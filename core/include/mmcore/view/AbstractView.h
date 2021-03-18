@@ -23,6 +23,11 @@
 #include "vislib/String.h"
 #include <AbstractInputScope.h>
 
+#include "mmcore/view/CameraSerializer.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/TimeControl.h"
+
 namespace megamol {
 namespace core {
 namespace view {
@@ -89,11 +94,13 @@ public:
     /**
      * Answer the default time for this view
      *
+     * @param instTime the current instance time
+     *
      * @return The default time
      */
-    virtual float DefaultTime(double instTime) const = 0; /* {
-        return 0.0f;
-    }*/
+    virtual float DefaultTime(double instTime) const {
+        return this->_timeCtrl.Time(instTime);
+    }
 
     /**
      * Answers whether the given parameter is relevant for this view.
@@ -112,25 +119,20 @@ public:
     virtual unsigned int GetCameraSyncNumber(void) const = 0;
 
     /**
-     * Serialises the camera of the view
-     *
-     * @param serialiser Serialises the camera of the view
-     */
-    virtual void SerialiseCamera(vislib::Serialiser& serialiser) const = 0;
-
-    /**
-     * Deserialises the camera of the view
-     *
-     * @param serialiser Deserialises the camera of the view
-     */
-    virtual void DeserialiseCamera(vislib::Serialiser& serialiser) = 0;
-
-    /**
-     * Renders this AbstractView3D in the currently active OpenGL context.
+     * Renders this AbstractView.
      *
      * @param context The context information like time or GPU affinity.
      */
-    virtual void Render(const mmcRenderViewContext& context) = 0;
+    void Render(const mmcRenderViewContext& context) {
+        this->Render(context, nullptr);
+    };
+
+    /**
+     * Renders this AbstractView. Implemented by child classes.
+     *
+     * @param context The context information like time or GPU affinity.
+     */
+    virtual void Render(const mmcRenderViewContext& context, Call* call) = 0;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -144,7 +146,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height) = 0;
+    virtual void Resize(unsigned int width, unsigned int height);
 
     /**
      * Answers the desired window position configuration of this view.
@@ -167,8 +169,8 @@ public:
      * @param hook The hook to register
      */
     void RegisterHook(Hooks* hook) {
-        if (!this->hooks.Contains(hook)) {
-            this->hooks.Add(hook);
+        if (!this->_hooks.Contains(hook)) {
+            this->_hooks.Add(hook);
         }
     }
 
@@ -177,7 +179,7 @@ public:
      *
      * @param hook The hook to unregister
      */
-    void UnregisterHook(Hooks* hook) { this->hooks.RemoveAll(hook); }
+    void UnregisterHook(Hooks* hook) { this->_hooks.RemoveAll(hook); }
 
     /**
      * Callback requesting a rendering of this view
@@ -231,6 +233,42 @@ public:
      */
     virtual void UpdateFreeze(bool freeze) = 0;
 
+    /**
+     * Restores the view
+     *
+     * @param p Must be resetViewSlot
+     *
+     * @return true
+     */
+    bool OnResetView(Call& call);
+
+    bool OnKeyCallback(Call& call);
+
+    bool OnCharCallback(Call& call);
+
+    bool OnMouseButtonCallback(Call& call);
+
+    bool OnMouseMoveCallback(Call& call);
+
+    bool OnMouseScrollCallback(Call& call);
+
+    /**
+     * Answer the background colour for the view
+     *
+     * @return The background colour for the view
+     */
+    glm::vec4 BkgndColour(void) const;
+
+    /**
+     * Restores the view
+     *
+     * @param p Must be resetViewSlot
+     *
+     * @return true
+     */
+    bool OnResetView(param::ParamSlot& p);
+
+
 protected:
     /** Typedef alias */
     typedef vislib::SingleLinkedList<Hooks*>::Iterator HooksIterator;
@@ -257,14 +295,14 @@ protected:
      *
      * @return 'true' if hook code should be run
      */
-    inline bool doHookCode(void) const { return !this->hooks.IsEmpty(); }
+    inline bool doHookCode(void) const { return !this->_hooks.IsEmpty(); }
 
     /**
      * Gets an iterator to the list or registered hooks.
      *
      * @return An iterator to the list of registered hooks.
      */
-    inline HooksIterator getHookIterator(void) { return this->hooks.GetIterator(); }
+    inline HooksIterator getHookIterator(void) { return this->_hooks.GetIterator(); }
 
     /**
      * The code triggering the pre render hook
@@ -287,6 +325,16 @@ protected:
     }
 
     /**
+     * ...
+     */
+    void beforeRender(const mmcRenderViewContext& context);
+
+    /**
+     * ...
+     */
+    void afterRender(const mmcRenderViewContext& context);
+
+    /**
      * Unpacks the mouse coordinates, which are relative to the virtual
      * viewport size.
      *
@@ -295,37 +343,95 @@ protected:
      */
     virtual void unpackMouseCoordinates(float& x, float& y);
 
-private:
-    /**
-     * cursor input callback
+        /**
+     * Stores the current camera settings
      *
-     * @param call The calling call
-     *
-     * @return The return value
+     * @param p Must be storeCameraSettingsSlot
+     * @return true
      */
-    bool onResetView(Call& call);
+    bool onStoreCamera(param::ParamSlot& p);
 
-    bool OnKeyCallback(Call& call);
+    /**
+     * Restores the camera settings
+     *
+     * @param p Must be restoreCameraSettingsSlot
+     *
+     * @return true
+     */
+    bool onRestoreCamera(param::ParamSlot& p);
 
-    bool OnCharCallback(Call& call);
+    /**
+     * This method determines the file path the camera file should have
+     *
+     * @return The file path of the camera file as string
+     */
+    std::string determineCameraFilePath(void) const;
 
-    bool OnMouseButtonCallback(Call& call);
+    /**
+     * Flag if this is the first time an image gets created. Used for
+     * initial camera reset
+     */
+    bool _firstImg;
 
-    bool OnMouseMoveCallback(Call& call);
-
-    bool OnMouseScrollCallback(Call& call);
+    /** Slot to call the renderer to render */
+    CallerSlot _rhsRenderSlot;
 
     /** Slot for incoming rendering requests */
-    CalleeSlot renderSlot;
+    CalleeSlot _lhsRenderSlot;
 
-#ifdef _WIN32
-#    pragma warning(disable : 4251)
-#endif /* _WIN32 */
+    /** The complete scene bounding box */
+    BoundingBoxes_2 _bboxs;
+
+    /** The camera */
+    Camera_2 _camera;
+
+    /** Slot containing the settings of the currently stored camera */
+    param::ParamSlot _cameraSettingsSlot;
+
+    /** Triggers the storage of the camera settings */
+    param::ParamSlot _storeCameraSettingsSlot;
+
+    /** Triggers the restore of the camera settings */
+    param::ParamSlot _restoreCameraSettingsSlot;
+
+    /** Slot activating or deactivating the override of already present camera settings */
+    param::ParamSlot _overrideCamSettingsSlot;
+
+    /** Slot activating or deactivating the automatic save of camera parameters to disk when a camera is saved */
+    param::ParamSlot _autoSaveCamSettingsSlot;
+
+    /** Slot activating or deactivating the automatic load of camera parameters at program startup */
+    param::ParamSlot _autoLoadCamSettingsSlot;
+
+    /** Triggers the reset of the view */
+    param::ParamSlot _resetViewSlot;
+
+    /** whether to reset the view when the object bounding box changes */
+    param::ParamSlot _resetViewOnBBoxChangeSlot;
+
+    /** Array that holds the saved camera states */
+    std::array<std::pair<Camera_2::minimal_state_type, bool>, 11> _savedCameras;
+
+    /** The object responsible for camera serialization */
+    CameraSerializer _cameraSerializer;
+
+    /** The time control */
+    view::TimeControl _timeCtrl;
+
+    /**  */
+    std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
+
+    std::chrono::microseconds _lastFrameDuration;
+
+    /** The background colour for the view */
+    mutable param::ParamSlot _bkgndColSlot;
+
+private:
     /** List of registered hooks */
-    vislib::SingleLinkedList<Hooks*> hooks;
-#ifdef _WIN32
-#    pragma warning(default : 4251)
-#endif /* _WIN32 */
+    vislib::SingleLinkedList<Hooks*> _hooks;
+
+    /** The background colour for the view */
+    mutable glm::vec4 _bkgndCol;
 };
 
 

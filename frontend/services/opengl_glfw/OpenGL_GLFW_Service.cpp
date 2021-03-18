@@ -7,6 +7,8 @@
 
 #include "OpenGL_GLFW_Service.hpp"
 
+#include "FrameStatistics.h"
+
 #include <array>
 #include <chrono>
 #include <vector>
@@ -36,13 +38,30 @@
 #include <iostream>
 
 static void log(std::string const& text) {
-    const std::string msg = "OpenGL_GLFW_Service: " + text; 
+    const std::string msg = "OpenGL_GLFW_Service: " + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
 static void log_error(std::string const& text) {
-    const std::string msg = "OpenGL_GLFW_Service: " + text; 
+    const std::string msg = "OpenGL_GLFW_Service: " + text;
     megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
+}
+
+// See: https://github.com/glfw/glfw/issues/1630
+static int fixGlfwKeyboardMods(int mods, int key, int action) {
+    if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT) {
+        return (action == GLFW_RELEASE) ? mods & (~GLFW_MOD_SHIFT) : mods | GLFW_MOD_SHIFT;
+    }
+    if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL) {
+        return (action == GLFW_RELEASE) ? mods & (~GLFW_MOD_CONTROL) : mods | GLFW_MOD_CONTROL;
+    }
+    if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT) {
+        return (action == GLFW_RELEASE) ? mods & (~GLFW_MOD_ALT) : mods | GLFW_MOD_ALT;
+    }
+    if (key == GLFW_KEY_LEFT_SUPER || key == GLFW_KEY_RIGHT_SUPER) {
+        return (action == GLFW_RELEASE) ? mods & (~GLFW_MOD_SUPER) : mods | GLFW_MOD_SUPER;
+    }
+    return mods;
 }
 
 static std::string get_message_id_name(GLuint id) {
@@ -277,7 +296,8 @@ struct OpenGL_GLFW_Service::PimplData {
     GLFWwindow* glfwContextWindowPtr{nullptr};
     OpenGL_GLFW_Service::Config config;    // keep copy of user-provided config
     std::string fullWindowTitle;
-    std::chrono::system_clock::time_point topmost_before_time;
+    std::chrono::system_clock::time_point last_time;
+    megamol::frontend_resources::FrameStatistics* frame_statistics{nullptr};
 };
 
 OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {
@@ -471,24 +491,41 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {"WindowManipulation", m_windowManipulation}
     };
 
-    m_pimpl->topmost_before_time = std::chrono::system_clock::now();
+    m_pimpl->last_time = std::chrono::system_clock::now();
 
     log("initialized successfully");
     return true;
 }
 
-void OpenGL_GLFW_Service::reset_window_topmost() {
-#ifdef _WIN32
+void OpenGL_GLFW_Service::do_every_second() {
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    auto& topmost_before_time = m_pimpl->topmost_before_time;
+    auto& last_time = m_pimpl->last_time;
 
-    if (now - topmost_before_time > std::chrono::seconds(1)) {
-        topmost_before_time = now;
+    if (now - last_time > std::chrono::seconds(1)) {
+        last_time = now;
+
+        auto const cut_off = [](std::string const& s) -> std::string {
+            const auto found_dot = s.find_first_of(".,");
+            const auto substr = s.substr(0, found_dot + 1 + 1);
+            return substr;
+        };
+
+        std::string fps = std::to_string(m_pimpl->frame_statistics->last_averaged_fps);
+        std::string mspf = std::to_string(m_pimpl->frame_statistics->last_averaged_mspf);
+        std::string title =
+            m_pimpl->config.windowTitlePrefix
+            + " [" + cut_off(fps) + "f/s, " + cut_off(mspf) + "ms/f]";
+        glfwSetWindowTitle(m_pimpl->glfwContextWindowPtr, title.c_str());
+
+#ifdef _WIN32
         // TODO fix this for EGL + Win
         //log("Periodic reordering of windows.");
-        SetWindowPos(glfwGetWin32Window(m_pimpl->glfwContextWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-    }
+        if (m_pimpl->config.windowPlacement.topMost) {
+            SetWindowPos(glfwGetWin32Window(m_pimpl->glfwContextWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+        }
 #endif
+
+    }
 }
 
 #define that static_cast<OpenGL_GLFW_Service*>(::glfwGetWindowUserPointer(wnd))
@@ -499,6 +536,8 @@ void OpenGL_GLFW_Service::register_glfw_callbacks() {
 
     // keyboard events
     ::glfwSetKeyCallback(window_ptr, [](GLFWwindow* wnd, int key, int scancode, int action, int mods){
+        // Fix mods, see: https://github.com/glfw/glfw/issues/1630
+        mods = fixGlfwKeyboardMods(mods, key, action);
         that->glfw_onKey_func(key, scancode, action, mods);
     });
 
@@ -600,7 +639,7 @@ void OpenGL_GLFW_Service::close() {
     ::glfwMakeContextCurrent(nullptr);
     ::glfwTerminate();
 }
-    
+
 void OpenGL_GLFW_Service::updateProvidedResources() {
     // poll events for all GLFW windows shared by this context. this also issues the callbacks.
     // note at this point there is no GL context active.
@@ -650,9 +689,7 @@ void OpenGL_GLFW_Service::postGraphRender() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
     //::glfwMakeContextCurrent(nullptr);
 
-    if (m_pimpl->config.windowPlacement.topMost) {
-        reset_window_topmost();
-    }
+    do_every_second();
 }
 
 std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {
@@ -660,12 +697,11 @@ std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {
 }
 
 const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() const {
-    // we dont depend on outside resources
-    return {};
+    return {"FrameStatistics"};
 }
 
 void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> resources) {
-    // we dont depend on outside resources
+    m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
 }
 
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {
@@ -758,11 +794,11 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
 
 // { glfw calls used somewhere by imgui but not covered by this class
 // glfwGetWin32Window(g_Window);
-// 
+//
 // glfwGetMouseButton(g_Window, i) != 0;
 // glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
 // glfwSetCursorPos(g_Window, (double)mouse_pos_backup.x, (double)mouse_pos_backup.y);
-// 
+//
 // glfwSetCursor(g_Window, g_MouseCursors);
 // glfwGetInputMode(g_Window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
 // glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);

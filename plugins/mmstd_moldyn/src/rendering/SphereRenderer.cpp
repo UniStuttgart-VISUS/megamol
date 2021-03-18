@@ -9,6 +9,8 @@
 #include "stdafx.h"
 #include "SphereRenderer.h"
 
+#include "mmcore/view/light/DistantLight.h"
+
 
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
@@ -25,11 +27,12 @@ const GLuint SSBOflagsBindingPoint = 2;
 const GLuint SSBOvertexBindingPoint = 3;
 const GLuint SSBOcolorBindingPoint = 4;
 
-SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
+SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
 , getDataSlot("getdata", "Connects to the data source")
 , getTFSlot("gettransferfunction", "The slot for the transfer function module")
 , getClipPlaneSlot("getclipplane", "The slot for the clipping plane module")
 , readFlagsSlot("readFlags", "The slot for reading the selection flags")
+, getLightsSlot("lights", "Lights are retrieved over this slot.")
 , curViewAttrib()
 , curClipDat()
 , oldClipDat()
@@ -115,6 +118,9 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
+
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
 
@@ -192,7 +198,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
 SphereRenderer::~SphereRenderer(void) { this->Release(); }
 
 
-bool SphereRenderer::GetExtents(view::CallRender3D_2& call) {
+bool SphereRenderer::GetExtents(view::CallRender3DGL& call) {
 
     auto cr = &call;
     if (cr == nullptr) return false;
@@ -1021,7 +1027,7 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 }
 
 
-bool SphereRenderer::Render(view::CallRender3D_2& call) {
+bool SphereRenderer::Render(view::CallRender3DGL& call) {
 
     // timer.BeginFrame();
 
@@ -1090,49 +1096,56 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     this->curMVPtransp = glm::transpose(this->curMVP);
 
     // Lights
-    this->GetLights();
-    this->curlightDir = { 0.0f, 0.0f, 0.0f, 1.0f };
-    if (this->lightMap.size() > 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
-    } else {
-        for (auto light : this->lightMap) {
-            if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single 'Distant Light' source is supported by this renderer");
-            }
-            else {
-                auto use_eyedir = light.second.dl_eye_direction;
-                if (use_eyedir) {
-                    this->curlightDir = -this->curCamView;
+    this->curlightDir = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
+
+        auto lights = call_light->getData();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+        if (distant_lights.size() > 1) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
+        } else if (distant_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] No 'Distant Light' found");
+        }
+
+        for (auto const& light : distant_lights) {
+            auto use_eyedir = light.eye_direction;
+            if (use_eyedir) {
+                curlightDir = curCamView;
+            } else {
+                auto lightDir = light.direction;
+                if (lightDir.size() == 3) {
+                    curlightDir[0] = lightDir[0];
+                    curlightDir[1] = lightDir[1];
+                    curlightDir[2] = lightDir[2];
                 }
-                else {
-                    auto lightDir = light.second.dl_direction;
-                    if (lightDir.size() == 3) {
-                        this->curlightDir[0] = lightDir[0];
-                        this->curlightDir[1] = lightDir[1];
-                        this->curlightDir[2] = lightDir[2];
-                    }
-                    if (lightDir.size() == 4) {
-                        this->curlightDir[3] = lightDir[3];
-                    }
-                    /// View Space Lighting. Comment line to change to Object Space Lighting.
-                    //this->curlightDir = this->curMVtransp * this->curlightDir;
+                if (lightDir.size() == 4) {
+                    curlightDir[3] = lightDir[3];
                 }
-                /// TODO Implement missing distant light parameters:
-                            //light.second.dl_angularDiameter;
-                            //light.second.lightColor;
-                            //light.second.lightIntensity;
+                /// View Space Lighting. Comment line to change to Object Space Lighting.
+                // this->curlightDir = this->curMVtransp * this->curlightDir;
             }
+            /// TODO Implement missing distant light parameters:
+            // light.second.dl_angularDiameter;
+            // light.second.lightColor;
+            // light.second.lightIntensity;
         }
     }
 
     // Viewport
-    auto viewport = call.GetViewport();
-    this->curVpWidth = viewport.Width();
-    this->curVpHeight = viewport.Height();
+    auto viewport = cam.resolution_gate();
+    this->curVpWidth = viewport.width();
+    this->curVpHeight = viewport.height();
     this->curViewAttrib[0] = 0.0f;
     this->curViewAttrib[1] = 0.0f;
-    this->curViewAttrib[2] = static_cast<float>(viewport.Width());
-    this->curViewAttrib[3] = static_cast<float>(viewport.Height());
+    this->curViewAttrib[2] = static_cast<float>(viewport.width());
+    this->curViewAttrib[3] = static_cast<float>(viewport.height());
     if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;
     if (this->curViewAttrib[3] < 1.0f) this->curViewAttrib[3] = 1.0f;
     this->curViewAttrib[2] = 2.0f / this->curViewAttrib[2];
@@ -1197,7 +1210,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 }
 
 
-bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSimple(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
     this->enableFlagStorage(this->sphereShader, mpdc);
@@ -1267,7 +1280,7 @@ bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataC
 }
 
 
-bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSSBO(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -1448,7 +1461,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
 }
 
 
-bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSplat(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     // Set OpenGL state -----------------------------------------------
     glDisable(GL_DEPTH_TEST);
@@ -1569,7 +1582,7 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
 }
 
 
-bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderBufferArray(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
     this->enableFlagStorage(this->sphereShader, mpdc);
@@ -1667,7 +1680,7 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticle
 }
 
 
-bool SphereRenderer::renderGeometryShader(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderGeometryShader(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -1735,7 +1748,7 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3D_2& call, MultiParti
 }
 
 
-bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderAmbientOcclusion(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     // We need to regenerate the shader if certain settings are changed
     if (this->enableLightingSlot.IsDirty() || this->aoConeApexSlot.IsDirty()) {
@@ -1825,7 +1838,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
 }
 
 
-bool SphereRenderer::renderOutline(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderOutline(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
     this->enableFlagStorage(this->sphereShader, mpdc);
@@ -2557,7 +2570,7 @@ bool SphereRenderer::rebuildGBuffer() {
 }
 
 
-void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
+void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (this->stateInvalid) {
@@ -2651,7 +2664,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
 
 
 
-void SphereRenderer::renderDeferredPass(view::CallRender3D_2& call) {
+void SphereRenderer::renderDeferredPass(view::CallRender3DGL& call) {
 
     bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
     bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();

@@ -13,7 +13,8 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/light/PointLight.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
@@ -36,9 +37,10 @@ using namespace megamol::core;
 /*
  * TriSoupRenderer::TriSoupRenderer
  */
-TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule_2(),
+TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModuleGL(),
         getDataSlot("getData", "The slot to fetch the tri-mesh data"),
         getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)"),
+        getLightsSlot("lights", "Lights are retrieved over this slot."),
         showVertices("showVertices", "Flag whether to show the verices of the object"),
         lighting("lighting", "Flag whether or not use lighting for the surface"),
         surFrontStyle("frontstyle", "The rendering style for the front surface"),
@@ -51,6 +53,9 @@ TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule_2(),
 
     this->getVolDataSlot.SetCompatibleCall<core::factories::CallAutoDescription<CallVolumetricData> >();
     this->MakeSlotAvailable(&this->getVolDataSlot);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
 
     this->showVertices.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showVertices);
@@ -106,7 +111,7 @@ bool TriSoupRenderer::create(void) {
 /*
  * TriSoupRenderer::GetExtents
  */
-bool TriSoupRenderer::GetExtents(view::CallRender3D_2& call) {
+bool TriSoupRenderer::GetExtents(view::CallRender3DGL& call) {
 
     megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
@@ -132,7 +137,7 @@ void TriSoupRenderer::release(void) {
 /*
  * TriSoupRenderer::Render
  */
-bool TriSoupRenderer::Render(view::CallRender3D_2& call) {
+bool TriSoupRenderer::Render(view::CallRender3DGL& call) {
     megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
 
@@ -151,31 +156,30 @@ bool TriSoupRenderer::Render(view::CallRender3D_2& call) {
     glm::mat4 view = viewTemp;
 
 	// lighting setup
-    this->GetLights();
     glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};
-    if (this->lightMap.size() != 1) {
-        //megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        //    "[TriSoupRenderer] Only one single point light source is supported by this renderer");
-    }
-    for (auto light : this->lightMap) {
-        if (light.second.lightType != core::view::light::POINTLIGHT) {
-            //megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            //    "[TriSoupRenderer] Only single point light source is supported by this renderer");
-        } else {
-            auto lPos = light.second.pl_position;
+
+    auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
+
+        auto lights = call_light->getData();
+        auto point_lights = lights.get<core::view::light::PointLightType>();
+
+        if (point_lights.size() > 1) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[TriSoupRenderer] Only one single 'Point Light' source is supported by this renderer");
+        } else if (point_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TriSoupRenderer] No 'Point Light' found");
+        }
+
+        for (auto const& light : point_lights) {
             // light.second.lightColor;
             // light.second.lightIntensity;
-            if (lPos.size() == 3) {
-                lightPos[0] = lPos[0];
-                lightPos[1] = lPos[1];
-                lightPos[2] = lPos[2];
-            }
-            if (lPos.size() == 4) {
-                lightPos[0] = lPos[0];
-                lightPos[1] = lPos[1];
-                lightPos[2] = lPos[2];
-                lightPos[3] = lPos[3];
-            }
+            lightPos[0] = light.position[0];
+            lightPos[1] = light.position[1];
+            lightPos[2] = light.position[2];
             break;
         }
     }

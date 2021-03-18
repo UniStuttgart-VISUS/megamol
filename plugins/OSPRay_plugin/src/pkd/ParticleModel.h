@@ -12,7 +12,8 @@
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 
-#include "ospcommon/box.h"
+#include "rkcommon/math//box.h"
+#include "rkcommon/math/vec.h"
 
 
 namespace megamol {
@@ -23,14 +24,14 @@ struct ParticleModel {
 
     ParticleModel() : radius(0) {}
 
-    std::vector<ospcommon::vec4f> position; //!< particle position + color encoded in 'w'
+    std::vector<rkcommon::math::vec4f> position; //!< particle position + color encoded in 'w'
 
     void fill(megamol::core::moldyn::SimpleSphericalParticles parts);
 
     //! return world bounding box of all particle *positions* (i.e., particles *ex* radius)
-    ospcommon::box3f getBounds() const;
+    rkcommon::math::box3f getBounds() const;
 
-    float encodeColorToFloat(ospcommon::vec4f const& col) {
+    float encodeColorToFloat(rkcommon::math::vec4f const& col) {
         unsigned int r = static_cast<unsigned int>(col.x * 255.f);
         unsigned int g = static_cast<unsigned int>(col.y * 255.f);
         unsigned int b = static_cast<unsigned int>(col.z * 255.f);
@@ -44,7 +45,7 @@ struct ParticleModel {
         return ret;
     }
 
-    float encodeColorToFloat(ospcommon::vec4uc const& col) {
+    float encodeColorToFloat(rkcommon::math::vec4uc const& col) {
         unsigned int r = static_cast<unsigned int>(col.x);
         unsigned int g = static_cast<unsigned int>(col.y);
         unsigned int b = static_cast<unsigned int>(col.z);
@@ -58,7 +59,7 @@ struct ParticleModel {
         return ret;
     }
 
-    float encodeColorToFloat(ospcommon::vec3f const& col) {
+    float encodeColorToFloat(rkcommon::math::vec3f const& col) {
         unsigned int r = static_cast<unsigned int>(col.x * 255.f);
         unsigned int g = static_cast<unsigned int>(col.y * 255.f);
         unsigned int b = static_cast<unsigned int>(col.z * 255.f);
@@ -71,7 +72,7 @@ struct ParticleModel {
         return ret;
     }
 
-    float encodeColorToFloat(ospcommon::vec3uc const& col) {
+    float encodeColorToFloat(rkcommon::math::vec3uc const& col) {
         unsigned int r = static_cast<unsigned int>(col.x);
         unsigned int g = static_cast<unsigned int>(col.y);
         unsigned int b = static_cast<unsigned int>(col.z);

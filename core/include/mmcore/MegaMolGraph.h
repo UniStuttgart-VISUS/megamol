@@ -146,6 +146,9 @@ public:
 
     void AddModuleDependencies(std::vector<megamol::frontend::FrontendResource> const& resources);
 
+    // shut down all calls, modules, graph entry points
+    void Clear();
+
     MegaMolGraph_Convenience& Convenience();
 
     // Create View ?

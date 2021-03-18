@@ -37,7 +37,7 @@ using namespace megamol::core::utility::log;
 /*
  * protein::UnstructuredGridRenderer::UnstructuredGridRenderer (CTOR)
  */
-protein::UnstructuredGridRenderer::UnstructuredGridRenderer(void) : Renderer3DModule (),
+protein::UnstructuredGridRenderer::UnstructuredGridRenderer(void) : Renderer3DModuleGL(),
     dataCallerSlot( "getData", "Connects the rendering with the data storage"),
     sphereRadSlot("sphereRad", "The sphere radius scale factor") {
 
@@ -131,7 +131,7 @@ bool protein::UnstructuredGridRenderer::create(void)
 /*
  * protein::UnstructuredGridRenderer::GetExtents
  */
-bool protein::UnstructuredGridRenderer::GetExtents(Call& call) {
+bool protein::UnstructuredGridRenderer::GetExtents(core::view::CallRender3DGL& call) {
 
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) {
@@ -147,15 +147,7 @@ bool protein::UnstructuredGridRenderer::GetExtents(Call& call) {
         return false;
     }
 
-    float scale;
-    if( !vislib::math::IsEqual(dc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
-        scale = 2.0f / dc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
     cr3d->AccessBoundingBoxes() = dc->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
     cr3d->SetTimeFramesCount(dc->FrameCount());
 
     return true;
@@ -164,13 +156,16 @@ bool protein::UnstructuredGridRenderer::GetExtents(Call& call) {
 /*
  * protein::UnstructuredGridRenderer::Render
  */
-bool protein::UnstructuredGridRenderer::Render(Call& call) {
+bool protein::UnstructuredGridRenderer::Render(core::view::CallRender3DGL& call) {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
-    // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
+    // Camera
+    cr3d->GetCamera(cameraInfo);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cameraInfo.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
     float callTime = cr3d->Time();
 
@@ -242,10 +237,10 @@ bool protein::UnstructuredGridRenderer::Render(Call& call) {
     glScalef( scale, scale, scale);
 
     float viewportStuff[4] = {
-        cameraInfo->TileRect().Left(),
-        cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(),
-        cameraInfo->TileRect().Height()};
+        cameraInfo.image_tile().left(),
+        cameraInfo.image_tile().bottom(),
+        cameraInfo.image_tile().width(),
+        cameraInfo.image_tile().height()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -264,9 +259,9 @@ bool protein::UnstructuredGridRenderer::Render(Call& call) {
     //glEnableClientState(GL_COLOR_ARRAY);
     // set shader variables
     glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, &cameraInfo.view_vector().x());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, &cameraInfo.right_vector().x());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, &cameraInfo.up_vector().x());
     // draw points
     // set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, posInter);

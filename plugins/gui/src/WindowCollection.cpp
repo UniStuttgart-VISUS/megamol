@@ -13,58 +13,55 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-void WindowCollection::SoftResetWindowSizePosition(WindowConfiguration& window_config) {
+void WindowCollection::SetWindowSizePosition(WindowConfiguration& window_config, bool consider_menu) {
+
     assert(ImGui::GetCurrentContext() != nullptr);
 
     ImGuiIO& io = ImGui::GetIO();
 
-    float width = window_config.win_reset_size.x;
-    float height = window_config.win_reset_size.y;
+    // Main menu height
+    float y_offset = ImGui::GetFrameHeight();
 
-    if (width > io.DisplaySize.x) {
-        width = io.DisplaySize.x;
-    }
-    if (height > io.DisplaySize.y) {
-        height = io.DisplaySize.y;
-    }
-
-    auto win_pos = ImGui::GetWindowPos();
-    if (win_pos.x < 0) {
-        win_pos.x = 0.0f;
-    }
-    if (win_pos.y < 0) {
-        win_pos.y = 0.0f;
-    }
-
-    ImVec2 win_size;
+    ImVec2 win_pos = window_config.win_position;
+    ImVec2 win_size = window_config.win_size;
     if (window_config.win_flags & ImGuiWindowFlags_AlwaysAutoResize) {
         win_size = ImGui::GetWindowSize();
-    } else {
-        win_size = ImVec2(width, height);
     }
 
-    float win_width = io.DisplaySize.x - (win_pos.x);
-    if (win_width < win_size.x) {
-        win_pos.x = io.DisplaySize.x - (win_size.x);
+    // Fit max window size to viewport
+    if (win_size.x > io.DisplaySize.x) {
+        win_size.x = io.DisplaySize.x;
     }
-    float win_height = io.DisplaySize.y - (win_pos.y);
-    if (win_height < win_size.y) {
-        win_pos.y = io.DisplaySize.y - (win_size.y);
+    if (win_size.y > (io.DisplaySize.y - y_offset)) {
+        win_size.y = (io.DisplaySize.y - y_offset);
     }
 
-    ImGui::SetWindowSize(ImVec2(width, height), ImGuiCond_Always);
+    // Snap to viewport
+    /// ImGui automatically moves windows lying outside viewport
+    // float win_width = io.DisplaySize.x - (win_pos.x);
+    // if (win_width < win_size.x) {
+    //    win_pos.x = io.DisplaySize.x - (win_size.x);
+    //}
+    // float win_height = io.DisplaySize.y - (win_pos.y);
+    // if (win_height < win_size.y) {
+    //    win_pos.y = io.DisplaySize.y - (win_size.y);
+    //}
+    // if (win_pos.x < 0) {
+    //    win_pos.x = 0.0f;
+    //}
+
+    // Snap window below menu bar
+    if (consider_menu && (win_pos.y < y_offset)) {
+        win_pos.y = y_offset;
+    }
+
+    window_config.win_position = win_pos;
+    // window_config.win_reset_position = win_pos;
     ImGui::SetWindowPos(win_pos, ImGuiCond_Always);
-}
 
-
-void WindowCollection::ResetWindowSizePosition(WindowConfiguration& window_config) {
-    assert(ImGui::GetCurrentContext() != nullptr);
-
-    ImVec2 pos = window_config.win_position;
-    ImVec2 size = window_config.win_size;
-
-    ImGui::SetWindowSize(size, ImGuiCond_Always);
-    ImGui::SetWindowPos(pos, ImGuiCond_Always);
+    window_config.win_size = win_size;
+    // window_config.win_reset_size = win_size;
+    ImGui::SetWindowSize(win_size, ImGuiCond_Always);
 }
 
 
@@ -120,8 +117,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                 for (auto& config_item : header_item.value().items()) {
                     WindowConfiguration tmp_config;
                     tmp_config.win_name = config_item.key();
-                    tmp_config.win_reset = true;
-                    tmp_config.buf_font_reset = false;
+                    tmp_config.buf_set_pos_size = true;
                     tmp_config.buf_tfe_reset = true;
                     auto config_values = config_item.value();
 
@@ -151,9 +147,6 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                     megamol::core::utility::get_json_value<float>(
                         config_values, {"win_size"}, size.data(), size.size());
                     tmp_config.win_size = ImVec2(size[0], size[1]);
-
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"win_soft_reset"}, &tmp_config.win_soft_reset);
 
                     std::array<float, 2> reset_size;
                     megamol::core::utility::get_json_value<float>(
@@ -197,21 +190,17 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
 
                     // FpsMs Config --------------------------------------------
                     megamol::core::utility::get_json_value<bool>(
-                        config_values, {"ms_show_options"}, &tmp_config.ms_show_options);
+                        config_values, {"fpsms_show_options"}, &tmp_config.fpsms_show_options);
 
                     megamol::core::utility::get_json_value<int>(
-                        config_values, {"ms_max_history_count"}, &tmp_config.ms_max_history_count);
+                        config_values, {"fpsms_max_value_count"}, &tmp_config.fpsms_buffer_size);
 
                     megamol::core::utility::get_json_value<float>(
-                        config_values, {"ms_refresh_rate"}, &tmp_config.ms_refresh_rate);
+                        config_values, {"fpsms_refresh_rate"}, &tmp_config.fpsms_refresh_rate);
 
                     int mode = 0;
-                    megamol::core::utility::get_json_value<int>(config_values, {"ms_mode"}, &mode);
-                    tmp_config.ms_mode = static_cast<TimingModes>(mode);
-
-                    // Font Config ---------------------------------------------
-                    megamol::core::utility::get_json_value<std::string>(
-                        config_values, {"font_name"}, &tmp_config.font_name);
+                    megamol::core::utility::get_json_value<int>(config_values, {"fpsms_mode"}, &mode);
+                    tmp_config.fpsms_mode = static_cast<TimingModes>(mode);
 
                     // TFE Config ---------------------------------------------
                     megamol::core::utility::get_json_value<bool>(
@@ -296,11 +285,17 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
                     static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_position"] = {
                     window_config.win_position.x, window_config.win_position.y};
+
+                auto rescale_win_size = window_config.win_size;
+                rescale_win_size /= megamol::gui::gui_scaling.Get();
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_size"] = {
-                    window_config.win_size.x, window_config.win_size.y};
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_soft_reset"] = window_config.win_soft_reset;
+                    rescale_win_size.x, rescale_win_size.y};
+
+                auto rescale_win_reset_size = window_config.win_reset_size;
+                rescale_win_reset_size /= megamol::gui::gui_scaling.Get();
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_reset_size"] = {
-                    window_config.win_reset_size.x, window_config.win_reset_size.y};
+                    rescale_win_reset_size.x, rescale_win_reset_size.y};
+
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_reset_position"] = {
                     window_config.win_reset_position.x, window_config.win_reset_position.y};
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_collapsed"] = window_config.win_collapsed;
@@ -322,16 +317,14 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_extended_mode"] =
                     window_config.param_extended_mode;
 
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_show_options"] = window_config.ms_show_options;
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_max_history_count"] =
-                    window_config.ms_max_history_count;
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_mode"] =
-                    static_cast<int>(window_config.ms_mode);
-
-                GUIUtils::Utf8Encode(window_config.font_name);
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["font_name"] = window_config.font_name;
-                GUIUtils::Utf8Decode(window_config.font_name);
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_show_options"] =
+                    window_config.fpsms_show_options;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_max_value_count"] =
+                    window_config.fpsms_buffer_size;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_refresh_rate"] =
+                    window_config.fpsms_refresh_rate;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_mode"] =
+                    static_cast<int>(window_config.fpsms_mode);
 
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_view_minimized"] =
                     window_config.tfe_view_minimized;

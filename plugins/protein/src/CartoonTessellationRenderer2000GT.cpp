@@ -10,13 +10,14 @@
 #include <inttypes.h>
 #include <stdint.h>
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/light/PointLight.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/assert.h"
 #include "vislib/math/Matrix.h"
@@ -42,8 +43,9 @@ const GLuint SSBObindingPoint = 2;
  * moldyn::CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT
  */
 CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void)
-    : view::Renderer3DModule_2()
+    : view::Renderer3DModuleGL()
     , getDataSlot("getdata", "Connects to the data source")
+    , getLightsSlot("lights", "Lights are retrieved over this slot.")
     , fences()
     , currBuf(0)
     , bufSize(32 * 1024 * 1024)
@@ -64,6 +66,9 @@ CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void)
 
     this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
 
     this->sphereParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->sphereParam);
@@ -310,8 +315,8 @@ void CartoonTessellationRenderer2000GT::getBytesAndStrideLines(MolecularDataCall
 /*
  * GetExtents
  */
-bool CartoonTessellationRenderer2000GT::GetExtents(view::CallRender3D_2& call) {
-    view::CallRender3D_2* cr = dynamic_cast<view::CallRender3D_2*>(&call);
+bool CartoonTessellationRenderer2000GT::GetExtents(view::CallRender3DGL& call) {
+    view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     MolecularDataCall* mol = this->getDataSlot.CallAs<MolecularDataCall>();
@@ -356,12 +361,12 @@ MolecularDataCall* CartoonTessellationRenderer2000GT::getData(unsigned int t, fl
 /*
  * moldyn::SimpleSphereRenderer::Render
  */
-bool CartoonTessellationRenderer2000GT::Render(view::CallRender3D_2& call) {
+bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
 #ifdef DEBUG_BLAHBLAH
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
-    view::CallRender3D_2* cr = dynamic_cast<view::CallRender3D_2*>(&call);
+    view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     float scaling = 1.0f;
@@ -714,18 +719,34 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3D_2& call) {
         unsigned int colBytes, vertBytes, colStride, vertStride;
         this->getBytesAndStride(*mol, colBytes, vertBytes, colStride, vertStride);
 
-        this->GetLights();
-        auto ls = this->lightMap.size();
-        std::array<float,3> lightPos = {0.0f, 0.0f, 0.0f};
-        if (this->lightMap.size() != 1) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Only single point light sources are supported by this renderer");
-        } else if (this->lightMap.begin()->second.lightType != core::view::light::POINTLIGHT) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("Only single point light sources are supported by this renderer");
-        } else {
-            lightPos = this->lightMap.begin()->second.pl_position;
-            std::cout << lightPos[0] << " " << lightPos[1] << " " << lightPos[2] << std::endl;
-        }
+        // lighting setup
+        std::array<float, 3> lightPos = {0.0f, 0.0f, 0.0f};
 
+        auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+        if (call_light != nullptr) {
+            if (!(*call_light)(0)) {
+                return false;
+            }
+
+            auto lights = call_light->getData();
+            auto point_lights = lights.get<core::view::light::PointLightType>();
+
+            if (point_lights.size() > 1) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[CartoonTessellationRenderer2000GT] Only one single 'Point Light' source is supported by this renderer");
+            } else if (point_lights.empty()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[CartoonTessellationRenderer2000GT] No 'Point Light' found");
+            }
+
+            for (auto const& light : point_lights) {
+                // light.second.lightColor;
+                // light.second.lightIntensity;
+                lightPos[0] = light.position[0];
+                lightPos[1] = light.position[1];
+                lightPos[2] = light.position[2];
+                break;
+            }
+        }
 
         this->tubeShader.Enable();
         glColor4f(1.0f / mainchain.size(), 0.75f, 0.25f, 1.0f);

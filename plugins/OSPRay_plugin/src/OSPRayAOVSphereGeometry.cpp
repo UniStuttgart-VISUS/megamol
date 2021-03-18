@@ -13,8 +13,9 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
 #include "mmcore/utility/log/Log.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
 
 
 using namespace megamol::ospray;
@@ -124,8 +125,9 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
         }
     }
 
-    OSPVolume aovol = NULL;
-    std::vector<OSPGeometry> geo;
+    ::ospray::cpp::Volume aovol = NULL;
+    ::ospray::cpp::VolumetricModel aovol_model;
+    std::vector<::ospray::cpp::Geometry> geo;
     if (!volDataOK) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "OSPRayAOVSphereGeometry: connected module supplies no volume data, ignore subsequent errors\n");
@@ -182,7 +184,7 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
                 colorLength = 0;
             }
 
-            int vertStride = parts.GetVertexDataStride();
+            unsigned long long vertStride = parts.GetVertexDataStride();
             if (vertStride == 0) {
                 vertStride = core::moldyn::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
             }
@@ -220,7 +222,7 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
             }
             float const minV = metadata->MinValues[0];
             float const maxV = metadata->MaxValues[0];
-            this->valuerange = std::make_pair(minV, maxV);
+            this->valuerange = {minV, maxV};
             this->gridorigin = {metadata->Origin[0], metadata->Origin[1], metadata->Origin[2]};
             this->gridspacing = {metadata->SliceDists[0][0], metadata->SliceDists[1][0], metadata->SliceDists[2][0]};
             this->dimensions = {static_cast<int>(metadata->Resolution[0]), static_cast<int>(metadata->Resolution[1]),
@@ -236,39 +238,37 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
             for (unsigned int i = 0; i < numCreateGeo; i++) {
 
                 if (parts.GetCount() == 0) continue;
-                geo.emplace_back(ospNewGeometry("aovspheres_geometry"));
-                long long int floatsToRead = parts.GetCount() * vertStride / (numCreateGeo * sizeof(float));
+                geo.emplace_back(::ospray::cpp::Geometry("aovspheres_geometry"));
+                unsigned long long floatsToRead = parts.GetCount() * vertStride / (numCreateGeo * sizeof(float));
                 floatsToRead -= floatsToRead % (vertStride / sizeof(float));
 
-                auto vertexData = ospNewData(floatsToRead / 3, OSP_FLOAT3,
-                    &static_cast<const float*>(parts.GetVertexData())[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                auto vertexData = ::ospray::cpp::SharedData(
+                    &static_cast<const float*>(parts.GetVertexData())[i * floatsToRead],
+                        OSP_FLOAT, floatsToRead / 3, vertStride);
 
-                ospCommit(vertexData);
-                ospSet1i(geo.back(), "bytes_per_sphere", vertStride);
-                ospSetData(geo.back(), "spheres", vertexData);
-                ospSetData(geo.back(), "color", nullptr);
+                vertexData.commit();
+                geo.back().setParam("spheres", vertexData);
+                geo.back().setParam("color", NULL);
 
                 if (vertexLength > 3) {
-                    ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
+                    geo.back().setParam("offset_radius", 3 * sizeof(float));
                 } else {
-                    ospSet1f(geo.back(), "radius", globalRadius);
+                    geo.back().setParam("radius", globalRadius);
                 }
                 if (parts.GetColourDataType() ==
                         core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
                     parts.GetColourDataType() ==
                         core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
 
-                    ospSet1i(geo.back(), "color_offset",
+                    geo.back().setParam("color_offset",
                         vertexLength * sizeof(float)); // TODO: This won't work if there are radii in the array
-                    ospSet1i(geo.back(), "color_stride", parts.GetColourDataStride());
-                    ospSetData(geo.back(), "color", vertexData);
+                    geo.back().setParam("color_stride", parts.GetColourDataStride());
+                    geo.back().setParam("color", vertexData);
                     if (parts.GetColourDataType() ==
                         core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
-                        // ospSet1i(geo.back(), "color_components", 3);
-                        ospSet1i(geo.back(), "color_format", OSP_FLOAT3);
+                        geo.back().setParam("color_format", OSP_VEC3F);
                     } else {
-                        // ospSet1i(geo.back(), "color_components", 4);
-                        ospSet1i(geo.back(), "color_format", OSP_FLOAT4);
+                        geo.back().setParam("color_format", OSP_VEC4F);
                     }
                 }
 
@@ -282,18 +282,29 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
                 // aovol
                 // auto const aovol = ospNewVolume("block_bricked_volume");
                 if (aovol == NULL) {
-                    aovol = ospNewVolume("shared_structured_volume");
-                    ospSet2f(aovol, "voxelRange", this->valuerange.first, this->valuerange.second);
-                    ospSet1f(aovol, "samplingRate", this->samplingRateSlot.Param<core::param::FloatParam>()->Value());
-                    // ospSet1b(aovol, "adaptiveSampling", false);
-                    ospSet3iv(aovol, "dimensions", this->dimensions.data());
-                    ospSetString(
-                        aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(voxelDataType::FLOAT)].c_str());
-                    ospSet3fv(aovol, "gridOrigin", this->gridorigin.data());
 
-                    ospSet3fv(aovol, "gridSpacing", this->gridspacing.data());
+                    aovol = ::ospray::cpp::Volume("shared_structured_volume");
 
-                    OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+
+                    // add data
+                    rkcommon::math::vec3i dims = {
+                        this->dimensions[0],
+                        this->dimensions[1],
+                        this->dimensions[2]};
+                    auto voxelData = ::ospray::cpp::SharedData(vd->GetData(), OSP_FLOAT, dims, rkcommon::math::vec3i(0));
+                    voxelData.commit();
+
+
+                    aovol.setParam("data", voxelData);
+
+                    rkcommon::math::vec3f gorigin = {
+                        this->gridorigin[0], this->gridorigin[1], this->gridorigin[2]};
+                    aovol.setParam("gridOrigin", gorigin);
+                    rkcommon::math::vec3f gspacing = {this->gridspacing[0], this->gridspacing[1], this->gridspacing[2]};
+                    aovol.setParam("gridSpacing", gspacing);
+
+
+                    auto tf = ::ospray::cpp::TransferFunction("piecewiseLinear");
 
                     std::vector<float> faketf = {
                         1.0f,
@@ -305,41 +316,44 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
                     };
                     std::vector<float> fakeopa = {1.0f, 1.0f};
 
-                    OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, faketf.data());
-                    OSPData tf_opa = ospNewData(2, OSP_FLOAT, fakeopa.data());
-                    ospSetData(tf, "colors", tf_rgb);
-                    ospSetData(tf, "opacities", tf_opa);
-                    ospSet2f(tf, "valueRange", 0.0f, 1.0f);
+                    auto tf_rgb = ::ospray::cpp::CopiedData(faketf.data(), OSP_FLOAT, faketf.size() / 3);
+                    auto tf_opa = ::ospray::cpp::CopiedData(fakeopa);
+                    tf.setParam("color", tf_rgb);
+                    tf.setParam("opacity", tf_opa);
+                    rkcommon::math::vec2f valrange = {
+                        this->valuerange[0], this->valuerange[1]};
+                    tf.setParam("valueRange", valrange);
 
-                    ospCommit(tf);
+                    tf.commit();
 
-                    ospSetObject(aovol, "transferFunction", tf);
-                    ospRelease(tf);
+                    aovol.commit();
 
-                    // add data
-                    auto voxelcount = this->dimensions[0] * this->dimensions[1] * this->dimensions[2];
-                    auto voxels = ospNewData(voxelcount,
-                        static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(voxelDataType::FLOAT)]),
-                        vd->GetData(), OSP_DATA_SHARED_BUFFER);
-                    ospCommit(voxels);
-                    ospSetData(aovol, "voxelData", voxels);
+                    aovol_model = ::ospray::cpp::VolumetricModel(aovol);
+ 
+                    aovol_model.setParam("transferFunction", tf);
+                    aovol_model.commit();
+
+                   
+                    //aovol, "voxelRange", this->valuerange.first, this->valuerange.second);
+                    //ospSet1f(aovol, "samplingRate", this->samplingRateSlot.Param<core::param::FloatParam>()->Value());
+                    // ospSet1b(aovol, "adaptiveSampling", false);
+
+
 
                     /*auto ptr = element.raw2.get();
                     ospSetRegion(aovol, ptr, osp::vec3i{0, 0, 0},
                         osp::vec3i{(*element.dimensions)[0], (*element.dimensions)[1], (*element.dimensions)[2]});*/
 
-                    ospCommit(aovol);
-
-                    // ospStructures.push_back(std::make_pair(aovol, structureTypeEnum::VOLUME));
+                     /*ospStructures.push_back(std::make_pair(aovol, structureTypeEnum::VOLUME));*/
                 }
 
                 assert(aovol);
 
-                ospSet1f(geo.back(), "aothreshold",
+                geo.back().setParam("aothreshold",
                     valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value());
-                ospSet1f(geo.back(), "aoRayOffset",
+                geo.back().setParam("aoRayOffset",
                     maxGridSpacing * this->aoRayOffsetFactorSlot.Param<core::param::FloatParam>()->Value());
-                ospSetObject(geo.back(), "aovol", aovol);
+                geo.back().setParam("aovol", ::ospray::cpp::CopiedData(aovol_model));
                 // ospCommit(geo);
             } // geometries
         }     // particle lists
@@ -347,7 +361,7 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
 
     std::vector<void*> geo_transfer(geo.size());
     for (auto i = 0; i < geo.size(); i++) {
-        geo_transfer[i] = reinterpret_cast<void*>(geo[i]);
+        geo_transfer[i] = geo[i].handle();
     }
     os->setStructureType(GEOMETRY);
     os->setAPIObjects(std::move(geo_transfer));

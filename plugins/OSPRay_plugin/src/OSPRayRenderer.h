@@ -5,13 +5,9 @@
 */
 #pragma once
 
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "AbstractOSPRayRenderer.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include <chrono>
 
 
 namespace megamol {
@@ -44,7 +40,7 @@ public:
     * @return 'true' if the module is available, 'false' otherwise.
     */
     static bool IsAvailable(void) {
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+        return true;
     }
 
     /** Dtor. */
@@ -74,7 +70,7 @@ protected:
     *
     * @return The return value of the function.
     */
-    virtual bool Render(megamol::core::view::CallRender3D_2& call);
+    virtual bool Render(megamol::core::view::CallRender3D& call);
 
 private:
 
@@ -87,43 +83,50 @@ private:
     *
     * @return The return value of the function.
     */
-    virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
+    virtual bool GetExtents(megamol::core::view::CallRender3D& call);
+
+    bool OnMouseButton(
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+    bool OnMouseMove(double x, double y) override;
 
     /** The call for data */
-    core::CallerSlot getStructureSlot;
+    core::CallerSlot _getStructureSlot;
 
+    core::param::ParamSlot _enablePickingSlot;
 
-    /** The texture shader */
-    vislib::graphics::gl::GLSLShader osprayShader;
 
     // Interface dirty flag
     bool InterfaceIsDirty();
     void InterfaceResetDirty();
 
     // rendering conditions
-    bool data_has_changed;
-    bool material_has_changed;
-    bool light_has_changed;
-    bool cam_has_changed;
-    bool transformation_has_changed;
+    bool _data_has_changed;
+    bool _material_has_changed;
+    bool _light_has_changed;
+    bool _cam_has_changed;
+    bool _transformation_has_changed;
 
-	core::view::Camera_2 cam;
-    float time;
-    size_t frameID;
+    core::view::Camera_2 _cam;
+    float _time;
+    size_t _frameID;
 
-    osp::vec2i imgSize;
+    std::array<int,2> _imgSize;
 
     // OSPRay textures
-    const uint32_t* fb;
-    std::vector<float> db;
-    void getOpenGLDepthFromOSPPerspective(float* db);
+    std::vector<uint32_t> _fb;
+    std::vector<float> _db;
+    void getOpenGLDepthFromOSPPerspective(std::vector<float>& db, cam_type::matrix_type projTemp);
 
-    bool renderer_has_changed;
+    bool _renderer_has_changed;
 
     struct {
         unsigned long long int count;
         unsigned long long int amount;
-    } accum_time;
+    } _accum_time;
+
+    float _mouse_x;
+    float _mouse_y;
 };
 
 } /*end namespace ospray*/

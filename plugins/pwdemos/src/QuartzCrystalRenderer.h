@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
@@ -18,7 +18,7 @@ namespace demos {
     /**
      * Module rendering quarts crystals frames
      */
-    class CrystalRenderer : public core::view::Renderer3DModule_2 {
+    class CrystalRenderer : public core::view::Renderer3DModuleGL {
     public:
 
         /**
@@ -63,7 +63,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3D_2& call);
+        virtual bool GetExtents(core::view::CallRender3DGL& call);
 
         /**
          * The render callback.
@@ -72,7 +72,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3D_2& call);
+        virtual bool Render(core::view::CallRender3DGL& call);
 
     protected:
 
@@ -92,6 +92,9 @@ namespace demos {
 
         /** The slot to get the data */
         core::CallerSlot dataInSlot;
+
+        /** The call for light sources */
+        core::CallerSlot lightsSlot;
 
         /** The index of the selected crystal */
         core::param::ParamSlot crystalIdx;

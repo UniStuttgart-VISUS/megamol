@@ -71,34 +71,32 @@ if(WIN32)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif()
 
-# Configurator
-if(WIN32)
-  # NuGet
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config
-    ${CMAKE_CURRENT_BINARY_DIR}/NuGet.Config COPYONLY)
-  add_subdirectory(configurator)
-endif()
-
 # Plugin register function
 # This function must be called by every plugin.
 # Within this function we need to define every binary which should include plugins.
 function(megamol_register_plugin TARGET)
   if (WIN32)
-    target_link_libraries(mmconsole PRIVATE ${TARGET})
-    target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${TARGET}")
-
-    target_link_libraries(megamol PRIVATE ${TARGET})
-    target_link_options(megamol PRIVATE "/WHOLEARCHIVE:${TARGET}")
+    if (BUILD_CONSOLE)
+      target_link_libraries(mmconsole PRIVATE ${TARGET})
+      target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${TARGET}")
+    endif()
+    if (BUILD_FRONTEND)
+      target_link_libraries(megamol PRIVATE ${TARGET})
+      target_link_options(megamol PRIVATE "/WHOLEARCHIVE:${TARGET}")
+    endif()
   else ()
-    target_link_libraries(mmconsole PRIVATE
-      -Wl,--whole-archive
-      ${TARGET}
-      -Wl,--no-whole-archive)
-
-    target_link_libraries(megamol PRIVATE
-      -Wl,--whole-archive
-      ${TARGET}
-      -Wl,--no-whole-archive)
+    if (BUILD_CONSOLE)
+      target_link_libraries(mmconsole PRIVATE
+        -Wl,--whole-archive
+        ${TARGET}
+        -Wl,--no-whole-archive)
+    endif()
+    if (BUILD_FRONTEND)
+      target_link_libraries(megamol PRIVATE
+        -Wl,--whole-archive
+        ${TARGET}
+        -Wl,--no-whole-archive)
+    endif()
   endif ()
 endfunction(megamol_register_plugin)
 

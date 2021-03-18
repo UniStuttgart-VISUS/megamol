@@ -33,7 +33,7 @@ void MoleculeSequenceRenderer::release(void)
 {
 }
 
-bool MoleculeSequenceRenderer::GetExtents(CallRender2D& call)
+bool MoleculeSequenceRenderer::GetExtents(CallRender2DGL& call)
 {
 	MolecularDataCall* data = dataCall->CallAs<MolecularDataCall>();
 	if(!data) return false;
@@ -41,12 +41,12 @@ bool MoleculeSequenceRenderer::GetExtents(CallRender2D& call)
 
 	unsigned int residueCount = data->ResidueCount();
 	
-	call.SetBoundingBox( 0.0f, 0.0f, static_cast<float>(residueCount * 20), 45.0f);
+	call.AccessBoundingBoxes().SetBoundingBox( 0.0f, 0.0f, static_cast<float>(residueCount * 20), 45.0f);
 
 	return true;
 }
 
-bool MoleculeSequenceRenderer::Render(CallRender2D& call)
+bool MoleculeSequenceRenderer::Render(CallRender2DGL& call)
 {
 	widgetLibrary.clear();
 

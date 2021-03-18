@@ -19,7 +19,7 @@ using namespace megamol;
 using namespace megamol::mesh;
 
 RenderMDIMesh::RenderMDIMesh()
-	: Renderer3DModule_2()
+	: Renderer3DModuleGL()
     , m_render_task_callerSlot("renderTasks", "Connects the renderer with a render task data source")
     , m_framebuffer_slot("framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module") 
 {
@@ -129,9 +129,9 @@ void RenderMDIMesh::release()
 	m_per_frame_data.reset();
 }
 
-bool RenderMDIMesh::GetExtents(core::view::CallRender3D_2& call) {
+bool RenderMDIMesh::GetExtents(core::view::CallRender3DGL& call) {
 
-    megamol::core::view::CallRender3D_2* cr = &call; // dynamic_cast<core::view::CallRender3D_2*>(&call);
+    megamol::core::view::CallRender3DGL* cr = &call; // dynamic_cast<core::view::CallRender3DGL*>(&call);
 	if (cr == NULL)
 		return false;
 
@@ -155,9 +155,9 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3D_2& call) {
 	return true;
 }
 
-bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
+bool RenderMDIMesh::Render(core::view::CallRender3DGL& call) {
 	
-	megamol::core::view::CallRender3D_2* cr = &call; //dynamic_cast<core::view::CallRender3D_2*>(&call);
+	megamol::core::view::CallRender3DGL* cr = &call; //dynamic_cast<core::view::CallRender3DGL*>(&call);
 	if (cr == NULL) return false;
 	
     // obtain camera information
@@ -185,64 +185,59 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
     glDisable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
 
-	auto gpu_render_tasks = task_call->getData();
+	auto const& gpu_render_tasks = task_call->getData();
 
-    // TODO yet another nullptr check for gpu render tasks
+    for (auto const& rt_collection : gpu_render_tasks) {
+            auto const& per_frame_buffers = rt_collection->getPerFrameBuffers();
 
-	auto const& per_frame_buffers = gpu_render_tasks->getPerFrameBuffers();
+            for (auto const& buffer : per_frame_buffers) {
+                std::get<0>(buffer)->bind(std::get<1>(buffer));
+            }
 
-	for (auto const& buffer : per_frame_buffers)
-	{
-        std::get<0>(buffer)->bind(std::get<1>(buffer));
-	}
-	
-	// loop through "registered" render batches
-	for (auto const& render_task : gpu_render_tasks->getRenderTasks())
-	{
-        render_task->shader_program->use();
-		
-		// TODO introduce per frame "global" data buffer to store information like camera matrices?
-        render_task->shader_program->setUniform("view_mx", view_mx);
-        render_task->shader_program->setUniform("proj_mx", proj_mx);
-		
-		render_task->per_draw_data->bind(0);
-		
-		render_task->draw_commands->bind();
-		render_task->mesh->bindVertexArray();
+            // loop through "registered" render batches
+            for (auto const& render_task : rt_collection->getRenderTasks()) {
+                render_task->shader_program->use();
 
-        if (render_task->mesh->getPrimitiveType() == GL_PATCHES) {
-            glPatchParameteri(GL_PATCH_VERTICES, 4);
-            //TODO add generic patch vertex count to render tasks....
-        }
-		
-		glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(),
-			render_task->mesh->getIndexType(),
-			(GLvoid*)0,
-			render_task->draw_cnt,
-			0);
+                // TODO introduce per frame "global" data buffer to store information like camera matrices?
+                render_task->shader_program->setUniform("view_mx", view_mx);
+                render_task->shader_program->setUniform("proj_mx", proj_mx);
 
-		//CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand command_buffer;
-		//command_buffer.cnt = 3;
-		//command_buffer.instance_cnt = 1;
-		//command_buffer.first_idx = 0;
-		//command_buffer.base_vertex = 0;
-		//command_buffer.base_instance = 0;
+                render_task->per_draw_data->bind(0);
 
-		//glowl::DrawElementsCommand command_buffer;
-		//command_buffer.cnt = 3;
-		//command_buffer.instance_cnt = 1;
-		//command_buffer.first_idx = 0;
-		//command_buffer.base_vertex = 0;
-		//command_buffer.base_instance = 0;
-		//
-		//glDrawElementsIndirect(render_batch.mesh->getPrimitiveType(),
-		//	render_batch.mesh->getIndicesType(),
-		//	&command_buffer);
+                render_task->draw_commands->bind();
+                render_task->mesh->bindVertexArray();
 
-		//GLenum err = glGetError();
-		//std::cout << "Error: " << err << std::endl;
-	}
-	
+                if (render_task->mesh->getPrimitiveType() == GL_PATCHES) {
+                    glPatchParameteri(GL_PATCH_VERTICES, 4);
+                    // TODO add generic patch vertex count to render tasks....
+                }
+
+                glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(), render_task->mesh->getIndexType(),
+                    (GLvoid*) 0, render_task->draw_cnt, 0);
+
+                // CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand command_buffer;
+                // command_buffer.cnt = 3;
+                // command_buffer.instance_cnt = 1;
+                // command_buffer.first_idx = 0;
+                // command_buffer.base_vertex = 0;
+                // command_buffer.base_instance = 0;
+
+                // glowl::DrawElementsCommand command_buffer;
+                // command_buffer.cnt = 3;
+                // command_buffer.instance_cnt = 1;
+                // command_buffer.first_idx = 0;
+                // command_buffer.base_vertex = 0;
+                // command_buffer.base_instance = 0;
+                //
+                // glDrawElementsIndirect(render_batch.mesh->getPrimitiveType(),
+                //	render_batch.mesh->getIndicesType(),
+                //	&command_buffer);
+
+                // GLenum err = glGetError();
+                // std::cout << "Error: " << err << std::endl;
+            }
+    }
+
 	// Clear the way for his ancient majesty, the mighty immediate mode...
 	glUseProgram(0);
 	glBindVertexArray(0);

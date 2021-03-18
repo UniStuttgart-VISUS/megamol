@@ -624,7 +624,7 @@ public:
      * Answer the time of this instance in seconds.
      *
      * DO NOT USE THIS FUNCTION in Renderer Modules.
-     * Use 'instTime' parameter in method 'Render' instead.
+     * Use '_instTime' parameter in method 'Render' instead.
      *
      * @return The time of this instance.
      */
@@ -825,6 +825,22 @@ public:
     * Getter for shader paths
     */
     std::vector<std::filesystem::path> GetShaderPaths() const;
+    
+    inline void SetConfigurationPaths_Frontend3000Compatibility (
+        std::string app_dir,
+        std::vector<std::string> shader_dirs,
+        std::vector<std::string> resource_dirs)
+    {
+        this->config.SetApplicationDirectory(app_dir.c_str());
+
+        for (auto& sd : shader_dirs) {
+            this->config.AddShaderDirectory(sd.c_str());
+        }
+
+        for (auto& rd : resource_dirs) {
+            this->config.AddResourceDirectory(rd.c_str());
+        }
+    }
 
 private:
     /**

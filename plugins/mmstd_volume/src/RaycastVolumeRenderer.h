@@ -12,7 +12,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "mmcore/utility/graphics/GLSLShader.h"
 
@@ -29,7 +29,7 @@ namespace megamol {
 namespace stdplugin {
 namespace volume {
 
-class RaycastVolumeRenderer : public megamol::core::view::Renderer3DModule_2 {
+class RaycastVolumeRenderer : public megamol::core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -87,7 +87,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3D_2& call) override;
+    bool GetExtents(core::view::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -96,7 +96,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3D_2& call) override;
+    bool Render(core::view::CallRender3DGL& call) override;
 
     bool updateVolumeData(const unsigned int frameID);
 
@@ -139,19 +139,16 @@ private:
     core::param::ParamSlot m_shininess_slot;
     core::param::ParamSlot m_ambient_color;
     core::param::ParamSlot m_specular_color;
-    core::param::ParamSlot m_light_color;
     core::param::ParamSlot m_material_color;
-
-    core::param::ParamSlot paramOverride;
-    core::param::ParamSlot paramMinOverride;
-    core::param::ParamSlot paramMaxOverride;
 
     /** caller slot */
     megamol::core::CallerSlot m_renderer_callerSlot;
     megamol::core::CallerSlot m_volumetricData_callerSlot;
+    megamol::core::CallerSlot m_lights_callerSlot;
     megamol::core::CallerSlot m_transferFunction_callerSlot;
 
     std::array<float, 2> valRange;
+    bool valRangeNeedsUpdate = false;
 
     /** FBO for chaining renderers */
     vislib::graphics::gl::FramebufferObject fbo;

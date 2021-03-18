@@ -8,6 +8,8 @@
 #include "stdafx.h"
 #include "GrimRenderer.h"
 
+#include "mmcore/view/light/DistantLight.h"
+
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
@@ -45,12 +47,13 @@ GrimRenderer::CellInfo::~CellInfo(void) {
 /****************************************************************************/
 // GrimRenderer
 
-GrimRenderer::GrimRenderer(void) : view::Renderer3DModule_2(),
+GrimRenderer::GrimRenderer(void) : view::Renderer3DModuleGL(),
         sphereShader(), vanillaSphereShader(), initDepthShader(),
         initDepthMapShader(), depthMipShader(), pointShader(),
         initDepthPointShader(), vertCntShader(), vertCntShade2r(), fbo(),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
+        getLightsSlot("lights", "Lights are retrieved over this slot."),
         useCellCullSlot("useCellCull", "Flag to activate per cell culling"),
         useVertCullSlot("useVertCull", "Flag to activate per vertex culling"),
         speakCellPercSlot("speakCellPerc", "Flag to activate output of percentage of culled cells"),
@@ -65,6 +68,9 @@ GrimRenderer::GrimRenderer(void) : view::Renderer3DModule_2(),
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
 
     this->useCellCullSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->useCellCullSlot);
@@ -260,7 +266,7 @@ bool GrimRenderer::create(void) {
 }
 
 
-bool GrimRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
+bool GrimRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) {
 
     auto cr = &call;
     if (cr == NULL) return false;
@@ -310,12 +316,10 @@ void GrimRenderer::set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, gl
 }
 
 
-bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
+bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     auto cr = &call;
     if (cr == NULL) return false;
-
-    cr->DisableOutputBuffer();
 
     ParticleGridDataCall *pgdc = this->getDataSlot.CallAs<ParticleGridDataCall>();
     if (pgdc == NULL) return false;
@@ -389,22 +393,31 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     float half_aperture_angle = cam.half_aperture_angle_radians();
 
     // Lights
-    this->GetLights();
     glm::vec4 curlightDir = {0.0f, 0.0f, 0.0f, 1.0f};
-    if (this->lightMap.size() > 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Only one single 'Distant Light' source is supported by this renderer");
-    }
-    for (auto light : this->lightMap) {
-        if (light.second.lightType != core::view::light::DISTANTLIGHT) {
+
+    auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
+
+        auto lights = call_light->getData();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+        if (distant_lights.size() > 1) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "Only single 'Distant Light' source is supported by this renderer");
-        } else {
-            auto use_eyedir = light.second.dl_eye_direction;
+                "[GrimRenderer] Only one single 'Distant Light' source is supported by this renderer");
+        } else if (distant_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GrimRenderer] No 'Distant Light' found");
+        }
+
+        for (auto const& light : distant_lights) {
+            auto use_eyedir = light.eye_direction;
             if (use_eyedir) {
                 curlightDir = -camView;
             } else {
-                auto lightDir = light.second.dl_direction;
+                auto lightDir = light.direction;
                 if (lightDir.size() == 3) {
                     curlightDir[0] = lightDir[0];
                     curlightDir[1] = lightDir[1];
@@ -424,21 +437,21 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
 
     // update fbo size, if required ///////////////////////////////////////////
-    auto viewport = call.GetViewport();
-    if ((this->fbo.GetWidth() != viewport.Width())
-            || (this->fbo.GetHeight() != viewport.Height())
+    auto viewport = cam.resolution_gate();
+    if ((this->fbo.GetWidth() != viewport.width())
+            || (this->fbo.GetHeight() != viewport.height())
             || this->deferredShadingSlot.IsDirty()) {
         this->deferredShadingSlot.ResetDirty();
 
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "grim-fbo-resize");
         this->fbo.Release();
-        this->fbo.Create(viewport.Width(), viewport.Height(),
+        this->fbo.Create(viewport.width(), viewport.height(),
                 GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, // colour buffer
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
                 GL_DEPTH_COMPONENT24); // depth buffer
 
-        unsigned int dmw = vislib::math::NextPowerOfTwo(viewport.Width());
-        unsigned int dmh = vislib::math::NextPowerOfTwo(viewport.Height());
+        unsigned int dmw = vislib::math::NextPowerOfTwo(viewport.width());
+        unsigned int dmh = vislib::math::NextPowerOfTwo(viewport.height());
         dmh += dmh / 2;
         if ((this->depthmap[0].GetWidth() != dmw) || (this->depthmap[0].GetHeight() != dmh)) {
             for (int i = 0; i < 2; i++) {
@@ -473,7 +486,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
             sap.format = GL_STENCIL_INDEX;
 
             try {
-                if (!this->dsFBO.Create(viewport.Width(), viewport.Height(), 3, cap, dap, sap)) {
+                if (!this->dsFBO.Create(viewport.width(), viewport.height(), 3, cap, dap, sap)) {
                     throw vislib::Exception("dsFBO.Create failed\n", __FILE__, __LINE__);
                 }
             } catch(vislib::Exception ex) {
@@ -703,7 +716,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // init depth disks ///////////////////////////////////////////////////////
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth-disks");
 
-    float viewportStuff[4] = { 0.0f, 0.0f, viewport.Width(), viewport.Height() };
+    float viewportStuff[4] = { 0.0f, 0.0f, viewport.width(), viewport.height() };
     float defaultPointSize = glm::max(viewportStuff[2], viewportStuff[3]);
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
@@ -1305,7 +1318,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         } else {
 
             // REACTIVATE TARGET FBO
-            cr->EnableOutputBuffer();
+            cr->GetFramebufferObject()->Enable();
         }
 
         glEnable(GL_DEPTH_TEST);
@@ -1746,7 +1759,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // deferred shading ///////////////////////////////////////////////////////
     if (deferredShading) {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 8, -1, "grim-deferred-shading");
-        cr->EnableOutputBuffer();
+        cr->GetFramebufferObject()->Enable();
 
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
@@ -1786,7 +1799,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
         up *= sinf(half_aperture_angle);
         right *= sinf(half_aperture_angle)
-            * static_cast<float>(viewport.Width()) / static_cast<float>(viewport.Height());
+            * static_cast<float>(viewport.width()) / static_cast<float>(viewport.height());
 
         this->deferredShader.SetParameterArray3("ray", 1, glm::value_ptr(camView));
 

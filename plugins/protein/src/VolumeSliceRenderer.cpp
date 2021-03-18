@@ -77,7 +77,7 @@ bool VolumeSliceRenderer::create() {
 void VolumeSliceRenderer::release() {
 }
 
-bool VolumeSliceRenderer::GetExtents( view::CallRender2D& call) {
+bool VolumeSliceRenderer::GetExtents( view::CallRender2DGL& call) {
 	// get pointer to VolumeSliceCall
     VolumeSliceCall *volume = this->volDataCallerSlot.CallAs<VolumeSliceCall>();
     if( volume == NULL ) return false;
@@ -90,16 +90,16 @@ bool VolumeSliceRenderer::GetExtents( view::CallRender2D& call) {
     // check axes
     if( vislib::math::IsEqual( lenX, 0.0f) ) {
         // positive x-axis
-        call.SetBoundingBox( 0.0f, 0.0f, volume->getBBoxDimensions().Y(), volume->getBBoxDimensions().Z());
+        call.AccessBoundingBoxes().SetBoundingBox( 0.0f, 0.0f, volume->getBBoxDimensions().Y(), volume->getBBoxDimensions().Z());
     } else if( vislib::math::IsEqual( lenY, 0.0f) ) {
         // positive y-axis
-        call.SetBoundingBox( 0.0f, 0.0f, volume->getBBoxDimensions().X(), volume->getBBoxDimensions().Z());
+        call.AccessBoundingBoxes().SetBoundingBox( 0.0f, 0.0f, volume->getBBoxDimensions().X(), volume->getBBoxDimensions().Z());
     } else if( vislib::math::IsEqual( lenZ, 0.0f) ) {
         // positive z-axis
-        call.SetBoundingBox( 0.0f, 0.0f, volume->getBBoxDimensions().X(), volume->getBBoxDimensions().Y());
+        call.AccessBoundingBoxes().SetBoundingBox( 0.0f, 0.0f, volume->getBBoxDimensions().X(), volume->getBBoxDimensions().Y());
     } else {
         // default
-	    call.SetBoundingBox( 0.0f, 0.0f, 1.0f, 1.0f);
+	    call.AccessBoundingBoxes().SetBoundingBox( 0.0f, 0.0f, 1.0f, 1.0f);
     }
 
 	return true;
@@ -156,7 +156,7 @@ bool VolumeSliceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
 /*
  * VolumeSliceRenderer::Render
  */
-bool VolumeSliceRenderer::Render( view::CallRender2D &call) {
+bool VolumeSliceRenderer::Render( view::CallRender2DGL &call) {
     
 	// get pointer to VolumeSliceCall
     VolumeSliceCall *volume = this->volDataCallerSlot.CallAs<VolumeSliceCall>();

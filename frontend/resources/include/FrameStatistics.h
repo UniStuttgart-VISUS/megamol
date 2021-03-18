@@ -17,6 +17,8 @@ struct FrameStatistics {
     size_t rendered_frames_count = 0;
 
     double last_rendered_frame_time_milliseconds = 0.0;
+    double last_averaged_fps = 0.0;
+    double last_averaged_mspf = 0.0;
 };
 
 } /* end namespace frontend_resources */

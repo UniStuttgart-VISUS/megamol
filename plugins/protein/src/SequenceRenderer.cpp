@@ -104,7 +104,7 @@ bool SequenceRenderer::create() {
 void SequenceRenderer::release() {
 }
 
-bool SequenceRenderer::GetExtents(view::CallRender2D& call) {
+bool SequenceRenderer::GetExtents(view::CallRender2DGL& call) {
     // check molecular data
     MolecularDataCall *mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL ) return false;
@@ -150,7 +150,7 @@ bool SequenceRenderer::GetExtents(view::CallRender2D& call) {
         
     // set the bounding box
     //call.SetBoundingBox( 0.0f, 0.0f, static_cast<float>(this->resCols), static_cast<float>(this->resRows));
-    call.SetBoundingBox( 0.0f, -static_cast<float>(this->resRows) * this->rowHeight, static_cast<float>(this->resCols), 0.0f);
+    call.AccessBoundingBoxes().SetBoundingBox( 0.0f, -static_cast<float>(this->resRows) * this->rowHeight, 0, static_cast<float>(this->resCols), 0.0f, 0);
 
     return true;
 }
@@ -159,7 +159,7 @@ bool SequenceRenderer::GetExtents(view::CallRender2D& call) {
 /*
  * SequenceRenderer::Render
  */
-bool SequenceRenderer::Render(view::CallRender2D &call) {
+bool SequenceRenderer::Render(view::CallRender2DGL &call) {
     // get pointer to MolecularDataCall
     MolecularDataCall *mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL ) return false;
