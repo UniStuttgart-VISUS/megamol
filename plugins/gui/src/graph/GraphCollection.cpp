@@ -542,7 +542,8 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                         auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID(),
                             std::string(caller_slot->Name().PeekBuffer()),
                             std::string(caller_slot->Description().PeekBuffer()),
-                            this->get_compatible_caller_idxs(caller_slot.get()), CallSlotType::CALLER);
+                            this->get_compatible_caller_idxs(caller_slot.get()), CallSlotType::CALLER,
+                            caller_slot->GetNecessity());
                         callslot_ptr->ConnectParentModule(new_module_ptr);
                         new_module_ptr->AddCallSlot(callslot_ptr);
                     }
@@ -553,7 +554,8 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                     auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID(),
                         std::string(callee_slot->Name().PeekBuffer()),
                         std::string(callee_slot->Description().PeekBuffer()),
-                        this->get_compatible_callee_idxs(callee_slot.get()), CallSlotType::CALLEE);
+                        this->get_compatible_callee_idxs(callee_slot.get()), CallSlotType::CALLEE,
+                        callee_slot->GetNecessity());
                     callslot_ptr->ConnectParentModule(new_module_ptr);
                     new_module_ptr->AddCallSlot(callslot_ptr);
                 }

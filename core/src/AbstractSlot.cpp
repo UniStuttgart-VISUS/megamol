@@ -65,7 +65,6 @@ AbstractSlot::AbstractSlot(const vislib::StringA& name, const vislib::StringA& d
     , status(STATUS_UNAVAILABLE)
     , connectedRefCnt(0)
     , listeners()
-    , necessity(Necessity::SLOT_REQUIRED)
 {
     this->setName(name);
 }
