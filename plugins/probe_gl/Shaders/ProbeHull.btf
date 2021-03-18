@@ -5,7 +5,7 @@
     <shader name="vertex">
         <snippet type="version">450</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="Main"             type="file">hull/dfr_hull_vertex.glsl</snippet>
+        <snippet name="Main"             type="file">hull/dfr_hull_patch_vertex.glsl</snippet>
     </shader>
 
     <shader name="fragment">
