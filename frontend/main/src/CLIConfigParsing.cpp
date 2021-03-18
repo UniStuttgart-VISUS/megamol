@@ -154,14 +154,35 @@ static void logfile_handler(std::string const& option_name, cxxopts::ParseResult
     config.log_file = parsed_options[option_name].as<std::string>();
 };
 
+static const std::string accepted_log_level_strings = "('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')";
+static unsigned int parse_log_level(std::string const& value) {
+    if (value.front()=='-')
+        exit("log level value must be positive. seems to be negative: " + value);
+
+    unsigned int value_as_uint = 0;
+
+    try {
+        if (std::string(value).find_first_of("0123456789") != std::string::npos) {
+            value_as_uint = std::stoi(value);
+        } else {
+            value_as_uint = megamol::core::utility::log::Log::ParseLevelAttribute(value);
+        }
+    }
+    catch (...) {
+        exit("Could not parse valid log level string or positive integer from argument \"" + value + "\"");
+    }
+
+    return value_as_uint;
+}
+
 static void loglevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.log_level = parsed_options[option_name].as<unsigned int>();
+    config.log_level = parse_log_level(parsed_options[option_name].as<std::string>());
 };
 
 static void echolevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.echo_level = parsed_options[option_name].as<unsigned int>();
+    config.echo_level = parse_log_level(parsed_options[option_name].as<std::string>());
 };
 
 static void project_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -255,8 +276,8 @@ std::vector<OptionsListEntry> cli_options_list =
         , {resourcedir_option,   "Add resource directory(ies)",                                                     cxxopts::value<std::vector<std::string>>(), resourcedir_handler}
         , {shaderdir_option,     "Add shader directory(ies)",                                                       cxxopts::value<std::vector<std::string>>(), shaderdir_handler}
         , {logfile_option,       "Set log file",                                                                    cxxopts::value<std::string>(),              logfile_handler}
-        , {loglevel_option,      "Set logging level",                                                               cxxopts::value<unsigned int>(),             loglevel_handler}
-        , {echolevel_option,     "Set echo level",                                                                  cxxopts::value<unsigned int>(),             echolevel_handler}
+        , {loglevel_option,      "Set logging level, accepted values: "+accepted_log_level_strings,                 cxxopts::value<std::string>(),              loglevel_handler}
+        , {echolevel_option,     "Set echo level, accepted values see above",                                       cxxopts::value<std::string>(),              echolevel_handler}
         , {project_option,       "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
         , {global_option,        "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
@@ -372,33 +393,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         };
     };
 
-    // helper to make options that parse a log level
-    auto make_log_level_callback = [&](std::string const& optname) {
-        return [optname, &cli_options_from_configs](std::string value) -> VoidResult {
-
-            sane(value);
-
-            if (value.front()=='-')
-                return Error {"log level value string seems to be negative"};
-
-            unsigned int value_as_uint = 0;
-
-            try {
-                if (std::string(value).find_first_of("0123456789") != std::string::npos) {
-                    value_as_uint = std::stoi(value);
-                } else {
-                    value_as_uint = megamol::core::utility::log::Log::ParseLevelAttribute(value);
-                }
-            }
-            catch (...) {
-                return Error{"Could not parse valid log level string or positive integer from argument \"" + value + "\""};
-            }
-
-            add_cli(optname, std::to_string(value_as_uint));
-            return VoidResult{};
-        };
-    };
-
     std::vector<std::string> all_options_separate;
     for (auto& opt : cli_options_list) {
         // split "h,help"
@@ -494,13 +488,13 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
 
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetLogLevel",
-        "(string level)\n\tSets the level of log events to include. Level values: ('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')",
-        { make_log_level_callback(loglevel_option) });
+        "(string level)\n\tSets the level of log events to include. Accepted values: "+accepted_log_level_strings,
+        { make_option_callback(loglevel_option) });
 
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetEchoLevel",
-        "(string level)\n\tSets the level of log events to output to the console. Level values: ('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')",
-        { make_log_level_callback(echolevel_option) });
+        "(string level)\n\tSets the level of log events to output to the console. Accepted values: "+accepted_log_level_strings,
+        { make_option_callback(echolevel_option) });
 
     lua.AddCallbacks(lua_config_callbacks);
 
