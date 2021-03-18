@@ -84,7 +84,9 @@ private:
     std::vector<std::string> m_requestedResourcesNames;
     megamol::frontend_resources::GUIResource m_providedResource;
 
-    std::string resource_request_gui_state(void);
+    std::string resource_request_gui_state(bool as_lua);
+    bool resource_request_gui_visibility(void);
+    float resource_request_gui_scale(void);
     void resource_provide_gui_state(const std::string& json_state);
     void resource_provide_gui_visibility(bool show);
     void resource_provide_gui_scale(float scale);

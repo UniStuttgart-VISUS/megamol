@@ -309,9 +309,17 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
             gui_resource.provide_gui_state(json);
             return VoidResult{};
         }});
+    callbacks.add<StringResult>(
+        "mmGetGUIState",
+        "()\n\tReturns the GUI state as json string.",
+        {[&]() -> StringResult {
+            auto& gui_resource =  m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
+            auto s = gui_resource.request_gui_state(false);
+            return StringResult{s};
+        }});
 
     callbacks.add<VoidResult, bool>(
-        "mmShowGUI",
+        "mmSetGUIVisible",
         "(bool state)\n\tShow (true) or hide (false) the GUI.",
         {[&](bool show) -> VoidResult
         {
@@ -319,15 +327,33 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
             gui_resource.provide_gui_visibility(show);
             return VoidResult{};
         }});
+    callbacks.add<StringResult>(
+        "mmGetGUIVisible",
+        "()\n\tReturns whether the GUI is visible (true/false).",
+        {[&]() -> StringResult
+        {
+            auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
+            const auto visible = gui_resource.request_gui_visibility();
+            return StringResult{visible ? "true" : "false"};
+        }});
 
     callbacks.add<VoidResult, float>(
-        "mmScaleGUI",
+        "mmSetGUIScale",
         "(float scale)\n\tSet GUI scaling factor.",
         {[&](float scale) -> VoidResult
         {
             auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
             gui_resource.provide_gui_scale(scale);
             return VoidResult{};
+        }});
+    callbacks.add<StringResult>(
+        "mmGetGUIScale",
+        "()\n\tReturns the GUI scaling as float.",
+        {[&]() -> StringResult
+        {
+            auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
+            const auto scale = gui_resource.request_gui_scale();
+            return StringResult{std::to_string(scale)};
         }});
 
     callbacks.add<VoidResult>(

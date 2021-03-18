@@ -118,8 +118,22 @@ namespace gui {
         /**
          * Pass current GUI state.
          */
-        std::string GetState(void) {
-            return this->project_to_lua_string();
+        std::string GetState(bool as_lua) {
+            return this->project_to_lua_string(as_lua);
+        }
+
+        /**
+         * Pass current GUI visibility.
+         */
+        bool GetVisibility(void) {
+            return this->state.gui_visible;
+        }
+
+        /**
+         * Pass current GUI scale.
+         */
+        float GetScale() {
+            return gui_scaling.Get();
         }
 
         /**
@@ -342,7 +356,7 @@ namespace gui {
         bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
         void triggerCoreInstanceShutdown(void);
 
-        std::string project_to_lua_string(void);
+        std::string project_to_lua_string(bool as_lua);
         bool state_from_string(const std::string& state);
         bool state_to_string(std::string& out_state);
 

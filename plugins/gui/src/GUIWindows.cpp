@@ -81,11 +81,11 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
                 "[GUI] There is no current OpenGL rendering context available from the calling thread.");
             prerequisities_given = false;
         }
-#else // Linux
-      /// XXX The following throws segfault if OpenGL is not loaded yet:
-      // Display* gl_current_display = ::glXGetCurrentDisplay();
-      // GLXContext ogl_current_context = ::glXGetCurrentContext();
-      /// XXX Is there a better way to check existing OpenGL context?
+#else  // Linux
+       /// XXX The following throws segfault if OpenGL is not loaded yet:
+       // Display* gl_current_display = ::glXGetCurrentDisplay();
+       // GLXContext ogl_current_context = ::glXGetCurrentContext();
+       /// XXX Is there a better way to check existing OpenGL context?
         if (glXGetCurrentDisplay == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_ERROR, "[GUI] There is no OpenGL rendering context available.");
@@ -2021,7 +2021,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 
             std::string gui_state;
             if (save_gui_state.IsTrue()) {
-                gui_state = this->project_to_lua_string();
+                gui_state = this->project_to_lua_string(true);
             }
 
             popup_failed |=
@@ -2260,18 +2260,24 @@ void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 }
 
 
-std::string megamol::gui::GUIWindows::project_to_lua_string(void) {
+std::string megamol::gui::GUIWindows::project_to_lua_string(bool as_lua) {
 
     std::string gui_state;
     if (this->state_to_string(gui_state)) {
-        std::string state = std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
-                            ((this->state.gui_visible) ? ("true") : ("false")) +
-                            std::string(GUI_END_TAG_SET_GUI_VISIBILITY) + "\n";
+        std::string state = "";
 
-        state += std::string(GUI_START_TAG_SET_GUI_SCALE) + std::to_string(megamol::gui::gui_scaling.Get()) +
-                 std::string(GUI_END_TAG_SET_GUI_SCALE) + "\n";
+        if (as_lua) {
+            state += std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
+                     ((this->state.gui_visible) ? ("true") : ("false")) + std::string(GUI_END_TAG_SET_GUI_VISIBILITY) +
+                     "\n";
 
-        state += std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
+            state += std::string(GUI_START_TAG_SET_GUI_SCALE) + std::to_string(megamol::gui::gui_scaling.Get()) +
+                     std::string(GUI_END_TAG_SET_GUI_SCALE) + "\n";
+            state +=
+                std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
+        } else {
+            state += gui_state;
+        }
 
         return state;
     }
