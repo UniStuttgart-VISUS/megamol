@@ -1,7 +1,7 @@
 #version 430
 
-#include "RaycastVolumeRenderer-Compute-Input.h"
-#include "RaycastVolumeRenderer-Compute-Output.h"
-#include "RaycastVolumeRenderer-Compute-Functions.h"
-#include "RaycastVolumeRenderer-Compute-Aggr.h"
-#include "RaycastVolumeRenderer-Compute.h"
+#include "RaycastVolumeRenderer-Compute-Input.inc.glsl"
+#include "RaycastVolumeRenderer-Compute-Output.inc.glsl"
+#include "RaycastVolumeRenderer-Compute-Functions.inc.glsl"
+#include "RaycastVolumeRenderer-Compute-Aggr.inc.glsl"
+#include "RaycastVolumeRenderer-Compute.inc.glsl"
