@@ -11,97 +11,15 @@
 
 #include "mmcore/utility/ShaderFactory.h"
 
+#include "glowl/GLSLProgram.hpp"
+
 namespace megamol::core::utility::graphics {
 
-class GLSLShader {
+class GLSLShader : public glowl::GLSLProgram {
 public:
-    struct glsl_uniform {
-        GLint location;
-        GLsizei count;
-        GLenum type;
-    };
-    using glsl_uniform_t = glsl_uniform;
-
-    GLSLShader() : _program(0) {}
-
     template<typename... Paths>
     GLSLShader(megamol::shaderfactory::compiler_options const& options, Paths... paths)
-            : _program(megamol::core::utility::make_program(options, std::forward<Paths>(paths)...)) {
-        // https://github.com/fendevel/Guide-to-Modern-OpenGL-Functions
-        GLint uniform_count = 0;
-        glGetProgramiv(_program, GL_ACTIVE_UNIFORMS, &uniform_count);
-
-        if (uniform_count != 0) {
-            GLint max_name_len = 0;
-            glGetProgramiv(_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_name_len);
-
-            auto name = std::make_unique<char[]>(max_name_len);
-
-            GLsizei length = 0;
-            GLsizei count = 0;
-            GLenum type = GL_NONE;
-
-            for (GLint idx = 0; idx < uniform_count; ++idx) {
-                glGetActiveUniform(_program, idx, max_name_len, &length, &count, &type, name.get());
-
-                _uniform_map.emplace(std::make_pair(std::string(name.get(), length),
-                    glsl_uniform_t{glGetUniformLocation(_program, name.get()), count, type}));
-            }
-        }
-    }
-
-    GLSLShader(GLSLShader const& rhs) = delete;
-
-    GLSLShader& operator=(GLSLShader const& rhs) = delete;
-
-    GLSLShader(GLSLShader&& rhs) noexcept : _program(std::move(rhs._program)), _uniform_map(std::move(rhs._uniform_map)) {}
-
-    GLSLShader& operator=(GLSLShader&& rhs) noexcept {
-        if (this != std::addressof(rhs)) {
-            std::swap(_program, rhs._program);
-            std::swap(_uniform_map, rhs._uniform_map);
-        }
-        return *this;
-    }
-
-    GLint get_uniform_location(std::string const& name) {
-        GLint res = -1;
-        try {
-            res = _uniform_map.at(name).location;
-        } catch (std::out_of_range const& e) {
-            // empty
-        }
-        return res;
-    }
-
-    GLsizei get_uniform_size(std::string const& name) {
-        return _uniform_map.at(name).count;
-    }
-
-    GLenum get_uniform_type(std::string const& name) {
-        return _uniform_map.at(name).type;
-    }
-
-    void enable() const {
-        glUseProgram(_program);
-    }
-
-    void disable() const {
-        glUseProgram(0);
-    }
-
-    ~GLSLShader() {
-        glDeleteProgram(_program);
-    }
-
-    operator GLuint() {
-        return _program;
-    }
-
-private:
-    GLuint _program;
-
-    std::unordered_map<std::string, glsl_uniform_t> _uniform_map;
+            : glowl::GLSLProgram(megamol::core::utility::make_program(options, std::forward<Paths>(paths)...)) {}
 };
 
 } // namespace megamol::core::utility::graphics

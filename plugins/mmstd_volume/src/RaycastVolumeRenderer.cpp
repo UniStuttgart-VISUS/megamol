@@ -17,10 +17,6 @@
 
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "glowl/Texture.hpp"
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture3D.hpp"
-
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -28,6 +24,10 @@
 #include <limits>
 #include <memory>
 #include <vector>
+#include "glowl/GLSLProgram.hpp"
+#include "glowl/Texture.hpp"
+#include "glowl/Texture2D.hpp"
+#include "glowl/Texture3D.hpp"
 
 #include "mmcore/view/light/DistantLight.h"
 
@@ -118,17 +118,17 @@ bool RaycastVolumeRenderer::create() {
         // create shader program
         auto const shdr_cp_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
 
-        rvc_dvr_shdr = core::utility::graphics::GLSLShader(
+        rvc_dvr_shdr = std::make_unique<core::utility::graphics::GLSLShader>(
             shdr_cp_options, std::filesystem::path("RaycastVolumeRenderer-Compute.comp.glsl"));
-        rvc_iso_shdr = core::utility::graphics::GLSLShader(
+        rvc_iso_shdr = std::make_unique<core::utility::graphics::GLSLShader>(
             shdr_cp_options, std::filesystem::path("RaycastVolumeRenderer-Compute-Iso.comp.glsl"));
-        rvc_aggr_shdr = core::utility::graphics::GLSLShader(
+        rvc_aggr_shdr = std::make_unique<core::utility::graphics::GLSLShader>(
             shdr_cp_options, std::filesystem::path("RaycastVolumeRenderer-Compute-Aggr.comp.glsl"));
 
-        rtf_shdr = core::utility::graphics::GLSLShader(shdr_cp_options,
+        rtf_shdr = std::make_unique<core::utility::graphics::GLSLShader>(shdr_cp_options,
             std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
             std::filesystem::path("RaycastVolumeRenderer-Fragment.frag.glsl"));
-        rtf_aggr_shdr = core::utility::graphics::GLSLShader(shdr_cp_options,
+        rtf_aggr_shdr = std::make_unique<core::utility::graphics::GLSLShader>(shdr_cp_options,
             std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
             std::filesystem::path("RaycastVolumeRenderer-Fragment-Aggr.frag.glsl"));
     } catch (...) {
@@ -266,13 +266,13 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
         if (!updateTransferFunction())
             return false;
 
-        compute_shdr = &rvc_dvr_shdr;
+        compute_shdr = rvc_dvr_shdr.get();
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-        compute_shdr = &rvc_iso_shdr;
+        compute_shdr = rvc_iso_shdr.get();
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
         if (!updateTransferFunction())
             return false;
-        compute_shdr = &rvc_aggr_shdr;
+        compute_shdr = rvc_aggr_shdr.get();
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unknown raycast mode.");
         return false;
@@ -311,17 +311,15 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     }
 
     // setup
-    compute_shdr->enable();
+    compute_shdr->use();
 
-    glUniformMatrix4fv(
-        compute_shdr->get_uniform_location("view_mx"), 1, GL_FALSE, glm::value_ptr(static_cast<glm::mat4>(viewTemp)));
-    glUniformMatrix4fv(
-        compute_shdr->get_uniform_location("proj_mx"), 1, GL_FALSE, glm::value_ptr(static_cast<glm::mat4>(projTemp)));
+    compute_shdr->setUniform("view_mx", viewTemp);
+    compute_shdr->setUniform("proj_mx", projTemp);
 
     glm::vec2 rt_resolution;
     rt_resolution[0] = static_cast<float>(m_render_target->getWidth());
     rt_resolution[1] = static_cast<float>(m_render_target->getHeight());
-    glUniform2fv(compute_shdr->get_uniform_location("rt_resolution"), 1, glm::value_ptr(rt_resolution));
+    compute_shdr->setUniform("rt_resolution", rt_resolution);
 
     glm::vec3 box_min;
     box_min[0] = m_volume_origin[0];
@@ -331,38 +329,42 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     box_max[0] = m_volume_origin[0] + m_volume_extents[0];
     box_max[1] = m_volume_origin[1] + m_volume_extents[1];
     box_max[2] = m_volume_origin[2] + m_volume_extents[2];
-    glUniform3fv(compute_shdr->get_uniform_location("boxMin"), 1, glm::value_ptr(box_min));
-    glUniform3fv(compute_shdr->get_uniform_location("boxMax"), 1, glm::value_ptr(box_max));
+    compute_shdr->setUniform("boxMin", box_min);
+    compute_shdr->setUniform("boxMax", box_max);
 
-    glUniform3f(compute_shdr->get_uniform_location("halfVoxelSize"), 1.0f / (2.0f * (m_volume_resolution[0] - 1)),
+    compute_shdr->setUniform("halfVoxelSize", 1.0f / (2.0f * (m_volume_resolution[0] - 1)),
         1.0f / (2.0f * (m_volume_resolution[1] - 1)), 1.0f / (2.0f * (m_volume_resolution[2] - 1)));
     auto const maxResolution =
         std::max(m_volume_resolution[0], std::max(m_volume_resolution[1], m_volume_resolution[2]));
     auto const maxExtents = std::max(m_volume_extents[0], std::max(m_volume_extents[1], m_volume_extents[2]));
-    glUniform1f(compute_shdr->get_uniform_location("voxelSize"), maxExtents / (maxResolution - 1.0f));
+    compute_shdr->setUniform("voxelSize", maxExtents / (maxResolution - 1.0f));
 
-    glUniform2fv(compute_shdr->get_uniform_location("valRange"), 1, valRange.data());
+    compute_shdr->setUniform("valRange", valRange[0], valRange[1]);
 
-    glUniform1f(compute_shdr->get_uniform_location("rayStepRatio"),
-        this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
+    compute_shdr->setUniform("rayStepRatio", this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
 
-    glUniform1i(compute_shdr->get_uniform_location("use_lighting"),
-        this->m_use_lighting_slot.Param<core::param::BoolParam>()->Value());
-    glUniform1f(compute_shdr->get_uniform_location("ka"), this->m_ka_slot.Param<core::param::FloatParam>()->Value());
-    glUniform1f(compute_shdr->get_uniform_location("kd"), this->m_kd_slot.Param<core::param::FloatParam>()->Value());
-    glUniform1f(compute_shdr->get_uniform_location("ks"), this->m_ks_slot.Param<core::param::FloatParam>()->Value());
-    glUniform1f(compute_shdr->get_uniform_location("shininess"),
-        this->m_shininess_slot.Param<core::param::FloatParam>()->Value());
-    glUniform3fv(compute_shdr->get_uniform_location("light"), 1, curlight.direction.data());
-    glUniform3fv(compute_shdr->get_uniform_location("ambient_col"), 1,
-        this->m_ambient_color.Param<core::param::ColorParam>()->Value().data());
-    glUniform3fv(compute_shdr->get_uniform_location("specular_col"), 1,
-        this->m_specular_color.Param<core::param::ColorParam>()->Value().data());
-    glUniform3fv(compute_shdr->get_uniform_location("light_col"), 1, curlight.colour.data());
-    glUniform3fv(compute_shdr->get_uniform_location("material_col"), 1,
-        this->m_material_color.Param<core::param::ColorParam>()->Value().data());
+    compute_shdr->setUniform("use_lighting", this->m_use_lighting_slot.Param<core::param::BoolParam>()->Value());
+    compute_shdr->setUniform("ka", this->m_ka_slot.Param<core::param::FloatParam>()->Value());
+    compute_shdr->setUniform("kd", this->m_kd_slot.Param<core::param::FloatParam>()->Value());
+    compute_shdr->setUniform("ks", this->m_ks_slot.Param<core::param::FloatParam>()->Value());
+    compute_shdr->setUniform("shininess", this->m_shininess_slot.Param<core::param::FloatParam>()->Value());
+    compute_shdr->setUniform("light", curlight.direction[0], curlight.direction[1], curlight.direction[2]);
+    compute_shdr->setUniform("ambient_col", this->m_ambient_color.Param<core::param::ColorParam>()->Value()[0],
+        this->m_ambient_color.Param<core::param::ColorParam>()->Value()[1],
+        this->m_ambient_color.Param<core::param::ColorParam>()->Value()[2],
+        this->m_ambient_color.Param<core::param::ColorParam>()->Value()[3]);
+    compute_shdr->setUniform("specular_col", this->m_specular_color.Param<core::param::ColorParam>()->Value()[0],
+        this->m_specular_color.Param<core::param::ColorParam>()->Value()[1],
+        this->m_specular_color.Param<core::param::ColorParam>()->Value()[2],
+        this->m_specular_color.Param<core::param::ColorParam>()->Value()[3]);
+    compute_shdr->setUniform(
+        "light_col", curlight.colour[0], curlight.colour[1], curlight.colour[2], curlight.colour[3]);
+    compute_shdr->setUniform("material_col", this->m_material_color.Param<core::param::ColorParam>()->Value()[0],
+        this->m_material_color.Param<core::param::ColorParam>()->Value()[1],
+        this->m_material_color.Param<core::param::ColorParam>()->Value()[2],
+        this->m_material_color.Param<core::param::ColorParam>()->Value()[3]);
 
-    auto const arv = std::dynamic_pointer_cast<core::view::AbstractView const>(cr.PeekCallerSlot()->Parent());
+    /*    auto const arv = std::dynamic_pointer_cast<core::view::AbstractView const>(cr.PeekCallerSlot()->Parent());
     std::array<float, 4> bkgndCol = {1.0f, 1.0f, 1.0f, 1.0f};
     if (arv != nullptr) {
         auto const ptr = arv->BkgndColour();
@@ -370,18 +372,16 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
         bkgndCol[1] = ptr[1];
         bkgndCol[2] = ptr[2];
         bkgndCol[3] = 1.0f;
-    }
-    glUniform3fv(compute_shdr->get_uniform_location("background"), 1, bkgndCol.data());
+    }*/
+    compute_shdr->setUniform("background", cr.BackgroundColor());
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
-        glUniform1f(compute_shdr->get_uniform_location("opacityThreshold"),
-            this->m_opacity_threshold.Param<core::param::FloatParam>()->Value());
+        compute_shdr->setUniform(
+            "opacityThreshold", this->m_opacity_threshold.Param<core::param::FloatParam>()->Value());
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-        glUniform1f(compute_shdr->get_uniform_location("isoValue"),
-            this->m_iso_value.Param<core::param::FloatParam>()->Value());
+        compute_shdr->setUniform("isoValue", this->m_iso_value.Param<core::param::FloatParam>()->Value());
 
-        glUniform1f(
-            compute_shdr->get_uniform_location("opacity"), this->m_opacity.Param<core::param::FloatParam>()->Value());
+        compute_shdr->setUniform("opacity", this->m_opacity.Param<core::param::FloatParam>()->Value());
     }
 
     this->m_opacity_threshold.Parameter()->SetGUIVisible(this->m_mode.Param<core::param::EnumParam>()->Value() == 0);
@@ -391,26 +391,26 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     // bind volume texture
     glActiveTexture(GL_TEXTURE0);
     m_volume_texture->bindTexture();
-    glUniform1i(compute_shdr->get_uniform_location("volume_tx3D"), 0);
+    compute_shdr->setUniform("volume_tx3D", 0);
 
     // bind the transfer function
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_1D, tf_texture);
-        glUniform1i(compute_shdr->get_uniform_location("tf_tx1D"), 1);
+        compute_shdr->setUniform("tf_tx1D", 1);
 
         if (ci != nullptr) {
             glActiveTexture(GL_TEXTURE2);
             this->fbo.BindColourTexture();
-            glUniform1i(compute_shdr->get_uniform_location("color_tx2D"), 2);
+            compute_shdr->setUniform("color_tx2D", 2);
 
             glActiveTexture(GL_TEXTURE3);
             this->fbo.BindDepthTexture();
-            glUniform1i(compute_shdr->get_uniform_location("depth_tx2D"), 3);
+            compute_shdr->setUniform("depth_tx2D", 3);
 
-            glUniform1i(compute_shdr->get_uniform_location("use_depth_tx"), 1);
+            compute_shdr->setUniform("use_depth_tx", 1);
         } else {
-            glUniform1i(compute_shdr->get_uniform_location("use_depth_tx"), 0);
+            compute_shdr->setUniform("use_depth_tx", 0);
         }
     }
 
@@ -418,15 +418,15 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
         if (ci != nullptr) {
             glActiveTexture(GL_TEXTURE2);
             this->fbo.BindColourTexture();
-            glUniform1i(compute_shdr->get_uniform_location("color_tx2D"), 2);
+            compute_shdr->setUniform("color_tx2D", 2);
 
             glActiveTexture(GL_TEXTURE3);
             this->fbo.BindDepthTexture();
-            glUniform1i(compute_shdr->get_uniform_location("depth_tx2D"), 3);
+            compute_shdr->setUniform("depth_tx2D", 3);
 
-            glUniform1i(compute_shdr->get_uniform_location("use_depth_tx"), 1);
+            compute_shdr->setUniform("use_depth_tx", 1);
         } else {
-            glUniform1i(compute_shdr->get_uniform_location("use_depth_tx"), 0);
+            compute_shdr->setUniform("use_depth_tx", 0);
         }
     }
 
@@ -463,7 +463,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, 0);
 
-    compute_shdr->disable();
+    // compute_shdr->disable();
 
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
@@ -514,25 +514,25 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
         glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    auto fbo_shdr = &rtf_shdr;
+    auto fbo_shdr = rtf_shdr.get();
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-        fbo_shdr = &rtf_aggr_shdr;
+        fbo_shdr = rtf_aggr_shdr.get();
     }
 
-    fbo_shdr->enable();
+    fbo_shdr->use();
 
     glActiveTexture(GL_TEXTURE0);
     m_render_target->bindTexture();
-    glUniform1i(fbo_shdr->get_uniform_location("src_tx2D"), 0);
+    fbo_shdr->setUniform("src_tx2D", 0);
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         glActiveTexture(GL_TEXTURE1);
         m_normal_target->bindTexture();
-        glUniform1i(fbo_shdr->get_uniform_location("normal_tx2D"), 1);
+        fbo_shdr->setUniform("normal_tx2D", 1);
 
         glActiveTexture(GL_TEXTURE2);
         m_depth_target->bindTexture();
-        glUniform1i(fbo_shdr->get_uniform_location("depth_tx2D"), 2);
+        fbo_shdr->setUniform("depth_tx2D", 2);
 
         GLenum buffers[] = {GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT};
         glDrawBuffers(2, buffers);
@@ -541,9 +541,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_1D, tf_texture);
-        glUniform1i(fbo_shdr->get_uniform_location("tf_tx1D"), 1);
+        fbo_shdr->setUniform("tf_tx1D", 1);
 
-        glUniform2f(fbo_shdr->get_uniform_location("valRange"), rndr_min, rndr_max);
+        fbo_shdr->setUniform("valRange", rndr_min, rndr_max);
     }
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -561,7 +561,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    fbo_shdr->disable();
+    // fbo_shdr->disable();
 
     glBlendFuncSeparate(state_blend_src_rgb, state_blend_dst_rgb, state_blend_src_alpha, state_blend_dst_alpha);
     if (!state_blend)

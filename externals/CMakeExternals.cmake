@@ -60,8 +60,8 @@ function(require_external NAME)
     endif()
 
     add_external_headeronly_project(glowl
-      GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "v0.4e"
+      GIT_REPOSITORY https://github.com/gralkapk/glowl.git
+      GIT_TAG "b015b536f59c471691079dac8aeea146e7b4a627"
       INCLUDE_DIR "include")
 
   # json
