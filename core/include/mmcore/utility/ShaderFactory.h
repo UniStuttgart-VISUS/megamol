@@ -59,7 +59,7 @@ GLuint make_shader(
     std::filesystem::path const& shader_source_path, megamol::shaderfactory::compiler_options const& options);
 
 
-template <typename... Paths>
+template<typename... Paths>
 std::enable_if_t<(std::is_convertible_v<std::filesystem::path, Paths> && ...), GLuint> make_program(
     megamol::shaderfactory::compiler_options const& options, Paths... paths) {
     constexpr std::size_t size = sizeof...(paths);
@@ -98,8 +98,8 @@ glowl::GLSLProgram::ShaderSourceList::value_type make_glowl_shader_source(
 
 
 template<typename... Paths>
-std::enable_if_t<(std::is_convertible_v<std::filesystem::path, Paths> && ...), glowl::GLSLProgram::ShaderSourceList> make_glowl_shader_source_list(
-    megamol::shaderfactory::compiler_options const& options, Paths... paths) {
+std::enable_if_t<(std::is_convertible_v<std::filesystem::path, Paths> && ...), glowl::GLSLProgram::ShaderSourceList>
+make_glowl_shader_source_list(megamol::shaderfactory::compiler_options const& options, Paths... paths) {
     return {make_glowl_shader_source(paths, options)...};
 }
 

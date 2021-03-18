@@ -19,7 +19,8 @@ class GLSLShader : public glowl::GLSLProgram {
 public:
     template<typename... Paths>
     GLSLShader(megamol::shaderfactory::compiler_options const& options, Paths... paths)
-            : glowl::GLSLProgram(megamol::core::utility::make_glowl_shader_source_list(options, std::forward<Paths>(paths)...)) {}
+            : glowl::GLSLProgram(
+                  megamol::core::utility::make_glowl_shader_source_list(options, std::forward<Paths>(paths)...)) {}
 };
 
 } // namespace megamol::core::utility::graphics
