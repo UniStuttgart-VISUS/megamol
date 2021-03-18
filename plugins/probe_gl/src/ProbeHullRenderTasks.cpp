@@ -178,12 +178,25 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
                     m_show_hull = !m_show_hull;
 
                     if (m_show_hull) {
-                        auto const& shader = m_material_collection->getMaterial("ProbeHull").shader_program;
+                        //TODO get rid of code copy-pasting...
+                        auto patch_shader = m_material_collection->getMaterial("ProbeHull").shader_program;
+                        auto tri_shader = m_material_collection->getMaterial("ProbeTriangleHull").shader_program;
+
                         for (int i = 0; i < m_batch_meshes.size(); ++i) {
-                            m_rendertask_collection.first->addRenderTasks(
-                                m_identifiers, shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
-                            m_rendertask_collection.second.insert(
-                                m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
+
+                            if (m_batch_meshes[i]->getPrimitiveType() == GL_TRIANGLES) {
+                                m_rendertask_collection.first->addRenderTasks(m_identifiers, tri_shader,
+                                    m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
+                                m_rendertask_collection.second.insert(
+                                    m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
+                            } else if (m_batch_meshes[i]->getPrimitiveType() == GL_PATCHES) {
+                                m_rendertask_collection.first->addRenderTasks(m_identifiers, patch_shader,
+                                    m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
+                                m_rendertask_collection.second.insert(
+                                    m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
+                            } else {
+                                // TODO print warning
+                            }
                         }
                     } else {
                         for (auto& identifier : m_rendertask_collection.second) {
