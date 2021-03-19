@@ -471,7 +471,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 ImU32 slot_border_color = COLOR_SLOT_BORDER;
                 ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
                 if (this->necessity == megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED) {
-                    slot_border_color = ImGui::ColorConvertFloat4ToU32(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+                    slot_border_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_REQUIRED);
                 }
                 if (this->gui_compatible) {
                     tmpcol = GUI_COLOR_SLOT_COMPATIBLE;

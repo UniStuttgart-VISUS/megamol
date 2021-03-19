@@ -99,11 +99,15 @@
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.1f, 0.0f, 1.0f))
 #define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.0f, 1.0f))
+
 #define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.75f, 0.0f, 0.25f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.25f, 1.0f))
+
 #define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 0.75f, 1.0f, 1.0f))
 #define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
-#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.5f, 0.9f, 0.0f, 1.0f))
+#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.5f, 0.9f, 0.25f, 1.0f))
+#define GUI_COLOR_SLOT_REQUIRED (ImVec4(0.9f, 0.75f, 0.1f, 1.0f))
+
 #define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.5f, 0.25f, 1.0f))
 #define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
