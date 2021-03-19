@@ -97,6 +97,9 @@ static std::string guishow_option       = "guishow";
 static std::string guiscale_option      = "guiscale";
 static std::string privacynote_option   = "privacynote";
 static std::string param_option         = "param";
+static std::string remote_head_option   = "headnode";
+static std::string remote_render_option = "rendernode";
+static std::string remote_mpi_option    = "mpi";
 static std::string help_option          = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -127,6 +130,21 @@ static void guiscale_handler(std::string const& option_name, cxxopts::ParseResul
 static void privacynote_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.screenshot_show_privacy_note = parsed_options[option_name].as<bool>();
+};
+
+static void remote_head_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_headnode = parsed_options[option_name].as<bool>();
+};
+
+static void remote_render_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_rendernode = parsed_options[option_name].as<bool>();
+};
+
+static void remote_mpirender_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_mpirendernode = parsed_options[option_name].as<bool>();
 };
 
 static void config_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -365,6 +383,9 @@ std::vector<OptionsListEntry> cli_options_list =
         , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
         , {privacynote_option,   "Show privacy note when taking screenshot, use '=false' to disable",               cxxopts::value<bool>(),                     privacynote_handler}
         , {param_option,         "Set MegaMol Graph parameter to value: --param param=value",                       cxxopts::value<std::vector<std::string>>(), param_handler}
+        , {remote_head_option,   "Start HeadNode server and run Remote_Service test ",               cxxopts::value<bool>(),                     remote_head_handler}
+        , {remote_render_option, "Start RenderNode client and run Remote_Service test ",             cxxopts::value<bool>(),                     remote_render_handler}
+        , {remote_mpi_option,    "Start MPI RenderNode client and run Remote_Service test ",         cxxopts::value<bool>(),                     remote_mpirender_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 
