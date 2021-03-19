@@ -74,6 +74,26 @@ bool ContextToGL::Render(CallRender3DGL& call) {
         _framebuffer = std::make_shared<CPUFramebuffer>();
     }
     cr->SetFramebuffer(_framebuffer);
+    cr->SetInputEvent(call.GetInputEvent());
+
+    auto const& ie = cr->GetInputEvent();
+    switch (ie.tag) {
+    case InputEvent::Tag::Char: {
+        (*cr)(view::CallRender3D::FnOnChar);
+    } break;
+    case InputEvent::Tag::Key: {
+        (*cr)(view::CallRender3D::FnOnKey);
+    } break;
+    case InputEvent::Tag::MouseButton: {
+        (*cr)(view::CallRender3D::FnOnMouseButton);
+    } break;
+    case InputEvent::Tag::MouseMove: {
+        (*cr)(view::CallRender3D::FnOnMouseMove);
+    } break;
+    case InputEvent::Tag::MouseScroll: {
+        (*cr)(view::CallRender3D::FnOnMouseScroll);
+    } break;
+    }
 
     (*cr)(view::CallRender3D::FnRender);
 
@@ -149,5 +169,4 @@ bool ContextToGL::Render(CallRender3DGL& call) {
     }
     return true;
 }
-
 } // namespace megamol::core::view

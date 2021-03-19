@@ -36,7 +36,7 @@
 #include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
 #include "mmcore/FlagCall.h"
-#include "mmcore/FlagCall_GL.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/EventCall.h"
 #include "mmcore/view/CallRender3D.h"
 
@@ -77,6 +77,8 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<FlagCall>();
     instance.RegisterAutoDescription<FlagCallRead_GL>();
     instance.RegisterAutoDescription<FlagCallWrite_GL>();
+    instance.RegisterAutoDescription<FlagCallRead_CPU>();
+    instance.RegisterAutoDescription<FlagCallWrite_CPU>();
     instance.RegisterAutoDescription<CallEvent>();
     instance.RegisterAutoDescription<view::CallRender3D>();
 }
