@@ -90,6 +90,9 @@ static std::string guiscale_option      = "guiscale";
 static std::string entryfbos_option     = "entryfbos";
 static std::string framebuffer_option   = "framebuffer";
 static std::string viewport_tile_option = "tile";
+static std::string remote_head_option   = "headnode";
+static std::string remote_render_option = "rendernode";
+static std::string remote_mpi_option    = "mpi";
 static std::string help_option          = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -120,6 +123,21 @@ static void guiscale_handler(std::string const& option_name, cxxopts::ParseResul
 static void entryfbos_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.gui_show_entryfbos = parsed_options[option_name].as<bool>();
+};
+
+static void remote_head_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_headnode = parsed_options[option_name].as<bool>();
+};
+
+static void remote_render_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_rendernode = parsed_options[option_name].as<bool>();
+};
+
+static void remote_mpirender_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_mpirendernode = parsed_options[option_name].as<bool>();
 };
 
 static void config_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -339,6 +357,9 @@ std::vector<OptionsListEntry> cli_options_list =
                                  "where x,y is the lower left start pixel of the local tile, "
                                  "LWIDTHxLHEIGHT is the local framebuffer resolution, "
                                  "GWIDTHxGHEIGHT is the global framebuffer resolution",                             cxxopts::value<std::string>(),              viewport_tile_handler}
+        , {remote_head_option,   "[Experimental] Start HeadNode server and run Remote_Service test ",               cxxopts::value<bool>(),                     remote_head_handler}
+        , {remote_render_option, "[Experimental] Start RenderNode client and run Remote_Service test ",             cxxopts::value<bool>(),                     remote_render_handler}
+        , {remote_mpi_option,    "[Experimental] Start MPI RenderNode client and run Remote_Service test ",         cxxopts::value<bool>(),                     remote_mpirender_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 

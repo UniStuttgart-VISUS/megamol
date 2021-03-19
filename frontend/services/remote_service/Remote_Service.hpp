@@ -91,6 +91,8 @@ private:
     Config m_config;
 };
 
+std::string handle_remote_session_config(megamol::frontend_resources::RuntimeConfig const& config, Remote_Service::Config& remote_config);
+
 } // namespace frontend
 } // namespace megamol
 

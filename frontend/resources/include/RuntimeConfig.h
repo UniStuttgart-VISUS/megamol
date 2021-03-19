@@ -69,6 +69,10 @@ struct RuntimeConfig {
             UintPair/*local framebuffer resolution*/,
             UintPair/*global framebuffer resolution*/>> viewport_tile = std::nullopt;
 
+    bool remote_headnode = false;
+    bool remote_rendernode = false;
+    bool remote_mpirendernode = false;
+
     std::string as_string() const {
         auto summarize = [](std::vector<std::string> const& vec) -> std::string {
             std::string result;

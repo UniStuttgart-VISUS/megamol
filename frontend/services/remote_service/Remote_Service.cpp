@@ -35,6 +35,33 @@ static void log_warning(std::string const& text) {
 namespace megamol {
 namespace frontend {
 
+std::string handle_remote_session_config(
+    megamol::frontend_resources::RuntimeConfig const& config,
+    Remote_Service::Config& remote_config)
+{
+    std::string role_name;
+
+    if (config.remote_headnode) {
+        remote_config.role = megamol::frontend::Remote_Service::Role::HeadNode;
+        role_name = " (Head Node)";
+    }
+    if (config.remote_rendernode) {
+        remote_config.role = megamol::frontend::Remote_Service::Role::RenderNode;
+        role_name = " (Render Node)";
+    }
+    if (config.remote_mpirendernode) {
+        #ifdef WITH_MPI
+            remote_config.role = megamol::frontend::Remote_Service::Role::MPIRenderNode;
+            role_name = " (MPI Render Node)";
+        #else
+            log_error(" MegaMol was compiled without MPI. Can not start in MPI mode. Shut down.");
+            std::exit(1);
+        #endif // WITH_MPI
+    }
+
+    return role_name;
+}
+
 
 struct Remote_Service::PimplData {
     HeadNode head;
