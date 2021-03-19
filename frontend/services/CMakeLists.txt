@@ -11,6 +11,7 @@ if(BUILD_FRONTEND_SERVICES)
   
   require_external(glad)
 
+
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   #set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
@@ -29,6 +30,7 @@ if(BUILD_FRONTEND_SERVICES)
     "framestatistics_service/*.hpp"
     "project_loader/*.hpp"
     "image_presentation/*.hpp"
+    "remote_service/*.hpp"
 #   "service_template/*.hpp"
     )
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -41,6 +43,7 @@ if(BUILD_FRONTEND_SERVICES)
     "framestatistics_service/*.cpp"
     "project_loader/*.cpp"
     "image_presentation/*.cpp"
+    "remote_service/*.cpp"
 #   "service_template/*.cpp"
     )
 
@@ -61,6 +64,7 @@ if(BUILD_FRONTEND_SERVICES)
     "framestatistics_service"
     "project_loader"
     "image_presentation"
+    "remote_service"
 #   "service_template"
     )
 
@@ -75,6 +79,10 @@ if(BUILD_FRONTEND_SERVICES)
     find_package(CUDAToolkit)
     target_compile_definitions(${PROJECT_NAME} PUBLIC MM_CUDA_ENABLED)
     target_link_libraries(${PROJECT_NAME} PRIVATE CUDA::cuda_driver)
+  endif()
+
+  if(MPI_C_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
   
   #if(WIN32)
