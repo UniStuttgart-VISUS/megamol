@@ -114,6 +114,14 @@ bool megamol::remote::ZMQCommFabric::Disconnect() {
     // if (this->socket_.connected()) {
     if (!this->address_.empty()) {
         if (bound_) {
+            if (this->address_.find('*') != std::string::npos) {
+                // wildcard in the address is not valid for socket unbind
+                // get last endpoint manually and unbind from that
+                char port[1024];
+                size_t size = sizeof(port);
+                this->socket_.getsockopt(ZMQ_LAST_ENDPOINT, &port, &size);
+                this->address_ = std::string{port, size};
+            }
             this->socket_.unbind(this->address_);
         } else {
             this->socket_.disconnect(this->address_);
