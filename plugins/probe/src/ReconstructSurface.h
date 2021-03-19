@@ -128,6 +128,7 @@ protected:
     core::param::ParamSlot _meshOutputSlot;
     core::param::ParamSlot _shellSplitsAxis;
     core::param::ParamSlot _shellSplitsAngle;
+    core::param::ParamSlot _useBBoxAsHull;
 
 private:
     bool InterfaceIsDirty();
@@ -144,6 +145,7 @@ private:
     void cut();
     void remove_self_intersections(Surface_mesh& mesh);
     void do_smoothing(Surface_mesh& mesh);
+    void generateBox();
 
     void compute();
     bool processRawData(adios::CallADIOSData* call, bool& something_changed);

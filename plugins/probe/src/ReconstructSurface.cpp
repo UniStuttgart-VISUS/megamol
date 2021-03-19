@@ -9,6 +9,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/BoundingBoxes_2.h"
@@ -71,14 +72,19 @@ namespace probe {
             , _xyzSlot("xyz", "")
             , _formatSlot("format", "")
             , _isoValue("HullGeneration::isoValue", "")
-            , _showShellSlot("Shells::showShell", "")
+            , _showShellSlot("showShell/Element", "")
             , _numShellsSlot("Shells::numShells", "")
             , _meshOutputSlot("meshOutput", "")
             , _meshToDiscCall("deployADIOS","")
             , _meshFromDiscCall("getMeshElements", "")
             , _shellSplitsAxis("Elements::splitsAxis", "")
             , _shellSplitsAngle("Elements::slitsAngle","")
+            , _useBBoxAsHull("useBBoxAsHull", "")
     {
+
+        this->_useBBoxAsHull << new core::param::BoolParam(false);
+        this->_useBBoxAsHull.SetUpdateCallback(&ReconstructSurface::parameterChanged);
+        this->MakeSlotAvailable(&this->_useBBoxAsHull);
 
         this->_numSlices << new core::param::IntParam(64);
         this->_numSlices.SetUpdateCallback(&ReconstructSurface::parameterChanged);
@@ -549,7 +555,7 @@ namespace probe {
                 //}
 
 
-                float plane_push_amount = _bbox.BoundingBox().GetSize()[main_direction] * 0.01f;
+                float plane_push_amount = _bbox.BoundingBox().GetSize()[main_direction] * 0.2f; //0.01f;
                 float dist_to_plane = 0;
                 glm::vec3 point_on_plane;
                 if (direction[main_direction] < 0.0f) {
@@ -635,7 +641,9 @@ namespace probe {
                     gradient += (distances[l + 1] - distances[l]);
                 }
                 gradient /= ((zero_element -1) - max_k);
+                assert(gradient != 0.0f);
                 auto predicted_k = -(distances[max_k]) / gradient;
+                assert(std::isfinite(predicted_k));
 
 
                 // if (n == 0) {
@@ -1290,6 +1298,55 @@ namespace probe {
         mesh.collect_garbage();
     }
 
+    void ReconstructSurface::generateBox() {
+
+        typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+        typedef K::Point_3 Point_3;
+        typedef CGAL::Delaunay_triangulation_3<K> Delaunay;
+        typedef Delaunay::Vertex_handle Vertex_handle;
+        typedef CGAL::Surface_mesh<Point_3> Surface_mesh;
+
+        Surface_mesh cube;
+
+        Point lbf = Point(_bbox.BoundingBox().Left(), _bbox.BoundingBox().Bottom(), _bbox.BoundingBox().Front());
+        Point rtb = Point(_bbox.BoundingBox().Right(), _bbox.BoundingBox().Top(), _bbox.BoundingBox().Back());
+
+        std::list<Point_3> points_for_triangulation;
+        points_for_triangulation.push_back(Point(lbf[0], lbf[1], lbf[2]));
+        points_for_triangulation.push_back(Point(rtb[0], lbf[1], lbf[2]));
+        points_for_triangulation.push_back(Point(lbf[0], lbf[1], rtb[2]));
+        points_for_triangulation.push_back(Point(lbf[0], rtb[1], lbf[2]));
+        points_for_triangulation.push_back(Point(rtb[0], lbf[1], rtb[2]));
+        points_for_triangulation.push_back(Point(lbf[0], rtb[1], rtb[2]));
+        points_for_triangulation.push_back(Point(rtb[0], rtb[1], lbf[2]));
+        points_for_triangulation.push_back(Point(rtb[0], rtb[1], rtb[2]));
+
+
+        Delaunay T(points_for_triangulation.begin(), points_for_triangulation.end());
+        _sm.clear();
+        CGAL::convex_hull_3_to_face_graph(T, _sm);
+
+        // Surface_mesh cube;
+        // CGAL::make_hexahedron(p0,p1,p2,p3,p4,p5,p6,p7,cube);
+        // CGAL::Polygon_mesh_processing::triangulate_faces(cube);
+
+        //_sm.clear();
+        //_sm = cube;
+        // CGAL::Polygon_mesh_processing::isotropic_remeshing(cube.faces(), (*min_d/10.0f), cube);
+        // bool is_cube_triangle_mesh = CGAL::is_triangle_mesh(cube);
+        // bool cube_does_self_intersect = CGAL::Polygon_mesh_processing::does_self_intersect(cube);
+        // if (cube_does_self_intersect) {
+        //    std::vector<std::pair<face_descriptor, face_descriptor>> intersected_tris;
+        //    PMP::self_intersections(cube, std::back_inserter(intersected_tris));
+        //    for (std::pair<face_descriptor, face_descriptor>& p : intersected_tris) {
+        //        CGAL::Euler::remove_face(cube.halfedge(get<0>(p)), cube);
+        //    }
+        //}
+
+        // bool is_triangle_mesh = CGAL::is_triangle_mesh(_shells[i]);
+        // bool does_self_intersect = CGAL::Polygon_mesh_processing::does_self_intersect(_shells[i]);
+    }
+
     void ReconstructSurface::compute() {
         // find main axis
         std::map<int, int> axes;
@@ -1317,12 +1374,15 @@ namespace probe {
         }
         _data_origin = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(), center_z};
 
-
-        this->generateEllipsoid_3();
-        this->sliceData();
-        this->tighten();
-        this->do_remeshing(_sm);
-        this->do_smoothing(_sm);
+        if (_useBBoxAsHull.Param<core::param::BoolParam>()->Value()) {
+            this->generateBox();
+        } else {
+            this->generateEllipsoid_3();
+            this->sliceData();
+            this->tighten();
+            this->do_remeshing(_sm);
+            this->do_smoothing(_sm);
+        }
 
         this->generateNormals(_sm);
         this->onionize();
