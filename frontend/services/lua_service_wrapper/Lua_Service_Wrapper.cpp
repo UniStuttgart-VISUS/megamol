@@ -631,6 +631,15 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             return StringResult{answer.str().c_str()};
         }});
 
+    callbacks.add<VoidResult>(
+        "mmClearGraph",
+        "()\n\tClear the MegaMol Graph from all Modules and Calls",
+        {[&]() -> VoidResult
+        {
+            graph.Clear();
+            return VoidResult{};
+        }});
+
     callbacks.add<StringResult>(
         "mmListCalls",
         "()\n\tReturn a list of instantiated calls.",
