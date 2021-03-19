@@ -18,12 +18,14 @@ using namespace megamol::gui;
 
 
 megamol::gui::CallSlot::CallSlot(ImGuiID uid, const std::string& name, const std::string& description,
-    const std::vector<size_t>& compatible_call_idxs, CallSlotType type)
+    const std::vector<size_t>& compatible_call_idxs, CallSlotType type,
+    megamol::core::AbstractCallSlotPresentation::Necessity necessity)
         : uid(uid)
         , name(name)
         , description(description)
         , compatible_call_idxs(compatible_call_idxs)
         , type(type)
+        , necessity(necessity)
         , parent_module(nullptr)
         , connected_calls()
         , gui_interfaceslot_ptr(nullptr)
@@ -332,6 +334,10 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
             std::string button_label = "callslot_" + std::to_string(this->uid);
 
             ImGui::PushID(this->uid);
+            std::string slot_label = this->name;
+            if (this->necessity == megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED) {
+                slot_label.append(" [REQUIRED]");
+            }
 
             if (phase == megamol::gui::PresentPhase::INTERACTION) {
 
@@ -395,7 +401,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
 
                 // Hover Tooltip
                 if ((state.interact.callslot_hovered_uid == this->uid) && !state.interact.callslot_show_label) {
-                    this->gui_tooltip.ToolTip(this->name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
+                    this->gui_tooltip.ToolTip(slot_label, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                 } else {
                     this->gui_tooltip.Reset();
                 }
@@ -460,9 +466,13 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
+
                 // Draw Slot
                 ImU32 slot_border_color = COLOR_SLOT_BORDER;
                 ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
+                if (this->necessity == megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED) {
+                    slot_border_color = ImGui::ColorConvertFloat4ToU32(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+                }
                 if (this->gui_compatible) {
                     tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
                     tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);

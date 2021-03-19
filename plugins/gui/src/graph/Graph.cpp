@@ -164,8 +164,8 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
 
                 for (auto& callslots_type : mod.callslots) {
                     for (auto& c : callslots_type.second) {
-                        auto callslot_ptr = std::make_shared<CallSlot>(
-                            megamol::gui::GenerateUniqueID(), c.name, c.description, c.compatible_call_idxs, c.type);
+                        auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID(), c.name,
+                            c.description, c.compatible_call_idxs, c.type, c.necessity);
                         callslot_ptr->ConnectParentModule(mod_ptr);
                         mod_ptr->AddCallSlot(callslot_ptr);
                     }
