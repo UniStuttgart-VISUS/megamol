@@ -1937,41 +1937,6 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
 
     ImGui::Separator();
 
-    // GRAPH LAYOUT
-    if (ImGui::Button("Layout Graph")) {
-        this->gui_graph_layout = 1;
-    }
-    ImGui::Separator();
-
-    if (ImGui::BeginMenu("Labels")) {
-        // MODULES
-        if (ImGui::BeginMenu("Modules")) {
-            if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.module_show_label)) {
-                this->gui_update = true;
-            }
-            if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.callslot_show_label)) {
-                this->gui_update = true;
-            }
-            ImGui::EndMenu();
-        }
-        // CALLS
-        if (ImGui::BeginMenu("Calls")) {
-            if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.call_show_label)) {
-                this->gui_update = true;
-            }
-            if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.call_show_slots_label)) {
-                this->gui_update = true;
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::EndMenu();
-    }
-    ImGui::Separator();
-
-    // GRID
-    ImGui::Checkbox("Grid", &this->gui_show_grid);
-
-    ImGui::Separator();
 
     // Choose single selected view module
     ModulePtr_t selected_mod_ptr;
@@ -2045,6 +2010,43 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
         }
         ImGui::PopItemWidth();
     }
+
+    ImGui::Separator();
+
+    // GRAPH LAYOUT
+    if (ImGui::Button("Layout Graph")) {
+        this->gui_graph_layout = 1;
+    }
+    ImGui::Separator();
+
+    if (ImGui::BeginMenu("Labels")) {
+        // MODULES
+        if (ImGui::BeginMenu("Modules")) {
+            if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.module_show_label)) {
+                this->gui_update = true;
+            }
+            if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.callslot_show_label)) {
+                this->gui_update = true;
+            }
+            ImGui::EndMenu();
+        }
+        // CALLS
+        if (ImGui::BeginMenu("Calls")) {
+            if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.call_show_label)) {
+                this->gui_update = true;
+            }
+            if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.call_show_slots_label)) {
+                this->gui_update = true;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenu();
+    }
+    ImGui::Separator();
+
+    // GRID
+    ImGui::Checkbox("Grid", &this->gui_show_grid);
+
     ImGui::Separator();
 
     // SCROLLING
