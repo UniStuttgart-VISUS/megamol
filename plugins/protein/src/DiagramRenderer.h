@@ -138,7 +138,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender2D& call);
+        virtual bool GetExtents(megamol::core::view::CallRender2DGL& call);
 
         VISLIB_FORCEINLINE bool isCategoricalMappable(const protein_calls::DiagramCall::DiagramMappable *dm) const {
             return (dm->IsCategoricalAbscissa(0));
@@ -162,7 +162,7 @@ namespace protein {
         * @param call The calling call.
         * @return The return value of the function.
         */
-        virtual bool Render(megamol::core::view::CallRender2D& call);
+        virtual bool Render(megamol::core::view::CallRender2DGL& call);
 
         /**********************************************************************
          * variables

@@ -13,7 +13,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "inttypes.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCall_GL.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
@@ -34,7 +34,7 @@ using namespace megamol::stdplugin::moldyn::rendering;
 //const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
 
 GlyphRenderer::GlyphRenderer(void)
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , getDataSlot("getData", "The slot to fetch the data")
     , getTFSlot("getTF", "the slot for the transfer function")
     , getClipPlaneSlot("getClipPlane", "the slot for the clip plane")
@@ -150,7 +150,7 @@ bool GlyphRenderer::makeShader(
     return true;
 }
 
-bool GlyphRenderer::GetExtents(core::view::CallRender3D_2& call) {
+bool GlyphRenderer::GetExtents(core::view::CallRender3DGL& call) {
 
     auto* epdc = this->getDataSlot.CallAs<core::moldyn::EllipsoidalParticleDataCall>();
     if ((epdc != NULL) && ((*epdc)(1))) {
@@ -283,7 +283,7 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
     return true;
 }
 
-bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
+bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
     auto* epdc = this->getDataSlot.CallAs<core::moldyn::EllipsoidalParticleDataCall>();
     if (epdc == nullptr) return false;
 
@@ -339,12 +339,13 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    auto viewport = call.GetViewport();
+    int w = call.GetFramebufferObject()->GetWidth();
+    int h = call.GetFramebufferObject()->GetHeight();
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(viewport.Width());
-    viewportStuff[3] = static_cast<float>(viewport.Height());
+    viewportStuff[2] = static_cast<float>(w);
+    viewportStuff[3] = static_cast<float>(h);
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];

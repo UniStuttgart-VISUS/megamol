@@ -9,6 +9,33 @@
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
 
+/**
+ * USED HOTKEYS:
+ *
+ * ----- GUIWindows -----
+ * - Trigger Screenshot:        F2
+ * - Toggle Graph Entry:        F3
+ * - Show/hide Windows:         F7-F11
+ * - Show/hide Menu:            F12
+ * - Show/hide GUI:             Ctrl  + g
+ * - Search Parameter:          Ctrl  + p
+ * - Save Running Project:      Ctrl  + s
+ * - Quit Program:              Alt   + F4
+
+ * ----- Configurator -----
+ * - Search Module:             Ctrl + Shift + m
+ * - Search Parameter:          Ctrl + Shift + p
+ * - Save Edited Project:       Ctrl + Shift + s
+ *
+ * ----- Graph -----
+ * - Delete Graph Item:         Delete
+ * - Selection, Drag & Drop:    Left Mouse Button
+ * - Context Menu:              Right Mouse Button
+ * - Zooming:                   Mouse Wheel
+ * - Scrolling:                 Middle Mouse Button
+ *
+ **/
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui.h"
@@ -62,19 +89,23 @@
 /// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
 /// megamol::core::param::AbstractParamPresentation.h
 
-#define GUI_PROJECT_GUI_STATE_START_TAG ("-- <GUI_STATE_JSON>")
-#define GUI_PROJECT_GUI_STATE_END_TAG ("</GUI_STATE_JSON>")
+#define GUI_START_TAG_SET_GUI_STATE ("mmSetGUIState([=[")
+#define GUI_END_TAG_SET_GUI_STATE ("]=])")
+#define GUI_START_TAG_SET_GUI_VISIBILITY ("mmShowGUI(")
+#define GUI_END_TAG_SET_GUI_VISIBILITY (")")
+#define GUI_START_TAG_SET_GUI_SCALE ("mmScaleGUI(")
+#define GUI_END_TAG_SET_GUI_SCALE (")")
 
 // Global Colors
-#define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
+#define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.1f, 0.0f, 1.0f))
 #define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.0f, 1.0f))
-#define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.3f, 1.0f))
-#define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.45f, 1.0f))
-#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 0.5f, 1.0f, 1.0f))
-#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.5f, 0.0f, 1.0f, 1.0f))
-#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.4f, 0.8f, 0.0f, 1.0f))
-#define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.4f, 0.3f, 1.0f))
-#define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.8f, 0.6f, 1.0f))
+#define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.75f, 0.0f, 0.25f, 1.0f))
+#define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.25f, 1.0f))
+#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 0.75f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.5f, 0.9f, 0.0f, 1.0f))
+#define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.5f, 0.25f, 1.0f))
+#define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
 
 namespace {
@@ -126,7 +157,7 @@ namespace gui {
             return this->scale;
         }
 
-        float TransitonFactor(void) const {
+        float TransitionFactor(void) const {
             return (this->scale / this->last_scale);
         }
 
@@ -143,7 +174,7 @@ namespace gui {
 
         void Set(float s) {
             this->last_scale = this->scale;
-            this->scale = std::max(1.0f, s);
+            this->scale = std::max(0.0f, s);
             if (this->scale != this->last_scale) {
                 this->pending_change = true;
             }
@@ -206,11 +237,12 @@ namespace gui {
 
     /* Data type holding information of graph canvas. */
     typedef struct _canvas_ {
-        ImVec2 position;  // in
-        ImVec2 size;      // in
-        ImVec2 scrolling; // in
-        float zooming;    // in
-        ImVec2 offset;    // in
+        ImVec2 position;      // in
+        ImVec2 size;          // in
+        ImVec2 scrolling;     // in
+        float zooming;        // in
+        ImVec2 offset;        // in
+        ImFont* gui_font_ptr; // in
     } GraphCanvas_t;
 
     enum GraphCoreInterface {
@@ -221,6 +253,7 @@ namespace gui {
 
     /* Data type holding information on graph item interaction. */
     typedef struct _interact_state_ {
+
         ImGuiID button_active_uid;  // in out
         ImGuiID button_hovered_uid; // in out
         bool process_deletion;      // out
@@ -229,17 +262,20 @@ namespace gui {
         ImGuiID group_hovered_uid;  // in out
         bool group_layout;          // out
 
-        UIDVector_t modules_selected_uids;             // in out
-        ImGuiID module_hovered_uid;                    // in out
-        UIDPairVector_t modules_add_group_uids;        // out
-        UIDVector_t modules_remove_group_uids;         // out
-        bool modules_layout;                           // out
-        StrPairVector_t module_rename;                 // out
-        vislib::math::Ternary module_mainview_changed; // out
-        ImVec2 module_param_child_position;            // out
+        UIDVector_t modules_selected_uids;               // in out
+        ImGuiID module_hovered_uid;                      // in out
+        UIDPairVector_t modules_add_group_uids;          // out
+        UIDVector_t modules_remove_group_uids;           // out
+        bool modules_layout;                             // out
+        StrPairVector_t module_rename;                   // out
+        vislib::math::Ternary module_graphentry_changed; // out
+        ImVec2 module_param_child_position;              // out
+        bool module_show_label;                          // in
 
-        ImGuiID call_selected_uid; // in out
-        ImGuiID call_hovered_uid;  // in out
+        ImGuiID call_selected_uid;  // in out
+        ImGuiID call_hovered_uid;   // in out
+        bool call_show_label;       // in
+        bool call_show_slots_label; // in
 
         ImGuiID slot_dropped_uid; // in out
 
@@ -248,10 +284,13 @@ namespace gui {
         UIDPair_t callslot_add_group_uid;    // in out
         UIDPair_t callslot_remove_group_uid; // in out
         CallSlotPtr_t callslot_compat_ptr;   // in
+        bool callslot_show_label;            // in
 
         ImGuiID interfaceslot_selected_uid;          // in out
         ImGuiID interfaceslot_hovered_uid;           // in out
         InterfaceSlotPtr_t interfaceslot_compat_ptr; // in
+
+        bool parameters_extended_mode; // in
 
         GraphCoreInterface graph_core_interface; // in
 
@@ -286,14 +325,15 @@ namespace gui {
      */
     class GUIUtils {
     public:
-        /** Extract gui state enclosed in predefined tags. */
-        static std::string ExtractGUIState(std::string& str) {
+        /** Extract string enclosed in predefined tags. */
+        static std::string ExtractTaggedString(
+            const std::string& str, const std::string& start_tag, const std::string& end_tag) {
             std::string return_str;
-            auto start_idx = str.find(GUI_PROJECT_GUI_STATE_START_TAG);
+            auto start_idx = str.find(start_tag);
             if (start_idx != std::string::npos) {
-                auto end_idx = str.find(GUI_PROJECT_GUI_STATE_END_TAG);
+                auto end_idx = str.find(end_tag, start_idx);
                 if ((end_idx != std::string::npos) && (start_idx < end_idx)) {
-                    start_idx += std::string(GUI_PROJECT_GUI_STATE_START_TAG).length();
+                    start_idx += std::string(start_tag).length();
                     return_str = str.substr(start_idx, (end_idx - start_idx));
                 }
             }

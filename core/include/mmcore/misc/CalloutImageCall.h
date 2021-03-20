@@ -1,7 +1,7 @@
 /*
 * CalloutImageCall.h
 *
-* Copyright (C) 2014 by Florian Frieﬂ
+* Copyright (C) 2014 by Florian Frie√ü
 * Copyright (C) 2008-2014 by VISUS (Universitaet Stuttgart)
 * Alle Rechte vorbehalten.
 */

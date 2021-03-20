@@ -15,7 +15,7 @@ using namespace megamol::core::moldyn;
 using namespace megamol::stdplugin::moldyn::rendering;
 
 
-ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2()
+ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModuleGL()
     , getDataSlot("getdata", "Connects to the data source")
     , getTFSlot("gettransferfunction", "Connects to the transfer function module")
     , getFlagsSlot("getflags", "connects to a FlagStorage")
@@ -109,7 +109,7 @@ bool ArrowRenderer::create(void) {
 }
 
 
-bool ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
+bool ArrowRenderer::GetExtents(view::CallRender3DGL& call) {
 
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if ((c2 != nullptr) && ((*c2)(1))) {
@@ -132,7 +132,7 @@ void ArrowRenderer::release(void) {
 }
 
 
-bool ArrowRenderer::Render(view::CallRender3D_2& call) {
+bool ArrowRenderer::Render(view::CallRender3DGL& call) {
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if (c2 != nullptr) {
@@ -189,12 +189,12 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     glm::mat4 MVPtransp = glm::transpose(MVP);
 
     // Viewport
-    auto viewport = call.GetViewport();
+    auto viewport = cam.resolution_gate();
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(viewport.Width());
-    viewportStuff[3] = static_cast<float>(viewport.Height());
+    viewportStuff[2] = static_cast<float>(viewport.width());
+    viewportStuff[3] = static_cast<float>(viewport.height());
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];

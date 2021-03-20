@@ -9,9 +9,11 @@
 #define MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
 
 
-#include "FileUtils.h"
 #include "GUIUtils.h"
+#include "HoverToolTip.h"
 #include "StringSearchWidget.h"
+
+#include "mmcore/utility/FileUtils.h"
 
 
 namespace megamol {
@@ -41,12 +43,12 @@ namespace gui {
          * @return True on success, false otherwise.
          */
         bool PopUp(std::string& inout_filename, FileBrowserFlag flag, const std::string& label, bool open_popup,
-            const std::string& extension, const std::string& check_option_label, bool& inout_check_option);
+            const std::string& extension, vislib::math::Ternary& inout_save_gui_state);
 
         bool PopUp(std::string& inout_filename, FileBrowserFlag flag, const std::string& label, bool open_popup,
             const std::string& extension) {
-            bool check_option = false;
-            return this->PopUp(inout_filename, flag, label, open_popup, extension, "", check_option);
+            vislib::math::Ternary tmp_save_gui_state(vislib::math::Ternary::TRI_UNKNOWN);
+            return this->PopUp(inout_filename, flag, label, open_popup, extension, tmp_save_gui_state);
         }
 
         /**
@@ -74,8 +76,9 @@ namespace gui {
         std::string file_warning;
         // Keeps child path and flag whether child is director or not
         std::vector<ChildData_t> child_paths;
-        size_t additional_lines;
-        bool check_option;
+        vislib::math::Ternary save_gui_state;
+
+        HoverToolTip tooltip;
 
         // FUNCTIONS --------------------------------------------------------------
 

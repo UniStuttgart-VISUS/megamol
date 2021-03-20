@@ -38,9 +38,9 @@ vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> getModelViewProject
     return projMatrix * modelViewMatrix;
 }
 
-inline std::string to_string(float x) {
+inline std::string to_string(float x, int precision = 2) {
     std::stringstream stream;
-    stream << std::fixed << std::setprecision(2) << x;
+    stream << std::fixed << std::setprecision(precision) << x;
     return stream.str();
 }
 
@@ -105,6 +105,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , axisTicksRedundantParam("axisTicksRedundant", "Enable redundant (inner) ticks")
         , axisTickLengthParam("axisTickLength", "Line length for the ticks")
         , axisTickSizeParam("axisTickSize", "Sets the fontsize for the ticks")
+        , axisTickPrecisionX("axisTickPrecisionX", "Sets the float precision for the x ticks")
+        , axisTickPrecisionY("axisTickPrecisionY", "Sets the float precision for the y ticks")
         , drawOuterLabelsParam("drawOuterLabels", "Draw labels outside of the matrix")
         , drawDiagonalLabelsParam("drawDiagonalLabels", "Draw labels at matrix diagonal")
         , cellInvertYParam("cellInvertY", "Draw diagonal top left to bottom right")
@@ -218,6 +220,12 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
     this->axisTickSizeParam << new core::param::FloatParam(0.5f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->axisTickSizeParam);
+
+    this->axisTickPrecisionX << new core::param::IntParam(2, 0);
+    this->MakeSlotAvailable(&this->axisTickPrecisionX);
+
+    this->axisTickPrecisionY << new core::param::IntParam(2, 0);
+    this->MakeSlotAvailable(&this->axisTickPrecisionY);
 
     this->drawOuterLabelsParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->drawOuterLabelsParam);
@@ -352,7 +360,7 @@ bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
     return false;
 }
 
-bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
+bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2DGL& call) {
     try {
         if (!this->validate(call, false))
             return false;
@@ -410,9 +418,9 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     return true;
 }
 
-bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
+bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
     this->validate(call, true);
-    call.SetBoundingBox(this->bounds);
+    call.AccessBoundingBoxes() = this->bounds;
     return true;
 }
 
@@ -444,7 +452,7 @@ void ScatterplotMatrixRenderer2D::resetDirtyScreen() {
     }
 }
 
-bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool ignoreMVP) {
+bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2DGL& call, bool ignoreMVP) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
@@ -540,7 +548,8 @@ void ScatterplotMatrixRenderer2D::updateColumns() {
         }
     }
 
-    this->bounds.Set(0, 0, columnCount * (size + margin) - margin, columnCount * (size + margin) - margin);
+    this->bounds.SetBoundingBox(
+        0, 0, 0, columnCount * (size + margin) - margin, columnCount * (size + margin) - margin, 0);
 
     this->plotSSBO.SetData(plots.data(), sizeof(PlotInfo), sizeof(PlotInfo), plots.size());
 }
@@ -558,6 +567,8 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
     const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
     const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
     const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
+    const int tickPrecisionX = this->axisTickPrecisionX.Param<core::param::IntParam>()->Value();
+    const int tickPrecisionY = this->axisTickPrecisionY.Param<core::param::IntParam>()->Value();
     const bool drawOuter = this->drawOuterLabelsParam.Param<core::param::BoolParam>()->Value();
     const bool drawDiagonal = this->drawDiagonalLabelsParam.Param<core::param::BoolParam>()->Value();
     const bool invertY = this->cellInvertYParam.Param<core::param::BoolParam>()->Value();
@@ -642,29 +653,30 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
             const float px = lerp(offsetX, offsetX + size, t);
             const float py = lerp(offsetY, offsetY + size, t);
             const float pValue = lerp(columnInfos[i].MinimumValue(), columnInfos[i].MaximumValue(), t);
-            const std::string pLabel = to_string(pValue);
+            const std::string pLabelX = to_string(pValue, tickPrecisionX);
+            const std::string pLabelY = to_string(pValue, tickPrecisionY);
             if (drawOuter && i < columnCount - 1) {
                 if (invertY) {
-                    this->axisFont.DrawString(axisColor.data(), px, -tickLength, tickSize, false, pLabel.c_str(),
+                    this->axisFont.DrawString(axisColor.data(), px, -tickLength, tickSize, false, pLabelX.c_str(),
                         core::utility::AbstractFont::ALIGN_CENTER_TOP);
                 } else {
                     this->axisFont.DrawString(axisColor.data(), px, totalSize + tickLength, tickSize, false,
-                        pLabel.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
+                        pLabelX.c_str(), core::utility::AbstractFont::ALIGN_CENTER_BOTTOM);
                 }
             }
             if (drawDiagonal && i < columnCount - 1) {
-                this->axisFont.DrawString(axisColor.data(), px, horizontalY, tickSize, false, pLabel.c_str(),
+                this->axisFont.DrawString(axisColor.data(), px, horizontalY, tickSize, false, pLabelX.c_str(),
                     invertY ? core::utility::AbstractFont::ALIGN_CENTER_BOTTOM
                             : core::utility::AbstractFont::ALIGN_CENTER_TOP);
             }
 
             if (drawOuter && i > 0) {
-                this->axisFont.DrawString(axisColor.data(), -tickLength, py, tickSize, false, pLabel.c_str(),
+                this->axisFont.DrawString(axisColor.data(), -tickLength, py, tickSize, false, pLabelY.c_str(),
                     core::utility::AbstractFont::ALIGN_RIGHT_MIDDLE);
             }
             if (drawDiagonal && i > 0) {
                 this->axisFont.DrawString(axisColor.data(), offsetX - margin + tickLength, py, tickSize, false,
-                    pLabel.c_str(), core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
+                    pLabelY.c_str(), core::utility::AbstractFont::ALIGN_LEFT_MIDDLE);
             }
         }
     }
@@ -1136,6 +1148,8 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels() {
     const GLsizei numTicks = this->axisTicksParam.Param<core::param::IntParam>()->Value();
     const GLfloat tickLength = this->axisTickLengthParam.Param<core::param::FloatParam>()->Value();
     const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
+    const int tickPrecisionX = this->axisTickPrecisionX.Param<core::param::IntParam>()->Value();
+    const int tickPrecisionY = this->axisTickPrecisionY.Param<core::param::IntParam>()->Value();
     const bool invertY = this->cellInvertYParam.Param<core::param::BoolParam>()->Value();
     const float xLabelMargin = this->outerXLabelMarginParam.Param<core::param::FloatParam>()->Value();
     const float yLabelMargin = this->outerYLabelMarginParam.Param<core::param::FloatParam>()->Value();
@@ -1187,8 +1201,8 @@ void ScatterplotMatrixRenderer2D::drawMouseLabels() {
         const float py = lerp(offsetY, offsetY + cellSize, t);
         const float pValueX = lerp(columnInfos[cellColIdX].MinimumValue(), columnInfos[cellColIdX].MaximumValue(), t);
         const float pValueY = lerp(columnInfos[cellColIdY].MinimumValue(), columnInfos[cellColIdY].MaximumValue(), t);
-        const std::string pLabelX = to_string(pValueX);
-        const std::string pLabelY = to_string(pValueY);
+        const std::string pLabelX = to_string(pValueX, tickPrecisionX);
+        const std::string pLabelY = to_string(pValueY, tickPrecisionY);
 
         this->axisFont.DrawString(axisColor.data(), px, offsetY - tickLength, tickSize, false, pLabelX.c_str(),
             core::utility::AbstractFont::ALIGN_CENTER_TOP);

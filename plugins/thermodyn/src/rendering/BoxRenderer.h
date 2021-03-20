@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 #include "mmcore/param/ParamSlot.h"
@@ -12,7 +12,7 @@ namespace megamol {
 namespace thermodyn {
 namespace rendering {
 
-class BoxRenderer : public core::view::Renderer3DModule_2 {
+class BoxRenderer : public core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -71,9 +71,9 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(megamol::core::view::CallRender3D_2& call) override;
+    bool Render(megamol::core::view::CallRender3DGL& call) override;
 
-    bool GetExtents(core::view::CallRender3D_2& call) override;
+    bool GetExtents(core::view::CallRender3DGL& call) override;
 
 private:
     std::pair<std::vector<float>, std::vector<float>> drawData;

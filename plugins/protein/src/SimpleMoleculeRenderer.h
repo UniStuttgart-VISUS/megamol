@@ -16,8 +16,8 @@
 #include "Color.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
-#include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/view/CallRender3DGL.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
@@ -30,8 +30,7 @@ namespace protein {
      * Simple Molecular Renderer class
      */
 
-    class SimpleMoleculeRenderer : public megamol::core::view::Renderer3DModuleDS
-    {
+    class SimpleMoleculeRenderer : public megamol::core::view::Renderer3DModuleGL {
     public:
 
         /** The names of the render modes */
@@ -111,7 +110,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( megamol::core::Call& call);
+        virtual bool GetExtents( core::view::CallRender3DGL& call);
 
         /**
          * The Open GL Render callback.
@@ -119,7 +118,7 @@ namespace protein {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render( megamol::core::Call& call);
+        virtual bool Render(core::view::CallRender3DGL& call);
 
         /**
          * Render the molecular data using lines and points.
@@ -227,7 +226,17 @@ namespace protein {
         megamol::core::CallerSlot bsDataCallerSlot;
 
         /** camera information */
-        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+        core::view::Camera_2 cam;
+        cam_type::snapshot_type snapshot;
+        cam_type::matrix_type viewTemp, projTemp;
+        float viewportStuff[4];
+        glm::mat4 view;
+        glm::mat4 proj;
+        glm::mat4 MVinv;
+        glm::mat4 NormalM;
+        glm::mat4 MVP;
+        glm::mat4 MVPinv;
+        glm::mat4 MVPtransp;
 
         /** parameter slot for color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;

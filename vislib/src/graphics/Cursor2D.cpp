@@ -18,7 +18,7 @@
 vislib::graphics::Cursor2D::Cursor2D(void) : AbstractCursor(), 
         x(static_cast<ImageSpaceType>(0)), y(static_cast<ImageSpaceType>(0)), 
         prevX(static_cast<ImageSpaceType>(0)), 
-        prevY(static_cast<ImageSpaceType>(0)), camPams(NULL) { 
+        prevY(static_cast<ImageSpaceType>(0)) { 
 }
 
 
@@ -27,7 +27,7 @@ vislib::graphics::Cursor2D::Cursor2D(void) : AbstractCursor(),
  */
 vislib::graphics::Cursor2D::Cursor2D(const Cursor2D& rhs) 
         : AbstractCursor(rhs), x(rhs.x), y(rhs.y), prevX(rhs.prevX), 
-        prevY(rhs.prevY), camPams(rhs.camPams) {
+        prevY(rhs.prevY) {
 }
 
 
@@ -42,7 +42,7 @@ vislib::graphics::Cursor2D::~Cursor2D(void) {
 /*
  * vislib::graphics::Cursor2D::SetPosition
  */
-void vislib::graphics::Cursor2D::SetPosition(ImageSpaceType x, ImageSpaceType y, bool flipY) {
+void vislib::graphics::Cursor2D::SetPosition(ImageSpaceType x, ImageSpaceType y, bool flipY, float height) {
     bool moved = !math::IsEqual(this->x, x) || !math::IsEqual(this->y, y);
 
     if (moved) {
@@ -52,9 +52,8 @@ void vislib::graphics::Cursor2D::SetPosition(ImageSpaceType x, ImageSpaceType y,
     this->x = x;
     this->y = y;
 
-    if (flipY && !this->camPams.IsNull()) {
-        this->y = this->camPams->VirtualViewSize().Height()
-            - static_cast<ImageSpaceType>(1) - this->y;
+    if (flipY) {
+        this->y = height - static_cast<ImageSpaceType>(1) - this->y;
     }
 
     if (moved) { // trigger move events
@@ -80,15 +79,5 @@ vislib::graphics::Cursor2D& vislib::graphics::Cursor2D::operator=(const Cursor2D
     this->y = rhs.y; 
     this->prevX = rhs.prevX;
     this->prevY = rhs.prevY;
-    this->camPams = rhs.camPams;
     return *this;
-}
-
-
-/*
- * vislib::graphics::Cursor2D::SetCamera
- */
-void vislib::graphics::Cursor2D::SetCameraParams(
-        vislib::SmartPtr<CameraParameters> cameraParams) {
-    this->camPams = cameraParams;
 }

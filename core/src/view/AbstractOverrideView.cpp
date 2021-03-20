@@ -19,7 +19,7 @@ view::AbstractOverrideView::AbstractOverrideView(void) : AbstractView(),
         renderViewSlot("renderView", "Slot for outgoing rendering requests to other views"),
         viewportWidth(1), viewportHeight(1) {
 
-    this->renderViewSlot.SetCompatibleCall<view::CallRenderViewDescription>();
+    this->renderViewSlot.SetCompatibleCall<view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->renderViewSlot);
 
 }
@@ -39,7 +39,7 @@ view::AbstractOverrideView::~AbstractOverrideView(void) {
  * view::AbstractOverrideView::DefaultTime
  */
 float view::AbstractOverrideView::DefaultTime(double instTime) const {
-    view::CallRenderView *call = const_cast<view::AbstractOverrideView*>(this)->renderViewSlot.CallAs<view::CallRenderView>();
+    view::CallRenderViewGL *call = const_cast<view::AbstractOverrideView*>(this)->renderViewSlot.CallAs<view::CallRenderViewGL>();
     if (call == NULL) return 0.0f;
     const CalleeSlot *s = call->PeekCalleeSlot();
     if (s == NULL) return 0.0f;
@@ -80,9 +80,9 @@ void view::AbstractOverrideView::DeserialiseCamera(vislib::Serialiser& serialise
  */
 void view::AbstractOverrideView::ResetView(void) {
     // resets camera, not override values
-    view::CallRenderView *crv = this->getCallRenderView();
+    view::CallRenderViewGL *crv = this->getCallRenderView();
     if (crv != NULL) {
-        (*crv)(view::CallRenderView::CALL_RESETVIEW);
+        (*crv)(view::CallRenderViewGL::CALL_RESETVIEW);
     }
 }
 
@@ -102,10 +102,10 @@ void view::AbstractOverrideView::Resize(unsigned int width, unsigned int height)
 // * view::AbstractOverrideView::SetCursor2DButtonState
 // */
 //void view::AbstractOverrideView::SetCursor2DButtonState(unsigned int btn, bool down) {
-//    view::CallRenderView *crv = this->getCallRenderView();
+//    view::CallRenderViewGL *crv = this->getCallRenderView();
 //    if (crv != NULL) {
 //        crv->SetMouseButton(btn, down);
-//        (*crv)(view::CallRenderView::CALL_SETCURSOR2DBUTTONSTATE);
+//        (*crv)(view::CallRenderViewGL::CALL_SETCURSOR2DBUTTONSTATE);
 //    }
 //}
 //
@@ -114,11 +114,11 @@ void view::AbstractOverrideView::Resize(unsigned int width, unsigned int height)
 // * view::AbstractOverrideView::SetCursor2DPosition
 // */
 //void view::AbstractOverrideView::SetCursor2DPosition(float x, float y) {
-//    view::CallRenderView *crv = this->getCallRenderView();
+//    view::CallRenderViewGL *crv = this->getCallRenderView();
 //    if (crv != NULL) {
 //        this->packMouseCoordinates(x, y);
 //        crv->SetMousePosition(x, y);
-//        (*crv)(view::CallRenderView::CALL_SETCURSOR2DPOSITION);
+//        (*crv)(view::CallRenderViewGL::CALL_SETCURSOR2DPOSITION);
 //    }
 //}
 //
@@ -127,10 +127,10 @@ void view::AbstractOverrideView::Resize(unsigned int width, unsigned int height)
 // * view::AbstractOverrideView::SetInputModifier
 // */
 //void view::AbstractOverrideView::SetInputModifier(view::Modifier mod, bool down) {
-//    view::CallRenderView *crv = this->getCallRenderView();
+//    view::CallRenderViewGL *crv = this->getCallRenderView();
 //    if (crv != NULL) {
 //        crv->SetInputModifier(mod, down);
-//        (*crv)(view::CallRenderView::CALL_SETINPUTMODIFIER);
+//        (*crv)(view::CallRenderViewGL::CALL_SETINPUTMODIFIER);
 //    }
 //}
 
@@ -139,11 +139,11 @@ void view::AbstractOverrideView::Resize(unsigned int width, unsigned int height)
  * view::AbstractOverrideView::UpdateFreeze
  */
 void view::AbstractOverrideView::UpdateFreeze(bool freeze) {
-    view::CallRenderView *crv = this->getCallRenderView();
+    view::CallRenderViewGL *crv = this->getCallRenderView();
     if (crv != NULL) {
         (*crv)(freeze
-            ? view::CallRenderView::CALL_FREEZE
-            : view::CallRenderView::CALL_UNFREEZE);
+            ? view::CallRenderViewGL::CALL_FREEZE
+            : view::CallRenderViewGL::CALL_UNFREEZE);
     }
 }
 
@@ -158,7 +158,7 @@ bool view::AbstractOverrideView::OnKey(Key key, KeyAction action, Modifiers mods
     evt.keyData.action = action;
     evt.keyData.mods = mods;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderView::FnOnKey)) return false;
+    if (!(*cr)(view::CallRenderViewGL::FnOnKey)) return false;
 
     return true;
 }
@@ -172,7 +172,7 @@ bool view::AbstractOverrideView::OnChar(unsigned int codePoint) {
     evt.tag = InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderView::FnOnChar)) return false;
+    if (!(*cr)(view::CallRenderViewGL::FnOnChar)) return false;
 
     return true;
 }
@@ -188,7 +188,7 @@ bool view::AbstractOverrideView::OnMouseButton(MouseButton button, MouseButtonAc
     evt.mouseButtonData.action = action;
     evt.mouseButtonData.mods = mods;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderView::FnOnMouseButton)) return false;
+    if (!(*cr)(view::CallRenderViewGL::FnOnMouseButton)) return false;
 
     return true;
 }
@@ -203,7 +203,7 @@ bool view::AbstractOverrideView::OnMouseMove(double x, double y) {
     evt.mouseMoveData.x = x;
     evt.mouseMoveData.y = y;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderView::FnOnMouseMove)) return false;
+    if (!(*cr)(view::CallRenderViewGL::FnOnMouseMove)) return false;
 
     return true;
 }
@@ -218,7 +218,7 @@ bool view::AbstractOverrideView::OnMouseScroll(double dx, double dy) {
     evt.mouseScrollData.dx = dx;
     evt.mouseScrollData.dy = dy;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderView::FnOnMouseScroll)) return false;
+    if (!(*cr)(view::CallRenderViewGL::FnOnMouseScroll)) return false;
 
     return true;
 }

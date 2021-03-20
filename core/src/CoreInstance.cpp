@@ -25,8 +25,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/cluster/ClusterController.h"
-#include "mmcore/cluster/ClusterViewMaster.h"
-#include "mmcore/cluster/simple/Server.h"
 #include "mmcore/job/JobThread.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
@@ -153,13 +151,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     , all_call_descriptions()
     , all_module_descriptions()
     , parameterHash(1) {
-    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-    megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-#ifdef _DEBUG
-    megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-#else
-    megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ERROR);
-#endif
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
@@ -293,29 +284,40 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
     this->mmconsoleFrontendCompatible = mmconsole_frontend_compatible;
 
     // logging mechanism
-    if (this->preInit->IsLogEchoLevelSet()) {
-        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(this->preInit->GetLogEchoLevel());
-        this->config.logEchoLevelLocked = true;
-        if (this->preInit->GetLogEchoLevel() != 0) {
-            megamol::core::utility::log::Log::DefaultLog.EchoOfflineMessages(true);
-        }
-    }
-    if (this->preInit->IsLogLevelSet()) {
-        megamol::core::utility::log::Log::DefaultLog.SetLevel(this->preInit->GetLogLevel());
-        this->config.logLevelLocked = true;
-        if (this->preInit->GetLogLevel() == 0) {
-            megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
-            this->config.logFilenameLocked = true;
-        } else {
-            if (this->preInit->IsLogFileSet()) {
-                megamol::core::utility::log::Log::DefaultLog.SetLogFileName(this->preInit->GetLogFile().c_str(), false);
-                this->config.logFilenameLocked = true;
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
+    if (mmconsole_frontend_compatible) {
+
+        megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
+        megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+#ifdef _DEBUG
+        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+#else
+        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ERROR);
+#endif
+
+        if (this->preInit->IsLogEchoLevelSet()) {
+            megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(this->preInit->GetLogEchoLevel());
+            this->config.logEchoLevelLocked = true;
+            if (this->preInit->GetLogEchoLevel() != 0) {
+                megamol::core::utility::log::Log::DefaultLog.EchoOfflineMessages(true);
             }
         }
+        if (this->preInit->IsLogLevelSet()) {
+            megamol::core::utility::log::Log::DefaultLog.SetLevel(this->preInit->GetLogLevel());
+            this->config.logLevelLocked = true;
+            if (this->preInit->GetLogLevel() == 0) {
+                megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
+                this->config.logFilenameLocked = true;
+            } else {
+                if (this->preInit->IsLogFileSet()) {
+                    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(this->preInit->GetLogFile().c_str(), false);
+                    this->config.logFilenameLocked = true;
+                } else {
+                    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
+                }
+            }
+        }
+        megamol::core::utility::log::Log::DefaultLog.EchoOfflineMessages(true);
     }
-    megamol::core::utility::log::Log::DefaultLog.EchoOfflineMessages(true);
 
     this->lua = new LuaState(this);
     if (this->lua == nullptr || !this->lua->StateOk()) {
@@ -334,29 +336,31 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
     // lua->RunString("mmLogInfo('Lua loaded Ok.')");
 
     // configuration file
-    if (this->preInit->IsConfigFileSet()) {
-        this->config.LoadConfig(this->preInit->GetConfigFile());
-    } else {
-        this->config.LoadConfig();
-    }
+    if (mmconsole_frontend_compatible) {
+        if (this->preInit->IsConfigFileSet()) {
+            this->config.LoadConfig(this->preInit->GetConfigFile());
+        } else {
+            this->config.LoadConfig();
+        }
 
-    // config overrides from command line
-    if (this->preInit->IsConfigOverrideSet()) {
-        const vislib::StringW& overrides = this->preInit->GetConfigFileOverrides();
-        int pos = 0;
-        int next = overrides.Find('\b', pos);
-        do {
-            if (next == vislib::StringW::INVALID_POS) next = overrides.Length();
-            auto sub = overrides.Substring(pos, next - pos);
-            int split = sub.Find('\a');
-            if (split != vislib::StringW::INVALID_POS) {
-                auto name = sub.Substring(0, split);
-                auto val = sub.Substring(split + 1, sub.Length() - split);
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Overriding from command line:");
-                this->config.SetValue<wchar_t>(MMC_CFGID_VARIABLE, name, val);
-            }
-            pos = next + 1;
-        } while ((next = overrides.Find('\b', pos)) != vislib::StringW::INVALID_POS || pos < overrides.Length());
+        // config overrides from command line
+        if (this->preInit->IsConfigOverrideSet()) {
+            const vislib::StringW& overrides = this->preInit->GetConfigFileOverrides();
+            int pos = 0;
+            int next = overrides.Find('\b', pos);
+            do {
+                if (next == vislib::StringW::INVALID_POS) next = overrides.Length();
+                auto sub = overrides.Substring(pos, next - pos);
+                int split = sub.Find('\a');
+                if (split != vislib::StringW::INVALID_POS) {
+                    auto name = sub.Substring(0, split);
+                    auto val = sub.Substring(split + 1, sub.Length() - split);
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("Overriding from command line:");
+                    this->config.SetValue<wchar_t>(MMC_CFGID_VARIABLE, name, val);
+                }
+                pos = next + 1;
+            } while ((next = overrides.Find('\b', pos)) != vislib::StringW::INVALID_POS || pos < overrides.Length());
+        }
     }
 
     // register services? TODO: right place?
@@ -416,10 +420,10 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
-    // empty View2D
+    // empty View2DGL
     vd = std::make_shared<ViewDescription>("emptyview2d");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("View2D"), "view");
-    // 'View2D' will show the title logo as long as no renderer is connected
+    vd->AddModule(this->GetModuleDescriptionManager().Find("View2DGL"), "view");
+    // 'View2DGL' will show the title logo as long as no renderer is connected
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
@@ -2324,9 +2328,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
             vislib::StringA modName(dat.GetBodyAsAt<char>(pos));
             pos += modName.Length() + 1;
 
-            if (modClass.Equals(cluster::ClusterViewMaster::ClassName()) ||
-                modClass.Equals(cluster::ClusterController::ClassName()) ||
-                modClass.Equals(cluster::simple::Server::ClassName())) {
+            if (modClass.Equals(cluster::ClusterController::ClassName()) ) {
                 // these are infra structure modules and not to be synced
                 continue;
             }
@@ -3291,7 +3293,7 @@ bool megamol::core::CoreInstance::quickConnectUp(
         // test for end condition
         if (to == NULL) {
             for (SIZE_T i = 0; i < connInfo.Count(); i++) {
-                if (vislib::StringA("View2D").Equals(connInfo[i].nextMod->ClassName(), false) ||
+                if (vislib::StringA("View2DGL").Equals(connInfo[i].nextMod->ClassName(), false) ||
                     vislib::StringA("View3D").Equals(connInfo[i].nextMod->ClassName(), false) ||
                     vislib::StringA("View3D_2").Equals(connInfo[i].nextMod->ClassName(), false)) {
 

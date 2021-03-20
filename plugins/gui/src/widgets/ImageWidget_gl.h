@@ -9,17 +9,11 @@
 #define MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
 
 
-#include "FileUtils.h"
 #include "GUIUtils.h"
 #include "widgets/HoverToolTip.h"
 
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/log/Log.h"
-
-#include "vislib/graphics/BitmapImage.h"
-
-#define GLOWL_OPENGL_INCLUDE_GLAD
-#include "glowl/Texture2D.hpp"
+#include "mmcore/view/RenderUtils.h"
 
 
 namespace megamol {
@@ -41,15 +35,13 @@ namespace gui {
             return (this->tex_ptr->getName() != 0); // OpenGL texture id
         }
 
-        /**
-         * Load texture from file.
-         */
-        bool LoadTextureFromFile(const std::string& filename);
+        bool LoadTextureFromData(int width, int height, float* data) {
+            return megamol::core::view::RenderUtils::LoadTextureFromData(this->tex_ptr, width, height, data);
+        }
 
-        /**
-         * Load texture from data.
-         */
-        bool LoadTextureFromData(int width, int height, float* data);
+        bool LoadTextureFromFile(const std::string& filename) {
+            return megamol::core::view::RenderUtils::LoadTextureFromFile(this->tex_ptr, filename);
+        }
 
         /**
          * Draw texture as simple image.

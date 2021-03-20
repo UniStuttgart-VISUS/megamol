@@ -27,7 +27,7 @@ const GLuint SSBOflagsBindingPoint = 2;
 const GLuint SSBOvertexBindingPoint = 3;
 const GLuint SSBOcolorBindingPoint = 4;
 
-SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
+SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
 , getDataSlot("getdata", "Connects to the data source")
 , getTFSlot("gettransferfunction", "The slot for the transfer function module")
 , getClipPlaneSlot("getclipplane", "The slot for the clipping plane module")
@@ -198,7 +198,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
 SphereRenderer::~SphereRenderer(void) { this->Release(); }
 
 
-bool SphereRenderer::GetExtents(view::CallRender3D_2& call) {
+bool SphereRenderer::GetExtents(view::CallRender3DGL& call) {
 
     auto cr = &call;
     if (cr == nullptr) return false;
@@ -1027,7 +1027,7 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 }
 
 
-bool SphereRenderer::Render(view::CallRender3D_2& call) {
+bool SphereRenderer::Render(view::CallRender3DGL& call) {
 
     // timer.BeginFrame();
 
@@ -1139,13 +1139,13 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     }
 
     // Viewport
-    auto viewport = call.GetViewport();
-    this->curVpWidth = viewport.Width();
-    this->curVpHeight = viewport.Height();
+    auto viewport = cam.resolution_gate();
+    this->curVpWidth = viewport.width();
+    this->curVpHeight = viewport.height();
     this->curViewAttrib[0] = 0.0f;
     this->curViewAttrib[1] = 0.0f;
-    this->curViewAttrib[2] = static_cast<float>(viewport.Width());
-    this->curViewAttrib[3] = static_cast<float>(viewport.Height());
+    this->curViewAttrib[2] = static_cast<float>(viewport.width());
+    this->curViewAttrib[3] = static_cast<float>(viewport.height());
     if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;
     if (this->curViewAttrib[3] < 1.0f) this->curViewAttrib[3] = 1.0f;
     this->curViewAttrib[2] = 2.0f / this->curViewAttrib[2];
@@ -1210,7 +1210,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 }
 
 
-bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSimple(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
     this->enableFlagStorage(this->sphereShader, mpdc);
@@ -1280,7 +1280,7 @@ bool SphereRenderer::renderSimple(view::CallRender3D_2& call, MultiParticleDataC
 }
 
 
-bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSSBO(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -1461,7 +1461,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
 }
 
 
-bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSplat(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     // Set OpenGL state -----------------------------------------------
     glDisable(GL_DEPTH_TEST);
@@ -1582,7 +1582,7 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
 }
 
 
-bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderBufferArray(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
     this->enableFlagStorage(this->sphereShader, mpdc);
@@ -1680,7 +1680,7 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2& call, MultiParticle
 }
 
 
-bool SphereRenderer::renderGeometryShader(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderGeometryShader(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -1748,7 +1748,7 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3D_2& call, MultiParti
 }
 
 
-bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderAmbientOcclusion(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     // We need to regenerate the shader if certain settings are changed
     if (this->enableLightingSlot.IsDirty() || this->aoConeApexSlot.IsDirty()) {
@@ -1838,7 +1838,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
 }
 
 
-bool SphereRenderer::renderOutline(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderOutline(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
     this->enableFlagStorage(this->sphereShader, mpdc);
@@ -2570,7 +2570,7 @@ bool SphereRenderer::rebuildGBuffer() {
 }
 
 
-void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
+void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (this->stateInvalid) {
@@ -2664,7 +2664,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2& call, MultiParticl
 
 
 
-void SphereRenderer::renderDeferredPass(view::CallRender3D_2& call) {
+void SphereRenderer::renderDeferredPass(view::CallRender3DGL& call) {
 
     bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
     bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();

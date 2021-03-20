@@ -9,12 +9,11 @@
 
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractRenderingView.h"
 
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
 #include "mmcore/CallerSlot.h"
-#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "mmcore/view/AbstractView.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
 #ifdef WITH_MPI

@@ -15,7 +15,6 @@
 
 
 #include "vislib/graphics/AbstractCursor.h"
-#include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/graphicstypes.h"
 #include "vislib/SmartPtr.h"
 
@@ -58,8 +57,9 @@ namespace graphics {
          *              to the associated camera. This is used to ensure the
          *              origin is placed in the lower left corner of the 
          *              window.
+         * @param height Height of the virtual view
          */
-        void SetPosition(ImageSpaceType x, ImageSpaceType y, bool flipY);
+        void SetPosition(ImageSpaceType x, ImageSpaceType y, bool flipY, float height);
 
         /**
          * Assignment operator
@@ -76,22 +76,6 @@ namespace graphics {
          * @param cursorEvent The cursor event to be added.
          */
         virtual void RegisterCursorEvent(AbstractCursor2DEvent *cursorEvent);
-
-        /**
-         * Associates a camera parameters object with this cursor.
-         *
-         * @param cameraParams The camera parameters object.
-         */
-        void SetCameraParams(SmartPtr<CameraParameters> cameraParams);
-
-        /**
-         * Returns the associated camera parameters object.
-         *
-         * @return The associated camera parameters object.
-         */
-        inline SmartPtr<CameraParameters> CameraParams(void) {
-            return this->camPams;
-        }
 
         /**
          * Returns the x coordinate of the cursor.
@@ -144,9 +128,6 @@ namespace graphics {
 
         /** previous y position of the cursor space */
         ImageSpaceType prevY;
-
-        /** The parameters object of the associated camera */
-        SmartPtr<CameraParameters> camPams;
 
 
     };

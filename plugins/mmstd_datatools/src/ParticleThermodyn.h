@@ -41,7 +41,8 @@ namespace datatools {
             PRESSURE,
             NEIGHBORS,
             NEAREST_DISTANCE,
-            PHASE
+            PHASE01,
+            PHASE02
         };
 
         enum phaseEnum {
@@ -120,6 +121,8 @@ namespace datatools {
         core::param::ParamSlot findExtremesSlot;
         core::param::ParamSlot extremeValueSlot;
         core::param::ParamSlot fluidDensitySlot;
+        core::param::ParamSlot tcSlot;
+        core::param::ParamSlot rhocSlot;
         
         size_t datahash;
         size_t myHash = 0;

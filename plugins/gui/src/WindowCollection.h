@@ -51,26 +51,27 @@ namespace gui {
             ImVec2 win_reset_size;          // minimum window size for soft reset
             ImVec2 win_reset_position;      // window position for minimize reset
             bool win_collapsed;             // flag indicating whether window is collapsed or not.
-            bool win_set_pos_size; // set window position and size to fit current viewport           [NOT SAVED]
+            bool buf_set_pos_size;          // [NOT SAVED] set window position and size to fit current viewport
             // ---------- Parameter specific configuration ----------
             bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
             std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
             FilterModes param_module_filter;             // module filter
             bool param_extended_mode;                    // Flag toggling between Expert and Basic parameter mode.
             // ---------- FPS/MS specific configuration ----------
-            bool ms_show_options;          // show/hide fps/ms options.
-            int ms_max_history_count;      // maximum count of values in value array
-            float ms_refresh_rate;         // maximum delay when fps/ms value should be renewed.
-            TimingModes ms_mode;           // mode for displaying either FPS or MS
-            float buf_current_delay;       // current delay between frames                              [NOT SAVED]
-            std::vector<float> buf_values; // current ms values                                         [NOT SAVED]
-            float buf_plot_ms_scaling;     // current ms plot scaling factor                            [NOT SAVED]
-            float buf_plot_fps_scaling;    // current fps plot scaling factor                           [NOT SAVED]
+            bool fpsms_show_options;           // show/hide fps/ms options.
+            int fpsms_buffer_size;             // maximum count of values in value array
+            float fpsms_refresh_rate;          // maximum delay when fps/ms value should be renewed.
+            TimingModes fpsms_mode;            // mode for displaying either FPS or MS
+            float buf_current_delay;           // [NOT SAVED] current delay between frames
+            std::vector<float> buf_ms_values;  // [NOT SAVED] current ms values
+            std::vector<float> buf_fps_values; // [NOT SAVED] current fps values
+            float buf_ms_max;                  // [NOT SAVED] current ms plot scaling factor
+            float buf_fps_max;                 // [NOT SAVED] current fps plot scaling factor
             // ---------- Transfer Function Editor specific configuration ---------
             bool tfe_view_minimized;      // flag indicating minimized window state
             bool tfe_view_vertical;       // flag indicating vertical window state
             std::string tfe_active_param; // last active parameter connected to editor
-            bool buf_tfe_reset;           // flag for reset of tfe window on state loading             [NOT SAVED]
+            bool buf_tfe_reset;           // [NOT SAVED] flag for reset of tfe window on state loading
             // ---------- LOG specific configuration ----------
             unsigned int log_level; // Log level used in log window
             bool log_force_open;    // Flag indicating if log window should be forced open on warnings and errors
@@ -87,20 +88,21 @@ namespace gui {
                     , win_reset_size(ImVec2(0.0f, 0.0f))
                     , win_reset_position(ImVec2(0.0f, 0.0f))
                     , win_collapsed(false)
-                    , win_set_pos_size(true)
+                    , buf_set_pos_size(true)
                     // Window specific configurations
                     , param_show_hotkeys(false)
                     , param_modules_list()
                     , param_module_filter(FilterModes::ALL)
                     , param_extended_mode(false)
-                    , ms_show_options(false)
-                    , ms_max_history_count(20)
-                    , ms_refresh_rate(2.0f)
-                    , ms_mode(TimingModes::FPS)
+                    , fpsms_show_options(false)
+                    , fpsms_buffer_size(20)
+                    , fpsms_refresh_rate(2.0f)
+                    , fpsms_mode(TimingModes::FPS)
                     , buf_current_delay(0.0f)
-                    , buf_values()
-                    , buf_plot_ms_scaling(1.0f)
-                    , buf_plot_fps_scaling(1.0f)
+                    , buf_ms_values()
+                    , buf_fps_values()
+                    , buf_ms_max(1.0f)
+                    , buf_fps_max(1.0f)
                     , tfe_view_minimized(false)
                     , tfe_view_vertical(false)
                     , tfe_active_param("")

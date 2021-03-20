@@ -23,7 +23,7 @@ using namespace megamol::protein;
 /*
  * SolPathRenderer::SolPathRenderer
  */
-SolPathRenderer::SolPathRenderer(void) : core::view::Renderer3DModule(),
+SolPathRenderer::SolPathRenderer(void) : core::view::Renderer3DModuleGL(),
         getdataslot("getdata", "Fetches data"), pathlineShader() {
 
     this->getdataslot.SetCompatibleCall<core::factories::CallAutoDescription<SolPathDataCall> >();
@@ -113,7 +113,7 @@ bool SolPathRenderer::create(void) {
 /*
  * SolPathRenderer::GetExtents
  */
-bool SolPathRenderer::GetExtents(core::Call& call) {
+bool SolPathRenderer::GetExtents(core::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) return false;
 
@@ -140,7 +140,7 @@ void SolPathRenderer::release(void) {
 /*
  * SolPathRenderer::Render
  */
-bool SolPathRenderer::Render(core::Call& call) {
+bool SolPathRenderer::Render(core::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) return false;
 
