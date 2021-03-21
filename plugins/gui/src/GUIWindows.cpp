@@ -260,10 +260,11 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
     // Propagate ImGui context to core instance
-    if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-        /// TODO Also for new frontend?
-        this->core_instance->SetCurrentImGuiContext(this->context);
-    }
+    // if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
+    this->core_instance->SetCurrentImGuiContext(this->context);
+    //} else {
+    /// !!! TODO Move to separate GUI resource which is available in modules
+    //}
 
     // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
     if (this->state.graph_uid == GUI_INVALID_ID) {
@@ -389,6 +390,7 @@ bool GUIWindows::PostDraw(void) {
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
         // Update transfer function
         if ((wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
+
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
 
@@ -401,7 +403,7 @@ bool GUIWindows::PostDraw(void) {
                             if ((wc.tfe_active_param == param_full_name) &&
                                 (param.Type() == Param_t::TRANSFERFUNCTION)) {
                                 this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
-                                this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param.GetValue()), true);
+                                param.TransferFunctionEditor_ConnectExternal(this->tf_editor_ptr, true);
                             }
                         }
                     }

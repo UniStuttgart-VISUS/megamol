@@ -24,7 +24,6 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
         , file_error()
         , file_warning()
         , child_paths()
-        , additional_lines(0)
         , save_gui_state(vislib::math::Ternary::TRI_UNKNOWN)
         , tooltip() {}
 
@@ -96,10 +95,11 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
             float footer_height =
-                ImGui::GetFrameHeightWithSpacing() * ((inout_save_gui_state.IsUnknown()) ? (2.0f) : (3.0f));
-            float child_select_height =
-                (ImGui::GetContentRegionAvail().y - (ImGui::GetTextLineHeightWithSpacing() * this->additional_lines) -
-                    footer_height);
+                ImGui::GetFrameHeightWithSpacing() * ((inout_save_gui_state.IsUnknown())
+                                                             ? (2.0f)
+                                                             : (3.0f)) + // 1x save gui state line + 2x line for button
+                (ImGui::GetTextLineHeightWithSpacing() * 2.0f);          // 2x max log lines
+            float child_select_height = (ImGui::GetContentRegionAvail().y - footer_height);
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);
 
@@ -212,6 +212,17 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
             // Widget group -------------------------------------------------------
             ImGui::BeginGroup();
 
+            auto cursor_pos = ImGui::GetCursorScreenPos();
+            // Error and warn messages ----------
+            if (!this->file_warning.empty()) {
+                ImGui::TextColored(GUI_COLOR_TEXT_WARN, this->file_warning.c_str());
+            }
+            if (!this->file_error.empty()) {
+                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, this->file_error.c_str());
+            }
+            float max_log_lines = 2.0f;
+            ImGui::SetCursorScreenPos(cursor_pos + ImVec2(0.0f, max_log_lines * ImGui::GetTextLineHeightWithSpacing()));
+
             // File name ------------------------
             if (flag == FileBrowserFlag::LOAD) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -242,6 +253,9 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
 
             // Buttons --------------------------
             std::string button_label;
+            if (!(this->valid_directory && this->valid_file)) {
+                GUIUtils::ReadOnlyWigetStyle(true);
+            }
             if (flag == FileBrowserFlag::SAVE) {
                 button_label = "Save";
             } else if (flag == FileBrowserFlag::LOAD) {
@@ -252,19 +266,14 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
             if (ImGui::Button(button_label.c_str())) {
                 apply = true;
             }
+            if (!(this->valid_directory && this->valid_file)) {
+                GUIUtils::ReadOnlyWigetStyle(false);
+            }
 
             ImGui::SameLine();
 
             if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 ImGui::CloseCurrentPopup();
-            }
-
-            // Error and warn massages
-            if (!this->file_warning.empty()) {
-                ImGui::TextColored(GUI_COLOR_TEXT_WARN, this->file_warning.c_str());
-            }
-            if (!this->file_error.empty()) {
-                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, this->file_error.c_str());
             }
 
             // Return complete file path --------------------------------------
@@ -464,7 +473,6 @@ void megamol::gui::FileBrowserWidget::validate_file(
 
         this->file_error.clear();
         this->file_warning.clear();
-        this->additional_lines = 0;
         this->valid_file = true;
         this->valid_ending = true;
 
@@ -475,14 +483,12 @@ void megamol::gui::FileBrowserWidget::validate_file(
             // Warn when no file name is given
             if (file_lower.empty()) {
                 this->file_warning += "Enter file name.\n";
-                this->additional_lines++;
                 this->valid_file = false;
             } else {
                 // Warn when file has not required extension
                 if (!ext_lower.empty()) {
                     if (!megamol::core::utility::FileUtils::FileHasExtension<std::string>(file_lower, ext_lower)) {
                         this->file_warning += "Appending required file extension '" + ext_lower + "'\n";
-                        this->additional_lines++;
                         this->valid_ending = false;
                     }
                 }
@@ -496,7 +502,6 @@ void megamol::gui::FileBrowserWidget::validate_file(
                 // Warn when file already exists
                 if (stdfs::exists(tmp_file_path) && stdfs::is_regular_file(tmp_file_path)) {
                     this->file_warning += "Overwriting existing file.\n";
-                    this->additional_lines++;
                 }
             }
         } else if (flag == FileBrowserFlag::LOAD) {
@@ -504,7 +509,6 @@ void megamol::gui::FileBrowserWidget::validate_file(
             if (!ext_lower.empty()) {
                 if (!megamol::core::utility::FileUtils::FileHasExtension<std::string>(file_lower, ext_lower)) {
                     this->file_error += "File with extension '" + ext_lower + "' required.\n";
-                    this->additional_lines++;
                     this->valid_ending = false;
                     this->valid_file = false;
                 }
@@ -516,7 +520,6 @@ void megamol::gui::FileBrowserWidget::validate_file(
         // Error when file is directory
         if (stdfs::is_directory(tmp_file_path)) {
             this->file_error += "File is directory.\n";
-            this->additional_lines++;
             this->valid_file = false;
         }
 

@@ -2120,6 +2120,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
     }
     // GLOBAL -----------------------------------------------------------
     else if (scope == megamol::gui::Parameter::WidgetScope::GLOBAL) {
+
         if (this->tf_use_external_editor) {
 
             // Check for changed parameter value which should be forced to the editor once.
