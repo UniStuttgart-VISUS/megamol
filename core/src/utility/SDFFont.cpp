@@ -612,13 +612,8 @@ bool SDFFont::initialise(megamol::core::CoreInstance* core_instance_ptr) {
 
 void SDFFont::deinitialise(void) {
 
-    // String cache
     this->ClearBatchDrawCache();
-
-    // Texture
     this->texture.reset();
-
-    // Shader
     this->shaderglobcol.Release();
     this->shadervertcol.Release();
 
@@ -762,11 +757,11 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
         // Check if glyph info is available
         if (idx > (unsigned int)this->glyphIdcs.size()) {
-            //megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [buildUpGlyphRun] Glyph index greater than available: \"%i\" > max. Index = \"%i\".\n", idx, this->idxCnt);
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] Glyph index greater than available: \"%i\" > max. Index = \"%i\".\n", idx, this->idxCnt);
             continue;
         }
         if (this->glyphIdcs[idx] == nullptr) {
-            //megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [buildUpGlyphRun] Glyph info not available for: \"%i\".\n", idx);
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] Glyph info not available for: \"%i\".\n", idx);
             continue;
         }
 
@@ -1060,7 +1055,8 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
 
     // Check texture
     if (this->texture->getName() == 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [render] Texture is not valid. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[SDFFont] Texture is not valid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 
@@ -1072,7 +1068,8 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
 
     // Check shaders
     if (!usedShader->IsValidHandle(usedShader->ProgramHandle())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [render] Shader handle is not valid. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[SDFFont] Shader handle is not valid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 
@@ -1143,14 +1140,15 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
     this->SetBillboardMode(false);
 
     if (core_instance_ptr == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Pointer to MegaMol CoreInstance is NULL. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[SDFFont] Pointer to MegaMol CoreInstance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     // (1) Load buffers --------------------------------------------------------
-    ///megamol::core::utility::log::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading OGL BUFFERS ... \n");
     if (!this->loadFontBuffers()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load buffers. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[SDFFont] Failed to load buffers. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -1161,7 +1159,9 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
         ResourceWrapper::getFileName(core_instance_ptr->Configuration(), vislib::StringA(infoFile.c_str()))
             .PeekBuffer();
     if (!this->loadFontInfo(info_filename)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[SDFFont] Failed to load font info file: \"%s\". [%s, %s, line %d]\n", infoFile.c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -1172,13 +1172,16 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
         ResourceWrapper::getFileName(core_instance_ptr->Configuration(), vislib::StringA(textureFile.c_str()))
             .PeekBuffer());
     if (!megamol::core::view::RenderUtils::LoadTextureFromFile(this->texture, texture_filename)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[SDFFont] Failed to load font texture: \"%s\". [%s, %s, line %d]\n", textureFile.c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
         return false;
     }
 
     // (4) Load shaders --------------------------------------------------------
     if (!this->loadFontShader(core_instance_ptr->ShaderSourceFactory())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font shaders. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[SDFFont] Failed to load font shaders. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -1277,10 +1280,9 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
     this->glyphs.clear();
     this->glyphIdcs.clear();
 
-    // Load file
     vislib::sys::ASCIIFileBuffer file;
     if (!file.LoadFile(filename)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadfontCharacters] Could not load file as ascii buffer: \"%s\". \n", filename.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] Could not load file as ascii buffer: \"%s\". [%s, %s, line %d]\n", filename.PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -1387,7 +1389,7 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
     for (unsigned int i = 0; i < (unsigned int)this->glyphs.size(); i++) {
         // Filling character index array --------------------------------------
         if (this->glyphs[i].id > (unsigned int)this->glyphIdcs.size()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFontInfo] Character is out of range: \"%i\". \n", this->glyphs[i].id);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] Character is out of range: \"%i\". [%s, %s, line %d]\n", this->glyphs[i].id, __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         this->glyphIdcs[this->glyphs[i].id] = &this->glyphs[i];
@@ -1441,60 +1443,58 @@ bool SDFFont::loadFontShader(megamol::core::utility::ShaderSourceFactory& shader
         // Reset shader
         shaderPtr[i]->Release();
         try {
-            // vertex shader
-            vs.Clear();
-            /// 1)
-            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::version")); 
-            // Choose right color snippet for current shader
-            StringA colSnipName;
-            if (&this->shaderglobcol == shaderPtr[i]) {
-                colSnipName = "sdffont::vertex::globalColor";
-            }
-            else if (&this->shadervertcol == shaderPtr[i]) {
-                colSnipName = "sdffont::vertex::vertexColor";
-            }
-            /// 2)
-            vs.Append(shader_factory.MakeShaderSnippet(colSnipName));
-            /// 3)
-            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::main")); 
-            //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "\n----- Vertex shader using '%s': ----- \n%s\n", colSnipName.PeekBuffer(), vs.WholeCode().PeekBuffer());
 
-            // fragment shader
+            vs.Clear();
+            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::version")); 
+            // Insert right color snippet for current shader
+            if (&this->shaderglobcol == shaderPtr[i]) {
+                vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::globalColor"));
+            }
+            else {
+                vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::vertexColor"));
+            }
+            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::main")); 
+
             fs.Clear();
             if (!shader_factory.MakeShaderSource("sdffont::fragment", fs)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[SDFFont] [loadShader] Unable to make shader source for fragment shader. \n");
+                    "[SDFFont] Unable to make shader source for fragment shader. [%s, %s, line %d]\n", __FILE__,
+                    __FUNCTION__, __LINE__);
                 return false;
             }
 
-            // Compiling shaders
             if (!shaderPtr[i]->Compile(vs.Code(), vs.Count(), fs.Code(), fs.Count())) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"sdffont\"-shader: Unknown error. \n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[SDFFont] Unable to compile \"sdffont\"-shader: Unknown error. [%s, %s, line %d]\n", __FILE__,
+                    __FUNCTION__, __LINE__);
                 return false;
             }
-
             // Bind vertex shader attributes (before linking shaders!)
             for (unsigned int j = 0; j < attribLoc[i].size(); j++) {
                 glBindAttribLocation(shaderPtr[i]->ProgramHandle(), this->vbos[attribLoc[i][j]].index, this->vbos[attribLoc[i][j]].name.PeekBuffer());
             }
-
-            // Linking shaders
             if (!shaderPtr[i]->Link()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"sdffont\"-shader: Unknown error. \n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[SDFFont] Unable to link \"sdffont\"-shader: Unknown error. [%s, %s, line %d]\n", __FILE__,
+                    __FUNCTION__, __LINE__);
                 return false;
             }
         }
         catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"sdffont\"-shader (@%s): %s. \n",
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] Unable to compile \"sdffont\"-shader (@%s): %s. [%s, %s, line %d]\n",
                 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
             return false;
         }
         catch (vislib::Exception e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"sdffont\"-shader: %s. \n", e.GetMsgA());
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[SDFFont] Unable to compile \"sdffont\"-shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__,
+                __FUNCTION__, __LINE__);
             return false;
         }
         catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"sdffont\"-shader: Unknown exception. \n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[SDFFont] Unable to compile \"sdffont\"-shader: Unknown exception. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     }

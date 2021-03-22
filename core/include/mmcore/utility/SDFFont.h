@@ -444,17 +444,13 @@ namespace utility {
         * functions
         **********************************************************************/
 
-        /** Loading font. */
-        bool loadFont(megamol::core::CoreInstance* core_instance_ptr);
+        bool loadFont(megamol::core::CoreInstance *core_instance_ptr);
 
-        /** Load buffers. */
         bool loadFontBuffers();
 
-        /** Load font info from file. */
         bool loadFontInfo(vislib::StringW filename);
 
-        /** Load shaders from files. */
-        bool loadFontShader(megamol::core::utility::ShaderSourceFactory& shader_factory);
+        bool loadFontShader(megamol::core::utility::ShaderSourceFactory &shader_factory);
 
         /**
         * Answer the number of lines in the glyph run
@@ -487,7 +483,6 @@ namespace utility {
         * @return The resulting glyph run
         */
         int *buildGlyphRun(const char *txt,  float maxWidth) const;
-        int *buildGlyphRun(const wchar_t *txt, float maxWidth) const;
 
         /**
         * Generates the glyph runs for the text 'txt'
