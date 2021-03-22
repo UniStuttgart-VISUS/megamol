@@ -79,7 +79,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         , needSelectionUpdate(false)
         , needFlagsUpdate(false)
         , lastTimeStep(0)
-        , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
+        , font(core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS,
+              core::utility::SDFFont::RenderMode::RENDERTYPE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);

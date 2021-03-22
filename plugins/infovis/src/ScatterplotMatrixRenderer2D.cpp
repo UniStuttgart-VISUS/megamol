@@ -126,8 +126,10 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , trianglesValid(false)
         , screenFBO(nullptr)
         , screenValid(false)
-        , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
-        , textFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
+        , axisFont(core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS,
+              core::utility::SDFFont::RenderMode::RENDERTYPE_FILL)
+        , textFont(core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS,
+              core::utility::SDFFont::RenderMode::RENDERTYPE_FILL)
         , textValid(false)
         , dataTime((std::numeric_limits<unsigned int>::max)())
         , flagsBufferVersion(0) {

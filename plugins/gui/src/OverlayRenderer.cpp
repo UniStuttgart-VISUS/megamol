@@ -132,11 +132,11 @@ OverlayRenderer::OverlayRenderer(void)
     this->MakeSlotAvailable(&this->paramText);
 
     // Font Settings
-    param::EnumParam* fep = new param::EnumParam(utility::SDFFont::FontName::ROBOTO_SANS);
-    fep->SetTypePair(utility::SDFFont::FontName::ROBOTO_SANS, "Roboto Sans");
-    fep->SetTypePair(utility::SDFFont::FontName::EVOLVENTA_SANS, "Evolventa");
-    fep->SetTypePair(utility::SDFFont::FontName::UBUNTU_MONO, "Ubuntu Mono");
-    fep->SetTypePair(utility::SDFFont::FontName::VOLLKORN_SERIF, "Vollkorn Serif");
+    param::EnumParam* fep = new param::EnumParam(utility::SDFFont::PresetFontName::ROBOTO_SANS);
+    fep->SetTypePair(utility::SDFFont::PresetFontName::ROBOTO_SANS, "Roboto Sans");
+    fep->SetTypePair(utility::SDFFont::PresetFontName::EVOLVENTA_SANS, "Evolventa");
+    fep->SetTypePair(utility::SDFFont::PresetFontName::UBUNTU_MONO, "Ubuntu Mono");
+    fep->SetTypePair(utility::SDFFont::PresetFontName::VOLLKORN_SERIF, "Vollkorn Serif");
     this->paramFontName << fep;
     this->paramFontName.SetUpdateCallback(this, &OverlayRenderer::onFontName);
     this->MakeSlotAvailable(&this->paramFontName);
@@ -261,7 +261,8 @@ bool OverlayRenderer::onFontName(param::ParamSlot& slot) {
 
     slot.ResetDirty();
     this->m_font_ptr.reset();
-    auto font_name = static_cast<utility::SDFFont::FontName>(this->paramFontName.Param<param::EnumParam>()->Value());
+    auto font_name =
+        static_cast<utility::SDFFont::PresetFontName>(this->paramFontName.Param<param::EnumParam>()->Value());
     this->m_font_ptr = std::make_unique<utility::SDFFont>(font_name);
     if (!this->m_font_ptr->Initialise(this->GetCoreInstance())) {
         return false;

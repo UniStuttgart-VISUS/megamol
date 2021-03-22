@@ -19,25 +19,22 @@
 #include "mmcore/utility/AbstractFont.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-
 #include "vislib/CharTraits.h"
 #include "vislib/UTF8Encoder.h"
+
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Matrix.h"
-
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "vislib/sys/FastFile.h"
-#include "mmcore/utility/log/Log.h"
-#include "vislib/sys/File.h"
-#include "vislib/Trace.h"
 
 #include <float.h>
 
@@ -49,14 +46,14 @@ namespace utility {
     /**
      * -----------------------------------------------------------------------------------------------------------------
      * 
-     * Implementation of font rendering using signed distance field texture and glyph information stored as bitmap font.
+     * Implementation of font rendering using signed distance field (SDF) texture and glyph information stored as bitmap font.
      * 
      * -----------------------------------------------------------------------------------------------------------------
      * >>> USAGE example (for megamol modules):
      *
      *     - Declare:            megamol::core::utility::SDFFont sdfFont;
      *
-     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS);
+     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS);
      *                       OR: this->sdfFont("filename-of-own-font");
      *
      *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
@@ -64,14 +61,15 @@ namespace utility {
      *
      *     - Draw:               this->sdfFont.DrawString(color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
      *
-     *     - RenderType:         this->sdfFont.SetRenderType(megamol::core::utility::SDFFont::RenderType::RENDERTYPE_OUTLINE);
+     *     - RenderMode:         this->sdfFont.SetRenderMode(megamol::core::utility::SDFFont::RenderMode::RENDERTYPE_OUTLINE);
      *     - Rotation:           this->sdfFont.SetRotation(60.0f, vislib::math::Vector<float, 3>(0.0f1.0f0.0f));
      *     - Billboard:          this->sdfFont.SetBillboard(true);
      *
-     *     - BATCH-rendering     ...
-     *
-     *
-     *
+     *     - Batch rendering     this->sdffont.SetBatchDrawMode(true);
+     *                           call this->sdfFont.DrawString() arbitrary times ...
+     *                           call this->sdfFont.BatchDrawString() as often as needed
+     *                           call this->ClearBatchDrawCache() to clear stored batch
+     * 
      * -----------------------------------------------------------------------------------------------------------------
      * >>> Predefined FONTS: (free for commercial use) 
      *     -> Available: Regular - TODO: Bold,Oblique,Bold-Oblique
@@ -108,15 +106,15 @@ namespace utility {
     public:
 
         /** Available predefined fonts. */
-        enum FontName {
-            EVOLVENTA_SANS,
-            ROBOTO_SANS,
-            VOLLKORN_SERIF,
-            UBUNTU_MONO
+        enum PresetFontName : int {
+            EVOLVENTA_SANS = 0,
+            ROBOTO_SANS    = 1,
+            VOLLKORN_SERIF = 2,
+            UBUNTU_MONO    = 3
         };
 
-        /** Possible render types for the font. */
-        enum RenderType {
+        /** Possible render modes for the font. */
+        enum RenderMode : int {
             RENDERTYPE_NONE    = 0,     // Do not render anything
             RENDERTYPE_FILL    = 1,     // Render the filled glyphs */
             RENDERTYPE_OUTLINE = 2      // Render the outline 
@@ -125,217 +123,41 @@ namespace utility {
         /**
         * Ctor.
         *
-        * @param fn The predefined font name.
+        * @param fn          The predefined font name or the font name as string
+        * @param render_mode The render to be used
+        * @param size        The size of the font in logical units 
+        * @param flipY       The vertical flip flag*
         */
-        SDFFont(FontName fn);
+        SDFFont(PresetFontName fn);
+        SDFFont(PresetFontName fn, RenderMode render_mode);
+        SDFFont(PresetFontName fn, float size);
+        SDFFont(PresetFontName fn, bool flipY);
+        SDFFont(PresetFontName fn, RenderMode render_mode, bool flipY);
+        SDFFont(PresetFontName fn, float size, bool flipY);
+        SDFFont(PresetFontName fn, float size, RenderMode render_mode);
+        SDFFont(PresetFontName fn, float size, RenderMode render_mode, bool flipY);
 
-        /**
-        * Ctor.
-        *
-        * @param fn     The predefined font name.
-        * @param render The render type to be used
-        */
-        SDFFont(FontName fn, RenderType render);
+        SDFFont(std::string fn);
+        SDFFont(std::string fn, RenderMode render_mode);
+        SDFFont(std::string fn, float size);
+        SDFFont(std::string fn, bool flipY);
+        SDFFont(std::string fn, RenderMode render_mode, bool flipY);
+        SDFFont(std::string fn, float size, bool flipY);
+        SDFFont(std::string fn, float size, RenderMode render_mode);
+        SDFFont(std::string fn, float size, RenderMode render_mode, bool flipY);
 
-        /**
-        * Ctor.
-        *
-        * @param fn   The predefined font name.
-        * @param size The size of the font in logical units
-        */
-        SDFFont(FontName fn, float size);
-
-        /**
-        * Ctor.
-        *
-        * @param fn    The predefined font name.
-        * @param flipY The vertical flip flag
-        */
-        SDFFont(FontName fn, bool flipY);
-
-        /**
-        * Ctor.
-        *
-        * @param fn     The predefined font name.
-        * @param render The render type to be used
-        * @param flipY  The vertical flip flag
-        */
-        SDFFont(FontName fn, RenderType render, bool flipY);
-
-        /**
-        * Ctor.
-        *
-        * @param fn    The predefined font name.
-        * @param size  The size of the font in logical units
-        * @param flipY The vertical flip flag
-        */
-        SDFFont(FontName fn, float size, bool flipY);
-
-        /**
-        * Ctor.
-        *
-        * @param fn     The predefined font name.
-        * @param size   The size of the font in logical units
-        * @param render The render type to be used
-        */
-        SDFFont(FontName fn, float size, RenderType render);
-
-        /**
-        * Ctor.
-        *
-        * @param fn     The predefined font name.
-        * @param size   The size of the font in logical units
-        * @param render The render type to be used
-        * @param flipY  The vertical flip flag
-        */
-        SDFFont(FontName fn, float size, RenderType render, bool flipY);
-
-        /**
-         * Ctor.
-         *
-         * @param fn The file name of the bitmap font.
-         */
-        SDFFont(vislib::StringA fn);
-
-        /**
-         * Ctor.
-         *
-         * @param fn     The file name of the bitmap font.
-         * @param render The render type to be used
-         */
-        SDFFont(vislib::StringA fn, RenderType render);
-
-        /**
-         * Ctor.
-         *
-         * @param fn   The file name of the bitmap font.
-         * @param size The size of the font in logical units
-         */
-        SDFFont(vislib::StringA fn, float size);
-
-        /**
-         * Ctor.
-         *   
-         * @param fn    The file name of the bitmap font.
-         * @param flipY The vertical flip flag
-         */
-        SDFFont(vislib::StringA fn, bool flipY);
-
-        /**
-         * Ctor.
-         *
-         * @param fn     The file name of the bitmap font.
-         * @param render The render type to be used
-         * @param flipY  The vertical flip flag
-         */
-        SDFFont(vislib::StringA fn, RenderType render, bool flipY);
-
-        /**
-         * Ctor.
-         *
-         * @param fn    The file name of the bitmap font.
-         * @param size  The size of the font in logical units
-         * @param flipY The vertical flip flag
-         */
-        SDFFont(vislib::StringA fn, float size, bool flipY);
-
-        /**
-         * Ctor.
-         *
-         * @param fn     The file name of the bitmap font.
-         * @param size   The size of the font in logical units
-         * @param render The render type to be used
-         */
-        SDFFont(vislib::StringA fn, float size, RenderType render);
-
-        /**
-         * Ctor.
-         *
-         * @param fn     The file name of the bitmap font.
-         * @param size   The size of the font in logical units
-         * @param render The render type to be used
-         * @param flipY  The vertical flip flag
-         */
-        SDFFont(vislib::StringA fn, float size, RenderType render, bool flipY);
-
-        /**
-         * Ctor.
-         *
-         * @param src The source object to clone from
-         */
         SDFFont(const SDFFont& src);
 
-        /**
-         * Ctor.
-         *
-         * @param src    The source object to clone from
-         * @param render The render type to be used
-         */
-        SDFFont(const SDFFont& src, RenderType render);
-
-        /**
-         * Ctor.
-         *
-         * @param src  The source object to clone from
-         * @param size The size of the font in logical units
-         */
-        SDFFont(const SDFFont& src, float size);
-
-        /**
-         * Ctor.
-         *
-         * @param src   The source object to clone from
-         * @param flipY The vertical flip flag
-         */
-        SDFFont(const SDFFont& src, bool flipY);
-
-        /**
-         * Ctor.
-         *
-         * @param src    The source object to clone from
-         * @param render The render type to be used
-         * @param flipY  The vertical flip flag
-         */
-        SDFFont(const SDFFont& src, RenderType render, bool flipY);
-
-        /**
-         * Ctor.
-         *
-         * @param src   The source object to clone from
-         * @param size  The size of the font in logical units
-         * @param flipY The vertical flip flag
-         */
-        SDFFont(const SDFFont& src, float size, bool flipY);
-
-        /**
-         * Ctor.
-         *
-         * @param src    The source object to clone from
-         * @param size   The size of the font in logical units
-         * @param render The render type to be used
-         */
-        SDFFont(const SDFFont& src, float size, RenderType render);
-
-        /**
-         * Ctor.
-         *
-         * @param src    The source object to clone from
-         * @param size   The size of the font in logical units
-         * @param render The render type to be used
-         * @param flipY  The vertical flip flag
-         */
-        SDFFont(const SDFFont& src, float size, RenderType render, bool flipY);
-
         /** Dtor. */
-        virtual ~SDFFont(void);
+        ~SDFFont(void);
 
         /**
-         * Draws a text into a specified rectangular area, and performs
-         * soft-breaks if necessary.
+         * Draws a text into a specified rectangular area, and performs soft-breaks if necessary.
          *
-         * @param c     The color as RGBA.
+         * @param col     The color as RGBA.
          * @param x     The left coordinate of the rectangle.
          * @param y     The upper coordinate of the rectangle.
+         * @param z     The z coordinate of the position.
          * @param w     The width of the rectangle.
          * @param h     The height of the rectangle.
          * @param size  The size to use.
@@ -343,55 +165,25 @@ namespace utility {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        virtual void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(col, x, y, w, h, size, flipY, this->to_string(txt), align);
+        }
 
-        /**
-        * Draws a text into a specified rectangular area, and performs
-        * soft-breaks if necessary.
-        *
-        * @param c     The color as RGBA.
-        * @param x     The left coordinate of the rectangle.
-        * @param y     The upper coordinate of the rectangle.
-        * @param z     The z coordinate of the position.
-        * @param w     The width of the rectangle.
-        * @param h     The height of the rectangle.
-        * @param size  The size to use.
-        * @param flipY The flag controlling the direction of the y-axis.
-        * @param txt   The zero-terminated string to draw.
-        * @param align The alignment of the text inside the area.
-        */
-        virtual void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(col, x, y, z, w, h, size, flipY, this->to_string(txt), align);
+        }
 
-        /**
-         * Draws a text at the specified position.
-         *
-         * @param c     The color as RGBA.
-         * @param x     The x coordinate of the position.
-         * @param y     The y coordinate of the position.
-         * @param size  The size to use.
-         * @param flipY The flag controlling the direction of the y-axis.
-         * @param txt   The zero-terminated string to draw.
-         * @param align The alignment of the text.
-         */
-        virtual void DrawString(const float col[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(const float col[4], float x, float y, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const float col[4], float x, float y, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(col, x, y, size, flipY, this->to_string(txt), align);
+        }
 
-        /**
-        * Draws a text at the specified position.
-        *  
-        * @param c     The color as RGBA.
-        * @param x     The x coordinate of the position.
-        * @param y     The y coordinate of the position.
-        * @param z     The z coordinate of the position.
-        * @param size  The size to use.
-        * @param flipY The flag controlling the direction of the y-axis.
-        * @param txt   The zero-terminated string to draw.
-        * @param align The alignment of the text.
-        */
-        virtual void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
-        virtual void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(col, x, y, z, size, flipY, this->to_string(txt), align);
+        }
 
         /**
         * Answers the width of the line 'txt' in logical units.
@@ -401,8 +193,10 @@ namespace utility {
         *
         * @return The width in the text in logical units.
         */
-        virtual float LineWidth(float size, const char *txt) const;
-        virtual float LineWidth(float size, const wchar_t *txt) const;
+        float LineWidth(float size, const char *txt) const;
+        float LineWidth(float size, const wchar_t* txt) const {
+            return this->LineWidth(size, this->to_string(txt));
+        }
 
         /**
         * Calculates the height of a text block in number of lines, when
@@ -415,34 +209,36 @@ namespace utility {
         *
         * @return The height of the text block in number of lines.
         */
-        virtual unsigned int BlockLines(float maxWidth, float size, const char *txt) const;
-        virtual unsigned int BlockLines(float maxWidth, float size, const wchar_t *txt) const;
+        unsigned int BlockLines(float maxWidth, float size, const char *txt) const;
+        unsigned int BlockLines(float maxWidth, float size, const wchar_t* txt) const {
+            return this->BlockLines(maxWidth, size, this->to_string(txt));
+        }
 
         // --- Global font settings -------------------------------------------
 
         /**
-         * Answers the globally used render type of the font.
+         * Answers the globally used render mode of the font.
          *
-         * @return The render type of the font
+         * @return The render mode of the font
          */
-        inline RenderType GetRenderType(void) const {
-            return this->renderType;
+        inline RenderMode GetRenderMode(void) const {
+            return this->renderMode;
         }
 
         /**
-         * Sets the render type of the font globally.
+         * Sets the render_mode type of the font globally.
          *
-         * @param t The render type for the font
+         * @param t The render_mode type for the font
          */
-        inline void SetRenderType(RenderType t) {
-            this->renderType = t;           
+        inline void SetRenderMode(RenderMode t) {
+            this->renderMode = t;           
         }
 
         /**
          * Enable/Disable billboard mode.
          */
         inline void SetBillboardMode(bool state) { 
-            this->billboard = state; 
+            this->billboardMode = state; 
         }
 
         /**
@@ -451,7 +247,7 @@ namespace utility {
         * @return True if billboard mode is enabled, false otherwise.
         */
         inline bool GetBillboardMode(void) const {
-            return this->billboard;
+            return this->billboardMode;
         }
 
         /**
@@ -492,7 +288,7 @@ namespace utility {
          * Determines that all DrawString() calls are cached for later batch draw.
          */
         inline void SetBatchDrawMode(bool state) { 
-            this->useBatchDraw = state;
+            this->batchDrawMode = state;
         }
 
         /**
@@ -501,7 +297,7 @@ namespace utility {
          * @return True if batch draw is enabled, false otherwise.
          */
         inline bool GetBatchDrawMode(void) const { 
-            return this->useBatchDraw;
+            return this->batchDrawMode;
         }
 
         /**
@@ -538,14 +334,14 @@ namespace utility {
          *
          * @return 'true' on success, 'false' on failure.
          */
-        virtual bool initialise(megamol::core::CoreInstance *core);
+        bool initialise(megamol::core::CoreInstance* core_instance_ptr);
 
         /**
          * Deinitialises the object. You must not call this method directly.
          * Instead call 'Deinitialise'. Derived classes must call
          * 'Deinitialise' in EACH dtor.
          */
-        virtual void deinitialise(void);
+        void deinitialise(void);
 
     private:
 
@@ -558,35 +354,39 @@ namespace utility {
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
 
-        /** The font file name. */
-        vislib::StringA fontFileName;
-
-        /** The render type used. */
-        RenderType renderType;
-
-        /** Billboard mode. */
-        bool billboard;
-
-        /** Quaternion for rotation. */
-        vislib::math::Quaternion<float> rotation;
-
-        /** Inidcating if font could be loaded successfully. */
+        /** Indicating if font could be loaded successfully. */
         bool initialised;
 
-        /** The shader of the font. */
-        vislib::graphics::gl::GLSLShader shader;
+        /** The font file name. */
+        std::string fontFileName;
+
+        /** The render_mode type used. */
+        RenderMode renderMode;
+
+        /** Billboard mode. */
+        bool billboardMode;
+
+        /** String batch cache status. */
+        bool batchDrawMode;
+
+        /** Quaternion for font rotation. */
+        vislib::math::Quaternion<float> rotation;
+
+        // Render data --------------------------------------------------------
+
+        /** The shaders of the font for different color modes. */
+        vislib::graphics::gl::GLSLShader shaderglobcol;
         vislib::graphics::gl::GLSLShader shadervertcol;
 
         /** The texture of the font. */
         std::shared_ptr<glowl::Texture2D> texture;
 
         /** Vertex buffer object attributes. */
-        enum VBOAttrib {
+        enum VBOAttrib : int {
             POSITION = 0,
             TEXTURE  = 1,
             COLOR    = 2  
         };
-
         /** Vertex buffer object info. */
         struct SDFVBO {
             GLuint           handle;  // buffer handle
@@ -599,14 +399,12 @@ namespace utility {
         /** Vertex buffer objects. */
         std::vector<SDFVBO> vbos;
 
-        /** String batch cache status. */
-        bool useBatchDraw;
-
         /** Position, texture and color data cache for batch draw. */
         mutable std::vector<float> posBatchCache;
         mutable std::vector<float> texBatchCache;
         mutable std::vector<float> colBatchCache;
 
+        // Font data ----------------------------------------------------------
 
         /** The glyph kernings. */
         struct SDFGlyphKerning {
@@ -631,7 +429,6 @@ namespace utility {
             SDFGlyphKerning  *kerns;     // Array of kernings
         };
 
-        // Regular font -------------------------------------------------------
         /** The glyphs. */
         std::vector<SDFGlyphInfo>    glyphs;
         /** The glyphs sorted by index. */
@@ -648,7 +445,7 @@ namespace utility {
         **********************************************************************/
 
         /** Loading font. */
-        bool loadFont(megamol::core::CoreInstance *core);
+        bool loadFont(megamol::core::CoreInstance* core_instance_ptr);
 
         /** Load buffers. */
         bool loadFontBuffers();
@@ -657,7 +454,7 @@ namespace utility {
         bool loadFontInfo(vislib::StringW filename);
 
         /** Load shaders from files. */
-        bool loadFontShader(megamol::core::CoreInstance *core);
+        bool loadFontShader(megamol::core::utility::ShaderSourceFactory& shader_factory);
 
         /**
         * Answer the number of lines in the glyph run
@@ -729,7 +526,12 @@ namespace utility {
         *
         * @param fn The predefined font name.
         */
-        vislib::StringA translateFontName(FontName fn);
+        inline std::string presetFontNameToString(PresetFontName fn) const ;
+
+        // Convert wchar_t to char
+        inline const char* to_string(const wchar_t* wstr) const {
+            return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr).c_str();
+        }
 
     };
 

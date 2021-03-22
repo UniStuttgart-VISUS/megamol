@@ -17,295 +17,395 @@ using namespace megamol::core::utility;
 /* PUBLIC ********************************************************************/
 
 
-/*
-* SDFFont::SDFFont
-*/
-SDFFont::SDFFont(FontName fn) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->fontFileName = this->translateFontName(fn);
+SDFFont::SDFFont(PresetFontName fn)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(this->presetFontNameToString(fn))
+        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
 }
 
-
-/*
-* SDFFont::SDFFont
-*/
-SDFFont::SDFFont(FontName fn, SDFFont::RenderType render) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->fontFileName = this->translateFontName(fn);
+SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(this->presetFontNameToString(fn))
+        , renderMode(render_mode)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
 }
 
-
-/*
-* SDFFont::SDFFont
-*/
-SDFFont::SDFFont(FontName fn, float size) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetSize(size);
-    this->fontFileName = this->translateFontName(fn);
-}
-
-
-/*
-* SDFFont::SDFFont
-*/
-SDFFont::SDFFont(FontName fn, bool flipY) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetFlipY(flipY);
-    this->fontFileName = this->translateFontName(fn);
-}
-
-
-/*
-* SDFFont::SDFFont
-*/
-SDFFont::SDFFont(FontName fn, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetFlipY(flipY);
-    this->fontFileName = this->translateFontName(fn);
-}
-
-
-/*
-* SDFFont::SDFFont
-*/
-SDFFont::SDFFont(FontName fn, float size, bool flipY) : AbstractFont(),
-    renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetSize(size);
-    this->SetFlipY(flipY);
-    this->fontFileName = this->translateFontName(fn);
-}
-
-
-/*
-* SDFFont::SDFFont
-*/
-SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetSize(size);
-    this->fontFileName = this->translateFontName(fn);
-}
-
-
-/*
-* SDFFont::SDFFont
-*/
-SDFFont::SDFFont(FontName fn, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetSize(size);
-    this->SetFlipY(flipY);
-    this->fontFileName = this->translateFontName(fn);
-}
-
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(vislib::StringA fn) : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false)  {
-
-}
-
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(vislib::StringA fn,  SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-}
-
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(vislib::StringA fn, float size)  : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
+SDFFont::SDFFont(PresetFontName fn, float size)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(this->presetFontNameToString(fn))
+        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
     this->SetSize(size);
 }
 
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(vislib::StringA fn, bool flipY) : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
+SDFFont::SDFFont(PresetFontName fn, bool flipY)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(this->presetFontNameToString(fn))
+        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
     this->SetFlipY(flipY);
 }
 
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(vislib::StringA fn, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
+SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode, bool flipY)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(this->presetFontNameToString(fn))
+        , renderMode(render_mode)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
     this->SetFlipY(flipY);
 }
 
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(vislib::StringA fn, float size, bool flipY) : AbstractFont(),
-    fontFileName(fn), renderType(SDFFont::RENDERTYPE_FILL), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
+SDFFont::SDFFont(PresetFontName fn, float size, bool flipY)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(this->presetFontNameToString(fn))
+        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
 
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
+SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(this->presetFontNameToString(fn))
+        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
     this->SetSize(size);
 }
 
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(vislib::StringA fn, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        fontFileName(fn), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetSize(size);
-    this->SetFlipY(flipY);
-}
-
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(const SDFFont& src) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetSize(src.GetSize());
-    this->SetFlipY(src.IsFlipY());
-}
-
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetSize(src.GetSize());
-    this->SetFlipY(src.IsFlipY());
-}
-
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(const SDFFont& src, float size) : AbstractFont(),
-        fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetSize(size);
-    this->SetFlipY(src.IsFlipY());
-}
-
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(const SDFFont& src, bool flipY) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false){
-
-    this->SetSize(src.GetSize());
-    this->SetFlipY(flipY);
-}
-
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(const SDFFont& src, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetSize(src.GetSize());
-    this->SetFlipY(flipY);
-}
-
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(const SDFFont& src, float size, bool flipY) : AbstractFont(),
-    fontFileName(src.fontFileName), renderType(src.renderType), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
+SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode, bool flipY)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(this->presetFontNameToString(fn))
+        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
 
-
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(const SDFFont& src, float size,  SDFFont::RenderType render) : AbstractFont(),
-    fontFileName(src.fontFileName),  renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
-
-    this->SetSize(size);
-    this->SetFlipY(src.IsFlipY());
+SDFFont::SDFFont(std::string fn)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(fn)
+        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
 }
 
+SDFFont::SDFFont(std::string fn, SDFFont::RenderMode render_mode)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(fn)
+        , renderMode(render_mode)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
+}
 
-/*
- * SDFFont::SDFFont
- */
-SDFFont::SDFFont(const SDFFont& src, float size, SDFFont::RenderType render, bool flipY) : AbstractFont(),
-        fontFileName(src.fontFileName), renderType(render), billboard(false), rotation(), initialised(false), shader(), shadervertcol(), texture(nullptr), vbos(), glyphs(), glyphIdcs(), glyphKrns(), useBatchDraw(false) {
+SDFFont::SDFFont(std::string fn, float size)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(fn)
+        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
+    this->SetSize(size);
+}
 
+SDFFont::SDFFont(std::string fn, bool flipY)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(fn)
+        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
+    this->SetFlipY(flipY);
+}
+
+SDFFont::SDFFont(std::string fn, SDFFont::RenderMode render_mode, bool flipY)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(fn)
+        , renderMode(render_mode)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
+    this->SetFlipY(flipY);
+}
+
+SDFFont::SDFFont(std::string fn, float size, bool flipY)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(fn)
+        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
 
+SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(fn)
+        , renderMode(render_mode)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
+    this->SetSize(size);
+}
 
-/*
- * SDFFont::~SDFFont
- */
+SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode, bool flipY)
+        : AbstractFont()
+        , initialised(false)
+        , fontFileName(fn)
+        , renderMode(render_mode)
+        , billboardMode(false)
+        , batchDrawMode(false)
+        , rotation()
+        , shaderglobcol()
+        , shadervertcol()
+        , texture(nullptr)
+        , vaoHandle(GLuint(0))
+        , vbos()
+        , posBatchCache()
+        , texBatchCache()
+        , colBatchCache()
+        , glyphs()
+        , glyphIdcs()
+        , glyphKrns() {
+    this->SetSize(size);
+    this->SetFlipY(flipY);
+}
+
+megamol::core::utility::SDFFont::SDFFont(const SDFFont& src)
+        : AbstractFont()
+        , initialised(src.initialised)
+        , fontFileName(src.fontFileName)
+        , renderMode(src.renderMode)
+        , billboardMode(src.billboardMode)
+        , batchDrawMode(src.batchDrawMode)
+        , rotation(src.rotation)
+        , shaderglobcol(src.shaderglobcol)
+        , shadervertcol(src.shadervertcol)
+        , texture(src.texture)
+        , vaoHandle(src.vaoHandle)
+        , vbos(src.vbos)
+        , posBatchCache(src.posBatchCache)
+        , texBatchCache(src.texBatchCache)
+        , colBatchCache(src.colBatchCache)
+        , glyphs(src.glyphs)
+        , glyphIdcs(src.glyphIdcs)
+        , glyphKrns(src.glyphKrns) {
+}
+
+
 SDFFont::~SDFFont(void) {
 
     this->Deinitialise();
 }
 
 
-/*
- * SDFFont::BlockLines
- */
 unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) const {
 
     return this->lineCount(this->buildGlyphRun(txt, maxWidth / size), true);
 }
 
 
-/*
- * SDFFont::BlockLines
- */
-unsigned int SDFFont::BlockLines(float maxWidth, float size, const wchar_t *txt) const {
-
-    return this->lineCount(this->buildGlyphRun(txt, maxWidth / size), true);
-}
-
-
-/*
- * SDFFont::DrawString
- */
 void SDFFont::DrawString(const float col[4], float x, float y, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
-    if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERTYPE_NONE)) return;
 
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
@@ -322,35 +422,9 @@ void SDFFont::DrawString(const float col[4], float x, float y, float size, bool 
 }
 
 
-/*
-* SDFFont::DrawString
-*/
-void SDFFont::DrawString(const float col[4], float x, float y, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
-
-    if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
-
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
-
-    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size *  (flipY ? -1.0f : 1.0f);
-
-    }
-    else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
-    }
-    
-    this->drawGlyphs(col, run, x, y, 0.0f, size, flipY, align);
-
-    ARY_SAFE_DELETE(run);
-}
-
-
-/*
- * SDFFont::DrawString
- */
 void SDFFont::DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
-    if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERTYPE_NONE)) return;
 
     int *run = this->buildGlyphRun(txt, w / size);
 
@@ -395,62 +469,9 @@ void SDFFont::DrawString(const float col[4], float x, float y, float w, float h,
 }
 
 
-/*
- * SDFFont::DrawString
- */
-void SDFFont::DrawString(const float col[4], float x, float y, float w, float h, float size,  bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
-
-    if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
-
-    int *run = this->buildGlyphRun(txt, w / size);
-
-    if (flipY) y += h;
-
-    switch (align) {
-    case ALIGN_CENTER_BOTTOM:
-        x += w * 0.5f;
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
-        break;
-    case ALIGN_CENTER_MIDDLE:
-        x += w * 0.5f;
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
-        break;
-    case ALIGN_CENTER_TOP:
-        x += w * 0.5f;
-        break;
-    case ALIGN_LEFT_BOTTOM:
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
-        break;
-    case ALIGN_LEFT_MIDDLE:
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
-        break;
-    case ALIGN_RIGHT_BOTTOM:
-        x += w;
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
-        break;
-    case ALIGN_RIGHT_MIDDLE:
-        x += w;
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
-        break;
-    case ALIGN_RIGHT_TOP:
-        x += w;
-        break;
-    default:
-        break;
-    }
-
-    this->drawGlyphs(col, run, x, y, 0.0f, size, flipY, align);
-
-    ARY_SAFE_DELETE(run);
-}
-
-
-/*
-* SDFFont::DrawString
-*/
 void SDFFont::DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char *txt, AbstractFont::Alignment align) const {
 
-    if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERTYPE_NONE)) return;
 
     int *run = this->buildGlyphRun(txt, w / size);
 
@@ -495,62 +516,9 @@ void SDFFont::DrawString(const float col[4], float x, float y, float z, float w,
 }
 
 
-/*
-* SDFFont::DrawString
-*/
-void SDFFont::DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t *txt, AbstractFont::Alignment align) const {
-
-    if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
-
-    int *run = this->buildGlyphRun(txt, w / size);
-
-    if (flipY) y += h;
-
-    switch (align) {
-    case ALIGN_CENTER_BOTTOM:
-        x += w * 0.5f;
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
-        break;
-    case ALIGN_CENTER_MIDDLE:
-        x += w * 0.5f;
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
-        break;
-    case ALIGN_CENTER_TOP:
-        x += w * 0.5f;
-        break;
-    case ALIGN_LEFT_BOTTOM:
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
-        break;
-    case ALIGN_LEFT_MIDDLE:
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
-        break;
-    case ALIGN_RIGHT_BOTTOM:
-        x += w;
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size);
-        break;
-    case ALIGN_RIGHT_MIDDLE:
-        x += w;
-        y += (flipY ? 1.0f : -1.0f) * (h - static_cast<float>(this->lineCount(run, false)) * size) * 0.5f;
-        break;
-    case ALIGN_RIGHT_TOP:
-        x += w;
-        break;
-    default:
-        break;
-    }
-
-    this->drawGlyphs(col, run, x, y, z, size, flipY, align);
-
-    ARY_SAFE_DELETE(run);
-}
-
-
-/*
-* SDFFont::DrawString
-*/
 void SDFFont::DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const {
 
-    if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERTYPE_NONE)) return;
 
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
@@ -567,31 +535,6 @@ void SDFFont::DrawString(const float col[4], float x, float y, float z, float si
 }
 
 
-/*
-* SDFFont::DrawString
-*/
-void SDFFont::DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t * txt, Alignment align) const {
-
-    if (!this->initialised || (this->renderType == RenderType::RENDERTYPE_NONE)) return;
-
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
-
-    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE) || (align == ALIGN_RIGHT_MIDDLE)) {
-        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size  *  (flipY ? -1.0f : 1.0f);
-    }
-    else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM) || (align == ALIGN_RIGHT_BOTTOM)) {
-        y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
-    }
-
-    this->drawGlyphs(col, run, x, y, z, size, flipY, align);
-
-    ARY_SAFE_DELETE(run);
-}
-
-
-/*
-* SDFFont::LineWidth
-*/
 float SDFFont::LineWidth(float size, const char *txt) const {
 
     int *run = this->buildGlyphRun(txt, FLT_MAX);
@@ -609,29 +552,6 @@ float SDFFont::LineWidth(float size, const char *txt) const {
 }
 
 
-/*
-* SDFFont::LineWidth
-*/
-float SDFFont::LineWidth(float size, const wchar_t *txt) const {
-
-    int *run = this->buildGlyphRun(txt, FLT_MAX);
-    int *i = run;
-    float len = 0.0f;
-    float comlen = 0.0f;
-    while (*i != 0) {
-        comlen = this->lineWidth(i, true);
-        if (comlen > len) {
-            len = comlen;
-        }
-    }
-    ARY_SAFE_DELETE(run);
-    return len * size;
-}
-
-
-/*
- * SDFFont::BatchDrawString
- */
 void SDFFont::BatchDrawString(const float col[4]) const {
 
     if (this->posBatchCache.empty()) return;
@@ -654,9 +574,6 @@ void SDFFont::BatchDrawString(const float col[4]) const {
 }
 
 
-/*
- * SDFFont::BatchDrawString
- */
 void SDFFont::BatchDrawString() const {
 
     if (this->posBatchCache.empty()) return;
@@ -684,21 +601,15 @@ void SDFFont::BatchDrawString() const {
 /* PRIVATE********************************************************************/
 
 
-/*
- * SDFFont::initialise
- */
-bool SDFFont::initialise(megamol::core::CoreInstance *core) {
+bool SDFFont::initialise(megamol::core::CoreInstance* core_instance_ptr) {
     
-    if (!this->initialised)
-        this->loadFont(core);
-
+    if (!this->initialised) {
+        this->loadFont(core_instance_ptr);
+    }
     return this->initialised;
 }
 
 
-/*
- * SDFFont::deinitialise
- */
 void SDFFont::deinitialise(void) {
 
     // String cache
@@ -708,7 +619,7 @@ void SDFFont::deinitialise(void) {
     this->texture.reset();
 
     // Shader
-    this->shader.Release();
+    this->shaderglobcol.Release();
     this->shadervertcol.Release();
 
     // VBOs
@@ -735,9 +646,6 @@ void SDFFont::deinitialise(void) {
 }
 
 
-/*
-* SDFFont::lineCount
-*/
 int SDFFont::lineCount(int *run, bool deleterun) const {
     if ((run == nullptr) || (run[0] == 0)) return 0;
     int i = 1;
@@ -750,9 +658,6 @@ return i;
 }
 
 
-/*
-* SDFFont::lineWidth
-*/
 float SDFFont::lineWidth(int *&run, bool iterate) const {
 
     int *i = run;
@@ -768,9 +673,6 @@ float SDFFont::lineWidth(int *&run, bool iterate) const {
 }
 
 
-/*
-* SDFFont::buildGlyphRun
-*/
 int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
 
     vislib::StringA txtutf8;
@@ -790,31 +692,6 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
 }
 
 
-/*
-* SDFFont::buildGlyphRun
-*/
-int *SDFFont::buildGlyphRun(const wchar_t *txt, float maxWidth) const {
-
-    vislib::StringA txtutf8;
-    if (!vislib::UTF8Encoder::Encode(txtutf8, txt)) {
-        // encoding failed ... how?
-        char *t = txtutf8.AllocateBuffer(vislib::CharTraitsW::SafeStringLength(txt));
-        for (; *txt != 0; txt++) {
-            if ((*txt & 0x80) == 0) {
-                *t = static_cast<char>(*txt);
-                t++;
-            }
-        }
-        *t = 0;
-    }
-
-    return this->buildUpGlyphRun(txtutf8, maxWidth);
-}
-
-
-/*
-* SDFFont::buildUpGlyphRun
-*/
 int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
     size_t txtlen = static_cast<size_t>(CharTraitsA::SafeStringLength(txtutf8));
@@ -941,9 +818,6 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 }
 
 
-/*
-* SDFFont::drawGlyphs
-*/
 void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z, float size, bool flipY, Alignment align) const {
 
     // Data buffers
@@ -971,7 +845,7 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
     // -> Setting fixed rotation point depending on alignment.
     vislib::math::Vector<GLfloat, 4> billboardRotPoint;
 
-    if (this->billboard) {
+    if (this->billboardMode) {
         float deltaY = 0.0f;
         switch (align) {
         case ALIGN_LEFT_MIDDLE:
@@ -1025,7 +899,7 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
 
         // Adjust positions if character indicates a new line
         if ((*run) < 0) {
-            gx = (this->billboard)?(billboardRotPoint.X()):(x);
+            gx = (this->billboardMode)?(billboardRotPoint.X()):(x);
             if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
                 gx -= this->lineWidth(run, false) * size * 0.5f;
             }
@@ -1182,9 +1056,6 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
 }
 
 
-/*
- * SDFFont::render
- */
 void SDFFont::render(unsigned int gc, const float *col[4]) const {
 
     // Check texture
@@ -1194,7 +1065,7 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
     }
 
     // Check if per vertex color should be used
-    const vislib::graphics::gl::GLSLShader *usedShader = &this->shader;
+    const vislib::graphics::gl::GLSLShader* usedShader = &this->shaderglobcol;
     if (col == nullptr) {
         usedShader = &this->shadervertcol;
     }
@@ -1212,7 +1083,7 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
 
     // modelviewprojection matrix
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
-    if (this->billboard) {
+    if (this->billboardMode) {
         // Only projection matrix has to be applied for billboard
         modelViewProjMatrix = projMatrix;
     }
@@ -1250,7 +1121,7 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
 
     // Fragment shader
     glUniform1i(usedShader->ParameterLocation("fontTex"), 0);
-    glUniform1i(usedShader->ParameterLocation("renderType"), (int)(this->renderType));
+    glUniform1i(usedShader->ParameterLocation("renderMode"), (int)(this->renderMode));
 
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)gc * 6); // 2 triangles per glyph -> 6 vertices
 
@@ -1262,10 +1133,7 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
 }
 
 
-/*
-* SDFFont::loadFont
-*/
-bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
+bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
 
     this->initialised = false;
 
@@ -1274,7 +1142,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     this->ClearBatchDrawCache();
     this->SetBillboardMode(false);
 
-    if (core == nullptr) {
+    if (core_instance_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Pointer to MegaMol CoreInstance is NULL. \n");
         return false;
     }
@@ -1287,26 +1155,29 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     }
 
     // (2) Load font information -----------------------------------------------
-    vislib::StringA infoFile = this->fontFileName;
-    infoFile.Append(".fnt");
-    vislib::StringW info_filename = ResourceWrapper::getFileName(core->Configuration(), infoFile).PeekBuffer();
+    std::string infoFile = this->fontFileName;
+    infoFile.append(".fnt");
+    vislib::StringW info_filename =
+        ResourceWrapper::getFileName(core_instance_ptr->Configuration(), vislib::StringA(infoFile.c_str()))
+            .PeekBuffer();
     if (!this->loadFontInfo(info_filename)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile.c_str());
         return false;
     }
 
     // (3) Load font texture --------------------------------------------------------
-    vislib::StringA textureFile = this->fontFileName;
-    textureFile.Append(".png");
-    auto texture_filename =
-        static_cast<std::wstring>(ResourceWrapper::getFileName(core->Configuration(), textureFile).PeekBuffer());
+    std::string textureFile = this->fontFileName;
+    textureFile.append(".png");
+    auto texture_filename = static_cast<std::wstring>(
+        ResourceWrapper::getFileName(core_instance_ptr->Configuration(), vislib::StringA(textureFile.c_str()))
+            .PeekBuffer());
     if (!megamol::core::view::RenderUtils::LoadTextureFromFile(this->texture, texture_filename)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile.c_str());
         return false;
     }
 
     // (4) Load shaders --------------------------------------------------------
-    if (!this->loadFontShader(core)) {
+    if (!this->loadFontShader(core_instance_ptr->ShaderSourceFactory())) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font shaders. \n");
         return false;
     }
@@ -1316,26 +1187,20 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
 }
 
 
-/*
-* SDFFont::translateFontName
-*/
-vislib::StringA SDFFont::translateFontName(FontName fn) {
+std::string SDFFont::presetFontNameToString(PresetFontName fn) const {
 
-    vislib::StringA fileName = "";
+    std::string fileName;
     switch (fn) {
-        case(SDFFont::FontName::EVOLVENTA_SANS): fileName = "Evolventa-SansSerif"; break;
-        case(SDFFont::FontName::ROBOTO_SANS):    fileName = "Roboto-SansSerif";    break;
-        case(SDFFont::FontName::VOLLKORN_SERIF): fileName = "Vollkorn-Serif";      break;
-        case(SDFFont::FontName::UBUNTU_MONO):    fileName = "Ubuntu-Mono";         break;
+        case(SDFFont::PresetFontName::EVOLVENTA_SANS): fileName = "Evolventa-SansSerif"; break;
+        case(SDFFont::PresetFontName::ROBOTO_SANS):    fileName = "Roboto-SansSerif";    break;
+        case(SDFFont::PresetFontName::VOLLKORN_SERIF): fileName = "Vollkorn-Serif";      break;
+        case(SDFFont::PresetFontName::UBUNTU_MONO):    fileName = "Ubuntu-Mono";         break;
         default: break;
     }
     return fileName;
 }
 
 
-/*
-* SDFFont::loadFontBuffers
-*/
 bool SDFFont::loadFontBuffers() {
 
     // Reset 
@@ -1398,12 +1263,7 @@ bool SDFFont::loadFontBuffers() {
 }
 
 
-/*
-* SDFFont::loadFontInfo
-*
-* Bitmap Font file format: http://www.angelcode.com/products/fnont/doc/file_format.html
-*
-*/
+// Bitmap Font file format: http://www.angelcode.com/products/fnont/doc/file_format.html
 bool SDFFont::loadFontInfo(vislib::StringW filename) {
 
     // Reset font info
@@ -1552,37 +1412,8 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
 }
 
 
-/*
-* SDFFont::loadFontShader
-*/
-bool SDFFont::loadFontShader(megamol::core::CoreInstance *core) {
-
-    if (core == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFontShader] Pointer to MegaMol CoreInstance is NULL. \n");
-        return false;
-    }
-
-    vislib::graphics::gl::ShaderSource vs, fs;
-
-    StringA shaderNamespace  = "sdffont";
-
-    StringA vertShaderName = shaderNamespace;
-    vertShaderName.Append("::vertex");
-
-    StringA fragShaderName = shaderNamespace;
-    fragShaderName.Append("::fragment");
-
-    StringA versSnipName = vertShaderName;
-    versSnipName.Append("::version");
-
-    StringA mainSnipName = vertShaderName;
-    mainSnipName.Append("::main");
-
-    // Create array of shaders to loop over
-    vislib::graphics::gl::GLSLShader *shaderPtr[2];
-    shaderPtr[0] = &this->shader;
-    shaderPtr[1] = &this->shadervertcol;
-
+bool SDFFont::loadFontShader(megamol::core::utility::ShaderSourceFactory& shader_factory) {
+    
     // Defining used vbo attributes for each shader
     std::vector<unsigned int> attribLoc[2];
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
@@ -1600,45 +1431,45 @@ bool SDFFont::loadFontShader(megamol::core::CoreInstance *core) {
         }
     }
 
+    vislib::graphics::gl::ShaderSource vs, fs;
+    // Create array of shaders to loop over
+    vislib::graphics::gl::GLSLShader* shaderPtr[2];
+    shaderPtr[0] = &this->shaderglobcol;
+    shaderPtr[1] = &this->shadervertcol;
     // Loop over all shaders in array
     for (unsigned int i = 0; i < 2; ++i) {
         // Reset shader
         shaderPtr[i]->Release();
-
-        // Load shader
         try {
-
+            // vertex shader
             vs.Clear();
-            if (!core->ShaderSourceFactory().MakeShaderSource(vertShaderName, vs)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for vertex shader. \n");
-                return false;
-            }
-
-            fs.Clear();
-            if (!core->ShaderSourceFactory().MakeShaderSource(fragShaderName, fs)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for fragment shader. \n");
-                return false;
-            }
-
+            /// 1)
+            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::version")); 
             // Choose right color snippet for current shader
-            StringA colSnipName = vertShaderName;
-            if (&this->shader == shaderPtr[i]) {
-                colSnipName.Append("::globalColor");
+            StringA colSnipName;
+            if (&this->shaderglobcol == shaderPtr[i]) {
+                colSnipName = "sdffont::vertex::globalColor";
             }
             else if (&this->shadervertcol == shaderPtr[i]) {
-                colSnipName.Append("::vertexColor");
+                colSnipName = "sdffont::vertex::vertexColor";
             }
-
-            // Putting vertex shader together
-            vs.Clear();
-            vs.Append(core->ShaderSourceFactory().MakeShaderSnippet(versSnipName)); /// 1)
-            vs.Append(core->ShaderSourceFactory().MakeShaderSnippet(colSnipName));  /// 2)
-            vs.Append(core->ShaderSourceFactory().MakeShaderSnippet(mainSnipName)); /// 3)
+            /// 2)
+            vs.Append(shader_factory.MakeShaderSnippet(colSnipName));
+            /// 3)
+            vs.Append(shader_factory.MakeShaderSnippet("sdffont::vertex::main")); 
             //VLTRACE(vislib::Trace::LEVEL_VL_INFO, "\n----- Vertex shader using '%s': ----- \n%s\n", colSnipName.PeekBuffer(), vs.WholeCode().PeekBuffer());
+
+            // fragment shader
+            fs.Clear();
+            if (!shader_factory.MakeShaderSource("sdffont::fragment", fs)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[SDFFont] [loadShader] Unable to make shader source for fragment shader. \n");
+                return false;
+            }
 
             // Compiling shaders
             if (!shaderPtr[i]->Compile(vs.Code(), vs.Count(), fs.Code(), fs.Count())) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown error. \n", shaderNamespace.PeekBuffer());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"sdffont\"-shader: Unknown error. \n");
                 return false;
             }
 
@@ -1649,21 +1480,21 @@ bool SDFFont::loadFontShader(megamol::core::CoreInstance *core) {
 
             // Linking shaders
             if (!shaderPtr[i]->Link()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"%s\"-shader: Unknown error. \n", shaderNamespace.PeekBuffer());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"sdffont\"-shader: Unknown error. \n");
                 return false;
             }
         }
         catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader (@%s): %s. \n", shaderNamespace.PeekBuffer(),
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"sdffont\"-shader (@%s): %s. \n",
                 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
             return false;
         }
         catch (vislib::Exception e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: %s. \n", shaderNamespace.PeekBuffer(), e.GetMsgA());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"sdffont\"-shader: %s. \n", e.GetMsgA());
             return false;
         }
         catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown exception. \n", shaderNamespace.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"sdffont\"-shader: Unknown exception. \n");
             return false;
         }
     }
