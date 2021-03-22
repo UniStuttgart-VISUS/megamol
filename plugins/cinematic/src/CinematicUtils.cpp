@@ -160,9 +160,10 @@ void CinematicUtils::PushMenu(const std::string& left_label, const std::string& 
     auto current_back_color = this->Color(CinematicUtils::Colors::BACKGROUND);
     this->SetBackgroundColor(this->Color(CinematicUtils::Colors::MENU));
     auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(glm::value_ptr(color), 0.0f, textPosY, new_font_size, false, left_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->font.DrawString(glm::value_ptr(color), (viewport_width - midleftLabelWidth) / 2.0f, textPosY, new_font_size, false, middle_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->font.DrawString(glm::value_ptr(color), (viewport_width - rightLabelWidth), textPosY, new_font_size, false, right_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    glm::mat4 ortho = glm::ortho(0.0f, viewport_width, 0.0f, viewport_height, -1.0f, 1.0f);
+    this->font.DrawString(ortho, glm::value_ptr(color), 0.0f, textPosY, new_font_size, false, left_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(ortho, glm::value_ptr(color), (viewport_width - midleftLabelWidth) / 2.0f, textPosY, new_font_size, false, middle_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(ortho, glm::value_ptr(color), (viewport_width - rightLabelWidth), textPosY, new_font_size, false, right_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     this->SetBackgroundColor(current_back_color);
 }
 
@@ -209,14 +210,15 @@ void CinematicUtils::PushHotkeyList(float viewport_width, float viewport_height)
 
     // Push hotkey text
     auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(glm::value_ptr(color), border, quad_height - border, hotkey_font_size, false, hotkey_str.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    glm::mat4 ortho = glm::ortho(0.0f, viewport_width, 0.0f, viewport_height, -1.0f, 1.0f);
+    this->font.DrawString(ortho, glm::value_ptr(color), border, quad_height - border, hotkey_font_size, false, hotkey_str.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 }
 
 
-void CinematicUtils::PushText(const std::string& text, float x, float y, float z) {
+void CinematicUtils::Push2DText(const glm::mat4& orhto, const std::string& text, float x, float y, float z) {
 
     auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(glm::value_ptr(color), x, y, z, this->font_size, false, text.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(orhto, glm::value_ptr(color), x, y, z, this->font_size, false, text.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 }
 
 
@@ -229,26 +231,9 @@ void CinematicUtils::DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 
     this->DrawAllPrimitives(mat_mvp, dim_vp);
 
-    // Font rendering takes matrices from OpenGL stack
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(mat_mvp));
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
     glDisable(GL_DEPTH_TEST);
-
-    this->font.BatchDrawString();
-
+    this->font.BatchDrawString(mat_mvp);
     glEnable(GL_DEPTH_TEST);
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-
     this->font.ClearBatchDrawCache();
 }
 

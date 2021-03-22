@@ -605,7 +605,7 @@ bool ParallelCoordinatesRenderer2D::OnKey(
     return false;
 }
 
-void ParallelCoordinatesRenderer2D::drawAxes(void) {
+void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
     debugPush(1, "drawAxes");
     if (this->columnCount > 0) {
         this->enableProgramAndBind(this->drawAxesProgram);
@@ -655,16 +655,16 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
             float top = filters[realCol].upper;
             // top *= (maximums[realCol] - minimums[realCol]);
             // top += minimums[realCol];
-            this->font.DrawString(color, x, this->marginY * 0.5f, fontSize, false, std::to_string(bottom).c_str(),
-                core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
+            this->font.DrawString(ortho, color, x, this->marginY * 0.5f, fontSize, false,
+                std::to_string(bottom).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
                 std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 #endif
-            this->font.DrawString(color, x,
+            this->font.DrawString(ortho, color, x,
                 this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontSize * 2.0f, false,
                 names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
-        this->font.BatchDrawString();
+        this->font.BatchDrawString(ortho);
 #endif
     }
     debugPop();
@@ -973,6 +973,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     cam_type::matrix_type view, proj;
     cam.calc_matrices(view, proj);
 
+    glm::vec2 viewport(cam.resolution_gate().width(), cam.resolution_gate().height());
+    glm::mat4 ortho = glm::ortho(0.0f, viewport.x, 0.0f, viewport.y, -1.0f, 1.0f);
+
     windowAspect = static_cast<float>(cam.resolution_gate_aspect());
 
     // this is the apex of suck and must die
@@ -1084,7 +1087,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     }
 
     if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
-        drawAxes();
+        drawAxes(ortho);
     }
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

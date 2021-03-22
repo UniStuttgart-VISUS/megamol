@@ -649,21 +649,7 @@ void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utilit
     } break;
     }
 
-    // Font rendering takes matrices from OpenGL stack
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(ortho));
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    font.DrawString(glm::value_ptr(color), x, y, z, size, false, text.c_str(), anchor);
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+    font.DrawString(ortho, glm::value_ptr(color), x, y, z, size, false, text.c_str(), anchor);
 }
 
 

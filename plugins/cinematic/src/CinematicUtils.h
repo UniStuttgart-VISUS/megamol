@@ -76,7 +76,7 @@ public:
 
     void PushHotkeyList(float viewport_width, float viewport_height);
 
-    void PushText(const std::string& text, float x, float y, float z);
+    void Push2DText(const glm::mat4& orhto, const std::string& text, float x, float y, float z);
 
     void DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp);
 

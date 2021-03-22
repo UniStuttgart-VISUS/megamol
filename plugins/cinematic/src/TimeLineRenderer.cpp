@@ -135,12 +135,13 @@ bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
 
 bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
 
-    // Viewport
     view::Camera_2 cam;
     call.GetCamera(cam);
     glm::vec2 currentViewport;
     currentViewport.x = cam.resolution_gate().width();
     currentViewport.y = cam.resolution_gate().height();
+    glm::mat4 ortho = glm::ortho(0.0f, this->viewport.x, 0.0f, this->viewport.y, -1.0f, 1.0f);
+
     if (currentViewport != this->viewport) {
         this->viewport = currentViewport;
         // Set axes position depending on font size
@@ -247,7 +248,6 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     auto cbc = call.BackgroundColor();
     glm::vec4 back_color = glm::vec4(static_cast<float>(cbc[0]) / 255.0f, static_cast<float>(cbc[1]) / 255.0f, static_cast<float>(cbc[2]) / 255.0f, 1.0f);
     this->utils.SetBackgroundColor(back_color);
-    glm::mat4 ortho = glm::ortho(0.0f, this->viewport.x, 0.0f, this->viewport.y, -1.0f, 1.0f);
     auto skf = ccc->GetSelectedKeyframe();
 
     // Push rulers ------------------------------------------------------------
@@ -387,7 +387,9 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     for (float f = this->axes[Axis::X].scaleOffset; f < this->axes[Axis::X].length + (this->axes[Axis::X].segmSize / 10.0f); f = f + this->axes[Axis::X].segmSize) {
         if (f >= 0.0f) {
             tmpStr.Format(this->axes[Axis::X].formatStr.c_str(), timeStep);
-            this->utils.PushText(std::string(tmpStr.PeekBuffer()), this->axes[Axis::X].startPos.x + f - strWidth / 2.0f, this->axes[Axis::X].startPos.y - this->rulerMarkHeight, 0.0f);
+            this->utils.Push2DText(ortho, std::string(tmpStr.PeekBuffer()),
+                this->axes[Axis::X].startPos.x + f - strWidth / 2.0f,
+                this->axes[Axis::X].startPos.y - this->rulerMarkHeight, 0.0f);
         }
         timeStep += this->axes[Axis::X].segmValue;
     }
@@ -399,14 +401,18 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     for (float f = this->axes[Axis::Y].scaleOffset; f < this->axes[Axis::Y].length + (this->axes[Axis::Y].segmSize / 10.0f); f = f + this->axes[Axis::Y].segmSize) {
         if (f >= 0.0f) {
             tmpStr.Format(this->axes[Axis::Y].formatStr.c_str(), timeStep);
-            this->utils.PushText(std::string(tmpStr.PeekBuffer()), this->axes[Axis::X].startPos.x - this->rulerMarkHeight - strWidth, this->axes[Axis::X].startPos.y + strHeight / 2.0f + f, 0.0f);
+            this->utils.Push2DText(ortho, std::string(tmpStr.PeekBuffer()),
+                this->axes[Axis::X].startPos.x - this->rulerMarkHeight - strWidth,
+                this->axes[Axis::X].startPos.y + strHeight / 2.0f + f, 0.0f);
         }
         timeStep += this->axes[Axis::Y].segmValue;
     }
     // Axis captions
     std::string caption = "Animation Time and Frames ";
     strWidth = this->utils.GetTextLineWidth(caption);
-    this->utils.PushText(caption, this->axes[Axis::X].startPos.x + this->axes[Axis::X].length / 2.0f - strWidth / 2.0f, this->axes[Axis::X].startPos.y - this->utils.GetTextLineHeight() - this->rulerMarkHeight, 0.0f);
+    this->utils.Push2DText(ortho, caption,
+        this->axes[Axis::X].startPos.x + this->axes[Axis::X].length / 2.0f - strWidth / 2.0f,
+        this->axes[Axis::X].startPos.y - this->utils.GetTextLineHeight() - this->rulerMarkHeight, 0.0f);
     caption = " ";
     switch (this->yAxisParam) {
         case (ActiveParam::SIMULATION_TIME): caption = "Simulation Time "; break;
@@ -414,7 +420,9 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     }
     strWidth = this->utils.GetTextLineWidth(caption);
     this->utils.SetTextRotation(90.0f, 0.0f, 0.0f, 1.0f);
-    this->utils.PushText(caption, this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, (-1.0f)*this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f*strHeight, 0.0f);
+    this->utils.Push2DText(ortho, caption,
+        this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f,
+        (-1.0f) * this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f * strHeight, 0.0f);
     this->utils.SetTextRotation(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Push menu --------------------------------------------------------------

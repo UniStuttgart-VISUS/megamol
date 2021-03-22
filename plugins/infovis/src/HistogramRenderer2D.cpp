@@ -207,20 +207,26 @@ bool HistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
     this->font.ClearBatchDrawCache();
 
     float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+    megamol::core::view::Camera_2 cam;
+    call.GetCamera(cam);
+    glm::vec2 viewport(cam.resolution_gate().width(), cam.resolution_gate().height());
+    glm::mat4 ortho = glm::ortho(0.0f, viewport.x, 0.0f, viewport.y, -1.0f, 1.0f);
+
     for (size_t c = 0; c < this->colCount; ++c) {
         float posX = 12.0f * c + 6.0f;
-        this->font.DrawString(white, posX, 13.0f, 1.0f, false, this->colNames[c].c_str(),
+        this->font.DrawString(ortho, white, posX, 13.0f, 1.0f, false, this->colNames[c].c_str(),
             core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-        this->font.DrawString(white, posX - 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMinimums[c]).c_str(),
-            core::utility::AbstractFont::ALIGN_LEFT_TOP);
-        this->font.DrawString(white, posX + 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMaximums[c]).c_str(),
-            core::utility::AbstractFont::ALIGN_RIGHT_TOP);
+        this->font.DrawString(ortho, white, posX - 5.0f, 2.0f, 1.0f, false,
+            std::to_string(this->colMinimums[c]).c_str(), core::utility::AbstractFont::ALIGN_LEFT_TOP);
+        this->font.DrawString(ortho, white, posX + 5.0f, 2.0f, 1.0f, false,
+            std::to_string(this->colMaximums[c]).c_str(), core::utility::AbstractFont::ALIGN_RIGHT_TOP);
     }
-    this->font.DrawString(white, 1.0f, 12.0f, 1.0f, false, std::to_string(this->maxBinValue).c_str(),
+    this->font.DrawString(ortho, white, 1.0f, 12.0f, 1.0f, false, std::to_string(this->maxBinValue).c_str(),
         core::utility::AbstractFont::ALIGN_RIGHT_TOP);
-    this->font.DrawString(white, 1.0f, 2.0f, 1.0f, false, "0", core::utility::AbstractFont::ALIGN_RIGHT_BOTTOM);
+    this->font.DrawString(ortho, white, 1.0f, 2.0f, 1.0f, false, "0", core::utility::AbstractFont::ALIGN_RIGHT_BOTTOM);
 
-    this->font.BatchDrawString();
+    this->font.BatchDrawString(ortho);
 
     return true;
 }
