@@ -208,10 +208,7 @@ bool HistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
 
     float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
-    megamol::core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    glm::vec2 viewport(cam.resolution_gate().width(), cam.resolution_gate().height());
-    glm::mat4 ortho = glm::ortho(0.0f, viewport.x, 0.0f, viewport.y, -1.0f, 1.0f);
+    glm::mat4 ortho = glm::make_mat4(projMatrix_column) * glm::make_mat4(modelViewMatrix_column);
 
     for (size_t c = 0; c < this->colCount; ++c) {
         float posX = 12.0f * c + 6.0f;

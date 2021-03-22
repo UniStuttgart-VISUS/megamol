@@ -966,15 +966,8 @@ void ParallelCoordinatesRenderer2D::load_filters() {
 
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
 
-    // get camera
-    core::view::Camera_2 cam;
+    megamol::core::view::Camera_2 cam;
     call.GetCamera(cam);
-
-    cam_type::matrix_type view, proj;
-    cam.calc_matrices(view, proj);
-
-    glm::vec2 viewport(cam.resolution_gate().width(), cam.resolution_gate().height());
-    glm::mat4 ortho = glm::ortho(0.0f, viewport.x, 0.0f, viewport.y, -1.0f, 1.0f);
 
     windowAspect = static_cast<float>(cam.resolution_gate_aspect());
 
@@ -989,6 +982,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     backgroundColor[1] = bg[1] / 255.0f;
     backgroundColor[2] = bg[2] / 255.0f;
     backgroundColor[3] = bg[3] / 255.0f;
+
+    glm::mat4 ortho = glm::make_mat4(projMatrix_column) * glm::make_mat4(modelViewMatrix_column);
 
     this->assertData(call);
 

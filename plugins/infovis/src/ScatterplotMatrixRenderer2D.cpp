@@ -365,10 +365,7 @@ bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
 bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2DGL& call) {
     try {
 
-        megamol::core::view::Camera_2 cam;
-        call.GetCamera(cam);
-        glm::vec2 viewport(cam.resolution_gate().width(), cam.resolution_gate().height());
-        glm::mat4 ortho = glm::ortho(0.0f, viewport.x, 0.0f, viewport.y, -1.0f, 1.0f);
+        glm::mat4 ortho = glm::make_mat4(getModelViewProjection().PeekComponents());
 
         if (!this->validate(call, false))
             return false;

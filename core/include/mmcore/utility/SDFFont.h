@@ -250,7 +250,6 @@ namespace utility {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        /*
         void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
             glm::mat4 om = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
             this->DrawString(om, glm::mat4(), col, x, y, w, h, size, flipY, txt, align);
@@ -282,7 +281,7 @@ namespace utility {
         void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
         }
-        */
+
         /**
          * Renders all cached string data at once.
          * Given color is used for all cached DrawString() calls (-> Faster version).
