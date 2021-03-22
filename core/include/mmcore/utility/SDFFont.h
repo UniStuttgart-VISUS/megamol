@@ -17,26 +17,21 @@
 
 #include "mmcore/view/RenderUtils.h"
 #include "mmcore/utility/AbstractFont.h"
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/CharTraits.h"
 #include "vislib/UTF8Encoder.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/quaternion.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "vislib/math/ShallowMatrix.h"
-#include "vislib/math/Vector.h"
-#include "vislib/math/Quaternion.h"
-#include "vislib/math/Matrix.h"
-
-#include <float.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <fstream>
 
 
 namespace megamol {
@@ -256,12 +251,12 @@ namespace utility {
         * @param a The rotation angle in degrees.
         * @param v The rotation axis.
         */
-        inline void SetRotation(float a, vislib::math::Vector<float, 3> v) {
-            this->rotation.Set((a * (float)M_PI / 180.0f), v);
+        inline void SetRotation(float a, glm::vec3 v) {
+            this->rotation = glm::quat((a * (float)M_PI / 180.0f), v.x, v.y, v.z);
         }
 
         inline void SetRotation(float a, float x, float y, float z) {
-            this->SetRotation(a, vislib::math::Vector<float, 3>(x, y, z));
+            this->SetRotation(a, glm::vec3(x, y, z));
         }
 
         /**
@@ -269,18 +264,7 @@ namespace utility {
         * (Facing in direction of positive z-Axis)
         */
         inline void ResetRotation(void) {
-            this->rotation.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
-        }
-
-        /**
-        * Get the globally used rotation.
-        *
-        * @param a The returned angle in degrees.
-        * @param v The returned rotation axis.
-        */
-        inline void GetRotation(float &a, vislib::math::Vector<float, 3> &v) {
-            this->rotation.AngleAndAxis(a, v);
-            a = (a / (float)M_PI * 180.0f);
+            this->rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
         }
 
         /**
@@ -370,7 +354,7 @@ namespace utility {
         bool batchDrawMode;
 
         /** Quaternion for font rotation. */
-        vislib::math::Quaternion<float> rotation;
+        glm::quat rotation;
 
         // Render data --------------------------------------------------------
 
@@ -390,7 +374,7 @@ namespace utility {
         /** Vertex buffer object info. */
         struct SDFVBO {
             GLuint           handle;  // buffer handle
-            vislib::StringA  name;    // varaible name of attribute in shader
+            std::string      name;    // varaible name of attribute in shader
             GLuint           index;   // index of attribute location
             unsigned int     dim;     // dimension of data
         };

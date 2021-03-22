@@ -10,11 +10,7 @@
 #include "mmcore/utility/SDFFont.h"
 
 
-using namespace vislib;
 using namespace megamol::core::utility;
-
-
-/* PUBLIC ********************************************************************/
 
 
 SDFFont::SDFFont(PresetFontName fn)
@@ -598,8 +594,6 @@ void SDFFont::BatchDrawString() const {
     this->render(glyphCnt, nullptr);
 }
 
-/* PRIVATE********************************************************************/
-
 
 bool SDFFont::initialise(megamol::core::CoreInstance* core_instance_ptr) {
     
@@ -683,13 +677,13 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
         *t = 0;
     }
 
-    return this->buildUpGlyphRun(txtutf8, maxWidth);
+    return this->buildUpGlyphRun(txtutf8.PeekBuffer(), maxWidth);
 }
 
 
 int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
-    size_t txtlen = static_cast<size_t>(CharTraitsA::SafeStringLength(txtutf8));
+    size_t txtlen = static_cast<size_t>(vislib::CharTraitsA::SafeStringLength(txtutf8));
     size_t pos = 0;
     bool knowLastWhite = false;
     bool blackspace = true;
@@ -825,8 +819,8 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
     unsigned int posCnt = glyphCnt * 18; // 2 Triangles * 3 Vertices * 3 Coordinates
     unsigned int texCnt = glyphCnt * 12; // 2 Triangles * 3 Vertices * 2 Coordinates
 
-    GLfloat *posData = new GLfloat[posCnt];   
-    GLfloat *texData = new GLfloat[texCnt]; 
+    float *posData = new float[posCnt];   
+    float *texData = new float[texCnt]; 
 
     float gx = x;
     float gy = y;
@@ -838,8 +832,7 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
 
     // Billboard stuff
     // -> Setting fixed rotation point depending on alignment.
-    vislib::math::Vector<GLfloat, 4> billboardRotPoint;
-
+    glm::vec4 billboardRotPoint(0.0f, 0.0f, 0.0f, 1.0f);
     if (this->billboardMode) {
         float deltaY = 0.0f;
         switch (align) {
@@ -864,18 +857,17 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
         default:
             break;
         }
-        billboardRotPoint.Set(gx, gy + deltaY, gz, 1.0f);
+        billboardRotPoint = glm::vec4(gx, gy + deltaY, gz, 1.0f);
 
-        GLfloat modelViewMatrix_column[16];
-        glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-        vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
+        glm::mat4 modelViewMatrix; /// TODO
+
 
         // Apply model view matrix ONLY to rotation point ...
         billboardRotPoint = modelViewMatrix * billboardRotPoint;
-        billboardRotPoint.SetY(billboardRotPoint.Y() - deltaY);
-        gx = billboardRotPoint.X();
-        gy = billboardRotPoint.Y();
-        gz = billboardRotPoint.Z();
+        billboardRotPoint.y = (billboardRotPoint.y - deltaY);
+        gx = billboardRotPoint.x;
+        gy = billboardRotPoint.y;
+        gz = billboardRotPoint.z;
     }
 
     // Adjustment for first line
@@ -894,7 +886,7 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
 
         // Adjust positions if character indicates a new line
         if ((*run) < 0) {
-            gx = (this->billboardMode)?(billboardRotPoint.X()):(x);
+            gx = (this->billboardMode)?(billboardRotPoint.x):(x);
             if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_CENTER_TOP)) {
                 gx -= this->lineWidth(run, false) * size * 0.5f;
             }
@@ -935,49 +927,49 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
         float tmpP03y = sy * (glyph->yoffset) + gy;
         float tmpP12y = tmpP03y + (sy * glyph->height);
 
-        vislib::math::Vector<float, 3> p0(tmpP01x, tmpP03y, gz);
-        vislib::math::Vector<float, 3> p1(tmpP01x, tmpP12y, gz);
-        vislib::math::Vector<float, 3> p2(tmpP23x, tmpP12y, gz);
-        vislib::math::Vector<float, 3> p3(tmpP23x, tmpP03y, gz);
+        glm::vec4 p0(tmpP01x, tmpP03y, gz, 0.0f);
+        glm::vec4 p1(tmpP01x, tmpP12y, gz, 0.0f);
+        glm::vec4 p2(tmpP23x, tmpP12y, gz, 0.0f);
+        glm::vec4 p3(tmpP23x, tmpP03y, gz, 0.0f);
 
         /// Apply rotation
-        auto rotMat = static_cast<vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR>>(this->rotation);
+        glm::mat4 rotMat = glm::toMat4(this->rotation);
         p0 = rotMat * p0;
         p1 = rotMat * p1;
         p2 = rotMat * p2;
         p3 = rotMat * p3;
 
         // Set position data:
-        posData[glyphIter * 18 + 0]  = p0.X(); 
-        posData[glyphIter * 18 + 1]  = p0.Y();  
-        posData[glyphIter * 18 + 2]  = p0.Z();
+        posData[glyphIter * 18 + 0]  = p0.x; 
+        posData[glyphIter * 18 + 1]  = p0.y;  
+        posData[glyphIter * 18 + 2]  = p0.z;
 
-        posData[glyphIter * 18 + 3] = p1.X(); 
-        posData[glyphIter * 18 + 4] = p1.Y(); 
-        posData[glyphIter * 18 + 5] = p1.Z();  
+        posData[glyphIter * 18 + 3] = p1.x; 
+        posData[glyphIter * 18 + 4] = p1.y; 
+        posData[glyphIter * 18 + 5] = p1.z;  
 
-        posData[glyphIter * 18 + 6] = p2.X();
-        posData[glyphIter * 18 + 7] = p2.Y();  
-        posData[glyphIter * 18 + 8] = p2.Z();  
+        posData[glyphIter * 18 + 6] = p2.x;
+        posData[glyphIter * 18 + 7] = p2.y;  
+        posData[glyphIter * 18 + 8] = p2.z;  
 
-        posData[glyphIter * 18 + 9]  = p0.X(); 
-        posData[glyphIter * 18 + 10] = p0.Y();  
-        posData[glyphIter * 18 + 11] = p0.Z(); 
+        posData[glyphIter * 18 + 9]  = p0.x; 
+        posData[glyphIter * 18 + 10] = p0.y;  
+        posData[glyphIter * 18 + 11] = p0.z; 
 
-        posData[glyphIter * 18 + 12] = p2.X(); 
-        posData[glyphIter * 18 + 13] = p2.Y(); 
-        posData[glyphIter * 18 + 14] = p2.Z();
+        posData[glyphIter * 18 + 12] = p2.x; 
+        posData[glyphIter * 18 + 13] = p2.y; 
+        posData[glyphIter * 18 + 14] = p2.z;
 
-        posData[glyphIter * 18 + 15] = p3.X(); 
-        posData[glyphIter * 18 + 16] = p3.Y(); 
-        posData[glyphIter * 18 + 17] = p3.Z(); 
+        posData[glyphIter * 18 + 15] = p3.x; 
+        posData[glyphIter * 18 + 16] = p3.y; 
+        posData[glyphIter * 18 + 17] = p3.z; 
 
         // Change rotation of quad positions for flipped y axis from CCW to CW.
         if (flipY) {
-            posData[glyphIter * 18 + 3] = p2.X();   // p2-x
-            posData[glyphIter * 18 + 6] = p1.X();   // p1-x
-            posData[glyphIter * 18 + 13] = p3.Y();  // p3-y
-            posData[glyphIter * 18 + 16] = p2.Y();  // p2-y
+            posData[glyphIter * 18 + 3] = p2.x;   // p2-x
+            posData[glyphIter * 18 + 6] = p1.x;   // p1-x
+            posData[glyphIter * 18 + 13] = p3.y;  // p3-y
+            posData[glyphIter * 18 + 16] = p2.y;  // p2-y
         }
         
         // Set texture data
@@ -1073,24 +1065,17 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
         return;
     }
 
-    // Get current matrices
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    glm::mat4 projMatrix;
+    glm::mat4 modelViewMatrix;
 
+    glm::mat4 shader_matrix;
     // modelviewprojection matrix
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
     if (this->billboardMode) {
         // Only projection matrix has to be applied for billboard
-        modelViewProjMatrix = projMatrix;
+        shader_matrix = projMatrix;
     }
     else {
-        GLfloat modelViewMatrix_column[16];
-        glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-        vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
-
-        // Calculate model view projection matrix 
-        modelViewProjMatrix = projMatrix * modelViewMatrix; 
+        shader_matrix = projMatrix * modelViewMatrix; 
     }
 
     // Set blending
@@ -1109,7 +1094,7 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
     glUseProgram(usedShader->ProgramHandle()); // instead of usedShader->Enable() => because draw() is CONST
 
     // Vertex shader
-    glUniformMatrix4fv(usedShader->ParameterLocation("mvpMat"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+    glUniformMatrix4fv(usedShader->ParameterLocation("mvpMat"), 1, GL_FALSE, glm::value_ptr(shader_matrix));
 
     // Set global color, if given
     if (col != nullptr) {
@@ -1280,75 +1265,72 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
     this->glyphs.clear();
     this->glyphIdcs.clear();
 
-    vislib::sys::ASCIIFileBuffer file;
-    if (!file.LoadFile(filename)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] Could not load file as ascii buffer: \"%s\". [%s, %s, line %d]\n", filename.PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
+    std::ifstream input_file(filename.PeekBuffer());
+    if (!input_file.is_open() || !input_file.good()) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] Unable to open font file \"%s\": Bad file. [%s, %s, line %d]\n",  __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
-    float texWidth    = 0.0f;
-    float texHeight   = 0.0f;
-    float lineHeight  = 0.0f;
-    
-    int    idx;
-    float  width;
-    float  height;
-
+    float texWidth   = 0.0f;
+    float texHeight  = 0.0f;
+    float lineHeight = 0.0f;
+    size_t idx;
+    float width;
+    float height;
     unsigned int maxId = 0;;
     std::vector<SDFGlyphKerning> tmpKerns;
     tmpKerns.clear();
 
     // Read info file line by line
-    size_t lineCnt = 0;
-    vislib::StringA line;
-    while (lineCnt < file.Count()) {
-        line = static_cast<vislib::StringA>(file.Line(lineCnt));
+    /// NB: Assuming file of correct format - there are no sanity checks for parsing
+    std::string line;
+    while (std::getline(input_file, line)) {
         // (1) Parse common info line
-        if (line.StartsWith("common ")) { 
+        if (line.rfind("common ", 0) == 0) { // starts with
 
-            idx = line.Find("scaleW=", 0);
-            texWidth = (float)std::atof(line.Substring(idx + 7, 4));
+            idx = line.find("scaleW=", 0);
+            texWidth = (float)std::atof(line.substr(idx + 7, 4).c_str());
 
-            idx = line.Find("scaleH=", 0);
-            texHeight = (float)std::atof(line.Substring(idx + 7, 4));
+            idx = line.find("scaleH=", 0);
+            texHeight = (float) std::atof(line.substr(idx + 7, 4).c_str());
 
-            idx = line.Find("lineHeight=", 0);
-            lineHeight = (float)std::atof(line.Substring(idx + 11, 4));
+            idx = line.find("lineHeight=", 0);
+            lineHeight = (float) std::atof(line.substr(idx + 11, 4).c_str());
         }
         // (2) Parse character info
-        else if (line.StartsWith("char ")) { 
+        else if (line.rfind("char ", 0) == 0) { 
             SDFGlyphInfo newChar;
 
-            idx = line.Find("id=", 0);
-            newChar.id = (unsigned int)std::atoi(line.Substring(idx + 3, 5)); 
+            idx = line.find("id=", 0);
+            newChar.id = (unsigned int) std::atoi(line.substr(idx + 3, 5).c_str()); 
 
             if (maxId < newChar.id) {
                 maxId = newChar.id;
             }
 
-            idx = line.Find("x=", 0);
-            newChar.texX0 = (float)std::atof(line.Substring(idx + 2, 4)) / texWidth;
+            idx = line.find("x=", 0);
+            newChar.texX0 = (float) std::atof(line.substr(idx + 2, 4).c_str()) / texWidth;
 
-            idx = line.Find("y=", 0);
-            newChar.texY0 = (float)std::atof(line.Substring(idx + 2, 4)) / texHeight;
+            idx = line.find("y=", 0);
+            newChar.texY0 = (float) std::atof(line.substr(idx + 2, 4).c_str()) / texHeight;
 
-            idx = line.Find("width=", 0);
-            width = (float)std::atof(line.Substring(idx + 6, 4));
+            idx = line.find("width=", 0);
+            width = (float) std::atof(line.substr(idx + 6, 4).c_str());
 
-            idx = line.Find("height=", 0);
-            height = (float)std::atof(line.Substring(idx + 7, 4));
+            idx = line.find("height=", 0);
+            height = (float) std::atof(line.substr(idx + 7, 4).c_str());
 
             newChar.width  = width / lineHeight;
             newChar.height = height / lineHeight;
 
-            idx = line.Find("xoffset=", 0);
-            newChar.xoffset = (float)std::atof(line.Substring(idx + 8, 4)) / lineHeight;
+            idx = line.find("xoffset=", 0);
+            newChar.xoffset = (float) std::atof(line.substr(idx + 8, 4).c_str()) / lineHeight;
 
-            idx = line.Find("yoffset=", 0);
-            newChar.yoffset  = (float)std::atof(line.Substring(idx + 8, 4)) / lineHeight;
+            idx = line.find("yoffset=", 0);
+            newChar.yoffset = (float) std::atof(line.substr(idx + 8, 4).c_str()) / lineHeight;
 
-            idx = line.Find("xadvance=", 0);
-            newChar.xadvance = (float)std::atof(line.Substring(idx + 9, 4)) / lineHeight;
+            idx = line.find("xadvance=", 0);
+            newChar.xadvance = (float) std::atof(line.substr(idx + 9, 4).c_str()) / lineHeight;
 
             newChar.kernCnt = 0;
             newChar.kerns   = nullptr;
@@ -1359,26 +1341,24 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
             this->glyphs.push_back(newChar);
         }
         // (3) Parse kerning info
-        else if (line.StartsWith("kerning ")) { 
+        else if (line.rfind("kerning ", 0) == 0) { 
 
             SDFGlyphKerning newKern;
 
-            idx = line.Find("first=", 0);
-            newKern.previous = (unsigned int)std::atoi(line.Substring(idx+6, 4));
+            idx = line.find("first=", 0);
+            newKern.previous = (unsigned int) std::atoi(line.substr(idx + 6, 4).c_str());
 
-            idx = line.Find("second=", 0);
-            newKern.current = (unsigned int)std::atoi(line.Substring(idx+7, 4));
+            idx = line.find("second=", 0);
+            newKern.current = (unsigned int) std::atoi(line.substr(idx + 7, 4).c_str());
 
-            idx = line.Find("amount=", 0);
-            newKern.xamount = (float)std::atof(line.Substring(idx+7, 4)) / lineHeight;
+            idx = line.find("amount=", 0);
+            newKern.xamount = (float) std::atof(line.substr(idx + 7, 4).c_str()) / lineHeight;
 
             tmpKerns.push_back(newKern);
         }
-        // Proceed with next line ...
-        lineCnt++;
     }
-    //Clear ascii file buffer
-    file.Clear();
+    // Close file
+    input_file.close();
 
     // Init index pointer array 
     maxId++;
@@ -1471,7 +1451,7 @@ bool SDFFont::loadFontShader(megamol::core::utility::ShaderSourceFactory& shader
             }
             // Bind vertex shader attributes (before linking shaders!)
             for (unsigned int j = 0; j < attribLoc[i].size(); j++) {
-                glBindAttribLocation(shaderPtr[i]->ProgramHandle(), this->vbos[attribLoc[i][j]].index, this->vbos[attribLoc[i][j]].name.PeekBuffer());
+                glBindAttribLocation(shaderPtr[i]->ProgramHandle(), this->vbos[attribLoc[i][j]].index, this->vbos[attribLoc[i][j]].name.c_str());
             }
             if (!shaderPtr[i]->Link()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(

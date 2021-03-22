@@ -18,6 +18,7 @@
 #include <optional>
 #include "Renderer2D.h"
 #include "mmcore/FlagStorage.h"
+#include "vislib/math/Matrix.h"
 
 namespace megamol::infovis {
 
