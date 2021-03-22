@@ -19,7 +19,7 @@ using namespace vislib::graphics::gl;
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi) : AbstractFont(),
-        data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
+        data(ofi), renderType(OutlineFont::RENDERMODE_FILL) {
 }
 
 
@@ -36,7 +36,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi,
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size)
-        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
+        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERMODE_FILL) {
     this->SetSize(size);
 }
 
@@ -45,7 +45,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size)
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, bool flipY)
-        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
+        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERMODE_FILL) {
     this->SetFlipY(flipY);
 }
 
@@ -64,7 +64,7 @@ OutlineFont::OutlineFont(const OutlineFontInfo& ofi,
  * OutlineFont::OutlineFont
  */
 OutlineFont::OutlineFont(const OutlineFontInfo& ofi, float size, bool flipY)
-        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERTYPE_FILL) {
+        : AbstractFont(), data(ofi), renderType(OutlineFont::RENDERMODE_FILL) {
     this->SetSize(size);
     this->SetFlipY(flipY);
 }
@@ -220,12 +220,12 @@ void OutlineFont::DrawString(float x, float y, float size, bool flipY,
 
     }
 
-    if ((this->renderType == RENDERTYPE_FILL)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERMODE_FILL)
+            || (this->renderType == RENDERMODE_FILL_AND_OUTLINE)) {
         this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
-    if ((this->renderType == RENDERTYPE_OUTLINE)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERMODE_OUTLINE)
+            || (this->renderType == RENDERMODE_FILL_AND_OUTLINE)) {
         this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
@@ -283,12 +283,12 @@ void OutlineFont::DrawString(float x, float y, float w, float h, float size,
 #endif /* !_WIN32 */
     }
 
-    if ((this->renderType == RENDERTYPE_FILL)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERMODE_FILL)
+            || (this->renderType == RENDERMODE_FILL_AND_OUTLINE)) {
         this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
-    if ((this->renderType == RENDERTYPE_OUTLINE)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERMODE_OUTLINE)
+            || (this->renderType == RENDERMODE_FILL_AND_OUTLINE)) {
         this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
@@ -315,12 +315,12 @@ void OutlineFont::DrawString(float x, float y, float size, bool flipY,
 
     }
 
-    if ((this->renderType == RENDERTYPE_FILL)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERMODE_FILL)
+            || (this->renderType == RENDERMODE_FILL_AND_OUTLINE)) {
         this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
-    if ((this->renderType == RENDERTYPE_OUTLINE)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERMODE_OUTLINE)
+            || (this->renderType == RENDERMODE_FILL_AND_OUTLINE)) {
         this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
@@ -378,12 +378,12 @@ void OutlineFont::DrawString(float x, float y, float w, float h, float size,
 #endif /* !_WIN32 */
     }
 
-    if ((this->renderType == RENDERTYPE_FILL)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERMODE_FILL)
+            || (this->renderType == RENDERMODE_FILL_AND_OUTLINE)) {
         this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
-    if ((this->renderType == RENDERTYPE_OUTLINE)
-            || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERMODE_OUTLINE)
+            || (this->renderType == RENDERMODE_FILL_AND_OUTLINE)) {
         this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
@@ -410,12 +410,12 @@ void vislib::graphics::gl::OutlineFont::DrawString(float x, float y, float z, fl
 
     }
 
-    if ((this->renderType == RENDERTYPE_FILL)
-        || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERMODE_FILL)
+        || (this->renderType == RENDERMODE_FILL_AND_OUTLINE)) {
         this->drawFilled(run, x, y, z, size, flipY, align);
     }
-    if ((this->renderType == RENDERTYPE_OUTLINE)
-        || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+    if ((this->renderType == RENDERMODE_OUTLINE)
+        || (this->renderType == RENDERMODE_FILL_AND_OUTLINE)) {
         this->drawOutline(run, x, y, z, size, flipY, align);
     }
 

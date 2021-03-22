@@ -80,7 +80,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         , needFlagsUpdate(false)
         , lastTimeStep(0)
         , font(core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS,
-              core::utility::SDFFont::RenderMode::RENDERTYPE_FILL) {
+              core::utility::SDFFont::RenderMode::RENDERMODE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);

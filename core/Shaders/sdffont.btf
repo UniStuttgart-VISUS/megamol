@@ -46,24 +46,24 @@ void main() {
 <![CDATA[ 
 
 // Same defines as in SDFFont.h!
-#define RENDERTYPE_FILL    1
-#define RENDERTYPE_OUTLINE 2
+#define RENDERMODE_FILL    1
+#define RENDERMODE_OUTLINE 2
 
-#define OUTLINE_WIDTH      0.05
-#define SDF_BORDER             0.5
+#define OUTLINE_WIDTH      0.1
+#define SDF_BORDER         0.5
 
 in vec2 texCoord;
 in vec4 color;
 
 uniform sampler2D fontTex;
-uniform int renderType = 1;
+uniform vec3 outlineColor = vec3(1.0, 1.0, 1.0);
+uniform int renderMode    = 1;
 
 layout(location = 0) out vec4 outFragColor;
 
 float supersample(in vec2 uv, float w) {
     return smoothstep(SDF_BORDER - w, SDF_BORDER + w, texture2D(fontTex, uv).a);
 }
-
 
 void main(void) {
 
@@ -73,40 +73,44 @@ void main(void) {
     }
     float smootingEdge = fwidth(distance); // = 0.7 * length(vec2(dFdx(distance), dFdy(distance)));  // dFdxFine(), dFdyFine() only for glsl >=450
 
-    if (renderType == RENDERTYPE_FILL) { 
+    float outline_fraction = 0.0;
+    if (renderMode == RENDERMODE_FILL) { 
         distance = smoothstep((SDF_BORDER - smootingEdge), (SDF_BORDER + smootingEdge), distance);
     }
-    else if (renderType == RENDERTYPE_OUTLINE) {
-        if (distance > (SDF_BORDER + smootingEdge + OUTLINE_WIDTH)) {
-            discard;
-        }
-        if (distance < SDF_BORDER) {
-            distance = smoothstep((SDF_BORDER - smootingEdge - OUTLINE_WIDTH), (SDF_BORDER + smootingEdge - OUTLINE_WIDTH), distance);
-        }
-        else {
-            distance = smoothstep((SDF_BORDER + smootingEdge + OUTLINE_WIDTH), (SDF_BORDER - smootingEdge + OUTLINE_WIDTH), distance);
-        }
+    else if (renderMode == RENDERMODE_OUTLINE) {
+        float distance_alpha = smoothstep((SDF_BORDER - OUTLINE_WIDTH - smootingEdge), (SDF_BORDER - OUTLINE_WIDTH + smootingEdge), distance);
+        outline_fraction = smoothstep((SDF_BORDER - smootingEdge ), (SDF_BORDER + smootingEdge), distance);
+        distance = distance_alpha;
     }
+    
     float alpha = distance;
-        
-    // Supersample, 4 extra points --------------------------------------------
-    float dscale = 0.354; // half of 1/sqrt2; you can play with this
-    vec2 duv = dscale * (dFdx(texCoord) + dFdy(texCoord));
-    vec4 box = vec4(texCoord-duv, texCoord+duv);
-    float asum = supersample( box.xy, smootingEdge )
-            + supersample( box.zw, smootingEdge )
-            + supersample( box.xw, smootingEdge )
-            + supersample( box.zy, smootingEdge );
-    // weighted average, with 4 extra points having 0.5 weight each, so 1 + 0.5*4 = 3 is the divisor
-    alpha = (alpha + 0.5 * asum) / 3.0;
-   // -------------------------------------------------------------------------
-   
-    alpha  = clamp(alpha, 0.0, 1.0);
-    if (distance == 0.0)  {
+    alpha = clamp(alpha, 0.0, 1.0);
+    if (alpha == 0.0)  {
         discard;
     }
-    outFragColor = vec4(color.rgb, color.a * alpha);
+    
+    if (renderMode == RENDERMODE_FILL) {
+
+        // Supersample, 4 extra points --------------------------------------------
+        float dscale = 0.354; // half of 1/sqrt2; you can play with this
+        vec2 duv = dscale * (dFdx(texCoord) + dFdy(texCoord));
+        vec4 box = vec4(texCoord-duv, texCoord+duv);
+        float asum = supersample( box.xy, smootingEdge )
+                + supersample( box.zw, smootingEdge )
+                + supersample( box.xw, smootingEdge )
+                + supersample( box.zy, smootingEdge );
+        // weighted average, with 4 extra points having 0.5 weight each, so 1 + 0.5*4 = 3 is the divisor
+        alpha = (alpha + 0.5 * asum) / 3.0;
+       // -------------------------------------------------------------------------
+           
+        outFragColor = vec4(color.rgb, color.a * alpha);
+    }
+    else if (renderMode == RENDERMODE_OUTLINE) {
+
+        outFragColor = vec4(mix(outlineColor, color.rgb, outline_fraction), (color.a * alpha));
+    }
 }
+
 ]]>
         </snippet>
     </shader>

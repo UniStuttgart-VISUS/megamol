@@ -56,7 +56,7 @@ namespace utility {
      *
      *     - Draw:               this->sdfFont.DrawString(color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
      *
-     *     - RenderMode:         this->sdfFont.SetRenderMode(megamol::core::utility::SDFFont::RenderMode::RENDERTYPE_OUTLINE);
+     *     - RenderMode:         this->sdfFont.SetRenderMode(megamol::core::utility::SDFFont::RenderMode::RENDERMODE_OUTLINE);
      *     - Rotation:           this->sdfFont.SetRotation(60.0f, vislib::math::Vector<float, 3>(0.0f1.0f0.0f));
      *     - Billboard:          this->sdfFont.SetBillboard(true);
      *
@@ -111,9 +111,9 @@ namespace utility {
 
         /** Possible render modes for the font. */
         enum RenderMode : int {
-            RENDERTYPE_NONE    = 0,     // Do not render anything
-            RENDERTYPE_FILL    = 1,     // Render the filled glyphs */
-            RENDERTYPE_OUTLINE = 2      // Render the outline 
+            RENDERMODE_NONE    = 0,     // Do not render anything
+            RENDERMODE_FILL    = 1,     // Render the filled glyphs */
+            RENDERMODE_OUTLINE = 2      // Render the outline 
         };
 
         /**
@@ -347,8 +347,8 @@ namespace utility {
          *
          * @param t The render_mode type for the font
          */
-        inline void SetRenderMode(RenderMode t) {
-            this->renderMode = t;           
+        inline void SetRenderMode(RenderMode rm) {
+            this->renderMode = rm;
         }
 
         /**
@@ -424,6 +424,22 @@ namespace utility {
             this->colBatchCache.clear();
         }
 
+        /**
+         * Set outline color.
+         */
+        inline void SetOutlineColor(glm::vec3 oc) { 
+            this->outlineColor = oc;
+        }
+
+        /**
+         * Answer the currently set outline color.
+         *
+         * @return True outline color.
+         */
+        inline glm::vec3 GetOutlineColor(void) const {
+            return this->outlineColor;
+        }
+
     protected:
 
         /**
@@ -472,6 +488,9 @@ namespace utility {
 
         /** Quaternion for font rotation. */
         glm::quat rotation;
+
+        /** Optional outline color. */
+        glm::vec3 outlineColor;
 
         // Render data --------------------------------------------------------
 

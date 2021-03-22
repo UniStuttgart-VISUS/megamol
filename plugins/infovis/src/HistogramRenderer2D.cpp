@@ -27,7 +27,7 @@ HistogramRenderer2D::HistogramRenderer2D()
         , rowCount(0)
         , maxBinValue(0)
         , font(core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS,
-              core::utility::SDFFont::RenderMode::RENDERTYPE_FILL)
+              core::utility::SDFFont::RenderMode::RENDERMODE_FILL)
         , mouseX(0.0f)
         , mouseY(0.0f)
         , needSelectionUpdate(false)

@@ -17,10 +17,11 @@ SDFFont::SDFFont(PresetFontName fn)
         : AbstractFont()
         , initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
-        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -42,6 +43,7 @@ SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -59,10 +61,11 @@ SDFFont::SDFFont(PresetFontName fn, float size)
         : AbstractFont()
         , initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
-        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -81,10 +84,11 @@ SDFFont::SDFFont(PresetFontName fn, bool flipY)
         : AbstractFont()
         , initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
-        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -107,6 +111,7 @@ SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode, bool flipY)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -125,10 +130,11 @@ SDFFont::SDFFont(PresetFontName fn, float size, bool flipY)
         : AbstractFont()
         , initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
-        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -148,10 +154,11 @@ SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode)
         : AbstractFont()
         , initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
-        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -170,10 +177,11 @@ SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode,
         : AbstractFont()
         , initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
-        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -193,10 +201,11 @@ SDFFont::SDFFont(std::string fn)
         : AbstractFont()
         , initialised(false)
         , fontFileName(fn)
-        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -218,6 +227,7 @@ SDFFont::SDFFont(std::string fn, SDFFont::RenderMode render_mode)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -235,10 +245,11 @@ SDFFont::SDFFont(std::string fn, float size)
         : AbstractFont()
         , initialised(false)
         , fontFileName(fn)
-        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -257,10 +268,11 @@ SDFFont::SDFFont(std::string fn, bool flipY)
         : AbstractFont()
         , initialised(false)
         , fontFileName(fn)
-        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -283,6 +295,7 @@ SDFFont::SDFFont(std::string fn, SDFFont::RenderMode render_mode, bool flipY)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -301,10 +314,11 @@ SDFFont::SDFFont(std::string fn, float size, bool flipY)
         : AbstractFont()
         , initialised(false)
         , fontFileName(fn)
-        , renderMode(RenderMode::RENDERTYPE_FILL)
+        , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -328,6 +342,7 @@ SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -350,6 +365,7 @@ SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode, bo
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
+        , outlineColor(1.0f, 1.0f, 1.0f)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -373,6 +389,7 @@ megamol::core::utility::SDFFont::SDFFont(const SDFFont& src)
         , billboardMode(src.billboardMode)
         , batchDrawMode(src.batchDrawMode)
         , rotation(src.rotation)
+        , outlineColor(src.outlineColor)
         , shaderglobcol(src.shaderglobcol)
         , shadervertcol(src.shadervertcol)
         , texture(src.texture)
@@ -402,7 +419,7 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) co
 void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float size, bool flipY,
     const char* txt, AbstractFont::Alignment align) const {
 
-    if (!this->initialised || (this->renderMode == RenderMode::RENDERTYPE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
 
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
@@ -422,7 +439,7 @@ void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float 
 void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float w, float h,
     float size, bool flipY, const char* txt, AbstractFont::Alignment align) const {
 
-    if (!this->initialised || (this->renderMode == RenderMode::RENDERTYPE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
 
     int *run = this->buildGlyphRun(txt, w / size);
 
@@ -470,7 +487,7 @@ void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float 
 void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float z, float w, float h,
     float size, bool flipY, const char* txt, AbstractFont::Alignment align) const {
 
-    if (!this->initialised || (this->renderMode == RenderMode::RENDERTYPE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
 
     int *run = this->buildGlyphRun(txt, w / size);
 
@@ -518,7 +535,7 @@ void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float 
 void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float z, float size,
     bool flipY, const char* txt, Alignment align) const {
 
-    if (!this->initialised || (this->renderMode == RenderMode::RENDERTYPE_NONE)) return;
+    if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
 
     int *run = this->buildGlyphRun(txt, FLT_MAX);
 
@@ -1091,17 +1108,19 @@ void SDFFont::render(glm::mat4 projection_mat, glm::mat4 modelview_mat, unsigned
 
     glUseProgram(usedShader->ProgramHandle()); // instead of usedShader->Enable() => because draw() is CONST
 
-    // Vertex shader
+    // Vertex shader uniforms
     glUniformMatrix4fv(usedShader->ParameterLocation("mvpMat"), 1, GL_FALSE, glm::value_ptr(shader_matrix));
-
     // Set global color, if given
     if (color_ptr != nullptr) {
         glUniform4fv(usedShader->ParameterLocation("inColor"), 1, (*color_ptr));
     }
 
-    // Fragment shader
+    // Fragment shader uniforms
     glUniform1i(usedShader->ParameterLocation("fontTex"), 0);
-    glUniform1i(usedShader->ParameterLocation("renderMode"), (int)(this->renderMode));
+    glUniform1i(usedShader->ParameterLocation("renderMode"), static_cast<int>(this->renderMode));
+    if (this->renderMode == RenderMode::RENDERMODE_OUTLINE) {
+        glUniform3fv(usedShader->ParameterLocation("outlineColor"), 1, glm::value_ptr(this->outlineColor));
+    }
 
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei) glyph_count * 6); // 2 triangles per glyph -> 6 vertices
 

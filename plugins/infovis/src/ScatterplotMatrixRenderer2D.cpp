@@ -127,9 +127,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , screenFBO(nullptr)
         , screenValid(false)
         , axisFont(core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS,
-              core::utility::SDFFont::RenderMode::RENDERTYPE_FILL)
+              core::utility::SDFFont::RenderMode::RENDERMODE_FILL)
         , textFont(core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS,
-              core::utility::SDFFont::RenderMode::RENDERTYPE_FILL)
+              core::utility::SDFFont::RenderMode::RENDERMODE_FILL)
         , textValid(false)
         , dataTime((std::numeric_limits<unsigned int>::max)())
         , flagsBufferVersion(0) {
