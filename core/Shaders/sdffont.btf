@@ -67,13 +67,12 @@ float supersample(in vec2 uv, float w) {
 
 void main(void) {
 
+    float outline_fraction = 0.0;
     float distance = texture(fontTex, texCoord).a; 
     if (distance == 0.0)  {
         discard;
     }
     float smootingEdge = fwidth(distance); // = 0.7 * length(vec2(dFdx(distance), dFdy(distance)));  // dFdxFine(), dFdyFine() only for glsl >=450
-
-    float outline_fraction = 0.0;
     if (renderMode == RENDERMODE_FILL) { 
         distance = smoothstep((SDF_BORDER - smootingEdge), (SDF_BORDER + smootingEdge), distance);
     }
@@ -82,30 +81,34 @@ void main(void) {
         outline_fraction = smoothstep((SDF_BORDER - smootingEdge ), (SDF_BORDER + smootingEdge), distance);
         distance = distance_alpha;
     }
-    
     float alpha = distance;
-    alpha = clamp(alpha, 0.0, 1.0);
-    if (alpha == 0.0)  {
-        discard;
-    }
-    
-    if (renderMode == RENDERMODE_FILL) {
+    if (alpha <= 0.0) discard;
 
-        // Supersample, 4 extra points --------------------------------------------
-        float dscale = 0.354; // half of 1/sqrt2; you can play with this
-        vec2 duv = dscale * (dFdx(texCoord) + dFdy(texCoord));
-        vec4 box = vec4(texCoord-duv, texCoord+duv);
-        float asum = supersample( box.xy, smootingEdge )
-                + supersample( box.zw, smootingEdge )
-                + supersample( box.xw, smootingEdge )
-                + supersample( box.zy, smootingEdge );
-        // weighted average, with 4 extra points having 0.5 weight each, so 1 + 0.5*4 = 3 is the divisor
+    // Supersample, 4 extra points --------------------------------------------
+    /// Is supersampling within sdf font texture reasonable anyway?
+    float dscale = 0.354; // half of 1/sqrt2; you can play with this
+    vec2 duv = dscale * (dFdx(texCoord) + dFdy(texCoord));
+    vec4 box = vec4(texCoord-duv, texCoord+duv);
+    float asum = supersample( box.xy, smootingEdge )
+            + supersample( box.zw, smootingEdge )
+            + supersample( box.xw, smootingEdge )
+            + supersample( box.zy, smootingEdge );
+    // Weighted average, with 4 extra points having 0.5 weight each, so 1 + 0.5*4 = 3 is the divisor
+    // -------------------------------------------------------------------------
+       
+    if (renderMode == RENDERMODE_FILL) {
+        // Apply 4xSS
         alpha = (alpha + 0.5 * asum) / 3.0;
-       // -------------------------------------------------------------------------
-           
+        alpha = clamp(alpha, 0.0, 1.0);
+        if (alpha <= 0.0) discard;
+        
         outFragColor = vec4(color.rgb, color.a * alpha);
     }
     else if (renderMode == RENDERMODE_OUTLINE) {
+        // Apply 4xSS
+        alpha = (alpha + (1.0 - outline_fraction) + 0.5 * asum) / 3.0;
+        alpha = clamp(alpha, 0.0, 1.0);
+        if (alpha <= 0.0) discard;
 
         outFragColor = vec4(mix(outlineColor, color.rgb, outline_fraction), (color.a * alpha));
     }
