@@ -126,7 +126,7 @@ namespace utility {
         * @param fn          The predefined font name or the font name as string
         * @param render_mode The render to be used
         * @param size        The size of the font in logical units 
-        * @param flipY       The vertical flip flag*
+        * @param flipY       The vertical flip flag
         */
         SDFFont(PresetFontName fn);
         SDFFont(PresetFontName fn, RenderMode render_mode);
@@ -411,18 +411,13 @@ namespace utility {
 
         /**
          * Set outline color.
-         */
-        inline void SetOutlineColor(glm::vec3 oc) { 
-            this->outlineColor = oc;
-        }
-
-        /**
-         * Answer the currently set outline color.
          *
-         * @return True outline color.
+         * @param color     The color of the outline.
+         * @param thikness  The thickness of the outline in per cent to the total font width in range [0, 1]
          */
-        inline glm::vec3 GetOutlineColor(void) const {
-            return this->outlineColor;
+        inline void SetOutline(glm::vec3 color, float thickness = 0.2f) { 
+            this->outlineColor = glm::vec3(std::clamp(color.x, 0.0f, 1.0f), std::clamp(color.y, 0.0f, 1.0f), std::clamp(color.z, 0.0f, 1.0f));
+            this->outlineThickness = std::clamp(thickness, 0.0f, 1.0f);
         }
 
     protected:
@@ -474,8 +469,9 @@ namespace utility {
         /** Quaternion for font rotation. */
         glm::quat rotation;
 
-        /** Optional outline color. */
+        /** Optional outline data. */
         glm::vec3 outlineColor;
+        float outlineThickness;
 
         // Render data --------------------------------------------------------
 
