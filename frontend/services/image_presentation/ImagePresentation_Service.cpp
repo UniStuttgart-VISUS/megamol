@@ -76,6 +76,20 @@ bool ImagePresentation_Service::init(const Config& config) {
 
     m_config = config;
 
+    if (m_config.local_tile_size.has_value()) {
+        UintPair start_pixel = std::get<0>(m_config.local_tile_size.value());
+        UintPair local_size  = std::get<1>(m_config.local_tile_size.value());
+        UintPair global_size = std::get<2>(m_config.local_tile_size.value());
+
+        auto diff = [](UintPair const& point, UintPair const& size) -> DoublePair {
+            return {point.first / static_cast<double>(size.first), point.second / static_cast<double>(size.second)};
+        };
+        DoublePair start = diff(start_pixel, global_size);
+        DoublePair end = diff({start_pixel.first+local_size.first,start_pixel.second+local_size.second}, global_size);
+        m_viewport_tile = {start, end};
+        m_config.framebuffer_size = local_size;
+    }
+
     m_default_fbo_events_source = m_config.framebuffer_size.has_value()
         ? GraphEntryPoint::FboEventsSource::Manual
         : GraphEntryPoint::FboEventsSource::WindowSize;
@@ -126,7 +140,7 @@ void ImagePresentation_Service::postGraphRender() {
 
 void ImagePresentation_Service::RenderNextFrame() {
     for (auto& entry : m_entry_points) {
-        entry.execute(entry.modulePtr, entry.entry_point_resources, entry.execution_result_image.get());
+        entry.execute(entry.modulePtr, entry.entry_point_resources, entry.execution_result_image.get(), entry.viewport_tile);
     }
 }
 
@@ -135,7 +149,7 @@ void ImagePresentation_Service::PresentRenderedImages() {
 
 // clang-format off
 using FrontendResource = megamol::frontend::FrontendResource;
-using EntryPointExecutionCallback = std::function<bool(void*, std::vector<FrontendResource> const&, ImageWrapper&)>;
+using EntryPointExecutionCallback = std::function<bool(void*, std::vector<FrontendResource> const&, ImageWrapper&, /*ViewportTile*/std::pair<std::pair<double,double>, std::pair<double,double>>)>;
 
 using EntryPointInitFunctions =
 std::tuple<
@@ -293,12 +307,16 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
     const auto fbo_events_source = m_default_fbo_events_source; // WindowSize or Manual, depending on CLI config
     megamol::frontend_resources::FramebufferEvents default_fbo_size{};
 
+    // tile is statically set in init()
+    auto local_tile = m_viewport_tile;
+
     m_entry_points.push_back(GraphEntryPoint{
         name,
         module_raw_ptr,
         resources,
         fbo_events_source,
         default_fbo_size,
+        local_tile,
         execute_etry,
         image
         });
@@ -308,7 +326,7 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
     remap_individual_resources(entry_point);
     set_individual_entry_point_resources_defaults(entry_point);
 
-    if (!init_entry(entry_point.modulePtr, entry_point.entry_point_resources, entry_point.execution_result_image)) {
+    if (!init_entry(entry_point.modulePtr, entry_point.entry_point_resources, entry_point.execution_result_image, entry_point.viewport_tile)) {
         log_error("init function for entry point " + entry_point.moduleName + " failed. Entry point not created.");
         m_entry_points.pop_back();
         return false;

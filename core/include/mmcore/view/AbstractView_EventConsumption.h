@@ -30,10 +30,13 @@ namespace view {
     // and just pass those resources to the view when rendering a frame
     // until we implement the 'optimal' approach, this is the best we can do
     MEGAMOLCORE_API std::vector<std::string> get_gl_view_runtime_resources_requests();
-    MEGAMOLCORE_API bool view_rendering_execution(void* module_ptr, std::vector<megamol::frontend::FrontendResource> const& resources, megamol::frontend_resources::ImageWrapper& fronend_image);
+
+    using DoublePair = std::pair<double, double>;
+    using ViewportTile = std::pair<DoublePair, DoublePair>;
+    MEGAMOLCORE_API bool view_rendering_execution(void* module_ptr, std::vector<megamol::frontend::FrontendResource> const& resources, megamol::frontend_resources::ImageWrapper& fronend_image, ViewportTile viewport_tile);
     // before rendering the first frame views need to know the current framebuffer size
     // because they may have beed added to the graph after the initial framebuffer size event, we need this init callback to give them that info
-    MEGAMOLCORE_API bool view_init_rendering_state(void* module_ptr, std::vector<megamol::frontend::FrontendResource> const& resources, megamol::frontend_resources::ImageWrapper& fronend_image);
+    MEGAMOLCORE_API bool view_init_rendering_state(void* module_ptr, std::vector<megamol::frontend::FrontendResource> const& resources, megamol::frontend_resources::ImageWrapper& fronend_image, ViewportTile viewport_tile);
 
 } /* end namespace view */
 } /* end namespace core */

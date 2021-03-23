@@ -103,7 +103,8 @@ std::vector<std::string> get_gl_view_runtime_resources_requests() {
 bool view_rendering_execution(
     void* module_ptr,
     std::vector<megamol::frontend::FrontendResource> const& resources,
-    megamol::frontend_resources::ImageWrapper& frontend_image)
+    megamol::frontend_resources::ImageWrapper& frontend_image,
+    ViewportTile viewport_tile/*unused*/)
 {
     megamol::core::view::AbstractView* view_ptr =
         dynamic_cast<megamol::core::view::AbstractView*>(static_cast<megamol::core::Module*>(module_ptr));
@@ -128,7 +129,8 @@ bool view_rendering_execution(
 bool view_init_rendering_state(
     void* module_ptr,
     std::vector<megamol::frontend::FrontendResource> const& resources,
-    megamol::frontend_resources::ImageWrapper& frontend_image)
+    megamol::frontend_resources::ImageWrapper& frontend_image,
+    ViewportTile viewport_tile)
 {
     megamol::core::view::AbstractView* view_ptr =
         dynamic_cast<megamol::core::view::AbstractView*>(static_cast<megamol::core::Module*>(module_ptr));

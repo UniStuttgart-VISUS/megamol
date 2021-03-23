@@ -19,6 +19,7 @@ namespace megamol {
 namespace frontend {
 
 using UintPair = std::pair<unsigned int, unsigned int>;
+using DoublePair = std::pair<double, double>;
 
 static const UintPair Resolution_HD     = {1280,  720};
 static const UintPair Resolution_FullHD = {1920, 1080};
@@ -29,7 +30,17 @@ static const UintPair Resolution_8K     = {7680, 4320};
 class ImagePresentation_Service final : public AbstractFrontendService {
 public:
 
+    // the config tile and framebuffer sizes are used for all views set as entry points
+    // (until somebody needs different views to render into different tiles)
     struct Config {
+        // local_tile, all values in pixels:
+        // (x,y) , (local width, local height) , (global width, global height)
+        // (x,y) lower left local tile start pixel (inclusive)
+        // (local width, local height) local tile resolution
+        // (global width, global height) global (virtual) screen resolution
+        std::optional<std::tuple<UintPair, UintPair, UintPair>> local_tile_size = std::nullopt;
+            //= {{{0, 0} /*start pixel*/, Resolution_HD /*local res*/, Resolution_HD /*global res*/}};
+
         // (local) framebuffer resolution to use for all views
         // independent of resolution of GLFW window framebuffer
         // default: scale view resolutions to window framebuffer size
@@ -86,8 +97,9 @@ private:
     // are satisfied, which means that the execute() callback for the entry point is provided the requested
     // dependencies/resources for rendering
 
+    using ViewportTile = std::pair<DoublePair, DoublePair>;
     using EntryPointExecutionCallback =
-        std::function<bool(void*, std::vector<megamol::frontend::FrontendResource> const&, ImageWrapper&)>;
+        std::function<bool(void*, std::vector<megamol::frontend::FrontendResource> const&, ImageWrapper&, ViewportTile viewport_tile)>;
 
     struct GraphEntryPoint {
         std::string moduleName;
@@ -98,11 +110,14 @@ private:
         FboEventsSource framebuffer_events_source;
         megamol::frontend_resources::FramebufferEvents framebuffer_events;
 
+        ViewportTile viewport_tile; // [start, end) local image region in some bigger global (virtual) image [0.0, 1.0).
+
         EntryPointExecutionCallback execute;
         std::reference_wrapper<ImageWrapper> execution_result_image;
     };
     std::list<GraphEntryPoint> m_entry_points;
     GraphEntryPoint::FboEventsSource m_default_fbo_events_source = GraphEntryPoint::FboEventsSource::WindowSize;
+    ViewportTile m_viewport_tile = {{0.0, 0.0}, {1.0, 1.0}};
 
     std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
     void remap_individual_resources(GraphEntryPoint& entry);
