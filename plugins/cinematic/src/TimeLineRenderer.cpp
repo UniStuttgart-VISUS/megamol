@@ -439,14 +439,14 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     std::string leftLabel = " TIMELINE ";
     std::string midLabel = stream.str();
     std::string rightLabel = "";
-    this->utils.PushMenu(leftLabel, midLabel, rightLabel, this->viewport.x, this->viewport.y);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, this->viewport);
 
     // Draw all ---------------------------------------------------------------
     this->utils.DrawAll(ortho, this->viewport);
 
+
 	return true;
 }
-
 
 void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color) {
 

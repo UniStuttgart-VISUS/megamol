@@ -136,16 +136,16 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
 }
 
 
-void CinematicUtils::PushMenu(const std::string& left_label, const std::string& middle_label, const std::string& right_label, float viewport_width, float viewport_height) {
+void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp) {
 
     const float menu_height = this->font_size;
 
     // Push menu background quad
-    this->PushQuadPrimitive(glm::vec3(0.0f, viewport_height, 0.0f), glm::vec3(0.0f, viewport_height - menu_height, 0.0f), 
-        glm::vec3(viewport_width, viewport_height - menu_height, 0.0f), glm::vec3(viewport_width, viewport_height, 0.0f), this->Color(CinematicUtils::Colors::MENU));
+    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, 0.0f), glm::vec3(0.0f, dim_vp.y - menu_height, 0.0f), 
+        glm::vec3(dim_vp.x, dim_vp.y - menu_height, 0.0f), glm::vec3(dim_vp.x, dim_vp.y, 0.0f), this->Color(CinematicUtils::Colors::MENU));
 
     // Push menu labels
-    float vpWhalf = viewport_width / 2.0f;
+    float vpWhalf = dim_vp.x / 2.0f;
     float new_font_size = this->font_size;
     float leftLabelWidth = this->font.LineWidth(this->font_size, left_label.c_str());
     float midleftLabelWidth = this->font.LineWidth(this->font_size, middle_label.c_str());
@@ -156,21 +156,19 @@ void CinematicUtils::PushMenu(const std::string& left_label, const std::string& 
         midleftLabelWidth = this->font.LineWidth(new_font_size, middle_label.c_str());
         rightLabelWidth = this->font.LineWidth(new_font_size, right_label.c_str());
     }
-    float textPosY = viewport_height - (menu_height / 2.0f) + (new_font_size / 2.0f);
+    float textPosY = dim_vp.y - (menu_height / 2.0f) + (new_font_size / 2.0f);
     auto current_back_color = this->Color(CinematicUtils::Colors::BACKGROUND);
     this->SetBackgroundColor(this->Color(CinematicUtils::Colors::MENU));
     auto color = this->Color(CinematicUtils::Colors::FONT);
 
-     glm::mat4 ortho = glm::ortho(0.0f, viewport_width, 0.0f, viewport_height, -1.0f, 1.0f);
-
     this->font.DrawString(ortho, glm::value_ptr(color), 0.0f, textPosY, new_font_size, false, left_label.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
-    this->font.DrawString(ortho, glm::value_ptr(color), (viewport_width - midleftLabelWidth) / 2.0f, textPosY, new_font_size, false, middle_label.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
-    this->font.DrawString(ortho, glm::value_ptr(color), (viewport_width - rightLabelWidth), textPosY, new_font_size, false, right_label.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(ortho, glm::value_ptr(color), (dim_vp.x - midleftLabelWidth) / 2.0f, textPosY, new_font_size, false, middle_label.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(ortho, glm::value_ptr(color), (dim_vp.x - rightLabelWidth), textPosY, new_font_size, false, right_label.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
     this->SetBackgroundColor(current_back_color);
 }
 
 
-void CinematicUtils::PushHotkeyList(float viewport_width, float viewport_height) {
+void CinematicUtils::PushHotkeyList(const glm::mat4& ortho, glm::vec2 dim_vp) {
 
     std::string hotkey_str = "";
     hotkey_str += "-----[ GLOBAL ]-----\n";
@@ -200,7 +198,7 @@ void CinematicUtils::PushHotkeyList(float viewport_width, float viewport_height)
 
     const float border = 10.0f;
     size_t line_count = std::count(hotkey_str.begin(), hotkey_str.end(), '\n');
-    float hotkey_font_size = (viewport_height - 2.0f * this->font_size - 2.0f*border) / static_cast<float>(line_count);
+    float hotkey_font_size = (dim_vp.y - 2.0f * this->font_size - 2.0f*border) / static_cast<float>(line_count);
     hotkey_font_size = (hotkey_font_size > this->font_size) ? (this->font_size) : (hotkey_font_size);
     float line_height = this->font.LineHeight(hotkey_font_size);
     float line_width = this->font.LineWidth(hotkey_font_size, hotkey_str.c_str());
@@ -209,14 +207,13 @@ void CinematicUtils::PushHotkeyList(float viewport_width, float viewport_height)
 
     // Push background quad
     this->PushQuadPrimitive(glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, viewport_height - quad_height, 0.0f),
-        glm::vec3(quad_width, viewport_height - quad_height, 0.0f), glm::vec3(quad_width, 0.0f, 0.0f),
+        glm::vec3(0.0f, dim_vp.y - quad_height, 0.0f),
+        glm::vec3(quad_width, dim_vp.y - quad_height, 0.0f), glm::vec3(quad_width, 0.0f, 0.0f),
         this->Color(CinematicUtils::Colors::MENU));
 
     // Push hotkey text
     auto color = this->Color(CinematicUtils::Colors::FONT);
-    glm::mat4 ortho = glm::ortho(0.0f, viewport_width, 0.0f, viewport_height, -1.0f, 1.0f);
-    this->font.DrawString(ortho, glm::value_ptr(color), border, viewport_height - quad_height - border, hotkey_font_size,
+    this->font.DrawString(ortho, glm::value_ptr(color), border, dim_vp.y - quad_height - border, hotkey_font_size,
         false, hotkey_str.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
 }
 
@@ -228,17 +225,17 @@ void CinematicUtils::Push2DText(const glm::mat4& ortho, const std::string& text,
 }
 
 
-void CinematicUtils::DrawAll(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+void CinematicUtils::DrawAll(const glm::mat4&mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Cinematic utilities must be initialized before drawing. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 
-    this->DrawAllPrimitives(mat_mvp, dim_vp);
+    this->DrawAllPrimitives(mvp, dim_vp);
 
     glDisable(GL_DEPTH_TEST);
-    this->font.BatchDrawString(mat_mvp);
+    this->font.BatchDrawString(mvp);
     this->font.ClearBatchDrawCache();
     glEnable(GL_DEPTH_TEST);
 }
