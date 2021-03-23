@@ -212,7 +212,7 @@ void cluster::InfoIconRenderer::RenderInfoIconBorder(unsigned char colR,
     const static vislib::StringW compName = infoIconBorderCaption();
     const static vislib::graphics::gl::OutlineFont font(
         vislib::graphics::gl::FontInfo_Helvetica_UltraCompressed,
-        vislib::graphics::gl::OutlineFont::RENDERMODE_FILL_AND_OUTLINE);
+        vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL_AND_OUTLINE);
     const static float fontSize = borderSize
         / vislib::graphics::gl::FontInfo_Helvetica_UltraCompressed.charHeight;
     const static float fontTopLine = fontSize

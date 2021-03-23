@@ -67,10 +67,10 @@ namespace gl {
 
         /** Possible render types for the font */
         enum RenderType {
-            RENDERMODE_NONE, /* Do not render anything */
-            RENDERMODE_OUTLINE, /* Render the outline with GL_LINE_LOOP */
-            RENDERMODE_FILL, /* Render the filled glyphs with GL_TRIANGLES */
-            RENDERMODE_FILL_AND_OUTLINE /* Render the filled glyphs with
+            RENDERTYPE_NONE, /* Do not render anything */
+            RENDERTYPE_OUTLINE, /* Render the outline with GL_LINE_LOOP */
+            RENDERTYPE_FILL, /* Render the filled glyphs with GL_TRIANGLES */
+            RENDERTYPE_FILL_AND_OUTLINE /* Render the filled glyphs with
                                            GL_TRIANGLES and the outline with
                                            GL_LINE_LOOP afterwards */
         };

@@ -20,7 +20,7 @@ namespace view {
     static const vislib::graphics::AbstractFont& __openGLVerdanaOutline(void) {
         const static vislib::graphics::gl::OutlineFont font(
             vislib::graphics::gl::FontInfo_Verdana,
-            vislib::graphics::gl::OutlineFont::RENDERMODE_FILL_AND_OUTLINE);
+            vislib::graphics::gl::OutlineFont::RENDERTYPE_FILL_AND_OUTLINE);
         return font;
     }
 
