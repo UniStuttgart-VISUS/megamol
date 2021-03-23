@@ -18,10 +18,23 @@
 namespace megamol {
 namespace frontend {
 
+using UintPair = std::pair<unsigned int, unsigned int>;
+
+static const UintPair Resolution_HD     = {1280,  720};
+static const UintPair Resolution_FullHD = {1920, 1080};
+static const UintPair Resolution_2K     = {2560, 1440};
+static const UintPair Resolution_4K     = {3840, 2160};
+static const UintPair Resolution_8K     = {7680, 4320};
+
 class ImagePresentation_Service final : public AbstractFrontendService {
 public:
 
     struct Config {
+        // (local) framebuffer resolution to use for all views
+        // independent of resolution of GLFW window framebuffer
+        // default: scale view resolutions to window framebuffer size
+        // currently, if local_tile_size specified, the framebuffer_size is ignored
+        std::optional<UintPair> framebuffer_size = std::nullopt; // Resolution_HD;
     };
 
     std::string serviceName() const override { return "ImagePresentation_Service"; }
@@ -104,6 +117,8 @@ private:
 
     void register_lua_framebuffer_callbacks();
     std::function<bool(std::string const&, std::string const&)> m_entrypointToPNG_trigger;
+
+    Config m_config;
 };
 
 } // namespace frontend

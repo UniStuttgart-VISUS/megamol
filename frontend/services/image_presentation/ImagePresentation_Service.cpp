@@ -74,6 +74,12 @@ bool ImagePresentation_Service::init(const Config& config) {
         , "ImageWrapperToPNG_ScreenshotTrigger"
     };
 
+    m_config = config;
+
+    m_default_fbo_events_source = m_config.framebuffer_size.has_value()
+        ? GraphEntryPoint::FboEventsSource::Manual
+        : GraphEntryPoint::FboEventsSource::WindowSize;
+
     log("initialized successfully");
     return true;
 }
@@ -249,9 +255,25 @@ void ImagePresentation_Service::set_individual_entry_point_resources_defaults(Gr
         entry.framebuffer_events.previous_state = maybe_window_fbo_events_ptr->previous_state;
         entry.framebuffer_events.size_events = maybe_window_fbo_events_ptr->size_events;
     } else {
-        log_error("entry point " + entry.moduleName + " demands Fbo Size initial values from WindowFramebufferEvents resource. "
-                  "\nBut i could not find that resource. Requesting to shut down MegaMol.");
-        this->setShutdown();
+        if (m_config.framebuffer_size.has_value()) {
+            // the init fbo size was set from CLI framebuffer size option
+            // this fbo size in m_config may be overwritten via mmSetFramebufferSize
+            // so here we check it for every new entry point
+            if (m_config.framebuffer_size.has_value()) {
+                auto& fbo_size = m_config.framebuffer_size.value();
+                entry.framebuffer_events_source = GraphEntryPoint::FboEventsSource::Manual;
+                entry.framebuffer_events.previous_state =
+                    {
+                        static_cast<int>(fbo_size.first),
+                        static_cast<int>(fbo_size.second)
+                    };
+                entry.framebuffer_events.size_events.push_back( entry.framebuffer_events.previous_state );
+            }
+        } else {
+            log_error("entry point " + entry.moduleName + " demands Fbo Size initial values from WindowFramebufferEvents resource. "
+                      "\nBut i could not find that resource. Set framebuffer size via CLI? Requesting to shut down MegaMol.");
+            this->setShutdown();
+        }
     }
 }
 
@@ -268,15 +290,15 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
         return false;
     }
 
-    // TODO: making entry points with non-window fbo size how?
-    const auto fbo_events_source = m_default_fbo_events_source;
+    const auto fbo_events_source = m_default_fbo_events_source; // WindowSize or Manual, depending on CLI config
+    megamol::frontend_resources::FramebufferEvents default_fbo_size{};
 
     m_entry_points.push_back(GraphEntryPoint{
         name,
         module_raw_ptr,
         resources,
         fbo_events_source,
-        megamol::frontend_resources::FramebufferEvents{},
+        default_fbo_size,
         execute_etry,
         image
         });
@@ -348,9 +370,11 @@ void ImagePresentation_Service::register_lua_framebuffer_callbacks() {
 
             // after manual resize of FBO, decouple FBO size of Views (entry points) from window size forever
             for (auto& entry : m_entry_points) {
+                m_config.framebuffer_size = {width, height};
                 entry.framebuffer_events.size_events.push_back({width, height});
                 entry.framebuffer_events_source = GraphEntryPoint::FboEventsSource::Manual;
             }
+            m_default_fbo_events_source = GraphEntryPoint::FboEventsSource::Manual;
 
             return VoidResult{};
         }});
