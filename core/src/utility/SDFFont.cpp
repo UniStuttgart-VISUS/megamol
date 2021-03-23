@@ -459,7 +459,7 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) co
 }
 
 
-void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY,
+void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float size, bool flipY,
     const char* txt, SDFFont::Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
@@ -479,7 +479,7 @@ void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float 
 }
 
 
-void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float w, float h,
+void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float w, float h,
     float size, bool flipY, const char* txt, SDFFont::Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
@@ -527,7 +527,7 @@ void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float 
 }
 
 
-void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float w, float h,
+void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float z, float w, float h,
     float size, bool flipY, const char* txt, SDFFont::Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
@@ -575,7 +575,7 @@ void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float 
 }
 
 
-void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float size,
+void SDFFont::DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float z, float size,
     bool flipY, const char* txt, Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
@@ -612,7 +612,7 @@ float SDFFont::LineWidth(float size, const char *txt) const {
 }
 
 
-void SDFFont::BatchDrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4]) const {
+void SDFFont::BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4]) const {
 
     if (this->posBatchCache.empty()) return;
 
@@ -634,7 +634,7 @@ void SDFFont::BatchDrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4]) c
 }
 
 
-void SDFFont::BatchDrawString(glm::mat4 mvm, glm::mat4 pm) const {
+void SDFFont::BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm) const {
 
     if (this->posBatchCache.empty()) return;
 
@@ -856,7 +856,7 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
 }
 
 
-void SDFFont::drawGlyphs(glm::mat4 modelview_mat, glm::mat4 projection_mat, const float col[4], int* run, float x,
+void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], int* run, float x,
     float y, float z, float size, bool flipY, Alignment align) const {
 
     // Data buffers
@@ -910,7 +910,7 @@ void SDFFont::drawGlyphs(glm::mat4 modelview_mat, glm::mat4 projection_mat, cons
         billboardRotPoint = glm::vec4(gx, gy + deltaY, gz, 1.0f);
 
         // Apply model view matrix ONLY to rotation point ...
-        billboardRotPoint = modelview_mat * billboardRotPoint;
+        billboardRotPoint = mvm * billboardRotPoint;
         billboardRotPoint.y = (billboardRotPoint.y - deltaY);
         gx = billboardRotPoint.x;
         gy = billboardRotPoint.y;
@@ -1082,7 +1082,7 @@ void SDFFont::drawGlyphs(glm::mat4 modelview_mat, glm::mat4 projection_mat, cons
         }
 
         // Draw data buffers
-        this->render(modelview_mat, projection_mat, glyphCnt, &col);
+        this->render(mvm, pm, glyphCnt, &col);
     } 
 
     ARY_SAFE_DELETE(posData);
@@ -1090,7 +1090,7 @@ void SDFFont::drawGlyphs(glm::mat4 modelview_mat, glm::mat4 projection_mat, cons
 }
 
 
-void SDFFont::render(glm::mat4 modelview_mat, glm::mat4 projection_mat, unsigned int glyph_count, const float* color_ptr[4]) const {
+void SDFFont::render(const glm::mat4& mvm, const glm::mat4& pm, unsigned int glyph_count, const float* color_ptr[4]) const {
 
     // Check texture
     if (this->texture->getName() == 0) {
@@ -1115,10 +1115,10 @@ void SDFFont::render(glm::mat4 modelview_mat, glm::mat4 projection_mat, unsigned
     glm::mat4 shader_matrix;
     if (this->billboardMode) {
         // Only projection matrix has to be applied for billboard
-        shader_matrix = projection_mat;
+        shader_matrix = pm;
     }
     else {
-        shader_matrix = projection_mat * modelview_mat; 
+        shader_matrix = pm * mvm; 
     }
 
     // Set blending

@@ -221,7 +221,7 @@ namespace utility {
          * Draws text into a specified rectangular area in world space.
          * Performs soft-breaks if necessary.
          *
-         * @param mvm   The current [3D]: model view matrix [2D]: glm::mat4().
+         * @param mvm   The current [3D]: model view matrix [2D]: const glm::mat4&().
          * @param pm    The current [3D]: projection matrix [2D]: pre-multiplied model view projection matrix.
          * 
          * @param mvp    The current pre-multiplied model view projection matrix.
@@ -238,76 +238,78 @@ namespace utility {
          * @param align The alignment of the text inside the area.
          */
         // mvm pm col x y size flipy txt (align)
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
         }
         // mvm pm col x y z size flipy txt (align)
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
         }
         // mvm pm col x y w h size flipy txt (align)
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
         // mvm pm col x y z w h size flipy txt (align)
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
 
         // mvp col x y size flipy txt (align)
-        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(glm::mat4(), mvp, col, x, y, w, h, size, flipY, txt, align);
-        }
-        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(mvp, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
-        }
-        // mvp col x y z size flipy txt (align)
-        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(glm::mat4(), mvp, col, x, y, z, w, h, size, flipY, txt, align);
-        }
-        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(mvp, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
-        }
-        // mvp col x y w h size flipy txt (align)
-        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float size, bool flipY, const char* txt,  Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float size, bool flipY, const char* txt,  Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(glm::mat4(), mvp, col, x, y, size, flipY, txt, align);
         }
-        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
         }
-        // mvp col x y w h z size flipy txt (align)
-        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        // mvp col x y z size flipy txt (align)
+        void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(glm::mat4(), mvp, col, x, y, z, size, flipY, txt, align);
         }
-        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
         }
-
+        // mvp col x y w h size flipy txt (align)
+        void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(glm::mat4(), mvp, col, x, y, w, h, size, flipY, txt, align);
+        }
+        void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvp, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
+        }
+        // mvp col x y w h z size flipy txt (align)
+        void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(glm::mat4(), mvp, col, x, y, z, w, h, size, flipY, txt, align);
+        }
+        void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvp, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
+        }
+        
+        /*
         // mvm pm col x y txt (align)
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, this->globalSize, this->globalFlipY, txt, align);
         }
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, this->globalSize, this->globalFlipY, this->to_string(txt).c_str(), align);
         }
         // mvm pm col x y size txt (align)
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float size, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, size, this->globalFlipY, txt, align);
         }
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, float size, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, size, this->globalFlipY, this->to_string(txt).c_str(), align);
         }
         // mvm pm col x y flipy txt (align)
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, this->globalSize, flipY, txt, align);
         }
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        void DrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], float x, float y, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, this->globalSize, flipY, this->to_string(txt).c_str(), align);
         }
+        */
 
         // mvm pm col x y z txt (align)
         // mvm pm col x y z size txt (align)
@@ -350,8 +352,8 @@ namespace utility {
          * @param mvm   The current model view matrix.
          * @param col   The color.
          */
-        void BatchDrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4]) const;
-        void BatchDrawString(glm::mat4 mvp, const float col[4]) const {
+        void BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4]) const;
+        void BatchDrawString(const glm::mat4& mvp, const float col[4]) const {
             this->BatchDrawString(glm::mat4(), mvp, col);
         }
 
@@ -364,8 +366,8 @@ namespace utility {
          * @param pm    The current projection matrix.
          * @param mvm   The current model view matrix.
          */
-        void BatchDrawString(glm::mat4 mvm, glm::mat4 pm) const;
-        void BatchDrawString(glm::mat4 mvp) const {
+        void BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm) const;
+        void BatchDrawString(const glm::mat4& mvp) const {
             this->BatchDrawString(glm::mat4(), mvp);
         }
 
@@ -685,7 +687,7 @@ namespace utility {
         /**
         * Generates the glyph runs for the text 'txt'
         *
-        * @param txtutf8  The input text 
+        * @param txt      The input text 
         * @param maxWidth The maximum width (normalized logical units)
         *
         * @return The resulting glyph run
@@ -695,29 +697,29 @@ namespace utility {
         /**
         * Draw font glyphs.
         *
-        * @param projection_mat  The current projection matrix.
-        * @param modelview_mat   The current modelview matrix.
-        * @param col             The color as RGBA.
-        * @param run             The glyph run
-        * @param x               The reference x coordinate
-        * @param y               The reference y coordinate
-        * @param z               The reference z coordinate
-        * @param size            The size
-        * @param flipY           The flag controlling the direction of the y-axis
-        * @param align           The alignment
+        * @param pm     The current projection matrix.
+        * @param mvm    The current modelview matrix.
+        * @param col    The color as RGBA.
+        * @param run    The glyph run
+        * @param x      The reference x coordinate
+        * @param y      The reference y coordinate
+        * @param z      The reference z coordinate
+        * @param size   The size
+        * @param flipY  The flag controlling the direction of the y-axis
+        * @param align  The alignment
         */
-        void drawGlyphs(glm::mat4 modelview_mat, glm::mat4 projection_mat, const float col[4], int* run, float x,
+        void drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float col[4], int* run, float x,
             float y, float z, float size, bool flipY, Alignment align) const;
 
         /** 
         * Renders buffer data. 
         *
-        * @param projection_mat  The current projection matrix.
-        * @param modelview_mat   The current modelview matrix.
-        * @param glyph_count     The total glyph count to render.
-        * @param color_ptr       Pointer to the color array. If col is nullptr, per vertex color is used.
+        * @param pm           The current projection matrix.
+        * @param mvm          The current modelview matrix.
+        * @param glyph_count  The total glyph count to render.
+        * @param color_ptr    Pointer to the color array. If col is nullptr, per vertex color is used.
         */
-        void render(glm::mat4 modelview_mat, glm::mat4 projection_mat, unsigned int glyph_count,
+        void render(const glm::mat4& mvm, const glm::mat4& pm, unsigned int glyph_count,
             const float* color_ptr[4]) const;
 
         /**
