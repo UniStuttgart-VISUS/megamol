@@ -121,6 +121,8 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::ImagePresentation_Service imagepresentation_service;
     megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
+    imagepresentationConfig.framebuffer_size = config.framebuffer_size;
+    imagepresentationConfig.local_tile_size  = config.viewport_tile;
     imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
 
 #ifdef MM_CUDA_ENABLED

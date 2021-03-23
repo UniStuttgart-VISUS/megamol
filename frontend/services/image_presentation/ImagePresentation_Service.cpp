@@ -88,11 +88,31 @@ bool ImagePresentation_Service::init(const Config& config) {
         DoublePair end = diff({start_pixel.first+local_size.first,start_pixel.second+local_size.second}, global_size);
         m_viewport_tile = {start, end};
         m_config.framebuffer_size = local_size;
+
+        log("using viewport tile {{"
+            + std::to_string(start.first) + ", "
+            + std::to_string(start.second) + "}, {"
+            + std::to_string(end.first) + ", "
+            + std::to_string(end.second) + "}}"
+            + "\n\t raw tile config: "
+            + std::string("start pixel {")
+            + std::to_string(start_pixel.first) + ", "
+            + std::to_string(start_pixel.second)
+            + "}, local resolution {"
+            + std::to_string(local_size.first) + ", "
+            + std::to_string(local_size.second)
+            + "}, global resolution {"
+            + std::to_string(global_size.first) + ", "
+            + std::to_string(global_size.second) + "}"
+        );
     }
 
     m_default_fbo_events_source = m_config.framebuffer_size.has_value()
         ? GraphEntryPoint::FboEventsSource::Manual
         : GraphEntryPoint::FboEventsSource::WindowSize;
+    if (m_config.framebuffer_size.has_value()) {
+        log("set framebuffer size to " + std::to_string(m_config.framebuffer_size.value().first) + ", " + std::to_string(m_config.framebuffer_size.value().second));
+    }
 
     log("initialized successfully");
     return true;

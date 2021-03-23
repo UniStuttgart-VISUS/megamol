@@ -22,6 +22,7 @@ struct RuntimeConfig {
     // general stuff
     using Path = std::string;
     using StringPair = std::pair<std::string/*Config*/, std::string/*Value*/>;
+    using UintPair   = std::pair<unsigned int, unsigned int>;
 
     std::vector<Path> configuration_files = {"megamol_config.lua"};               // set only via (multiple) --config in CLI
     std::vector<std::string> configuration_file_contents = {};
@@ -45,8 +46,8 @@ struct RuntimeConfig {
     bool lua_host_port_retry = true;
     bool opengl_khr_debug = false;
     bool opengl_vsync = false;
-    std::optional<std::pair<unsigned int /*width*/,unsigned int /*height*/>> window_size = std::nullopt; // if not set, GLFW service will open window with 3/4 of monitor resolution 
-    std::optional<std::pair<unsigned int /*x*/,unsigned int /*y*/>>          window_position = std::nullopt;
+    std::optional<UintPair/*width, height*/> window_size = std::nullopt; // if not set, GLFW service will open window with 3/4 of monitor resolution 
+    std::optional<UintPair/*x, y*/>          window_position = std::nullopt;
     enum WindowMode {
         fullscreen   = 1 << 0,
         nodecoration = 1 << 1,
@@ -58,6 +59,14 @@ struct RuntimeConfig {
     bool gui_show = true;
     float gui_scale = 1.0f;
     bool gui_show_entryfbos = false;
+
+    // if not set, framebuffer size will be GLFW window framebuffer size
+    std::optional<UintPair/*width, height*/> framebuffer_size = std::nullopt;
+    std::optional<
+        std::tuple<
+            UintPair/*lower left start pixel of local tile in global framebuffer*/,
+            UintPair/*local framebuffer resolution*/,
+            UintPair/*global framebuffer resolution*/>> viewport_tile = std::nullopt;
 
     std::string as_string() const {
         auto summarize = [](std::vector<std::string> const& vec) -> std::string {
