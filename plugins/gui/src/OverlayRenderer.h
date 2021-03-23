@@ -122,7 +122,7 @@ namespace gui {
             float bottom;
         };
 
-        typedef megamol::core::utility::AbstractFont::Alignment Anchor;
+        typedef megamol::core::utility::SDFFont::Alignment Anchor;
 
         enum Mode { TEXTURE, TRANSPORT_CTRL, PARAMETER, LABEL };
 

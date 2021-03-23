@@ -14,8 +14,7 @@ using namespace megamol::core::utility;
 
 
 SDFFont::SDFFont(PresetFontName fn)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
         , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
@@ -23,6 +22,8 @@ SDFFont::SDFFont(PresetFontName fn)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(1.0f)
+        , globalFlipY(false)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -37,8 +38,7 @@ SDFFont::SDFFont(PresetFontName fn)
 }
 
 SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
         , renderMode(render_mode)
         , billboardMode(false)
@@ -46,6 +46,8 @@ SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(1.0f)
+        , globalFlipY(false)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -60,8 +62,7 @@ SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode)
 }
 
 SDFFont::SDFFont(PresetFontName fn, float size)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
         , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
@@ -69,6 +70,8 @@ SDFFont::SDFFont(PresetFontName fn, float size)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(size)
+        , globalFlipY(false)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -84,8 +87,7 @@ SDFFont::SDFFont(PresetFontName fn, float size)
 }
 
 SDFFont::SDFFont(PresetFontName fn, bool flipY)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
         , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
@@ -93,6 +95,8 @@ SDFFont::SDFFont(PresetFontName fn, bool flipY)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(1.0f)
+        , globalFlipY(flipY)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -108,8 +112,7 @@ SDFFont::SDFFont(PresetFontName fn, bool flipY)
 }
 
 SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode, bool flipY)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
         , renderMode(render_mode)
         , billboardMode(false)
@@ -117,6 +120,8 @@ SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode, bool flipY)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(1.0f)
+        , globalFlipY(flipY)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -132,8 +137,7 @@ SDFFont::SDFFont(PresetFontName fn, SDFFont::RenderMode render_mode, bool flipY)
 }
 
 SDFFont::SDFFont(PresetFontName fn, float size, bool flipY)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
         , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
@@ -141,6 +145,8 @@ SDFFont::SDFFont(PresetFontName fn, float size, bool flipY)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(size)
+        , globalFlipY(flipY)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -157,15 +163,16 @@ SDFFont::SDFFont(PresetFontName fn, float size, bool flipY)
 }
 
 SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
-        , renderMode(RenderMode::RENDERMODE_FILL)
+        , renderMode(render_mode)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(size)
+        , globalFlipY(false)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -181,15 +188,16 @@ SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode)
 }
 
 SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode, bool flipY)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(this->presetFontNameToString(fn))
-        , renderMode(RenderMode::RENDERMODE_FILL)
+        , renderMode(render_mode)
         , billboardMode(false)
         , batchDrawMode(false)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(size)
+        , globalFlipY(flipY)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -206,8 +214,7 @@ SDFFont::SDFFont(PresetFontName fn, float size, SDFFont::RenderMode render_mode,
 }
 
 SDFFont::SDFFont(std::string fn)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(fn)
         , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
@@ -215,6 +222,8 @@ SDFFont::SDFFont(std::string fn)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(1.0f)
+        , globalFlipY(false)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -229,8 +238,7 @@ SDFFont::SDFFont(std::string fn)
 }
 
 SDFFont::SDFFont(std::string fn, SDFFont::RenderMode render_mode)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(fn)
         , renderMode(render_mode)
         , billboardMode(false)
@@ -238,6 +246,8 @@ SDFFont::SDFFont(std::string fn, SDFFont::RenderMode render_mode)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(1.0f)
+        , globalFlipY(false)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -252,8 +262,7 @@ SDFFont::SDFFont(std::string fn, SDFFont::RenderMode render_mode)
 }
 
 SDFFont::SDFFont(std::string fn, float size)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(fn)
         , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
@@ -261,6 +270,8 @@ SDFFont::SDFFont(std::string fn, float size)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(size)
+        , globalFlipY(false)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -276,8 +287,7 @@ SDFFont::SDFFont(std::string fn, float size)
 }
 
 SDFFont::SDFFont(std::string fn, bool flipY)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(fn)
         , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
@@ -285,6 +295,8 @@ SDFFont::SDFFont(std::string fn, bool flipY)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(1.0f)
+        , globalFlipY(flipY)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -300,8 +312,7 @@ SDFFont::SDFFont(std::string fn, bool flipY)
 }
 
 SDFFont::SDFFont(std::string fn, SDFFont::RenderMode render_mode, bool flipY)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(fn)
         , renderMode(render_mode)
         , billboardMode(false)
@@ -309,6 +320,8 @@ SDFFont::SDFFont(std::string fn, SDFFont::RenderMode render_mode, bool flipY)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(1.0f)
+        , globalFlipY(flipY)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -324,8 +337,7 @@ SDFFont::SDFFont(std::string fn, SDFFont::RenderMode render_mode, bool flipY)
 }
 
 SDFFont::SDFFont(std::string fn, float size, bool flipY)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(fn)
         , renderMode(RenderMode::RENDERMODE_FILL)
         , billboardMode(false)
@@ -333,6 +345,8 @@ SDFFont::SDFFont(std::string fn, float size, bool flipY)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(size)
+        , globalFlipY(flipY)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -349,8 +363,7 @@ SDFFont::SDFFont(std::string fn, float size, bool flipY)
 }
 
 SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(fn)
         , renderMode(render_mode)
         , billboardMode(false)
@@ -358,6 +371,8 @@ SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode)
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(size)
+        , globalFlipY(false)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -373,8 +388,7 @@ SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode)
 }
 
 SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode, bool flipY)
-        : AbstractFont()
-        , initialised(false)
+        : initialised(false)
         , fontFileName(fn)
         , renderMode(render_mode)
         , billboardMode(false)
@@ -382,6 +396,8 @@ SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode, bo
         , rotation()
         , outlineColor(0.0f, 0.0f, 0.0f)
         , outlineThickness(0.1f)
+        , globalSize(size)
+        , globalFlipY(flipY)
         , shaderglobcol()
         , shadervertcol()
         , texture(nullptr)
@@ -398,8 +414,7 @@ SDFFont::SDFFont(std::string fn, float size, SDFFont::RenderMode render_mode, bo
 }
 
 megamol::core::utility::SDFFont::SDFFont(const SDFFont& src)
-        : AbstractFont()
-        , initialised(src.initialised)
+        : initialised(src.initialised)
         , fontFileName(src.fontFileName)
         , renderMode(src.renderMode)
         , billboardMode(src.billboardMode)
@@ -407,6 +422,8 @@ megamol::core::utility::SDFFont::SDFFont(const SDFFont& src)
         , rotation(src.rotation)
         , outlineColor(src.outlineColor)
         , outlineThickness(src.outlineThickness)
+        , globalSize(src.globalSize)
+        , globalFlipY(src.globalFlipY)
         , shaderglobcol(src.shaderglobcol)
         , shadervertcol(src.shadervertcol)
         , texture(src.texture)
@@ -427,6 +444,15 @@ SDFFont::~SDFFont(void) {
 }
 
 
+bool SDFFont::Initialise(megamol::core::CoreInstance* core_instance_ptr) {
+
+    if (!this->initialised) {
+        this->initialised = this->loadFont(core_instance_ptr);
+    }
+    return this->initialised;
+}
+
+
 unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) const {
 
     return this->lineCount(this->buildGlyphRun(txt, maxWidth / size), true);
@@ -434,7 +460,7 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) co
 
 
 void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY,
-    const char* txt, AbstractFont::Alignment align) const {
+    const char* txt, SDFFont::Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
 
@@ -454,7 +480,7 @@ void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float 
 
 
 void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float w, float h,
-    float size, bool flipY, const char* txt, AbstractFont::Alignment align) const {
+    float size, bool flipY, const char* txt, SDFFont::Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
 
@@ -502,7 +528,7 @@ void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float 
 
 
 void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float w, float h,
-    float size, bool flipY, const char* txt, AbstractFont::Alignment align) const {
+    float size, bool flipY, const char* txt, SDFFont::Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
 
@@ -633,16 +659,7 @@ void SDFFont::BatchDrawString(glm::mat4 mvm, glm::mat4 pm) const {
 }
 
 
-bool SDFFont::initialise(megamol::core::CoreInstance* core_instance_ptr) {
-    
-    if (!this->initialised) {
-        this->loadFont(core_instance_ptr);
-    }
-    return this->initialised;
-}
-
-
-void SDFFont::deinitialise(void) {
+void SDFFont::Deinitialise(void) {
 
     this->ClearBatchDrawCache();
     this->texture.reset();
@@ -705,7 +722,7 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
     vislib::StringA txtutf8;
     if (!vislib::UTF8Encoder::Encode(txtutf8, txt)) {
         // encoding failed ... how?
-        char *t = txtutf8.AllocateBuffer(vislib::CharTraitsA::SafeStringLength(txt));
+        char* t = txtutf8.AllocateBuffer(vislib::CharTraitsA::SafeStringLength(txt));
         for (; *txt != 0; txt++) {
             if ((*txt & 0x80) == 0) {
                 *t = *txt;
@@ -714,12 +731,6 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
         }
         *t = 0;
     }
-
-    return this->buildUpGlyphRun(txtutf8.PeekBuffer(), maxWidth);
-}
-
-
-int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
     size_t txtlen = static_cast<size_t>(vislib::CharTraitsA::SafeStringLength(txtutf8));
     size_t pos = 0;
@@ -1152,8 +1163,6 @@ void SDFFont::render(glm::mat4 modelview_mat, glm::mat4 projection_mat, unsigned
 
 bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
 
-    this->initialised = false;
-
     this->ResetRotation();
     this->SetBatchDrawMode(false);
     this->ClearBatchDrawCache();
@@ -1205,7 +1214,6 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
         return false;
     }
 
-    this->initialised = true;
     return true;
 }
 
@@ -1214,10 +1222,18 @@ std::string SDFFont::presetFontNameToString(PresetFontName fn) const {
 
     std::string fileName;
     switch (fn) {
-        case(SDFFont::PresetFontName::EVOLVENTA_SANS): fileName = "Evolventa-SansSerif"; break;
-        case(SDFFont::PresetFontName::ROBOTO_SANS):    fileName = "Roboto-SansSerif";    break;
-        case(SDFFont::PresetFontName::VOLLKORN_SERIF): fileName = "Vollkorn-Serif";      break;
-        case(SDFFont::PresetFontName::UBUNTU_MONO):    fileName = "Ubuntu-Mono";         break;
+    case (PRESET_EVOLVENTA_SANS):
+        fileName = "Evolventa-SansSerif";
+        break;
+    case (PRESET_ROBOTO_SANS):
+        fileName = "Roboto-SansSerif";
+        break;
+    case (PRESET_VOLLKORN_SERIF):
+        fileName = "Vollkorn-Serif";
+        break;
+    case (PRESET_UBUNTU_MONO):
+        fileName = "Ubuntu-Mono";
+        break;
         default: break;
     }
     return fileName;

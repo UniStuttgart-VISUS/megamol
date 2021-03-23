@@ -79,8 +79,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         , needSelectionUpdate(false)
         , needFlagsUpdate(false)
         , lastTimeStep(0)
-        , font(core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS,
-              core::utility::SDFFont::RenderMode::RENDERMODE_FILL) {
+        , font(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -656,13 +655,13 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
             // top *= (maximums[realCol] - minimums[realCol]);
             // top += minimums[realCol];
             this->font.DrawString(ortho, color, x, this->marginY * 0.5f, fontSize, false,
-                std::to_string(bottom).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+                std::to_string(bottom).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
             this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
-                std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+                std::to_string(top).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
 #endif
             this->font.DrawString(ortho, color, x,
                 this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontSize * 2.0f, false,
-                names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+                names[realCol].c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
         }
         this->font.BatchDrawString(ortho);
 #endif

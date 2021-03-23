@@ -16,7 +16,7 @@
 
 
 #include "mmcore/view/RenderUtils.h"
-#include "mmcore/utility/AbstractFont.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ResourceWrapper.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
@@ -49,7 +49,7 @@ namespace utility {
      *
      *     - Declare:            megamol::core::utility::SDFFont sdfFont;
      *
-     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS, megamol::core::utility::SDFFont::RenderMode::RENDERMODE_FILL);
+     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::PRESET_EVOLVENTA_SANS, megamol::core::utility::SDFFont::RENDERMODE_FILL);
      *                           OR: this->sdfFont("filename-of-own-font");
      *
      *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
@@ -57,7 +57,7 @@ namespace utility {
      *
      *     - Draw:               this->sdfFont.DrawString(mvm, pm, color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
      *
-     *     - Render Mode:        this->sdfFont.SetRenderMode(megamol::core::utility::SDFFont::RenderMode::RENDERMODE_OUTLINE);
+     *     - Render Mode:        this->sdfFont.SetRenderMode(megamol::core::utility::SDFFont::RENDERMODE_OUTLINE);
      * 
      *     - Rotation:           this->sdfFont.SetRotation(60.0f, vislib::math::Vector<float, 3>(0.0f1.0f0.0f));
      * 
@@ -99,18 +99,54 @@ namespace utility {
      *     - Distance Field - Scale:            50 (set in the end, operation is expensive)
      *
      * -----------------------------------------------------------------------------------------------------------------
+     *
+     * These fonts can render text onto the currently active graphics context
+     * in the object space x-y-plane. The class also contains metric
+     * functions.
+     *
+     * The planes are defined as follows:
+     *  The positive direction of the x-axis is to the right.
+     *  The positive direction of the y-axis is downwards.
+     * However, you can change the direction of the y-axis to upwards by
+     * setting the 'flipY' flag.
+     *
+     * There are two types of 'DrawString' methods, which perform a different
+     * text alignment. When using the methods using a single point for
+     * positioning the text the alignment specifies in which corner of the
+     * text string the position point should be:
+     *
+     *         Left     Center   Right
+     *
+     * Top     A-----+  +--A--+  +-----A
+     *         | str |  | str |  | str |
+     *         +-----+  +-----+  +-----+
+     *
+     * Center  +-----+  +-----+  +-----+
+     *         A str |  | sAr |  | str A
+     *         +-----+  +-----+  +-----+
+     *
+     * Bottom  +-----+  +-----+  +-----+
+     *         | str |  | str |  | str |
+     *         A-----+  +--A--+  +-----A
+     *
+     * When using the methods which use a rectangle to specify the text
+     * position the alignment specifies in which corner of that rectangle the
+     * text should be placed. The positions (x, y) specifies the minimum values
+     * on both axis (regardless 'flipY' flag) and the size (w, h) should always
+     * be positive.
+     * -----------------------------------------------------------------------------------------------------------------
      */
 
-    class MEGAMOLCORE_API SDFFont : public AbstractFont {
+    class MEGAMOLCORE_API SDFFont {
     public:
         // clang-format off
 
         /** Available predefined fonts. */
         enum PresetFontName : int {
-            EVOLVENTA_SANS = 0,
-            ROBOTO_SANS    = 1,
-            VOLLKORN_SERIF = 2,
-            UBUNTU_MONO    = 3
+            PRESET_EVOLVENTA_SANS = 0,
+            PRESET_ROBOTO_SANS    = 1,
+            PRESET_VOLLKORN_SERIF = 2,
+            PRESET_UBUNTU_MONO    = 3
         };
 
         /** Possible render modes for the font. */
@@ -118,6 +154,19 @@ namespace utility {
             RENDERMODE_NONE    = 0,     // Do not render anything
             RENDERMODE_FILL    = 1,     // Render the filled glyphs */
             RENDERMODE_OUTLINE = 2      // Render the outline 
+        };
+
+        /** Possible values for the text alignment. */
+        enum Alignment {
+            ALIGN_LEFT_TOP      = 0x00,
+            ALIGN_CENTER_TOP    = 0x01,
+            ALIGN_RIGHT_TOP     = 0x02,
+            ALIGN_LEFT_MIDDLE   = 0x10,
+            ALIGN_CENTER_MIDDLE = 0x11,
+            ALIGN_RIGHT_MIDDLE  = 0x12,
+            ALIGN_LEFT_BOTTOM   = 0x20,
+            ALIGN_CENTER_BOTTOM = 0x21,
+            ALIGN_RIGHT_BOTTOM  = 0x22
         };
 
         /**
@@ -152,15 +201,30 @@ namespace utility {
         ~SDFFont(void);
 
         /**
-         * [3D with billboard]
-         * NB: REQUIRED FOR 3D BILLBOARD MODE!
+         * Initialises the object. You must not call this method directly.
+         * Instead call 'Initialise'. You must call 'Initialise' before the
+         * object can be used.
+         *
+         * @param conf The megamol core isntance. Needed for being able to load files from 'share/shaders' and 'share/resources' folders.
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        bool Initialise(megamol::core::CoreInstance* core_instance_ptr);
+
+        /**
+         * Deinitialises the object.
+         */
+        void Deinitialise(void);
+
+        /**
          * 
          * Draws text into a specified rectangular area in world space.
          * Performs soft-breaks if necessary.
          *
-         *
-         * @param mvm   The current model view matrix.
-         * @param pm    The current projection matrix.
+         * @param mvm   The current [3D]: model view matrix [2D]: glm::mat4().
+         * @param pm    The current [3D]: projection matrix [2D]: pre-multiplied model view projection matrix.
+         * 
+         * @param mvp    The current pre-multiplied model view projection matrix.
          *
          * @param col   The color as RGBA.
          * @param x     The left coordinate of the rectangle.
@@ -173,56 +237,49 @@ namespace utility {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
+        // mvm pm col x y size flipy txt (align)
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
+        }
+        // mvm pm col x y z size flipy txt (align)
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
+        }
+        // mvm pm col x y w h size flipy txt (align)
         void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
         void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
-
+        // mvm pm col x y z w h size flipy txt (align)
         void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
         void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvm, pm, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
 
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(mvm, pm, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
-        }
-
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
-        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(mvm, pm, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
-        }
-
-        /**
-         * [2D] and [3D without billboard]
-         * 
-         * Draws text into a specified rectangular area in screen or world space.
-         * Performs soft-breaks if necessary.
-         *
-         * @param mvp    The current pre-multiplied model view projection matrix.
-         * 
-         */
+        // mvp col x y size flipy txt (align)
         void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(glm::mat4(), mvp, col, x, y, w, h, size, flipY, txt, align);
         }
         void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
-
+        // mvp col x y z size flipy txt (align)
         void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(glm::mat4(), mvp, col, x, y, z, w, h, size, flipY, txt, align);
         }
         void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
-
+        // mvp col x y w h size flipy txt (align)
         void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float size, bool flipY, const char* txt,  Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(glm::mat4(), mvp, col, x, y, size, flipY, txt, align);
         }
         void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
         }
-
+        // mvp col x y w h z size flipy txt (align)
         void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(glm::mat4(), mvp, col, x, y, z, size, flipY, txt, align);
         }
@@ -230,41 +287,57 @@ namespace utility {
             this->DrawString(mvp, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
         }
 
+        // mvm pm col x y txt (align)
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, this->globalSize, this->globalFlipY, txt, align);
+        }
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, this->globalSize, this->globalFlipY, this->to_string(txt).c_str(), align);
+        }
+        // mvm pm col x y size txt (align)
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, size, this->globalFlipY, txt, align);
+        }
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, size, this->globalFlipY, this->to_string(txt).c_str(), align);
+        }
+        // mvm pm col x y flipy txt (align)
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, this->globalSize, flipY, txt, align);
+        }
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, this->globalSize, flipY, this->to_string(txt).c_str(), align);
+        }
+
+        // mvm pm col x y z txt (align)
+        // mvm pm col x y z size txt (align)
+        // mvm pm col x y z flipy txt (align)
+
+        // mvm pm col x y w h txt (align)
+        // mvm pm col x y w h size txt (align)
+        // mvm pm col x y w h flipy txt (align)
+
+        // mvm pm col x y z w h txt (align)
+        // mvm pm col x y z w h size txt (align)
+        // mvm pm col x y z w h flipy txt (align)
+
+        // Batch Draw Mode ----------------------------------------------------
+
         /**
-         * [[DEPRECATED]]
-         * [2D]
-         * Draws text into a specified rectangular area in screen space rectangle using fixed orthographic projection matrix with ranges x=[0,1] y=[0,1] z=[-1,1].
+         * Enable/Disable batch draw mode.  
+         * Determines that all DrawString() calls are cached for later batch draw.
          */
-        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            glm::mat4 mvp = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
-            this->DrawString(glm::mat4(), mvp, col, x, y, w, h, size, flipY, txt, align);
-        }
-        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
+        inline void SetBatchDrawMode(bool state) { 
+            this->batchDrawMode = state;
         }
 
-        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            glm::mat4 mvp = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
-            this->DrawString(glm::mat4(), mvp, col, x, y, z, w, h, size, flipY, txt, align);
-        }
-        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
-        }
-
-        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            glm::mat4 mvp = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
-            this->DrawString(glm::mat4(), mvp, col, x, y, size, flipY, txt, align);
-        }
-        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(col, x, y, size, flipY, this->to_string(txt).c_str(), align);
-        }
-
-        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            glm::mat4 mvp = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
-            this->DrawString(glm::mat4(), mvp, col, x, y, z, size, flipY, txt, align);
-        }
-        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
+        /**
+         * Answer status of batch draw.
+         *
+         * @return True if batch draw is enabled, false otherwise.
+         */
+        inline bool GetBatchDrawMode(void) const {
+            return this->batchDrawMode;
         }
 
         /**
@@ -297,6 +370,40 @@ namespace utility {
         }
 
         /**
+         * Clears the batch draw caches.
+         */
+        inline void ClearBatchDrawCache(void) {
+            this->posBatchCache.clear();
+            this->texBatchCache.clear();
+            this->colBatchCache.clear();
+        }
+
+        // Global Font Settings -----------------------------------------------
+
+        /**
+         * Answers the height of a single line in logical units. This default
+         * implementation returns 'size', since this is the value representing
+         * a line height. The line height is always positive.
+         *
+         * @param size The font size to use.
+         *
+         * @return The height of a single line in logical units.
+         */
+        float LineHeight(float size) const {
+            return this->globalSize;
+        }
+
+        /**
+         * Answers the height of a single line with the default font size in
+         * logical units. The line height is always positive.
+         *
+         * @return The height of a single line in logical units.
+         */
+        inline float LineHeight(void) const {
+            return this->LineHeight(this->globalSize);
+        }
+
+        /**
         * Answers the width of the line 'txt' in logical units.
         *
         * @param size The font size to use.
@@ -324,8 +431,6 @@ namespace utility {
         unsigned int BlockLines(float maxWidth, float size, const wchar_t* txt) const {
             return this->BlockLines(maxWidth, size, this->to_string(txt).c_str());
         }
-
-        // --- global font settings -------------------------------------------
 
         /**
          * Sets the render_mode type of the font globally.
@@ -384,32 +489,6 @@ namespace utility {
         }
 
         /**
-         * Enable/Disable batch draw mode.  
-         * Determines that all DrawString() calls are cached for later batch draw.
-         */
-        inline void SetBatchDrawMode(bool state) { 
-            this->batchDrawMode = state;
-        }
-
-        /**
-         * Answer status of batch draw.
-         *
-         * @return True if batch draw is enabled, false otherwise.
-         */
-        inline bool GetBatchDrawMode(void) const {
-            return this->batchDrawMode;
-        }
-
-        /**
-         * Clears the batch draw caches.
-         */
-        inline void ClearBatchDrawCache(void) {
-            this->posBatchCache.clear();
-            this->texBatchCache.clear();
-            this->colBatchCache.clear();
-        }
-
-        /**
          * Set outline color.
          *
          * @param color     The color of the outline.
@@ -420,25 +499,47 @@ namespace utility {
             this->outlineThickness = std::clamp(thickness, 0.0f, 1.0f);
         }
 
-    protected:
+        /**
+         * Gets the default size of the font. The size is specified in logical
+         * units used to measure the text in object space.
+         *
+         * @return The default size of the font.
+         */
+        inline float GetSize(void) const {
+            return this->globalSize;
+        }
 
         /**
-         * Initialises the object. You must not call this method directly.
-         * Instead call 'Initialise'. You must call 'Initialise' before the
-         * object can be used.
+         * Sets the default size of the font. The size is specified in logical
+         * units used to measure the text in object space.
          *
-         * @param conf The megamol core isntance. Needed for being able to load files from 'share/shaders' and 'share/resources' folders.
+         * @param size The new default size of the font.
          *
-         * @return 'true' on success, 'false' on failure.
+         * @throw IllegalParamException if size is less than zero.
          */
-        bool initialise(megamol::core::CoreInstance* core_instance_ptr);
+        void SetSize(float size) {
+            this->globalSize = std::max(0.0f, size);
+        }
 
         /**
-         * Deinitialises the object. You must not call this method directly.
-         * Instead call 'Deinitialise'. Derived classes must call
-         * 'Deinitialise' in EACH dtor.
+         * Sets the flag 'flipY'. If the flag is set, the direction of the
+         * y-axis is upward, otherwise it is downward.
+         *
+         * @param flipY The new value for the 'flipY' flag.
          */
-        void deinitialise(void);
+        void SetFlipY(bool flipY) {
+            this->globalFlipY = flipY;
+        }
+
+        /**
+         * Answer the flag 'flipY'. If 'flipY' is true, the direction of the
+         * y-axis is upward, otherwise the direction is downward.
+         *
+         * @return The flag 'flipY'
+         */
+        inline bool IsFlipY(void) const {
+            return this->globalFlipY;
+        }
 
     private:
 
@@ -472,6 +573,12 @@ namespace utility {
         /** Optional outline data. */
         glm::vec3 outlineColor;
         float outlineThickness;
+
+        /** The default size of the font */
+        float globalSize;
+
+        /** flag whether to flip the y-axis */
+        bool globalFlipY;
 
         // Render data --------------------------------------------------------
 
@@ -578,22 +685,12 @@ namespace utility {
         /**
         * Generates the glyph runs for the text 'txt'
         *
-        * @param txt      The input text
+        * @param txtutf8  The input text 
         * @param maxWidth The maximum width (normalized logical units)
         *
         * @return The resulting glyph run
         */
-        int *buildGlyphRun(const char *txt,  float maxWidth) const;
-
-        /**
-        * Generates the glyph runs for the text 'txt'
-        *
-        * @param txtutf8  The input text in utf8 encoding
-        * @param maxWidth The maximum width (normalized logical units)
-        *
-        * @return The resulting glyph run
-        */
-        int *buildUpGlyphRun(const char *txtutf8, float maxWidth) const;
+        int *buildGlyphRun(const char *txt, float maxWidth) const;
 
         /**
         * Draw font glyphs.
