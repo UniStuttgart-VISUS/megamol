@@ -68,13 +68,11 @@ struct Remote_Service::PimplData {
     RenderNode render;
     MpiNode mpi;
     megamol::remote::Message_t message;
-    std::string commands_string;
 };
 #define m_head (m_pimpl->head)
 #define m_render (m_pimpl->render)
 #define m_mpi (m_pimpl->mpi)
 #define m_message (m_pimpl->message)
-#define m_commands_string (m_pimpl->commands_string)
 
 Remote_Service::Remote_Service() {
     // init members to default states
@@ -252,12 +250,12 @@ void Remote_Service::execute_message(std::vector<char> const& message) {
     if (message.empty())
         return;
 
-    // message contains graph state
-    m_commands_string.resize(message.size());
-    std::memcpy(m_commands_string.data(), message.data(), message.size());
+    static std::string commands_string;
+    commands_string.resize(message.size());
+    std::memcpy(commands_string.data(), message.data(), message.size());
     
     auto& executeLua = m_requestedResourceReferences[1].getResource<std::function<std::tuple<bool,std::string>(std::string const&)>>();
-    auto result = executeLua(m_commands_string);
+    auto result = executeLua(commands_string);
 
     if (!std::get<0>(result)) {
         log_error("Error executing Lua: " + std::get<1>(result));
