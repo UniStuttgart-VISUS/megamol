@@ -416,7 +416,7 @@ unsigned int SDFFont::BlockLines(float maxWidth, float size, const char *txt) co
 }
 
 
-void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float size, bool flipY,
+void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY,
     const char* txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
@@ -430,13 +430,13 @@ void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float 
         y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
     }
 
-    this->drawGlyphs(pm, mvm, col, run, x, y, 0.0f, size, flipY, align);
+    this->drawGlyphs(mvm, pm, col, run, x, y, 0.0f, size, flipY, align);
 
     ARY_SAFE_DELETE(run);
 }
 
 
-void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float w, float h,
+void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float w, float h,
     float size, bool flipY, const char* txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
@@ -478,13 +478,13 @@ void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float 
         break;
     }
 
-    this->drawGlyphs(pm, mvm, col, run, x, y, 0.0f, size, flipY, align);
+    this->drawGlyphs(mvm, pm, col, run, x, y, 0.0f, size, flipY, align);
 
     ARY_SAFE_DELETE(run);
 }
 
 
-void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float z, float w, float h,
+void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float w, float h,
     float size, bool flipY, const char* txt, AbstractFont::Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
@@ -526,13 +526,13 @@ void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float 
         break;
     }
 
-    this->drawGlyphs(pm, mvm, col, run, x, y, z, size, flipY, align);
+    this->drawGlyphs(mvm, pm, col, run, x, y, z, size, flipY, align);
 
     ARY_SAFE_DELETE(run);
 }
 
 
-void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float z, float size,
+void SDFFont::DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float size,
     bool flipY, const char* txt, Alignment align) const {
 
     if (!this->initialised || (this->renderMode == RenderMode::RENDERMODE_NONE)) return;
@@ -546,7 +546,7 @@ void SDFFont::DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float 
         y += static_cast<float>(this->lineCount(run, false)) * size *  (flipY ? -1.0f : 1.0f);
     }
 
-    this->drawGlyphs(pm, mvm, col, run, x, y, z, size, flipY, align);
+    this->drawGlyphs(mvm, pm, col, run, x, y, z, size, flipY, align);
 
     ARY_SAFE_DELETE(run);
 }
@@ -569,7 +569,7 @@ float SDFFont::LineWidth(float size, const char *txt) const {
 }
 
 
-void SDFFont::BatchDrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4]) const {
+void SDFFont::BatchDrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4]) const {
 
     if (this->posBatchCache.empty()) return;
 
@@ -587,11 +587,11 @@ void SDFFont::BatchDrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4]) c
 
     // Draw batch cache 
     unsigned int glyphCnt = ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
-    this->render(pm, mvm, glyphCnt, &col);
+    this->render(mvm, pm, glyphCnt, &col);
 }
 
 
-void SDFFont::BatchDrawString(glm::mat4 pm, glm::mat4 mvm) const {
+void SDFFont::BatchDrawString(glm::mat4 mvm, glm::mat4 pm) const {
 
     if (this->posBatchCache.empty()) return;
 
@@ -612,7 +612,7 @@ void SDFFont::BatchDrawString(glm::mat4 pm, glm::mat4 mvm) const {
 
     // Draw batch cache
     unsigned int glyphCnt = ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
-    this->render(pm, mvm, glyphCnt, nullptr);
+    this->render(mvm, pm, glyphCnt, nullptr);
 }
 
 
@@ -828,7 +828,7 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 }
 
 
-void SDFFont::drawGlyphs(glm::mat4 projection_mat, glm::mat4 modelview_mat, const float col[4], int* run, float x,
+void SDFFont::drawGlyphs(glm::mat4 modelview_mat, glm::mat4 projection_mat, const float col[4], int* run, float x,
     float y, float z, float size, bool flipY, Alignment align) const {
 
     // Data buffers
@@ -1054,7 +1054,7 @@ void SDFFont::drawGlyphs(glm::mat4 projection_mat, glm::mat4 modelview_mat, cons
         }
 
         // Draw data buffers
-        this->render(projection_mat, modelview_mat, glyphCnt, &col);
+        this->render(modelview_mat, projection_mat, glyphCnt, &col);
     } 
 
     ARY_SAFE_DELETE(posData);
@@ -1062,7 +1062,7 @@ void SDFFont::drawGlyphs(glm::mat4 projection_mat, glm::mat4 modelview_mat, cons
 }
 
 
-void SDFFont::render(glm::mat4 projection_mat, glm::mat4 modelview_mat, unsigned int glyph_count, const float* color_ptr[4]) const {
+void SDFFont::render(glm::mat4 modelview_mat, glm::mat4 projection_mat, unsigned int glyph_count, const float* color_ptr[4]) const {
 
     // Check texture
     if (this->texture->getName() == 0) {

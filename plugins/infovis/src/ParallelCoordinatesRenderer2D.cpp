@@ -646,8 +646,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
             }
             float x = this->marginX + this->axisDistance * c;
 #if 0
-            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #else
             float bottom = filters[realCol].lower;
             // bottom *= (maximums[realCol] - minimums[realCol]);

@@ -33,6 +33,7 @@
 #include <math.h>
 #include <fstream>
 
+#define SDFFONT_DEPRECATED_DRAWSTRING [[DEPRECATED("Use DrawString version providing explicit matrices!")]]
 
 namespace megamol {
 namespace core {
@@ -48,36 +49,39 @@ namespace utility {
      *
      *     - Declare:            megamol::core::utility::SDFFont sdfFont;
      *
-     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS);
-     *                       OR: this->sdfFont("filename-of-own-font");
+     *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::PresetFontName::EVOLVENTA_SANS, megamol::core::utility::SDFFont::RenderMode::RENDERMODE_FILL);
+     *                           OR: this->sdfFont("filename-of-own-font");
      *
      *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
      *                           !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available there yet (call once e.g. in create()) !!!
      *
-     *     - Draw:               this->sdfFont.DrawString(color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+     *     - Draw:               this->sdfFont.DrawString(mvm, pm, color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
      *
-     *     - RenderMode:         this->sdfFont.SetRenderMode(megamol::core::utility::SDFFont::RenderMode::RENDERMODE_OUTLINE);
+     *     - Render Mode:        this->sdfFont.SetRenderMode(megamol::core::utility::SDFFont::RenderMode::RENDERMODE_OUTLINE);
+     * 
      *     - Rotation:           this->sdfFont.SetRotation(60.0f, vislib::math::Vector<float, 3>(0.0f1.0f0.0f));
-     *     - Billboard:          this->sdfFont.SetBillboard(true);
+     * 
+     *     - Billboard Mode:     this->sdfFont.SetBillboard(true);
+     *                           ! Requires use of DrawString(mvm, pm, ...) version providing separate model view and projection matrices!
      *
      *     - Batch rendering     this->sdffont.SetBatchDrawMode(true);
-     *                           call this->sdfFont.DrawString() arbitrary times ...
-     *                           call this->sdfFont.BatchDrawString() as often as needed
-     *                           call this->ClearBatchDrawCache() to clear stored batch
+     *                           - Call this->sdfFont.DrawString() arbitrary times ...
+     *                           - Call this->sdfFont.BatchDrawString() as often as needed
+     *                           - Call this->ClearBatchDrawCache() to finally clear stored batch
      * 
      * -----------------------------------------------------------------------------------------------------------------
      * >>> Predefined FONTS: (free for commercial use) 
      *     -> Available: Regular - TODO: Bold,Oblique,Bold-Oblique
      *
-     *     - "Evolventa-SansSerif"      Source: https://evolventa.github.io/
-     *     - "Roboto-SansSerif"         Source: https://www.fontsquirrel.com/fonts/roboto
-     *     - "Ubuntu-Mono"              Source: https://www.fontsquirrel.com/fonts/ubuntu-mono
-     *     - "Vollkorn-Serif"           Source: https://www.fontsquirrel.com/fonts/vollkorn
+     *     - EVOLVENTA_SANS       "Evolventa-SansSerif"      Source: https://evolventa.github.io/
+     *     - ROBOTO_SANS          "Roboto-SansSerif"         Source: https://www.fontsquirrel.com/fonts/roboto
+     *     - UBUNTU_MONO          "Ubuntu-Mono"              Source: https://www.fontsquirrel.com/fonts/ubuntu-mono
+     *     - VOLLKORN_SERIF       "Vollkorn-Serif"           Source: https://www.fontsquirrel.com/fonts/vollkorn
      *
      * -----------------------------------------------------------------------------------------------------------------
      * >>> PATH the fonts are stored: 
      *
-     *     - <megamol>/share/resource/<fontname>(.fnt/.png)
+     *     - <megamol>/share/resources/<fontname>(.fnt/.png)
      *
      * -----------------------------------------------------------------------------------------------------------------
      * >>> SDF font GENERATION using "Hiero":
@@ -148,12 +152,15 @@ namespace utility {
         ~SDFFont(void);
 
         /**
-         * [3D]
+         * [3D with billboard]
+         * NB: REQUIRED FOR 3D BILLBOARD MODE!
+         * 
          * Draws text into a specified rectangular area in world space.
          * Performs soft-breaks if necessary.
          *
+         *
+         * @param mvm   The current model view matrix.
          * @param pm    The current projection matrix.
-         * @param mvm   The current modelview matrix.
          *
          * @param col   The color as RGBA.
          * @param x     The left coordinate of the rectangle.
@@ -166,119 +173,97 @@ namespace utility {
          * @param txt   The zero-terminated string to draw.
          * @param align The alignment of the text inside the area.
          */
-        void DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
-        void DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(pm, mvm, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
 
-        void DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
-        void DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(pm, mvm, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
 
-        void DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
-        void DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(pm, mvm, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
         }
 
-        void DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
-        void DrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(pm, mvm, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+        void DrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvm, pm, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
         }
 
         /**
-         * [2D]
-         * Draws text into a specified rectangular area in screen space rectangle.
+         * [2D] and [3D without billboard]
+         * 
+         * Draws text into a specified rectangular area in screen or world space.
          * Performs soft-breaks if necessary.
          *
-         * @param om    The current orthographic projection matrix.
+         * @param mvp    The current pre-multiplied model view projection matrix.
          * 
-         * @param col   The color as RGBA.
-         * @param x     The left coordinate of the rectangle.
-         * @param y     The upper coordinate of the rectangle.
-         * @param z     The z coordinate of the position.
-         * @param w     The width of the rectangle.
-         * @param h     The height of the rectangle.
-         * @param size  The size to use.
-         * @param flipY The flag controlling the direction of the y-axis.
-         * @param txt   The zero-terminated string to draw.
-         * @param align The alignment of the text inside the area.
          */
-        void DrawString(glm::mat4 om, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(om, glm::mat4(), col, x, y, w, h, size, flipY, txt, align);
+        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(glm::mat4(), mvp, col, x, y, w, h, size, flipY, txt, align);
         }
-        void DrawString(glm::mat4 om, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(om, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
-        }
-
-        void DrawString(glm::mat4 om, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(om, glm::mat4(), col, x, y, z, w, h, size, flipY, txt, align);
-        }
-        void DrawString(glm::mat4 om, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(om, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
+        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvp, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
 
-        void DrawString(glm::mat4 om, const float col[4], float x, float y, float size, bool flipY, const char* txt,  Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(om, glm::mat4(), col, x, y, size, flipY, txt, align);
+        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(glm::mat4(), mvp, col, x, y, z, w, h, size, flipY, txt, align);
         }
-        void DrawString(glm::mat4 om, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(om, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
+        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvp, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
 
-        void DrawString(glm::mat4 om, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(om, glm::mat4(), col, x, y, z, size, flipY, txt, align);
+        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float size, bool flipY, const char* txt,  Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(glm::mat4(), mvp, col, x, y, size, flipY, txt, align);
         }
-        void DrawString(glm::mat4 om, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(om, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
+        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvp, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
+        }
+
+        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(glm::mat4(), mvp, col, x, y, z, size, flipY, txt, align);
+        }
+        void DrawString(glm::mat4 mvp, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            this->DrawString(mvp, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
         }
 
         /**
+         * [[DEPRECATED]]
          * [2D]
-         * Draws text into a specified rectangular area in screen space rectangle x=[0,1] y=[0,1] z=[-1,1]
-         * Performs soft-breaks if necessary.
-         *
-         * @param om    The current orthographic projection matrix.
-         * 
-         * @param col   The color as RGBA.
-         * @param x     The left coordinate of the rectangle.
-         * @param y     The upper coordinate of the rectangle.
-         * @param z     The z coordinate of the position.
-         * @param w     The width of the rectangle.
-         * @param h     The height of the rectangle.
-         * @param size  The size to use.
-         * @param flipY The flag controlling the direction of the y-axis.
-         * @param txt   The zero-terminated string to draw.
-         * @param align The alignment of the text inside the area.
+         * Draws text into a specified rectangular area in screen space rectangle using fixed orthographic projection matrix with ranges x=[0,1] y=[0,1] z=[-1,1].
          */
-        void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            glm::mat4 om = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
-            this->DrawString(om, glm::mat4(), col, x, y, w, h, size, flipY, txt, align);
+        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            glm::mat4 mvp = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
+            this->DrawString(glm::mat4(), mvp, col, x, y, w, h, size, flipY, txt, align);
         }
-        void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
 
-        void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            glm::mat4 om = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
-            this->DrawString(om, glm::mat4(), col, x, y, z, w, h, size, flipY, txt, align);
+        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            glm::mat4 mvp = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
+            this->DrawString(glm::mat4(), mvp, col, x, y, z, w, h, size, flipY, txt, align);
         }
-        void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
 
-        void DrawString(const float col[4], float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            glm::mat4 om = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
-            this->DrawString(om, glm::mat4(), col, x, y, size, flipY, txt, align);
+        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            glm::mat4 mvp = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
+            this->DrawString(glm::mat4(), mvp, col, x, y, size, flipY, txt, align);
         }
-        void DrawString(const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(col, x, y, size, flipY, this->to_string(txt).c_str(), align);
         }
 
-        void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            glm::mat4 om = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
-            this->DrawString(om, glm::mat4(), col, x, y, z, size, flipY, txt, align);
+        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
+            glm::mat4 mvp = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
+            this->DrawString(glm::mat4(), mvp, col, x, y, z, size, flipY, txt, align);
         }
-        void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
+        SDFFONT_DEPRECATED_DRAWSTRING void DrawString(const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
         }
 
@@ -286,29 +271,29 @@ namespace utility {
          * Renders all cached string data at once.
          * Given color is used for all cached DrawString() calls (-> Faster version).
          *
-         * @param om    The current orthographic projection matrix.
+         * @param mvp    The current orthographic projection matrix.
          * 
          * @param pm    The current projection matrix.
-         * @param mvm   The current modelview matrix.
+         * @param mvm   The current model view matrix.
          * @param col   The color.
          */
-        void BatchDrawString(glm::mat4 pm, glm::mat4 mvm, const float col[4]) const;
-        void BatchDrawString(glm::mat4 om, const float col[4]) const {
-            this->BatchDrawString(om, glm::mat4(), col);
+        void BatchDrawString(glm::mat4 mvm, glm::mat4 pm, const float col[4]) const;
+        void BatchDrawString(glm::mat4 mvp, const float col[4]) const {
+            this->BatchDrawString(glm::mat4(), mvp, col);
         }
 
         /**
          * Renders all cached string data at once.
          * Color data from individual DrawString() calls are used in additional vbo (-> Slower version).
          *
-         * @param om    The current orthographic projection matrix.
+         * @param mvp    The current orthographic projection matrix.
          * 
          * @param pm    The current projection matrix.
-         * @param mvm   The current modelview matrix.
+         * @param mvm   The current model view matrix.
          */
-        void BatchDrawString(glm::mat4 pm, glm::mat4 mvm) const;
-        void BatchDrawString(glm::mat4 om) const {
-            this->BatchDrawString(om, glm::mat4());
+        void BatchDrawString(glm::mat4 mvm, glm::mat4 pm) const;
+        void BatchDrawString(glm::mat4 mvp) const {
+            this->BatchDrawString(glm::mat4(), mvp);
         }
 
         /**
@@ -628,7 +613,7 @@ namespace utility {
         * @param flipY           The flag controlling the direction of the y-axis
         * @param align           The alignment
         */
-        void drawGlyphs(glm::mat4 projection_mat, glm::mat4 modelview_mat, const float col[4], int* run, float x,
+        void drawGlyphs(glm::mat4 modelview_mat, glm::mat4 projection_mat, const float col[4], int* run, float x,
             float y, float z, float size, bool flipY, Alignment align) const;
 
         /** 
@@ -639,7 +624,7 @@ namespace utility {
         * @param glyph_count     The total glyph count to render.
         * @param color_ptr       Pointer to the color array. If col is nullptr, per vertex color is used.
         */
-        void render(glm::mat4 projection_mat, glm::mat4 modelview_mat, unsigned int glyph_count,
+        void render(glm::mat4 modelview_mat, glm::mat4 projection_mat, unsigned int glyph_count,
             const float* color_ptr[4]) const;
 
         /**
