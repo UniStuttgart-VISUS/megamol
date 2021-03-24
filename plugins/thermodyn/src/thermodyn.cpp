@@ -17,6 +17,7 @@
 #include "ParticleSurface.h"
 #include "VelocityDistribution.h"
 #include "rendering/BoxRenderer.h"
+#include "rendering/TimeLinePlot.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -51,6 +52,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticleSurface>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::VelocityDistribution>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::BoxRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::TimeLinePlot>();
         //
         // TODO: Register your plugin's modules here
         // like:
