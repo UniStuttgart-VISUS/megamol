@@ -16,7 +16,8 @@ CinematicUtils::CinematicUtils(void) : core::view::RenderUtils()
     , font(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
     , font_size(20.0f)
     , init_once(false)
-    , background_color(0.0f, 0.0f, 0.0f, 0.0f) {
+    , background_color(0.0f, 0.0f, 0.0f, 0.0f)
+    , hotkey_window_setup_once (true) {
 
 }
 
@@ -170,38 +171,49 @@ void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_la
 
 void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm::vec2 dim_vp) {
 
-    std::string hotkey_str = "";
-    hotkey_str += "-----[ GLOBAL ]-----\n";
-    hotkey_str += "[Shift+a] Apply current settings to selected/new keyframe. \n";
-    hotkey_str += "[Shift+d] Delete selected keyframe. \n";
-    hotkey_str += "[Shift+s] Save keyframes to file. \n";
-    hotkey_str += "[Shift+l] Load keyframes from file. \n";
-    hotkey_str += "[Shift+z] Undo keyframe changes. \n";
-    hotkey_str += "[Shift+y] Redo keyframe changes. \n";
-    hotkey_str += "-----[ TRACKING SHOT ]----- \n";
-    hotkey_str += "[Shift+q] Toggle different manipulators for the selected keyframe. \n";
-    hotkey_str += "[Shift+w] Show manipulators inside/outside of model bounding box. \n";
-    hotkey_str += "[Shift+u] Reset look-at vector of selected keyframe. \n";
-    hotkey_str += "-----[ CINEMATIC ]----- \n";
-    hotkey_str += "[Shift+r] Start/Stop rendering complete animation. \n";
-    hotkey_str += "[Shift+Space] Start/Stop animation preview. \n";
-    hotkey_str += "-----[ TIMELINE ]----- \n";
-    hotkey_str += "[Shift+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
-    hotkey_str += "[Shift+f] Snap all keyframes to animation frames. \n";
-    hotkey_str += "[Shift+g] Snap all keyframes to simulation frames. \n";
-    hotkey_str += "[Shift+t] Linearize simulation time between two keyframes. \n";
-    //hotkey_str += "[Shift+v] Set same velocity between all keyframes (Experimental).\n"; ///XXX Calcualation is not correct yet ...
-    hotkey_str += "[Shift+p] Reset shifted and scaled time axes. \n";
-    hotkey_str += "[Left Mouse Button] Select keyframe. \n";
-    hotkey_str += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
-    hotkey_str += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
-
     if (inout_show) {
+        if (this->hotkey_window_setup_once) {
+            ImGui::SetNextWindowPos(ImVec2(0.0f, this->font_size));
+            this->hotkey_window_setup_once = false;
+        }
+ 
         auto flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse;
-        if (ImGui::Begin("Cinematic", &inout_show, flags)) {
+        if (ImGui::Begin("[Cinematic] HOTKEYS", &inout_show, flags)) {
+            auto header_flags = ImGuiTreeNodeFlags_DefaultOpen;
 
-            ImGui::TextUnformatted(hotkey_str.c_str());
+            if (ImGui::CollapsingHeader("  GLOBAL", header_flags)) {
+                ImGui::TextUnformatted("[Shift+a] Apply current settings to selected/new keyframe.");
+                ImGui::TextUnformatted("[Shift+d] Delete selected keyframe.");
+                ImGui::TextUnformatted("[Shift+s] Save keyframes to file.");
+                ImGui::TextUnformatted("[Shift+l] Load keyframes from file.");
+                ImGui::TextUnformatted("[Shift+z] Undo keyframe changes.");
+                ImGui::TextUnformatted("[Shift+y] Redo keyframe changes.");
+            }
 
+            if (ImGui::CollapsingHeader("  TRACKING SHOT", header_flags)) {
+                ImGui::TextUnformatted("[Shift+q] Toggle different manipulators for the selected keyframe.");
+                ImGui::TextUnformatted("[Shift+w] Show manipulators inside/outside of model bounding box.");
+                ImGui::TextUnformatted("[Shift+u] Reset look-at vector of selected keyframe.");
+            }
+
+            if (ImGui::CollapsingHeader("  CINEMATIC", header_flags)) {
+                ImGui::TextUnformatted("[Shift+r] Start/Stop rendering complete animation.");
+                ImGui::TextUnformatted("[Shift+Space] Start/Stop animation preview.");
+            }
+
+            if (ImGui::CollapsingHeader("  TIMELINE", header_flags)) {
+                ImGui::TextUnformatted("[Shift+Right/Left Arrow] Move selected keyframe on animation time axis.");
+                ImGui::TextUnformatted("[Shift+f] Snap all keyframes to animation frames.");
+                ImGui::TextUnformatted("[Shift+g] Snap all keyframes to simulation frames.");
+                ImGui::TextUnformatted("[Shift+t] Linearize simulation time between two keyframes.");
+                ImGui::TextUnformatted("[Shift+p] Reset shifted and scaled time axes.");
+                ImGui::TextUnformatted("[Left Mouse Button] Select keyframe.");
+                ImGui::TextUnformatted("[Middle Mouse Button] Axes scaling in mouse direction.");
+                ImGui::TextUnformatted("[Right Mouse Button] Drag & drop keyframe / pan axes.");
+                // ImGui::TextUnformatted("[Shift+v] Set same velocity between all keyframes (Experimental)."); ///XXX
+                // Calcualation is not correct yet ...
+            }
+       
             ImGui::End();
         }
     }

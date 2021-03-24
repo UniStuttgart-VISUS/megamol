@@ -97,6 +97,8 @@ private:
     bool init_once;
     glm::vec4 background_color;
 
+    bool hotkey_window_setup_once;
+
     // FUNCTIONS ------------------------------------------------------- //
 
     const float lightness(glm::vec4 background) const;
