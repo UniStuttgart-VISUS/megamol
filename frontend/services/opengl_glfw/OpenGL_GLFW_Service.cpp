@@ -633,6 +633,10 @@ void OpenGL_GLFW_Service::register_glfw_callbacks() {
         &this->m_framebufferEvents.previous_state.width,
         &this->m_framebufferEvents.previous_state.height);
 
+    log("Window framebuffer size is: "
+        + std::to_string(this->m_framebufferEvents.previous_state.width)
+        + " x " + std::to_string(this->m_framebufferEvents.previous_state.height));
+
     glfw_onFramebufferSize_func(
         this->m_framebufferEvents.previous_state.width,
         this->m_framebufferEvents.previous_state.height);
