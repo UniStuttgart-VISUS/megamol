@@ -15,7 +15,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Add externals.
   require_external(libpng)
-  
+  require_external(imgui)
+
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -27,7 +28,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${resource_files} ${source_files} ${shader_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core libpng)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core libpng imgui)
 
   # Installation rules for generated files
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

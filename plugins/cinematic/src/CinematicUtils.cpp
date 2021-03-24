@@ -168,7 +168,7 @@ void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_la
 }
 
 
-void CinematicUtils::PushHotkeyList(const glm::mat4& ortho, glm::vec2 dim_vp) {
+void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm::vec2 dim_vp) {
 
     std::string hotkey_str = "";
     hotkey_str += "-----[ GLOBAL ]-----\n";
@@ -196,21 +196,15 @@ void CinematicUtils::PushHotkeyList(const glm::mat4& ortho, glm::vec2 dim_vp) {
     hotkey_str += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
     hotkey_str += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
 
-    const float border = 10.0f;
-    size_t line_count = std::count(hotkey_str.begin(), hotkey_str.end(), '\n');
-    float hotkey_font_size = (dim_vp.y - 2.0f * this->font_size - 2.0f*border) / static_cast<float>(line_count);
-    hotkey_font_size = (hotkey_font_size > this->font_size) ? (this->font_size) : (hotkey_font_size);
-    float line_height = this->font.LineHeight(hotkey_font_size);
-    float line_width = this->font.LineWidth(hotkey_font_size, hotkey_str.c_str());
-    float quad_width = line_width + 2.0f * border;
-    float quad_height = line_height * line_count + 2.0f * border;
+    if (inout_show) {
+        auto flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse;
+        if (ImGui::Begin("Cinematic", &inout_show, flags)) {
 
-    // Push background quad
-    this->PushQuadPrimitive(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, quad_height, 0.0f), glm::vec3(quad_width, quad_height, 0.0f), glm::vec3(quad_width, 0.0f, 0.0f), this->Color(CinematicUtils::Colors::MENU));
+            ImGui::TextUnformatted(hotkey_str.c_str());
 
-    // Push hotkey text
-    auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(ortho, glm::value_ptr(color), border, quad_height - border, hotkey_font_size, false, hotkey_str.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
+            ImGui::End();
+        }
+    }
 }
 
 

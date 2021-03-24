@@ -11,6 +11,8 @@
 
 #include "mmcore/view/RenderUtils.h"
 
+#include "imgui.h"
+
 
 // #### Utility minimal camera state ################################### //
 
@@ -73,7 +75,7 @@ public:
 
     void PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp);
 
-    void PushHotkeyList(const glm::mat4& ortho, glm::vec2 dim_vp);
+    void HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm::vec2 dim_vp);
 
     void Push2DText(const glm::mat4& ortho, const std::string& text, float x, float y);
 
