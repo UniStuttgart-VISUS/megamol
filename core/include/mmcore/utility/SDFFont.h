@@ -392,7 +392,7 @@ namespace utility {
          * @return The height of a single line in logical units.
          */
         float LineHeight(float size) const {
-            return size;
+            return std::max(0.0f, size);
         }
 
         /**
