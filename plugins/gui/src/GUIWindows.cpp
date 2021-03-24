@@ -259,11 +259,11 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
+
     // Propagate ImGui context to core instance
-    // if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
+    /// DEPRECATED since static build. Just draw your ImGui stuff ...
+    //if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
     this->core_instance->SetCurrentImGuiContext(this->context);
-    //} else {
-    /// !!! TODO Move to separate GUI resource which is available in modules
     //}
 
     // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
@@ -333,7 +333,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->state.style_changed = false;
     }
 
-    // Delete window
+    // Delete windows
     if (!this->state.win_delete.empty()) {
         this->window_collection.DeleteWindowConfiguration(this->state.win_delete);
         this->state.win_delete.clear();
@@ -342,6 +342,22 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Start new ImGui frame --------------------------------------------------
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
+
+/// DOCKING
+#ifdef IMGUI_HAS_DOCK
+    // Global Docking Space --------------------------------------------------
+    ImGuiStyle& style = ImGui::GetStyle();
+    auto child_bg = style.Colors[ImGuiCol_ChildBg];
+    style.Colors[ImGuiCol_ChildBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+    auto global_docking_id = ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+    style.Colors[ImGuiCol_ChildBg] = child_bg;
+
+    // Load global docking preset(before first window is drawn!)
+    if (this->state.load_docking_preset) {
+        this->load_preset_window_docking(global_docking_id);
+        this->state.load_docking_preset = false;
+    }
+#endif
 
     return true;
 }
@@ -353,7 +369,6 @@ bool GUIWindows::PostDraw(void) {
     if (!this->state.gui_visible_post) {
         return true;
     }
-
     // Check for initialized imgui api
     if (this->initialized_api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -372,19 +387,10 @@ bool GUIWindows::PostDraw(void) {
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    ////////// DRAW ///////////////////////////////////////////////////////////
+    ////////// DRAW GUI ///////////////////////////////////////////////////////
 
     // Main Menu ---------------------------------------------------------------
     this->drawMenu();
-
-    // Global Docking Space ---------------------------------------------------
-    /// DOCKING
-#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
-    auto child_bg = style.Colors[ImGuiCol_ChildBg];
-    style.Colors[ImGuiCol_ChildBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
-    style.Colors[ImGuiCol_ChildBg] = child_bg;
-#endif
 
     // Draw Windows ------------------------------------------------------------
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
@@ -1228,7 +1234,7 @@ bool GUIWindows::createContext(void) {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
 
 /// DOCKING
-#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+#ifdef IMGUI_HAS_DOCK
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // enable window docking
     io.ConfigDockingWithShift = true;                 // activate docking on pressing 'shift'
 #endif
@@ -1746,18 +1752,13 @@ void GUIWindows::drawMenu(void) {
         };
         this->window_collection.EnumWindows(func);
 
+/// DOCKING
+#ifdef IMGUI_HAS_DOCK
         ImGui::Separator();
-
-        if (ImGui::BeginMenu("Docking")) {
-            if (ImGui::MenuItem("Preset")) {
-
-                // Load preset docking for all windows
-
-            }
-
-            ImGui::EndMenu();
+        if (ImGui::MenuItem("Docking Preset")) {
+            this->state.load_docking_preset = true;
         }
-
+#endif
         ImGui::EndMenu();
     }
     ImGui::Separator();
@@ -2100,31 +2101,31 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
         ImGui::Separator();
 
 /// DOCKING
-#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+#ifdef IMGUI_HAS_DOCK
         ImGui::MenuItem("Docking", "Shift + Left-Drag", false, false);
         ImGui::Separator();
 #endif
         ImGui::MenuItem("Snap", nullptr, false, false);
 
-        if (ImGui::ArrowButton("dock_left", ImGuiDir_Left)) {
+        if (ImGui::ArrowButton("snap_left", ImGuiDir_Left)) {
             wc.win_position.x = 0.0f;
             wc.buf_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
-        if (ImGui::ArrowButton("dock_up", ImGuiDir_Up)) {
+        if (ImGui::ArrowButton("snap_up", ImGuiDir_Up)) {
             wc.win_position.y = 0.0f;
             wc.buf_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
-        if (ImGui::ArrowButton("dock_down", ImGuiDir_Down)) {
+        if (ImGui::ArrowButton("snap_down", ImGuiDir_Down)) {
             wc.win_position.y = viewport.y - wc.win_size.y;
             wc.buf_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
-        if (ImGui::ArrowButton("dock_right", ImGuiDir_Right)) {
+        if (ImGui::ArrowButton("snap_right", ImGuiDir_Right)) {
             wc.win_position.x = viewport.x - wc.win_size.x;
             wc.buf_set_pos_size = true;
             ImGui::CloseCurrentPopup();
@@ -2274,56 +2275,83 @@ void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 }
 
 
-void megamol::gui::GUIWindows::load_preset_window_docking(void) {
+void megamol::gui::GUIWindows::load_preset_window_docking(ImGuiID global_docking_id) {
 
-    // Use DockBuilder
+/// DOCKING
+#ifdef IMGUI_HAS_DOCK
+
+    // Create preset using DockBuilder
+    /// https://github.com/ocornut/imgui/issues/2109#issuecomment-426204357
+    //   -------------------------------
+    //   |      |                      |
+    //   | Prop |       Main           |
+    //   |      |                      |
+    //   |      |                      |
+    //   |______|______________________|
+    //   |           Bottom            |
+    //   -------------------------------
+
+    ImGuiIO& io = ImGui::GetIO();
+    auto dockspace_size = io.DisplaySize;
+
+    std::cout << ">>>>>>> Global DOCKING ID: " << global_docking_id << std::endl;
+    //ImGui::DockBuilderRemoveNode(global_docking_id);
+
+    const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+
+
+
+    };
+    this->window_collection.EnumWindows(func);
+
     /*
-     * https://github.com/ocornut/imgui/issues/2109#issuecomment-426204357
-     *
-ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing layout
-ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_Dockspace); // Add empty node
-ImGui::DockBuilderSetNodeSize(dockspace_id, dockspace_size);
+    ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing layout
+    ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_Dockspace); // Add empty node
+    ImGui::DockBuilderSetNodeSize(dockspace_id, dockspace_size);
 
-ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
-ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.20f, NULL, &dock_main_id);
-ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.20f, NULL, &dock_main_id);
+    ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
+    ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.20f, NULL, &dock_main_id);
+    ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.20f, NULL, &dock_main_id);
 
-ImGui::DockBuilderDockWindow("Log", dock_id_bottom);
-ImGui::DockBuilderDockWindow("Properties", dock_id_prop);
-ImGui::DockBuilderDockWindow("Mesh", dock_id_prop);
-ImGui::DockBuilderDockWindow("Extra", dock_id_prop);
-ImGui::DockBuilderFinish(dockspace_id);
-     *
+    ImGui::DockBuilderDockWindow("Log", dock_id_bottom);
+    ImGui::DockBuilderDockWindow("Properties", dock_id_prop);
+    ImGui::DockBuilderDockWindow("Mesh", dock_id_prop);
+    ImGui::DockBuilderDockWindow("Extra", dock_id_prop);
+    ImGui::DockBuilderFinish(dockspace_id);
      */
 
+#endif
 }
 
 
 void megamol::gui::GUIWindows::load_docking_from_string(std::string docking) {
 
-    ImGui::LoadIniSettingsFromMemory(docking.c_str(), docking.size());
+/// DOCKING
+#ifdef IMGUI_HAS_DOCK
+    if (!docking.empty()) {
+        ImGui::LoadIniSettingsFromMemory(docking.c_str(), docking.size());
+    }
+#endif
 }
 
 
 std::string megamol::gui::GUIWindows::save_docking_to_string(void) {
 
-    ImGuiIO& io = ImGui::GetIO();
-    // Ignore io.WantSaveIniSettings since we only save on explicit request by user
-    //if (!io.WantSaveIniSettings) {
-    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] WantSaveIniSettings is not true. ImGui::GetIO().IniFilename should be nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    //}
-    //io.WantSaveIniSettings = false;
-
+/// DOCKING
+#ifdef IMGUI_HAS_DOCK
     size_t buffer_size = 0;
     const char* buffer = ImGui::SaveIniSettingsToMemory(&buffer_size);
-    if (buffer == nullptr) return std::string();
-    std::string imgui_docking(buffer, buffer_size);
-
-    if (imgui_docking.find("[Docking]") == std::string::npos) {
-        imgui_docking.clear();
+    if (buffer == nullptr) {
+        return std::string();
     }
-
+    std::string imgui_docking(buffer, buffer_size);
+    if (imgui_docking.find("[Docking]") == std::string::npos) {
+        return std::string();
+    }
     return imgui_docking;
+#else
+    return std::string();
+#endif
 }
 
 
@@ -2496,6 +2524,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.stat_frame_count = 0;
     this->state.font_size = 13;
     this->state.resource_directories.clear();
+    this->state.load_docking_preset = true;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);
 }

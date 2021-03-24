@@ -270,6 +270,7 @@ namespace gui {
             double stat_averaged_ms;              // current average fps value
             size_t stat_frame_count;              // current fame count
             std::vector<std::string> resource_directories; // the global resource directories
+            bool load_docking_preset;                      // Flag indicating docking preset loading
             bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
         };
 
@@ -342,7 +343,7 @@ namespace gui {
         bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
         void triggerCoreInstanceShutdown(void);
 
-        void load_preset_window_docking(void);
+        void load_preset_window_docking(ImGuiID global_docking_id);
         void load_docking_from_string(std::string docking);
         std::string save_docking_to_string(void);
 
