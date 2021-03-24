@@ -64,7 +64,7 @@ namespace gui {
         const std::vector<CallPtr_t>& GetConnectedCalls(void);
 
         bool IsParentModuleConnected(void) const;
-        bool ConnectParentModule(ModulePtr_t parent_module);
+        bool ConnectParentModule(ModulePtr_t pm);
         bool DisconnectParentModule(void);
         const ModulePtr_t& GetParentModule(void);
 

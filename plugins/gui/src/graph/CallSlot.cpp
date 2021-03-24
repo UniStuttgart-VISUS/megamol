@@ -151,9 +151,9 @@ bool megamol::gui::CallSlot::IsParentModuleConnected(void) const {
 }
 
 
-bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t parent_module) {
+bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t pm) {
 
-    if (parent_module == nullptr) {
+    if (pm == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] Pointer to given parent module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -163,7 +163,7 @@ bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t paren
             "[GUI] Pointer to parent module is already set. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    this->parent_module = parent_module;
+    this->parent_module = pm;
     return true;
 }
 
@@ -486,9 +486,10 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                     tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }
-                const float segment_numer = (20.0f * megamol::gui::gui_scaling.Get());
-                draw_list->AddCircleFilled(slot_position, radius, slot_background_color, segment_numer);
-                draw_list->AddCircle(slot_position, radius, slot_border_color, segment_numer);
+                const float segment_number = (20.0f * megamol::gui::gui_scaling.Get());
+                const float thickness = (2.0f * megamol::gui::gui_scaling.Get());
+                draw_list->AddCircleFilled(slot_position, radius, slot_background_color, segment_number);
+                draw_list->AddCircle(slot_position, radius, slot_border_color, segment_number, thickness);
 
                 // Text
                 if (state.interact.callslot_show_label) {
