@@ -982,7 +982,7 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
     this->glyphs.clear();
     this->glyphIdcs.clear();
 
-    std::ifstream input_file(filename.PeekBuffer());
+    std::ifstream input_file(this->to_string(filename.PeekBuffer()));
     if (!input_file.is_open() || !input_file.good()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] Unable to open font file \"%s\": Bad file. [%s, %s, line %d]\n",  __FILE__, __FUNCTION__, __LINE__);
         return false;
