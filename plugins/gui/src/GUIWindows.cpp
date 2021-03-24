@@ -2301,7 +2301,7 @@ ImGui::DockBuilderFinish(dockspace_id);
 
 void megamol::gui::GUIWindows::load_docking_from_string(std::string docking) {
 
-    std::string imgui_docking = this->replace_string(imgui_docking, "|", "\n");
+    std::string imgui_docking = this->replace_string(docking, "|", "\n");
     ImGui::LoadIniSettingsFromMemory(imgui_docking.c_str(), imgui_docking.size());
 }
 
