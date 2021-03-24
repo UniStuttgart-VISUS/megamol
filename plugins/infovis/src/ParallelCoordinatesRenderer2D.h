@@ -135,7 +135,7 @@ namespace infovis {
 
         void computeScaling(void);
 
-        void drawAxes(void);
+        void drawAxes(glm::mat4 ortho);
 
         void drawDiscrete(const float otherColor[4], const float selectedColor[4], float tfColorFactor);
 

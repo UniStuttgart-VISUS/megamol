@@ -18,6 +18,7 @@
 #include <optional>
 #include "Renderer2D.h"
 #include "mmcore/FlagStorage.h"
+#include "vislib/math/Matrix.h"
 
 namespace megamol::infovis {
 
@@ -153,9 +154,9 @@ private:
 
     void updateColumns();
 
-    void drawMinimalisticAxis();
+    void drawMinimalisticAxis(glm::mat4 ortho);
 
-    void drawScientificAxis();
+    void drawScientificAxis(glm::mat4 ortho);
 
     void bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader);
 
@@ -169,13 +170,13 @@ private:
 
     void drawTriangulation();
 
-    void validateText();
+    void validateText(glm::mat4 ortho);
 
-    void drawText();
+    void drawText(glm::mat4 ortho);
 
     void drawPickIndicator();
 
-    void drawMouseLabels();
+    void drawMouseLabels(glm::mat4 ortho);
 
     void unbindScreen();
 
