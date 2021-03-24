@@ -355,8 +355,6 @@ namespace gui {
         void update_frame_statistics(WindowCollection::WindowConfiguration& wc);
 
         bool create_not_existing_png_filepath(std::string& inout_filepath);
-
-        std::string replace_string(std::string& str, const std::string& from, const std::string& to) const;
     };
 
 } // namespace gui

@@ -2301,24 +2301,38 @@ ImGui::DockBuilderFinish(dockspace_id);
 
 void megamol::gui::GUIWindows::load_docking_from_string(std::string docking) {
 
-    std::string imgui_docking = this->replace_string(docking, "|", "\n");
-    ImGui::LoadIniSettingsFromMemory(imgui_docking.c_str(), imgui_docking.size());
+    ImGui::LoadIniSettingsFromMemory(docking.c_str(), docking.size());
 }
 
 
 std::string megamol::gui::GUIWindows::save_docking_to_string(void) {
 
     ImGuiIO& io = ImGui::GetIO();
-    if (!io.WantSaveIniSettings) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] WantSaveIniSettings is not true. ImGui::GetIO().IniFilename should be nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
+    // Ignore io.WantSaveIniSettings since we only save on explicit request by user
+    //if (!io.WantSaveIniSettings) {
+    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] WantSaveIniSettings is not true. ImGui::GetIO().IniFilename should be nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //}
+    //io.WantSaveIniSettings = false;
+
     size_t buffer_size = 0;
     const char* buffer = ImGui::SaveIniSettingsToMemory(&buffer_size);
     if (buffer == nullptr) return std::string();
     std::string imgui_docking(buffer, buffer_size);
-    std::string docking = this->replace_string(imgui_docking, "\n", "|");
-    io.WantSaveIniSettings = false;
-    return docking;
+
+    // Remove unused information from imgui settings state
+    std::string windows_tag = "[Window]";
+    // Skip first window entry which is required for docking
+    auto idx_windows = imgui_docking.find(windows_tag, windows_tag.length());
+    std::string docking_tag = "[Docking]";
+    auto idx_docking = imgui_docking.find(docking_tag);
+    if ((idx_windows != std::string::npos) && (idx_docking != std::string::npos)) {
+        imgui_docking = imgui_docking.replace(idx_windows, idx_docking - idx_windows, "");
+    }
+    else {
+        imgui_docking.clear();
+    }
+
+    return imgui_docking;
 }
 
 
@@ -2571,18 +2585,4 @@ bool megamol::gui::GUIWindows::create_not_existing_png_filepath(std::string& ino
         created_filepath = true;
     }
     return created_filepath;
-}
-
-
-std::string megamol::gui::GUIWindows::replace_string(std::string& str, const std::string& from, const std::string& to) const {
-    if(from.empty()) {
-        return str;
-    }
-    std::string replaced_str = str;
-    size_t start_pos = 0;
-    while((start_pos = replaced_str.find(from, start_pos)) != std::string::npos) {
-        replaced_str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-    }
-    return replaced_str;
 }
