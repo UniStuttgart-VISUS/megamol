@@ -16,10 +16,9 @@
 #include "Screenshots.h"
 #include "FrameStatistics.h"
 #include "WindowManipulation.h"
+#include "GUI_Resource.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
-#include "Window_Events.h"
-#include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/utility/log/Log.h"
 static void log(const char* text) {
     const std::string msg = "Lua_Service_Wrapper: " + std::string(text) + "\n";
@@ -66,15 +65,32 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     m_config = config;
 
-    this->m_providedResourceReferences = {};
+    m_executeLuaScript_resource =
+        [&](std::string const& script) -> std::tuple<bool,std::string> {
+            std::string result_str;
+            bool result_b = luaAPI.RunString(script, result_str);
+            return {result_b, result_str};
+        };
+
+    m_setScriptPath_resource = [&](std::string const& script_path) -> void {
+        luaAPI.SetScriptPath(script_path);
+    };
+
+    this->m_providedResourceReferences =
+    {
+        {"LuaScriptPaths", m_scriptpath_resource},
+        {"ExecuteLuaScript", m_executeLuaScript_resource},
+        {"SetScriptPath", m_setScriptPath_resource}
+    };
 
     this->m_requestedResourcesNames = 
     {
         "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
-        "WindowEvents", // for file drag and drop events
         "FrameStatistics", // for LastFrameTime
-        "WindowManipulation" // for Framebuffer resize
+        "WindowManipulation", // for Framebuffer resize
+        "GUIResource", // propagate GUI state and visibility
+        "MegaMolGraph" // LuaAPI manipulates graph
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
@@ -100,11 +116,6 @@ void Lua_Service_Wrapper::close() {
 }
 
 std::vector<FrontendResource>& Lua_Service_Wrapper::getProvidedResources() {
-    this->m_providedResourceReferences =
-    {
-        {"LuaScriptPaths", m_scriptpath_resource}
-    };
-
     return m_providedResourceReferences;
 }
 
@@ -123,31 +134,48 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     callbacks.mmScreenshot_callback_ = m_requestedResourceReferences[1].getResource<std::function<bool(std::string const&)> >();
 
     callbacks.mmLastFrameTime_callback_ = [&]() {
-        auto& frame_statistics = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::FrameStatistics>();
+        auto& frame_statistics = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
         return static_cast<float>(frame_statistics.last_rendered_frame_time_milliseconds);
     };
 
     callbacks.mmSetFramebufferSize_callback_ = [&](unsigned int w, unsigned int h) {
-        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_framebuffer_size(w, h);
     };
 
     callbacks.mmSetWindowPosition_callback_ = [&](unsigned int x, unsigned int y) {
-        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_window_position(x, y);
     };
 
     callbacks.mmSetFullscreen_callback_ = [&](bool fullscreen) {
-        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_fullscreen(fullscreen?frontend_resources::WindowManipulation::Fullscreen::Maximize:frontend_resources::WindowManipulation::Fullscreen::Restore);
     };
 
     callbacks.mmSetVsync_callback_= [&](bool state) {
-        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_swap_interval(state ? 1 : 0);
     };
 
+    callbacks.mmSetGUIState_callback_ = [&](std::string json) {
+        auto& gui_resource =  m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
+        gui_resource.provide_gui_state(json);
+    };
+
+    callbacks.mmShowGUI_callback_ = [&](bool show) {
+        auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
+        gui_resource.provide_gui_visibility(show);
+    };
+
+    callbacks.mmScaleGUI_callback_ = [&](float scale) {
+        auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
+        gui_resource.provide_gui_scale(scale);
+    };
+
     luaAPI.SetCallbacks(callbacks);
+    auto& graph = const_cast<megamol::core::MegaMolGraph&>(m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
+    luaAPI.SetMegaMolGraph(graph);
 }
 
 // -------- main loop callbacks ---------
@@ -181,18 +209,6 @@ void Lua_Service_Wrapper::updateProvidedResources() {
         }
     }
 
-    for (auto& file : m_queuedProjectFiles) {
-        std::string result;
-        log("running file " + file);
-        if (megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file, ".png")) {
-            luaAPI.RunString(megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(file), result);
-        } else {
-            luaAPI.RunFile(file, result);
-        }
-        log("executed file " + file + ": " + result);
-    }
-    m_queuedProjectFiles.clear();
-
     need_to_shutdown |= luaAPI.getShutdown();
 
     if (need_to_shutdown)
@@ -201,17 +217,6 @@ void Lua_Service_Wrapper::updateProvidedResources() {
 
 void Lua_Service_Wrapper::digestChangedRequestedResources() {
     recursion_guard;
-
-    // execute lua files dropped into megamol window
-    auto window_events = this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::WindowEvents>();
-    for(auto& event: window_events.dropped_path_events) {
-        for (auto& file_path : event) {
-            if(megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file_path, ".lua") ||
-                megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file_path, ".png")) {
-                m_queuedProjectFiles.push_back(file_path);
-            }
-        }
-    }
 }
 
 void Lua_Service_Wrapper::resetProvidedResources() { recursion_guard; }

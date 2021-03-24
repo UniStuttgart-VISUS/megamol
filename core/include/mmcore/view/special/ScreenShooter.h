@@ -32,6 +32,12 @@ namespace special {
         public view::AbstractView::Hooks {
     public:
 
+        std::vector<std::string> requested_lifetime_resources() {
+            auto lifetime_resources = Module::requested_lifetime_resources();
+            lifetime_resources.push_back("MegaMolGraph");
+            return lifetime_resources;
+        }
+
         /**
          * Answer the name of this module.
          *

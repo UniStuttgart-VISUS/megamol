@@ -117,21 +117,30 @@ This FlagStorage variant relies on a shader storage buffer and does not move any
 -----
 ## 1D Transfer Function
 
-The whole functionality of a 1D transfer function is given in the module `TransferFunction`.
-Every module can be connected to the `TransferFunction` module holding the actual `TransferFunctionParam` parameter, using a caller slot which is compatible to the call `CallGetTransferFunction`.
+***... TODO ...***
 
-The description of the transfer function is encoded in a string in JSON format, see header `TransferFunctionParam.h`.
+<!--
 
-### Usage
+The whole functionality of a 1D transfer function is provided via the module `TransferFunction` which holds the actual `TransferFunctionParam` parameter.
 
 If you want to use a transfer function in you renderer module you have to create a caller slot, which is compatible to the call `CallGetTransferFunction`:
 ```C++
     this->tfSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->tfSlot);
 ```
+
+The description of the transfer function is encoded in a string in JSON format, see header `TransferFunctionParam.h`.
+
+-->
+### Usage
+
+***... TODO ...***
+
+<!--
 See the header file of the call `CallGetTransferFunction` for a more detailed interface description of the available functions.
 The renderer modules `SimpleSphereRenderer` or `ScatterplotMatrixRenderer2D`can be looked at for a example implementation of the transfer function.
 
+-->
 
 <!-- ###################################################################### -->
 -----

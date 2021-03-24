@@ -12,6 +12,7 @@
 #include "FrameStatistics.h"
 
 #include <chrono>
+#include <array>
 
 namespace megamol {
 namespace frontend {
@@ -64,6 +65,9 @@ private:
 
     std::chrono::high_resolution_clock::time_point m_program_start_time;
     std::chrono::high_resolution_clock::time_point m_frame_start_time;
+
+    std::array<long long, 30> m_frame_times_micro = {};
+    unsigned int m_ring_buffer_ptr = 0;
 
     void start_frame();
     void finish_frame();

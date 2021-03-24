@@ -118,6 +118,7 @@ protected:
      * @param CallRenderer3D object
      */
     void setupOSPRayCamera(megamol::core::view::Camera_2& mmcam);
+    void clearOSPRayStuff();
 
 
     /**
@@ -148,12 +149,6 @@ protected:
     void changeMaterial();
 
     void changeTransformation();
-
-    /**
-     * Releases the created geometries and volumes.
-     *
-     */
-    void releaseOSPRayStuff();
 
     // Call slots
     megamol::core::CallerSlot _lightSlot;
@@ -216,6 +211,8 @@ protected:
 
     long long int _ispcLimit = 1ULL << 30;
     long long int _numCreateGeo;
+
+    core::thecam::Projection_type _currentProjectionType = core::thecam::Projection_type::perspective;
 };
 
 } // end namespace ospray

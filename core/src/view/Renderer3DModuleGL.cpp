@@ -69,9 +69,6 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
  * Renderer3DModuleGL::RenderChain
  */
 bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
-    auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
     // Camera
     view::Camera_2 cam;
@@ -79,15 +76,6 @@ bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-
-    if (viewptr != nullptr) {
-        auto vp = cam.image_tile();
-        glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
-        auto backCol = call.BackgroundColor();
-        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
 
     this->PreRender(call);
 

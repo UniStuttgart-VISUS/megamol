@@ -17,15 +17,6 @@ namespace view {
 class MEGAMOLCORE_API View3DGL : public view::AbstractView3D {
 
 public:
-    /** Enum for default views from the respective direction */
-    enum defaultview {
-        DEFAULTVIEW_FRONT,
-        DEFAULTVIEW_BACK,
-        DEFAULTVIEW_RIGHT,
-        DEFAULTVIEW_LEFT,
-        DEFAULTVIEW_TOP,
-        DEFAULTVIEW_BOTTOM,
-    };
 
     /**
      * Answer the name of this module.

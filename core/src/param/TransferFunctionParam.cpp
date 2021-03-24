@@ -12,10 +12,9 @@
 using namespace megamol::core::param;
 
 
-/**
- * TransferFunctionParam::TransferFunctionParam
- */
-TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : AbstractParam() {
+TransferFunctionParam::TransferFunctionParam(const std::string& initVal)
+        : AbstractParam(), val(""), hash(0) {
+
     if (this->CheckTransferFunctionString(initVal)) {
         this->val = initVal;
         this->hash = std::hash<std::string>()(this->val);
@@ -27,10 +26,9 @@ TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : Abstr
 }
 
 
-/**
- * TransferFunctionParam::TransferFunctionParam
- */
-TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractParam() {
+TransferFunctionParam::TransferFunctionParam(const char* initVal)
+        : AbstractParam(), val(""), hash(0) {
+
     if (this->CheckTransferFunctionString(std::string(initVal))) {
         this->val = std::string(initVal);
         this->hash = std::hash<std::string>()(this->val);
@@ -42,10 +40,9 @@ TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractPara
 }
 
 
-/**
- * TransferFunctionParam::TransferFunctionParam
- */
-TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : AbstractParam() {
+TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal)
+        : AbstractParam(), val(""), hash(0) {
+
     if (this->CheckTransferFunctionString(std::string(initVal.PeekBuffer()))) {
         this->val = std::string(initVal.PeekBuffer());
         this->hash = std::hash<std::string>()(this->val);
@@ -57,39 +54,25 @@ TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : A
 }
 
 
-/**
- * TransferFunctionParam::~TransferFunctionParam
- */
 TransferFunctionParam::~TransferFunctionParam(void) {}
 
 
-/**
- * TransferFunctionParam::Definition
- */
 void TransferFunctionParam::Definition(vislib::RawStorage& outDef) const {
     outDef.AssertSize(6);
     memcpy(outDef.AsAt<char>(0), "MMTFFC", 6);
 }
 
 
-/**
- * TransferFunctionParam::ParseValue
- */
 bool TransferFunctionParam::ParseValue(vislib::TString const& v) {
 
-    if (this->CheckTransferFunctionString(std::string(v.PeekBuffer()))) {
-        this->val = std::string(v.PeekBuffer());
-        this->hash = std::hash<std::string>()(this->val);
+    try {
+        this->SetValue(std::string(v.PeekBuffer()));
         return true;
-    }
-
+    } catch (...) {}
     return false;
 }
 
 
-/**
- * TransferFunctionParam::SetValue
- */
 void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
 
     if (v != this->val) {
@@ -103,48 +86,41 @@ void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
 }
 
 
-/**
- * TransferFunctionParam::ValueString
- */
-vislib::TString TransferFunctionParam::ValueString(void) const { return vislib::TString(this->val.c_str()); }
+vislib::TString TransferFunctionParam::ValueString(void) const {
 
-
-/**
- * TransferFunctionParam::TransferFunctionTexture
- */
-bool TransferFunctionParam::TransferFunctionTexture(
-    const std::string& in_tfs, std::vector<float>& out_nodes, unsigned int& out_texsize, std::array<float, 2>& out_range) {
-
-    TFNodeType nodes;
-    InterpolationMode mode;
-
-    if (ParseTransferFunction(in_tfs, nodes, mode, out_texsize, out_range)) {
-        if (mode == InterpolationMode::LINEAR) {
-            LinearInterpolation(out_nodes, out_texsize, nodes);
-        } else if (mode == InterpolationMode::GAUSS) {
-            GaussInterpolation(out_nodes, out_texsize, nodes);
-        } else {
-            return false;
-        }
-
-        return true;
-    }
-
-    return false;
+    return vislib::TString(this->val.c_str());
 }
 
 
-/**
- * TransferFunctionParam::ParseTransferFunction
- */
-bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFNodeType& out_nodes,
+bool megamol::core::param::TransferFunctionParam::IgnoreProjectRange(const std::string& in_tfs) {
+
+    bool ignore_project_range = true;
+    try {
+        if (!in_tfs.empty()) {
+            ignore_project_range = false;
+            nlohmann::json json = nlohmann::json::parse(in_tfs);
+            megamol::core::utility::get_json_value<bool>(json, {"IgnoreProjectRange"}, &ignore_project_range);
+        }
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[IgnoreProjectRange] JSON Error - Unable to read flag 'IgnoreProjectRange' from transfer function JSON string.");
+    }
+    return ignore_project_range;
+}
+
+
+bool TransferFunctionParam::GetParsedTransferFunctionData(const std::string& in_tfs, TFNodeType& out_nodes,
     InterpolationMode& out_interpolmode, unsigned int& out_texsize, std::array<float, 2>& out_range) {
 
     TFNodeType tmp_nodes;
+    std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
+    std::array<float, TFP_VAL_CNT> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f};
+    tmp_nodes.emplace_back(zero);
+    tmp_nodes.emplace_back(one);
     std::string tmp_interpolmode_str;
-    InterpolationMode tmp_interpolmode;
-    unsigned int tmp_texsize;
-    std::array<float, 2> tmp_range;
+    InterpolationMode tmp_interpolmode = InterpolationMode::LINEAR;
+    unsigned int tmp_texsize = 256;
+    std::array<float, 2> tmp_range = {0.0f, 1.0f};
 
     if (!in_tfs.empty()) {
 
@@ -155,80 +131,43 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFN
         try {
             nlohmann::json json = nlohmann::json::parse(in_tfs);
 
-            // Get texture size
-            json.at("TextureSize").get_to(tmp_texsize);
-
-            // Get interpolation method
-            json.at("Interpolation").get_to(tmp_interpolmode_str);
+            megamol::core::utility::get_json_value<unsigned int>(json, {"TextureSize"}, &tmp_texsize);
+            megamol::core::utility::get_json_value<float>(json, {"ValueRange"}, tmp_range.data(), 2);
+            megamol::core::utility::get_json_value<std::string>(json, {"Interpolation"}, &tmp_interpolmode_str);
             if (tmp_interpolmode_str == "LINEAR") {
                 tmp_interpolmode = InterpolationMode::LINEAR;
             } else if (tmp_interpolmode_str == "GAUSS") {
                 tmp_interpolmode = InterpolationMode::GAUSS;
             }
-
-            // Get nodes data
-            unsigned int tf_size = (unsigned int)json.at("Nodes").size();
-            tmp_nodes.resize(tf_size);
-            for (unsigned int i = 0; i < tf_size; ++i) {
+            auto node_count = json.at("Nodes").size(); // unknown size
+            tmp_nodes.resize(node_count);
+            for (size_t i = 0; i < node_count; ++i) {
                 json.at("Nodes")[i].get_to(tmp_nodes[i]);
             }
-
-            // Get value range
-            json.at("ValueRange")[0].get_to(tmp_range[0]);
-            json.at("ValueRange")[1].get_to(tmp_range[1]);
-
-        }
-        catch (nlohmann::json::type_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::invalid_iterator& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::out_of_range& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::other_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
         }
         catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[ParseTransferFunction] Unknown Error - Unable to read transfer function from JSON string.");
             return false;
         }
-    } else { // Loading default values for empty transfer function
-        tmp_nodes.clear();
-        std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
-        std::array<float, TFP_VAL_CNT> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f};
-        tmp_nodes.emplace_back(zero);
-        tmp_nodes.emplace_back(one);
-        tmp_interpolmode = InterpolationMode::LINEAR;
-        tmp_texsize = 256;
-        tmp_range[0] = 0.0f;
-        tmp_range[1] = 1.0f;
-    }
+    } 
 
     if (!TransferFunctionParam::CheckTransferFunctionData(tmp_nodes, tmp_interpolmode, tmp_texsize, tmp_range)) {
         return false;
     }
+
     out_nodes = tmp_nodes;
     out_interpolmode = tmp_interpolmode;
     out_texsize = tmp_texsize;
     out_range = tmp_range;
 
-
     return true;
 }
 
 
-/**
- * TransferFunctionParam::DumpTransferFunction
- */
-bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFNodeType& in_nodes,
-    const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range) {
+bool TransferFunctionParam::GetDumpedTransferFunction(std::string& out_tfs, const TFNodeType& in_nodes,
+    const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range,
+    bool in_ignore_project_range) {
 
     try {
         nlohmann::json json;
@@ -251,6 +190,7 @@ bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFN
         json["TextureSize"] = in_texsize;
         json["Nodes"] = in_nodes;
         json["ValueRange"] = in_range;
+        json["IgnoreProjectRange"] = in_ignore_project_range;
 
         out_tfs = json.dump(2); // Dump with indent of 2 spaces and new lines.
     }
@@ -280,9 +220,6 @@ bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFN
 }
 
 
-/**
- * TransferFunctionParam::CheckTransferFunctionData
- */
 bool TransferFunctionParam::CheckTransferFunctionData(const TFNodeType& nodes, const InterpolationMode interpolmode,
     const unsigned int texsize, const std::array<float, 2> range) {
 
@@ -345,9 +282,6 @@ bool TransferFunctionParam::CheckTransferFunctionData(const TFNodeType& nodes, c
 }
 
 
-/**
- * TransferFunctionParam::CheckTransferFunctionData
- */
 bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) {
 
     bool check = true;
@@ -468,17 +402,14 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
 }
 
 
-/*
- * TransferFunctionParam::LinearInterpolation
- */
-void TransferFunctionParam::LinearInterpolation(
-    std::vector<float>& out_texdata, unsigned int in_texsize, const TFNodeType& in_nodes) {
+std::vector<float> TransferFunctionParam::LinearInterpolation(unsigned int in_texsize, const TFNodeType& in_nodes) {
 
+    std::vector<float> out_texdata;
     if (in_texsize == 0) {
-        return;
+        return out_texdata;
     }
-
     out_texdata.resize(4 * in_texsize);
+
     std::array<float, TFP_VAL_CNT> cx1 = in_nodes[0];
     std::array<float, TFP_VAL_CNT> cx2 = in_nodes[0];
     int p1 = 0;
@@ -503,19 +434,16 @@ void TransferFunctionParam::LinearInterpolation(
             out_texdata[p * 4 + 3] = cx1[3] * be + cx2[3] * al;
         }
     }
+    return out_texdata;
 }
 
 
-/*
- * TransferFunctionParam::GaussInterpolation
- */
-void TransferFunctionParam::GaussInterpolation(
-    std::vector<float>& out_texdata, unsigned int in_texsize, const TFNodeType& in_nodes) {
+std::vector<float> TransferFunctionParam::GaussInterpolation(unsigned int in_texsize, const TFNodeType& in_nodes) {
 
+    std::vector<float> out_texdata;
     if (in_texsize == 0) {
-        return;
+        return out_texdata;
     }
-
     out_texdata.resize(4 * in_texsize);
     out_texdata.assign(out_texdata.size(), 0.0f);
 
@@ -540,6 +468,7 @@ void TransferFunctionParam::GaussInterpolation(
             out_texdata[t * 4 + 3] = std::max(a, out_texdata[t * 4 + 3]);
         }
     }
+    return out_texdata;
 }
 
 
@@ -547,23 +476,20 @@ void TransferFunctionParam::GaussInterpolation(
 
     out_tex_data.clear();
     unsigned int tmp_texture_size;
-    megamol::core::param::TransferFunctionParam::TFNodeType tmp_nodes;
     std::array<float, 2> tmp_range;
+    megamol::core::param::TransferFunctionParam::TFNodeType tmp_nodes;
     megamol::core::param::TransferFunctionParam::InterpolationMode tmp_mode;
 
-    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        in_tfs, tmp_nodes, tmp_mode, tmp_texture_size, tmp_range);
-    if (!ok) {
+    if (!megamol::core::param::TransferFunctionParam::GetParsedTransferFunctionData(in_tfs, tmp_nodes, tmp_mode, tmp_texture_size, tmp_range)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not parse transfer function.");
         return false;
     }
     if (tmp_mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
-        param::TransferFunctionParam::LinearInterpolation(out_tex_data, tmp_texture_size, tmp_nodes);
+        out_tex_data = param::TransferFunctionParam::LinearInterpolation(tmp_texture_size, tmp_nodes);
     }
     else if (tmp_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-        param::TransferFunctionParam::GaussInterpolation(out_tex_data, tmp_texture_size, tmp_nodes);
+        out_tex_data = param::TransferFunctionParam::GaussInterpolation(tmp_texture_size, tmp_nodes);
     }
-
     out_width = tmp_texture_size;
     out_height = 1;
 
