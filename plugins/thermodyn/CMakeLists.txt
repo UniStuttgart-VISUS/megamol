@@ -16,6 +16,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   find_package(CGAL CONFIG REQUIRED)
 
   require_external(Eigen)
+  require_external(implot)
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -30,7 +31,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mesh mmstd_datatools Eigen CGAL::CGAL)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mesh mmstd_datatools Eigen CGAL::CGAL imgui implot)
 
   # Installation rules for generated files
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
