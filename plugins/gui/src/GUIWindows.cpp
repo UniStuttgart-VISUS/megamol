@@ -175,7 +175,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Process hotkeys
-    this->checkMultipleHotkeyAssignement();
+    this->checkMultipleHotkeyAssignment();
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
         if (this->state.gui_visible) {
             this->state.gui_hide_next_frame = 2;
@@ -1726,9 +1726,9 @@ void GUIWindows::drawMenu(void) {
         const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
             bool registered_window = !(wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN);
             if (registered_window) {
-                ;
                 ImGui::MenuItem(wc.win_name.c_str(), wc.win_hotkey.ToString().c_str(), &wc.win_show);
             } else {
+                // Custom unregistered parameter window
                 if (ImGui::BeginMenu(wc.win_name.c_str())) {
                     std::string menu_label = "Show";
                     if (wc.win_show)
@@ -1745,6 +1745,18 @@ void GUIWindows::drawMenu(void) {
             }
         };
         this->window_collection.EnumWindows(func);
+
+        ImGui::Separator();
+
+        if (ImGui::BeginMenu("Docking")) {
+            if (ImGui::MenuItem("Preset")) {
+
+                // Load preset docking for all windows
+
+            }
+
+            ImGui::EndMenu();
+        }
 
         ImGui::EndMenu();
     }
@@ -2164,7 +2176,7 @@ bool GUIWindows::considerModule(const std::string& modname, std::vector<std::str
 }
 
 
-void GUIWindows::checkMultipleHotkeyAssignement(void) {
+void GUIWindows::checkMultipleHotkeyAssignment(void) {
     if (this->state.hotkeys_check_once) {
 
         std::list<core::view::KeyCode> hotkeylist;
@@ -2262,6 +2274,54 @@ void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 }
 
 
+void megamol::gui::GUIWindows::load_preset_window_docking(void) {
+
+    // Use DockBuilder
+    /*
+     * https://github.com/ocornut/imgui/issues/2109#issuecomment-426204357
+     *
+ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing layout
+ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_Dockspace); // Add empty node
+ImGui::DockBuilderSetNodeSize(dockspace_id, dockspace_size);
+
+ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
+ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.20f, NULL, &dock_main_id);
+ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.20f, NULL, &dock_main_id);
+
+ImGui::DockBuilderDockWindow("Log", dock_id_bottom);
+ImGui::DockBuilderDockWindow("Properties", dock_id_prop);
+ImGui::DockBuilderDockWindow("Mesh", dock_id_prop);
+ImGui::DockBuilderDockWindow("Extra", dock_id_prop);
+ImGui::DockBuilderFinish(dockspace_id);
+     *
+     */
+
+}
+
+
+void megamol::gui::GUIWindows::load_docking_from_string(std::string docking) {
+
+    std::string imgui_docking = this->replace_string(imgui_docking, "|", "\n");
+    ImGui::LoadIniSettingsFromMemory(imgui_docking.c_str(), imgui_docking.size());
+}
+
+
+std::string megamol::gui::GUIWindows::save_docking_to_string(void) {
+
+    ImGuiIO& io = ImGui::GetIO();
+    if (!io.WantSaveIniSettings) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] WantSaveIniSettings is not true. ImGui::GetIO().IniFilename should be nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+    size_t buffer_size = 0;
+    const char* buffer = ImGui::SaveIniSettingsToMemory(&buffer_size);
+    if (buffer == nullptr) return std::string();
+    std::string imgui_docking(buffer, buffer_size);
+    std::string docking = this->replace_string(imgui_docking, "\n", "|");
+    io.WantSaveIniSettings = false;
+    return docking;
+}
+
+
 std::string megamol::gui::GUIWindows::project_to_lua_string(void) {
 
     std::string gui_state;
@@ -2305,6 +2365,9 @@ bool megamol::gui::GUIWindows::state_from_string(const std::string& state) {
                 megamol::core::utility::get_json_value<int>(gui_state, {"font_size"}, &this->state.font_size);
                 this->state.font_apply = true;
                 float new_gui_scale = 1.0f;
+                std::string docking_settings;
+                megamol::core::utility::get_json_value<std::string>(gui_state, {"docking"}, &docking_settings);
+                this->load_docking_from_string(docking_settings);
             }
         }
 
@@ -2355,6 +2418,7 @@ bool megamol::gui::GUIWindows::state_to_string(std::string& out_state) {
         json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->state.font_file_name;
         GUIUtils::Utf8Decode(this->state.font_file_name);
         json_state[GUI_JSON_TAG_GUI]["font_size"] = this->state.font_size;
+        json_state[GUI_JSON_TAG_GUI]["docking"] = this->save_docking_to_string();
 
         // Write window configuration
         this->window_collection.StateToJSON(json_state);
@@ -2507,4 +2571,18 @@ bool megamol::gui::GUIWindows::create_not_existing_png_filepath(std::string& ino
         created_filepath = true;
     }
     return created_filepath;
+}
+
+
+std::string megamol::gui::GUIWindows::replace_string(std::string& str, const std::string& from, const std::string& to) const {
+    if(from.empty()) {
+        return str;
+    }
+    std::string replaced_str = str;
+    size_t start_pos = 0;
+    while((start_pos = replaced_str.find(from, start_pos)) != std::string::npos) {
+        replaced_str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+    return replaced_str;
 }

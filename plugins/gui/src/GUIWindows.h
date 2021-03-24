@@ -338,9 +338,13 @@ namespace gui {
         void window_sizing_and_positioning(WindowCollection::WindowConfiguration& wc, bool& out_collapsing_changed);
 
         bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
-        void checkMultipleHotkeyAssignement(void);
+        void checkMultipleHotkeyAssignment(void);
         bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
         void triggerCoreInstanceShutdown(void);
+
+        void load_preset_window_docking(void);
+        void load_docking_from_string(std::string docking);
+        std::string save_docking_to_string(void);
 
         std::string project_to_lua_string(void);
         bool state_from_string(const std::string& state);
@@ -351,6 +355,8 @@ namespace gui {
         void update_frame_statistics(WindowCollection::WindowConfiguration& wc);
 
         bool create_not_existing_png_filepath(std::string& inout_filepath);
+
+        std::string replace_string(std::string& str, const std::string& from, const std::string& to) const;
     };
 
 } // namespace gui
