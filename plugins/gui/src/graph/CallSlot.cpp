@@ -151,9 +151,9 @@ bool megamol::gui::CallSlot::IsParentModuleConnected(void) const {
 }
 
 
-bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t parent_module) {
+bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t pm) {
 
-    if (parent_module == nullptr) {
+    if (pm == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] Pointer to given parent module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -163,7 +163,7 @@ bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t paren
             "[GUI] Pointer to parent module is already set. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    this->parent_module = parent_module;
+    this->parent_module = pm;
     return true;
 }
 

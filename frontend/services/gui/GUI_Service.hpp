@@ -14,7 +14,7 @@
 #include "gui-wrapper.h"
 
 #include "IOpenGL_Context.h"
-#include "GUI_Resource.h"
+#include "GUIState.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"

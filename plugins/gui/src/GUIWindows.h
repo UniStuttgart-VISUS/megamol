@@ -117,6 +117,9 @@ namespace gui {
 
         /**
          * Pass current GUI state.
+         *
+         * @param as_lua   If true, GUI state, scale and visibility are returned wrapped into respective LUA commands.
+         *                 If false, only GUI state JSON string is returned.
          */
         std::string GetState(bool as_lua) {
             return this->project_to_lua_string(as_lua);
@@ -125,15 +128,15 @@ namespace gui {
         /**
          * Pass current GUI visibility.
          */
-        bool GetVisibility(void) {
+        bool GetVisibility(void) const {
             return this->state.gui_visible;
         }
 
         /**
          * Pass current GUI scale.
          */
-        float GetScale() {
-            return gui_scaling.Get();
+        float GetScale(void) const {
+            return megamol::gui::gui_scaling.Get();
         }
 
         /**

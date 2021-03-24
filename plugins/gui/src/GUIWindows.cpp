@@ -2313,22 +2313,23 @@ std::string megamol::gui::GUIWindows::project_to_lua_string(bool as_lua) {
 
     std::string gui_state;
     if (this->state_to_string(gui_state)) {
-        std::string state = "";
+        std::string return_state_str = "";
 
         if (as_lua) {
-            state += std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
+            return_state_str += std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
                      ((this->state.gui_visible) ? ("true") : ("false")) + std::string(GUI_END_TAG_SET_GUI_VISIBILITY) +
                      "\n";
 
-            state += std::string(GUI_START_TAG_SET_GUI_SCALE) + std::to_string(megamol::gui::gui_scaling.Get()) +
+            return_state_str += std::string(GUI_START_TAG_SET_GUI_SCALE) + std::to_string(megamol::gui::gui_scaling.Get()) +
                      std::string(GUI_END_TAG_SET_GUI_SCALE) + "\n";
-            state +=
+
+            return_state_str +=
                 std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
         } else {
-            state += gui_state;
+            return_state_str += gui_state;
         }
 
-        return state;
+        return return_state_str;
     }
     return std::string();
 }

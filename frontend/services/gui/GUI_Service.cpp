@@ -350,6 +350,7 @@ void GUI_Service::resource_provide_gui_visibility(bool show) {
     gui->SetVisibility(show);
 }
 
+
 void GUI_Service::resource_provide_gui_scale(float scale) {
 
     if (!check_gui_not_nullptr) {
