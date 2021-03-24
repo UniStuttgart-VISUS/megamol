@@ -177,6 +177,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
 
     std::vector<float> tmp_data;
     float* vert_ptr = nullptr;
+    float* norm_ptr = nullptr;
 
     for (auto const& attr : attributes) {
         if (attr.semantic != mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION)
@@ -190,6 +191,12 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
         vert_ptr = reinterpret_cast<float*>(attr.data);
         for (std::size_t idx = 0; idx < 3 * num_vertices; ++idx) {
             tmp_data.push_back(vert_ptr[idx]);
+        }
+    }
+
+    for (auto const& attr : attributes) {
+        if (attr.semantic == mesh::MeshDataAccessCollection::AttributeSemanticType::NORMAL) {
+            norm_ptr = reinterpret_cast<float*>(attr.data);
         }
     }
 
@@ -381,6 +388,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
         positions_.resize(plCount0);
         colors_.resize(plCount0);
         indices_.resize(plCount0);
+        normals_.resize(plCount0);
         for (unsigned int plIdx = 0; plIdx < plCount0; ++plIdx) {
             auto const& orgs = origins[plIdx];
 
@@ -445,6 +453,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
         auto& positions = positions_[plIdx];
         auto& colors = colors_[plIdx];
         auto& indices = indices_[plIdx];
+        auto& normals = normals_[plIdx];
 
         auto& ray_vec = rays[plIdx];
 
@@ -487,6 +496,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
 
         auto mesh_indices = reinterpret_cast<glm::u32vec3 const*>(mesh_data.indices.data);
         auto vert_glm_ptr = reinterpret_cast<glm::vec3 const*>(vert_ptr);
+        auto norm_glm_ptr = reinterpret_cast<glm::vec3 const*>(norm_ptr);
 
         using output_type_ut = std::underlying_type_t<output_type>;
         auto const type = static_cast<output_type>(output_type_slot_.Param<core::param::EnumParam>()->Value());
@@ -585,6 +595,8 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
         positions.reserve(data_ptr->size() * 3);
         indices.clear();
         indices.reserve(num_vertices / 3);
+        normals.clear();
+        normals.reserve(num_vertices);
         auto const minmax = std::minmax_element(data_ptr->begin(), data_ptr->end());
         tf.SetRange({static_cast<float>(*minmax.first), static_cast<float>(*minmax.second)});
         tf();
@@ -614,6 +626,10 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
             positions.push_back(vert_glm_ptr[idx.y]);
             positions.push_back(vert_glm_ptr[idx.z]);
 
+            normals.push_back(norm_glm_ptr[idx.x]);
+            normals.push_back(norm_glm_ptr[idx.y]);
+            normals.push_back(norm_glm_ptr[idx.z]);
+
             indices.push_back(idx.x);
             indices.push_back(idx.y);
             indices.push_back(idx.z);
@@ -628,9 +644,9 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
         cmd_indices.data = reinterpret_cast<uint8_t*>(indices.data());
         cmd_indices.type = mesh::MeshDataAccessCollection::UNSIGNED_INT;
 
-        /*mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
+        mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
             reinterpret_cast<uint8_t*>(normals.data()), normals.size() * sizeof(float), 3,
-            mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0, mesh::MeshDataAccessCollection::NORMAL});*/
+            mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0, mesh::MeshDataAccessCollection::NORMAL});
         mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
             reinterpret_cast<uint8_t*>(colors.data()), colors.size() * 4 * sizeof(float), 4,
             mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 4, 0, mesh::MeshDataAccessCollection::COLOR});

@@ -110,6 +110,8 @@ private:
 
     std::vector<std::vector<std::uint32_t>> indices_;
 
+    std::vector<std::vector<glm::vec3>> normals_;
+
     std::shared_ptr<mesh::MeshDataAccessCollection> mesh_access_collection_;
 
     std::size_t out_data_hash_ = 0;
