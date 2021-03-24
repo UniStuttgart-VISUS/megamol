@@ -2319,16 +2319,7 @@ std::string megamol::gui::GUIWindows::save_docking_to_string(void) {
     if (buffer == nullptr) return std::string();
     std::string imgui_docking(buffer, buffer_size);
 
-    // Remove unused information from imgui settings state
-    std::string windows_tag = "[Window]";
-    // Skip first window entry which is required for docking
-    auto idx_windows = imgui_docking.find(windows_tag, windows_tag.length());
-    std::string docking_tag = "[Docking]";
-    auto idx_docking = imgui_docking.find(docking_tag);
-    if ((idx_windows != std::string::npos) && (idx_docking != std::string::npos)) {
-        imgui_docking = imgui_docking.replace(idx_windows, idx_docking - idx_windows, "");
-    }
-    else {
+    if (imgui_docking.find("[Docking]") == std::string::npos) {
         imgui_docking.clear();
     }
 
