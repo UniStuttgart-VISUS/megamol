@@ -168,12 +168,12 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
         float alpha = alphaParam.Param<param::FloatParam>()->Value();
 
-        glm::vec4 front  = {0.0f, 0.0f, 1.0f, alpha};
-        glm::vec4 back   = {0.0f, 1.0f, 1.0f, alpha};
-        glm::vec4 left   = {1.0f, 1.0f, 0.0f, alpha};
-        glm::vec4 right  = {0.0f, 1.0f, 0.0f, alpha};
-        glm::vec4 top    = {1.0f, 0.0f, 0.0f, alpha};
-        glm::vec4 bottom = {1.0f, 0.0f, 1.0f, alpha};
+        glm::vec4 front   = {0.0f, 0.0f, 1.0f, alpha};
+        glm::vec4 back    = {0.0f, 1.0f, 1.0f, alpha};
+        glm::vec4 right   = {1.0f, 0.0f, 0.0f, alpha};
+        glm::vec4 left    = {1.0f, 0.0f, 1.0f, alpha};
+        glm::vec4 top     = {0.0f, 1.0f, 0.0f, alpha};
+        glm::vec4 bottom  = {1.0f, 1.0f, 0.0f, alpha};
 
         glm::vec3 left_top_back = { this->bbox.Left(), this->bbox.Top(), this->bbox.Back() };
         glm::vec3 left_bottom_back = { this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back() };
