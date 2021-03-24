@@ -82,7 +82,7 @@ bool TimeLineRenderer::create(void) {
 	
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -113,7 +113,7 @@ bool TimeLineRenderer::create(void) {
     }
 
     if (!loaded_texture) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
      }
     return true;
@@ -156,11 +156,10 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         float strWidth = this->utils.GetTextLineWidth(std::string(tmpStr.PeekBuffer()));
         this->rulerMarkHeight = strHeight / 2.0f;
         this->keyframeMarkHeight = strHeight * 1.5f;
-        this->axes[Axis::X].startPos = this->axes[Axis::Y].startPos =
-            glm::vec2(strWidth + strHeight * 1.5f, strHeight * 2.5f);
+        this->axes[Axis::X].startPos = glm::vec2(strWidth + strHeight * 1.5f, (strHeight * 2.5f));
+        this->axes[Axis::Y].startPos = this->axes[Axis::X].startPos;
         this->axes[Axis::X].endPos = glm::vec2(this->viewport.x - strWidth, strHeight * 2.5f);
-        this->axes[Axis::Y].endPos = glm::vec2(
-            strWidth + strHeight * 1.5f, this->viewport.y - (this->keyframeMarkHeight * 1.1f) - strHeight);
+        this->axes[Axis::Y].endPos = glm::vec2(strWidth + strHeight * 1.5f, this->viewport.y - (this->keyframeMarkHeight * 1.1f) - strHeight);
         for (size_t i = 0; i < Axis::COUNT; ++i) {
             this->axes[i].length = glm::length(this->axes[i].endPos - this->axes[i].startPos);
             this->axes[i].scaleFactor = 1.0f;
@@ -175,7 +174,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
      auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] Pointer to keyframe array is nullptr.");
         return false;
     }
 
@@ -462,15 +461,9 @@ void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, g
 
 bool TimeLineRenderer::recalcAxesData(void) {
 
-    if ((this->axes[Axis::X].startPos.x >= this->axes[Axis::X].endPos.x) ||
-        (this->axes[Axis::Y].startPos.y >= this->axes[Axis::Y].endPos.y)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [GetExtents] Viewport is too small to calculate proper dimensions of time line diagram.");
-        return false;
-    }
-
     for (size_t i = 0; i < Axis::COUNT; ++i) {
         if (this->axes[i].maxValue <= 0.0f) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [recalcAxesData] Invalid max value %f of axis %d. [%s, %s, line %d]", this->axes[i].maxValue, i, __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] Invalid max value %f of axis %d. [%s, %s, line %d]", this->axes[i].maxValue, i, __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -547,7 +540,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
     auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [OnMouseButton] Pointer to keyframe array is nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] Pointer to keyframe array is nullptr.");
         return false;
     }
 
