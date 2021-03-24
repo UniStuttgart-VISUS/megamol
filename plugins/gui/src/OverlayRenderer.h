@@ -33,6 +33,7 @@
 
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iomanip>
 
 
 namespace megamol {
