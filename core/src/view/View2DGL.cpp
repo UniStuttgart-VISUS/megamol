@@ -241,20 +241,21 @@ void view::View2DGL::Resize(unsigned int width, unsigned int height) {
  * view::View2DGL::OnRenderView
  */
 bool view::View2DGL::OnRenderView(Call& call) {
-    float overBC[3];
-    view::CallRenderViewGL *crv = dynamic_cast<view::CallRenderViewGL*>(&call);
-    if (crv == NULL) return false;
+    //float overBC[3];
+    //view::CallRenderViewGL *crv = dynamic_cast<view::CallRenderViewGL*>(&call);
+    //if (crv == NULL) return false;
 
-    float time = crv->Time();
-    if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
-    context.Time = time;
-    context.InstanceTime = crv->InstanceTime();
-    // TODO: Affinity
-    this->Render(context, &call);
+    //float time = crv->Time();
+    //if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
+    //mmcRenderViewContext context;
+    //::ZeroMemory(&context, sizeof(context));
+    //context.Time = time;
+    //context.InstanceTime = crv->InstanceTime();
+    //// TODO: Affinity
+    //this->Render(context, &call);
 
-    return true;
+    //return true;
+    return AbstractView::OnRenderView(call);
 }
 
 

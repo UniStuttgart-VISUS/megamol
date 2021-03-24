@@ -15,10 +15,11 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "vislib/assert.h"
+#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallTime.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
 
 using namespace megamol::core;
 using megamol::core::utility::log::Log;
@@ -32,6 +33,7 @@ view::AbstractView::AbstractView(void)
         , _firstImg(false)
         , _rhsRenderSlot("rendering", "Connects the view to a Renderer")
         , _lhsRenderSlot("render", "Connects modules requesting renderings")
+        , _in_time_slot("time", "Input time code. Overriding time code of view.")
         , _cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
         , _storeCameraSettingsSlot("camstore::storecam",
               "Triggers the storage of the camera settings. This only works for "
@@ -78,6 +80,9 @@ view::AbstractView::AbstractView(void)
     this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::OnResetView);
     // this->MakeSlotAvailable(&this->renderSlot);
+
+    _in_time_slot.SetCompatibleCall<CallTimeDescription>();
+    MakeSlotAvailable(&_in_time_slot);
 
     this->_cameraSettingsSlot.SetParameter(new param::StringParam(""));
     this->MakeSlotAvailable(&this->_cameraSettingsSlot);
@@ -209,8 +214,32 @@ bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
  * view::AbstractView::OnRenderView
  */
 bool view::AbstractView::OnRenderView(Call& call) {
-    throw vislib::UnsupportedOperationException(
-        "AbstractView::OnRenderView", __FILE__, __LINE__);
+    auto* crv = dynamic_cast<AbstractCallRenderView*>(&call);
+    if (crv == nullptr)
+        return false;
+
+    auto in_time = _in_time_slot.CallAs<CallTime>();
+
+    float time = crv->Time();
+    if (in_time != nullptr) {
+        if ((*in_time)(0)) {
+            time = static_cast<float>(in_time->getData());
+        }
+    }
+    if (time < 0.0f)
+        time = this->DefaultTime(crv->InstanceTime());
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+    context.Time = time;
+    context.InstanceTime = crv->InstanceTime();
+
+    if (crv->IsTileSet()) {
+        this->_camera.resolution_gate(cam_type::screen_size_type(crv->VirtualWidth(), crv->VirtualHeight()));
+        this->_camera.image_tile(cam_type::screen_rectangle_type::from_bottom_left(
+            crv->TileX(), crv->TileY(), crv->TileWidth(), crv->TileHeight()));
+    }
+
+    return true;
 }
 
 /*
@@ -321,6 +350,14 @@ void view::AbstractView::Resize(unsigned int width, unsigned int height) {
 void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext& context) {
     float simulationTime = static_cast<float>(context.Time);
     float instTime = static_cast<float>(context.InstanceTime);
+
+    auto in_time = _in_time_slot.CallAs<CallTime>();
+
+    if (in_time != nullptr) {
+        if ((*in_time)(0)) {
+            simulationTime = static_cast<float>(in_time->getData());
+        }
+    }
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();

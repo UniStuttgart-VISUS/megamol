@@ -411,7 +411,7 @@ void AbstractView3D::ResetView(void) {
  * AbstractView3D::OnRenderView
  */
 bool AbstractView3D::OnRenderView(Call& call) {
-    AbstractCallRenderView* crv = dynamic_cast<AbstractCallRenderView*>(&call);
+    /*AbstractCallRenderView* crv = dynamic_cast<AbstractCallRenderView*>(&call);
     if (crv == nullptr) return false;
 
     float time = crv->Time();
@@ -429,7 +429,9 @@ bool AbstractView3D::OnRenderView(Call& call) {
 
     this->Render(context, &call);
 
-    return true;
+    return true;*/
+
+    return AbstractView::OnRenderView(call);
 }
 
 /*

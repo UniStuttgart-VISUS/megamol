@@ -379,6 +379,9 @@ protected:
     /** Slot for incoming rendering requests */
     CalleeSlot _lhsRenderSlot;
 
+    /** Slot for overriding time code */
+    CallerSlot _in_time_slot;
+
     /** The complete scene bounding box */
     BoundingBoxes_2 _bboxs;
 
