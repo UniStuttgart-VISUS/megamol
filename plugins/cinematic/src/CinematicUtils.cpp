@@ -206,15 +206,11 @@ void CinematicUtils::PushHotkeyList(const glm::mat4& ortho, glm::vec2 dim_vp) {
     float quad_height = line_height * line_count + 2.0f * border;
 
     // Push background quad
-    this->PushQuadPrimitive(glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, dim_vp.y - quad_height, 0.0f),
-        glm::vec3(quad_width, dim_vp.y - quad_height, 0.0f), glm::vec3(quad_width, 0.0f, 0.0f),
-        this->Color(CinematicUtils::Colors::MENU));
+    this->PushQuadPrimitive(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, quad_height, 0.0f), glm::vec3(quad_width, quad_height, 0.0f), glm::vec3(quad_width, 0.0f, 0.0f), this->Color(CinematicUtils::Colors::MENU));
 
     // Push hotkey text
     auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(ortho, glm::value_ptr(color), border, dim_vp.y - quad_height - border, hotkey_font_size,
-        false, hotkey_str.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(ortho, glm::value_ptr(color), border, quad_height - border, hotkey_font_size, false, hotkey_str.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
 }
 
 
