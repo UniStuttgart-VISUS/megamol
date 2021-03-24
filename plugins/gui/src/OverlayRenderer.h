@@ -34,6 +34,7 @@
 #include <chrono>
 #include <iomanip>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iomanip>
 
 
 namespace megamol {
