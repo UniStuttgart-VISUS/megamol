@@ -36,6 +36,8 @@ public:
     struct Config {
         ImGuiAPI imgui_api = GUI_Service::ImGuiAPI::OPEN_GL;
         megamol::core::CoreInstance* core_instance = nullptr;
+        bool gui_show = true;
+        float gui_scale = 1.0f;
     };
 
     std::string serviceName() const override { return "GUI_Service"; }
@@ -82,7 +84,9 @@ private:
     std::vector<std::string> m_requestedResourcesNames;
     megamol::frontend_resources::GUIResource m_providedResource;
 
-    std::string resource_request_gui_state(void);
+    std::string resource_request_gui_state(bool as_lua);
+    bool resource_request_gui_visibility(void);
+    float resource_request_gui_scale(void);
     void resource_provide_gui_state(const std::string& json_state);
     void resource_provide_gui_visibility(bool show);
     void resource_provide_gui_scale(float scale);
