@@ -82,7 +82,7 @@ private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<FrontendResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
-    megamol::frontend_resources::GUIResource m_providedResource;
+    megamol::frontend_resources::GUIState m_providedResource;
 
     std::string resource_request_gui_state(bool as_lua);
     bool resource_request_gui_visibility(void);
