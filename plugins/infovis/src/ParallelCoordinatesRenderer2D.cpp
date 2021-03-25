@@ -672,7 +672,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
         glUniform1ui(this->drawScalesProgram.ParameterLocation("numTicks"), this->numTicks);
         glUniform1f(this->drawScalesProgram.ParameterLocation("axisHalfTick"), 2.0f);
         glUniform1i(this->drawScalesProgram.ParameterLocation("pickedAxis"), pickedAxis);
-        glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount * this->numTicks);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount * this->numTicks);
         this->drawScalesProgram.Disable();
 
         this->enableProgramAndBind(this->drawFilterIndicatorsProgram);

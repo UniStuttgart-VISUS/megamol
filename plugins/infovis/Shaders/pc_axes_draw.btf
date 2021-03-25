@@ -72,12 +72,17 @@ void main()
   uint dimension = pc_dimension(gl_InstanceID / numTicks);
 	vec4 bottom = axis_line(gl_InstanceID / numTicks, 0);
 	vec4 top = axis_line(gl_InstanceID / numTicks, 1);
+
+  int realID = gl_VertexID %2;
   
   vec4 vertex = vec4(
-  bottom.x - axisHalfTick + 2 * gl_VertexID * axisHalfTick,
+  bottom.x - axisHalfTick + 2 * realID * axisHalfTick,
   mix(bottom.y, top.y, (gl_InstanceID % numTicks) / float(numTicks - 1)),
   bottom.z,
   bottom.w);
+  
+  int side = gl_VertexID / 2 - gl_VertexID/3;
+  vertex = vertex + vec4(0, 0.1, 0, 0) + side * vec4(0, -0.2, 0, 0);
   
   if (dimension == pickedAxis) {
   	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
