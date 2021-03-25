@@ -2332,6 +2332,9 @@ void megamol::gui::GUIWindows::load_docking_from_string(std::string docking) {
     if (!docking.empty()) {
         ImGui::LoadIniSettingsFromMemory(docking.c_str(), docking.size());
     }
+    else {
+        this->state.load_docking_preset = true;
+    }
 #endif
 }
 
@@ -2525,7 +2528,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.stat_frame_count = 0;
     this->state.font_size = 13;
     this->state.resource_directories.clear();
-    this->state.load_docking_preset = true;
+    this->state.load_docking_preset = false;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);
 }
