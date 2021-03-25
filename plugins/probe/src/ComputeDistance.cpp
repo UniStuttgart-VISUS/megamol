@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "ComputeDistance.h"
 
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
-#include "mmcore/CoreInstance.h"
 
 #include "DTW.hpp"
 
@@ -46,8 +46,8 @@ bool megamol::probe::ComputeDistance::create() {
         return false;
     vislib::graphics::gl::ShaderSource compute_shader_src = _compute_shader_src;
     std::string sample_count_decl = "const uint sample_count = 30;";
-    vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet> snip = new vislib::graphics::gl::ShaderSource::StringSnippet(sample_count_decl.c_str());
-    compute_shader_src.Insert(1, snip);
+    vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet> snip = new
+    vislib::graphics::gl::ShaderSource::StringSnippet(sample_count_decl.c_str()); compute_shader_src.Insert(1, snip);
 
     if (!_fd_shader.Compile(compute_shader_src.Code(), compute_shader_src.Count()))
         return false;
@@ -268,11 +268,12 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                     //    });
                     // auto const score = std::accumulate(scores.begin(), scores.end(), 0.0f, std::plus<float>());
                     // auto const score = *std::max_element(scores.begin(), scores.end());
-                    
+
                     std::vector<float> tmp_mat(sample_count * sample_count);
                     for (std::int64_t as_idx = 0; as_idx < sample_count; ++as_idx) {
                         for (std::int64_t bs_idx = as_idx; bs_idx < sample_count; ++bs_idx) {
-                            auto const val = vec_dist_func(sample_collection[a_pidx][as_idx], sample_collection[b_pidx][bs_idx]);
+                            auto const val =
+                                vec_dist_func(sample_collection[a_pidx][as_idx], sample_collection[b_pidx][bs_idx]);
                             tmp_mat[as_idx + bs_idx * sample_count] = val;
                             tmp_mat[bs_idx + as_idx * sample_count] = val;
                         }
@@ -285,7 +286,7 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
 
                     /*auto validation = std::numeric_limits<float>::lowest();
                     for (std::int64_t as_idx = 0; as_idx < sample_count; ++as_idx) {
-                        auto max_val = std::numeric_limits<float>::max(); 
+                        auto max_val = std::numeric_limits<float>::max();
                         for (std::int64_t bs_idx = 0; bs_idx < sample_count; ++bs_idx) {
                             auto const val = tmp_mat[as_idx + bs_idx * sample_count];
                             if (max_val > val) {
@@ -296,7 +297,7 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                             validation = max_val;
                         }
                     }*/
-                    
+
 
                     auto const score = stdplugin::datatools::misc::frechet_distance<float>(
                         sample_count, [&tmp_mat, sample_count](std::size_t lhs, std::size_t rhs) -> float {
@@ -333,11 +334,11 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                     el = 1.0;
             });*/
             std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
-            /*std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
+            std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
             std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
                 if (el > 1.0)
                     el = 1.0;
-            });*/
+            });
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished");
         } else {
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Computing distances for scalar probes");
@@ -367,14 +368,15 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                     X(a_pidx, sample_idx - base_skip) = a_samples_tmp[sample_idx];
                 }
             }
-            auto svd = Eigen::JacobiSVD<Eigen::MatrixXd>(X, Eigen::ComputeFullU | Eigen::ComputeFullV);
+            auto svd = Eigen::JacobiSVD<Eigen::MatrixXd>(X, Eigen::ComputeThinU | Eigen::ComputeThinV);
             auto sv = svd.singularValues();
             for (Eigen::Index idx = sv.size() / 2; idx < sv.size(); ++idx) {
                 sv[idx] = 0.0;
             }
             auto U = svd.matrixU();
             auto V = svd.matrixV();
-            X = U * sv.asDiagonal() * V.transpose();
+            auto D = sv.asDiagonal();
+            X = U * D * V.transpose();
 
             auto min_val = std::numeric_limits<double>::max();
             auto max_val = std::numeric_limits<double>::lowest();
@@ -394,11 +396,11 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                         a_samples.begin(), a_samples.end(), [](auto const& el) { return !std::isnan(el[1]); });
                     std::for_each(it, a_samples.end(), [](auto& el) { el[1] = 0.0; });
                 }*/
-                std::vector<double> a_samples;
+                /*std::vector<double> a_samples;
                 a_samples.resize(X.cols());
                 for (Eigen::Index idx = 0; idx < X.cols(); ++idx) {
                     a_samples[idx] = X(a_pidx, idx);
-                }
+                }*/
                 //{
                 //    auto const a_probe = probe_data->getProbe<FloatProbe>(a_pidx);
                 //    auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
@@ -444,11 +446,11 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                             b_samples.begin(), b_samples.end(), [](auto const& el) { return !std::isnan(el[1]); });
                         std::for_each(it, b_samples.end(), [](auto& el) { el[1] = 0.0; });
                     }*/
-                    std::vector<double> b_samples;
+                    /*std::vector<double> b_samples;
                     b_samples.resize(X.cols());
                     for (Eigen::Index idx = 0; idx < X.cols(); ++idx) {
                         b_samples[idx] = X(b_pidx, idx);
-                    }
+                    }*/
                     //{
                     //    auto const b_probe = probe_data->getProbe<FloatProbe>(b_pidx);
                     //    auto const b_samples_tmp = b_probe.getSamplingResult()->samples;
@@ -478,17 +480,33 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                     //    }*/
                     //    b_samples.erase(b_samples.begin(), b_samples.begin() + base_skip);
                     //}
-                    auto const dis = stdplugin::datatools::misc::frechet_distance<double, double>(a_samples, b_samples,
-                        [](double const& a, double const& b) -> double { return std::abs(a - b); });
+                    /*auto const dis = stdplugin::datatools::misc::frechet_distance<double, double>(a_samples,
+                       b_samples,
+                        [](double const& a, double const& b) -> double { return std::abs(a - b); });*/
+
+                    std::vector<float> tmp_mat(sample_count * sample_count);
+                    for (std::int64_t as_idx = 0; as_idx < sample_count; ++as_idx) {
+                        for (std::int64_t bs_idx = as_idx; bs_idx < sample_count; ++bs_idx) {
+                            auto const val = std::abs(X(a_pidx, as_idx) - X(b_pidx, as_idx));
+                            tmp_mat[as_idx + bs_idx * sample_count] = val;
+                            tmp_mat[bs_idx + as_idx * sample_count] = val;
+                        }
+                    }
+
+                    auto const score = stdplugin::datatools::misc::frechet_distance<float>(
+                        sample_count, [&tmp_mat, sample_count](std::size_t lhs, std::size_t rhs) -> float {
+                            return tmp_mat[lhs + rhs * sample_count];
+                        });
+
                     // auto const dis = DTW::dtw_distance_only(a_samples, b_samples, 2);
-                    _dis_mat[a_pidx + b_pidx * probe_count] = dis;
-                    _dis_mat[b_pidx + a_pidx * probe_count] = dis;
+                    _dis_mat[a_pidx + b_pidx * probe_count] = score;
+                    _dis_mat[b_pidx + a_pidx * probe_count] = score;
 #pragma omp critical
                     {
-                        if (dis < min_val)
-                            min_val = dis;
-                        if (dis > max_val)
-                            max_val = dis;
+                        if (score < min_val)
+                            min_val = score;
+                        if (score > max_val)
+                            max_val = score;
                     }
                 }
             }
