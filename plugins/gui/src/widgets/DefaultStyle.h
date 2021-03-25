@@ -57,7 +57,6 @@ inline void DefaultStyle(void) {
     style.AntiAliasedLinesUseTex = true;
     style.AntiAliasedFill = true;
     style.CurveTessellationTol = 1.25f;
-    style.CircleTessellationMaxError = 1.10f;
 
     // Colors
     ImGui::StyleColorsDark();

@@ -50,7 +50,7 @@ bool megamol::gui::ButtonWidgets::OptionButton(const std::string& id, const std:
     if (dirty) {
         color_front = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_BUTTON_MODIFIED);
     }
-    draw_list->AddCircleFilled(center, thickness, color_front, 12);
+    draw_list->AddCircleFilled(center, thickness, color_front);
     draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
 
     ImVec2 rect = ImVec2(button_size, button_size);
@@ -149,7 +149,7 @@ bool megamol::gui::ButtonWidgets::KnobButton(
         retval = true;
     }
     draw_list->AddLine(widget_center, widget_center + knob_pos, knob_line_color, thickness);
-    draw_list->AddCircleFilled(widget_center + knob_pos, knob_radius, knob_color, 12);
+    draw_list->AddCircleFilled(widget_center + knob_pos, knob_radius, knob_color);
 
     ImGui::EndChild();
     ImGui::PopStyleColor();
@@ -288,7 +288,7 @@ bool megamol::gui::ButtonWidgets::ToggleButton(const std::string& id, bool& inou
             ImDrawFlags_RoundCornersAll);
     }
     draw_list->AddCircleFilled(ImVec2(p.x + radius + (inout_bool ? 1 : 0) * (width - radius * 2.0f), p.y + radius),
-        radius - 1.5f, IM_COL32(255, 255, 255, 255), 0);
+        radius - 1.5f, IM_COL32(255, 255, 255, 255));
 
     ImGui::SameLine();
     ImGui::AlignTextToFramePadding();

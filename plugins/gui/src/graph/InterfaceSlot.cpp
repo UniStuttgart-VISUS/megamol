@@ -426,9 +426,8 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
             }
 
             // Draw Slot
-            const float segment_numer = (20.0f * megamol::gui::gui_scaling.Get());
-            draw_list->AddCircleFilled(actual_position, radius, slot_color, segment_numer);
-            draw_list->AddCircle(actual_position, radius, COLOR_INTERFACE_BORDER, segment_numer);
+            draw_list->AddCircleFilled(actual_position, radius, slot_color);
+            draw_list->AddCircle(actual_position, radius, COLOR_INTERFACE_BORDER);
 
             // Draw Curves
             if (!this->gui_group_collapsed_view) {
