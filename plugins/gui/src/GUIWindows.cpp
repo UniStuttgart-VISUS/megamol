@@ -440,14 +440,6 @@ bool GUIWindows::PostDraw(void) {
                 return;
             }
 
-/// DOCKING
-#ifdef IMGUI_HAS_DOCK
-            auto window_dock_id = ImGui::GetWindowDockID();
-            if (window_dock_id != 0) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] WINDOW DOCK ID: %i \n", static_cast<int>(window_dock_id), __FILE__, __FUNCTION__, __LINE__);
-            }
-#endif
             // Omit updating size and position of window from imgui for current frame when reset
             bool update_window_by_imgui = !wc.buf_set_pos_size;
             bool collapsing_changed = false;
