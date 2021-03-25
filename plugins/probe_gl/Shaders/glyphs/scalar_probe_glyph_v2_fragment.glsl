@@ -50,6 +50,14 @@ void main() {
 
     if(radius > 1.0) discard;
 
+    float border_circle_width = 0.04;
+    if(mesh_shader_params[draw_id].state == 1) {
+        border_circle_width = 0.08;
+    }
+    else if(mesh_shader_params[draw_id].state == 2) {
+        border_circle_width = 0.08;
+    }
+
     float angle = atan(
         pixel_coords.x,
         pixel_coords.x > 0.0 ? -pixel_coords.y : pixel_coords.y
@@ -97,7 +105,7 @@ void main() {
             sample_value_normalized = (sample_value - min_value) / (value_range);
             //out_colour = fakeViridis(sample_value_normalized);
             //out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
-			//if( radius > sample_value_normalized && radius < 0.96 ) discard;
+			//if( radius > sample_value_normalized && radius < border_circle_width ) discard;
         }
         else
         {
@@ -106,21 +114,21 @@ void main() {
             sample_value_normalized = (sample_value - min_value) / (value_range);
             //out_colour = fakeViridis(sample_value_normalized);
             //out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
-			//if( radius > sample_value_normalized && radius < 0.96 ) discard;
+			//if( radius > sample_value_normalized && radius < border_circle_width ) discard;
         }
 
         out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
-        if( sample_value_normalized >= zero_value_radius && radius < 0.96){
+        if( sample_value_normalized >= zero_value_radius && radius < border_circle_width){
             if( radius < (zero_value_radius) || radius > sample_value_normalized ) discard;
         }
-        else if(sample_value_normalized < zero_value_radius && radius < 0.96){
+        else if(sample_value_normalized < zero_value_radius && radius < border_circle_width){
             if( radius > (zero_value_radius) || radius < sample_value_normalized ) discard;
         }
     }
 
     if(abs(radius - zero_value_radius) < 0.005) out_colour = vec3(1.0);
-    if(radius > 0.96 && radius < 0.98) out_colour = glyph_border_color.rgb;
+    if(radius > (1.0 - border_circle_width) && radius < (1.0 - 0.02)) out_colour = glyph_border_color.rgb;
 
     float test = dFdx(radius);
 
