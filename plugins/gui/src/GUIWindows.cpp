@@ -260,11 +260,10 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
 
+    /// DEPRECATED: No longer required since static build. Just draw your ImGui stuff ...
     // Propagate ImGui context to core instance
-    /// DEPRECATED since static build. Just draw your ImGui stuff ...
-    //if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
+    //if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { } /// mmconsole
     this->core_instance->SetCurrentImGuiContext(this->context);
-    //}
 
     // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
     if (this->state.graph_uid == GUI_INVALID_ID) {
