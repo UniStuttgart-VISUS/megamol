@@ -2325,12 +2325,12 @@ void megamol::gui::GUIWindows::load_preset_window_docking(ImGuiID global_docking
 }
 
 
-void megamol::gui::GUIWindows::load_docking_from_string(std::string docking) {
+void megamol::gui::GUIWindows::load_imgui_settings_from_string(std::string imgui_settings) {
 
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
-    if (!docking.empty()) {
-        ImGui::LoadIniSettingsFromMemory(docking.c_str(), docking.size());
+    if (!imgui_settings.empty()) {
+        ImGui::LoadIniSettingsFromMemory(imgui_settings.c_str(), imgui_settings.size());
     }
     else {
         this->state.load_docking_preset = true;
@@ -2339,7 +2339,7 @@ void megamol::gui::GUIWindows::load_docking_from_string(std::string docking) {
 }
 
 
-std::string megamol::gui::GUIWindows::save_docking_to_string(void) {
+std::string megamol::gui::GUIWindows::save_imgui_settings_to_string(void) {
 
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
@@ -2348,11 +2348,8 @@ std::string megamol::gui::GUIWindows::save_docking_to_string(void) {
     if (buffer == nullptr) {
         return std::string();
     }
-    std::string imgui_docking(buffer, buffer_size);
-    if (imgui_docking.find("[Docking]") == std::string::npos) {
-        return std::string();
-    }
-    return imgui_docking;
+    std::string imgui_settings(buffer, buffer_size);
+    return imgui_settings;
 #else
     return std::string();
 #endif
@@ -2402,9 +2399,9 @@ bool megamol::gui::GUIWindows::state_from_string(const std::string& state) {
                 megamol::core::utility::get_json_value<int>(gui_state, {"font_size"}, &this->state.font_size);
                 this->state.font_apply = true;
                 float new_gui_scale = 1.0f;
-                std::string docking_settings;
-                megamol::core::utility::get_json_value<std::string>(gui_state, {"docking"}, &docking_settings);
-                this->load_docking_from_string(docking_settings);
+                std::string imgui_settings;
+                megamol::core::utility::get_json_value<std::string>(gui_state, {"imgui_settings"}, &imgui_settings);
+                this->load_imgui_settings_from_string(imgui_settings);
             }
         }
 
@@ -2455,7 +2452,7 @@ bool megamol::gui::GUIWindows::state_to_string(std::string& out_state) {
         json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->state.font_file_name;
         GUIUtils::Utf8Decode(this->state.font_file_name);
         json_state[GUI_JSON_TAG_GUI]["font_size"] = this->state.font_size;
-        json_state[GUI_JSON_TAG_GUI]["docking"] = this->save_docking_to_string();
+        json_state[GUI_JSON_TAG_GUI]["imgui_settings"] = this->save_imgui_settings_to_string();
 
         // Write window configuration
         this->window_collection.StateToJSON(json_state);

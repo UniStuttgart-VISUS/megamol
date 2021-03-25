@@ -344,8 +344,10 @@ namespace gui {
         void triggerCoreInstanceShutdown(void);
 
         void load_preset_window_docking(ImGuiID global_docking_id);
-        void load_docking_from_string(std::string docking);
-        std::string save_docking_to_string(void);
+
+        // Required to save/load docking
+        void load_imgui_settings_from_string(std::string imgui_settings);
+        std::string save_imgui_settings_to_string(void);
 
         std::string project_to_lua_string(void);
         bool state_from_string(const std::string& state);
