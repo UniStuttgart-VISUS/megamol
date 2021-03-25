@@ -31,11 +31,11 @@ bool megamol::frontend::Remote_Service::HeadNode::send(megamol::remote::Message_
     return true;
 }
 
-bool megamol::frontend::Remote_Service::HeadNode::start_server(std::string address) {
+bool megamol::frontend::Remote_Service::HeadNode::start_server(std::string const& send_to_address) {
     try {
         close_server();
         this->comm_fabric_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::push));
-        this->comm_fabric_.Connect(address);
+        this->comm_fabric_.Connect(send_to_address);
         this->comm_thread_.thread = std::thread{[&]() { this->comm_thread_loop(); }};
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::HeadNode: Communication thread started.");
     } catch (...) {

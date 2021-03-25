@@ -19,15 +19,14 @@ megamol::frontend::Remote_Service::RenderNode::~RenderNode() {
     close_receiver();
 }
 
-bool megamol::frontend::Remote_Service::RenderNode::start_receiver(int listen_port) {
+bool megamol::frontend::Remote_Service::RenderNode::start_receiver(std::string const& receive_from_address) {
     close_receiver();
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::RenderNode: Starting listener on port %i.", listen_port);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::RenderNode: Starting listener on %s.", receive_from_address.c_str());
 
     try {
-        std::string const address = "tcp://*:" + std::to_string(listen_port);
         this->receiver_comm_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::pull));
-        this->receiver_comm_.Bind(address);
+        this->receiver_comm_.Bind(receive_from_address);
         receiver_thread_.thread = std::thread{[&]() { receiver_thread_loop(); }};
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::RenderNode: Receiver thread started.");
     }

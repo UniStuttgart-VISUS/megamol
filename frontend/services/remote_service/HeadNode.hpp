@@ -23,7 +23,7 @@ struct megamol::frontend::Remote_Service::HeadNode {
 
     // "Start listening to port."
     // "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")"
-    bool start_server(std::string address);
+    bool start_server(std::string const& send_to_address);
     bool close_server();
 
 private:
