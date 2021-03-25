@@ -69,9 +69,13 @@ struct RuntimeConfig {
             UintPair/*local framebuffer resolution*/,
             UintPair/*global framebuffer resolution*/>> viewport_tile = std::nullopt;
 
-    bool remote_headnode = false;
-    bool remote_rendernode = false;
-    bool remote_mpirendernode = false;
+    bool remote_headnode       = false;
+    bool remote_rendernode     = false;
+    bool remote_mpirendernode  = false;
+    bool remote_broadcast_quit = true;
+    unsigned int remote_mpi_broadcast_rank = 0;
+    std::string remote_zmq_control_send_to = "tcp://127.0.0.1:62562";
+    std::string remote_zmq_control_receive_from = "tcp://*:62562";
 
     std::string as_string() const {
         auto summarize = [](std::vector<std::string> const& vec) -> std::string {

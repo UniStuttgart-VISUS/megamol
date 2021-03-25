@@ -59,6 +59,13 @@ std::string handle_remote_session_config(
         #endif // WITH_MPI
     }
 
+    remote_config.mpi_broadcast_rank = config.remote_mpi_broadcast_rank;
+    remote_config.zmq_control_send_to = config.remote_zmq_control_send_to;
+    remote_config.zmq_control_receive_from = config.remote_zmq_control_receive_from;
+
+    //remote_config.render_sync_data_sources_mpi;
+    //remote_config.render_use_mpi;
+
     return role_name;
 }
 
