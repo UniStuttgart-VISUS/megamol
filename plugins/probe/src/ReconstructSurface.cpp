@@ -1041,7 +1041,11 @@ namespace probe {
 
         _shellElements.resize(_shells.size());
         for (int i = 0; i < _shells.size(); ++i) {
-            _shellElements[i].reserve(splits_main_axis * splits_phi);
+            if (_useBBoxAsHull.Param<core::param::BoolParam>()->Value()) {
+                _shellElements[i].reserve(splits_main_axis * (2 * splits_phi));
+            } else {
+                _shellElements[i].reserve(splits_main_axis * splits_phi);
+            }
 
             // shell box values
             auto shell_lbf = glm::vec3(_shellBBoxes[i].BoundingBox().Left(), _shellBBoxes[i].BoundingBox().Bottom(),
@@ -1106,39 +1110,126 @@ namespace probe {
                 // DEBUG
                 //_shellElements[i].emplace_back(shell);
 
-                for (int k = 0; k < splits_phi; ++k) {
-                    auto shell_copy = shell;
-                    if (k > 0) {
-                        n2 = rot_mx[_main_axis] * n2;
-                    }
-                    auto n3 = -rot_mx[_main_axis] * n2;
+                // Radial or square cutting
+                if (this->_useBBoxAsHull.Param<core::param::BoolParam>()->Value()) {
+                    std::array<float,3> whd = {
+                        _bbox.BoundingBox().Width(), _bbox.BoundingBox().Height(), _bbox.BoundingBox().Depth()};
 
-                    const Plane plane2(p_origin, Vector(n2.x,n2.y,n2.z));
-                    const Plane plane3(p_origin, Vector(n3.x, n3.y, n3.z));
+                    whd[_main_axis] = 0.0f;
+                    auto second_max_element = std::max_element(whd.begin(),whd.end());
+                    auto second_max_axis = std::distance(whd.begin(), second_max_element);
+                    auto off_axis_cut_normal0 = glm::vec3(0, 0, 0);
+                    auto off_axis_cut_normal1 = glm::vec3(0, 0, 0);
+                    off_axis_cut_normal0[second_max_axis] = -1;
+                    off_axis_cut_normal1[second_max_axis] = 1;
 
-                    try {
+                    auto shell_off_axis_step = glm::vec3(0);
+                    shell_off_axis_step[second_max_axis] = shell_whd[second_max_axis] / splits_phi;
+
+                    whd[_main_axis] = std::numeric_limits<float>::max();
+                    auto min_element = std::min_element(whd.begin(), whd.end());
+                    auto min_axis = std::distance(whd.begin(), min_element);
+
+                    auto off_axis_normal = glm::vec3(0, 0, 0);
+                    off_axis_normal[min_axis] = 1;
+                    Point data_origin = Point(_data_origin[0], _data_origin[1], _data_origin[2]);
+                    // left right
+                    for (int l = 0; l < 2; ++l) {
+                        auto shell_copy = shell;
+                        const Plane planelr(
+                            data_origin, Vector(off_axis_normal.x, off_axis_normal.y, off_axis_normal.z));
                         bool si = CGAL::Polygon_mesh_processing::does_self_intersect(shell_copy);
                         if (si) {
                             this->remove_self_intersections(shell_copy);
                         }
-                        CGAL::Polygon_mesh_processing::clip(
-                            shell_copy, plane2, CGAL::Polygon_mesh_processing::parameters::clip_volume(true).throw_on_self_intersection(true));
+                        CGAL::Polygon_mesh_processing::clip(shell_copy, planelr,
+                            CGAL::Polygon_mesh_processing::parameters::clip_volume(true).throw_on_self_intersection(
+                                true));
                         shell_copy.collect_garbage();
+                        for (int k = 0; k < splits_phi; ++k) {
+                            auto shell_copy_copy = shell_copy;
 
-                        si = CGAL::Polygon_mesh_processing::does_self_intersect(shell_copy);
-                        if (si) {
-                            this->remove_self_intersections(shell_copy);
+                            // split in main axis direction
+                            auto off_p0 = shell_lbf;
+                            off_p0 += static_cast<float>(k) * shell_off_axis_step * off_axis_cut_normal1;
+                            const Point off_point0(off_p0.x, off_p0.y, off_p0.z);
+                            Vector off_normal0(off_axis_cut_normal0[0], off_axis_cut_normal0[1], off_axis_cut_normal0[2]);
+                            const Plane off_plane0(off_point0, off_normal0);
+
+                            auto off_p1 = shell_lbf;
+                            off_p1 += static_cast<float>(k + 1) * shell_off_axis_step * off_axis_cut_normal1;
+                            const Point off_point1(off_p1.x, off_p1.y, off_p1.z);
+                            Vector off_normal1(off_axis_cut_normal1[0], off_axis_cut_normal1[1], off_axis_cut_normal1[2]);
+                            const Plane off_plane1(off_point1, off_normal1);
+
+                            try {
+                                si = CGAL::Polygon_mesh_processing::does_self_intersect(shell_copy_copy);
+                                if (si) {
+                                    this->remove_self_intersections(shell_copy_copy);
+                                }
+                                CGAL::Polygon_mesh_processing::clip(shell_copy_copy, off_plane0,
+                                    CGAL::Polygon_mesh_processing::parameters::clip_volume(true)
+                                        .throw_on_self_intersection(true));
+                                shell_copy_copy.collect_garbage();
+
+                                si = CGAL::Polygon_mesh_processing::does_self_intersect(shell_copy_copy);
+                                if (si) {
+                                    this->remove_self_intersections(shell_copy_copy);
+                                }
+                                CGAL::Polygon_mesh_processing::clip(shell_copy_copy, off_plane1,
+                                    CGAL::Polygon_mesh_processing::parameters::clip_volume(true)
+                                        .throw_on_self_intersection(true));
+                                shell_copy_copy.collect_garbage();
+
+                            } catch (const std::exception& e) {
+                                core::utility::log::Log::DefaultLog.WriteError(
+                                    std::string("[ReconstructSurface] Element generation exited with ")
+                                        .append(e.what())
+                                        .c_str());
+                            }
+                            assert(shell_copy_copy.num_vertices() > 0);
+                            _shellElements[i].emplace_back(shell_copy_copy);
                         }
-                        CGAL::Polygon_mesh_processing::clip(
-                            shell_copy, plane3, CGAL::Polygon_mesh_processing::parameters::clip_volume(true).throw_on_self_intersection(true));
-                        shell_copy.collect_garbage();
-                    } catch (const std::exception& e) {
-                        core::utility::log::Log::DefaultLog.WriteError(
-                            std::string("[ReconstructSurface] Element generation exited with ")
-                                .append(e.what()).c_str());
+                        off_axis_normal[min_axis] = -1;
                     }
-                    shell_copy.collect_garbage();
-                    _shellElements[i].emplace_back(shell_copy);
+
+
+                } else {
+                    for (int k = 0; k < splits_phi; ++k) {
+                        auto shell_copy = shell;
+                        if (k > 0) {
+                            n2 = rot_mx[_main_axis] * n2;
+                        }
+                        auto n3 = -rot_mx[_main_axis] * n2;
+
+                        const Plane plane2(p_origin, Vector(n2.x,n2.y,n2.z));
+                        const Plane plane3(p_origin, Vector(n3.x, n3.y, n3.z));
+
+                        try {
+                            bool si = CGAL::Polygon_mesh_processing::does_self_intersect(shell_copy);
+                            if (si) {
+                                this->remove_self_intersections(shell_copy);
+                            }
+                            CGAL::Polygon_mesh_processing::clip(
+                                shell_copy, plane2, CGAL::Polygon_mesh_processing::parameters::clip_volume(true).throw_on_self_intersection(true));
+                            shell_copy.collect_garbage();
+
+                            si = CGAL::Polygon_mesh_processing::does_self_intersect(shell_copy);
+                            if (si) {
+                                this->remove_self_intersections(shell_copy);
+                            }
+                            CGAL::Polygon_mesh_processing::clip(
+                                shell_copy, plane3, CGAL::Polygon_mesh_processing::parameters::clip_volume(true).throw_on_self_intersection(true));
+                            shell_copy.collect_garbage();
+                        } catch (const std::exception& e) {
+                            core::utility::log::Log::DefaultLog.WriteError(
+                                std::string("[ReconstructSurface] Element generation exited with ")
+                                    .append(e.what()).c_str());
+                        }
+                        shell_copy.collect_garbage();
+                        assert(shell_copy.num_vertices() > 0);
+                        _shellElements[i].emplace_back(shell_copy);
+                    }
                 }
             }
         }

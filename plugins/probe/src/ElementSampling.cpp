@@ -130,7 +130,7 @@ bool ElementSampling::getData(core::Call& call) {
 
 
     if (something_has_changed) {
-    ++_version;
+        ++_version;
         std::vector<float> raw_positions;
         if (this->_formatSlot.Param<core::param::EnumParam>()->Value() == 0) {
             auto x =
@@ -273,9 +273,17 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
     }
 
     auto longest_edge = _bbox.BoundingBox().LongestEdge();
+    std::vector<uint32_t> geom_ids(elements.size());
 
     //select Element
     for (int j = 0; j < elements[0].size(); ++j) {
+
+        geom_ids.clear();
+        // generate flat geomety indices
+        for (int k = 0; k < elements.size(); ++k) {
+            geom_ids[k] = elements[0].size() * k + j;
+        }
+
         BaseProbe new_probe;
         new_probe.m_begin = -(longest_edge / 10.0f);
         glm::vec3 start = glm::vec3(0);
@@ -298,6 +306,7 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
         auto dir = glm::normalize(end - start);
         new_probe.m_direction = {dir.x, dir.y, dir.z};
         new_probe.m_end = glm::length(end - start);
+        new_probe.m_geo_ids = geom_ids;
 
         _probes->addProbe(new_probe);
     }
