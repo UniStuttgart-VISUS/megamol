@@ -40,7 +40,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src"
-    "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/")
+    "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/") # imgui
   target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad abstract_frontend_service PUBLIC imgui imguizmoquat)
 
   # Installation rules for generated files
@@ -73,7 +73,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     string(REGEX REPLACE "^include\\\\mmcore" "Public Header Files" GROUP_NAME ${GROUP_NAME})
     source_group(${GROUP_NAME} FILES ${FILE_NAME})
   endforeach()
-  source_group("Version" FILES ${version_files})
   source_group("ImGui Files" FILES ${imgui_files})
   source_group("Resources" FILES ${resource_files})
 

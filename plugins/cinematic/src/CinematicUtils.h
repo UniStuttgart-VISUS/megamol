@@ -93,15 +93,21 @@ private:
     // VARIABLES ------------------------------------------------------- //
 
     megamol::core::utility::SDFFont font;
-    const float font_size;
-    bool init_once;
-    glm::vec4 background_color;
 
+    bool init_once;
+
+    float menu_font_size;
+    float menu_height;
+    glm::vec4 background_color;
     bool hotkey_window_setup_once;
 
     // FUNCTIONS ------------------------------------------------------- //
 
     const float lightness(glm::vec4 background) const;
+
+    void gui_update(void);
+
+    void gui_table_row(const char* left, const char* right);
 };
 
 } /* end namespace cinematic */

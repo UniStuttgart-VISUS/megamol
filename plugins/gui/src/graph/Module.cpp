@@ -413,7 +413,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     ImU32 module_bg_color =
                         (this->gui_selected) ? (COLOR_MODULE_HIGHTLIGHT) : (COLOR_MODULE_BACKGROUND);
                     draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, GUI_RECT_CORNER_RADIUS,
-                        ImDrawCornerFlags_All);
+                        ImDrawFlags_RoundCornersAll);
 
                     // Draw Text and Option Buttons
                     float text_width;
@@ -430,7 +430,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         ImVec2 header_rect_max =
                             module_rect_min + ImVec2(module_size.x, ImGui::GetTextLineHeightWithSpacing());
                         draw_list->AddRectFilled(module_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
-                            (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
+                            (ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight));
 
                         text_width = ImGui::CalcTextSize(this->class_name.c_str()).x;
                         text_pos_left_upper = ImVec2(
@@ -516,7 +516,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     float border = ((!this->graph_entry_name.empty()) ? (4.0f) : (1.0f)) *
                                    megamol::gui::gui_scaling.Get() * state.canvas.zooming;
                     draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
-                        ImDrawCornerFlags_All, border);
+                        ImDrawFlags_RoundCornersAll, border);
                 }
             }
 

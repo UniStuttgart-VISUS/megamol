@@ -250,3 +250,49 @@ bool megamol::gui::ButtonWidgets::LuaButton(const std::string& id, const megamol
 
     return retval;
 }
+
+
+bool megamol::gui::ButtonWidgets::ToggleButton(const std::string& id, bool& inout_bool) {
+
+    bool retval = false;
+
+    ImVec4* colors = ImGui::GetStyle().Colors;
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    float height = ImGui::GetFrameHeight();
+    float width = height * 1.55f;
+    float radius = height * 0.50f;
+
+    std::string button_id = "inv_button_" + id;
+    ImGui::InvisibleButton(button_id.c_str(), ImVec2(width, height));
+    if (ImGui::IsItemClicked()) {
+        inout_bool = !inout_bool;
+        retval = true;
+    }
+    ImGuiContext& gg = *GImGui;
+    float ANIM_SPEED = 0.085f;
+    if (gg.LastActiveId == gg.CurrentWindow->GetID(id.c_str())) { // && g.LastActiveIdTimer < ANIM_SPEED)
+        float t_anim = ImSaturate(gg.LastActiveIdTimer / ANIM_SPEED);
+    }
+
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    if (ImGui::IsItemHovered()) {
+        draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height),
+            ImGui::GetColorU32(inout_bool ? colors[ImGuiCol_ButtonActive] : ImVec4(0.78f, 0.78f, 0.78f, 1.0f)),
+            height * 0.5f, ImDrawFlags_RoundCornersAll);
+    } else {
+        draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height),
+            ImGui::GetColorU32(inout_bool ? colors[ImGuiCol_Button] : ImVec4(0.85f, 0.85f, 0.85f, 1.0f)), height * 0.5f,
+            ImDrawFlags_RoundCornersAll);
+    }
+    draw_list->AddCircleFilled(ImVec2(p.x + radius + (inout_bool ? 1 : 0) * (width - radius * 2.0f), p.y + radius),
+        radius - 1.5f, IM_COL32(255, 255, 255, 255), 0);
+
+    ImGui::SameLine();
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextUnformatted(id.c_str());
+
+    return retval;
+}
