@@ -65,7 +65,15 @@ void main() {
     if(r > 1.0) discard;
     if(r < 0.1) discard;
 
-    if(r > 0.98){
+    float border_circle_width = 0.02;
+    if(mesh_shader_params[draw_id].state == 1) {
+        border_circle_width = 0.06;
+    }
+    else if(mesh_shader_params[draw_id].state == 2) {
+        border_circle_width = 0.06;
+    }
+
+    if(r > (1.0 - border_circle_width)){
         albedo_out = glyph_border_color;
         normal_out = vec3(0.0,0.0,1.0);
         depth_out = gl_FragCoord.z;
