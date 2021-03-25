@@ -47,11 +47,14 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
         return false;
     }
 
+    uint32_t requested_frame_id = lhs_rtc->requestedFrameID();
+    uint32_t current_frame_id = lhs_rtc->frameID();
+
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
     std::vector<std::shared_ptr<GPURenderTaskCollection>> gpu_render_tasks;
     if (rhs_rtc != nullptr) {
-        if (!(*rhs_rtc)(0)) {
+        if (!(*rhs_rtc)(CallGPURenderTaskData::CallGetData, requested_frame_id)) {
             return false;
         }
         if (rhs_rtc->hasUpdate()) {
@@ -64,7 +67,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
     CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
     if (mc == NULL)
         return false;
-    if (!(*mc)(0))
+    if (!(*mc)(CallGPUMeshData::CallGetData, requested_frame_id))
         return false;
 
     CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<CallGlTFData>();
@@ -82,6 +85,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
         auto model = gltf_call->getData().second;
         auto gpu_mesh_storage = mc->getData();
+        current_frame_id = mc->frameID();
 
         for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++) {
             if (node_idx < model->nodes.size() && model->nodes[node_idx].mesh != -1) {
@@ -237,7 +241,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
         m_rendertask_collection.first->addPerFrameDataBuffer("lights", lights, 1);
     }
 
-    lhs_rtc->setData(gpu_render_tasks, m_version);
+    lhs_rtc->setData(gpu_render_tasks, m_version, current_frame_id);
 
     return true;
 }

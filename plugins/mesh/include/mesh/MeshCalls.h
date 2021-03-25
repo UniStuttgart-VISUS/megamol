@@ -57,10 +57,10 @@ public:
 };
 
 class CallGPUMeshData
-    : public core::GenericVersionedCall<std::vector<std::shared_ptr<GPUMeshCollection>>, core::Spatial3DMetaData> {
+    : public core::GenericTimedVersionedCall<std::vector<std::shared_ptr<GPUMeshCollection>>, core::Spatial3DMetaData> {
 public:
     CallGPUMeshData()
-            : GenericVersionedCall<std::vector<std::shared_ptr<GPUMeshCollection>>, core::Spatial3DMetaData>() {}
+            : GenericTimedVersionedCall<std::vector<std::shared_ptr<GPUMeshCollection>>, core::Spatial3DMetaData>() {}
     ~CallGPUMeshData() = default;
 
     static const char* ClassName(void) { return "CallGPUMeshData"; }
@@ -70,20 +70,23 @@ public:
 };
 
 class CallGPURenderTaskData
-    : public core::GenericVersionedCall<std::vector<std::shared_ptr<GPURenderTaskCollection>>, core::Spatial3DMetaData> {
+        : public core::GenericTimedVersionedCall<std::vector<std::shared_ptr<GPURenderTaskCollection>>,
+              core::Spatial3DMetaData> {
 public:
     CallGPURenderTaskData()
-            : GenericVersionedCall<std::vector<std::shared_ptr<GPURenderTaskCollection>>, core::Spatial3DMetaData>(){}
+            : GenericTimedVersionedCall<std::vector<std::shared_ptr<GPURenderTaskCollection>>,
+                  core::Spatial3DMetaData>() {}
     ~CallGPURenderTaskData(){};
 
     static const char* ClassName(void) { return "CallGPURenderTaskData"; }
     static const char* Description(void) { return "Call that gives access to render tasks."; }
 };
 
-class CallMesh : public core::GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData> {
+class CallMesh
+        : public core::GenericTimedVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData> {
 public:
-    CallMesh() : GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData>() {}
-    ~CallMesh(){};
+    CallMesh() : GenericTimedVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData>() {}
+    ~CallMesh() = default;
 
     static const char* ClassName(void) { return "CallMesh"; }
     static const char* Description(void) { return "Call that gives access to CPU-side mesh data."; }

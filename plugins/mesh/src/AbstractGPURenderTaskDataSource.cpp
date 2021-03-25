@@ -58,7 +58,7 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
         auto rhs_meta_data = rhs_rt_call->getMetaData();
         rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
         rhs_rt_call->setMetaData(rhs_meta_data);
-        if (!(*rhs_rt_call)(1))
+        if (!(*rhs_rt_call)(1,0))
             return false;
         rhs_meta_data = rhs_rt_call->getMetaData();
 
@@ -76,7 +76,7 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
         auto mesh_meta_data = mesh_call->getMetaData();
         mesh_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
         mesh_call->setMetaData(mesh_meta_data);
-        if (!(*mesh_call)(1))
+        if (!(*mesh_call)(1,0))
             return false;
         mesh_meta_data = mesh_call->getMetaData();
 

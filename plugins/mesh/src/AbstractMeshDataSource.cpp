@@ -43,7 +43,7 @@ bool megamol::mesh::AbstractMeshDataSource::getMeshMetaDataCallback(core::Call& 
         auto rhs_meta_data = rhs_mesh_call->getMetaData();
         rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
         rhs_mesh_call->setMetaData(rhs_meta_data);
-        if (!(*rhs_mesh_call)(1))
+        if (!(*rhs_mesh_call)(CallMesh::CallGetMetaData, 0))
             return false;
         rhs_meta_data = rhs_mesh_call->getMetaData();
 
@@ -67,7 +67,7 @@ void megamol::mesh::AbstractMeshDataSource::release() {}
 void megamol::mesh::AbstractMeshDataSource::syncMeshAccessCollection(CallMesh* lhs_call, CallMesh* rhs_call) {
     if (lhs_call->getData() == nullptr) {
         // no incoming mesh -> use your own mesh access collection, i.e. share to left
-        lhs_call->setData(m_mesh_access_collection.first, lhs_call->version());
+        lhs_call->setData(m_mesh_access_collection.first, lhs_call->version(), lhs_call->frameID());
     } else {
         // incoming material -> use it, copy material from last used collection if needed
         if (lhs_call->getData() != m_mesh_access_collection.first) {
@@ -86,7 +86,7 @@ void megamol::mesh::AbstractMeshDataSource::syncMeshAccessCollection(CallMesh* l
     }
 
     if (rhs_call != nullptr) {
-        rhs_call->setData(m_mesh_access_collection.first, rhs_call->version());
+        rhs_call->setData(m_mesh_access_collection.first, rhs_call->version(), rhs_call->frameID());
     }
 }
 
