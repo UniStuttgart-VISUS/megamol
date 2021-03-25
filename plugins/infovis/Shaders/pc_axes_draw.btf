@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <btf namespace="pc_axes_draw" type="MegaMolGLSLShader" version="1.0">
 
   <include file="pc" />
@@ -16,9 +16,13 @@ out vec4 actualColor;
 
 void main()
 {
-  uint dimension = pc_dimension(gl_InstanceID);
-	vec4 vertex = axis_line(gl_InstanceID, gl_VertexID);
-	
+    uint dimension = pc_dimension(gl_InstanceID);
+    int realID = gl_VertexID % 2;
+    int side = gl_VertexID / 2 - gl_VertexID/3;
+
+	vec4 vertex = axis_line(gl_InstanceID, realID);
+    vertex = vertex + vec4(0.1, 0, 0, 0) + side * vec4(-0.2, 0, 0, 0);
+
   if (dimension == pickedAxis) {
   	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
   } else {

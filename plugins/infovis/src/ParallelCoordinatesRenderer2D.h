@@ -161,14 +161,6 @@ namespace infovis {
         void store_filters();
         void load_filters();
 
-        void setupAccel(int approach, int w, int h, int ssLevel);
-
-        std::vector<glm::fvec2> calculateHammersley(int until);
-
-        void setupBuffers();
-
-        void doReconstruction(int approach, int w, int h, int ssLevel);
-
         int mouseXtoAxis(float x);
 
         bool enableProgramAndBind(vislib::graphics::gl::GLSLShader& program);
@@ -299,48 +291,9 @@ namespace infovis {
 
         megamol::core::utility::SDFFont font;
 
-        core::param::ParamSlot halveRes;
-
-        core::param::ParamSlot approachSlot;
-        core::param::ParamSlot superSamplingLevelSlot;
-        core::param::ParamSlot testingFloat;
         core::param::ParamSlot thicknessFloatP;
         core::param::ParamSlot legacyMode;
 
-
-        std::vector<GLfloat> tex;
-        std::vector<unsigned char> tex2;
-        GLboolean why = GL_FALSE;
-        GLint origFBO = 0;
-        GLint origFBOr = 0;
-        GLuint imageStorageA;
-        GLuint imageStorageB;
-        GLuint imageStorageC;
-        GLuint imageStorageD;
-        GLuint imageArrayA;
-        GLuint imageArrayB;
-        GLuint resultBuffer;
-        GLuint historyBuffer;
-        GLuint imageArrayTest;
-        GLuint msImageStorageA;
-        GLuint msImageStorageB;
-        GLuint msImageStorageC;
-        GLuint msImageStorageD;
-        GLuint msImageArray;
-        GLuint depthStore;
-        GLuint stenStore;
-        GLuint depthStore2;
-        GLuint ssboMatrices;
-        GLuint amortizedFboA;
-        GLuint amortizedFboB;
-        GLuint amortizedFboC;
-        GLuint amortizedFboD;
-        GLuint amortizedMsaaFboA;
-        GLuint amortizedMsaaFboB;
-        GLuint arrayTestFBO;
-        // glowl::FramebufferObject nuFB2 = glowl::FramebufferObject(1, 1, false, false);
-        GLuint nuDRB;
-        GLuint nuSRB;
         // res should be a parameter
         GLfloat res[2];
         std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction0_shdr;
@@ -348,32 +301,6 @@ namespace infovis {
         std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction2_shdr;
         std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction3_shdr;
         std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction3h_shdr;
-
-        int frametype = 0;
-        int framesNeeded = 1;
-
-        glm::mat4 invTexA = glm::mat4(1.0);
-        glm::mat4 invTexB = glm::mat4(1.0);
-        glm::mat4 invTexC = glm::mat4(1.0);
-        glm::mat4 invTexD = glm::mat4(1.0);
-
-        std::vector<glm::mat4> invMatrices;
-        std::vector<glm::mat4> moveMatrices;
-        std::vector<glm::fvec2> hammerPositions;
-
-        glm::vec4 sA;
-        glm::vec4 sB;
-        glm::vec4 sC;
-        glm::vec4 sD;
-        glm::vec4 tA;
-        glm::vec4 tB;
-        glm::vec4 tC;
-        glm::vec4 tD;
-
-        glm::mat4 jitA;
-        glm::mat4 jitB;
-        glm::mat4 jitC;
-        glm::mat4 jitD;
 
         vislib::graphics::gl::ShaderSource vertex_shader_src;
         vislib::graphics::gl::ShaderSource fragment_shader_src;
