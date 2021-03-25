@@ -114,7 +114,7 @@ bool Remote_Service::init(const Config& config) {
     if (config.role == Role::HeadNode) {
         m_do_remote_things = std::function{[&]() { do_headnode_things(); }};
 
-        if (!m_head.start_server(config.head_address)) {
+        if (!m_head.start_server(config.zmq_control_send_to)) {
             log_error("could not start HeadNode server");
             return false;
         }
@@ -123,7 +123,7 @@ bool Remote_Service::init(const Config& config) {
     if (config.role == Role::RenderNode) {
         m_do_remote_things = std::function{[&]() { do_rendernode_things(); }};
 
-        if (!m_render.start_receiver(config.render_listen_port)) {
+        if (!m_render.start_receiver(config.zmq_control_receive_from)) {
             log_error("could not start RenderNode receiver");
             return false;
         }
@@ -132,13 +132,13 @@ bool Remote_Service::init(const Config& config) {
     if (config.role == Role::MPIRenderNode) {
         m_do_remote_things = std::function{[&]() { do_mpi_things(); }};
 
-        if (!m_mpi.init(0)) {
+        if (!m_mpi.init(static_cast<int>(config.mpi_broadcast_rank))) {
             log_error("could not start MPI");
             return false;
         }
 
         if (m_mpi.i_do_broadcast()) {
-            if (!m_render.start_receiver(config.render_listen_port)) {
+            if (!m_render.start_receiver(config.zmq_control_receive_from)) {
                 log_error("could not start RenderNode receiver");
                 return false;
             }

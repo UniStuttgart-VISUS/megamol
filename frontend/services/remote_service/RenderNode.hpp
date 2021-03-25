@@ -22,7 +22,7 @@ struct megamol::frontend::Remote_Service::RenderNode {
     //, bool use_mpi, bool sync_data_sources_mpi, int broadcast_rank_mpi);
     ~RenderNode();
 
-    bool start_receiver(int listen_port = 62562);
+    bool start_receiver(std::string const& receive_from_address);
     bool close_receiver();
     bool await_message(megamol::remote::Message_t& result, unsigned int timeout_ms = 1000);
 
