@@ -395,7 +395,7 @@ bool GUIWindows::PostDraw(void) {
     // Draw Windows ------------------------------------------------------------
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
         // Update transfer function
-        if ((wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
+        if ((wc.win_callback == WindowCollection::DrawCallbacks::DRAWCALLBACK_TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
 
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
@@ -418,11 +418,11 @@ bool GUIWindows::PostDraw(void) {
             wc.buf_tfe_reset = false;
         }
         // Update log console
-        if (wc.win_callback == WindowCollection::DrawCallbacks::LOGCONSOLE) {
+        if (wc.win_callback == WindowCollection::DrawCallbacks::DRAWCALLBACK_LOGCONSOLE) {
             this->console.Update(wc);
         }
         // Update frame statistics
-        if (wc.win_callback == WindowCollection::DrawCallbacks::PERFORMANCE) {
+        if (wc.win_callback == WindowCollection::DrawCallbacks::DRAWCALLBACK_PERFORMANCE) {
             this->update_frame_statistics(wc);
         }
 
@@ -430,7 +430,7 @@ bool GUIWindows::PostDraw(void) {
         if (wc.win_show) {
 
             // Change window flags depending on current view of transfer function editor
-            if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
+            if (wc.win_callback == WindowCollection::DrawCallbacks::DRAWCALLBACK_TRANSFER_FUNCTION) {
                 if (this->tf_editor_ptr->IsMinimized()) {
                     wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
                                    ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
@@ -446,8 +446,7 @@ bool GUIWindows::PostDraw(void) {
             ImGui::SetNextWindowCollapsed(wc.win_collapsed, ImGuiCond_Always);
 
             // Begin Window
-            auto window_title = wc.win_name + "     " + wc.win_hotkey.ToString();
-            if (!ImGui::Begin(window_title.c_str(), &wc.win_show, wc.win_flags)) {
+            if (!ImGui::Begin(this->full_window_title(wc).c_str(), &wc.win_show, wc.win_flags)) {
                 wc.win_collapsed = ImGui::IsWindowCollapsed();
                 ImGui::End(); // early ending
                 return;
@@ -1133,17 +1132,17 @@ bool GUIWindows::createContext(void) {
     }
 
     // Register window callbacks in window collection -------------------------
-    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::MAIN_PARAMETERS,
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::DRAWCALLBACK_MAIN_PARAMETERS,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawParamWindowCallback(wc); });
-    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::PARAMETERS,
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::DRAWCALLBACK_PARAMETERS,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawParamWindowCallback(wc); });
-    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::PERFORMANCE,
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::DRAWCALLBACK_PERFORMANCE,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawFpsWindowCallback(wc); });
-    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::TRANSFER_FUNCTION,
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::DRAWCALLBACK_TRANSFER_FUNCTION,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawTransferFunctionWindowCallback(wc); });
-    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::CONFIGURATOR,
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::DRAWCALLBACK_CONFIGURATOR,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawConfiguratorWindowCallback(wc); });
-    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::LOGCONSOLE,
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::DRAWCALLBACK_LOGCONSOLE,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->console.Draw(wc); });
 
     // Create window configurations
@@ -1155,7 +1154,7 @@ bool GUIWindows::createContext(void) {
     float vp[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     ::glGetFloatv(GL_VIEWPORT, vp);
 
-    // CONFIGURATOR Window ----------------------------------------------------
+    // DRAWCALLBACK_CONFIGURATOR Window ----------------------------------------------------
     buf_win.win_name = "Configurator";
     buf_win.win_show = false;
     buf_win.win_size = ImVec2(vp[2], vp[3]);
@@ -1164,7 +1163,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_reset_position = buf_win.win_position;
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
-    buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
+    buf_win.win_callback = WindowCollection::DrawCallbacks::DRAWCALLBACK_CONFIGURATOR;
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // Parameters -------------------------------------------------------------
@@ -1176,7 +1175,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_reset_position = buf_win.win_position;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
-    buf_win.win_callback = WindowCollection::DrawCallbacks::MAIN_PARAMETERS;
+    buf_win.win_callback = WindowCollection::DrawCallbacks::DRAWCALLBACK_MAIN_PARAMETERS;
     buf_win.win_reset_size = buf_win.win_size;
     this->window_collection.AddWindowConfiguration(buf_win);
     float param_win_width = buf_win.win_size.x;
@@ -1193,7 +1192,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_reset_position = buf_win.win_position;
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
-    buf_win.win_callback = WindowCollection::DrawCallbacks::LOGCONSOLE;
+    buf_win.win_callback = WindowCollection::DrawCallbacks::DRAWCALLBACK_LOGCONSOLE;
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
@@ -1205,7 +1204,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_reset_position = buf_win.win_position;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    buf_win.win_callback = WindowCollection::DrawCallbacks::TRANSFER_FUNCTION;
+    buf_win.win_callback = WindowCollection::DrawCallbacks::DRAWCALLBACK_TRANSFER_FUNCTION;
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // FPS/MS Window ----------------------------------------------------------
@@ -1217,7 +1216,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_reset_position = buf_win.win_position;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
-    buf_win.win_callback = WindowCollection::DrawCallbacks::PERFORMANCE;
+    buf_win.win_callback = WindowCollection::DrawCallbacks::DRAWCALLBACK_PERFORMANCE;
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // Style settings ---------------------------------------------------------
@@ -1464,7 +1463,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     this->tooltip.ToolTip(param_help);
 
     // Paramter substring name filtering (only for main parameter view)
-    if (wc.win_callback == WindowCollection::DrawCallbacks::MAIN_PARAMETERS) {
+    if (wc.win_callback == WindowCollection::DrawCallbacks::DRAWCALLBACK_MAIN_PARAMETERS) {
         if (this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed) {
             this->search_widget.SetSearchFocus(true);
             this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
@@ -1530,7 +1529,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                             buf_win.win_name = window_name;
                             buf_win.win_show = true;
                             buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
-                            buf_win.win_callback = WindowCollection::DrawCallbacks::PARAMETERS;
+                            buf_win.win_callback = WindowCollection::DrawCallbacks::DRAWCALLBACK_PARAMETERS;
                             buf_win.param_show_hotkeys = false;
                             buf_win.win_position =
                                 ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing());
@@ -1541,7 +1540,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                         }
 
                         // Deleting module's parameters is not available in main parameter window.
-                        if (wc.win_callback != WindowCollection::DrawCallbacks::MAIN_PARAMETERS) {
+                        if (wc.win_callback != WindowCollection::DrawCallbacks::DRAWCALLBACK_MAIN_PARAMETERS) {
                             if (ImGui::MenuItem("Delete from List")) {
                                 std::vector<std::string>::iterator find_iter =
                                     std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), module_label);
@@ -1574,7 +1573,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                             this->tf_editor_ptr, &out_open_external_tf_editor, override_header_state, nullptr);
                         if (out_open_external_tf_editor) {
                             const auto func = [](WindowCollection::WindowConfiguration& wc) {
-                                if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
+                                if (wc.win_callback == WindowCollection::DrawCallbacks::DRAWCALLBACK_TRANSFER_FUNCTION) {
                                     wc.win_show = true;
                                 }
                             };
@@ -1755,7 +1754,7 @@ void GUIWindows::drawMenu(void) {
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
         ImGui::Separator();
-        if (ImGui::MenuItem("Docking Preset")) {
+        if (ImGui::MenuItem("Load Docking Preset")) {
             this->state.load_docking_preset = true;
         }
 #endif
@@ -2284,42 +2283,44 @@ void megamol::gui::GUIWindows::load_preset_window_docking(ImGuiID global_docking
     /// https://github.com/ocornut/imgui/issues/2109#issuecomment-426204357
     //   -------------------------------
     //   |      |                      |
-    //   | Prop |       Main           |
+    //   | prop |       main           |
     //   |      |                      |
     //   |      |                      |
     //   |______|______________________|
-    //   |           Bottom            |
+    //   |           bottom            |
     //   -------------------------------
 
     ImGuiIO& io = ImGui::GetIO();
     auto dockspace_size = io.DisplaySize;
-
-    std::cout << ">>>>>>> Global DOCKING ID: " << global_docking_id << std::endl;
-    //ImGui::DockBuilderRemoveNode(global_docking_id);
+    ImGui::DockBuilderRemoveNode(global_docking_id); // Clear out existing layout
+    ImGui::DockBuilderAddNode(global_docking_id, ImGuiDockNodeFlags_DockSpace); // Add empty node
+    ImGui::DockBuilderSetNodeSize(global_docking_id, dockspace_size);
+    // Define new dock spaces
+    ImGuiID dock_id_main = global_docking_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
+    ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Down, 0.25f, NULL, &dock_id_main);
+    ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, NULL, &dock_id_main);
 
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
 
-
-
+        switch (wc.win_callback) {
+            case(WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS) : {
+                ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(),  dock_id_prop);
+            } break;
+            case(WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION) : {
+                ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_prop);
+            } break;
+            case(WindowCollection::DRAWCALLBACK_CONFIGURATOR) : {
+                ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_main);
+            } break;
+            case(WindowCollection::DRAWCALLBACK_LOGCONSOLE) : {
+                ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_bottom);
+            } break;
+            default: break;
+        }
     };
     this->window_collection.EnumWindows(func);
 
-    /*
-    ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing layout
-    ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_Dockspace); // Add empty node
-    ImGui::DockBuilderSetNodeSize(dockspace_id, dockspace_size);
-
-    ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
-    ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.20f, NULL, &dock_main_id);
-    ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.20f, NULL, &dock_main_id);
-
-    ImGui::DockBuilderDockWindow("Log", dock_id_bottom);
-    ImGui::DockBuilderDockWindow("Properties", dock_id_prop);
-    ImGui::DockBuilderDockWindow("Mesh", dock_id_prop);
-    ImGui::DockBuilderDockWindow("Extra", dock_id_prop);
-    ImGui::DockBuilderFinish(dockspace_id);
-     */
-
+    ImGui::DockBuilderFinish(global_docking_id);
 #endif
 }
 
@@ -2605,4 +2606,8 @@ bool megamol::gui::GUIWindows::create_not_existing_png_filepath(std::string& ino
         created_filepath = true;
     }
     return created_filepath;
+}
+
+std::string megamol::gui::GUIWindows::full_window_title(WindowCollection::WindowConfiguration& wc) const {
+    return (wc.win_name + "     " + wc.win_hotkey.ToString());
 }
