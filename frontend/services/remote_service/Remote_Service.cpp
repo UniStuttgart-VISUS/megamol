@@ -59,6 +59,13 @@ std::string handle_remote_session_config(
         #endif // WITH_MPI
     }
 
+    remote_config.mpi_broadcast_rank = config.remote_mpi_broadcast_rank;
+    remote_config.headnode_zmq_target_address = config.headnode_zmq_target_address;
+    remote_config.rendernode_zmq_source_address = config.rendernode_zmq_source_address;
+
+    //remote_config.render_sync_data_sources_mpi;
+    //remote_config.render_use_mpi;
+
     return role_name;
 }
 
