@@ -35,6 +35,47 @@ namespace {
 #undef make_name
 }
 
+namespace foo {
+
+    struct LuaError {
+        std::string reason;
+    };
+
+    template <typename T>
+    struct LuaResult {
+        LuaResult(LuaError e)
+                : exit_success{false}
+                , exit_reason{e.reason}
+        {}
+
+        LuaResult(T result)
+                : exit_success{true}
+                , exit_reason{}
+                , result{result}
+        {}
+
+        bool exit_success = false;
+        std::string exit_reason = "unknown reason";
+        T result;
+    };
+
+    template <>
+    struct LuaResult<void> {
+        LuaResult(LuaError e)
+                : exit_success{false}
+                , exit_reason{e.reason}
+        {}
+
+        LuaResult()
+                : exit_success{true}
+                , exit_reason{}
+        {}
+
+        bool exit_success = false;
+        std::string exit_reason = "unknown reason";
+    };
+}
+
 struct LuaCallbacksCollection {
 
     struct LuaState {
@@ -51,43 +92,8 @@ struct LuaCallbacksCollection {
         void* state_ptr = nullptr;
     };
 
-    struct LuaError {
-        std::string reason;
-    };
-
     template <typename T>
-    struct LuaResult {
-        LuaResult(LuaError e)
-        : exit_success{false} 
-        , exit_reason{e.reason}
-        {}
-
-        LuaResult(T result)
-        : exit_success{true}
-        , exit_reason{}
-        , result{result}
-        {}
-
-        bool exit_success = false;
-        std::string exit_reason = "unknown reason";
-        T result;
-    };
-
-    template <>
-    struct LuaResult<void> {
-        LuaResult(LuaError e)
-        : exit_success{false} 
-        , exit_reason{e.reason}
-        {}
-    
-        LuaResult()
-        : exit_success{true}
-        , exit_reason{}
-        {}
-    
-        bool exit_success = false;
-        std::string exit_reason = "unknown reason";
-    };
+    using LuaResult = foo::LuaResult<T>;
 
     template <typename ReturnType, typename FuncType, typename... FuncArgs, size_t... I>
     ReturnType unpack(LuaState state, FuncType func, std::tuple<FuncArgs...> tuple, std::index_sequence<I...>) {
@@ -153,8 +159,8 @@ struct LuaCallbacksCollection {
     using FloatResult = LuaCallbacksCollection::LuaResult<float>;
     using DoubleResult = LuaCallbacksCollection::LuaResult<double>;
     using StringResult = LuaCallbacksCollection::LuaResult<std::string>;
+    using LuaError = foo::LuaError;
     using Error = LuaCallbacksCollection::LuaError;
-    using LuaError = LuaCallbacksCollection::LuaError;
 };
 
 // we implement reading/writing the lua stack in LuaAPI.cpp
