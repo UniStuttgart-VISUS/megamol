@@ -41,33 +41,6 @@ megamol::probe::ComputeDistance::~ComputeDistance() {
 
 
 bool megamol::probe::ComputeDistance::create() {
-    /*try {
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("FrechetDistance::compute", _compute_shader_src))
-        return false;
-    vislib::graphics::gl::ShaderSource compute_shader_src = _compute_shader_src;
-    std::string sample_count_decl = "const uint sample_count = 30;";
-    vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet> snip = new
-    vislib::graphics::gl::ShaderSource::StringSnippet(sample_count_decl.c_str()); compute_shader_src.Insert(1, snip);
-
-    if (!_fd_shader.Compile(compute_shader_src.Code(), compute_shader_src.Count()))
-        return false;
-    if (!_fd_shader.Link())
-        return false;
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
-        return false;
-    }*/
     return true;
 }
 
@@ -136,138 +109,41 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
 
             auto min_val = std::numeric_limits<float>::max();
             auto max_val = std::numeric_limits<float>::lowest();
-            /*std::vector<std::vector<double>> sample_collection(probe_count * probe_count);
-            for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
-                std::vector<glm::vec3> a_samples;
-                {
-                    auto const a_probe = probe_data->getProbe<Vec4Probe>(a_pidx);
-                    auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
-                    a_samples.resize(a_samples_tmp.size() - base_skip);
-                    std::transform(a_samples_tmp.begin() + base_skip, a_samples_tmp.end(), a_samples.begin(),
-                        [](auto const& el) { return glm::vec3(el[0], el[1], el[2]); });
-                    std::for_each(a_samples.begin(), a_samples.end(), [](auto& el) { el = glm::normalize(el); });
-                }
-                for (std::int64_t b_pidx = a_pidx; b_pidx < probe_count; ++b_pidx) {
-                    std::vector<glm::vec3> b_samples;
-                    {
-                        auto const b_probe = probe_data->getProbe<Vec4Probe>(b_pidx);
-                        auto const& b_samples_tmp = b_probe.getSamplingResult()->samples;
-                        b_samples.resize(b_samples_tmp.size() - base_skip);
-                        std::transform(b_samples_tmp.begin() + base_skip, b_samples_tmp.end(), b_samples.begin(),
-                            [](auto const& el) { return glm::vec3(el[0], el[1], el[2]); });
-                        std::for_each(b_samples.begin(), b_samples.end(), [](auto& el) { el = glm::normalize(el); });
-                    }
-                    std::vector<double> current_samples(sample_count - base_skip);
-                    std::transform(a_samples.begin(), a_samples.end(), b_samples.begin(), current_samples.begin(),
-                        [](auto const& lhs, auto const& rhs) {
-                            auto const angle = std::acos(glm::dot(lhs, rhs));
-                            auto const angle_dis = angle / 3.14f;
-                            return angle_dis;
-                        });
-                    sample_collection[a_pidx + b_pidx * probe_count] = current_samples;
-                    sample_collection[b_pidx + a_pidx * probe_count] = current_samples;
-                }
-            }*/
 
-            auto vec_dist_func = [](glm::vec3 const& a, glm::vec3 const& b) -> float {
-                auto const angle = std::acos(glm::dot(a, b));
+
+            auto vec_dist_func = [](glm::vec4 const& a, glm::vec4 const& b) -> float {
+                auto const angle = std::acos(glm::dot(glm::vec3(a), glm::vec3(b)));
                 auto const angle_dis = angle / 3.14f;
-                return angle_dis;
+                auto const length_dis = std::fabs(a.w - b.w);
+                return angle_dis; /* + length_dis;*/
             };
 
-            /*std::vector<glm::vec3> sample_collection(probe_count * sample_count);
+
+            std::vector<std::vector<glm::vec4>> sample_collection(probe_count);
 #pragma omp parallel for
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
-                std::vector<glm::vec3> a_samples;
+                std::vector<glm::vec4> a_samples;
                 {
                     auto const a_probe = probe_data->getProbe<Vec4Probe>(a_pidx);
                     auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
                     a_samples.resize(a_samples_tmp.size() - base_skip);
                     std::transform(a_samples_tmp.begin() + base_skip, a_samples_tmp.end(), a_samples.begin(),
-                        [](auto const& el) { return glm::vec3(el[0], el[1], el[2]); });
-                    std::for_each(a_samples.begin(), a_samples.end(), [](auto& el) { el = glm::normalize(el); });
-                }
-                for (unsigned int s_idx = 0; s_idx < sample_count; ++s_idx) {
-                    sample_collection[a_pidx * sample_count + s_idx] = a_samples[s_idx];
-                }
-            }
-            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Prepared probes");
-
-            cudaDeviceProp prop;
-            cudaGetDeviceProperties(&prop, 0);
-
-            float3* samples = nullptr;
-            cudaMalloc(&samples, probe_count * sample_count * sizeof(float3));
-            auto error = cudaGetLastError();
-            cudaMemcpy(
-                samples, sample_collection.data(), sizeof(float3) * probe_count * sample_count, cudaMemcpyHostToDevice);
-            error = cudaGetLastError();
-            float* scores = nullptr;
-            cudaMalloc(&scores, probe_count * probe_count * sizeof(float));
-            error = cudaGetLastError();
-
-            dim3 thread_dim(8, 8, 1);
-            dim3 grid_dim(probe_count / 8 + 1, probe_count / 8 + 1, 1);
-
-            launch_frechet_distance(grid_dim, thread_dim, scores, samples, probe_count, sample_count);
-            error = cudaGetLastError();
-
-            cudaDeviceSynchronize();
-            error = cudaGetLastError();
-
-            cudaMemcpy(_dis_mat.data(), scores, sizeof(float) * probe_count * probe_count, cudaMemcpyDeviceToHost);
-            error = cudaGetLastError();*/
-
-            std::vector<std::vector<glm::vec3>> sample_collection(probe_count);
-#pragma omp parallel for
-            for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
-                std::vector<glm::vec3> a_samples;
-                {
-                    auto const a_probe = probe_data->getProbe<Vec4Probe>(a_pidx);
-                    auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
-                    a_samples.resize(a_samples_tmp.size() - base_skip);
-                    std::transform(a_samples_tmp.begin() + base_skip, a_samples_tmp.end(), a_samples.begin(),
-                        [](auto const& el) { return glm::vec3(el[0], el[1], el[2]); });
-                    std::for_each(a_samples.begin(), a_samples.end(), [](auto& el) { el = glm::normalize(el); });
+                        [](auto const& el) { return glm::vec4(el[0], el[1], el[2], el[3]); });
+                    std::for_each(a_samples.begin(), a_samples.end(), [](auto& el) {
+                        auto const norm = glm::normalize(glm::vec3(el));
+                        el.x = norm.x;
+                        el.y = norm.y;
+                        el.z = norm.z;
+                    });
                 }
                 sample_collection[a_pidx] = a_samples;
             }
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Prepared probes");
 #pragma omp parallel for
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
-                /*std::vector<glm::vec3> a_samples;
-                {
-                    auto const a_probe = probe_data->getProbe<Vec4Probe>(a_pidx);
-                    auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
-                    a_samples.resize(a_samples_tmp.size() - base_skip);
-                    std::transform(a_samples_tmp.begin() + base_skip, a_samples_tmp.end(), a_samples.begin(),
-                        [](auto const& el) { return glm::vec3(el[0], el[1], el[2]); });
-                    std::for_each(a_samples.begin(), a_samples.end(), [](auto& el) { el = glm::normalize(el); });
-                }*/
+
                 for (std::int64_t b_pidx = a_pidx; b_pidx < probe_count; ++b_pidx) {
-                    /*std::vector<glm::vec3> b_samples;
-                    {
-                        auto const b_probe = probe_data->getProbe<Vec4Probe>(b_pidx);
-                        auto const& b_samples_tmp = b_probe.getSamplingResult()->samples;
-                        b_samples.resize(b_samples_tmp.size() - base_skip);
-                        std::transform(b_samples_tmp.begin() + base_skip, b_samples_tmp.end(), b_samples.begin(),
-                            [](auto const& el) { return glm::vec3(el[0], el[1], el[2]); });
-                        std::for_each(b_samples.begin(), b_samples.end(), [](auto& el) { el = glm::normalize(el); });
-                    }*/
-                    // std::vector<float> scores(a_samples.size());
-                    // std::transform(a_samples.begin(), a_samples.end(), b_samples.begin(), scores.begin(),
-                    //    [](auto const& lhs, auto const& rhs) {
-                    //        if (std::isnan(lhs.x) || std::isnan(lhs.y) || std::isnan(lhs.z) ||
-                    //            std::isnan(rhs.x) || std::isnan(rhs.y) || std::isnan(rhs.z)) {
-                    //            return 1.0f;
-                    //        }
-                    //        // return glm::dot(lhs, rhs);
-                    //        auto const angle = std::acos(glm::dot(lhs, rhs));
-                    //        auto const angle_dis = angle / 3.14f;
-                    //        return angle_dis;
-                    //    });
-                    // auto const score = std::accumulate(scores.begin(), scores.end(), 0.0f, std::plus<float>());
-                    // auto const score = *std::max_element(scores.begin(), scores.end());
+
 
                     std::vector<float> tmp_mat(sample_count * sample_count);
                     for (std::int64_t as_idx = 0; as_idx < sample_count; ++as_idx) {
@@ -278,25 +154,6 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                             tmp_mat[bs_idx + as_idx * sample_count] = val;
                         }
                     }
-                    /*auto const validation = *std::min_element(tmp_mat.begin(), tmp_mat.end(), [](auto lhs, auto rhs) {
-                        if (lhs <= 0.0f)
-                            return false;
-                        return lhs < rhs;
-                    });*/
-
-                    /*auto validation = std::numeric_limits<float>::lowest();
-                    for (std::int64_t as_idx = 0; as_idx < sample_count; ++as_idx) {
-                        auto max_val = std::numeric_limits<float>::max();
-                        for (std::int64_t bs_idx = 0; bs_idx < sample_count; ++bs_idx) {
-                            auto const val = tmp_mat[as_idx + bs_idx * sample_count];
-                            if (max_val > val) {
-                                max_val = val;
-                            }
-                        }
-                        if (validation < max_val) {
-                            validation = max_val;
-                        }
-                    }*/
 
 
                     auto const score = stdplugin::datatools::misc::frechet_distance<float>(
@@ -304,14 +161,6 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                             return tmp_mat[lhs + rhs * sample_count];
                         });
 
-                    /*auto const validation = stdplugin::datatools::misc::frechet_distance_2<float>(
-                        sample_count, [&tmp_mat, sample_count](std::size_t lhs, std::size_t rhs) -> float {
-                            return tmp_mat[lhs + rhs * sample_count];
-                        });
-
-                    if (validation != score) {
-                        core::utility::log::Log::DefaultLog.WriteInfo("score %f validation %f", score, validation);
-                    }*/
 
                     _dis_mat[a_pidx + b_pidx * probe_count] = score;
                     _dis_mat[b_pidx + a_pidx * probe_count] = score;
@@ -382,107 +231,9 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
             auto max_val = std::numeric_limits<double>::lowest();
 #pragma omp parallel for
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
-                /*std::vector<std::vector<double>> a_samples;
-                {
-                    auto const a_probe = probe_data->getProbe<FloatProbe>(a_pidx);
-                    auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
-                    a_samples.resize(a_samples_tmp.size());
-                    double tmp_cnt = 0.0;
-                    std::transform(
-                        a_samples_tmp.cbegin(), a_samples_tmp.cend(), a_samples.begin(), [&tmp_cnt](auto const val) {
-                            return std::vector<double>{tmp_cnt++, static_cast<double>(val)};
-                        });
-                    auto const it = std::stable_partition(
-                        a_samples.begin(), a_samples.end(), [](auto const& el) { return !std::isnan(el[1]); });
-                    std::for_each(it, a_samples.end(), [](auto& el) { el[1] = 0.0; });
-                }*/
-                /*std::vector<double> a_samples;
-                a_samples.resize(X.cols());
-                for (Eigen::Index idx = 0; idx < X.cols(); ++idx) {
-                    a_samples[idx] = X(a_pidx, idx);
-                }*/
-                //{
-                //    auto const a_probe = probe_data->getProbe<FloatProbe>(a_pidx);
-                //    auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
-                //    a_samples.resize(a_samples_tmp.size());
-                //    std::transform(
-                //        a_samples_tmp.cbegin(), a_samples_tmp.cend(), a_samples.begin(), [](auto const val) {
-                //            return static_cast<double>(val);
-                //        });
-                //    /*auto const it = std::stable_partition(
-                //        a_samples.begin(), a_samples.end(), [](auto const& el) { return !std::isnan(el); });
-                //    std::for_each(it, a_samples.end(), [](auto& el) { el = 0.0; });*/
-                //    /*auto first_val = std::find_if_not(a_samples.begin(), a_samples.end(), std::isnan<double>);
-                //    auto last_val = std::find_if_not(a_samples.rbegin(), a_samples.rend(), std::isnan<double>);
-                //    std::for_each(a_samples.begin(), first_val, [&first_val](auto& el){
-                //        el = *first_val;});
-                //    std::for_each(a_samples.rbegin(), last_val, [&last_val](auto& el) { el = *last_val; });
-                //    auto a_tmp = a_samples;
-                //    for (size_t idx = 0; idx < a_samples.size(); ++idx) {
-                //        auto a = idx - 1;
-                //        if (idx == 0)
-                //            a = 0;
-                //        auto b = idx;
-                //        auto c = idx + 1;
-                //        if (idx == a_samples.size() - 1)
-                //            c = a_samples.size() - 1;
 
-                //        a_samples[idx] = 0.5 * (0.5 * a_tmp[a] + a_tmp[b] + 0.5 * a_tmp[c]);
-                //    }*/
-                //    a_samples.erase(a_samples.begin(), a_samples.begin() + base_skip);
-                //}
                 for (std::int64_t b_pidx = a_pidx; b_pidx < probe_count; ++b_pidx) {
-                    /*std::vector<std::vector<double>> b_samples;
-                    {
-                        auto const b_probe = probe_data->getProbe<FloatProbe>(b_pidx);
-                        auto const b_samples_tmp = b_probe.getSamplingResult()->samples;
-                        b_samples.resize(b_samples_tmp.size());
-                        double tmp_cnt = 0.0;
-                        std::transform(b_samples_tmp.cbegin(), b_samples_tmp.cend(), b_samples.begin(),
-                            [&tmp_cnt](auto const val) {
-                                return std::vector<double>{tmp_cnt++, static_cast<double>(val)};
-                            });
-                        auto const it = std::stable_partition(
-                            b_samples.begin(), b_samples.end(), [](auto const& el) { return !std::isnan(el[1]); });
-                        std::for_each(it, b_samples.end(), [](auto& el) { el[1] = 0.0; });
-                    }*/
-                    /*std::vector<double> b_samples;
-                    b_samples.resize(X.cols());
-                    for (Eigen::Index idx = 0; idx < X.cols(); ++idx) {
-                        b_samples[idx] = X(b_pidx, idx);
-                    }*/
-                    //{
-                    //    auto const b_probe = probe_data->getProbe<FloatProbe>(b_pidx);
-                    //    auto const b_samples_tmp = b_probe.getSamplingResult()->samples;
-                    //    b_samples.resize(b_samples_tmp.size());
-                    //    std::transform(b_samples_tmp.cbegin(), b_samples_tmp.cend(), b_samples.begin(),
-                    //        [](auto const val) {
-                    //            return static_cast<double>(val);
-                    //        });
-                    //    /*auto const it = std::stable_partition(
-                    //        b_samples.begin(), b_samples.end(), [](auto const& el) { return !std::isnan(el); });
-                    //    std::for_each(it, b_samples.end(), [](auto& el) { el = 0.0; });*/
-                    //    /*auto first_val = std::find_if_not(b_samples.begin(), b_samples.end(), std::isnan<double>);
-                    //    auto last_val = std::find_if_not(b_samples.rbegin(), b_samples.rend(), std::isnan<double>);
-                    //    std::for_each(b_samples.begin(), first_val, [&first_val](auto& el) { el = *first_val; });
-                    //    std::for_each(b_samples.rbegin(), last_val, [&last_val](auto& el) { el = *last_val; });
-                    //    auto b_tmp = b_samples;
-                    //    for (size_t idx = 0; idx < b_samples.size(); ++idx) {
-                    //        auto a = idx - 1;
-                    //        if (idx == 0)
-                    //            a = 0;
-                    //        auto b = idx;
-                    //        auto c = idx + 1;
-                    //        if (idx == b_samples.size() - 1)
-                    //            c = b_samples.size() - 1;
 
-                    //        b_samples[idx] = 0.5 * (0.5 * b_tmp[a] + b_tmp[b] + 0.5 * b_tmp[c]);
-                    //    }*/
-                    //    b_samples.erase(b_samples.begin(), b_samples.begin() + base_skip);
-                    //}
-                    /*auto const dis = stdplugin::datatools::misc::frechet_distance<double, double>(a_samples,
-                       b_samples,
-                        [](double const& a, double const& b) -> double { return std::abs(a - b); });*/
 
                     std::vector<float> tmp_mat(sample_count * sample_count);
                     for (std::int64_t as_idx = 0; as_idx < sample_count; ++as_idx) {
