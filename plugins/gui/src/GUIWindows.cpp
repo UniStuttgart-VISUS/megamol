@@ -262,7 +262,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     /// DEPRECATED: No longer required since static build. Just draw your ImGui stuff ...
     // Propagate ImGui context to core instance
-    //if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { } /// mmconsole
+    // if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { } /// mmconsole
     this->core_instance->SetCurrentImGuiContext(this->context);
 
     // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
@@ -348,7 +348,8 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     ImGuiStyle& style = ImGui::GetStyle();
     auto child_bg = style.Colors[ImGuiCol_ChildBg];
     style.Colors[ImGuiCol_ChildBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-    auto global_docking_id = ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+    auto global_docking_id =
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
     style.Colors[ImGuiCol_ChildBg] = child_bg;
 
     // Load global docking preset(before first window is drawn!)
@@ -1753,7 +1754,7 @@ void GUIWindows::drawMenu(void) {
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
         ImGui::Separator();
-        if (ImGui::MenuItem("Load Docking Preset")) {
+        if (ImGui::MenuItem("Windows Docking Preset")) {
             this->state.load_docking_preset = true;
         }
 #endif
@@ -2291,30 +2292,31 @@ void megamol::gui::GUIWindows::load_preset_window_docking(ImGuiID global_docking
 
     ImGuiIO& io = ImGui::GetIO();
     auto dockspace_size = io.DisplaySize;
-    ImGui::DockBuilderRemoveNode(global_docking_id); // Clear out existing layout
+    ImGui::DockBuilderRemoveNode(global_docking_id);                            // Clear out existing layout
     ImGui::DockBuilderAddNode(global_docking_id, ImGuiDockNodeFlags_DockSpace); // Add empty node
     ImGui::DockBuilderSetNodeSize(global_docking_id, dockspace_size);
     // Define new dock spaces
-    ImGuiID dock_id_main = global_docking_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
+    ImGuiID dock_id_main = global_docking_id; // This variable will track the document node, however we are not using it
+                                              // here as we aren't docking anything into it.
     ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Down, 0.25f, NULL, &dock_id_main);
     ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, NULL, &dock_id_main);
 
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-
         switch (wc.win_callback) {
-            case(WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS) : {
-                ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(),  dock_id_prop);
-            } break;
-            case(WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION) : {
-                ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_prop);
-            } break;
-            case(WindowCollection::DRAWCALLBACK_CONFIGURATOR) : {
-                ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_main);
-            } break;
-            case(WindowCollection::DRAWCALLBACK_LOGCONSOLE) : {
-                ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_bottom);
-            } break;
-            default: break;
+        case (WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS): {
+            ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_prop);
+        } break;
+        case (WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION): {
+            ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_prop);
+        } break;
+        case (WindowCollection::DRAWCALLBACK_CONFIGURATOR): {
+            ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_main);
+        } break;
+        case (WindowCollection::DRAWCALLBACK_LOGCONSOLE): {
+            ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_bottom);
+        } break;
+        default:
+            break;
         }
     };
     this->window_collection.EnumWindows(func);
@@ -2330,8 +2332,7 @@ void megamol::gui::GUIWindows::load_imgui_settings_from_string(std::string imgui
 #ifdef IMGUI_HAS_DOCK
     if (!imgui_settings.empty()) {
         ImGui::LoadIniSettingsFromMemory(imgui_settings.c_str(), imgui_settings.size());
-    }
-    else {
+    } else {
         this->state.load_docking_preset = true;
     }
 #endif
