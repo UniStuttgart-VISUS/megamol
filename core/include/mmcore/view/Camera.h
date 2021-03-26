@@ -12,6 +12,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include "glm/gtx/quaternion.hpp" // glm::rotate(quat, vector)
 
 namespace megamol {
 namespace core {

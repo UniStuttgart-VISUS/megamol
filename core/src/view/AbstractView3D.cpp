@@ -28,9 +28,10 @@
 #include "vislib/sys/sysfunctions.h"
 #include "mmcore/view/CallRenderView.h"
 
-#include "glm/gtc/matrix_transform.hpp"
-
 #include "GlobalValueStore.h"
+
+#include "glm/gtx/rotate_vector.hpp" // glm::rotate(quaternion, vector)
+#include "glm/gtx/quaternion.hpp" // glm::rotate(quat, vector)
 
 using namespace megamol::core::view;
 
