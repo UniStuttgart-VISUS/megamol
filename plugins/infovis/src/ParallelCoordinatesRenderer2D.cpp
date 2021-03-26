@@ -681,7 +681,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
         glUniform1f(this->drawFilterIndicatorsProgram.ParameterLocation("axisHalfTick"), 2.0f);
         glUniform2i(this->drawFilterIndicatorsProgram.ParameterLocation("pickedIndicator"), pickedIndicatorAxis,
             pickedIndicatorIndex);
-        glDrawArraysInstanced(GL_LINE_STRIP, 0, 3, this->columnCount * 2);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 12, this->columnCount * 2);
         this->drawScalesProgram.Disable();
         float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
         const float* color;

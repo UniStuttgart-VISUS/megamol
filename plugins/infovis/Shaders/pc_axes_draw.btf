@@ -133,17 +133,22 @@ void main()
   uint dimension = pc_dimension(gl_InstanceID / 2);
 	vec4 bottom = axis_line(gl_InstanceID / 2, 0);
 	vec4 top = axis_line(gl_InstanceID / 2, 1);
-  
+
+    int realID = int(gl_VertexID / 6) + gl_VertexID % 2;
+    int side = gl_VertexID / 2 - gl_VertexID/3 - gl_VertexID / 6;
+
   float iAmTop = (gl_InstanceID % 2);
   float topOffset = iAmTop * 2.0 - 1.0; // top -> 1, bottom -> -1
   float val = (topOffset > 0) ? filters[dimension].upper : filters[dimension].lower;
   val = val - dataMinimum[dimension];
   val /= dataMaximum[dimension] - dataMinimum[dimension];
   vec4 vertex = vec4(
-  bottom.x - axisHalfTick + gl_VertexID * axisHalfTick,
-  mix(bottom.y, top.y, val) + axisHalfTick * (-topOffset * (-1 + gl_VertexID % 2)),
+  bottom.x - axisHalfTick + realID * axisHalfTick,
+  mix(bottom.y, top.y, val) + axisHalfTick * (-topOffset * (-1 + realID % 2)),
   bottom.z,
   bottom.w);
+
+    vertex = vertex + vec4(0, 0, 0, 0) + side * vec4(0, 0.4, 0, 0);
   
   if ((dimension == pickedIndicator.x) && (abs(iAmTop - pickedIndicator.y) < 0.1)) {
   	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
