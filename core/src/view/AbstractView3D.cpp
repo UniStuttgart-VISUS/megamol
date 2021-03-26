@@ -679,9 +679,9 @@ void AbstractView3D::setCameraValues(Camera const& cam) {
         vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), makeDirty);
     this->_cameraPositionParam.QueueUpdateNotification();
 
-    glm::quat orient(cam_pose.direction, cam_pose.up);
+    glm::quat orientation = cam_pose.to_quat();
     this->_cameraOrientationParam.Param<param::Vector4fParam>()->SetValue(
-        vislib::math::Vector<float, 4>(orient.x, orient.y, orient.z, orient.w), makeDirty);
+        vislib::math::Vector<float, 4>(orientation.x, orientation.y, orientation.z, orientation.w), makeDirty);
     this->_cameraOrientationParam.QueueUpdateNotification();
 
     auto cam_proj_type = cam.get<Camera::ProjectionType>();
@@ -717,13 +717,14 @@ bool AbstractView3D::adaptCameraValues(Camera& cam) {
         this->_cameraPositionParam.ResetDirty();
         result = true;
     }
-    // TODO set vectors from quaternion
-    //  if (this->_cameraOrientationParam.IsDirty()) {
-    //      auto val = this->_cameraOrientationParam.Param<param::Vector4fParam>()->Value();
-    //      this->_camera.orientation(glm::quat(val.GetW(), val.GetX(), val.GetY(), val.GetZ()));
-    //      this->_cameraOrientationParam.ResetDirty();
-    //      result = true;
-    //  }
+
+    if (this->_cameraOrientationParam.IsDirty()) {
+        auto val = this->_cameraOrientationParam.Param<param::Vector4fParam>()->Value();
+        const auto orientation = glm::quat(val.GetW(), val.GetX(), val.GetY(), val.GetZ());
+        cam_pose = Camera::Pose(cam_pose.position, orientation);
+        this->_cameraOrientationParam.ResetDirty();
+        result = true;
+    }
     cam.setPose(cam_pose);
 
     // BIG TODO: manipulation of intrinsics via GUI

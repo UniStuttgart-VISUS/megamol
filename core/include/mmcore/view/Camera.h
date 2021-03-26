@@ -35,7 +35,11 @@ namespace view {
             Pose(glm::vec3 const& position, glm::quat const& orientation)
                     : position(position) {
                 direction = glm::rotate(orientation, glm::vec3(0.0, 0.0, -1.0));
-                up = glm::rotate(orientation, glm::vec3(0.0, 0.0, 0.0));
+                up = glm::rotate(orientation, glm::vec3(0.0, 1.0, 0.0));
+            }
+
+            glm::quat to_quat() const {
+                return glm::quatLookAt(direction, up);
             }
 
             glm::vec3 position;
