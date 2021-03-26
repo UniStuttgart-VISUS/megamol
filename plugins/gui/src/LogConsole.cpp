@@ -63,6 +63,8 @@ megamol::gui::LogConsole::LogConsole()
         , scroll_down(2)
         , scroll_up(0)
         , last_window_height(0.0f)
+        , screenshot_note_show(false)
+        , screenshot_note()
         , tooltip() {
 
     this->echo_log_target = std::make_shared<megamol::core::utility::log::StreamTarget>(
@@ -180,10 +182,12 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
     if (new_log_msg_count > this->log_msg_count) {
         // Scroll down if new message came in
         this->scroll_down = 2;
-        // Bring log console to front on new warnings and errors
-        if (wc.log_force_open) {
-            for (size_t i = this->log_msg_count; i < new_log_msg_count; i++) {
-                auto entry = this->echo_log_buffer.log()[i];
+
+        for (size_t i = this->log_msg_count; i < new_log_msg_count; i++) {
+            auto entry = this->echo_log_buffer.log()[i];
+
+            // Bring log console to front on new warnings and errors
+            if (wc.log_force_open) {
                 if (entry.level < megamol::core::utility::log::Log::LEVEL_INFO) {
                     if (wc.log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
                         wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
@@ -191,9 +195,21 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                     wc.win_show = true;
                 }
             }
+
+            // Check for screenshot privacy note
+            auto note_pos = entry.message.find("<<<< PRIVACY NOTE >>>>>");
+            if (note_pos != std::string::npos) {
+                this->screenshot_note_show = true;
+                this->screenshot_note = entry.message.substr(note_pos);
+            }
         }
     }
     this->log_msg_count = new_log_msg_count;
+
+
+    // Show screenshot privacy note pop-up
+    megamol::gui::MinimalPopUp::PopUp("Screenshot", this->screenshot_note_show, this->screenshot_note, "Ok");
+    this->screenshot_note_show = false;
 }
 
 

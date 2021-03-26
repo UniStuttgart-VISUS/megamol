@@ -2029,8 +2029,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             popup_failed |=
                 !this->configurator.GetGraphCollection().SaveProjectToFile(this->state.graph_uid, filename, gui_state);
         }
-        MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
-            confirmed, "Cancel", aborted);
+        MinimalPopUp::PopUp(
+            "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
     }
     this->state.open_popup_save = false;
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed = false;
@@ -2045,8 +2045,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             /// GUI graph and GUI state are updated at next synchronization
             this->state.request_load_projet_file = filename;
         }
-        MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
-            confirmed, "Cancel", aborted);
+        MinimalPopUp::PopUp(
+            "Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
     }
     this->state.open_popup_load = false;
     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed = false;

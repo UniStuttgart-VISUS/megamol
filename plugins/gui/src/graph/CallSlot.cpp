@@ -467,12 +467,8 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                     tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
                     tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
-                }
-                if (hovered || this->gui_selected) {
-                    tmpcol = GUI_COLOR_SLOT_CALLER;
-                    if (this->type == CallSlotType::CALLEE) {
-                        tmpcol = GUI_COLOR_SLOT_CALLEE;
-                    }
+                } else if (this->gui_compatible) {
+                    tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
                     tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }

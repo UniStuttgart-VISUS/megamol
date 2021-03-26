@@ -97,6 +97,10 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
 
     png_destroy_write_struct(&pngPtr, &pngInfoPtr);
 
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn("Screenshot_Service: \n\n<<<< PRIVACY NOTE >>>>>\n "
+        "Please note that the MegaMol project is stored in the EXIF part of the screenshot PNG image file.\n"
+        "Before giving away the screenshot, clear privacy relevant information (e.g. username in file paths) in project file before taking screenshot.\n\n");
+
     return true;
 }
 

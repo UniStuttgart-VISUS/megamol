@@ -480,8 +480,8 @@ void megamol::gui::Configurator::drawPopUps(void) {
                         this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename));
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
-    MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
-        confirmed, "Cancel", aborted);
+    MinimalPopUp::PopUp(
+        "Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
     this->open_popup_load = false;
 
     // Module Stock List Child Window ------------------------------------------

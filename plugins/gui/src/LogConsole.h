@@ -12,6 +12,7 @@
 #include "GUIUtils.h"
 #include "WindowCollection.h"
 #include "widgets/HoverToolTip.h"
+#include "widgets/MinimalPopUp.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/log/OfflineTarget.h"
@@ -71,6 +72,10 @@ namespace gui {
         unsigned int scroll_down;
         unsigned int scroll_up;
         float last_window_height;
+
+        bool screenshot_note_show;
+        std::string screenshot_note;
+
 
         // Widgets
         HoverToolTip tooltip;

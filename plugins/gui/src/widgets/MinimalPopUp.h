@@ -24,6 +24,22 @@ namespace gui {
         static bool PopUp(const std::string& label_id, bool open_popup, const std::string& info_text,
             const std::string& confirm_btn_text, bool& confirmed, const std::string& abort_btn_text, bool& aborted);
 
+        static bool PopUp(const std::string& label_id, bool open_popup, const std::string& info_text,
+            const std::string& confirm_btn_text, bool& confirmed) {
+            return PopUp(label_id, open_popup, info_text, confirm_btn_text, confirmed, "", confirmed);
+        }
+
+        static bool PopUp(const std::string& label_id, bool open_popup, const std::string& info_text) {
+            bool confirmed;
+            return PopUp(label_id, open_popup, info_text, "", confirmed, "", confirmed);
+        }
+
+        static bool PopUp(const std::string& label_id, bool open_popup, const std::string& info_text,
+            const std::string& confirm_btn_text) {
+            bool confirmed;
+            return PopUp(label_id, open_popup, info_text, confirm_btn_text, confirmed, "", confirmed);
+        }
+
     private:
         MinimalPopUp(void) = default;
 
