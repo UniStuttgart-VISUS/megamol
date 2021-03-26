@@ -46,9 +46,11 @@ enum class RealTimeUnit {
   *   StartTime_response <= StartTime_request and
   *   EndTime_response >= EndTime_request
   * -> a normal data module will answer the request exactly
-  * -> an aggregating module will give you the data for a time span that
-  *    includes your request. it depends on the module whether
+  * -> an aggregating module can give you the data for a time span that
+  *    includes your request. It depends on the module whether
   *    StartTime_response = StartTime_request or the next best "bin" that is available.
+  *    It also depends whether the "bins" are disjunct or a sliding window etc.
+  *    You need to look into the response to make sure what you actually get.
   * b) an aggregation
   * - you request StartTime + EndTime
   * -> a normal data module will answer StartTime_response = EndTime_response = StartTime_request
@@ -72,14 +74,29 @@ struct TimeParams {
      * [0.8 - 0.8] -> StartTime = 0; StartFraction = 0.8; EndTime = 0; EndFraction = 0.8;
      * e.g. a module aggregating several time steps 5,6,7,8,9,10
      * [5-10] -> StartTime = 5; StartFraction = 0.0; EndTime = 10; EndFraction = 0.0;
+     *
+     * Note that a response could not fit your request. There are several scenarios for this:
+     * a) you request an interpolated frame that cannot be answered:
+     *   [1.3] -> StartTime = 1; StartFraction = 0.0;
+     * b) you request an interpolated frame and there is a numerical problem:
+     *   [1.3] -> StartTime = 1; StartFraction = 0.29999999;
+     * c) you request an integral frame and it's still being loaded:
+     *   [5] -> StartTime = 2; StartFraction = 0.0;
+     * In cases a) and b) HasUpdate considers both time and fraction. In both cases re-requesting
+     * will never improve/change the answer, so HasUpdate will only trigger the first time around.
+     * In case c) HasUpdate also considers both time and fraction. Re-requesting is useful since
+     * the streaming loader will at some time deliver the requested frame.
+     * The "ForceFrame" scenario works similar to before: you have to re-issue the call until you
+     * get a StartTime that fits your request. HasUpdate can only shortcut complex checks if nothing
+     * at all has happened.
      */
     struct {
         int32_t StartTime = 0;
         float StartFraction = 0.0f; // optional, required for interpolation
         int32_t EndTime = 0;
         float EndFraction = 0.0f; // optional, required for interpolation
-        float RealTimeStart = 0.0f; // for time+fraction
-        float RealTimeEnd = 0.0f;
+        float RealTimeStart = 0.0f; // for time+fraction. this CANNOT be requested, just replied.
+        float RealTimeEnd = 0.0f; // for time+fraction. this CANNOT be requested, just replied.
         RealTimeUnit Unit = RealTimeUnit::Unknown;
     } Slice;
 };
