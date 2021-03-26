@@ -24,6 +24,66 @@ struct Spatial3DMetaData {
     megamol::core::BoundingBoxes_2 m_bboxs;
 };
 
+enum class RealTimeUnit {
+    Unknown,
+    Femtosecond,
+    Picosecond,
+    Nanosecond,
+    Microsecond,
+    Millisecond,
+    Second,
+    Minute,
+    Hour,
+    Day,
+    Redshift
+};
+
+/** you can request data in two ways and receive an update to show what time span
+  * the response actually covers.
+  * a) a time step
+  * - you request StartTime = EndTime
+  * - you will receive, if possible, data with
+  *   StartTime_response <= StartTime_request and
+  *   EndTime_response >= EndTime_request
+  * -> a normal data module will answer the request exactly
+  * -> an aggregating module will give you the data for a time span that
+  *    includes your request. it depends on the module whether
+  *    StartTime_response = StartTime_request or the next best "bin" that is available.
+  * b) an aggregation
+  * - you request StartTime + EndTime
+  * -> a normal data module will answer StartTime_response = EndTime_response = StartTime_request
+  *    ('I cannot do that')
+  * -> an aggregating module must honor this request exactly (if the data exists)
+  */
+struct TimeParams {
+    struct {
+        int32_t StartTime = 0;
+        int32_t EndTime = 0;
+        float RealTimeStart = 0.0f;
+        float RealTimeEnd = 0.0f;
+        RealTimeUnit Unit = RealTimeUnit::Unknown;
+    } DataSet;
+    /** this is just a single data "record", we define here what kind
+     * of time slice it refers to. Aggregating modules would still return
+     * on "time step" but reveal what kind of time span this refers to.
+     * Times are always floor, and the fraction is added on top of that,
+     * e.g. a module interpolating between discrete simulation time steps
+     * (numbered as ints, specifically 0 and 1)
+     * [0.8 - 0.8] -> StartTime = 0; StartFraction = 0.8; EndTime = 0; EndFraction = 0.8;
+     * e.g. a module aggregating several time steps 5,6,7,8,9,10
+     * [5-10] -> StartTime = 5; StartFraction = 0.0; EndTime = 10; EndFraction = 0.0;
+     */
+    struct {
+        int32_t StartTime = 0;
+        float StartFraction = 0.0f; // optional, required for interpolation
+        int32_t EndTime = 0;
+        float EndFraction = 0.0f; // optional, required for interpolation
+        float RealTimeStart = 0.0f; // for time+fraction
+        float RealTimeEnd = 0.0f;
+        RealTimeUnit Unit = RealTimeUnit::Unknown;
+    } Slice;
+};
+
 struct EmptyMetaData {
 };
 
