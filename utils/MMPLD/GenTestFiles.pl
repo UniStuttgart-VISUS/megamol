@@ -327,8 +327,6 @@ foreach my $r (@renderer_modes) {
         open my $fh, ">", $proj or die "cannot open $proj";
         
         print $fh qq{mmCreateView("test", "View3DGL", "::view")\n};
-
-        print $fh qq{mmCreateModule("ScreenShooter", "::imgmaker")\n};
         print $fh qq{mmCreateModule("MMPLDDataSource", "::dat")\n};
 
         if ($r =~ /^OSPRay/) {
@@ -392,13 +390,11 @@ foreach my $r (@renderer_modes) {
         print $fh qq{mmSetParamValue("::view::camstore::settings", [=[{"centre_offset":[0.0,0.0],"convergence_plane":0.0,"eye":0,"far_clipping_plane":12.97671890258789,"film_gate":[0.0,0.0],"gate_scaling":0,"half_aperture_angle":0.2617993950843811,"half_disparity":0.02500000037252903,"image_tile":[0,720,1280,0],"near_clipping_plane":0.012976719066500664,"orientation":[0.17020022869110107,-0.24738462269306183,-0.0711577907204628,-0.9511932134628296],"position":[4.224766731262207,3.3975491523742676,7.757389545440674],"projection_type":0,"resolution_gate":[1280,720]}]=])\n};
         print $fh qq{mmSetParamValue("::view::camstore::autoLoadSettings", "true")\n};
         print $fh qq{mmSetParamValue("::dat::filename", "}.getcwd().qq{/$f")\n};
-        # Image resolution MUST fit current viewport, using default from megamolconfig.lua
-        print $fh qq{mmSetParamValue("::imgmaker::imgWidth", "1280")\n};
-        print $fh qq{mmSetParamValue("::imgmaker::imgHeight", "720")\n};
-        print $fh qq{mmSetParamValue("::imgmaker::filename", "}.getcwd().qq{/$f-$r.png")\n};
-        print $fh qq{mmSetParamValue("::imgmaker::view", "::view")\n};
-        # print $fh qq{mmSetParamValue("::imgmaker::closeAfter", "true")\n};
-        print $fh qq{mmSetParamValue("::imgmaker::trigger", " ")\n};        
+
+        print $fh qq{mmShowGUI(false)\n};                          # print $fh qq{mmSetGUIVisible(false)\n};
+        print $fh qq{mmRenderNextFrame()\n};
+        print $fh qq{mmScreenShot("}.getcwd().qq{/$f-$r.png")\n};  # print $fh qq{mmScreenshot("}.getcwd().qq{/$f-$r.png")\n};
+        print $fh qq{mmQuit()\n};
 
         close $fh;
 
