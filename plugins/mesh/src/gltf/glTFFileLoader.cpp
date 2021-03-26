@@ -65,17 +65,21 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         return false;
     }
 
+    uint32_t requested_frame_id = lhs_mesh_call->requestedFrameID();
+    uint32_t current_frame_id = 0; // not supporting time at the moment
+
     syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
 
     // if there is a mesh connection to the right, pass on the mesh collection
     if (rhs_mesh_call != NULL) {
-        if (!(*rhs_mesh_call)(0)) {
+        if (!(*rhs_mesh_call)(CallMesh::CallGetData, requested_frame_id)) {
             return false;
         }
         if (rhs_mesh_call->hasUpdate()) {
             ++m_version;
             rhs_mesh_call->getData();
         }
+        // TODO: frame id and chaining?
     }
 
     auto has_update = checkAndLoadGltfModel();
@@ -90,7 +94,7 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         m_mesh_access_collection.second.clear();
 
         // set data and version to signal update
-        lhs_mesh_call->setData(m_mesh_access_collection.first, m_version);
+        lhs_mesh_call->setData(m_mesh_access_collection.first, m_version, current_frame_id);
 
         // compute mesh call specific update
         std::array<float, 6> bbox;

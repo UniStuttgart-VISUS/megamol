@@ -64,7 +64,7 @@ namespace core {
          *
          * @return The return value of the function.
          */
-        bool operator()(unsigned int func = 0);
+        virtual bool operator()(unsigned int func = 0);
 
         /**
          * Answers the callee slot this call is connected to.

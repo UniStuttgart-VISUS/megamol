@@ -37,17 +37,21 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
         return false;
     }
 
+    uint32_t requested_frame_id = lhs_rtc->requestedFrameID();
+    uint32_t current_frame_id = lhs_rtc->frameID();
+
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
     std::vector<std::shared_ptr<GPURenderTaskCollection>> gpu_render_tasks;
     if (rhs_rtc != nullptr) {
-        if (!(*rhs_rtc)(0)) {
+        if (!(*rhs_rtc)(CallGPURenderTaskData::CallGetData, requested_frame_id)) {
             return false;
         }
         if (rhs_rtc->hasUpdate()) {
             ++m_version;
         }
         gpu_render_tasks = rhs_rtc->getData();
+        // TODO: frame id and chaining?
     }
     gpu_render_tasks.push_back(m_rendertask_collection.first);
 
@@ -55,7 +59,7 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
     CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<CallGlTFData>();
 
     if (mc != nullptr && gltf_call != nullptr) {
-        if (!(*mc)(0)) {
+        if (!(*mc)(CallGPUMeshData::CallGetData,requested_frame_id)) {
             return false;
         }
 
@@ -64,6 +68,7 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
         }
 
         auto gpu_mesh_storage = mc->getData();
+        current_frame_id = mc->frameID();
 
         if (gltf_call->hasUpdate() || this->m_btf_filename_slot.IsDirty()) {
             ++m_version;
@@ -136,7 +141,7 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
         clearRenderTaskCollection();
     }
 
-    lhs_rtc->setData(gpu_render_tasks, m_version);
+    lhs_rtc->setData(gpu_render_tasks, m_version, current_frame_id);
 
     return true;
 }

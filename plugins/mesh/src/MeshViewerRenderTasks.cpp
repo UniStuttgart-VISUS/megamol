@@ -26,11 +26,14 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
         return false;
     }
 
+    uint32_t requested_frame_id = lhs_rtc->requestedFrameID();
+    uint32_t current_frame_id = lhs_rtc->frameID();
+
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
     std::vector<std::shared_ptr<GPURenderTaskCollection>> gpu_render_tasks;
     if (rhs_rtc != nullptr) {
-        if (!(*rhs_rtc)(0)) {
+        if (!(*rhs_rtc)(CallGPURenderTaskData::CallGetData,requested_frame_id)) {
             return false;
         }
         if (rhs_rtc->hasUpdate()) {
@@ -46,7 +49,7 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
     if (mtlc != nullptr && mc != nullptr) {
         if (!(*mtlc)(0))
             return false;
-        if (!(*mc)(0))
+        if (!(*mc)(CallGPUMeshData::CallGetData, requested_frame_id))
             return false;
 
         bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate();
@@ -58,6 +61,7 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
 
             auto gpu_mtl_collections = mtlc->getData();
             auto gpu_mesh_collections = mc->getData();
+            current_frame_id = mc->frameID();
 
             std::vector<std::vector<std::string>> identifiers;
             std::vector<std::vector<glowl::DrawElementsCommand>> draw_commands;
@@ -99,12 +103,14 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
         }
     } else {
         clearRenderTaskCollection();
+        current_frame_id = 0;
+        ++m_version;
     }
 
     // TODO merge meta data stuff, i.e. bounding box
 
     // set data if necessary
-    lhs_rtc->setData(gpu_render_tasks, m_version);
+    lhs_rtc->setData(gpu_render_tasks, m_version, current_frame_id);
 
     return true;
 }

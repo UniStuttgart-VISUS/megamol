@@ -21,10 +21,13 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         return false;
     }
 
+    uint32_t requested_frame_id = lhs_mesh_call->requestedFrameID();
+    uint32_t current_frame_id = lhs_mesh_call->frameID();
+
     std::vector<std::shared_ptr<GPUMeshCollection>> gpu_mesh_collection;
     // if there is a mesh connection to the right, pass on the mesh collection
     if (rhs_mesh_call != nullptr) {
-        if (!(*rhs_mesh_call)(0)) {
+        if (!(*rhs_mesh_call)(CallGPUMeshData::CallGetData, requested_frame_id)) {
             return false;
         }
         if (rhs_mesh_call->hasUpdate()) {
@@ -37,8 +40,9 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
     if (mc != nullptr) {
 
-        if (!(*mc)(0))
+        if (!(*mc)(CallMesh::CallGetData, requested_frame_id)) {
             return false;
+        }
 
         bool something_has_changed = mc->hasUpdate(); // something has changed in the neath...
 
@@ -48,6 +52,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             clearMeshCollection();
 
             auto meshes = mc->getData()->accessMeshes();
+            current_frame_id = mc->frameID();
 
             for (auto& mesh : meshes) {
 
@@ -101,7 +106,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             }
         }
 
-         auto lhs_meta_data = lhs_mesh_call->getMetaData();
+        auto lhs_meta_data = lhs_mesh_call->getMetaData();
         core::Spatial3DMetaData rhs_meta_data;
         auto src_meta_data = mc->getMetaData();
 
@@ -123,13 +128,15 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
         lhs_mesh_call->setMetaData(lhs_meta_data);
     } else {
-        clearMeshCollection();
-
-        ++m_version;
+        if (!m_mesh_collection.second.empty()) {
+            clearMeshCollection();
+            current_frame_id = 0;
+            ++m_version;
+        }
     }
 
     if (lhs_mesh_call->version() < m_version) {
-        lhs_mesh_call->setData(gpu_mesh_collection, m_version);
+        lhs_mesh_call->setData(gpu_mesh_collection, m_version, current_frame_id);
     }
 
     return true;
@@ -151,7 +158,7 @@ bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller) {
 
     src_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
     src_mesh_call->setMetaData(src_meta_data);
-    if (!(*src_mesh_call)(1))
+    if (!(*src_mesh_call)(1,0))
         return false;
     src_meta_data = src_mesh_call->getMetaData();
 
@@ -159,7 +166,7 @@ bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller) {
         rhs_meta_data = rhs_mesh_call->getMetaData();
         rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
         rhs_mesh_call->setMetaData(rhs_meta_data);
-        if (!(*rhs_mesh_call)(1))
+        if (!(*rhs_mesh_call)(1,0))
             return false;
         rhs_meta_data = rhs_mesh_call->getMetaData();
     } else {

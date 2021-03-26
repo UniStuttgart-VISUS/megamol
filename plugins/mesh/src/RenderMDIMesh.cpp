@@ -144,7 +144,7 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3DGL& call) {
     meta_data.m_frame_ID = static_cast<int>(cr->Time());
     rtc->setMetaData(meta_data);
 
-	if (!(*rtc)(1))
+	if (!(*rtc)(CallGPURenderTaskData::CallGetMetaData,0))
 		return false;
 
     meta_data = rtc->getMetaData();
@@ -173,7 +173,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3DGL& call) {
 	if (task_call == NULL)
 		return false;
 	
-	if ((!(*task_call)(0)) )
+	if ((!(*task_call)(CallGPURenderTaskData::CallGetData,cr->Time())) )
 		return false;
 	
 	//megamol::core::utility::log::Log::DefaultLog.WriteError("Hey listen!");
