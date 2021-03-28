@@ -550,7 +550,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
                     framesNeeded;
         parity = (parity + 1) % 2;
     } else {
-        frametype = frametype + 1 % framesNeeded;
+        frametype = (frametype + 1) % framesNeeded;
     }
 }
 
@@ -622,8 +622,6 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
     }
-
-
     return true;
 }
 
