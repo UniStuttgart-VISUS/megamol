@@ -96,6 +96,31 @@ private:
     struct PimplData;
     std::unique_ptr<PimplData, std::function<void(PimplData*)>> m_pimpl;
     Config m_config;
+
+    // EXPERIMENTAL
+    struct HeadNodeRemoteControl {
+        enum class Command {
+            None = 0
+            , StartHeadNode
+            , CloseHeadNode
+            , ClearGraph
+            , SendGraph
+            , KeepSendingParams
+            , DontSendParams
+            , SetParamSendingModules
+            , SendLuaCommand
+            , Count // not a commnd, gives number of enum entries
+        };
+        bool keep_sending_params = false;
+        std::string modules_to_send_params_of = "all";
+        std::string lua_command = "";
+
+        std::vector<Command> commands_queue;
+    };
+    HeadNodeRemoteControl m_headnode_remote_control;
+    void add_headnode_remote_command(HeadNodeRemoteControl::Command command, std::string const& value = "");
+    void remote_control_window();
+
     bool start_headnode(bool start_or_shutdown = true);
 };
 
