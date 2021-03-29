@@ -60,8 +60,11 @@ std::string handle_remote_session_config(
     }
 
     remote_config.mpi_broadcast_rank = config.remote_mpi_broadcast_rank;
-    remote_config.headnode_zmq_target_address = config.headnode_zmq_target_address;
-    remote_config.rendernode_zmq_source_address = config.rendernode_zmq_source_address;
+    remote_config.headnode_zmq_target_address = config.remote_headnode_zmq_target_address;
+    remote_config.rendernode_zmq_source_address = config.remote_rendernode_zmq_source_address;
+    remote_config.headnode_broadcast_quit = config.remote_headnode_broadcast_quit;
+    remote_config.headnode_broadcast_initial_project = config.remote_headnode_broadcast_initial_project;
+    remote_config.headnode_connect_on_start = config.remote_headnode_connect_on_start;
 
     //remote_config.render_sync_data_sources_mpi;
     //remote_config.render_use_mpi;
@@ -159,7 +162,7 @@ bool Remote_Service::init(const Config& config) {
 void Remote_Service::close() {
     switch (m_config.role) {
     case Role::HeadNode:
-        if (m_config.head_broadcast_quit)
+        if (m_config.headnode_broadcast_quit)
             head_send_message("mmQuit()");
         m_head.close_server();
         break;
