@@ -121,12 +121,14 @@ bool Remote_Service::init(const Config& config) {
         , "ExecuteLuaScript" // std::function<std::tuple<bool,std::string>(std::string const&)>
     };
 
-    if (config.role == Role::HeadNode) {
-        m_do_remote_things = std::function{[&]() { do_headnode_things(); }};
+    m_do_remote_things = std::function{[&]() {}};
 
-        if (!m_head.start_server(config.zmq_control_send_to)) {
-            log_error("could not start HeadNode server");
+    if (config.role == Role::HeadNode && config.head_connect_on_start) {
+        if (!start_headnode(true))
             return false;
+
+        if (config.head_broadcast_initial_project) {
+            m_headnode_remote_control.commands_queue.push_back(HeadNodeRemoteControl::Command::SendGraph);
         }
     }
 
@@ -162,9 +164,7 @@ bool Remote_Service::init(const Config& config) {
 void Remote_Service::close() {
     switch (m_config.role) {
     case Role::HeadNode:
-        if (m_config.head_broadcast_quit)
-            head_send_message("mmQuit()");
-        m_head.close_server();
+        start_headnode(false);
         break;
     case Role::RenderNode:
         m_render.close_receiver();
@@ -225,6 +225,25 @@ void Remote_Service::do_headnode_things() {
         const auto params = const_cast<megamol::core::MegaMolGraph&>(graph).Convenience().SerializeAllParameters();
         head_send_message(params);
     }
+}
+
+bool Remote_Service::start_headnode(bool start_or_shutdown) {
+    switch (start_or_shutdown) {
+    case true:
+        m_do_remote_things = std::function{[&]() { do_headnode_things(); }};
+
+        if (!m_head.start_server(m_config.zmq_control_send_to)) {
+            log_error("could not start HeadNode server");
+            return false;
+        }
+        break;
+    case false:
+        if (m_config.head_broadcast_quit)
+            head_send_message("mmQuit()");
+        m_head.close_server();
+        break;
+    };
+    return true;
 }
 
 void Remote_Service::do_rendernode_things() {

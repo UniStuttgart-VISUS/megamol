@@ -92,6 +92,7 @@ private:
     struct PimplData;
     std::unique_ptr<PimplData, std::function<void(PimplData*)>> m_pimpl;
     Config m_config;
+    bool start_headnode(bool start_or_shutdown = true);
 };
 
 std::string handle_remote_session_config(megamol::frontend_resources::RuntimeConfig const& config, Remote_Service::Config& remote_config);
