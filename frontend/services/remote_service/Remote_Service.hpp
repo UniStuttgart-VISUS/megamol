@@ -29,16 +29,17 @@ public:
     struct Config {
         Role role = Role::None;
 
-        bool head_broadcast_quit = true; // if MegaMol exists in a normal way, broadcast mmQuit()
+        bool head_broadcast_quit            = false; // if MegaMol exists in a normal way, broadcast mmQuit()
+        bool head_broadcast_initial_project = false; // send initial project/graph state at startup
+        bool head_connect_on_start          = false; // start headnode thread on startup or wait till later
 
         std::string zmq_control_send_to      = "tcp://127.0.0.1:62562"; // "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")"
         std::string zmq_control_receive_from = "tcp://*:62562"; // "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")"
-        //bool        head_distribute_local_project_at_startup = true;                    // "Sends project file on connect"
 
         int  mpi_broadcast_rank = 0;     // "Set which MPI rank is the broadcast master"
 
-        bool render_use_mpi               = false; // "Requests initialization of MPI and the communicator for the view."
-        bool render_sync_data_sources_mpi = false; // "Requests synchronization of data sources in the MPI world."
+        // UNUSED: bool render_use_mpi               = false; // "Requests initialization of MPI and the communicator for the view."
+        // UNUSED: bool render_sync_data_sources_mpi = false; // "Requests synchronization of data sources in the MPI world."
         // TODO: decouple ZMQ send/recv vs MPI send/recv
     };
 

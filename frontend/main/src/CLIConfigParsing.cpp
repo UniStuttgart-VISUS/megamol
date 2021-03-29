@@ -97,6 +97,9 @@ static std::string remote_mpi_option    = "mpi";
 static std::string remote_mpi_broadcast_rank_option  = "mpi-broadcaster-rank";
 static std::string remote_zmq_control_send_option    = "zmq-control-send-to";
 static std::string remote_zmq_control_receive_option = "zmq-control-receive-from";
+static std::string remote_head_broadcast_quit_option    = "headnode-broadcast-quit";
+static std::string remote_head_broadcast_project_option = "headnode-broadcast-project";
+static std::string remote_head_connect_at_start_option  = "headnode-connect-at-start";
 static std::string help_option          = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -162,6 +165,21 @@ static void remote_zmqsend_handler(std::string const& option_name, cxxopts::Pars
 static void remote_zmqreceive_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.remote_zmq_control_receive_from = parsed_options[option_name].as<std::string>();
+};
+
+static void remote_head_broadcast_quit_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_head_broadcast_quit = parsed_options[option_name].as<bool>();
+};
+
+static void remote_head_broadcast_project_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_head_broadcast_initial_project = parsed_options[option_name].as<bool>();
+};
+
+static void remote_head_connect_at_start_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_head_connect_on_start = parsed_options[option_name].as<bool>();
 };
 
 static void config_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -388,6 +406,9 @@ std::vector<OptionsListEntry> cli_options_list =
         , {remote_mpi_broadcast_rank_option, "[Experimental] MPI rank that broadcasts to others, default: 0",       cxxopts::value<unsigned int>(),             remote_mpirank_handler}
         , {remote_zmq_control_send_option,   "[Experimental] Address and port where to send state via ZMQ",         cxxopts::value<std::string>(),              remote_zmqsend_handler}
         , {remote_zmq_control_receive_option,"[Experimental] Address and port where to receive state via ZMQ from", cxxopts::value<std::string>(),              remote_zmqreceive_handler}
+        , {remote_head_broadcast_quit_option,   "[Experimental] Headnode broadcasts mmQuit to rendernodes on shutdown",                    cxxopts::value<bool>(), remote_head_broadcast_quit_handler}
+        , {remote_head_broadcast_project_option,"[Experimental] Headnode broadcasts initial graph state after project loading at startup", cxxopts::value<bool>(), remote_head_broadcast_project_handler}
+        , {remote_head_connect_at_start_option, "[Experimental] Headnode starts sender thread at startup",                                 cxxopts::value<bool>(), remote_head_connect_at_start_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 

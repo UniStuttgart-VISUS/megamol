@@ -62,6 +62,9 @@ std::string handle_remote_session_config(
     remote_config.mpi_broadcast_rank = config.remote_mpi_broadcast_rank;
     remote_config.zmq_control_send_to = config.remote_zmq_control_send_to;
     remote_config.zmq_control_receive_from = config.remote_zmq_control_receive_from;
+    remote_config.head_broadcast_quit = config.remote_head_broadcast_quit;
+    remote_config.head_broadcast_initial_project = config.remote_head_broadcast_initial_project;
+    remote_config.head_connect_on_start = config.remote_head_connect_on_start;
 
     //remote_config.render_sync_data_sources_mpi;
     //remote_config.render_use_mpi;
