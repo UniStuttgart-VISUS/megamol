@@ -68,6 +68,13 @@ bool GUI_Service::init(const Config& config) {
         , "ImageRegistry" // 12 - frontend images test
     };
 
+    // head node remote control resource is only available when remote service active
+    if (config.show_headnode_remote_control) {
+        m_requestedResourcesNames.push_back(
+         "HeadNodeRemoteControl" // 13 - remote headnode controller UI
+        );
+    }
+
     // init gui
     if (config.imgui_api == GUI_Service::ImGuiAPI::OPEN_GL) { 
         if (this->m_gui == nullptr) {
@@ -290,6 +297,10 @@ void GUI_Service::postGraphRender() {
                     textures.push_back({image_name, megamol::frontend_resources::to_gl_texture(image).as_gl_handle(), image.size().width, image.size().height});
                 });
         gui->SetEntryPointTextures(textures);
+    }
+    if (m_config_frontend_fbos_test.show_headnode_remote_control) {
+        const auto& remote_control = this->m_requestedResourceReferences[13].getResource<std::function<void(unsigned int, std::string const&)>>();
+        gui->SetRemoteControlCallback(remote_control);
     }
 
     gui->PostDraw();

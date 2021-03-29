@@ -39,6 +39,7 @@ public:
         bool gui_show = true;
         float gui_scale = 1.0f;
         bool show_fbos_test = false;
+        bool show_headnode_remote_control = false;
     };
 
     std::string serviceName() const override { return "GUI_Service"; }
