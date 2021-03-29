@@ -73,22 +73,6 @@ struct LuaCallbacksCollection {
         T result;
     };
 
-    template <>
-    struct LuaResult<void> {
-        LuaResult(LuaError e)
-        : exit_success{false} 
-        , exit_reason{e.reason}
-        {}
-    
-        LuaResult()
-        : exit_success{true}
-        , exit_reason{}
-        {}
-    
-        bool exit_success = false;
-        std::string exit_reason = "unknown reason";
-    };
-
     template <typename ReturnType, typename FuncType, typename... FuncArgs, size_t... I>
     ReturnType unpack(LuaState state, FuncType func, std::tuple<FuncArgs...> tuple, std::index_sequence<I...>) {
         return func( state.read< typename std::tuple_element<I, std::tuple<FuncArgs...>>::type >(I+1)... );
@@ -155,6 +139,22 @@ struct LuaCallbacksCollection {
     using StringResult = LuaCallbacksCollection::LuaResult<std::string>;
     using Error = LuaCallbacksCollection::LuaError;
     using LuaError = LuaCallbacksCollection::LuaError;
+};
+
+template <>
+struct LuaCallbacksCollection::LuaResult<void> {
+    LuaResult(LuaError e)
+    : exit_success{false}
+    , exit_reason{e.reason}
+    {}
+
+    LuaResult()
+    : exit_success{true}
+    , exit_reason{}
+    {}
+
+    bool exit_success = false;
+    std::string exit_reason = "unknown reason";
 };
 
 // we implement reading/writing the lua stack in LuaAPI.cpp
