@@ -104,8 +104,8 @@ private:
     void register_glfw_callbacks();
     void do_every_second();
 
-    void create_glfw_mouse_cursor();
-    void update_glfw_mouse_cursor(const int cursor_id);
+    void create_glfw_mouse_cursors();
+    void update_glfw_mouse_cursors(const int cursor_id);
 
     struct OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
         void* ptr = nullptr;

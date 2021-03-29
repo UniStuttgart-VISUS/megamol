@@ -457,7 +457,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     if (config.windowPlacement.noCursor) {
         ::glfwSetInputMode(window_ptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     } else {
-        create_glfw_mouse_cursor();
+        create_glfw_mouse_cursors();
     }
 
     // note the m_data window position got overwritten with monitor position for fullscreen mode
@@ -485,7 +485,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     m_windowManipulation.window_ptr = window_ptr;
 
     m_windowManipulation.set_mouse_cursor = [&](const int cursor_id) -> void {
-        update_glfw_mouse_cursor(cursor_id);
+        update_glfw_mouse_cursors(cursor_id);
     };
 
     // make the events and resources managed/provided by this service available to the outside world
@@ -804,7 +804,7 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
     this->m_windowEvents.dropped_path_events.push_back(paths_);
 }
 
-void OpenGL_GLFW_Service::create_glfw_mouse_cursor(void) {
+void OpenGL_GLFW_Service::create_glfw_mouse_cursors(void) {
     // (By design, on X11 cursors are user configurable and some cursors may be missing. When a cursor doesn't exist,
     // GLFW will emit an error which will often be printed by the app, so we temporarily disable error reporting.
     // Missing cursors will return NULL and  megamol::frontend_resources::WindowManipulation::set_mouse_cursor()
@@ -837,7 +837,7 @@ void OpenGL_GLFW_Service::create_glfw_mouse_cursor(void) {
     ::glfwSetErrorCallback(prev_error_callback);
 }
 
-void OpenGL_GLFW_Service::update_glfw_mouse_cursor(const int cursor_id) {
+void OpenGL_GLFW_Service::update_glfw_mouse_cursors(const int cursor_id) {
     if (!m_pimpl->config.windowPlacement.noCursor && (cursor_id < m_pimpl->mouse_cursors.size())) {
         ::glfwSetCursor(m_pimpl->glfwContextWindowPtr, m_pimpl->mouse_cursors[cursor_id] ? m_pimpl->mouse_cursors[cursor_id] : m_pimpl->mouse_cursors[static_cast<int>(GLFW_ARROW_CURSOR)]);
         ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);

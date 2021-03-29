@@ -154,7 +154,7 @@ namespace gui {
          * Pass current mouse cursor request.
          */
         int GetMouseCursor(void) const {
-            return ImGui::GetMouseCursor(); // ImGuiMouseCursor_None = -1
+            return ImGui::GetMouseCursor();
         }
 
         ///////// SET ///////////
