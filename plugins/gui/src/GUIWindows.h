@@ -47,10 +47,6 @@
 #include <iomanip>
 #include <sstream>
 
-#ifdef GUI_USE_GLFW
-#include "GLFW/glfw3.h"
-#endif // GUI_USE_GLFW
-
 
 namespace megamol {
 namespace gui {
@@ -128,7 +124,7 @@ namespace gui {
         /**
          * Pass triggered Shutdown.
          */
-        inline bool ConsumeTriggeredShutdown(void) {
+        inline bool GetTriggeredShutdown(void) {
             bool request_shutdown = this->state.shutdown_triggered;
             this->state.shutdown_triggered = false;
             return request_shutdown;
@@ -148,10 +144,17 @@ namespace gui {
          * Pass project load request.
          * Request is consumed when calling this function.
          */
-        std::string ConsumeProjectLoadRequest(void) {
+        std::string GetProjectLoadRequest(void) {
             auto project_file_name = this->state.request_load_projet_file;
             this->state.request_load_projet_file.clear();
             return project_file_name;
+        }
+
+        /**
+         * Pass current mouse cursor request.
+         */
+        int GetMouseCursor(void) const {
+            return ImGui::GetMouseCursor(); // ImGuiMouseCursor_None = -1
         }
 
         ///////// SET ///////////
@@ -175,8 +178,6 @@ namespace gui {
          * Set GUI scale.
          */
         void SetScale(float scale);
-
-        // --------------------------------------
 
         /**
          * Set project script paths.
@@ -206,15 +207,6 @@ namespace gui {
          */
         void SetClipboardFunc(const char* (*get_clipboard_func)(void* user_data),
             void (*set_clipboard_func)(void* user_data, const char* string), void* user_data);
-
-        /**
-         * Set GLFW window manipulation pointer
-         */
-        void SetWindowManipulationPtr(void* window_ptr) {
-#ifdef GUI_USE_GLFW
-            this->glfw_window_ptr = reinterpret_cast<GLFWwindow*>(window_ptr);
-#endif // GUI_USE_GLFW
-        }
 
         /**
          * Synchronise changes between core graph <-> gui graph.
@@ -324,11 +316,6 @@ namespace gui {
         /** The current local state of the gui. */
         StateBuffer state;
 
-#ifdef GUI_USE_GLFW
-        GLFWcursor* glfw_mouse_cursors[ImGuiMouseCursor_COUNT] = {};
-        GLFWwindow* glfw_window_ptr;
-#endif // GUI_USE_GLFW
-
         // Widgets
         FileBrowserWidget file_browser;
         StringSearchWidget search_widget;
@@ -368,10 +355,6 @@ namespace gui {
         void update_frame_statistics(WindowCollection::WindowConfiguration& wc);
 
         bool create_not_existing_png_filepath(std::string& inout_filepath);
-
-        void create_glfw_mouse_cursor(void);
-        void destroy_glfw_mouse_cursor(void);
-        void update_glfw_mouse_cursor(void);
     };
 
 } // namespace gui

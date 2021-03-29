@@ -115,7 +115,7 @@ void GUI_Service::digestChangedRequestedResources() {
     auto gui = this->m_gui->Get();
 
     // Trigger shutdown
-    this->setShutdown(gui->ConsumeTriggeredShutdown());
+    this->setShutdown(gui->GetTriggeredShutdown());
 
     // Check for updates in requested resources --------------------------------
 
@@ -221,7 +221,7 @@ void GUI_Service::digestChangedRequestedResources() {
     gui->SetProjectScriptPaths(script_paths.lua_script_paths);
 
     /// Pipe project loading request from GUI to project loader = resource index 8
-    auto requested_project_file = gui->ConsumeProjectLoadRequest();
+    auto requested_project_file = gui->GetProjectLoadRequest();
     if (!requested_project_file.empty()) {
         auto& project_loader =
             this->m_requestedResourceReferences[8].getResource<megamol::frontend_resources::ProjectLoader>();
@@ -241,7 +241,7 @@ void GUI_Service::digestChangedRequestedResources() {
 
     /// Get window manipulation resource = resource index 11
     auto& window_manulation = this->m_requestedResourceReferences[11].getResource<megamol::frontend_resources::WindowManipulation>();
-    gui->SetWindowManipulationPtr(window_manulation.window_ptr);
+    window_manulation.set_mouse_cursor(gui->GetMouseCursor());
 }
 
 

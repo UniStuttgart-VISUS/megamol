@@ -22,10 +22,6 @@ GUIWindows::GUIWindows(void)
         , configurator()
         , console()
         , state()
-#ifdef GUI_USE_GLFW
-    , glfw_mouse_cursors()
-    , glfw_window_ptr(nullptr)
-#endif // GUI_USE_GLFW
         , file_browser()
         , search_widget()
         , tf_editor_ptr(nullptr)
@@ -291,8 +287,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     // Set stuff for next frame --------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-
-    this->update_glfw_mouse_cursor();
 
     io.DisplaySize = ImVec2(window_size.x, window_size.y);
     if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
@@ -1232,7 +1226,8 @@ bool GUIWindows::createContext(void) {
     io.LogFilename = nullptr;                             // "imgui_log.txt" - disabled
     io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
-    this->create_glfw_mouse_cursor();
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors; // GLFW will process GetMouseCursor() values (different mouse
+                                                          // cursor shape events)
 
 /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
@@ -1328,7 +1323,6 @@ bool GUIWindows::destroyContext(void) {
         this->initialized_api = GUIImGuiAPI::NONE;
     }
 
-    this->destroy_glfw_mouse_cursor();
     this->window_collection.DeleteWindowConfigurations();
 
     this->configurator.GetGraphCollection().DeleteGraph(this->state.graph_uid);
@@ -2515,76 +2509,4 @@ bool megamol::gui::GUIWindows::create_not_existing_png_filepath(std::string& ino
         created_filepath = true;
     }
     return created_filepath;
-}
-
-
-void megamol::gui::GUIWindows::create_glfw_mouse_cursor(void) {
-
-#ifdef GUI_USE_GLFW
-    /// see "imgui_impl_glfw.cpp" for reference ...
-    ImGuiIO& io = ImGui::GetIO();
-    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors; // We can honor GetMouseCursor() values (optional)
-    io.ConfigWindowsResizeFromEdges = true;
-
-    // Create mouse cursors
-    // (By design, on X11 cursors are user configurable and some cursors may be missing. When a cursor doesn't exist,
-    // GLFW will emit an error which will often be printed by the app, so we temporarily disable error reporting.
-    // Missing cursors will return NULL and our _UpdateMouseCursor() function will use the Arrow cursor instead.)
-    for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++) {
-        this->glfw_mouse_cursors[cursor_n] = nullptr;
-    }
-    GLFWerrorfun prev_error_callback = ::glfwSetErrorCallback(nullptr);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_Arrow] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_TextInput] = ::glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_ResizeNS] = ::glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_ResizeEW] = ::glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_Hand] = ::glfwCreateStandardCursor(GLFW_HAND_CURSOR);
-#if GLFW_HAS_NEW_CURSORS
-    this->glfw_mouse_cursors[ImGuiMouseCursor_ResizeAll] = ::glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_ResizeNESW] = ::glfwCreateStandardCursor(GLFW_RESIZE_NESW_CURSOR);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_ResizeNWSE] = ::glfwCreateStandardCursor(GLFW_RESIZE_NWSE_CURSOR);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_NotAllowed] = ::glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR);
-#else
-    this->glfw_mouse_cursors[ImGuiMouseCursor_ResizeAll] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_ResizeNESW] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_ResizeNWSE] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-    this->glfw_mouse_cursors[ImGuiMouseCursor_NotAllowed] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-#endif
-    ::glfwSetErrorCallback(prev_error_callback);
-
-#endif // GUI_USE_GLFW
-}
-
-
-void megamol::gui::GUIWindows::destroy_glfw_mouse_cursor(void) {
-
-#ifdef GUI_USE_GLFW
-    for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++) {
-        ::glfwDestroyCursor(this->glfw_mouse_cursors[cursor_n]);
-        this->glfw_mouse_cursors[cursor_n] = nullptr;
-    }
-#endif // GUI_USE_GLFW
-}
-
-
-void megamol::gui::GUIWindows::update_glfw_mouse_cursor(void) {
-
-#ifdef GUI_USE_GLFW
-    if (this->glfw_window_ptr != nullptr) {
-
-        ImGuiIO &io = ImGui::GetIO();
-        ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
-        if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor) {
-            // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
-            ::glfwSetInputMode(this->glfw_window_ptr, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-        } else {
-            // Show OS mouse cursor
-            /// FIXME-PLATFORM: Unfocused windows seems to fail changing the mouse cursor with GLFW 3.2, but 3.3 works here.
-            ::glfwSetCursor(this->glfw_window_ptr,
-                          this->glfw_mouse_cursors[imgui_cursor] ? this->glfw_mouse_cursors[imgui_cursor]
-                                                                 : this->glfw_mouse_cursors[ImGuiMouseCursor_Arrow]);
-            ::glfwSetInputMode(this->glfw_window_ptr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
-    }
-#endif // GUI_USE_GLFW
 }
