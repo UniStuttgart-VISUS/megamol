@@ -292,6 +292,7 @@ namespace infovis {
         megamol::core::utility::SDFFont font;
 
         core::param::ParamSlot thicknessFloatP;
+        core::param::ParamSlot axesThicknessFloatP;
         core::param::ParamSlot legacyMode;
 
         // res should be a parameter

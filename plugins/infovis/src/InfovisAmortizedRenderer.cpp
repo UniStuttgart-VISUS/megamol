@@ -60,7 +60,6 @@ InfovisAmortizedRenderer::~InfovisAmortizedRenderer() {
 }
 
 bool megamol::infovis::InfovisAmortizedRenderer::create(void) {
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("yes");
     makeShaders();
 
     setupBuffers();
@@ -325,6 +324,8 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 }
 
 void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLevel) {
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("%i , %i ", w,h);
+
     if (approach == 0) {
         framesNeeded = 2;
         if (invMatrices.size() != framesNeeded) {

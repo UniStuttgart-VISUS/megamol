@@ -13,6 +13,9 @@
       <snippet type="string">
         <![CDATA[
 out vec4 actualColor;
+uniform float axesThickness;
+uniform int width;
+uniform int height;
 
 void main()
 {
@@ -21,7 +24,6 @@ void main()
     int side = gl_VertexID / 2 - gl_VertexID/3;
 
 	vec4 vertex = axis_line(gl_InstanceID, realID);
-    vertex = vertex + vec4(0.1, 0, 0, 0) + side * vec4(-0.2, 0, 0, 0);
 
   if (dimension == pickedAxis) {
   	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -29,7 +31,7 @@ void main()
   	actualColor = color;
   }
   
-  gl_Position = projection * modelView * vertex;
+  gl_Position = projection * modelView * vertex + axesThickness * (vec4(2.0 / width, 0, 0, 0) + side * vec4(-4.0 / width, 0, 0, 0));
 }
 		    ]]>
       </snippet>
@@ -65,6 +67,9 @@ void main()
       <snippet type="string">
         <![CDATA[
 out vec4 actualColor;
+uniform float axesThickness;
+uniform int width;
+uniform int height;
         
 void main()
 {
@@ -82,14 +87,13 @@ void main()
   bottom.w);
   
   int side = gl_VertexID / 2 - gl_VertexID/3;
-  vertex = vertex + vec4(0, 0.1, 0, 0) + side * vec4(0, -0.2, 0, 0);
   
   if (dimension == pickedAxis) {
   	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
   } else {
   	actualColor = color;
   }
-  gl_Position = projection * modelView * vertex;
+  gl_Position = projection * modelView * vertex + axesThickness * (vec4(0, 2.0/height, 0, 0) + side * vec4(0, -4.0/height, 0, 0));
 }
 		    ]]>
       </snippet>
@@ -126,6 +130,9 @@ void main()
         <![CDATA[
 out vec4 actualColor;
 uniform ivec2 pickedIndicator;
+uniform float axesThickness;
+uniform int width;
+uniform int height;
         
 void main()
 {
@@ -148,7 +155,7 @@ void main()
   bottom.z,
   bottom.w);
 
-    vertex = vertex + vec4(0, 0, 0, 0) + side * vec4(0, 0.4, 0, 0);
+  
   
   if ((dimension == pickedIndicator.x) && (abs(iAmTop - pickedIndicator.y) < 0.1)) {
   	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -156,6 +163,7 @@ void main()
   	actualColor = color;
   }
   gl_Position = projection * modelView * vertex;
+  gl_Position = gl_Position + axesThickness * (iAmTop * side * vec4(0, 16.0 / height, 0, 0) + side * vec4(0, -8.0 / height, 0, 0));
 }
 		    ]]>
       </snippet>

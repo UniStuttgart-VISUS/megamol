@@ -64,6 +64,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
         , filterStateSlot("filterState", "stores filter state for serialization")
         , thicknessFloatP("thickness", "Float value to incease line thickness")
+        , axesThicknessFloatP("Axes Thickness", "Float value to incease line thickness of Axes and Indicators")
         , legacyMode("LegacyMode", "Enables old Line Rendering mode with Bresenham Algorithm")
 
         , numTicks(5)
@@ -174,6 +175,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
 
     this->thicknessFloatP << new core::param::FloatParam(1.5);
     this->MakeSlotAvailable(&thicknessFloatP);
+
+    this->axesThicknessFloatP << new core::param::FloatParam(1.0);
+    this->MakeSlotAvailable(&axesThicknessFloatP);
 
     this->legacyMode << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&legacyMode);
@@ -663,6 +667,10 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
         glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1,
             this->axesColorSlot.Param<core::param::ColorParam>()->Value().data());
         glUniform1i(this->drawAxesProgram.ParameterLocation("pickedAxis"), pickedAxis);
+        glUniform1i(this->drawAxesProgram.ParameterLocation("width"), windowWidth);
+        glUniform1i(this->drawAxesProgram.ParameterLocation("height"), windowHeight);
+        glUniform1f(this->drawAxesProgram.ParameterLocation("axesThickness"),
+            this->axesThicknessFloatP.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount);
         this->drawAxesProgram.Disable();
 
@@ -672,6 +680,10 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
         glUniform1ui(this->drawScalesProgram.ParameterLocation("numTicks"), this->numTicks);
         glUniform1f(this->drawScalesProgram.ParameterLocation("axisHalfTick"), 2.0f);
         glUniform1i(this->drawScalesProgram.ParameterLocation("pickedAxis"), pickedAxis);
+        glUniform1i(this->drawScalesProgram.ParameterLocation("width"), windowWidth);
+        glUniform1i(this->drawScalesProgram.ParameterLocation("height"), windowHeight);
+        glUniform1f(this->drawScalesProgram.ParameterLocation("axesThickness"),
+            this->axesThicknessFloatP.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount * this->numTicks);
         this->drawScalesProgram.Disable();
 
@@ -681,6 +693,10 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
         glUniform1f(this->drawFilterIndicatorsProgram.ParameterLocation("axisHalfTick"), 2.0f);
         glUniform2i(this->drawFilterIndicatorsProgram.ParameterLocation("pickedIndicator"), pickedIndicatorAxis,
             pickedIndicatorIndex);
+        glUniform1i(this->drawFilterIndicatorsProgram.ParameterLocation("width"), windowWidth);
+        glUniform1i(this->drawFilterIndicatorsProgram.ParameterLocation("height"), windowHeight);
+        glUniform1f(this->drawFilterIndicatorsProgram.ParameterLocation("axesThickness"),
+            this->axesThicknessFloatP.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 12, this->columnCount * 2);
         this->drawScalesProgram.Disable();
         float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
