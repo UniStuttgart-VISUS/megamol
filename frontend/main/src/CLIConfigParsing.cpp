@@ -86,6 +86,7 @@ static std::string topmost_option       = "topmost";
 static std::string nocursor_option      = "nocursor";
 static std::string interactive_option   = "i,interactive";
 static std::string guishow_option       = "guishow";
+static std::string nogui_option         = "nogui";
 static std::string guiscale_option      = "guiscale";
 static std::string entryfbos_option     = "entryfbos";
 static std::string framebuffer_option   = "framebuffer";
@@ -116,6 +117,11 @@ static void empty_handler(std::string const& option_name, cxxopts::ParseResult c
 static void guishow_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.gui_show = parsed_options[option_name].as<bool>();
+};
+
+static void nogui_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.gui_show = !parsed_options[option_name].as<bool>();
 };
 
 static void guiscale_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -367,7 +373,8 @@ std::vector<OptionsListEntry> cli_options_list =
         , {nocursor_option,      "Do not show mouse cursor inside window",                                          cxxopts::value<bool>(),                     nocursor_handler     }
         , {interactive_option,   "Run MegaMol even if some project file failed to load",                            cxxopts::value<bool>(),                     interactive_handler  }
         , {project_files_option, "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
-        , {guishow_option,       "Render GUI overlay, use '=false' to disable",                                     cxxopts::value<bool>(),                     guishow_handler}
+        , {guishow_option,       "Render GUI overlay",                                                              cxxopts::value<bool>(),                     guishow_handler}
+        , {nogui_option,         "Dont render GUI overlay",                                                         cxxopts::value<bool>(),                     nogui_handler}
         , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
         , {entryfbos_option,     "[Experimental] Show result images of graph entry point views in GUI",             cxxopts::value<bool>(),                     entryfbos_handler}
         , {framebuffer_option,   "Size of framebuffer, syntax: --framebuffer WIDTHxHEIGHT",                         cxxopts::value<std::string>(),              framebuffer_handler}
