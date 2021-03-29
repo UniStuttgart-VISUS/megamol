@@ -111,8 +111,13 @@ bool Remote_Service::init(const Config& config) {
         return false;
     }
 
+    m_remote_control_resource = [&](unsigned int command, std::string const& value) {
+        this->add_headnode_remote_command(command, value);
+    };
+
     this->m_providedResourceReferences =
     {
+        {"HeadNodeRemoteControl", m_remote_control_resource} // std::function<void(unsigned int, std::string const&)>
     };
 
     this->m_requestedResourcesNames =
@@ -192,11 +197,11 @@ void Remote_Service::setRequestedResources(std::vector<FrontendResource> resourc
 }
     
 void Remote_Service::updateProvidedResources() {
-    // depending on role does head or render things
-    m_do_remote_things();
 }
 
 void Remote_Service::digestChangedRequestedResources() {
+    // depending on role does head or render things
+    m_do_remote_things();
 
     if (false)
         this->setShutdown();
@@ -214,17 +219,90 @@ void Remote_Service::postGraphRender() {
 void Remote_Service::do_headnode_things() {
     auto& graph = m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>();
 
-    static bool send_graph = true;
-    if (send_graph) {
-        send_graph = false;
-        const auto graph_state = const_cast<megamol::core::MegaMolGraph&>(graph).Convenience().SerializeGraph();
-        head_send_message(graph_state);
+    for(auto command: m_headnode_remote_control.commands_queue)
+    switch (command) {
+    case HeadNodeRemoteControl::Command::ClearGraph:
+        head_send_message("mmClearGraph()");
+        break;
+    case HeadNodeRemoteControl::Command::SendGraph:
+        head_send_message(const_cast<megamol::core::MegaMolGraph&>(graph).Convenience().SerializeGraph());
+        break;
+    case HeadNodeRemoteControl::Command::SendLuaCommand:
+        head_send_message(m_headnode_remote_control.lua_command);
+        break;
+    default:
+        break;
+    }
+    m_headnode_remote_control.commands_queue.clear();
+
+    auto split_module_names = [&](std::string const& modules_list_string, auto& module_list) {
+        if (modules_list_string.empty())
+            return;
+
+        const auto delimiters = ", ";
+        size_t begin = modules_list_string.find_first_not_of(delimiters);
+        auto end = modules_list_string.find_first_of(delimiters, begin);
+
+        while (begin != std::string::npos) {
+            module_list.push_back(modules_list_string.substr(begin, end-begin));
+            begin = modules_list_string.find_first_not_of(delimiters, end);
+            end = modules_list_string.find_first_of(delimiters, begin);
+        }
+    };
+
+    if (m_headnode_remote_control.keep_sending_params) {
+        static std::string send_params;
+        send_params.clear();
+
+        if (m_headnode_remote_control.modules_to_send_params_of == "all") {
+            send_params = const_cast<megamol::core::MegaMolGraph&>(graph).Convenience().SerializeAllParameters();
+        } else {
+            static std::vector<std::string> module_list;
+            module_list.clear();
+
+            split_module_names(m_headnode_remote_control.modules_to_send_params_of, module_list);
+
+            for (auto& module: module_list)
+                send_params += const_cast<megamol::core::MegaMolGraph&>(graph).Convenience().SerializeModuleParameters(module);
+        }
+
+        head_send_message(send_params);
+    }
+}
+
+void Remote_Service::add_headnode_remote_command(unsigned int command, std::string const& value) {
+
+    if (command > static_cast<unsigned int>(HeadNodeRemoteControl::Command::Count)) {
+        log_error("unknown Remote Control command number: " + std::to_string(command) + ", value: " + value);
+        return;
     }
 
-    if (!send_graph) {
-        const auto params = const_cast<megamol::core::MegaMolGraph&>(graph).Convenience().SerializeAllParameters();
-        head_send_message(params);
+    HeadNodeRemoteControl::Command cmd = static_cast<HeadNodeRemoteControl::Command>(command);
+
+    switch (cmd) {
+    case HeadNodeRemoteControl::Command::StartHeadNode:
+        start_headnode(true);
+        break;
+    case HeadNodeRemoteControl::Command::CloseHeadNode:
+        start_headnode(false);
+        break;
+    case HeadNodeRemoteControl::Command::KeepSendingParams:
+        m_headnode_remote_control.keep_sending_params = true;
+        break;
+    case HeadNodeRemoteControl::Command::DontSendParams:
+        m_headnode_remote_control.keep_sending_params = false;
+        break;
+    case HeadNodeRemoteControl::Command::SetParamSendingModules:
+        m_headnode_remote_control.modules_to_send_params_of = value;
+        break;
+    case HeadNodeRemoteControl::Command::SendLuaCommand:
+        m_headnode_remote_control.lua_command = value;
+        break;
+    default:
+        break;
     }
+
+    m_headnode_remote_control.commands_queue.push_back(cmd);
 }
 
 bool Remote_Service::start_headnode(bool start_or_shutdown) {
