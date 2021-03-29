@@ -21,6 +21,8 @@
 
 #include "glm/gtx/transform.hpp"
 
+#include "mmvtkm/sobol.h"
+
 using namespace megamol;
 using namespace megamol::mmvtkm;
 
@@ -34,6 +36,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , vtkCallerSlot_("vtkCallerSlot", "Requests vtk data for streamlines")
     , psStreamlineFieldName_("fieldName", "Specifies the field name of the streamline vector field")
     , psNumStreamlineSeeds_("numSeeds", "Specifies the number of seeds for the streamlines")
+    , psSeedStrategy_("seedStrategy", "Specifies how the seeds are generated")
     , psStreamlineStepSize_("stepSize", "Specifies the step size for the streamlines")
     , psNumStreamlineSteps_("numSteps", "Specifies the number of steps for the streamlines")
     , psLowerStreamlineSeedBound_("lowerSeedBound", "Specifies the lower streamline seed bound")
@@ -70,6 +73,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , streamlineColor_{}
     , streamlineIndices_{}
     , numSeeds_(100)
+    , seedStrategy_(0)
     , numSteps_(2000)
     , stepSize_(0.1f)
     , activeField_("hs1")
@@ -131,6 +135,12 @@ mmvtkmStreamLines::mmvtkmStreamLines()
 
     this->psNumStreamlineSeeds_.SetParameter(new core::param::IntParam(numSeeds_, 0));
     this->MakeSlotAvailable(&this->psNumStreamlineSeeds_);
+
+    this->psSeedStrategy_.SetParameter(new core::param::EnumParam(1));
+    this->psSeedStrategy_.Param<core::param::EnumParam>()->SetTypePair(0, "naive rand()");
+    this->psSeedStrategy_.Param<core::param::EnumParam>()->SetTypePair(1, "sobol sequence");
+    this->psSeedStrategy_.Param<core::param::EnumParam>()->SetTypePair(2, "uniform");
+    this->MakeSlotAvailable(&this->psSeedStrategy_);
 
     this->psStreamlineStepSize_.SetParameter(new core::param::FloatParam(stepSize_, 0.f));
     this->MakeSlotAvailable(&this->psStreamlineStepSize_);
@@ -1132,13 +1142,29 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
 
         // sample points in triangles and combine each triangles' samples
+        seedStrategy_ = psSeedStrategy_.Param<core::param::EnumParam>()->Value();
         for (const auto& tri : seedPlaneTriangles_) {
             unsigned int numTriSeeds = (unsigned int)floor(numSeeds_ * tri.weight);
 
+            int cnt = 0;
             for (int i = 0; i < numTriSeeds; ++i) {
-                float s = (float)rand() / (float)RAND_MAX;
-                float t = (float)rand() / (float)RAND_MAX;
+                float s = 0, t = 0;
+                if (seedStrategy_ == 0) {
+                    s = (float) rand() / (float) RAND_MAX;
+                    t = (float) rand() / (float) RAND_MAX;
+                } else if (seedStrategy_ == 1) {
+                    s = sobol::sample(cnt, 0);
+                    t = sobol::sample(cnt, 1);
+                    std::cout << cnt;
+                    std::cout << ": sobol s: " << s << " "
+                              << "sobol t: " << t << "\n";
+                } else if (seedStrategy_ == 2) {
+
+                }
+
                 glm::vec3 p = tri.o + s * tri.v1 + t * tri.v2;
+
+                cnt++;
 
                 if (!isInsideTriangle(p, tri)) {
                     // reject via --i;

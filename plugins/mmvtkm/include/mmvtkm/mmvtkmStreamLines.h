@@ -315,6 +315,9 @@ private:
     /** Paramslot to specify the seeds for the streamline */
     core::param::ParamSlot psNumStreamlineSeeds_;
 
+    /** Paramslot to specify how the seeds are generated */
+    core::param::ParamSlot psSeedStrategy_;
+
     /** Paramslot to specify the step size of the streamline */
     core::param::ParamSlot psStreamlineStepSize_;
 
@@ -405,6 +408,7 @@ private:
 
     /** Data storage for streamline parameters */
     vtkm::Id numSeeds_;
+    int seedStrategy_;
     vtkm::Id numSteps_;
     vtkm::FloatDefault stepSize_;
     std::string activeField_;
