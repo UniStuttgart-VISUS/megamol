@@ -19,7 +19,6 @@
 #define GUI_API
 #endif // _WIN32
 
-
 #include "Configurator.h"
 #include "LogConsole.h"
 #include "WindowCollection.h"
@@ -47,6 +46,10 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+
+#ifdef GUI_USE_GLFW
+#include "GLFW/glfw3.h"
+#endif // GUI_USE_GLFW
 
 
 namespace megamol {
@@ -205,6 +208,15 @@ namespace gui {
             void (*set_clipboard_func)(void* user_data, const char* string), void* user_data);
 
         /**
+         * Set GLFW window manipulation pointer
+         */
+        void SetWindowManipulationPtr(void* window_ptr) {
+#ifdef GUI_USE_GLFW
+            this->glfw_window_ptr = reinterpret_cast<GLFWwindow*>(window_ptr);
+#endif // GUI_USE_GLFW
+        }
+
+        /**
          * Synchronise changes between core graph <-> gui graph.
          *
          * - 'Old' core instance graph:    Call this function after(!) rendering of current frame.
@@ -312,6 +324,11 @@ namespace gui {
         /** The current local state of the gui. */
         StateBuffer state;
 
+#ifdef GUI_USE_GLFW
+        GLFWcursor* glfw_mouse_cursors[ImGuiMouseCursor_COUNT] = {};
+        GLFWwindow* glfw_window_ptr;
+#endif // GUI_USE_GLFW
+
         // Widgets
         FileBrowserWidget file_browser;
         StringSearchWidget search_widget;
@@ -351,6 +368,10 @@ namespace gui {
         void update_frame_statistics(WindowCollection::WindowConfiguration& wc);
 
         bool create_not_existing_png_filepath(std::string& inout_filepath);
+
+        void create_glfw_mouse_cursor(void);
+        void destroy_glfw_mouse_cursor(void);
+        void update_glfw_mouse_cursor(void);
     };
 
 } // namespace gui
