@@ -162,6 +162,11 @@ int main(const int argc, const char** argv) {
     if (auto remote_session_role = handle_remote_session_config(config, remoteConfig); !remote_session_role.empty()) {
         openglConfig.windowTitlePrefix += remote_session_role;
         remote_service.setPriority(lua_service_wrapper.getPriority() - 1); // remote does stuff before everything else, even before lua
+
+        if (remote_session_role.find("Head") != std::string::npos) {
+            guiConfig.show_headnode_remote_control = true;
+        }
+
         services.add(remote_service, &remoteConfig);
     }
 

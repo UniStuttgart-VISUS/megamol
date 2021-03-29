@@ -176,6 +176,12 @@ namespace gui {
         void SetEntryPointTextures(std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int>> textures) { m_textures_test = textures; }
         void ShowTextures();
 
+        std::function<void(unsigned int, std::string const&)>* m_headnode_remote_control = nullptr;
+        void SetRemoteControlCallback(std::function<void(unsigned int, std::string const&)> const& remote_control) {
+            m_headnode_remote_control = &const_cast<std::function<void(unsigned int, std::string const&)>&>(remote_control);
+        }
+        void ShowHeadnodeRemoteControl();
+
         // --------------------------------------
 
         /**

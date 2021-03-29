@@ -378,6 +378,7 @@ bool GUIWindows::PostDraw(void) {
     this->drawMenu();
 
     this->ShowTextures();
+    this->ShowHeadnodeRemoteControl();
 
     // Global Docking Space ---------------------------------------------------
     /// DOCKING
@@ -2523,3 +2524,77 @@ void megamol::gui::GUIWindows::ShowTextures() {
 
     #undef val
 }
+
+void megamol::gui::GUIWindows::ShowHeadnodeRemoteControl() {
+    if (!m_headnode_remote_control)
+        return;
+
+    static bool headnode_running = false;
+    static std::string lua_command = "";
+    static std::string param_send_modules = "all";
+    static bool keep_sending_params = false;
+
+
+    auto command_value = [&](unsigned int cmd, std::string const& value) {
+        (*this->m_headnode_remote_control)(cmd, value);
+    };
+    auto command = [&](unsigned int cmd) {
+        command_value(cmd, "");
+    };
+
+    auto window_name = "Head Node Remote Control";
+    ImGui::Begin(window_name, nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    {
+        if (headnode_running) {
+            ImGui::Text("(Server running) ");
+            ImGui::SameLine();
+            // CloseHeadNode - 2
+            if (ImGui::Button("Stop Head Node Server")) {
+                command(2);
+                headnode_running = false;
+            }
+        } else {
+            ImGui::Text("(Server stopped) ");
+            ImGui::SameLine();
+            //  StartHeadNode - 1
+            if (ImGui::Button("Start Head Node Server")) {
+                command(1);
+                headnode_running = true;
+            }
+        }
+
+        // ClearGraph - 3
+        if (ImGui::Button("Clear Rendernode Graphs")) {
+            command(3);
+            keep_sending_params = false;
+            command(6);
+        }
+        ImGui::SameLine();
+        // SendGraph  - 4
+        if (ImGui::Button("Broadcast Local Graph"))
+            command(4);
+
+        if (ImGui::RadioButton("Sync Module Params", keep_sending_params)) {
+            keep_sending_params = !keep_sending_params;
+            // KeepSendingParams - 5
+            // DontSendParams    - 6
+            keep_sending_params
+                ? command(5)
+                : command(6);
+        }
+        ImGui::SameLine();
+        if (ImGui::InputText("Sync Modules", &param_send_modules, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            command_value(7, param_send_modules);
+        }
+
+        if (ImGui::Button("Send Lua Command")) {
+            // SendLuaCommand - 8
+            command_value(8, lua_command);
+        }
+        ImGui::SameLine();
+        ImGui::InputText("Lua Command", &lua_command);
+
+    }
+    ImGui::End();
+}
+
