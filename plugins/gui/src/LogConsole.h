@@ -12,7 +12,7 @@
 #include "GUIUtils.h"
 #include "WindowCollection.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/MinimalPopUp.h"
+#include "widgets/PopUps.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/log/OfflineTarget.h"

@@ -1786,14 +1786,14 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
 
             popup_failed = !this->SaveProjectToFile(state.graph_selected_uid, project_filename, gui_state);
         }
-        MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+        PopUps::Minimal("Failed to Save Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
         state.configurator_graph_save = false;
 
         // Delete selected graph when tab is closed and unsaved changes should be discarded.
         confirmed = false;
         aborted = false;
-        bool popup_open = MinimalPopUp::PopUp(
+        bool popup_open = PopUps::Minimal(
             "Closing unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
         if (this->gui_graph_delete_uid != GUI_INVALID_ID) {
             if (aborted) {

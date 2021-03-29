@@ -14,7 +14,7 @@
 #include "Graph.h"
 
 #include "widgets/FileBrowserWidget.h"
-#include "widgets/MinimalPopUp.h"
+#include "widgets/PopUps.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"

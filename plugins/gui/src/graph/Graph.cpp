@@ -1764,12 +1764,11 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             state.hotkeys = this->gui_graph_state.hotkeys;
 
             // Prevent closing tab of running project pop-up ----------------------
-            bool tmp;
-            MinimalPopUp::PopUp("Close Project", popup_prevent_close_permanent,
-                "Running project can not be closed in configurator.", "OK", tmp, "", tmp);
+            PopUps::Minimal("Close Project", popup_prevent_close_permanent,
+                "Running project can not be closed in configurator.", "OK");
 
             // Rename pop-up ------------------------------------------------------
-            if (this->gui_rename_popup.PopUp("Rename Project", popup_rename, this->name)) {
+            if (this->gui_rename_popup.Rename("Rename Project", popup_rename, this->name)) {
                 this->ForceSetDirty();
             }
 

@@ -208,7 +208,7 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
 
 
     // Show screenshot privacy note pop-up
-    megamol::gui::MinimalPopUp::PopUp("Screenshot", this->screenshot_note_show, this->screenshot_note, "Ok");
+    PopUps::Minimal("Screenshot", this->screenshot_note_show, this->screenshot_note, "Ok");
     this->screenshot_note_show = false;
 }
 

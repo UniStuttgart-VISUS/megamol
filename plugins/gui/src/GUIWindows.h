@@ -28,7 +28,7 @@
 #include "widgets/DefaultStyle.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/MinimalPopUp.h"
+#include "widgets/PopUps.h"
 #include "widgets/StringSearchWidget.h"
 #include "widgets/TransferFunctionEditor.h"
 #include "widgets/WidgetPicking_gl.h"

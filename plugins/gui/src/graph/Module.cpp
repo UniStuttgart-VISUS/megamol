@@ -338,7 +338,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         }
                     } else {
                         std::string last_module_name = this->FullName();
-                        if (this->gui_rename_popup.PopUp("Rename Project", popup_rename, this->name)) {
+                        if (this->gui_rename_popup.Rename("Rename Project", popup_rename, this->name)) {
                             this->Update(state);
                             if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
                                 state.interact.module_rename.push_back(StrPair_t(last_module_name, this->FullName()));

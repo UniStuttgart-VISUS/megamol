@@ -1210,7 +1210,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_position = ImVec2(vp[2] / 2.0f, 0.0f);
     buf_win.win_reset_position = buf_win.win_position;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking;
     buf_win.win_callback = WindowCollection::DrawCallbacks::PERFORMANCE;
     this->window_collection.AddWindowConfiguration(buf_win);
 
@@ -2029,7 +2029,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             popup_failed |=
                 !this->configurator.GetGraphCollection().SaveProjectToFile(this->state.graph_uid, filename, gui_state);
         }
-        MinimalPopUp::PopUp(
+        PopUps::Minimal(
             "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
     }
     this->state.open_popup_save = false;
@@ -2045,7 +2045,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             /// GUI graph and GUI state are updated at next synchronization
             this->state.request_load_projet_file = filename;
         }
-        MinimalPopUp::PopUp(
+        PopUps::Minimal(
             "Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
     }
     this->state.open_popup_load = false;
