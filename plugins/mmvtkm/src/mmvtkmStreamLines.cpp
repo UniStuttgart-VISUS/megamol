@@ -998,7 +998,7 @@ bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::string const& identifier
     va.byte_size = 3 * (size_t)numPoints * sizeof(float);
     va.component_cnt = 3;
     va.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-    va.stride = 0;
+    va.stride = 3 * sizeof(float);
     va.offset = 0;
     va.semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION;
 
@@ -1007,7 +1007,7 @@ bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::string const& identifier
     vColor.byte_size = 4 * (size_t)numPoints * sizeof(float);
     vColor.component_cnt = 4;
     vColor.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-    vColor.stride = 0;
+    vColor.stride = 4 * sizeof(float);
     vColor.offset = 0;
     vColor.semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::COLOR;
 
@@ -1049,6 +1049,7 @@ bool mmvtkmStreamLines::addMeshDataToCall(
  * mmvtkmStreamLines::getDataCallback
  */
 bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
+
     mmvtkm::mmvtkmDataCall* rhsVtkmDc = this->vtkCallerSlot_.CallAs<mmvtkm::mmvtkmDataCall>();
     if (rhsVtkmDc == nullptr) {
         core::utility::log::Log::DefaultLog.WriteError("In %s at line %d.\rhsVtkmDc is nullptr.", __FILE__, __LINE__);
@@ -1072,7 +1073,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         planeAppearanceUpdate_ = false;
         return true;
     }
-
+    
     bool vtkmUpdate = rhsVtkmDc->HasUpdate();
     // plane calculation part here
     if (vtkmUpdate || planeUpdate_) {
@@ -1275,7 +1276,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
 
         lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
-
 
         streamlineUpdate_ = false;
         

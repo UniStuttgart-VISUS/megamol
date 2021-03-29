@@ -22,7 +22,7 @@ using namespace megamol::mmvtkm;
  * mmvtkmDataRenderer::mmvtmDataRenderer
  */
 mmvtkmDataRenderer::mmvtkmDataRenderer(void)
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , vtkmDataCallerSlot_("getData", "Connects the vtkm renderer with a vtkm data source")
     , psColorTables_("colorTable", "Colortables specify the color range of the data")
     , vtkmDataSet_()
@@ -83,7 +83,7 @@ void mmvtkmDataRenderer::release() {
 /**
  * mmvtkmDataRenderer::Render
  */
-bool mmvtkmDataRenderer::Render(core::view::CallRender3D_2& call) {
+bool mmvtkmDataRenderer::Render(core::view::CallRender3DGL& call) {
     mmvtkmDataCall* lhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkmDataCall>();
 
     if (lhsVtkmDc == nullptr) {
@@ -182,14 +182,14 @@ bool mmvtkmDataRenderer::Render(core::view::CallRender3D_2& call) {
 /**
  * mmvtkmDataRenderer::GetExtents
  */
-bool mmvtkmDataRenderer::GetExtents(core::view::CallRender3D_2& call) {
+bool mmvtkmDataRenderer::GetExtents(core::view::CallRender3DGL& call) {
     mmvtkmDataCall* lhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkmDataCall>();
     if (lhsVtkmDc == nullptr) {
         core::utility::log::Log::DefaultLog.WriteError("In %s at line %d. lhsVtkmDc is nullptr.", __FILE__, __LINE__);
         return false;
     }
 
-    megamol::core::view::CallRender3D_2* cr = &call;
+    megamol::core::view::CallRender3DGL* cr = &call;
     if (cr == nullptr) {
         core::utility::log::Log::DefaultLog.WriteError(
             "In %s at line %d. CallRender3D_2 is nullptr.", __FILE__, __LINE__);

@@ -105,9 +105,13 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 }
 
                 try {
+                    bool store_separate = false;
+                    if (mesh.first == "ghostplane")
+                        store_separate = true;
+
                     m_mesh_collection.first->addMesh(mesh.first, vb_layouts, vb_iterators, ib_iterators,
                         MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW,
-                        primtive_type);
+                        primitive_type, true);
                     m_mesh_collection.second.push_back(mesh.first);
                 } catch (glowl::MeshException const& exc) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -121,18 +125,6 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 }
 
             }
-<<<<<<< HEAD
-
-            bool store_separate = false;
-            if (mesh.first == "ghostplane")
-                store_separate = true;
-
-            m_mesh_collection.first->addMesh(mesh.first, vb_layouts, vb_iterators, ib_iterators,
-                MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW, primitive_type,
-                store_separate);
-            m_mesh_collection.second.push_back(mesh.first);
-=======
->>>>>>> upstream/master
         }
 
          auto lhs_meta_data = lhs_mesh_call->getMetaData();
@@ -145,19 +137,11 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             rhs_meta_data.m_frame_cnt = src_meta_data.m_frame_cnt;
         }
 
-<<<<<<< HEAD
-    } else {
-        rhs_meta_data.m_frame_cnt = src_meta_data.m_frame_cnt;
-    }
-
-    lhs_meta_data.m_frame_cnt = std::min(src_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
-=======
         lhs_meta_data.m_frame_cnt = std::min(src_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
 
         auto bbox = src_meta_data.m_bboxs.BoundingBox();
         bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
         lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
->>>>>>> upstream/master
 
         auto cbbox = src_meta_data.m_bboxs.ClipBox();
         cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
