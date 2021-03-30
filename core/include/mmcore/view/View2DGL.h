@@ -132,6 +132,9 @@ public:
 
 private:
 
+    /** Track state of ctrl key for camera controls */
+    bool _ctrlDown;
+
     /** The mouse drag mode */
     MouseMode _mouseMode;
 
@@ -140,15 +143,6 @@ private:
 
     /** The mouse y coordinate */
     float _mouseY;
-
-    /** The view focus x coordinate */
-    float _viewX;
-
-    /** The view focus y coordinate */
-    float _viewY;
-
-    /** The view zoom factor */
-    float _viewZoom;
 
     /** the update counter for the view settings */
     unsigned int _viewUpdateCnt;
