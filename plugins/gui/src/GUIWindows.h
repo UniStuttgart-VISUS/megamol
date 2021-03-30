@@ -19,7 +19,6 @@
 #define GUI_API
 #endif // _WIN32
 
-
 #include "Configurator.h"
 #include "LogConsole.h"
 #include "WindowCollection.h"
@@ -142,7 +141,7 @@ namespace gui {
         /**
          * Pass triggered Shutdown.
          */
-        inline bool ConsumeTriggeredShutdown(void) {
+        inline bool GetTriggeredShutdown(void) {
             bool request_shutdown = this->state.shutdown_triggered;
             this->state.shutdown_triggered = false;
             return request_shutdown;
@@ -162,7 +161,19 @@ namespace gui {
          * Pass project load request.
          * Request is consumed when calling this function.
          */
-        std::string ConsumeProjectLoadRequest(void);
+        std::string GetProjectLoadRequest(void);
+
+        /**
+         * Pass current mouse cursor request.
+         *
+         * See imgui.h: enum ImGuiMouseCursor_
+         * io.MouseDrawCursor is true when Software Cursor should be drawn instead.
+         *
+         * @return Retured mouse cursor is in range [ImGuiMouseCursor_None=-1, (ImGuiMouseCursor_COUNT-1)=8]
+         */
+        int GetMouseCursor(void) const {
+            return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
+        }
 
         ///////// SET ///////////
 
@@ -185,8 +196,6 @@ namespace gui {
          * Set GUI scale.
          */
         void SetScale(float scale);
-
-        // --------------------------------------
 
         /**
          * Set project script paths.

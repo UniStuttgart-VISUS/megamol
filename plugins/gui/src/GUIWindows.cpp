@@ -825,7 +825,7 @@ bool megamol::gui::GUIWindows::GetTriggeredScreenshot(void) {
 }
 
 
-std::string megamol::gui::GUIWindows::ConsumeProjectLoadRequest(void) {
+std::string megamol::gui::GUIWindows::GetProjectLoadRequest(void) {
 
     auto project_file_name = this->state.request_load_projet_file;
     this->state.request_load_projet_file.clear();
@@ -1222,6 +1222,7 @@ bool GUIWindows::createContext(void) {
     io.LogFilename = nullptr;                             // "imgui_log.txt" - disabled
     io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors; // GetMouseCursor() is processed in frontend service
 
 /// DOCKING https://github.com/ocornut/imgui/issues/2109
 #ifdef IMGUI_HAS_DOCK
