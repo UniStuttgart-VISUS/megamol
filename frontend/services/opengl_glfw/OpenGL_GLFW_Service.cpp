@@ -812,7 +812,7 @@ void OpenGL_GLFW_Service::create_glfw_mouse_cursors(void) {
     if (m_pimpl->mouse_cursors.size() != 9) {
         return;
     }
-    // matched to enum ImGuiMouseCursor_ in imgui.h
+    // See imgui.h: enum ImGuiMouseCursor_ 
     GLFWerrorfun prev_error_callback = ::glfwSetErrorCallback(nullptr);
     m_pimpl->mouse_cursors[0] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_Arrow
     m_pimpl->mouse_cursors[1] = ::glfwCreateStandardCursor(GLFW_IBEAM_CURSOR); // ImGuiMouseCursor_TextInput
@@ -834,11 +834,18 @@ void OpenGL_GLFW_Service::create_glfw_mouse_cursors(void) {
 }
 
 void OpenGL_GLFW_Service::update_glfw_mouse_cursors(const int cursor_id) {
-    if (!m_pimpl->config.windowPlacement.noCursor && (cursor_id >= 0) && (cursor_id < m_pimpl->mouse_cursors.size())) {
-        ::glfwSetCursor(m_pimpl->glfwContextWindowPtr, m_pimpl->mouse_cursors[cursor_id] ? m_pimpl->mouse_cursors[cursor_id] : m_pimpl->mouse_cursors[static_cast<int>(GLFW_ARROW_CURSOR)]);
+    if (m_pimpl->config.windowPlacement.noCursor) {
+        ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        return;
+    }
+
+    if ((cursor_id >= 0) && (cursor_id < m_pimpl->mouse_cursors.size())) {
+        ::glfwSetCursor(m_pimpl->glfwContextWindowPtr,
+            m_pimpl->mouse_cursors[cursor_id] ? m_pimpl->mouse_cursors[cursor_id]
+                                              : m_pimpl->mouse_cursors[static_cast<int>(GLFW_ARROW_CURSOR)]);
         ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     } else {
-        ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     }
 }
 
@@ -849,12 +856,7 @@ void OpenGL_GLFW_Service::update_glfw_mouse_cursors(const int cursor_id) {
 // glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
 // glfwSetCursorPos(g_Window, (double)mouse_pos_backup.x, (double)mouse_pos_backup.y);
 //
-// glfwSetCursor(g_Window, g_MouseCursors);
 // glfwGetInputMode(g_Window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
-// glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-// glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-// glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
-// glfwDestroyCursor(g_MouseCursors[cursor_n]);
 // }
 
 } // namespace frontend
