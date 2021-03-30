@@ -23,7 +23,7 @@
 namespace megamol {
 namespace frontend {
 
-#define is_gui_not_nullptr (static_cast<bool>((this->m_gui != nullptr) && (this->m_gui->Get() != nullptr)))
+#define is_gui_nullptr (static_cast<bool>((this->m_gui == nullptr) || (this->m_gui->Get() == nullptr)))
 
 GUI_Service::~GUI_Service() {
 
@@ -69,7 +69,7 @@ bool GUI_Service::init(const Config& config) {
     if (config.imgui_api == GUI_Service::ImGuiAPI::OPEN_GL) { 
         if (this->m_gui == nullptr) {
             this->m_gui = std::make_shared<megamol::gui::GUIWrapper>();
-            if (is_gui_not_nullptr) {
+            if (!is_gui_nullptr) {
                 auto gui = this->m_gui->Get();
 
                 // Create context
@@ -110,8 +110,7 @@ void GUI_Service::updateProvidedResources() {
 
 void GUI_Service::digestChangedRequestedResources() {
 
-    if (!is_gui_not_nullptr)
-        return;
+    if (is_gui_nullptr) return;
     auto gui = this->m_gui->Get();
 
     // Trigger shutdown
@@ -252,7 +251,7 @@ void GUI_Service::resetProvidedResources() {
 
 void GUI_Service::preGraphRender() {
 
-    if (!is_gui_not_nullptr) return;
+    if (is_gui_nullptr) return;
     auto gui = this->m_gui->Get();
 
     if (this->m_opengl_context_ptr) {
@@ -271,7 +270,7 @@ void GUI_Service::preGraphRender() {
 
 void GUI_Service::postGraphRender() {
 
-    if (!is_gui_not_nullptr) return;
+    if (is_gui_nullptr) return;
     auto gui = this->m_gui->Get();
 
     if (this->m_opengl_context_ptr) {
@@ -303,7 +302,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 
 std::string GUI_Service::resource_request_gui_state(void) {
 
-    if (!is_gui_not_nullptr) {
+    if (is_gui_nullptr) {
         return std::string();
     }
     auto gui = this->m_gui->Get();
@@ -313,9 +312,7 @@ std::string GUI_Service::resource_request_gui_state(void) {
 
 void GUI_Service::resource_provide_gui_state(const std::string& json_state) {
 
-    if (!is_gui_not_nullptr) {
-        return;
-    }
+    if (is_gui_nullptr) return;
     auto gui = this->m_gui->Get();
     gui->SetState(json_state);
 }
@@ -323,18 +320,14 @@ void GUI_Service::resource_provide_gui_state(const std::string& json_state) {
 
 void GUI_Service::resource_provide_gui_visibility(bool show) {
 
-    if (!is_gui_not_nullptr) {
-        return;
-    }
+    if (is_gui_nullptr) return;
     auto gui = this->m_gui->Get();
     gui->SetVisibility(show);
 }
 
 void GUI_Service::resource_provide_gui_scale(float scale) {
 
-    if (!is_gui_not_nullptr) {
-        return;
-    }
+    if (is_gui_nullptr) return;
     auto gui = this->m_gui->Get();
     gui->SetScale(scale);
 }
