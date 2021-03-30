@@ -152,9 +152,14 @@ namespace gui {
 
         /**
          * Pass current mouse cursor request.
+         *
+         * See imgui.h: enum ImGuiMouseCursor_
+         * io.MouseDrawCursor is true when Software Cursor should be drawn instead.
+         *
+         * @return Retured mouse cursor is in range [ImGuiMouseCursor_None=-1, (ImGuiMouseCursor_COUNT-1)=8]
          */
         int GetMouseCursor(void) const {
-            return ImGui::GetMouseCursor();
+            return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
         }
 
         ///////// SET ///////////

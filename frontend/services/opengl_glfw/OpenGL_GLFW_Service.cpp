@@ -805,11 +805,7 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
 }
 
 void OpenGL_GLFW_Service::create_glfw_mouse_cursors(void) {
-    // (By design, on X11 cursors are user configurable and some cursors may be missing. When a cursor doesn't exist,
-    // GLFW will emit an error which will often be printed by the app, so we temporarily disable error reporting.
-    // Missing cursors will return NULL and  megamol::frontend_resources::WindowManipulation::set_mouse_cursor()
-    // function will use the Arrow cursor instead.)
-    /// See imgui_impl_glfw.cpp
+    // See imgui_impl_glfw.cpp for reference
     for (auto& mouse_cursor_ptr : m_pimpl->mouse_cursors) {
         mouse_cursor_ptr = nullptr;
     }
@@ -838,12 +834,13 @@ void OpenGL_GLFW_Service::create_glfw_mouse_cursors(void) {
 }
 
 void OpenGL_GLFW_Service::update_glfw_mouse_cursors(const int cursor_id) {
-    if (!m_pimpl->config.windowPlacement.noCursor && (cursor_id < m_pimpl->mouse_cursors.size())) {
+    if (!m_pimpl->config.windowPlacement.noCursor && (cursor_id >= 0) && (cursor_id < m_pimpl->mouse_cursors.size())) {
         ::glfwSetCursor(m_pimpl->glfwContextWindowPtr, m_pimpl->mouse_cursors[cursor_id] ? m_pimpl->mouse_cursors[cursor_id] : m_pimpl->mouse_cursors[static_cast<int>(GLFW_ARROW_CURSOR)]);
         ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    } else {
+        ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 }
-
 
 // { glfw calls used somewhere by imgui but not covered by this class
 // glfwGetWin32Window(g_Window);
