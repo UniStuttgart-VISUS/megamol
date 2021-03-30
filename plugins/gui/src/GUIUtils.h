@@ -28,7 +28,7 @@
  * - Save Edited Project:       Ctrl + Shift + s
  *
  * ----- Graph -----
- * - Delete Graph Item:         Delete
+ * - Delete Graph Item:         Entf
  * - Selection, Drag & Drop:    Left Mouse Button
  * - Context Menu:              Right Mouse Button
  * - Zooming:                   Mouse Wheel
