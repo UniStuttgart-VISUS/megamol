@@ -18,29 +18,22 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "resources/*")
 
-  # glm
   require_external(glm)
-  # glad
   require_external(glad)
-  # imgui
   require_external(imgui)
-  set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
-  # imguizmoquat
   require_external(imguizmoquat)
 
   # target definition
+  set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${resource_files})
 
-  # Add C++ filesystem support.
   if(UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
   endif()
 
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS IMGUI_IMPL_OPENGL_LOADER_GLAD)
-  target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    "include" "src"
-    "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/")
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
+    "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/") # imgui
   target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad abstract_frontend_service PUBLIC imgui imguizmoquat)
 
   # Installation rules for generated files

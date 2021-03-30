@@ -1231,6 +1231,7 @@ bool GUIWindows::createContext(void) {
     io.LogFilename = nullptr;                             // "imgui_log.txt" - disabled
     io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors; // GetMouseCursor() is processed in frontend service
 
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
