@@ -43,6 +43,7 @@ namespace view {
         // within the frustrum given by fovy and aspect or by frustrum height and aspect
         struct ImagePlaneTile {
             ImagePlaneTile() : tile_start(glm::vec2(0.0f)), tile_end(glm::vec2(1.0f)){};
+            ImagePlaneTile(glm::vec2 const& start, glm::vec2 const& end) : tile_start(start), tile_end(end){};
 
             glm::vec2 tile_start; //< lower left corner of image tile in normalized coordinates
             glm::vec2 tile_end;   //< upper right corner of image tile in normalized coordinates
@@ -144,17 +145,62 @@ namespace view {
 
     inline Camera::Camera(glm::mat4 const& view_matrix, glm::mat4 const& projection_matrix)
             : _view_matrix(view_matrix), _projection_matrix(projection_matrix), _intrinsics(std::monostate()) {
-        // TODO compute pose from view matrix
+
+        const glm::vec4 position  = {0.0f, 0.0f, 0.0f, 1.0f};
+        const glm::vec4 direction = {0.0f, 0.0f,-1.0f, 1.0f};
+        const glm::vec4 up        = {0.0f, 1.0f, 0.0f, 1.0f};
+
+        _pose.position  =                view_matrix * position;
+        _pose.direction = glm::normalize(view_matrix * direction);
+        _pose.up        = glm::normalize(view_matrix * up);
     }
 
     inline Camera::Camera(Pose const& pose, PerspectiveParameters const& intrinsics)
             : _pose(pose), _intrinsics(intrinsics) {
         // compute view matrix from pose
         _view_matrix = glm::lookAt(_pose.position, _pose.position + _pose.direction, _pose.up);
+
         // compute projection matrix from intrinsics
+        //_projection_matrix =
+        //    glm::perspective(intrinsics.fovy, intrinsics.aspect, intrinsics.near_plane, intrinsics.far_plane);
+        //return;
+
+        // check image_tile and compute projection matrix with adjusted fovy and/or off-center
+        // all values normalized at distance 1 from camera
+        #undef near // some header already defines near?
+        const float near   = intrinsics.near_plane;
+        const float global_height = glm::tan(intrinsics.fovy * 0.5f) * 2.0f; // fovy is whole frustum but tan takes only half
+        const float global_width  = global_height * intrinsics.aspect;
+
+        // https://docs.microsoft.com/en-us/windows/win32/opengl/glfrustum
+        // https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glFrustum.xml
+        // note that these values need to be multiplied by near_distance to be fed into glFrustum
+        const glm::vec2 global_left_bottom = {0, 0};
+        const glm::vec2 global_right_top = {global_width, global_height};
+
+        const auto normalized_tile_to_frustum = [&](glm::vec2 const& tile_point) {
+            return tile_point * global_right_top;
+        };
+
+        const auto left_bottom_tile = normalized_tile_to_frustum(intrinsics.image_plane_tile.tile_start);
+        const auto right_top_tile   = normalized_tile_to_frustum(intrinsics.image_plane_tile.tile_end);
+
+        // center at (0,0) and map onto near plane
+        const auto center_and_map = [&](glm::vec2 const& point) {
+            const glm::vec2 global_half_frustum = {global_width * 0.5f, global_height * 0.5f};
+            return (point - global_half_frustum) * near;
+        };
+
+        const auto local_frustum_left_bottom = center_and_map(left_bottom_tile);
+        const auto local_frustum_right_top   = center_and_map(right_top_tile);
+
         _projection_matrix =
-            glm::perspective(intrinsics.fovy, intrinsics.aspect, intrinsics.near_plane, intrinsics.far_plane);
-        // TODO check image_tile and compute projection matrix with adjusted fovy and/or off-center
+            glm::frustum(
+                local_frustum_left_bottom.x, // left
+                local_frustum_right_top.x,   // right
+                local_frustum_left_bottom.y, // botom
+                local_frustum_right_top.y,   // top
+                intrinsics.near_plane, intrinsics.far_plane);
     }
 
     inline Camera::Camera(Pose const& pose, OrthographicParameters const& intrinsics)
@@ -166,8 +212,33 @@ namespace view {
         auto r = (intrinsics.frustrum_height / 2.0f) * intrinsics.aspect;
         auto t = (intrinsics.frustrum_height / 2.0f);
         auto b = -1.0f * (intrinsics.frustrum_height / 2.0f);
-        _projection_matrix = glm::ortho(l, r, b, t, intrinsics.near_plane, intrinsics.far_plane);
-        // TODO check image_tile and compute projection matrix with adjusted fovy and/or off-center
+        //_projection_matrix = glm::ortho(l, r, b, t, intrinsics.near_plane, intrinsics.far_plane);
+        // return;
+
+        // check image_tile and compute projection matrix with adjusted fovy and/or off-center
+        const auto global_height = intrinsics.frustrum_height;
+        const auto global_width  = intrinsics.frustrum_height * intrinsics.aspect;
+
+        const glm::vec2 global_frustum_size = {global_width, global_height};
+        const glm::vec2 global_left_bottom  = -global_frustum_size * 0.5f;
+        const glm::vec2 global_right_top    =  global_frustum_size * 0.5f;
+
+        // tile specified in (0,1) - can use for linear interpolation
+        const glm::vec2 tile_start = intrinsics.image_plane_tile.tile_start;
+        const glm::vec2 tile_end   = intrinsics.image_plane_tile.tile_end;
+
+        const auto normalized_tile_to_frustum = [&](glm::vec2 const& point) {
+            return point * global_frustum_size + global_left_bottom;
+        };
+
+        const glm::vec2 local_frustum_left_bottom = normalized_tile_to_frustum(tile_start);
+        const glm::vec2 local_frustum_right_top   = normalized_tile_to_frustum(tile_end);
+        _projection_matrix = glm::ortho(
+            local_frustum_left_bottom.x, // left
+            local_frustum_right_top.x,   // right
+            local_frustum_left_bottom.y, // bottom
+            local_frustum_right_top.y,   // top
+            intrinsics.near_plane, intrinsics.far_plane);
     }
 
     template<typename CameraInfoType>
