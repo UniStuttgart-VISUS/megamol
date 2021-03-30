@@ -270,6 +270,7 @@ namespace gui {
             double stat_averaged_ms;              // current average fps value
             size_t stat_frame_count;              // current fame count
             std::vector<std::string> resource_directories; // the global resource directories
+            bool load_docking_preset;                      // Flag indicating docking preset loading
             bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
         };
 
@@ -338,9 +339,15 @@ namespace gui {
         void window_sizing_and_positioning(WindowCollection::WindowConfiguration& wc, bool& out_collapsing_changed);
 
         bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
-        void checkMultipleHotkeyAssignement(void);
+        void checkMultipleHotkeyAssignment(void);
         bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
         void triggerCoreInstanceShutdown(void);
+
+        void load_preset_window_docking(ImGuiID global_docking_id);
+
+        // Required to save/load docking
+        void load_imgui_settings_from_string(std::string imgui_settings);
+        std::string save_imgui_settings_to_string(void);
 
         std::string project_to_lua_string(void);
         bool state_from_string(const std::string& state);
@@ -351,6 +358,8 @@ namespace gui {
         void update_frame_statistics(WindowCollection::WindowConfiguration& wc);
 
         bool create_not_existing_png_filepath(std::string& inout_filepath);
+
+        std::string full_window_title(WindowCollection::WindowConfiguration& wc) const;
     };
 
 } // namespace gui
