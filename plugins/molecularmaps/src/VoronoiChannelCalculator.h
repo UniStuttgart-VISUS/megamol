@@ -39,7 +39,7 @@ namespace molecularmaps {
         /**
          * Invokes the rendering calls.
          */
-        virtual bool Render(core::view::CallRender3D_2& call, bool lighting = true);
+        virtual bool Render(core::view::CallRender3DGL& call, bool lighting = true);
 
         /**
          * Update function for the local data to render.
