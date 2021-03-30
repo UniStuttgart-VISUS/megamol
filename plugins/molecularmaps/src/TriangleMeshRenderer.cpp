@@ -162,7 +162,7 @@ void TriangleMeshRenderer::release(void) {}
 /*
  * TriangleMeshRenderer::Render
  */
-bool TriangleMeshRenderer::Render(core::view::CallRender3D_2& call, bool lighting) {
+bool TriangleMeshRenderer::Render(core::view::CallRender3DGL& call, bool lighting) {
 
     if (this->faces == nullptr)
         return false;
@@ -233,7 +233,7 @@ bool TriangleMeshRenderer::Render(core::view::CallRender3D_2& call, bool lightin
 /*
  * TriangleMeshRenderer::RenderWireFrame
  */
-bool TriangleMeshRenderer::RenderWireFrame(core::view::CallRender3D_2& call, bool lighting) {
+bool TriangleMeshRenderer::RenderWireFrame(core::view::CallRender3DGL& call, bool lighting) {
     GLint oldpolymode[2];
     glGetIntegerv(GL_POLYGON_MODE, oldpolymode);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
