@@ -132,11 +132,11 @@ OverlayRenderer::OverlayRenderer(void)
     this->MakeSlotAvailable(&this->paramText);
 
     // Font Settings
-    param::EnumParam* fep = new param::EnumParam(utility::SDFFont::FontName::ROBOTO_SANS);
-    fep->SetTypePair(utility::SDFFont::FontName::ROBOTO_SANS, "Roboto Sans");
-    fep->SetTypePair(utility::SDFFont::FontName::EVOLVENTA_SANS, "Evolventa");
-    fep->SetTypePair(utility::SDFFont::FontName::UBUNTU_MONO, "Ubuntu Mono");
-    fep->SetTypePair(utility::SDFFont::FontName::VOLLKORN_SERIF, "Vollkorn Serif");
+    param::EnumParam* fep = new param::EnumParam(utility::SDFFont::PRESET_ROBOTO_SANS);
+    fep->SetTypePair(utility::SDFFont::PRESET_ROBOTO_SANS, "Roboto Sans");
+    fep->SetTypePair(utility::SDFFont::PRESET_EVOLVENTA_SANS, "Evolventa");
+    fep->SetTypePair(utility::SDFFont::PRESET_UBUNTU_MONO, "Ubuntu Mono");
+    fep->SetTypePair(utility::SDFFont::PRESET_VOLLKORN_SERIF, "Vollkorn Serif");
     this->paramFontName << fep;
     this->paramFontName.SetUpdateCallback(this, &OverlayRenderer::onFontName);
     this->MakeSlotAvailable(&this->paramFontName);
@@ -261,7 +261,8 @@ bool OverlayRenderer::onFontName(param::ParamSlot& slot) {
 
     slot.ResetDirty();
     this->m_font_ptr.reset();
-    auto font_name = static_cast<utility::SDFFont::FontName>(this->paramFontName.Param<param::EnumParam>()->Value());
+    auto font_name =
+        static_cast<utility::SDFFont::PresetFontName>(this->paramFontName.Param<param::EnumParam>()->Value());
     this->m_font_ptr = std::make_unique<utility::SDFFont>(font_name);
     if (!this->m_font_ptr->Initialise(this->GetCoreInstance())) {
         return false;
@@ -438,18 +439,6 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-
-    auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
-
-    if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
-        auto vp = cam.image_tile();
-        glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
-        auto backCol = call.BackgroundColor();
-        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
 
     // First call chained renderer
     auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
@@ -660,21 +649,7 @@ void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utilit
     } break;
     }
 
-    // Font rendering takes matrices from OpenGL stack
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(ortho));
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    font.DrawString(glm::value_ptr(color), x, y, z, size, false, text.c_str(), anchor);
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+    font.DrawString(ortho, glm::value_ptr(color), x, y, z, size, false, text.c_str(), anchor);
 }
 
 

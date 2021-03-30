@@ -310,7 +310,7 @@ void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm:
 
 void RenderUtils::Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bottom_left,
     const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y,
-    const glm::vec4& color) {
+    const glm::vec4& color, bool force_opaque) {
 
     glm::vec3 pbl = pos_bottom_left;
     glm::vec3 pul = pos_upper_left;
@@ -322,7 +322,7 @@ void RenderUtils::Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bot
         pur.y = pos_bottom_right.y;
         pbr.y = pos_upper_right.y;
     }
-    glm::vec4 attributes = {0.0f, 0.0f, 0.0f, 0.0f};
+    glm::vec4 attributes = {((force_opaque) ? (1.0f) : (0.0f)), 0.0f, 0.0f, 0.0f};
     this->pushQuad(RenderUtils::Primitives::COLOR_TEXTURE, texture_id, pbl, pul, pur, pbr, color, attributes);
 }
 
@@ -370,7 +370,7 @@ unsigned int RenderUtils::GetTextureHeight(GLuint texture_id) const {
 }
 
 
-void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

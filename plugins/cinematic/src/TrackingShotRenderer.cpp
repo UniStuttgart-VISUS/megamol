@@ -177,19 +177,16 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     glm::mat4 proj = projTemp;
     glm::mat4 mvp = proj * view;
 
-    // Get current viewport
-    auto viewport = cam.resolution_gate();
-    const float vp_fw = static_cast<float>(viewport.width());
-    const float vp_fh = static_cast<float>(viewport.height());
-
-    // Get matrix for orthogonal projection of 2D rendering
-    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
+    glm::vec2 viewport;
+    viewport.x = static_cast<float>(cam.resolution_gate().width());
+    viewport.y = static_cast<float>(cam.resolution_gate().height());
+    glm::mat4 ortho = glm::ortho(0.0f, viewport.x, 0.0f, viewport.y, -1.0f, 1.0f);
 
     // Push manipulators ------------------------------------------------------
     if (keyframes->size() > 0) {
         cam_type::minimal_state_type camera_state;
         cam.get_minimal_state(camera_state);
-        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera_state, glm::vec2(vp_fw, vp_fh), mvp);
+        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera_state, viewport, mvp);
         this->manipulators.PushRendering(this->utils);
     }
 
@@ -210,12 +207,12 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     }
 
     // Draw 3D ---------------------------------------------------------------
-    this->utils.DrawAll(mvp, glm::vec2(vp_fw, vp_fh));
+    this->utils.DrawAll(mvp, viewport);
 
     // Push hotkey list ------------------------------------------------------
     // Draw help text 
     if (this->showHelpText) {
-        this->utils.PushHotkeyList(vp_fw, vp_fh);
+        this->utils.PushHotkeyList(ortho, viewport);
     }
 
     // Push menu --------------------------------------------------------------
@@ -225,10 +222,10 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     if (this->showHelpText) {
         rightLabel = " [Shift+h] Hide Help Text ";
     }
-    this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, viewport);
 
     // Draw 2D ---------------------------------------------------------------
-    this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
+    this->utils.DrawAll(ortho, viewport);
 
     return true;
 }

@@ -141,10 +141,6 @@ private:
     core::param::ParamSlot m_specular_color;
     core::param::ParamSlot m_material_color;
 
-    core::param::ParamSlot paramOverride;
-    core::param::ParamSlot paramMinOverride;
-    core::param::ParamSlot paramMaxOverride;
-
     /** caller slot */
     megamol::core::CallerSlot m_renderer_callerSlot;
     megamol::core::CallerSlot m_volumetricData_callerSlot;
@@ -152,6 +148,7 @@ private:
     megamol::core::CallerSlot m_transferFunction_callerSlot;
 
     std::array<float, 2> valRange;
+    bool valRangeNeedsUpdate = false;
 
     /** FBO for chaining renderers */
     vislib::graphics::gl::FramebufferObject fbo;

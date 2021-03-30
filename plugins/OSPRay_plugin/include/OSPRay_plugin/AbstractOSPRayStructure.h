@@ -11,6 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/UniFlagCalls.h"
 
 
 namespace megamol {
@@ -44,6 +45,9 @@ protected:
 
     /** The call for transformation */
     core::CallerSlot getTransformationSlot;
+
+    core::CallerSlot writeFlagsSlot;
+    core::CallerSlot readFlagsSlot;
 
     SIZE_T datahash;
     float time;

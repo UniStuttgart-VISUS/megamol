@@ -144,6 +144,7 @@ namespace gui {
 
     /********** Global GUI Scaling Factor **********/
 
+    // Forward declaration
     class GUIWindows;
 
     class GUIScaling {
