@@ -187,8 +187,9 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::G
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
 
     glUniform2f(program.ParameterLocation("scaling"), 1.0f, 1.0f); // scaling, whatever
-    glUniformMatrix4fv(program.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(program.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    glUniformMatrix4fv(program.ParameterLocation("modelView"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getViewMatrix()));
+    glUniformMatrix4fv(
+        program.ParameterLocation("projection"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getProjectionMatrix()));
     glUniform1ui(program.ParameterLocation("dimensionCount"), this->columnCount);
     glUniform1ui(program.ParameterLocation("itemCount"), this->itemCount);
 
@@ -453,7 +454,7 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
 
     if (this->scaleToFitSlot.Param<core::param::BoolParam>()->Value()) {
         // scale to fit
-        float requiredHeight = width / windowAspect;
+        float requiredHeight = width / camera_cpy.get<core::view::Camera::OrthographicParameters>().aspect;
         this->axisHeight = requiredHeight - 3.0f * marginY;
     } else {
         this->axisHeight = 80.0f;
@@ -539,8 +540,17 @@ bool ParallelCoordinatesRenderer2D::OnMouseButton(
 }
 
 bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
-    this->mouseX = x;
-    this->mouseY = y;
+
+    auto cam_pose = camera_cpy.get<core::view::Camera::Pose>();
+    auto cam_intrinsics = camera_cpy.get<core::view::Camera::OrthographicParameters>();
+    float world_x, world_y;
+    world_x = ((x * 2.0f / fbo->getWidth()) - 1.0f);
+    world_y = 1.0f - (y * 2.0f / fbo->getHeight());
+    world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
+    world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
+
+    this->mouseX = world_x;
+    this->mouseY = world_y;
 
     if (this->ctrlDown) {
         // these clicks go to the view
@@ -807,7 +817,7 @@ void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, flo
 
 void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     debugPush(4, "doFragmentCount");
-    int invocations[] = {static_cast<int>(std::ceil(windowWidth / 16)), static_cast<int>(std::ceil(windowHeight / 16))};
+    int invocations[] = {static_cast<int>(std::ceil(fbo->getWidth() / 16)), static_cast<int>(std::ceil(fbo->getHeight() / 16))};
     GLuint invocationCount = invocations[0] * invocations[1];
 
     size_t bytes = sizeof(uint32_t) * 2 * invocationCount;
@@ -829,7 +839,7 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     // uniforms invocationcount etc.
     glUniform1ui(minMaxProgram.ParameterLocation("invocationCount"), invocationCount);
     glUniform4fv(minMaxProgram.ParameterLocation("clearColor"), 1, backgroundColor);
-    glUniform2ui(minMaxProgram.ParameterLocation("resolution"), windowWidth, windowHeight);
+    glUniform2ui(minMaxProgram.ParameterLocation("resolution"), fbo->getWidth(), fbo->getHeight());
     glUniform2ui(minMaxProgram.ParameterLocation("fragmentCountStepSize"), invocations[0], invocations[1]);
 
 
@@ -901,10 +911,10 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
     case DRAW_CONTINUOUS:
     case DRAW_HISTOGRAM:
         bool ok = true;
-        if (!this->densityFBO.IsValid() || this->densityFBO.GetWidth() != windowWidth ||
-            this->densityFBO.GetHeight() != windowHeight) {
+        if (!this->densityFBO.IsValid() || this->densityFBO.GetWidth() != fbo->getWidth() ||
+            this->densityFBO.GetHeight() != fbo->getHeight()) {
             densityFBO.Release();
-            ok = densityFBO.Create(windowWidth, windowHeight, GL_R32F, GL_RED, GL_FLOAT);
+            ok = densityFBO.Create(fbo->getWidth(), fbo->getHeight(), GL_R32F, GL_RED, GL_FLOAT);
             makeDebugLabel(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
         }
         if (ok) {
@@ -970,22 +980,15 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
     auto cam_intrinsics = cam.get<core::view::Camera::OrthographicParameters>(); // don't you dare using a perspective cam here...
-    auto fbo = call.GetFramebufferObject();
+    fbo = call.GetFramebufferObject();
+    camera_cpy = cam;
 
     // maintainer comment: assuming this wants to know the aspect of the full window, i.e. not onlyof the current image tile
-    windowAspect = static_cast<float>(cam_intrinsics.aspect);
-
-    // this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
-
-    std::copy(glm::value_ptr(view), glm::value_ptr(view) + 16, &modelViewMatrix_column[0]);
-    std::copy(glm::value_ptr(proj), glm::value_ptr(proj) + 16, &projMatrix_column[0]);
+    
 
     // maintainer comment: assuming this now here wants to know about the current tile's resolution
-    windowWidth = fbo->getWidth();
-    windowHeight = fbo->getHeight();
+    
+
     auto bg = call.BackgroundColor();
     backgroundColor[0] = bg[0] / 255.0f;
     backgroundColor[1] = bg[1] / 255.0f;

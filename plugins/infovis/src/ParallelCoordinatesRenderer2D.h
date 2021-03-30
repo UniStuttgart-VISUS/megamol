@@ -222,17 +222,14 @@ namespace infovis {
         float axisHeight;
         GLuint numTicks;
         float fontSize;
-        float windowAspect;
-        int windowWidth;
-        int windowHeight;
         float backgroundColor[4];
         core::BoundingBoxes_2 bounds;
+        core::view::Camera camera_cpy; //< local copy of last used camera
+        std::shared_ptr<glowl::FramebufferObject> fbo; //< last used framebuffer
         unsigned int lastTimeStep;
 
         GLuint columnCount;
         GLuint itemCount;
-        GLfloat modelViewMatrix_column[16];
-        GLfloat projMatrix_column[16];
 
         vislib::graphics::gl::GLSLShader drawAxesProgram;
         vislib::graphics::gl::GLSLShader drawScalesProgram;
