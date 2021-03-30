@@ -1769,8 +1769,8 @@ void GUIWindows::drawMenu(void) {
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem(
-                "Show/Hide All Windows", this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem("Show/Hide All Windows",
+                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
             this->state.gui_hide_next_frame = 2;
         }
 
