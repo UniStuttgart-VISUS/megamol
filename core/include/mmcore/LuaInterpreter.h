@@ -48,6 +48,22 @@ template <class C, luaCallbackFunc<C> func> int dispatch(lua_State* L) {
     return (ptr->*func)(L);
 }
 
+static int invoke_lua_std_function(lua_State* L){
+    //const int argc = lua_gettop(L);
+
+    const auto index = lua_upvalueindex(1);
+    //if (lua_islightuserdata(L, index))
+    //{
+        const void* ptr = lua_touserdata(L, index);
+        const auto func_ptr = reinterpret_cast<std::function<int(lua_State *)> const*>(ptr);
+        return (*func_ptr)(L);
+
+    //} else {
+    //    std::cout << "PANIC: NO USER DATA" << std::endl;
+    //}
+    //return 0;
+};
+
 // clang-format off
 #define MMC_LUA_MMLOG "mmLog"
 #define MMC_LUA_MMLOGINFO "mmLogInfo"
@@ -106,6 +122,20 @@ public:
     }
 
     /**
+     * Register callback function in lua and all environments known to date
+     */
+    void RegisterCallback(std::string const& name, std::string const& help, std::function<int(lua_State*)>& func) {
+        //this->theCallbacks += name + "=" + name + ",";
+        this->theHelp.push_back(std::make_pair(name,help));
+        lua_pushlightuserdata(L, &func); // push ptr to func as user data to be used by invoke_lua_std_function onto stack
+        lua_pushcclosure(L, &invoke_lua_std_function, 1); // register invoke_lua_std_function as closure that gets ptr to func
+        lua_setglobal(L, name.c_str()); // set pushed closure as global under name "name"
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + name + "="+name).c_str());
+        }
+    }
+
+    /**
      * Register an alias to a callback function in lua and all environments known to date.
      * Only works if the function has already been registered.
      */
@@ -129,7 +159,9 @@ public:
     }
 
     void UnregisterCallback(std::string const& name) {
-        std::remove_if(this->theHelp.begin(), this->theHelp.end(), [name](std::pair<std::string, std::string> const& p){return p.first.compare(name) == 0;});
+        auto remove_end = std::remove_if(this->theHelp.begin(), this->theHelp.end(), [name](std::pair<std::string, std::string> const& p){return p.first == name;});
+        this->theHelp.erase(remove_end, this->theHelp.end());
+
         luaL_dostring(L, (name + "= nil").c_str());
         for(auto &x: theEnvironments) {
             luaL_dostring(L, (x + "." + name + "= nil").c_str());
@@ -503,7 +535,8 @@ template <class T> int megamol::core::LuaInterpreter<T>::help(lua_State *L) {
     std::stringstream out;
     out << "MegaMol Lua Help:" << std::endl;
     std::string helpString;
-    for (const auto &s : theHelp) helpString += s.first + s.second;
+    for (const auto &s : theHelp)
+        helpString += s.first + s.second + "\n";
     out << helpString;
     lua_pushstring(L, out.str().c_str());
     return 1;
