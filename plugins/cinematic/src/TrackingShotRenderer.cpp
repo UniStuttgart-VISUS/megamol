@@ -204,12 +204,12 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     }
 
     // Draw 3D ---------------------------------------------------------------
-    this->utils.DrawAll(mvp, glm::vec2(vp_fw, vp_fh));
+    this->utils.DrawAll(mvp, viewport);
 
     // Push hotkey list ------------------------------------------------------
     // Draw help text 
     if (this->showHelpText) {
-        this->utils.PushHotkeyList(vp_fw, vp_fh);
+        this->utils.PushHotkeyList(ortho, viewport);
     }
 
     // Push menu --------------------------------------------------------------
@@ -219,10 +219,10 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     if (this->showHelpText) {
         rightLabel = " [Shift+h] Hide Help Text ";
     }
-    this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, viewport);
 
     // Draw 2D ---------------------------------------------------------------
-    this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
+    this->utils.DrawAll(ortho, viewport);
 
     return true;
 }

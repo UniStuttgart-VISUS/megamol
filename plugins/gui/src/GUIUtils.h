@@ -91,9 +91,9 @@
 
 #define GUI_START_TAG_SET_GUI_STATE ("mmSetGUIState([=[")
 #define GUI_END_TAG_SET_GUI_STATE ("]=])")
-#define GUI_START_TAG_SET_GUI_VISIBILITY ("mmShowGUI(")
+#define GUI_START_TAG_SET_GUI_VISIBILITY ("mmSetGUIVisible(")
 #define GUI_END_TAG_SET_GUI_VISIBILITY (")")
-#define GUI_START_TAG_SET_GUI_SCALE ("mmScaleGUI(")
+#define GUI_START_TAG_SET_GUI_SCALE ("mmSetGUIScale(")
 #define GUI_END_TAG_SET_GUI_SCALE (")")
 
 // Global Colors
@@ -144,6 +144,7 @@ namespace gui {
 
     /********** Global GUI Scaling Factor **********/
 
+    // Forward declaration
     class GUIWindows;
 
     class GUIScaling {

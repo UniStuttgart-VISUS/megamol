@@ -23,13 +23,13 @@ namespace gui {
     public:
         /** Identifiers for the window draw callbacks. */
         enum DrawCallbacks {
-            NONE = 0,
-            MAIN_PARAMETERS = 1,
-            PARAMETERS = 2,
-            PERFORMANCE = 3,
-            TRANSFER_FUNCTION = 5,
-            CONFIGURATOR = 6,
-            LOGCONSOLE = 7
+            DRAWCALLBACK_NONE = 0,
+            DRAWCALLBACK_MAIN_PARAMETERS = 1,
+            DRAWCALLBACK_PARAMETERS = 2,
+            DRAWCALLBACK_PERFORMANCE = 3,
+            DRAWCALLBACK_TRANSFER_FUNCTION = 5,
+            DRAWCALLBACK_CONFIGURATOR = 6,
+            DRAWCALLBACK_LOGCONSOLE = 7
         };
 
         /** Performance mode for fps/ms windows. */
@@ -81,7 +81,7 @@ namespace gui {
                     : win_show(false)
                     , win_store_config(true)
                     , win_flags(0)
-                    , win_callback(DrawCallbacks::NONE)
+                    , win_callback(DrawCallbacks::DRAWCALLBACK_NONE)
                     , win_hotkey(megamol::core::view::KeyCode())
                     , win_position(ImVec2(0.0f, 0.0f))
                     , win_size(ImVec2(0.0f, 0.0f))

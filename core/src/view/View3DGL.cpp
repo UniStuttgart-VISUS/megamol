@@ -26,14 +26,14 @@ View3DGL::View3DGL(void) : view::AbstractView3D(), _cursor2d() {
     // Override renderSlot behavior
     this->_lhsRenderSlot.SetCallback(
         view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    this->_lhsRenderSlot.SetCallback(
-        view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &AbstractView::OnCharCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
-        &AbstractView::OnMouseButtonCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
-        &AbstractView::OnMouseMoveCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
-        &AbstractView::OnMouseScrollCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnChar),
+        &AbstractView::OnCharCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
@@ -139,7 +139,8 @@ bool view::View3DGL::OnKey(view::Key key, view::KeyAction action, view::Modifier
         evt.keyData.action = action;
         evt.keyData.mods = mods;
         cr->SetInputEvent(evt);
-        if ((*cr)(CallRender3DGL::FnOnKey)) return true;
+        if ((*cr)(CallRender3DGL::FnOnKey))
+            return true;
     }
 
     if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
@@ -203,13 +204,15 @@ bool view::View3DGL::OnKey(view::Key key, view::KeyAction action, view::Modifier
  */
 bool view::View3DGL::OnChar(unsigned int codePoint) {
     auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender3DGL>();
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     view::InputEvent evt;
     evt.tag = view::InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3DGL::FnOnChar)) return false;
+    if (!(*cr)(view::CallRender3DGL::FnOnChar))
+        return false;
 
     return true;
 }
@@ -232,7 +235,8 @@ bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             evt.mouseButtonData.action = action;
             evt.mouseButtonData.mods = mods;
             cr->SetInputEvent(evt);
-            if ((*cr)(CallRender3DGL::FnOnMouseButton)) return true;
+            if ((*cr)(CallRender3DGL::FnOnMouseButton))
+                return true;
         }
     }
 
@@ -244,7 +248,7 @@ bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 
     // This mouse handling/mapping is so utterly weird and should die!
     auto down = action == view::MouseButtonAction::PRESS;
-    bool altPressed = mods.test(view::Modifier::ALT); // this->modkeys.test(view::Modifier::ALT);
+    bool altPressed = mods.test(view::Modifier::ALT);   // this->modkeys.test(view::Modifier::ALT);
     bool ctrlPressed = mods.test(view::Modifier::CTRL); // this->modkeys.test(view::Modifier::CTRL);
 
     // get window resolution to help computing mouse coordinates
@@ -336,8 +340,8 @@ bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAc
  * View3DGL::OnMouseMove
  */
 bool view::View3DGL::OnMouseMove(double x, double y) {
-    this->_mouseX = (float)static_cast<int>(x);
-    this->_mouseY = (float)static_cast<int>(y);
+    this->_mouseX = (float) static_cast<int>(x);
+    this->_mouseY = (float) static_cast<int>(y);
 
     bool anyManipulatorActive = _arcballManipulator.manipulating() || _translateManipulator.manipulating() ||
                                 _rotateManipulator.manipulating() || _turntableManipulator.manipulating() ||
@@ -351,7 +355,8 @@ bool view::View3DGL::OnMouseMove(double x, double y) {
             evt.mouseMoveData.x = x;
             evt.mouseMoveData.y = y;
             cr->SetInputEvent(evt);
-            if ((*cr)(CallRender3DGL::FnOnMouseMove)) return true;
+            if ((*cr)(CallRender3DGL::FnOnMouseMove))
+                return true;
         }
     }
 
@@ -401,7 +406,7 @@ bool view::View3DGL::OnMouseMove(double x, double y) {
             static_cast<int>(this->_mouseY), glm::vec4(_rotCenter, 1.0));
     }
 
-    if (this->_translateManipulator.manipulating() && !this->_rotateManipulator.manipulating() ) {
+    if (this->_translateManipulator.manipulating() && !this->_rotateManipulator.manipulating()) {
 
         // compute proper step size by computing pixel world size at distance to rotCenter
         glm::vec3 currCamPos = this->_camera.get<Camera::Pose>().position;
@@ -439,7 +444,8 @@ bool view::View3DGL::OnMouseScroll(double dx, double dy) {
         evt.mouseScrollData.dx = dx;
         evt.mouseScrollData.dy = dy;
         cr->SetInputEvent(evt);
-        if ((*cr)(view::CallRender3DGL::FnOnMouseScroll)) return true;
+        if ((*cr)(view::CallRender3DGL::FnOnMouseScroll))
+            return true;
     }
 
 
@@ -447,9 +453,8 @@ bool view::View3DGL::OnMouseScroll(double dx, double dy) {
     if ((abs(dy) > 0.0)) {
         if (this->_rotateManipulator.manipulating()) {
             this->_viewKeyMoveStepSlot.Param<param::FloatParam>()->SetValue(
-                this->_viewKeyMoveStepSlot.Param<param::FloatParam>()->Value() + 
-                (dy * 0.1f * this->_viewKeyMoveStepSlot.Param<param::FloatParam>()->Value())
-            ); 
+                this->_viewKeyMoveStepSlot.Param<param::FloatParam>()->Value() +
+                (dy * 0.1f * this->_viewKeyMoveStepSlot.Param<param::FloatParam>()->Value()));
         } else {
             auto cam_pose = _camera.get<Camera::Pose>();
             auto v = glm::normalize(_rotCenter - cam_pose.position);

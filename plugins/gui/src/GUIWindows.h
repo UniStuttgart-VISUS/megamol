@@ -19,7 +19,6 @@
 #define GUI_API
 #endif // _WIN32
 
-
 #include "Configurator.h"
 #include "LogConsole.h"
 #include "WindowCollection.h"
@@ -118,14 +117,28 @@ namespace gui {
         /**
          * Pass current GUI state.
          */
-        std::string GetState(void) {
-            return this->project_to_lua_string();
+        std::string GetState(bool as_lua) {
+            return this->project_to_lua_string(as_lua);
+        }
+
+        /**
+         * Pass current GUI visibility.
+         */
+        bool GetVisibility(void) {
+            return this->state.gui_visible;
+        }
+
+        /**
+         * Pass current GUI scale.
+         */
+        float GetScale() {
+            return gui_scaling.Get();
         }
 
         /**
          * Pass triggered Shutdown.
          */
-        inline bool ConsumeTriggeredShutdown(void) {
+        inline bool GetTriggeredShutdown(void) {
             bool request_shutdown = this->state.shutdown_triggered;
             this->state.shutdown_triggered = false;
             return request_shutdown;
@@ -145,10 +158,22 @@ namespace gui {
          * Pass project load request.
          * Request is consumed when calling this function.
          */
-        std::string ConsumeProjectLoadRequest(void) {
+        std::string GetProjectLoadRequest(void) {
             auto project_file_name = this->state.request_load_projet_file;
             this->state.request_load_projet_file.clear();
             return project_file_name;
+        }
+
+        /**
+         * Pass current mouse cursor request.
+         *
+         * See imgui.h: enum ImGuiMouseCursor_
+         * io.MouseDrawCursor is true when Software Cursor should be drawn instead.
+         *
+         * @return Retured mouse cursor is in range [ImGuiMouseCursor_None=-1, (ImGuiMouseCursor_COUNT-1)=8]
+         */
+        int GetMouseCursor(void) const {
+            return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
         }
 
         ///////// SET ///////////
@@ -172,8 +197,6 @@ namespace gui {
          * Set GUI scale.
          */
         void SetScale(float scale);
-
-        // --------------------------------------
 
         /**
          * Set project script paths.
@@ -270,6 +293,7 @@ namespace gui {
             double stat_averaged_ms;              // current average fps value
             size_t stat_frame_count;              // current fame count
             std::vector<std::string> resource_directories; // the global resource directories
+            bool load_docking_preset;                      // Flag indicating docking preset loading
             bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
         };
 
@@ -338,11 +362,17 @@ namespace gui {
         void window_sizing_and_positioning(WindowCollection::WindowConfiguration& wc, bool& out_collapsing_changed);
 
         bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
-        void checkMultipleHotkeyAssignement(void);
+        void checkMultipleHotkeyAssignment(void);
         bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
         void triggerCoreInstanceShutdown(void);
 
-        std::string project_to_lua_string(void);
+        void load_preset_window_docking(ImGuiID global_docking_id);
+
+        // Required to save/load docking
+        void load_imgui_settings_from_string(std::string imgui_settings);
+        std::string save_imgui_settings_to_string(void);
+
+        std::string project_to_lua_string(bool as_lua);
         bool state_from_string(const std::string& state);
         bool state_to_string(std::string& out_state);
 
@@ -351,6 +381,8 @@ namespace gui {
         void update_frame_statistics(WindowCollection::WindowConfiguration& wc);
 
         bool create_not_existing_png_filepath(std::string& inout_filepath);
+
+        std::string full_window_title(WindowCollection::WindowConfiguration& wc) const;
     };
 
 } // namespace gui

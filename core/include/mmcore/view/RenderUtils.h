@@ -165,29 +165,29 @@ public:
         const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false,
         const glm::vec4& color = glm::vec4(0.0f));
 
-    inline void DrawPointPrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+    inline void DrawPointPrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->drawPrimitives(RenderUtils::Primitives::POINTS, mat_mvp, dim_vp);
         this->clearQueue(Primitives::POINTS);
     }
 
-    inline void DrawLinePrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+    inline void DrawLinePrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->drawPrimitives(RenderUtils::Primitives::LINES, mat_mvp, dim_vp);
         this->clearQueue(Primitives::LINES);
     }
 
-    inline void DrawQuadPrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+    inline void DrawQuadPrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->drawPrimitives(RenderUtils::Primitives::QUADS, mat_mvp, dim_vp);
         this->clearQueue(Primitives::QUADS);
     }
 
-    inline void DrawTextures(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+    inline void DrawTextures(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->drawPrimitives(RenderUtils::Primitives::DEPTH_TEXTURE, mat_mvp, dim_vp);
         this->drawPrimitives(RenderUtils::Primitives::COLOR_TEXTURE, mat_mvp, dim_vp);
         this->clearQueue(Primitives::COLOR_TEXTURE);
         this->clearQueue(Primitives::DEPTH_TEXTURE);
     }
 
-    inline void DrawAllPrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+    inline void DrawAllPrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->DrawPointPrimitives(mat_mvp, dim_vp);
         this->DrawLinePrimitives(mat_mvp, dim_vp);
         this->DrawQuadPrimitives(mat_mvp, dim_vp);
@@ -247,7 +247,7 @@ private:
         const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right,
         const glm::vec4& color, const glm::vec4& attributes);
 
-    void drawPrimitives(Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp);
+    void drawPrimitives(Primitives primitive, const glm::mat4& mat_mvp, glm::vec2 dim_vp);
 
     void sortPrimitiveQueue(Primitives primitive);
 

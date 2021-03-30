@@ -6,20 +6,20 @@
  */
 
 #include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/view/View2DGL.h"
+#include "json.hpp"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallRenderViewGL.h"
-#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/Trace.h"
-#include "vislib/math/Matrix4.h"
-#include "json.hpp"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/view/CallRender2DGL.h"
+#include "mmcore/view/CallRenderViewGL.h"
+#include "vislib/Trace.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/math/Matrix4.h"
 #include "vislib/math/Rectangle.h"
 
 
@@ -44,8 +44,8 @@ view::View2DGL::View2DGL(void)
         &AbstractView::OnCharCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         InputCall::FunctionName(InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
-        &AbstractView::OnMouseMoveCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         InputCall::FunctionName(InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
@@ -104,15 +104,6 @@ void view::View2DGL::Render(double time, double instanceTime) {
 
     cr2d->SetFramebufferObject(_fbo);
     cr2d->SetCamera(_camera);
-
-    ///// use this to keep supporting text rendering without additional changes for now
-    ::glMatrixMode(GL_PROJECTION);
-    ::glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(_camera.getProjectionMatrix()));
-    ::glMatrixMode(GL_MODELVIEW);
-    ::glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(_camera.getViewMatrix()));
-    /////
 
     (*cr2d)(AbstractCallRender::FnRender);
 
@@ -213,8 +204,9 @@ void view::View2DGL::Resize(unsigned int width, unsigned int height) {
  */
 bool view::View2DGL::OnRenderView(Call& call) {
     float overBC[3];
-    view::CallRenderViewGL *crv = dynamic_cast<view::CallRenderViewGL*>(&call);
-    if (crv == NULL) return false;
+    view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
+    if (crv == NULL)
+        return false;
 
     // get time from incoming call
     double time = crv->Time();
@@ -232,7 +224,8 @@ bool view::View2DGL::OnRenderView(Call& call) {
 
 bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     if (key == Key::KEY_HOME) {
         OnResetView(this->_resetViewSlot);
@@ -245,7 +238,8 @@ bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
     evt.keyData.action = action;
     evt.keyData.mods = mods;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender2DGL::FnOnKey)) return false;
+    if (!(*cr)(view::CallRender2DGL::FnOnKey))
+        return false;
 
     return true;
 }
@@ -253,20 +247,22 @@ bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
 
 bool view::View2DGL::OnChar(unsigned int codePoint) {
     auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     InputEvent evt;
     evt.tag = InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender2DGL::FnOnChar)) return false;
+    if (!(*cr)(view::CallRender2DGL::FnOnChar))
+        return false;
 
     return true;
 }
 
 
 bool view::View2DGL::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
-	this->_mouseMode = MouseMode::Propagate;
+    this->_mouseMode = MouseMode::Propagate;
 
     auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
     if (cr) {
@@ -276,7 +272,8 @@ bool view::View2DGL::OnMouseButton(MouseButton button, MouseButtonAction action,
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
         cr->SetInputEvent(evt);
-        if ((*cr)(view::CallRender2DGL::FnOnMouseButton)) return true;
+        if ((*cr)(view::CallRender2DGL::FnOnMouseButton))
+            return true;
     }
 
     if (_ctrlDown) {
@@ -305,7 +302,8 @@ bool view::View2DGL::OnMouseMove(double x, double y) {
             evt.mouseMoveData.x = x;
             evt.mouseMoveData.y = y;
             cr->SetInputEvent(evt);
-            if ((*cr)(view::CallRender2DGL::FnOnMouseMove)) return true;
+            if ((*cr)(view::CallRender2DGL::FnOnMouseMove))
+                return true;
         }
     } else if (this->_mouseMode == MouseMode::Pan) {
 
@@ -353,7 +351,8 @@ bool view::View2DGL::OnMouseMove(double x, double y) {
 
 bool view::View2DGL::OnMouseScroll(double dx, double dy) {
     auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     InputEvent evt;
     evt.tag = InputEvent::Tag::MouseScroll;
@@ -406,7 +405,8 @@ void view::View2DGL::release(void) {
  */
 bool view::View2DGL::GetExtents(Call& call) {
     view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
-    if (crv == nullptr) return false;
+    if (crv == nullptr)
+        return false;
 
     CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
     if (cr2d == nullptr) {
@@ -414,7 +414,8 @@ bool view::View2DGL::GetExtents(Call& call) {
     }
     cr2d->SetCamera(this->_camera);
 
-    if (!(*cr2d)(CallRender2DGL::FnGetExtents)) return false;
+    if (!(*cr2d)(CallRender2DGL::FnGetExtents))
+        return false;
 
     crv->SetTimeFramesCount(cr2d->TimeFramesCount());
     crv->SetIsInSituTime(cr2d->IsInSituTime());
