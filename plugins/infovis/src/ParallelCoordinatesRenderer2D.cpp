@@ -995,7 +995,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     backgroundColor[2] = bg[2] / 255.0f;
     backgroundColor[3] = bg[3] / 255.0f;
 
-    glm::mat4 ortho = glm::make_mat4(projMatrix_column) * glm::make_mat4(modelViewMatrix_column);
+    glm::mat4 ortho = proj * view;
 
     this->assertData(call);
 
