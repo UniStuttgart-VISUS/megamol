@@ -32,6 +32,7 @@ namespace gui {
         InteractVector GetInteractions(unsigned int id) const;
 
     private:
+        ImageWidget image_up_arrow;
         std::shared_ptr<glowl::GLSLProgram> shader;
     };
 

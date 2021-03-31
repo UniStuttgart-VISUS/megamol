@@ -17,7 +17,7 @@ using namespace megamol::gui;
 
 // *** Pickable Cube ******************************************************** //
 
-megamol::gui::PickableCube::PickableCube(void) : shader(nullptr) {}
+megamol::gui::PickableCube::PickableCube(void) : image_up_arrow(),shader(nullptr) {}
 
 
 bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, int& inout_orientation_index,
@@ -25,6 +25,11 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, in
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
+
+    // Create texture once
+    if (!this->image_up_arrow.IsLoaded()) {
+        this->image_up_arrow.LoadTextureFromFile(GUI_VIEWCUBE_UP_ARROW);
+    }
 
     // Create shader once -----------------------------------------------------
     if (this->shader == nullptr) {
@@ -39,8 +44,10 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, in
             "uniform int orientation_index; \n"
             "uniform int face_hover_index; \n"
             "uniform int orientation_hover_index; \n"
-            "out vec4 vertex_color; \n"
+            "out vec2 tex_coord; \n"
+            "flat out vec4 vertex_color; \n"
             "flat out int face_id; \n"
+            "flat out int use_texture; \n"
             "void main() { \n"
             "    // Vertex indices must fit enum order in megamol::core::view::View3D_2::defaultview \n"
             "    const vec4 vertices[72] = vec4[72]( \n"
@@ -88,31 +95,58 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, in
             "    face_id = int((id << (current_face_index + 4)) | current_orientation_id);"
             "    \n"
             "    // Set colors depending on selected or hovered triangles \n"
-            "    if ((face_hover_index == current_face_index) && \n"
-            "            (orientation_hover_index == current_orientation_index)) { \n"
-            "        vertex_color = colors[current_face_index] * (0.6 + (0.3 - 0.3*(current_orientation_index/2.0))); // vec4(0.5); \n"
-            "    } \n"
-            "    else if (face_index == current_face_index) { \n"
+            "    vertex_color = colors[current_face_index] * 0.25; \n"
+            "    if (face_index == current_face_index) { \n"
             "        vertex_color = colors[current_face_index] * (0.5 + (0.5 - 0.5*(current_orientation_index/2.0))); \n"
             "    } \n"
-            "    else { \n"
-            "        vertex_color = colors[current_face_index] * 0.25; \n"
+            "    if ((face_hover_index == current_face_index) && \n"
+            "            (orientation_hover_index == current_orientation_index)) { \n"
+            "        vertex_color = colors[current_face_index] * (0.6 + (0.4 - 0.4*(current_orientation_index/2.0))); \n"
             "    } \n"
-            "    vertex_color.w = 1.0; \n"
+            "    vertex_color.a = 1.0; \n"
             "    \n"
+            "    use_texture = ((face_index == current_face_index)?(1):(0)); \n"
+            "    if (use_texture > 0) { \n"
+            "        if ((mod_index == 0) || (mod_index == 4)) tex_coord = vec2(1.0, 0.0); \n"
+            "        else if ((mod_index == 1) || (mod_index == 9)) tex_coord = vec2(0.0, 0.0); \n"
+            "        else if ((mod_index == 3) || (mod_index == 7)) tex_coord = vec2(1.0, 1.0); \n"
+            "        else if ((mod_index == 6) || (mod_index == 10)) tex_coord = vec2(0.0, 1.0); \n"
+            "        else if ((mod_index == 2) || (mod_index == 5) || (mod_index == 8) || (mod_index == 11)) tex_coord = vec2(0.5, 0.5); \n"
+            "    } \n"
             "    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID]; \n"
             "}";
 
         std::string fragment_src = "#version 130  \n"
                                    "#extension GL_ARB_explicit_attrib_location : require \n"
-                                   "in vec4 vertex_color; \n"
+                                   "in vec2 tex_coord; \n"
+                                   "flat in vec4 vertex_color; \n"
                                    "flat in int face_id; \n"
+                                   "flat in int use_texture; \n"
+                                   "uniform sampler2D tex; \n"
+                                   "uniform vec3 color; \n"
                                    "layout(location = 0) out vec4 outFragColor; \n"
                                    "layout(location = 1) out vec2 outFragInfo; \n"
-                                   "\n"
+                                   "float supersample(in vec2 uv, float w, float alpha) { \n"
+                                   "    return smoothstep(0.5 - w, 0.5 + w, alpha); \n"
+                                   "} \n"
                                    "void main(void) { \n"
                                    "    outFragColor = vertex_color; \n"
                                    "    outFragInfo  = vec2(float(face_id), gl_FragCoord.z); \n"
+                                   "    if (use_texture > 0) {"
+                                   "        vec4 tex_color = texture(tex, tex_coord); \n"
+                                   "        float alpha = tex_color.a; \n"
+                                   "        // Supersample - 4 extra points \n"
+                                   "        float smootingEdge = fwidth(alpha); \n"
+                                   "        float dscale = 0.354; // half of 1/sqrt2; you can play with this \n"
+                                   "        vec2 duv = dscale * (dFdx(tex_coord) + dFdy(tex_coord)); \n"
+                                   "        vec4 box = vec4(tex_coord-duv, tex_coord+duv); \n"
+                                   "        float asum = supersample(box.xy, smootingEdge, alpha) \n"
+                                   "                   + supersample(box.zw, smootingEdge, alpha) \n"
+                                   "                   + supersample(box.xw, smootingEdge, alpha) \n"
+                                   "                   + supersample(box.zy, smootingEdge, alpha); \n"
+                                   "        alpha = (alpha + 0.5 * asum) / 3.0; \n"
+                                   "        if (alpha > 0.0) outFragColor = mix(vertex_color, vec4(color, 1.0), alpha); \n"
+                                   "    } \n"
                                    "} ";
 
         if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
@@ -190,6 +224,14 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, in
 
     this->shader->use();
 
+    auto texture_id = this->image_up_arrow.GetTextureID();
+    if (texture_id != 0) {
+        glEnable(GL_TEXTURE_2D);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture_id);
+        glUniform1i(this->shader->getUniformLocation("tex"), static_cast<GLint>(0));
+    }
+
     this->shader->setUniform("rot_mx", rotation);
     this->shader->setUniform("model_mx", model);
     this->shader->setUniform("proj_mx", proj);
@@ -199,7 +241,16 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, in
     this->shader->setUniform("orientation_hover_index", out_hovered_orientation);
     this->shader->setUniform("id", static_cast<int>(id));
 
+    // Arrow Color
+    glm::vec3 color(0.6, 0.6, 0.7);
+    this->shader->setUniform("color", color);
+
     glDrawArrays(GL_TRIANGLES, 0, 72);
+
+    if (texture_id != 0) {
+        glBindTexture(GL_TEXTURE_1D, 0);
+        glDisable(GL_TEXTURE_2D);
+    }
 
     glUseProgram(0);
 
@@ -243,9 +294,8 @@ bool megamol::gui::PickableTexture::Draw(unsigned int id, int& out_orientation_i
         std::string vertex_src =
             "#version 130 \n"
             "uniform int id; \n"
-            "uniform int orientation_index_offset; \n"
             "out vec2 tex_coord; \n"
-            "flat out int tex_id; \n"
+            "flat out int arrow_id; \n"
             "void main() { \n"
             "    const vec4 vertices[12] = vec4[12]( \n"
             "        vec4(0.75, 0.75, -1.0, 1.0), vec4(1.0, 0.75, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), \n"
@@ -257,16 +307,15 @@ bool megamol::gui::PickableTexture::Draw(unsigned int id, int& out_orientation_i
             "        vec2(0.0, 1.0), vec2(1.0, 0.0), vec2(0.0, 0.0), \n"
             "        vec2(1.0, 1.0), vec2(0.0, 1.0), vec2(0.0, 0.0), \n"
             "        vec2(1.0, 1.0), vec2(0.0, 0.0), vec2(1.0, 0.0)); \n"
-            "    tex_id = int(id << int(gl_VertexID / 6)); \n"
+            "    arrow_id = int(id << int(gl_VertexID / 6)); \n"
             "    gl_Position = vertices[gl_VertexID]; \n"
             "    tex_coord = texcoords[gl_VertexID]; \n"
             "}";
 
         std::string fragment_src = "#version 130 \n"
                                    "#extension GL_ARB_explicit_attrib_location : require \n"
-                                   "in vec4 vertex_color; \n"
                                    "in vec2 tex_coord; \n"
-                                   "flat in int tex_id; \n"
+                                   "flat in int arrow_id; \n"
                                    "uniform sampler2D tex; \n"
                                    "uniform vec3 color; \n"
                                    "layout(location = 0) out vec4 outFragColor; \n"
@@ -289,7 +338,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int id, int& out_orientation_i
                                    "    alpha = (alpha + 0.5 * asum) / 3.0; \n"
                                    "    if (alpha <= 0.0) discard; \n"
                                    "    outFragColor = vec4(color, alpha); \n"
-                                   "    outFragInfo  = vec2(float(tex_id), gl_FragCoord.z); \n"
+                                   "    outFragInfo  = vec2(float(arrow_id), gl_FragCoord.z); \n"
                                    "} ";
 
         if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
@@ -301,7 +350,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int id, int& out_orientation_i
     out_hovered_arrow = 0;
     for (auto& manip : pending_manipulations) {
         int orientation_index_offset = 0;
-        if (id == (id & (manip.obj_id >> 0))) {
+        if (id == manip.obj_id) {
             orientation_index_offset = -1;
         }
         else if (id == (id & (manip.obj_id >> 1))) {
@@ -318,8 +367,6 @@ bool megamol::gui::PickableTexture::Draw(unsigned int id, int& out_orientation_i
     }
 
     // Draw -------------------------------------------------------------------
-
-    glm::vec3 color(0.5, 0.5, 0.6);
 
     // Set state
     const auto culling = glIsEnabled(GL_CULL_FACE);
@@ -342,9 +389,12 @@ bool megamol::gui::PickableTexture::Draw(unsigned int id, int& out_orientation_i
         glBindTexture(GL_TEXTURE_2D, texture_id);
         glUniform1i(this->shader->getUniformLocation("tex"), static_cast<GLint>(0));
     }
-    this->shader->setUniform("color", color);
-    this->shader->setUniform("orientation_index_offset", out_orientation_index_offset);
+
     this->shader->setUniform("id", static_cast<int>(id));
+
+    // Arrow Color
+    glm::vec3 color(0.6, 0.6, 0.7);
+    this->shader->setUniform("color", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 12);
 
@@ -519,12 +569,19 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             auto rot_picking_id = param_defaultOrientation->UID();
             inout_picking_buffer->AddInteractionObject(rot_picking_id, this->texture_widget.GetInteractions(rot_picking_id));
             this->texture_widget.Draw(rot_picking_id, orientation_index_offset, hovered_arrow, inout_picking_buffer->GetPendingManipulations());
+
             default_orientation = (default_orientation + orientation_index_offset);
             default_orientation = (default_orientation < 0)?(3):(default_orientation % 4);
+            if (selected) {
+                param_resetView->ForceSetValueDirty();
+            }
+            param_defaultOrientation->SetValue(default_orientation);
+            param_defaultView->SetValue(default_view);
 
+            // Tooltip
             std::string tooltip_text;
-            /// Indices must fit enum order in view::View3D_2::defaultview
             if (hovered_cube_face >= 0) {
+                /// Indices must fit enum order in view::View3D_2::defaultview
                 switch (hovered_cube_face) {
                 case (0): // DEFAULTVIEW_FRONT
                     tooltip_text += "[Front]";
@@ -581,12 +638,6 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 ImGui::TextUnformatted(tooltip_text.c_str());
                 ImGui::EndTooltip();
             }
-
-            if (selected) {
-                param_resetView->ForceSetValueDirty();
-            }
-            param_defaultOrientation->SetValue(default_orientation);
-            param_defaultView->SetValue(default_view);
 
             ImGui::PopID();
 
