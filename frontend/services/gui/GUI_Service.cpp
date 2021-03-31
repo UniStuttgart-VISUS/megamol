@@ -318,7 +318,7 @@ std::string GUI_Service::resource_request_gui_state(bool as_lua) {
 
 bool GUI_Service::resource_request_gui_visibility() {
 
-    if (!check_gui_not_nullptr) {
+    if (is_gui_nullptr) {
         return false;
     }
     auto gui = this->m_gui->Get();
@@ -328,8 +328,8 @@ bool GUI_Service::resource_request_gui_visibility() {
 
 float GUI_Service::resource_request_gui_scale() {
 
-    if (!check_gui_not_nullptr) {
-        return false;
+    if (is_gui_nullptr) {
+        return 1.0f;
     }
     auto gui = this->m_gui->Get();
     return gui->GetScale();
