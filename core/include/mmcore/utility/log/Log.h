@@ -73,6 +73,11 @@ namespace log {
          */
         static const UINT LEVEL_WARN;
 
+        /**
+         * Parse accepted log level attributes from string to UINT
+         */
+        static UINT ParseLevelAttribute(const std::string value);
+
         /** The default log object. */
         static Log& DefaultLog;
 
