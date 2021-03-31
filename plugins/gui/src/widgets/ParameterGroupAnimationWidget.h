@@ -9,6 +9,7 @@
 #define MEGAMOL_GUI_PARAMETERGROUPANIMATIONWIDGET_INCLUDED
 
 
+#include "ImageWidget_gl.h"
 #include "AbstractParameterGroupWidget.h"
 
 

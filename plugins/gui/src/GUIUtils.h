@@ -114,7 +114,7 @@
 #define GUI_TRANSPORT_ICON_PAUSE ("transport_ctrl_pause.png")
 #define GUI_TRANSPORT_ICON_FAST_FORWARD ("transport_ctrl_fast-forward.png")
 #define GUI_TRANSPORT_ICON_FAST_REWIND ("transport_ctrl_fast-rewind.png")
-#define GUI_VIEWCUBE_ROTATION_ARROWS ("viewcube_rotation_arrows.png")
+#define GUI_VIEWCUBE_ROTATION_ARROW ("viewcube_rotation_arrow.png")
 
 
 /********** Additional Global ImGui Operators ********************************/

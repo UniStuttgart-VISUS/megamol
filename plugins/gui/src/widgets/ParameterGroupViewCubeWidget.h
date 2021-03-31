@@ -9,8 +9,10 @@
 #define MEGAMOL_GUI_PARAMETERGROUPVIEWCUBEWIDGET_INCLUDED
 
 
+#include "ImageWidget_gl.h"
 #include "AbstractParameterGroupWidget.h"
 #include "mmcore/view/RenderUtils.h"
+
 
 namespace megamol {
 namespace gui {
@@ -43,11 +45,12 @@ namespace gui {
         PickableTexture(void);
         ~PickableTexture(void) = default;
 
-        bool Draw(unsigned int id);
+        bool Draw(unsigned int id, int& out_orientation_index_offset, const glm::vec2& vp_dim, ManipVector& pending_manipulations);
 
         InteractVector GetInteractions(unsigned int id) const;
 
     private:
+        ImageWidget image_rotation_arrow;
         std::shared_ptr<glowl::GLSLProgram> shader;
     };
 
@@ -71,6 +74,7 @@ namespace gui {
 
         HoverToolTip tooltip;
         PickableCube cube_widget;
+        PickableTexture texture_widget;
 
         megamol::core::param::AbstractParamPresentation::Presentation last_presentation;
     };

@@ -27,10 +27,9 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
 
-    // Info: IDs of the six cube faces are encoded via bit shift by face index of given parameter id.
-
     // Create shader once -----------------------------------------------------
     if (this->shader == nullptr) {
+        // INFO: IDs of the six cube faces are encoded via bit shift by face index of given parameter id.
         std::string vertex_src =
             "#version 130 \n"
             "uniform int id; \n"
@@ -111,6 +110,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
                                    "flat in int face_id; \n"
                                    "layout(location = 0) out vec4 outFragColor; \n"
                                    "layout(location = 1) out vec2 outFragInfo; \n"
+                                   "\n"
                                    "void main(void) { \n"
                                    "    outFragColor = vertex_color; \n"
                                    "    outFragInfo  = vec2(float(face_id), gl_FragCoord.z); \n"
@@ -143,9 +143,9 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
         else if (id == (id & (manip.obj_id >> 9))) // DEFAULTVIEW_BOTTOM
             view_index = 5;
 
-        int orientation_index = -1;
         // First 4 bit indicate currently hovered orientation
         // Orientation is given by triangle order in shader of pickable cube
+        int orientation_index = -1;
         if ((1 << 0) & manip.obj_id)
             orientation_index = 0; // TOP
         else if ((1 << 1) & manip.obj_id)
@@ -226,12 +226,124 @@ InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) cons
 
 // *** Pickable Cube ******************************************************** //
 
-megamol::gui::PickableTexture::PickableTexture(void) : shader(nullptr) {}
+megamol::gui::PickableTexture::PickableTexture(void) : image_rotation_arrow(), shader(nullptr) {}
 
 
-bool megamol::gui::PickableTexture::Draw(unsigned int id) {
+bool megamol::gui::PickableTexture::Draw(unsigned int id, int& out_orientation_index_offset, const glm::vec2& vp_dim, ManipVector& pending_manipulations) {
 
+    assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
+
+    // Create texture once
+    if (!this->image_rotation_arrow.IsLoaded()) {
+        this->image_rotation_arrow.LoadTextureFromFile(GUI_VIEWCUBE_ROTATION_ARROW);
+    }
+    auto texture_id = this->image_rotation_arrow.GetTextureID();
+
+    // Create shader once -----------------------------------------------------
+    if (this->shader == nullptr) {
+        // INFO: IDs of the six cube faces are encoded via bit shift by face index of given parameter id.
+        std::string vertex_src =
+            "#version 130 \n"
+            "uniform int id; \n"
+            "uniform int orientation_index_offset; \n"
+            "out vec2 tex_coord; \n"
+            "flat out int tex_id; \n"
+            "void main() { \n"
+            "    const vec4 vertices[12] = vec4[12]( \n"
+            "        vec4(0.75, 0.75, -1.0, 1.0), vec4(1.0, 0.75, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), \n"
+            "        vec4(0.75, 0.75, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.75, 1.0, -1.0, 1.0), \n"
+            "        vec4(0.0, 0.75, -1.0, 1.0), vec4(0.25, 0.75, -1.0, 1.0), vec4(0.25, 1.0, -1.0, 1.0), \n"
+            "        vec4(0.0, 0.75, -1.0, 1.0), vec4(0.25, 1.0, -1.0, 1.0), vec4(0.0, 1.0, -1.0, 1.0)); \n"
+            "    const vec2 texcoords[12] = vec2[12]( \n"
+            "        vec2(0.0, 1.0), vec2(1.0, 1.0), vec2(1.0, 0.0), \n"
+            "        vec2(0.0, 1.0), vec2(1.0, 0.0), vec2(0.0, 0.0), \n"
+            "        vec2(1.0, 1.0), vec2(0.0, 1.0), vec2(0.0, 0.0), \n"
+            "        vec2(1.0, 1.0), vec2(0.0, 0.0), vec2(1.0, 0.0)); \n"
+            "    tex_id = int(id << int(gl_VertexID / 6)); \n"
+            "    gl_Position = vertices[gl_VertexID]; \n"
+            "    tex_coord = texcoords[gl_VertexID]; \n"
+            "}";
+
+        std::string fragment_src = "#version 130 \n"
+                                   "#extension GL_ARB_explicit_attrib_location : require \n"
+                                   "in vec4 vertex_color; \n"
+                                   "in vec2 tex_coord; \n"
+                                   "flat in int tex_id; \n"
+                                   "uniform sampler2D tex; \n"
+                                   "layout(location = 0) out vec4 outFragColor; \n"
+                                   "layout(location = 1) out vec2 outFragInfo; \n"
+                                   "void main(void) { \n"
+                                   "    float alpha = texture(tex, tex_coord).a; \n"
+                                   "    if (alpha <= 0.0) discard; \n"
+                                   "    outFragColor = vec4(1.0, 1.0, 1.0, 0.5); \n"
+                                   "    outFragInfo  = vec2(float(tex_id), gl_FragCoord.z); \n"
+                                   "} ";
+
+        if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
+            return false;
+        }
+    }
+
+    // Process pending manipulations ------------------------------------------
+    for (auto& manip : pending_manipulations) {
+        int orientation_index_offset = 0;
+        if (id == (id & (manip.obj_id >> 0))) {
+            orientation_index_offset = -1;
+        }
+        else if (id == (id & (manip.obj_id >> 1))) {
+            orientation_index_offset = 1;
+        }
+
+        if (orientation_index_offset != 0) {
+            if (manip.type == InteractionType::SELECT) {
+                out_orientation_index_offset = orientation_index_offset;
+                selected = true;
+            } else if (manip.type == InteractionType::HIGHLIGHT) {
+
+            }
+        }
+    }
+
+    // Draw -------------------------------------------------------------------
+
+    // Set state
+    const auto culling = glIsEnabled(GL_CULL_FACE);
+    if (!culling) {
+        glEnable(GL_CULL_FACE);
+    }
+    std::array<GLint, 4> viewport;
+    glGetIntegerv(GL_VIEWPORT, viewport.data());
+    int size = (200 * static_cast<int>(megamol::gui::gui_scaling.Get()));
+    int x = viewport[2] - size;
+    int y = viewport[3] - size - ImGui::GetFrameHeightWithSpacing();
+    glViewport(x, y, size, size);
+
+    this->shader->use();
+
+    if (texture_id != 0) {
+        glEnable(GL_TEXTURE_2D);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture_id);
+        glUniform1i(this->shader->getUniformLocation("tex"), static_cast<GLint>(0));
+    }
+    this->shader->setUniform("orientation_index_offset", out_orientation_index_offset);
+    this->shader->setUniform("id", static_cast<int>(id));
+
+    glDrawArrays(GL_TRIANGLES, 0, 12);
+
+    if (texture_id != 0) {
+        glBindTexture(GL_TEXTURE_1D, 0);
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    glUseProgram(0);
+
+    // Restore
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    if (!culling) {
+        glDisable(GL_CULL_FACE);
+    }
 
     return selected;
 }
@@ -253,6 +365,7 @@ megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget(void)
         : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
         , tooltip()
         , cube_widget()
+        , texture_widget()
         , last_presentation(param::AbstractParamPresentation::Presentation::Basic) {
 
     this->InitPresentation(Param_t::GROUP_3D_CUBE);
@@ -375,9 +488,6 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
             ImGui::PushID(this->uid);
 
-            auto id = param_defaultView->UID();
-            inout_picking_buffer->AddInteractionObject(id, this->cube_widget.GetInteractions(id));
-
             ImGuiIO& io = ImGui::GetIO();
             auto default_view = std::get<int>(param_defaultView->GetValue());
             auto default_orientation = std::get<int>(param_defaultOrientation->GetValue());
@@ -385,9 +495,17 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
             int hovered_view = -1;
             int hovered_orientation = -1;
-
-            bool selected = this->cube_widget.Draw(id, default_view, default_orientation, hovered_view,
+            auto cube_picking_id = param_defaultView->UID();
+            inout_picking_buffer->AddInteractionObject(cube_picking_id, this->cube_widget.GetInteractions(cube_picking_id));
+            bool selected = this->cube_widget.Draw(cube_picking_id, default_view, default_orientation, hovered_view,
                 hovered_orientation, view_orientation, viewport_dim, inout_picking_buffer->GetPendingManipulations());
+
+            int orientation_index_offset = 0;
+            auto rot_picking_id = param_defaultOrientation->UID();
+            inout_picking_buffer->AddInteractionObject(rot_picking_id, this->texture_widget.GetInteractions(rot_picking_id));
+            this->texture_widget.Draw(rot_picking_id, orientation_index_offset, viewport_dim, inout_picking_buffer->GetPendingManipulations());
+            default_orientation = (default_orientation + orientation_index_offset);
+            default_orientation = (default_orientation < 0)?(3):(default_orientation % 4);
 
             std::string tooltip_text;
             /// Indices must fit enum order in view::View3D_2::defaultview
