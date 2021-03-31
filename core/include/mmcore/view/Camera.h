@@ -22,6 +22,10 @@ namespace view {
 
         enum ProjectionType { PERSPECTIVE, ORTHOGRAPHIC, UNKNOWN };
 
+        //typedef float AspectRation;
+        //typedef float NearPlane;
+        //typedef float FarPlane;
+
         struct Pose {
             Pose() = default;
             Pose(Pose const& cpy) : position(cpy.position), direction(cpy.direction), up(cpy.up) {}
@@ -253,8 +257,15 @@ namespace view {
             }
         } else if constexpr (std::is_same_v<CameraInfoType, Pose>) {
             return _pose;
-        }
-        else {
+        } else if constexpr (std::is_same_v<CameraInfoType, ImagePlaneTile>) {
+            if (_intrinsics.index() == 0) {
+                throw std::exception(); // How dare you
+            } else if (_intrinsics.index() == 1) {
+                return std::get<PerspectiveParameters>(_intrinsics).image_plane_tile;
+            } else if (_intrinsics.index() == 2) {
+                return std::get<OrthographicParameters>(_intrinsics).image_plane_tile;
+            }
+        } else {
             return std::get<CameraInfoType>(_intrinsics);
         }
     }

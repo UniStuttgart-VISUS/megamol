@@ -26,18 +26,6 @@ const GLuint PlotSSBOBindingPoint = 2;
 const GLuint ValueSSBOBindingPoint = 3;
 const GLuint FlagsBindingPoint = 4;
 
-vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> getModelViewProjection() {
-    // this is the apex of suck and must die
-    GLfloat modelViewMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
-    // end suck
-    return projMatrix * modelViewMatrix;
-}
-
 inline std::string to_string(float x, int precision = 2) {
     std::stringstream stream;
     stream << std::fixed << std::setprecision(precision) << x;
@@ -349,8 +337,17 @@ bool ScatterplotMatrixRenderer2D::OnMouseButton(
 }
 
 bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
-    this->mouse.x = x;
-    this->mouse.y = y;
+    // Make the following a convenience function in the future
+    auto cam_pose = currentCamera.get<core::view::Camera::Pose>();
+    auto cam_intrinsics = currentCamera.get<core::view::Camera::OrthographicParameters>();
+    float world_x, world_y;
+    world_x = ((x * 2.0f / currentFBO->getWidth()) - 1.0f);
+    world_y = 1.0f - (y * 2.0f / currentFBO->getHeight());
+    world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
+    world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
+
+    this->mouse.x = world_x;
+    this->mouse.y = world_y;
 
     if (this->mouse.selector != BrushState::NOP) {
         this->selectionNeedsUpdate = true;
@@ -363,7 +360,12 @@ bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
 bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2DGL& call) {
     try {
 
-        glm::mat4 ortho = glm::make_mat4(getModelViewProjection().PeekComponents());
+        // get camera
+        currentCamera = call.GetCamera();
+        auto view = currentCamera.getViewMatrix();
+        auto proj = currentCamera.getProjectionMatrix();
+        glm::mat4 ortho = proj * view;
+        currentFBO = call.GetFramebufferObject();
 
         if (!this->validate(call, false))
             return false;
@@ -483,7 +485,11 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2DGL& call, boo
     auto columnInfos = this->floatTable->GetColumnsInfos();
     const size_t colCount = this->floatTable->GetColumnsCount();
 
-    auto mvp = getModelViewProjection();
+    // get camera
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto mvp = proj * view;
     // mvp is unstable across GetExtents and Render, so we just do these checks when rendering
     if (hasDirtyScreen() || hasDirtyData() || (!ignoreMVP && (screenLastMVP != mvp || this->readFlags->hasUpdate())) ||
         this->transferFunction->IsDirty()) {
@@ -583,7 +589,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
 
     // Transformation uniform.
     glUniformMatrix4fv(this->minimalisticAxisShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
-        getModelViewProjection().PeekComponents());
+        glm::value_ptr(screenLastMVP));
 
     // Other uniforms.
     glUniform4fv(this->minimalisticAxisShader.ParameterLocation("axisColor"), 1,
@@ -705,10 +711,9 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
 
-    auto mvpMatrix = getModelViewProjection();
-    auto ndcSpaceSize = mvpMatrix * vislib::math::Vector<float, 4>(size, size, 0.0f, 0.0f);
+    auto ndcSpaceSize = screenLastMVP * glm::vec4(size, size, 0.0f, 0.0f);
     auto screenSpaceSize =
-        vislib::math::Vector<float, 2>(viewport[2] / 2.0 * ndcSpaceSize.X(), viewport[3] / 2.0 * ndcSpaceSize.Y());
+        vislib::math::Vector<float, 2>(viewport[2] / 2.0 * ndcSpaceSize.x, viewport[3] / 2.0 * ndcSpaceSize.y);
 
     // 0: no grid <-> 3: big,mid,small grid
     GLint recursiveDepth = 0;
@@ -728,8 +733,8 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
     glDisable(GL_DEPTH_TEST);
 
     // Transformation uniform.
-    glUniformMatrix4fv(
-        this->scientificAxisShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
+    glUniformMatrix4fv(this->scientificAxisShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+        glm::value_ptr(screenLastMVP));
 
     // Other uniforms.
     glUniform1ui(this->scientificAxisShader.ParameterLocation("depth"), recursiveDepth);
@@ -845,8 +850,8 @@ void ScatterplotMatrixRenderer2D::drawPoints() {
 
     // Transformation uniforms.
     glUniform4fv(this->pointShader.ParameterLocation("viewport"), 1, viewport);
-    glUniformMatrix4fv(this->pointShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
-        getModelViewProjection().PeekComponents());
+    glUniformMatrix4fv(
+        this->pointShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, glm::value_ptr(screenLastMVP));
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
@@ -903,8 +908,8 @@ void ScatterplotMatrixRenderer2D::drawLines() {
 
     // Transformation uniforms.
     glUniform4fv(this->lineShader.ParameterLocation("viewport"), 1, viewport);
-    glUniformMatrix4fv(this->lineShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
-        getModelViewProjection().PeekComponents());
+    glUniformMatrix4fv(
+        this->lineShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, glm::value_ptr(screenLastMVP));
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
@@ -1065,9 +1070,8 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangleIBO);
 
     // Set uniforms.
-    auto mvpMatrix = getModelViewProjection();
     glUniformMatrix4fv(
-        this->triangleShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
+        this->triangleShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, glm::value_ptr(screenLastMVP));
 
     // Emit draw call.
     glDrawElements(GL_TRIANGLES, triangleVertexCount, GL_UNSIGNED_INT, nullptr);
@@ -1126,8 +1130,8 @@ void ScatterplotMatrixRenderer2D::drawPickIndicator() {
     this->pickIndicatorShader.Enable();
 
     float color[] = {0.0, 1.0, 1.0, 1.0};
-    glUniformMatrix4fv(this->pickIndicatorShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
-        getModelViewProjection().PeekComponents());
+    glUniformMatrix4fv(
+        this->pickIndicatorShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, glm::value_ptr(screenLastMVP));
     glUniform2f(this->pickIndicatorShader.ParameterLocation("mouse"), this->mouse.x, this->mouse.y);
     glUniform1f(this->pickIndicatorShader.ParameterLocation("pickRadius"),
         this->pickRadiusParam.Param<core::param::FloatParam>()->Value());

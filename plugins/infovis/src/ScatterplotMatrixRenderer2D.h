@@ -312,8 +312,11 @@ private:
     GLsizei triangleVertexCount;
     bool trianglesValid;
 
+    core::view::Camera currentCamera;
+    std::shared_ptr<glowl::FramebufferObject> currentFBO;
+
     std::unique_ptr<glowl::FramebufferObject> screenFBO;
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> screenLastMVP;
+    glm::mat4 screenLastMVP;
     GLint screenRestoreFBO;
     bool screenValid;
 

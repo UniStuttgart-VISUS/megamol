@@ -540,7 +540,7 @@ bool ParallelCoordinatesRenderer2D::OnMouseButton(
 }
 
 bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
-
+    // Make the following a convenience function in the future
     auto cam_pose = camera_cpy.get<core::view::Camera::Pose>();
     auto cam_intrinsics = camera_cpy.get<core::view::Camera::OrthographicParameters>();
     float world_x, world_y;
