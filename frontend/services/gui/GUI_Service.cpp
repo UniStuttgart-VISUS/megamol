@@ -76,16 +76,21 @@ bool GUI_Service::init(const Config& config) {
                 if (gui->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL, config.core_instance)) {
 
                     // Set function pointer in resource once
-                    this->m_providedResource.request_gui_state = [&](void) -> std::string {return this->resource_request_gui_state();};
+                    this->m_providedResource.request_gui_state = [&](bool as_lua) -> std::string {return this->resource_request_gui_state(as_lua);};
                     this->m_providedResource.provide_gui_state = [&](std::string json_state) -> void {
                         return this->resource_provide_gui_state(json_state);
                     };
+                    this->m_providedResource.request_gui_visibility = [&]() -> bool {return this->resource_request_gui_visibility();};
                     this->m_providedResource.provide_gui_visibility = [&](bool show) -> void {
                         return this->resource_provide_gui_visibility(show);
                     };
+                    this->m_providedResource.request_gui_scale = [&]() -> float {return this->resource_request_gui_scale();};
                     this->m_providedResource.provide_gui_scale = [&](float scale) -> void {
                         return this->resource_provide_gui_scale(scale);
                     };
+
+                    resource_provide_gui_visibility(config.gui_show);
+                    resource_provide_gui_scale(config.gui_scale);
 
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
@@ -93,6 +98,7 @@ bool GUI_Service::init(const Config& config) {
             }
         }
     }
+
 
     return false;
 }
@@ -301,13 +307,33 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 }
 
 
-std::string GUI_Service::resource_request_gui_state(void) {
+std::string GUI_Service::resource_request_gui_state(bool as_lua) {
 
     if (is_gui_nullptr) {
         return std::string();
     }
     auto gui = this->m_gui->Get();
-    return gui->GetState();
+    return gui->GetState(as_lua);
+}
+
+
+bool GUI_Service::resource_request_gui_visibility() {
+
+    if (is_gui_nullptr) {
+        return false;
+    }
+    auto gui = this->m_gui->Get();
+    return gui->GetVisibility();
+}
+
+
+float GUI_Service::resource_request_gui_scale() {
+
+    if (is_gui_nullptr) {
+        return 1.0f;
+    }
+    auto gui = this->m_gui->Get();
+    return gui->GetScale();
 }
 
 

@@ -551,3 +551,48 @@ std::string megamol::core::utility::log::Log::getFileNameSuffix(void) {
 
     return buf.str();
 }
+
+inline static bool iequals(const std::string& one, const std::string& other) {
+
+    return ((one.size() == other.size()) &&
+            std::equal(one.begin(), one.end(), other.begin(),
+                [](const char& c1, const char& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
+}
+
+UINT megamol::core::utility::log::Log::ParseLevelAttribute(const std::string attr) {
+
+    UINT retval = megamol::core::utility::log::Log::LEVEL_ERROR;
+    if (iequals(attr, "error")) {
+        retval = megamol::core::utility::log::Log::LEVEL_ERROR;
+    }
+    else if (iequals(attr, "warn")) {
+        retval = megamol::core::utility::log::Log::LEVEL_WARN;
+    }
+    else if (iequals(attr, "warning")) {
+        retval = megamol::core::utility::log::Log::LEVEL_WARN;
+    }
+    else if (iequals(attr, "info")) {
+        retval = megamol::core::utility::log::Log::LEVEL_INFO;
+    }
+    else if (iequals(attr, "none")) {
+        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+    }
+    else if (iequals(attr, "null")) {
+        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+    }
+    else if (iequals(attr, "zero")) {
+        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+    }
+    else if (iequals(attr, "all")) {
+        retval = megamol::core::utility::log::Log::LEVEL_ALL;
+    }
+    else if (iequals(attr, "*")) {
+        retval = megamol::core::utility::log::Log::LEVEL_ALL;
+    }
+    else {
+        retval = std::stoi(attr);
+        // dont catch stoi exceptions
+        // let exception be handled by the one who called me
+    }
+    return retval;
+}

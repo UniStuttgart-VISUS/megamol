@@ -2034,7 +2034,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 
             std::string gui_state;
             if (save_gui_state.IsTrue()) {
-                gui_state = this->project_to_lua_string();
+                gui_state = this->project_to_lua_string(true);
             }
 
             popup_failed |=
@@ -2355,18 +2355,24 @@ std::string megamol::gui::GUIWindows::save_imgui_settings_to_string(void) {
 }
 
 
-std::string megamol::gui::GUIWindows::project_to_lua_string(void) {
+std::string megamol::gui::GUIWindows::project_to_lua_string(bool as_lua) {
 
     std::string gui_state;
     if (this->state_to_string(gui_state)) {
-        std::string state = std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
-                            ((this->state.gui_visible) ? ("true") : ("false")) +
-                            std::string(GUI_END_TAG_SET_GUI_VISIBILITY) + "\n";
+        std::string state = "";
 
-        state += std::string(GUI_START_TAG_SET_GUI_SCALE) + std::to_string(megamol::gui::gui_scaling.Get()) +
-                 std::string(GUI_END_TAG_SET_GUI_SCALE) + "\n";
+        if (as_lua) {
+            state += std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
+                     ((this->state.gui_visible) ? ("true") : ("false")) + std::string(GUI_END_TAG_SET_GUI_VISIBILITY) +
+                     "\n";
 
-        state += std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
+            state += std::string(GUI_START_TAG_SET_GUI_SCALE) + std::to_string(megamol::gui::gui_scaling.Get()) +
+                     std::string(GUI_END_TAG_SET_GUI_SCALE) + "\n";
+            state +=
+                std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
+        } else {
+            state += gui_state;
+        }
 
         return state;
     }
