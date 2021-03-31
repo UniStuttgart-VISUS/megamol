@@ -586,10 +586,29 @@ bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
  * AbstractView::determineCameraFilePath
  */
 std::string view::AbstractView::determineCameraFilePath(void) const {
-    auto path = this->GetCoreInstance()->GetLuaState()->GetScriptPath();
-    if (path.empty())
-        return path; // early exit for mmprj projects
-    auto dotpos = path.find_last_of('.');
+    std::string path;
+    if (!this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+        // new frontend
+        const auto fit = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+            [](auto const& el) { return el.getIdentifier() == "LuaScriptPaths"; });
+
+        if (fit != this->frontend_resources.end()) {
+            core::utility::log::Log::DefaultLog.WriteInfo("[AbstractView] Got script paths");
+            const auto& paths = fit->getResource<megamol::frontend_resources::ScriptPaths>().lua_script_paths;
+            if (!paths.empty()) {
+                path = paths[0];
+            } else {
+                return path;
+            }
+        } else {
+            return path;
+        }
+    } else {
+        path = this->GetCoreInstance()->GetLuaState()->GetScriptPath();
+        if (path.empty())
+            return path; // early exit for mmprj projects
+    }
+    const auto dotpos = path.find_last_of('.');
     path = path.substr(0, dotpos);
     path.append("_cam.json");
     return path;

@@ -370,7 +370,7 @@ unsigned int RenderUtils::GetTextureHeight(GLuint texture_id) const {
 }
 
 
-void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

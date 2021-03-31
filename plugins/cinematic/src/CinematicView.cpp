@@ -279,6 +279,8 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     const float vp_fh = static_cast<float>(vp_ih);
     const float vp_fh_reduced = static_cast<float>(vp_ih_reduced);
     const float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
+    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
+
     // FBO viewport
     int fboWidth = vp_iw;
     int fboHeight = vp_ih_reduced;
@@ -491,10 +493,9 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
         midLabel = " Playing Animation ";
     }
     std::string rightLabel = "";
-    this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, glm::vec2(vp_fw, vp_fh));
 
     // Draw 2D ----------------------------------------------------------------
-    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
     this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
 
     err = glGetError();

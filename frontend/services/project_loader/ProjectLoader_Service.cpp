@@ -135,7 +135,7 @@ bool ProjectLoader_Service::load_file(std::string const& filename) const {
     }
     set_script_path(filename);
 
-    log("loaded file " + filename + "\n\t" + script_error);
+    log("loaded file " + filename + ((script_error.size()) ? "\n\t" + script_error : ""));
     return true;
 }
 
