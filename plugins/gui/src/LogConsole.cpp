@@ -23,7 +23,6 @@ int megamol::gui::LogBuffer::sync(void) {
             while (split_index != std::string::npos) {
                 // Assuming new line of log message of format "<level>|<message>\r\n"
                 auto new_message = message_str.substr(0, split_index + 1);
-                unsigned int log_level = megamol::core::utility::log::Log::LEVEL_NONE;
                 bool extracted_new_message = false;
                 auto seperator_index = new_message.find("|");
                 if (seperator_index != std::string::npos) {

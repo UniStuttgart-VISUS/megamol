@@ -1357,14 +1357,14 @@ void megamol::gui::GUIWindows::load_default_fonts(void) {
     std::string configurator_font_path;
     std::string default_font_path;
 
-    auto get_preset_font_path = [&](auto directory) {
-        std::string font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, "Roboto-Regular.ttf");
+    auto get_preset_font_path = [&](std::string directory) {
+        std::string font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_ROBOTOSANS);
         if (!font_path.empty()) {
             font_paths.emplace_back(font_path);
             configurator_font_path = font_path;
             default_font_path = font_path;
         }
-        font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, "SourceCodePro-Regular.ttf");
+        font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_SOURCECODEPRO);
         if (!font_path.empty()) {
             font_paths.emplace_back(font_path);
         }
@@ -1373,10 +1373,10 @@ void megamol::gui::GUIWindows::load_default_fonts(void) {
     if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
         auto search_paths = this->core_instance->Configuration().ResourceDirectories();
         for (size_t i = 0; i < search_paths.Count(); ++i) {
-            get_preset_font_path(std::wstring(search_paths[i].PeekBuffer()));
+            get_preset_font_path(megamol::core::utility::to_string(search_paths[i].PeekBuffer()));
         }
     } else {
-        for (auto& resource_directory : this->state.resource_directories) {
+        for (auto& resource_directory : megamol::gui::gui_resource_paths) {
             get_preset_font_path(resource_directory);
         }
     }
@@ -1690,10 +1690,8 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
 
 void GUIWindows::drawMenu(void) {
 
-    if (!this->state.menu_visible)
-        return;
+    if (!this->state.menu_visible) return;
 
-    ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
     bool megamolgraph_interface = false;
@@ -2399,7 +2397,6 @@ bool megamol::gui::GUIWindows::state_from_string(const std::string& state) {
                     gui_state, {"font_file_name"}, &this->state.font_file_name);
                 megamol::core::utility::get_json_value<int>(gui_state, {"font_size"}, &this->state.font_size);
                 this->state.font_apply = true;
-                float new_gui_scale = 1.0f;
                 std::string imgui_settings;
                 megamol::core::utility::get_json_value<std::string>(gui_state, {"imgui_settings"}, &imgui_settings);
                 this->load_imgui_settings_from_string(imgui_settings);
@@ -2525,7 +2522,6 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.stat_averaged_ms = 0.0;
     this->state.stat_frame_count = 0;
     this->state.font_size = 13;
-    this->state.resource_directories.clear();
     this->state.load_docking_preset = false;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);
@@ -2540,9 +2536,8 @@ void megamol::gui::GUIWindows::update_frame_statistics(WindowCollection::WindowC
     if (wc.fpsms_refresh_rate > 0.0f) {
         if (wc.buf_current_delay >= (1.0f / wc.fpsms_refresh_rate)) {
 
-            auto update_values = [](float current_value, float& max_value, std::vector<float>& values,
-                                     size_t actual_buffer_size) {
-                auto buffer_size = static_cast<int>(values.size());
+            auto update_values = [](float current_value, float& max_value, std::vector<float>& values, size_t actual_buffer_size) {
+                size_t buffer_size = values.size();
                 if (buffer_size != actual_buffer_size) {
                     if (buffer_size > actual_buffer_size) {
                         values.erase(values.begin(), values.begin() + (buffer_size - actual_buffer_size));

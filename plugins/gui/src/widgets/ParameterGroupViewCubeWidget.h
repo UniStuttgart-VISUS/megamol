@@ -16,7 +16,7 @@ namespace megamol {
 namespace gui {
 
 
-    /**
+    /** ***********************************************************************
      * Pickable Cube
      */
     class PickableCube {
@@ -35,7 +35,24 @@ namespace gui {
     };
 
 
-    /**
+    /** ***********************************************************************
+     * Pickable Texture
+     */
+    class PickableTexture {
+    public:
+        PickableTexture(void);
+        ~PickableTexture(void) = default;
+
+        bool Draw(unsigned int id);
+
+        InteractVector GetInteractions(unsigned int id) const;
+
+    private:
+        std::shared_ptr<glowl::GLSLProgram> shader;
+    };
+
+
+    /** ***********************************************************************
      * View cube widget for parameter group.
      */
     class ParameterGroupViewCubeWidget : public AbstractParameterGroupWidget {

@@ -39,9 +39,7 @@ namespace gui {
             return megamol::core::view::RenderUtils::LoadTextureFromData(this->tex_ptr, width, height, data);
         }
 
-        bool LoadTextureFromFile(const std::string& filename) {
-            return megamol::core::view::RenderUtils::LoadTextureFromFile(this->tex_ptr, filename);
-        }
+        bool LoadTextureFromFile(const std::string& filename);
 
         /**
          * Draw texture as simple image.

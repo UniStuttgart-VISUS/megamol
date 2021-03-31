@@ -32,89 +32,88 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
     // Create shader once -----------------------------------------------------
     if (this->shader == nullptr) {
         std::string vertex_src =
-            "#version 130 \n "
-            "uniform int id; \n "
-            "uniform mat4 rot_mx; \n "
-            "uniform mat4 model_mx; \n "
-            "uniform mat4 proj_mx; \n "
-            "uniform int view_index; \n "
-            "uniform int orientation_index; \n "
-            "uniform int view_hover_index; \n "
-            "uniform int orientation_hover_index; \n "
-            "out vec4 vertex_color; \n "
-            "flat out int face_id; \n "
-            "void main() { \n "
-            "    // Vertex indices must fit enum order in megamol::core::view::View3D_2::defaultview \n "
-            "    const vec4 vertices[72] = vec4[72]( \n "
-            "        // DEFAULTVIEW_FRONT = 0 \n "
-            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
-            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
-            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
-            "        // DEFAULTVIEW_BACK = 1 \n "
-            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
-            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
-            "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
-            "        // DEFAULTVIEW_RIGHT = 2 \n "
-            "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
-            "        // DEFAULTVIEW_LEFT = 3 \n "
-            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
-            "        // DEFAULTVIEW_TOP = 4 \n "
+            "#version 130 \n"
+            "uniform int id; \n"
+            "uniform mat4 rot_mx; \n"
+            "uniform mat4 model_mx; \n"
+            "uniform mat4 proj_mx; \n"
+            "uniform int view_index; \n"
+            "uniform int orientation_index; \n"
+            "uniform int view_hover_index; \n"
+            "uniform int orientation_hover_index; \n"
+            "out vec4 vertex_color; \n"
+            "flat out int face_id; \n"
+            "void main() { \n"
+            "    // Vertex indices must fit enum order in megamol::core::view::View3D_2::defaultview \n"
+            "    const vec4 vertices[72] = vec4[72]( \n"
+            "        // DEFAULTVIEW_FRONT = 0 \n"
+            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n"
+            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n"
+            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n"
+            "        // DEFAULTVIEW_BACK = 1 \n"
+            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n"
+            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n"
+            "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n"
+            "        // DEFAULTVIEW_RIGHT = 2 \n"
+            "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n"
+            "        // DEFAULTVIEW_LEFT = 3 \n"
+            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n"
+            "        // DEFAULTVIEW_TOP = 4 \n"
             "        vec4(1.0, 1.0, -1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n"
-            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
-            "        // DEFAULTVIEW_BOTTOM = 5 \n "
-            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
-            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0)); \n "
+            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n"
+            "        // DEFAULTVIEW_BOTTOM = 5 \n"
+            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n"
+            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0)); \n"
             "    \n"
-            "    const vec4 colors[6] = vec4[6](vec4(0.0, 0.0, 1.0, 1.0), vec4(0.0, 1.0, 1.0, 1.0), \n "
-            "                                   vec4(0.0, 1.0, 0.0, 1.0), vec4(1.0, 1.0, 0.0, 1.0), \n "
-            "                                   vec4(1.0, 0.0, 0.0, 1.0), vec4(1.0, 0.0, 1.0, 1.0)); \n "
+            "    const vec4 colors[6] = vec4[6](vec4(0.0, 0.0, 1.0, 1.0), vec4(0.0, 1.0, 1.0, 1.0), \n"
+            "                                   vec4(0.0, 1.0, 0.0, 1.0), vec4(1.0, 1.0, 0.0, 1.0), \n"
+            "                                   vec4(1.0, 0.0, 0.0, 1.0), vec4(1.0, 0.0, 1.0, 1.0)); \n"
             "    // Calculate indices and IDs \n"
             "    float vertex_index = float(gl_VertexID); \n"
             "    float mod_index = vertex_index - (12.0 * floor(vertex_index/12.0)); \n"
             "    float mod_triangle_index = mod_index - (3.0 * floor(mod_index/3.0)); \n"
             "    int current_orientation_index = int(floor(mod_index / 3.0)); \n"
-            "    int current_orientation_id = int(1 << current_orientation_index); // in range [0-3]\n "
-            "    int current_view_index = int(gl_VertexID / 12);       // in range [0-5] \n "
+            "    int current_orientation_id = int(1 << current_orientation_index); // in range [0-3]\n"
+            "    int current_view_index = int(gl_VertexID / 12);       // in range [0-5] \n"
             "    face_id = int((id << (current_view_index + 4)) | current_orientation_id);"
             "    \n"
             "    // Set colors depending on selected or hovered triangles \n"
-            "    vertex_color = colors[current_view_index]; \n "
-            "    if (view_index != current_view_index) { \n "
-            "        vertex_color *= 0.25; \n "
-            "    } \n "
-            "    if (view_index == current_view_index) { \n "
-            "        vertex_color *= (0.5 + (0.5 - 0.5*(current_orientation_index/2.0))); \n "
-            "    } \n "
             "    if ((view_hover_index == current_view_index) && \n"
-            "            (orientation_hover_index == current_orientation_index)) { \n "
-            "        vertex_color = vec4(0.5); \n "
-            "    } \n "
-            "    vertex_color.w = 1.0; \n "
+            "            (orientation_hover_index == current_orientation_index)) { \n"
+            "        vertex_color = colors[current_view_index] * (0.6 + (0.3 - 0.3*(current_orientation_index/2.0))); // vec4(0.5); \n"
+            "    } \n"            
+            "    else if (view_index == current_view_index) { \n"
+            "        vertex_color = colors[current_view_index] * (0.5 + (0.5 - 0.5*(current_orientation_index/2.0))); \n"
+            "    } \n"
+            "    else { \n"
+            "        vertex_color = colors[current_view_index] * 0.25; \n"
+            "    } \n"
+            "    vertex_color.w = 1.0; \n"
             "    \n"
-            "    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID]; \n "
+            "    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID]; \n"
             "}";
 
-        std::string fragment_src = "#version 130  \n "
-                                   "#extension GL_ARB_explicit_attrib_location : require \n "
-                                   "in vec4 vertex_color; \n "
-                                   "flat in int face_id; \n "
-                                   "layout(location = 0) out vec4 outFragColor; \n "
-                                   "layout(location = 1) out vec2 outFragInfo; \n "
-                                   "void main(void) { \n "
-                                   "    outFragColor = vertex_color; \n "
-                                   "    outFragInfo  = vec2(float(face_id), gl_FragCoord.z); \n "
+        std::string fragment_src = "#version 130  \n"
+                                   "#extension GL_ARB_explicit_attrib_location : require \n"
+                                   "in vec4 vertex_color; \n"
+                                   "flat in int face_id; \n"
+                                   "layout(location = 0) out vec4 outFragColor; \n"
+                                   "layout(location = 1) out vec2 outFragInfo; \n"
+                                   "void main(void) { \n"
+                                   "    outFragColor = vertex_color; \n"
+                                   "    outFragInfo  = vec2(float(face_id), gl_FragCoord.z); \n"
                                    "} ";
 
         if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
@@ -222,6 +221,30 @@ InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) cons
     interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
+
+
+
+// *** Pickable Cube ******************************************************** //
+
+megamol::gui::PickableTexture::PickableTexture(void) : shader(nullptr) {}
+
+
+bool megamol::gui::PickableTexture::Draw(unsigned int id) {
+
+    bool selected = false;
+
+    return selected;
+}
+
+
+InteractVector megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
+
+    InteractVector interactions;
+    interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    return interactions;
+}
+
 
 
 // *** Parameter Group View Cube Widget ************************************ //

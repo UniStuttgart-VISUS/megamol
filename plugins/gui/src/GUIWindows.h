@@ -204,7 +204,7 @@ namespace gui {
          * Set resource directories.
          */
         void SetResourceDirectories(const std::vector<std::string>& resource_directories) {
-            this->state.resource_directories = resource_directories;
+            megamol::gui::gui_resource_paths = resource_directories;
         }
 
         /**
@@ -278,7 +278,6 @@ namespace gui {
             double stat_averaged_fps;             // current average fps value
             double stat_averaged_ms;              // current average fps value
             size_t stat_frame_count;              // current fame count
-            std::vector<std::string> resource_directories; // the global resource directories
             bool load_docking_preset;                      // Flag indicating docking preset loading
             bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
         };

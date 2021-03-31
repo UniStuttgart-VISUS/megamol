@@ -107,10 +107,18 @@
 #define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.5f, 0.25f, 1.0f))
 #define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
+// Texture File Names
+#define GUI_DEFAULT_FONT_ROBOTOSANS ("Roboto-Regular.ttf")
+#define GUI_DEFAULT_FONT_SOURCECODEPRO ("SourceCodePro-Regular.ttf")
+#define GUI_TRANSPORT_ICON_PLAY ("transport_ctrl_play.png")
+#define GUI_TRANSPORT_ICON_PAUSE ("transport_ctrl_pause.png")
+#define GUI_TRANSPORT_ICON_FAST_FORWARD ("transport_ctrl_fast-forward.png")
+#define GUI_TRANSPORT_ICON_FAST_REWIND ("transport_ctrl_fast-rewind.png")
+#define GUI_VIEWCUBE_ROTATION_ARROWS ("viewcube_rotation_arrows.png")
 
+
+/********** Additional Global ImGui Operators ********************************/
 namespace {
-
-/********** Global Operators **********/
 
 bool operator==(const ImVec2& left, const ImVec2& right) {
     return ((left.x == right.x) && (left.y == right.y));
@@ -127,7 +135,7 @@ namespace megamol {
 namespace gui {
 
 
-    /********** Global Unique ID **********/
+    /********** Global Unique ID *********************************************/
 
     extern ImGuiID gui_generated_uid;
 
@@ -136,13 +144,19 @@ namespace gui {
     }
 
 
-    /********** Global ImGui Context Pointer Counter **********/
+    /********** Global ImGui Context Pointer Counter *************************/
 
     // Only accessed by possible multiple instances of GUIWindows
     extern unsigned int gui_context_count;
 
 
-    /********** Global GUI Scaling Factor **********/
+    /********** Global Resource Paths ****************************************/
+
+    // Resource paths set by GUIWindows
+    extern std::vector<std::string> gui_resource_paths;
+
+
+    /********** Global GUI Scaling Factor ************************************/
 
     // Forward declaration
     class GUIWindows;
@@ -189,7 +203,7 @@ namespace gui {
     extern GUIScaling gui_scaling;
 
 
-    /********** Types **********/
+    /********** Types ********************************************************/
 
     // Forward declaration
     class CallSlot;
@@ -319,13 +333,14 @@ namespace gui {
 
     enum class HeaderType { MODULE_GROUP, MODULE, PARAMETERG_ROUP };
 
-    /********** Class **********/
+    /********** GUIUtils *****************************************************/
 
     /**
      * Static GUI utility functions.
      */
     class GUIUtils {
     public:
+
         /** Extract string enclosed in predefined tags. */
         static std::string ExtractTaggedString(
             const std::string& str, const std::string& start_tag, const std::string& end_tag) {
@@ -341,7 +356,6 @@ namespace gui {
             return return_str;
         }
 
-
         /** Decode string from UTF-8. */
         static bool Utf8Decode(std::string& str) {
 
@@ -353,7 +367,6 @@ namespace gui {
             return false;
         }
 
-
         /** Encode string into UTF-8. */
         static bool Utf8Encode(std::string& str) {
 
@@ -364,7 +377,6 @@ namespace gui {
             }
             return false;
         }
-
 
         /**
          * Enable/Disable read only widget style.
@@ -380,7 +392,6 @@ namespace gui {
             }
         }
 
-
         /**
          * Returns true if search string is found in source as a case insensitive substring.
          *
@@ -394,7 +405,6 @@ namespace gui {
                 [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
             return (it != source.end());
         }
-
 
         /*
          * Draw collapsing group header.
@@ -472,7 +482,6 @@ namespace gui {
 
     private:
         GUIUtils(void) = default;
-
         ~GUIUtils(void) = default;
     };
 

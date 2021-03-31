@@ -52,7 +52,7 @@ bool RenderUtils::LoadTextureFromData(
         glowl::TextureLayout tex_layout(GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1);
         if (out_texture_ptr == nullptr) {
             out_texture_ptr =
-                std::make_unique<glowl::Texture2D>("image_widget", tex_layout, static_cast<GLvoid*>(data), false);
+                std::make_unique<glowl::Texture2D>("image", tex_layout, static_cast<GLvoid*>(data), false);
         } else {
             // Reload data
             out_texture_ptr->reload(tex_layout, static_cast<GLvoid*>(data), false);
