@@ -55,7 +55,7 @@ void main() {
     if(r > 1.0) discard;
     if(r < 0.1) discard;
     
-    vec3 out_colour = color_table[mesh_shader_params[draw_id].cluster_id % 41];
+    vec3 out_colour = hsvSpiralColor(mesh_shader_params[draw_id].cluster_id, mesh_shader_params[draw_id].total_cluster_cnt);
 
     albedo_out = vec4(out_colour,1.0);
     normal_out = vec3(0.0,0.0,1.0);
