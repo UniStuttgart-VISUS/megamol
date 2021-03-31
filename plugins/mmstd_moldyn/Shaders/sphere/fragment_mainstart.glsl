@@ -78,11 +78,25 @@ void main(void) {
 #ifdef AXISHINTS
     // debug-axis-hints
     float mc = min(abs(normal.x), min(abs(normal.y), abs(normal.z)));
-    if (mc < 0.05)            { color = vec3(0.5); }
-    if (abs(normal.x) > 0.98) { color = vec3(1.0, 0.0, 0.0); }
-    if (abs(normal.y) > 0.98) { color = vec3(0.0, 1.0, 0.0); }
-    if (abs(normal.z) > 0.98) { color = vec3(0.0, 0.0, 1.0); }
-    if (normal.x < -0.99)     { color = vec3(0.5); }
-    if (normal.y < -0.99)     { color = vec3(0.5); }
-    if (normal.z < -0.99)     { color = vec3(0.5); }
+    if (mc < 0.05) {
+        color = vec4(0.5, 0.5, 0.5, 1.0);
+    }
+    if (abs(normal.x) > 0.98) {
+        color = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+    if (abs(normal.y) > 0.98) {
+        color = vec4(0.0, 1.0, 0.0, 1.0);
+    }
+    if (abs(normal.z) > 0.98) {
+        color = vec4(0.0, 0.0, 1.0, 1.0);
+    }
+    if (normal.x < -0.99) {
+        color = vec4(0.5, 0.5, 0.5, 1.0);
+    }
+    if (normal.y < -0.99) {
+        color = vec4(0.5, 0.5, 0.5, 1.0);
+    }
+    if (normal.z < -0.99) {
+        color = vec4(0.5, 0.5, 0.5, 1.0);
+    }
 #endif // AXISHINTS
