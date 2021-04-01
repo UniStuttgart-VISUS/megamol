@@ -45,7 +45,7 @@ namespace gui {
         PickableTexture(void);
         ~PickableTexture(void) = default;
 
-        bool Draw(unsigned int id, int& out_orientation_index_offset, int& out_hovered_arrow, ManipVector& pending_manipulations);
+        bool Draw(unsigned int id, int face_index, int& out_orientation_index_offset, int& out_hovered_arrow, ManipVector& pending_manipulations);
 
         InteractVector GetInteractions(unsigned int id) const;
 

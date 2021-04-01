@@ -871,6 +871,8 @@ void megamol::gui::GUIWindows::SetClipboardFunc(const char* (*get_clipboard_func
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
+    if (!this->state.gui_visible) return true;
+
     // 1) Load all known calls from core instance ONCE ---------------------------
     if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
