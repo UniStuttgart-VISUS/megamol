@@ -1,10 +1,6 @@
 # MegaMol Plugin: GUI
 
-This is the plugin providing the GUI for MegaMol.
-
-**DISCLAIMER: The following descriptions are no longer valid for the old frontend *mmconsole***
-
-See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress.
+This is the plugin that provides the GUI for MegaMol.
 
 ![gui](gui.jpg)
 
@@ -40,7 +36,11 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
 
 ## Graphical User Interface (GUI)
 
-The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui) *Version 1.82 (Docking Branch)*.
+The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui) *Version 1.82 (Docking Branch)*.  
+
+See the *Bug and Feature Tracker* [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress. 
+
+**DISCLAIMER: The following descriptions are no longer valid for the old frontend *mmconsole***   
 
 **NOTE**
 * Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considered or recognized. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
