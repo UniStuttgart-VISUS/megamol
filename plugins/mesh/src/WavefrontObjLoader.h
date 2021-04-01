@@ -87,19 +87,19 @@ private:
     std::shared_ptr<TinyObjModel> m_obj_model;
 
     /**
-    // * Internal storage for unpacked positions, i.e one position per vertex, three vertices per triangle
-    // */
-    //std::vector<float> m_positions;
+     * Internal storage for unpacked positions, i.e one position per vertex, three vertices per triangle
+     */
+    std::vector<std::vector<float>> m_positions;
 
-    ///**
-    // * Internal storage for unpacked normals, i.e one normal per vertex, three vertices per triangle
-    // */
-    //std::vector<float> m_normals;
+    /**
+     * Internal storage for unpacked normals, i.e one normal per vertex, three vertices per triangle
+     */
+    std::vector<std::vector<float>> m_normals;
 
-    ///**
-    // * Internal storage for unpacked texcoords, i.e one texcoord per vertex, three vertices per triangle
-    // */
-    //std::vector<float> m_texcoords;
+    /**
+     * Internal storage for unpacked texcoords, i.e one texcoord per vertex, three vertices per triangle
+     */
+    std::vector<std::vector<float>> m_texcoords;
 
     /**
      * 

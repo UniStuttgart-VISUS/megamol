@@ -26,9 +26,9 @@
  * - Search Module:             Ctrl + Shift + m
  * - Search Parameter:          Ctrl + Shift + p
  * - Save Edited Project:       Ctrl + Shift + s
- * - Delete Graph Item:         Delete
  *
  * ----- Graph -----
+ * - Delete Graph Item:         Delete
  * - Selection, Drag & Drop:    Left Mouse Button
  * - Context Menu:              Right Mouse Button
  * - Zooming:                   Mouse Wheel
@@ -89,8 +89,12 @@
 /// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
 /// megamol::core::param::AbstractParamPresentation.h
 
-#define GUI_PROJECT_GUI_STATE_START_TAG ("-- <GUI_STATE_JSON>")
-#define GUI_PROJECT_GUI_STATE_END_TAG ("</GUI_STATE_JSON>")
+#define GUI_START_TAG_SET_GUI_STATE ("mmSetGUIState([=[")
+#define GUI_END_TAG_SET_GUI_STATE ("]=])")
+#define GUI_START_TAG_SET_GUI_VISIBILITY ("mmSetGUIVisible(")
+#define GUI_END_TAG_SET_GUI_VISIBILITY (")")
+#define GUI_START_TAG_SET_GUI_SCALE ("mmSetGUIScale(")
+#define GUI_END_TAG_SET_GUI_SCALE (")")
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.1f, 0.0f, 1.0f))
@@ -103,10 +107,19 @@
 #define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.5f, 0.25f, 1.0f))
 #define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
+// Texture File Names
+#define GUI_DEFAULT_FONT_ROBOTOSANS ("Roboto-Regular.ttf")
+#define GUI_DEFAULT_FONT_SOURCECODEPRO ("SourceCodePro-Regular.ttf")
+#define GUI_TRANSPORT_ICON_PLAY ("transport_ctrl_play.png")
+#define GUI_TRANSPORT_ICON_PAUSE ("transport_ctrl_pause.png")
+#define GUI_TRANSPORT_ICON_FAST_FORWARD ("transport_ctrl_fast-forward.png")
+#define GUI_TRANSPORT_ICON_FAST_REWIND ("transport_ctrl_fast-rewind.png")
+#define GUI_VIEWCUBE_ROTATION_ARROW ("viewcube_rotation_arrow.png")
+#define GUI_VIEWCUBE_UP_ARROW ("viewcube_up_arrow.png")
 
+
+/********** Additional Global ImGui Operators ********************************/
 namespace {
-
-/********** Global Operators **********/
 
 bool operator==(const ImVec2& left, const ImVec2& right) {
     return ((left.x == right.x) && (left.y == right.y));
@@ -123,7 +136,7 @@ namespace megamol {
 namespace gui {
 
 
-    /********** Global Unique ID **********/
+    /********** Global Unique ID *********************************************/
 
     extern ImGuiID gui_generated_uid;
 
@@ -132,14 +145,21 @@ namespace gui {
     }
 
 
-    /********** Global ImGui Context Pointer Counter **********/
+    /********** Global ImGui Context Pointer Counter *************************/
 
     // Only accessed by possible multiple instances of GUIWindows
     extern unsigned int gui_context_count;
 
 
-    /********** Global GUI Scaling Factor **********/
+    /********** Global Resource Paths ****************************************/
 
+    // Resource paths set by GUIWindows
+    extern std::vector<std::string> gui_resource_paths;
+
+
+    /********** Global GUI Scaling Factor ************************************/
+
+    // Forward declaration
     class GUIWindows;
 
     class GUIScaling {
@@ -153,7 +173,7 @@ namespace gui {
             return this->scale;
         }
 
-        float TransitonFactor(void) const {
+        float TransitionFactor(void) const {
             return (this->scale / this->last_scale);
         }
 
@@ -170,7 +190,7 @@ namespace gui {
 
         void Set(float s) {
             this->last_scale = this->scale;
-            this->scale = std::max(1.0f, s);
+            this->scale = std::max(0.0f, s);
             if (this->scale != this->last_scale) {
                 this->pending_change = true;
             }
@@ -184,7 +204,7 @@ namespace gui {
     extern GUIScaling gui_scaling;
 
 
-    /********** Types **********/
+    /********** Types ********************************************************/
 
     // Forward declaration
     class CallSlot;
@@ -233,11 +253,12 @@ namespace gui {
 
     /* Data type holding information of graph canvas. */
     typedef struct _canvas_ {
-        ImVec2 position;  // in
-        ImVec2 size;      // in
-        ImVec2 scrolling; // in
-        float zooming;    // in
-        ImVec2 offset;    // in
+        ImVec2 position;      // in
+        ImVec2 size;          // in
+        ImVec2 scrolling;     // in
+        float zooming;        // in
+        ImVec2 offset;        // in
+        ImFont* gui_font_ptr; // in
     } GraphCanvas_t;
 
     enum GraphCoreInterface {
@@ -313,27 +334,28 @@ namespace gui {
 
     enum class HeaderType { MODULE_GROUP, MODULE, PARAMETERG_ROUP };
 
-    /********** Class **********/
+    /********** GUIUtils *****************************************************/
 
     /**
      * Static GUI utility functions.
      */
     class GUIUtils {
     public:
-        /** Extract gui state enclosed in predefined tags. */
-        static std::string ExtractGUIState(std::string& str) {
+
+        /** Extract string enclosed in predefined tags. */
+        static std::string ExtractTaggedString(
+            const std::string& str, const std::string& start_tag, const std::string& end_tag) {
             std::string return_str;
-            auto start_idx = str.find(GUI_PROJECT_GUI_STATE_START_TAG);
+            auto start_idx = str.find(start_tag);
             if (start_idx != std::string::npos) {
-                auto end_idx = str.find(GUI_PROJECT_GUI_STATE_END_TAG);
+                auto end_idx = str.find(end_tag, start_idx);
                 if ((end_idx != std::string::npos) && (start_idx < end_idx)) {
-                    start_idx += std::string(GUI_PROJECT_GUI_STATE_START_TAG).length();
+                    start_idx += std::string(start_tag).length();
                     return_str = str.substr(start_idx, (end_idx - start_idx));
                 }
             }
             return return_str;
         }
-
 
         /** Decode string from UTF-8. */
         static bool Utf8Decode(std::string& str) {
@@ -346,7 +368,6 @@ namespace gui {
             return false;
         }
 
-
         /** Encode string into UTF-8. */
         static bool Utf8Encode(std::string& str) {
 
@@ -357,7 +378,6 @@ namespace gui {
             }
             return false;
         }
-
 
         /**
          * Enable/Disable read only widget style.
@@ -373,7 +393,6 @@ namespace gui {
             }
         }
 
-
         /**
          * Returns true if search string is found in source as a case insensitive substring.
          *
@@ -387,7 +406,6 @@ namespace gui {
                 [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
             return (it != source.end());
         }
-
 
         /*
          * Draw collapsing group header.
@@ -465,7 +483,6 @@ namespace gui {
 
     private:
         GUIUtils(void) = default;
-
         ~GUIUtils(void) = default;
     };
 

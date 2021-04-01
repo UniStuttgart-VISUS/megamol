@@ -51,7 +51,7 @@ ImGuiID megamol::gui::GraphCollection::AddGraph(GraphCoreInterface graph_core_in
             retval = graph_ptr->UID();
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Added graph %s' (uid %i). \n", graph_ptr->name.c_str(), graph_ptr->UID());
+                "[GUI] Added graph %s' (uid %i). \n", graph_ptr->Name().c_str(), graph_ptr->UID());
 #endif // GUI_VERBOSE
         }
     } catch (std::exception& e) {
@@ -74,7 +74,7 @@ bool megamol::gui::GraphCollection::DeleteGraph(ImGuiID in_graph_uid) {
         if ((*iter)->UID() == in_graph_uid) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Deleted graph %s' (uid %i). \n", (*iter)->name.c_str(), (*iter)->UID());
+                "[GUI] Deleted graph %s' (uid %i). \n", (*iter)->Name().c_str(), (*iter)->UID());
 #endif // GUI_VERBOSE
 
             if ((*iter).use_count() > 1) {
@@ -189,7 +189,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
     if (core_instance == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (this->calls_stock.empty()) {
@@ -328,7 +328,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
         return false;
     }
 
-    if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, megamol_graph, false)) {
+    if (this->add_update_project_from_core(valid_graph_id, core_instance, megamol_graph, false)) {
         inout_graph_uid = valid_graph_id;
         if (created_new_graph) {
             graph_ptr->SetLayoutGraph();
@@ -342,7 +342,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
 }
 
 
-bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_uid,
+bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_graph_uid,
     megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph, bool use_stock) {
 
     /// TODO
@@ -358,11 +358,15 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             return false;
         }
 
-        const bool use_megamol_graph = (megamol_graph != nullptr);
-        const bool use_core_instance = (core_instance != nullptr);
-        if (use_megamol_graph == use_core_instance) {
+        bool use_megamol_graph = (megamol_graph != nullptr);
+        bool use_core_instance = (core_instance != nullptr);
+        /// XXX Prioritize megamol_graph over core_instance graph
+        if (use_megamol_graph) {
+            use_core_instance = false;
+        }
+        if ((!use_megamol_graph) && (!use_core_instance)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Ambiguous references to the graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Missing references to any graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -1187,7 +1191,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
 
                 // Serialze graph to string -----------------------------------
                 std::string projectstr;
-                std::stringstream confInstances, confModules, confCalls, confParams, confGUIState;
+                std::stringstream confInstances, confModules, confCalls, confParams;
                 for (auto& module_ptr : graph_ptr->Modules()) {
                     if (module_ptr->IsGraphEntry()) {
                         confInstances << "mmCreateView(\"" << module_ptr->GraphEntryName() << "\",\""
@@ -1224,12 +1228,9 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         }
                     }
                 }
-                if (!state_json.empty()) {
-                    confGUIState << (GUI_PROJECT_GUI_STATE_START_TAG) << state_json << (GUI_PROJECT_GUI_STATE_END_TAG);
-                }
 
                 projectstr = confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
-                             confParams.str() + "\n" + confGUIState.str();
+                             confParams.str() + "\n" + state_json;
 
                 graph_ptr->ResetDirty();
                 if (megamol::core::utility::FileUtils::WriteFile(project_filename, projectstr)) {
@@ -1631,8 +1632,8 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 
     // Try to load existing gui state from file
     std::string state_str;
-    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str, true)) {
-        state_str = GUIUtils::ExtractGUIState(state_str);
+    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str)) {
+        state_str = GUIUtils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (!state_str.empty()) {
             state_json = nlohmann::json::parse(state_str);
             if (!state_json.is_object()) {
@@ -1665,6 +1666,10 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
             }
         }
         state_str = state_json.dump(); // No line feed
+
+        state_str =
+            std::string(GUI_START_TAG_SET_GUI_STATE) + state_str + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
+
         return state_str;
     }
     return std::string("");
@@ -1674,8 +1679,8 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
 
     std::string state_str;
-    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str, true)) {
-        state_str = GUIUtils::ExtractGUIState(state_str);
+    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str)) {
+        state_str = GUIUtils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (state_str.empty())
             return false;
         nlohmann::json json;

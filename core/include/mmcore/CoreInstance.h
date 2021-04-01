@@ -820,6 +820,22 @@ public:
      */
     inline bool IsmmconsoleFrontendCompatible(void) const { return this->mmconsoleFrontendCompatible;  }
 
+    inline void SetConfigurationPaths_Frontend3000Compatibility (
+        std::string app_dir,
+        std::vector<std::string> shader_dirs,
+        std::vector<std::string> resource_dirs)
+    {
+        this->config.SetApplicationDirectory(app_dir.c_str());
+
+        for (auto& sd : shader_dirs) {
+            this->config.AddShaderDirectory(sd.c_str());
+        }
+
+        for (auto& rd : resource_dirs) {
+            this->config.AddResourceDirectory(rd.c_str());
+        }
+    }
+
 private:
     /**
      * Nested class with pre initialisation values.

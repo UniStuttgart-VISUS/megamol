@@ -15,6 +15,8 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
     - [FlagStorage](#flagstorage) 
     - [FlagStorage_GL](#flagstorage_gl) 
+- [1D Transfer Function](#1d-transfer-function)  
+    - [Usage](#usage)  
 - [Graph Manipulation](#graph-manipulation)
     - [Graph Manipulation Queues](#graph-manipulation-queues) 
 - [Build System](#build-system)
@@ -110,6 +112,35 @@ The flags here are stored uniquely, resembling a unique pointer or Rust-like mem
 
 This FlagStorage variant relies on a shader storage buffer and does not move any data around. It is implicitly synchronized by single-threaded execution in OpenGL. You still need to synchronize with the host if you want to download the data though. It still keeps track of proper versions so you can detect and act on changes, for example when synchronizing a FlagStorage and a FlagStorage_GL.
 
+
+<!-- ###################################################################### -->
+-----
+## 1D Transfer Function
+
+***... TODO ...***
+
+<!--
+
+The whole functionality of a 1D transfer function is provided via the module `TransferFunction` which holds the actual `TransferFunctionParam` parameter.
+
+If you want to use a transfer function in you renderer module you have to create a caller slot, which is compatible to the call `CallGetTransferFunction`:
+```C++
+    this->tfSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    this->MakeSlotAvailable(&this->tfSlot);
+```
+
+The description of the transfer function is encoded in a string in JSON format, see header `TransferFunctionParam.h`.
+
+-->
+### Usage
+
+***... TODO ...***
+
+<!--
+See the header file of the call `CallGetTransferFunction` for a more detailed interface description of the available functions.
+The renderer modules `SimpleSphereRenderer` or `ScatterplotMatrixRenderer2D`can be looked at for a example implementation of the transfer function.
+
+-->
 
 <!-- ###################################################################### -->
 -----

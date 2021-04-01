@@ -23,7 +23,6 @@ int megamol::gui::LogBuffer::sync(void) {
             while (split_index != std::string::npos) {
                 // Assuming new line of log message of format "<level>|<message>\r\n"
                 auto new_message = message_str.substr(0, split_index + 1);
-                unsigned int log_level = megamol::core::utility::log::Log::LEVEL_NONE;
                 bool extracted_new_message = false;
                 auto seperator_index = new_message.find("|");
                 if (seperator_index != std::string::npos) {
@@ -184,8 +183,10 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
         if (wc.log_force_open) {
             for (size_t i = this->log_msg_count; i < new_log_msg_count; i++) {
                 auto entry = this->echo_log_buffer.log()[i];
-                if (wc.log_level < megamol::core::utility::log::Log::LEVEL_INFO) {
-                    wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                if (entry.level < megamol::core::utility::log::Log::LEVEL_INFO) {
+                    if (wc.log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
+                        wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                    }
                     wc.win_show = true;
                 }
             }
@@ -207,6 +208,7 @@ bool megamol::gui::LogConsole::connect_log(void) {
     /// connected and the taget is not the default OfflineTarget.
     if ((offline_echo_target != nullptr) && (this->echo_log_target != nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
+        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     }
 
     return true;

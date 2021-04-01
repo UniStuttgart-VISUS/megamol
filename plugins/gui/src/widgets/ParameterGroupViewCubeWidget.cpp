@@ -17,104 +17,136 @@ using namespace megamol::gui;
 
 // *** Pickable Cube ******************************************************** //
 
-megamol::gui::PickableCube::PickableCube(void) : shader(nullptr) {}
+megamol::gui::PickableCube::PickableCube(void) : image_up_arrow(),shader(nullptr) {}
 
 
-bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, int& inout_orientation_index,
-    int& out_view_hover_index, int& out_orientation_hover_index, const glm::vec4& view_orientation,
-    const glm::vec2& vp_dim, ManipVector& pending_manipulations) {
+bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, int& inout_orientation_index,
+                                      int& out_hovered_face, int& out_hovered_orientation, const glm::vec4& cube_orientation, ManipVector& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
 
-    // Info: IDs of the six cube faces are encoded via bit shift by face index of given parameter id.
+    // Create texture once
+    if (!this->image_up_arrow.IsLoaded()) {
+        this->image_up_arrow.LoadTextureFromFile(GUI_VIEWCUBE_UP_ARROW);
+    }
 
     // Create shader once -----------------------------------------------------
     if (this->shader == nullptr) {
+        // INFO: IDs of the six cube faces are encoded via bit shift by face index of given parameter id.
         std::string vertex_src =
-            "#version 130 \n "
-            "uniform int id; \n "
-            "uniform mat4 rot_mx; \n "
-            "uniform mat4 model_mx; \n "
-            "uniform mat4 proj_mx; \n "
-            "uniform int view_index; \n "
-            "uniform int orientation_index; \n "
-            "uniform int view_hover_index; \n "
-            "uniform int orientation_hover_index; \n "
-            "out vec4 vertex_color; \n "
-            "flat out int face_id; \n "
-            "void main() { \n "
-            "    // Vertex indices must fit enum order in megamol::core::view::View3D_2::defaultview \n "
-            "    const vec4 vertices[72] = vec4[72]( \n "
-            "        // DEFAULTVIEW_FRONT = 0 \n "
-            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
-            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
-            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
-            "        // DEFAULTVIEW_BACK = 1 \n "
-            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
-            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
-            "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
-            "        // DEFAULTVIEW_RIGHT = 2 \n "
-            "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
-            "        // DEFAULTVIEW_LEFT = 3 \n "
-            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
-            "        // DEFAULTVIEW_TOP = 4 \n "
+            "#version 130 \n"
+            "uniform int id; \n"
+            "uniform mat4 rot_mx; \n"
+            "uniform mat4 model_mx; \n"
+            "uniform mat4 proj_mx; \n"
+            "uniform int face_index; \n"
+            "uniform int orientation_index; \n"
+            "uniform int face_hover_index; \n"
+            "uniform int orientation_hover_index; \n"
+            "out vec2 tex_coord; \n"
+            "flat out vec3 texture_color; \n"
+            "flat out vec3 vertex_color; \n"
+            "flat out int face_id; \n"
+            "void main() { \n"
+            "    // Vertex indices must fit enum order in megamol::core::view::View3D_2::defaultview \n"
+            "    const vec4 vertices[72] = vec4[72]( \n"
+            "        // DEFAULTVIEW_FRONT = 0 \n"
+            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n"
+            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n"
+            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n"
+            "        // DEFAULTVIEW_BACK = 1 \n"
+            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n"
+            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n"
+            "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n"
+            "        // DEFAULTVIEW_RIGHT = 2 \n"
+            "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n"
+            "        // DEFAULTVIEW_LEFT = 3 \n"
+            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n"
+            "        // DEFAULTVIEW_TOP = 4 \n"
             "        vec4(1.0, 1.0, -1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n"
-            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
-            "        // DEFAULTVIEW_BOTTOM = 5 \n "
-            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
-            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0)); \n "
+            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n"
+            "        // DEFAULTVIEW_BOTTOM = 5 \n"
+            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n"
+            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0)); \n"
             "    \n"
-            "    const vec4 colors[6] = vec4[6](vec4(0.0, 0.0, 1.0, 1.0), vec4(0.0, 1.0, 1.0, 1.0), \n "
-            "                                   vec4(0.0, 1.0, 0.0, 1.0), vec4(1.0, 1.0, 0.0, 1.0), \n "
-            "                                   vec4(1.0, 0.0, 0.0, 1.0), vec4(1.0, 0.0, 1.0, 1.0)); \n "
+            "    const vec3 colors[6] = vec3[6](vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 1.0), \n"
+            "                                   vec3(0.0, 1.0, 0.0), vec3(1.0, 1.0, 0.0), \n"
+            "                                   vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 1.0)); \n"
             "    // Calculate indices and IDs \n"
             "    float vertex_index = float(gl_VertexID); \n"
             "    float mod_index = vertex_index - (12.0 * floor(vertex_index/12.0)); \n"
             "    float mod_triangle_index = mod_index - (3.0 * floor(mod_index/3.0)); \n"
             "    int current_orientation_index = int(floor(mod_index / 3.0)); \n"
-            "    int current_orientation_id = int(1 << current_orientation_index); // in range [0-3]\n "
-            "    int current_view_index = int(gl_VertexID / 12);       // in range [0-5] \n "
-            "    face_id = int((id << (current_view_index + 4)) | current_orientation_id);"
+            "    int current_orientation_id = int(1 << current_orientation_index); // in range [0-3]\n"
+            "    int current_face_index = int(gl_VertexID / 12);  // in range [0-5] \n"
+            "    face_id = int((id << (current_face_index + 4)) | current_orientation_id);"
             "    \n"
-            "    // Set colors depending on selected or hovered triangles \n"
-            "    vertex_color = colors[current_view_index]; \n "
-            "    if (view_index != current_view_index) { \n "
-            "        vertex_color *= 0.25; \n "
-            "    } \n "
-            "    if (view_index == current_view_index) { \n "
-            "        vertex_color *= (0.5 + (0.5 - 0.5*(current_orientation_index/2.0))); \n "
-            "    } \n "
-            "    if ((view_hover_index == current_view_index) && \n"
-            "            (orientation_hover_index == current_orientation_index)) { \n "
-            "        vertex_color = vec4(0.5); \n "
-            "    } \n "
-            "    vertex_color.w = 1.0; \n "
+            "    // Vertex Color \n"
+            "    vertex_color = colors[current_face_index] * 0.25; \n"
+            "    if (face_index == current_face_index) { \n"
+            "        vertex_color = colors[current_face_index] * (0.5 + (0.5 - 0.5*(current_orientation_index/3.0))); \n"
+            "    } \n"
+            "    if ((face_hover_index == current_face_index) && \n"
+            "            (orientation_hover_index == current_orientation_index)) { \n"
+            "        vertex_color = colors[current_face_index] * (0.6 + (0.4 - 0.4*(current_orientation_index/3.0))); \n"
+            "    } \n"
             "    \n"
-            "    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID]; \n "
+            "    // Up Arrow Texture \n"
+            "    texture_color = colors[current_face_index] * 0.5; \n"
+            "    if (face_index == current_face_index) texture_color /= 2.0; // = 0.25 \n"
+            "    if ((mod_index == 0) || (mod_index == 4)) tex_coord = vec2(1.0, 0.0); \n"
+            "    else if ((mod_index == 1) || (mod_index == 9)) tex_coord = vec2(0.0, 0.0); \n"
+            "    else if ((mod_index == 3) || (mod_index == 7)) tex_coord = vec2(1.0, 1.0); \n"
+            "    else if ((mod_index == 6) || (mod_index == 10)) tex_coord = vec2(0.0, 1.0); \n"
+            "    else if ((mod_index == 2) || (mod_index == 5) || (mod_index == 8) || (mod_index == 11)) tex_coord = vec2(0.5, 0.5); \n"
+            "    \n"
+            "    // Vertex Position \n"
+            "    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID]; \n"
             "}";
 
-        std::string fragment_src = "#version 130  \n "
-                                   "#extension GL_ARB_explicit_attrib_location : require \n "
-                                   "in vec4 vertex_color; \n "
-                                   "flat in int face_id; \n "
-                                   "layout(location = 0) out vec4 outFragColor; \n "
-                                   "layout(location = 1) out vec2 outFragInfo; \n "
-                                   "void main(void) { \n "
-                                   "    outFragColor = vertex_color; \n "
-                                   "    outFragInfo  = vec2(float(face_id), gl_FragCoord.z); \n "
+        std::string fragment_src = "#version 130  \n"
+                                   "#extension GL_ARB_explicit_attrib_location : require \n"
+                                   "in vec2 tex_coord; \n"
+                                   "flat in vec3 texture_color; \n"
+                                   "flat in vec3 vertex_color; \n"
+                                   "flat in int face_id; \n"
+                                   "uniform sampler2D tex; \n"
+                                   "layout(location = 0) out vec4 outFragColor; \n"
+                                   "layout(location = 1) out vec2 outFragInfo; \n"
+                                   "float supersample(in vec2 uv, float w, float alpha) { \n"
+                                   "    return smoothstep(0.5 - w, 0.5 + w, alpha); \n"
+                                   "} \n"
+                                   "void main(void) { \n"
+                                   "    outFragInfo  = vec2(float(face_id), gl_FragCoord.z); \n"
+                                   "    float alpha = texture(tex, tex_coord).a; \n"
+                                   "    // Supersample - 4 extra points \n"
+                                   "    float smootingEdge = fwidth(alpha); \n"
+                                   "    float dscale = 0.354; // half of 1/sqrt2; you can play with this \n"
+                                   "    vec2 duv = dscale * (dFdx(tex_coord) + dFdy(tex_coord)); \n"
+                                   "    vec4 box = vec4(tex_coord-duv, tex_coord+duv); \n"
+                                   "    float asum = supersample(box.xy, smootingEdge, alpha) \n"
+                                   "               + supersample(box.zw, smootingEdge, alpha) \n"
+                                   "               + supersample(box.xw, smootingEdge, alpha) \n"
+                                   "               + supersample(box.zy, smootingEdge, alpha); \n"
+                                   "    alpha = (alpha + 0.5 * asum) / 3.0; \n"
+                                   "    if (alpha > 0.0) { \n"
+                                   "        outFragColor = mix(vec4(vertex_color, 1.0), vec4(texture_color, 1.0), alpha); \n"
+                                   "    } else { \n"
+                                   "        outFragColor = vec4(vertex_color, 1.0); \n"
+                                   "    } \n"
                                    "} ";
 
         if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
@@ -123,30 +155,30 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
     }
 
     // Process pending manipulations ------------------------------------------
-    out_orientation_hover_index = -1;
-    out_view_hover_index = -1;
+    out_hovered_orientation = -1;
+    out_hovered_face = -1;
     for (auto& manip : pending_manipulations) {
 
         // ID is shifted by at least 4 bits and at most 9 bits.
         // Leaving at least 23 bit for actual id (meaning max id can be ....?)
         /// Indices must fit enum order in megamol::core::view::View3D_2::defaultview
-        int view_index = -1;
+        int face_index = -1;
         if (id == (id & (manip.obj_id >> 4))) // DEFAULTVIEW_FRONT
-            view_index = 0;
+            face_index = 0;
         else if (id == (id & (manip.obj_id >> 5))) // DEFAULTVIEW_BACK
-            view_index = 1;
+            face_index = 1;
         else if (id == (id & (manip.obj_id >> 6))) // DEFAULTVIEW_RIGHT
-            view_index = 2;
+            face_index = 2;
         else if (id == (id & (manip.obj_id >> 7))) // DEFAULTVIEW_LEFT
-            view_index = 3;
+            face_index = 3;
         else if (id == (id & (manip.obj_id >> 8))) // DEFAULTVIEW_TOP
-            view_index = 4;
+            face_index = 4;
         else if (id == (id & (manip.obj_id >> 9))) // DEFAULTVIEW_BOTTOM
-            view_index = 5;
+            face_index = 5;
 
-        int orientation_index = -1;
         // First 4 bit indicate currently hovered orientation
         // Orientation is given by triangle order in shader of pickable cube
+        int orientation_index = -1;
         if ((1 << 0) & manip.obj_id)
             orientation_index = 0; // TOP
         else if ((1 << 1) & manip.obj_id)
@@ -156,14 +188,14 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
         else if ((1 << 3) & manip.obj_id)
             orientation_index = 3; // LEFT
 
-        if (view_index >= 0) {
+        if (face_index >= 0) {
             if (manip.type == InteractionType::SELECT) {
-                inout_view_index = view_index;
+                inout_face_index = face_index;
                 inout_orientation_index = orientation_index;
                 selected = true;
             } else if (manip.type == InteractionType::HIGHLIGHT) {
-                out_view_hover_index = view_index;
-                out_orientation_hover_index = orientation_index;
+                out_hovered_face = face_index;
+                out_hovered_orientation = orientation_index;
             }
         }
     }
@@ -172,7 +204,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
 
     // Create view/model and projection matrices
     const auto rotation = glm::inverse(
-        glm::mat4_cast(glm::quat(view_orientation.w, view_orientation.x, view_orientation.y, view_orientation.z)));
+        glm::mat4_cast(glm::quat(cube_orientation.w, cube_orientation.x, cube_orientation.y, cube_orientation.z)));
     const float dist = 2.0f / std::tan(megamol::core::thecam::math::angle_deg2rad(30.0f) / 2.0f);
     glm::mat4 model(1.0f);
     model[3][2] = -dist;
@@ -192,16 +224,29 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
 
     this->shader->use();
 
+    auto texture_id = this->image_up_arrow.GetTextureID();
+    if (texture_id != 0) {
+        glEnable(GL_TEXTURE_2D);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture_id);
+        glUniform1i(this->shader->getUniformLocation("tex"), static_cast<GLint>(0));
+    }
+
     this->shader->setUniform("rot_mx", rotation);
     this->shader->setUniform("model_mx", model);
     this->shader->setUniform("proj_mx", proj);
-    this->shader->setUniform("view_index", inout_view_index);
+    this->shader->setUniform("face_index", inout_face_index);
     this->shader->setUniform("orientation_index", inout_orientation_index);
-    this->shader->setUniform("view_hover_index", out_view_hover_index);
-    this->shader->setUniform("orientation_hover_index", out_orientation_hover_index);
+    this->shader->setUniform("face_hover_index", out_hovered_face);
+    this->shader->setUniform("orientation_hover_index", out_hovered_orientation);
     this->shader->setUniform("id", static_cast<int>(id));
 
     glDrawArrays(GL_TRIANGLES, 0, 72);
+
+    if (texture_id != 0) {
+        glBindTexture(GL_TEXTURE_1D, 0);
+        glDisable(GL_TEXTURE_2D);
+    }
 
     glUseProgram(0);
 
@@ -224,10 +269,172 @@ InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) cons
 }
 
 
+
+// *** Pickable Cube ******************************************************** //
+
+megamol::gui::PickableTexture::PickableTexture(void) : image_rotation_arrow(), shader(nullptr) {}
+
+
+bool megamol::gui::PickableTexture::Draw(unsigned int id, int face_index, int& out_orientation_index_offset, int& out_hovered_arrow, ManipVector& pending_manipulations) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+    bool selected = false;
+
+    // Create texture once
+    if (!this->image_rotation_arrow.IsLoaded()) {
+        this->image_rotation_arrow.LoadTextureFromFile(GUI_VIEWCUBE_ROTATION_ARROW);
+    }
+
+    // Create shader once -----------------------------------------------------
+    if (this->shader == nullptr) {
+        std::string vertex_src =
+            "#version 130 \n"
+            "uniform int id; \n"
+            "out vec2 tex_coord; \n"
+            "flat out int arrow_id; \n"
+            "void main() { \n"
+            "    const vec4 vertices[12] = vec4[12]( \n"
+            "        vec4(0.75, 0.75, -1.0, 1.0), vec4(1.0, 0.75, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), \n"
+            "        vec4(0.75, 0.75, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.75, 1.0, -1.0, 1.0), \n"
+            "        vec4(0.0, 0.75, -1.0, 1.0), vec4(0.25, 0.75, -1.0, 1.0), vec4(0.25, 1.0, -1.0, 1.0), \n"
+            "        vec4(0.0, 0.75, -1.0, 1.0), vec4(0.25, 1.0, -1.0, 1.0), vec4(0.0, 1.0, -1.0, 1.0)); \n"
+            "    const vec2 texcoords[12] = vec2[12]( \n"
+            "        vec2(0.0, 1.0), vec2(1.0, 1.0), vec2(1.0, 0.0), \n"
+            "        vec2(0.0, 1.0), vec2(1.0, 0.0), vec2(0.0, 0.0), \n"
+            "        vec2(1.0, 1.0), vec2(0.0, 1.0), vec2(0.0, 0.0), \n"
+            "        vec2(1.0, 1.0), vec2(0.0, 0.0), vec2(1.0, 0.0)); \n"
+            "    arrow_id = int(id << int(gl_VertexID / 6)); \n"
+            "    gl_Position = vertices[gl_VertexID]; \n"
+            "    tex_coord = texcoords[gl_VertexID]; \n"
+            "}";
+
+        std::string fragment_src = "#version 130 \n"
+                                   "#extension GL_ARB_explicit_attrib_location : require \n"
+                                   "in vec2 tex_coord; \n"
+                                   "flat in int arrow_id; \n"
+                                   "uniform int face_index; \n"
+                                   "uniform sampler2D tex; \n"
+                                   "uniform vec3 color; \n"
+                                   "layout(location = 0) out vec4 outFragColor; \n"
+                                   "layout(location = 1) out vec2 outFragInfo; \n"
+                                   "float supersample(in vec2 uv, float w, float alpha) { \n"
+                                   "    return smoothstep(0.5 - w, 0.5 + w, alpha); \n"
+                                   "} \n"
+                                   "void main(void) { \n"
+                                   "    outFragInfo  = vec2(float(arrow_id), gl_FragCoord.z); \n"
+                                   "    // Same colors as in vertex shader of pickable cube \n"
+                                   "    const vec3 colors[6] = vec3[6](vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 1.0), \n"
+                                   "                                   vec3(0.0, 1.0, 0.0), vec3(1.0, 1.0, 0.0), \n"
+                                   "                                   vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 1.0)); \n"
+                                   "    vec4 tex_color = texture(tex, tex_coord); \n"
+                                   "    float alpha = tex_color.a; \n"
+                                   "    // Supersample - 4 extra points \n"
+                                   "    float smootingEdge = fwidth(alpha); \n"
+                                   "    float dscale = 0.354; // half of 1/sqrt2; you can play with this \n"
+                                   "    vec2 duv = dscale * (dFdx(tex_coord) + dFdy(tex_coord)); \n"
+                                   "    vec4 box = vec4(tex_coord-duv, tex_coord+duv); \n"
+                                   "    float asum = supersample(box.xy, smootingEdge, alpha) \n"
+                                   "               + supersample(box.zw, smootingEdge, alpha) \n"
+                                   "               + supersample(box.xw, smootingEdge, alpha) \n"
+                                   "               + supersample(box.zy, smootingEdge, alpha); \n"
+                                   "    alpha = (alpha + 0.5 * asum) / 3.0; \n"
+                                   "    if (alpha <= 0.0) discard; \n"
+                                   "    outFragColor = vec4(colors[face_index] * 0.75, alpha); \n"
+                                   "} ";
+
+        if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
+            return false;
+        }
+    }
+
+    // Process pending manipulations ------------------------------------------
+    out_hovered_arrow = 0;
+    for (auto& manip : pending_manipulations) {
+        int orientation_index_offset = 0;
+        if (id == manip.obj_id) {
+            orientation_index_offset = -1;
+        }
+        else if (id == (id & (manip.obj_id >> 1))) {
+            orientation_index_offset = 1;
+        }
+        if (orientation_index_offset != 0) {
+            if (manip.type == InteractionType::SELECT) {
+                out_orientation_index_offset = orientation_index_offset;
+                selected = true;
+            } else if (manip.type == InteractionType::HIGHLIGHT) {
+                out_hovered_arrow = orientation_index_offset;
+            }
+        }
+    }
+
+    // Draw -------------------------------------------------------------------
+
+    // Set state
+    const auto culling = glIsEnabled(GL_CULL_FACE);
+    if (!culling) {
+        glEnable(GL_CULL_FACE);
+    }
+    std::array<GLint, 4> viewport;
+    glGetIntegerv(GL_VIEWPORT, viewport.data());
+    int size = (2 * 100 * static_cast<int>(megamol::gui::gui_scaling.Get()));
+    int x = viewport[2] - size;
+    int y = viewport[3] - size - ImGui::GetFrameHeightWithSpacing();
+    glViewport(x, y, size, size);
+
+    this->shader->use();
+
+    auto texture_id = this->image_rotation_arrow.GetTextureID();
+    if (texture_id != 0) {
+        glEnable(GL_TEXTURE_2D);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture_id);
+        glUniform1i(this->shader->getUniformLocation("tex"), static_cast<GLint>(0));
+    }
+
+    this->shader->setUniform("face_index", face_index);
+    this->shader->setUniform("id", static_cast<int>(id));
+
+    // Arrow Color
+    glm::vec3 color(0.6, 0.6, 0.6);
+    this->shader->setUniform("color", color);
+
+    glDrawArrays(GL_TRIANGLES, 0, 12);
+
+    if (texture_id != 0) {
+        glBindTexture(GL_TEXTURE_1D, 0);
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    glUseProgram(0);
+
+    // Restore
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    if (!culling) {
+        glDisable(GL_CULL_FACE);
+    }
+
+    return selected;
+}
+
+
+InteractVector megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
+
+    InteractVector interactions;
+    interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    return interactions;
+}
+
+
+
 // *** Parameter Group View Cube Widget ************************************ //
 
 megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget(void)
-        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID()), tooltip(), cube_widget() {
+        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
+        , tooltip()
+        , cube_widget()
+        , texture_widget()
+        , last_presentation(param::AbstractParamPresentation::Presentation::Basic) {
 
     this->InitPresentation(Param_t::GROUP_3D_CUBE);
     this->name = "view";
@@ -255,7 +462,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
         }
     }
 
-    return (param_cubeOrientation && param_defaultView && param_showCube);
+    return (param_cubeOrientation && param_defaultView && param_showCube && param_defaultOrientation && param_resetView);
 }
 
 
@@ -298,15 +505,18 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
     // Parameter presentation -------------------------------------------------
     auto presentation = this->GetGUIPresentation();
-    // Switch presentation via parameter
-    if (param_showCube->IsValueDirty()) {
+    if (presentation != this->last_presentation) {
+        param_showCube->SetValue((presentation == param::AbstractParamPresentation::Presentation::Group_3D_Cube));
+        this->last_presentation = presentation;
+    } else {
         if (std::get<bool>(param_showCube->GetValue())) {
-            this->SetGUIPresentation(param::AbstractParamPresentation::Presentation::Group_3D_Cube);
+            this->last_presentation = param::AbstractParamPresentation::Presentation::Group_3D_Cube;
+            this->SetGUIPresentation(this->last_presentation);
         } else {
-            this->SetGUIPresentation(param::AbstractParamPresentation::Presentation::Basic);
+            this->last_presentation = param::AbstractParamPresentation::Presentation::Basic;
+            this->SetGUIPresentation(this->last_presentation);
         }
     }
-    param_showCube->SetValue((presentation == param::AbstractParamPresentation::Presentation::Group_3D_Cube));
 
     if (presentation == param::AbstractParamPresentation::Presentation::Basic) {
 
@@ -346,24 +556,35 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
             ImGui::PushID(this->uid);
 
-            auto id = param_defaultView->UID();
-            inout_picking_buffer->AddInteractionObject(id, this->cube_widget.GetInteractions(id));
-
-            ImGuiIO& io = ImGui::GetIO();
             auto default_view = std::get<int>(param_defaultView->GetValue());
             auto default_orientation = std::get<int>(param_defaultOrientation->GetValue());
-            auto view_orientation = std::get<glm::vec4>(param_cubeOrientation->GetValue());
-            auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
-            int hovered_view = -1;
+            auto cube_orientation = std::get<glm::vec4>(param_cubeOrientation->GetValue());
+            int hovered_cube_face = -1;
             int hovered_orientation = -1;
+            auto cube_picking_id = param_defaultView->UID();
+            inout_picking_buffer->AddInteractionObject(cube_picking_id, this->cube_widget.GetInteractions(cube_picking_id));
+            bool selected = this->cube_widget.Draw(cube_picking_id, default_view, default_orientation, hovered_cube_face,
+                                                   hovered_orientation, cube_orientation, inout_picking_buffer->GetPendingManipulations());
 
-            bool selected = this->cube_widget.Draw(id, default_view, default_orientation, hovered_view,
-                hovered_orientation, view_orientation, viewport_dim, inout_picking_buffer->GetPendingManipulations());
+            int hovered_arrow = 0;
+            int orientation_index_offset = 0;
+            auto rot_picking_id = param_defaultOrientation->UID();
+            inout_picking_buffer->AddInteractionObject(rot_picking_id, this->texture_widget.GetInteractions(rot_picking_id));
+            this->texture_widget.Draw(rot_picking_id, default_view, orientation_index_offset, hovered_arrow, inout_picking_buffer->GetPendingManipulations());
 
+            default_orientation = (default_orientation + orientation_index_offset);
+            default_orientation = (default_orientation < 0)?(3):(default_orientation % 4);
+            if (selected) {
+                param_resetView->ForceSetValueDirty();
+            }
+            param_defaultOrientation->SetValue(default_orientation);
+            param_defaultView->SetValue(default_view);
+
+            // Tooltip
             std::string tooltip_text;
-            /// Indices must fit enum order in view::View3D_2::defaultview
-            if (hovered_view >= 0) {
-                switch (hovered_view) {
+            if (hovered_cube_face >= 0) {
+                /// Indices must fit enum order in view::View3D_2::defaultview
+                switch (hovered_cube_face) {
                 case (0): // DEFAULTVIEW_FRONT
                     tooltip_text += "[Front]";
                     break;
@@ -406,17 +627,19 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                     break;
                 }
             }
+
+            if (hovered_arrow < 0) {
+                tooltip_text = "Rotate Right";
+            }
+            else if (hovered_arrow > 0) {
+                tooltip_text = "Rotate Left";
+            }
+
             if (!tooltip_text.empty()) {
                 ImGui::BeginTooltip();
                 ImGui::TextUnformatted(tooltip_text.c_str());
                 ImGui::EndTooltip();
             }
-
-            if (selected) {
-                param_resetView->ForceSetValueDirty();
-            }
-            param_defaultOrientation->SetValue(default_orientation);
-            param_defaultView->SetValue(default_view);
 
             ImGui::PopID();
 

@@ -68,7 +68,7 @@ bool megamol::gui::InterfaceSlot::AddCallSlot(
             callslot_ptr->SetInterfaceSlotPtr(parent_interfaceslot_ptr);
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Added call slot '%s' to interface slot of group.\n", callslot_ptr->name.c_str());
+                "[GUI] Added call slot '%s' to interface slot of group.\n", callslot_ptr->Name().c_str());
 #endif // GUI_VERBOSE
             return true;
         }
@@ -97,7 +97,7 @@ bool megamol::gui::InterfaceSlot::RemoveCallSlot(ImGuiID callslot_uid) {
                 (*iter)->SetInterfaceSlotPtr(nullptr);
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[GUI] Removed call slot '%s' from interface slot of group.\n", (*iter)->name.c_str());
+                    "[GUI] Removed call slot '%s' from interface slot of group.\n", (*iter)->Name().c_str());
 #endif // GUI_VERBOSE
                 (*iter).reset();
                 this->callslots.erase(iter);
@@ -306,6 +306,7 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
             }
 
             // Context Menu
+            ImGui::PushFont(state.canvas.gui_font_ptr);
             if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                 state.interact.button_active_uid = this->uid;
 
@@ -319,6 +320,7 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
 
                 ImGui::EndPopup();
             }
+            ImGui::PopFont();
 
             // Drag & Drop
             if (ImGui::BeginDragDropTarget()) {

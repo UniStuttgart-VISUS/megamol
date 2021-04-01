@@ -159,35 +159,35 @@ public:
     /// Default color requires alpha = zero to recognise in shader whether global color for texture is set or not.
     void Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left,
         const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false,
-        const glm::vec4& color = glm::vec4(0.0f));
+        const glm::vec4& color = glm::vec4(0.0f), bool force_opaque = false);
 
     void Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left,
         const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false,
         const glm::vec4& color = glm::vec4(0.0f));
 
-    inline void DrawPointPrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+    inline void DrawPointPrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->drawPrimitives(RenderUtils::Primitives::POINTS, mat_mvp, dim_vp);
         this->clearQueue(Primitives::POINTS);
     }
 
-    inline void DrawLinePrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+    inline void DrawLinePrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->drawPrimitives(RenderUtils::Primitives::LINES, mat_mvp, dim_vp);
         this->clearQueue(Primitives::LINES);
     }
 
-    inline void DrawQuadPrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+    inline void DrawQuadPrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->drawPrimitives(RenderUtils::Primitives::QUADS, mat_mvp, dim_vp);
         this->clearQueue(Primitives::QUADS);
     }
 
-    inline void DrawTextures(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+    inline void DrawTextures(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->drawPrimitives(RenderUtils::Primitives::DEPTH_TEXTURE, mat_mvp, dim_vp);
         this->drawPrimitives(RenderUtils::Primitives::COLOR_TEXTURE, mat_mvp, dim_vp);
         this->clearQueue(Primitives::COLOR_TEXTURE);
         this->clearQueue(Primitives::DEPTH_TEXTURE);
     }
 
-    inline void DrawAllPrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+    inline void DrawAllPrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->DrawPointPrimitives(mat_mvp, dim_vp);
         this->DrawLinePrimitives(mat_mvp, dim_vp);
         this->DrawQuadPrimitives(mat_mvp, dim_vp);
@@ -214,7 +214,6 @@ public:
     ~RenderUtils();
 
 private:
-    typedef std::vector<float> DataType;
 
     enum Primitives : size_t { LINES = 0, POINTS = 1, QUADS = 2, COLOR_TEXTURE = 3, DEPTH_TEXTURE = 4, PRIM_COUNT = 5 };
 
@@ -222,10 +221,10 @@ private:
 
     typedef struct _shader_data_ {
         GLuint texture_id;
-        DataType position;
-        DataType color;
-        DataType texture_coord;
-        DataType attributes;
+        std::vector<float> position;
+        std::vector<float> color;
+        std::vector<float> texture_coord;
+        std::vector<float> attributes;
     } ShaderDataType;
 
     // VARIABLES ------------------------------------------------------- //
@@ -248,7 +247,7 @@ private:
         const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right,
         const glm::vec4& color, const glm::vec4& attributes);
 
-    void drawPrimitives(Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp);
+    void drawPrimitives(Primitives primitive, const glm::mat4& mat_mvp, glm::vec2 dim_vp);
 
     void sortPrimitiveQueue(Primitives primitive);
 
@@ -259,13 +258,13 @@ private:
     void pushShaderData(Primitives primitive, GLuint texture_id, const glm::vec3& position, const glm::vec4& color,
         const glm::vec2& texture_coord, const glm::vec4& attributes);
 
-    void pushQueue(DataType& d, float v, UINT cnt = 1);
+    void pushQueue(std::vector<float>& d, float v, UINT cnt = 1);
 
-    void pushQueue(DataType& d, glm::vec2 v, UINT cnt = 1);
+    void pushQueue(std::vector<float>& d, glm::vec2 v, UINT cnt = 1);
 
-    void pushQueue(DataType& d, glm::vec3 v, UINT cnt = 1);
+    void pushQueue(std::vector<float>& d, glm::vec3 v, UINT cnt = 1);
 
-    void pushQueue(DataType& d, glm::vec4 v, UINT cnt = 1);
+    void pushQueue(std::vector<float>& d, glm::vec4 v, UINT cnt = 1);
 
     glm::vec3 arbitraryPerpendicular(glm::vec3 in);
 };

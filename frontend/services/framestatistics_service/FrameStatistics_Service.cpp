@@ -9,6 +9,8 @@
 // you should also delete the FAQ comments in these template files after you read and understood them
 #include "FrameStatistics_Service.hpp"
 
+#include <numeric>
+
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -99,8 +101,16 @@ void FrameStatistics_Service::finish_frame() {
     m_statistics.elapsed_program_time_seconds = 
         std::chrono::duration_cast<std::chrono::milliseconds>(now - m_program_start_time).count() / static_cast<double>(1000);
 
+    auto last_frame_till_now_micro = std::chrono::duration_cast<std::chrono::microseconds>(now - m_frame_start_time).count();
+
     m_statistics.last_rendered_frame_time_milliseconds = 
-        std::chrono::duration_cast<std::chrono::microseconds>(now - m_frame_start_time).count() / static_cast<double>(1000);
+         last_frame_till_now_micro / static_cast<double>(1000);
+
+    m_frame_times_micro[m_ring_buffer_ptr] = last_frame_till_now_micro;
+    m_ring_buffer_ptr = (m_ring_buffer_ptr+1) % m_frame_times_micro.size();
+
+    m_statistics.last_averaged_mspf = std::accumulate(m_frame_times_micro.begin(), m_frame_times_micro.end(), 0) / m_frame_times_micro.size() / static_cast<double>(1000);
+    m_statistics.last_averaged_fps = 1000.0 / m_statistics.last_averaged_mspf;
 }
 
 } // namespace frontend

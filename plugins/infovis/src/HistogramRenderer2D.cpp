@@ -26,7 +26,7 @@ HistogramRenderer2D::HistogramRenderer2D()
         , colCount(0)
         , rowCount(0)
         , maxBinValue(0)
-        , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
+        , font(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL)
         , mouseX(0.0f)
         , mouseY(0.0f)
         , needSelectionUpdate(false)
@@ -90,8 +90,6 @@ bool HistogramRenderer2D::create() {
 }
 
 void HistogramRenderer2D::release() {
-    this->font.Deinitialise();
-
     this->calcHistogramProgram.Release();
     this->selectionProgram.Release();
     this->histogramProgram.Release();
@@ -206,20 +204,23 @@ bool HistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
     this->font.ClearBatchDrawCache();
 
     float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+    glm::mat4 ortho = glm::make_mat4(projMatrix_column);
+
     for (size_t c = 0; c < this->colCount; ++c) {
         float posX = 12.0f * c + 6.0f;
-        this->font.DrawString(white, posX, 13.0f, 1.0f, false, this->colNames[c].c_str(),
-            core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-        this->font.DrawString(white, posX - 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMinimums[c]).c_str(),
-            core::utility::AbstractFont::ALIGN_LEFT_TOP);
-        this->font.DrawString(white, posX + 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMaximums[c]).c_str(),
-            core::utility::AbstractFont::ALIGN_RIGHT_TOP);
+        this->font.DrawString(ortho, white, posX, 13.0f, 1.0f, false, this->colNames[c].c_str(),
+            core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
+        this->font.DrawString(ortho, white, posX - 5.0f, 2.0f, 1.0f, false,
+            std::to_string(this->colMinimums[c]).c_str(), core::utility::SDFFont::ALIGN_LEFT_TOP);
+        this->font.DrawString(ortho, white, posX + 5.0f, 2.0f, 1.0f, false,
+            std::to_string(this->colMaximums[c]).c_str(), core::utility::SDFFont::ALIGN_RIGHT_TOP);
     }
-    this->font.DrawString(white, 1.0f, 12.0f, 1.0f, false, std::to_string(this->maxBinValue).c_str(),
-        core::utility::AbstractFont::ALIGN_RIGHT_TOP);
-    this->font.DrawString(white, 1.0f, 2.0f, 1.0f, false, "0", core::utility::AbstractFont::ALIGN_RIGHT_BOTTOM);
+    this->font.DrawString(ortho, white, 1.0f, 12.0f, 1.0f, false, std::to_string(this->maxBinValue).c_str(),
+        core::utility::SDFFont::ALIGN_RIGHT_TOP);
+    this->font.DrawString(ortho, white, 1.0f, 2.0f, 1.0f, false, "0", core::utility::SDFFont::ALIGN_RIGHT_BOTTOM);
 
-    this->font.BatchDrawString();
+    this->font.BatchDrawString(ortho);
 
     return true;
 }

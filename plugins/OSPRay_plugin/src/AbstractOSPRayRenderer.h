@@ -211,6 +211,8 @@ protected:
 
     long long int _ispcLimit = 1ULL << 30;
     long long int _numCreateGeo;
+
+    core::thecam::Projection_type _currentProjectionType = core::thecam::Projection_type::perspective;
 };
 
 } // end namespace ospray

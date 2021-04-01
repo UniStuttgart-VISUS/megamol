@@ -63,7 +63,7 @@ bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
         if (mod->UID() == module_ptr->UID()) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Module '%s' is already part of group '%s'.\n", mod->name.c_str(), this->name.c_str());
+                "[GUI] Module '%s' is already part of group '%s'.\n", mod->Name().c_str(), this->name.c_str());
 #endif // GUI_VERBOSE
             return false;
         }
@@ -80,7 +80,7 @@ bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
 
 #ifdef GUI_VERBOSE
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-        "[GUI] Added module '%s' to group '%s'.\n", module_ptr->name.c_str(), this->name.c_str());
+        "[GUI] Added module '%s' to group '%s'.\n", module_ptr->Name().c_str(), this->name.c_str());
 #endif // GUI_VERBOSE
     return true;
 }
@@ -105,7 +105,7 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
 
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[GUI] Removed module '%s' from group '%s'.\n", (*mod_iter)->name.c_str(), this->name.c_str());
+                    "[GUI] Removed module '%s' from group '%s'.\n", (*mod_iter)->Name().c_str(), this->name.c_str());
 #endif // GUI_VERBOSE
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
@@ -185,7 +185,7 @@ InterfaceSlotPtr_t megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& ca
             this->interfaceslots[callslot_ptr->Type()].emplace_back(interfaceslot_ptr);
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Added interface slot (uid %i) to group '%s'.\n", interfaceslot_ptr->uid, this->name.c_str());
+                "[GUI] Added interface slot (uid %i) to group '%s'.\n", interfaceslot_ptr->UID(), this->name.c_str());
 #endif // GUI_VERBOSE
 
             if (interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr)) {
@@ -294,7 +294,7 @@ bool megamol::gui::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
 
 #ifdef GUI_VERBOSE
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                        "[GUI] Deleted interface slot (uid %i) from group '%s'.\n", (*iter)->uid, this->name.c_str());
+                        "[GUI] Deleted interface slot (uid %i) from group '%s'.\n", (*iter)->UID(), this->name.c_str());
 #endif // GUI_VERBOSE
 
                     (*iter).reset();
@@ -450,6 +450,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             }
 
             // Context menu
+            ImGui::PushFont(state.canvas.gui_font_ptr);
             bool popup_rename = false;
             if (ImGui::BeginPopupContextItem("invisible_button_context")) { /// this->allow_context &&
 
@@ -478,6 +479,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                 }
                 ImGui::EndPopup();
             } /// else { this->allow_context = false; }
+            ImGui::PopFont();
 
             // Rename pop-up
             if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {

@@ -245,6 +245,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     }
 
                     // Context menu
+                    ImGui::PushFont(state.canvas.gui_font_ptr);
                     bool popup_rename = false;
                     if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                         state.interact.button_active_uid = this->uid;
@@ -317,6 +318,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         }
                         ImGui::EndPopup();
                     }
+                    ImGui::PopFont();
 
                     // Hover Tooltip
                     if ((state.interact.module_hovered_uid == this->uid) && !state.interact.module_show_label) {
@@ -508,13 +510,13 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                                 other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
                             }
                         }
-
-                        // Draw Outline
-                        float border = ((!this->graph_entry_name.empty()) ? (4.0f) : (1.0f)) *
-                                       megamol::gui::gui_scaling.Get() * state.canvas.zooming;
-                        draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER,
-                            GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
                     }
+
+                    // Draw Outline
+                    float border = ((!this->graph_entry_name.empty()) ? (4.0f) : (1.0f)) *
+                                   megamol::gui::gui_scaling.Get() * state.canvas.zooming;
+                    draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
+                        ImDrawCornerFlags_All, border);
                 }
             }
 
