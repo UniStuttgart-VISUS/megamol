@@ -135,7 +135,10 @@ bool megamol::core::LuaAPI::RunString(
     // todo: locking!!!
     // no two threads can touch L at the same time
     std::lock_guard<std::mutex> stateGuard(this->stateLock);
-    this->currentScriptPath = scriptPath;
+    if (this->currentScriptPath.empty() && !scriptPath.empty()) {
+        // the information got better, at least
+        this->currentScriptPath = scriptPath;
+    }
     return luaApiInterpreter_.RunString(envName, script, result);
 }
 

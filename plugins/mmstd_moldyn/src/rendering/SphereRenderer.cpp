@@ -110,7 +110,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
     , aoStrengthSlot("ambient occlusion::strength", "Ambient Occlusion: Strength")
     , aoConeLengthSlot("ambient occlusion::coneLength", "Ambient Occlusion: Cone length")
     , useHPTexturesSlot("ambient occlusion::highPrecisionTexture", "Ambient Occlusion: Use high precision textures")
-    , outlineSizeSlot("outline::width", "Width of the outline") {
+    , outlineWidthSlot("outline::width", "Width of the outline in pixels") {
 
     this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -190,8 +190,8 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
     this->useHPTexturesSlot << (new param::BoolParam(false));
     this->MakeSlotAvailable(&this->useHPTexturesSlot);
 
-    this->outlineSizeSlot << (new core::param::FloatParam(2.0f, 0.0f));
-    this->MakeSlotAvailable(&this->outlineSizeSlot);
+    this->outlineWidthSlot << (new core::param::FloatParam(2.0f, 0.0f));
+    this->MakeSlotAvailable(&this->outlineWidthSlot);
 }
 
 
@@ -323,7 +323,7 @@ bool SphereRenderer::resetResources(void) {
     this->aoConeLengthSlot.Param<param::FloatParam>()->SetGUIVisible(false);
     this->useHPTexturesSlot.Param<param::BoolParam>()->SetGUIVisible(false);
     // Outlining
-    this->outlineSizeSlot.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->outlineWidthSlot.Param<param::FloatParam>()->SetGUIVisible(false);
 
     this->flags_enabled = false;
     this->flags_available = false;
@@ -713,7 +713,7 @@ bool SphereRenderer::createResources() {
         } break;
 
         case RenderMode::OUTLINE: {
-            this->outlineSizeSlot.Param<param::FloatParam>()->SetGUIVisible(true);
+            this->outlineWidthSlot.Param<param::FloatParam>()->SetGUIVisible(true);
             vertShaderName = "sphere_outline::vertex";
             fragShaderName = "sphere_outline::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -1857,7 +1857,7 @@ bool SphereRenderer::renderOutline(view::CallRender3DGL& call, MultiParticleData
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
 
-    glUniform1f(this->sphereShader.ParameterLocation("outlineSize"), this->outlineSizeSlot.Param<param::FloatParam>()->Value());
+    glUniform1f(this->sphereShader.ParameterLocation("outlineWidth"), this->outlineWidthSlot.Param<param::FloatParam>()->Value());
 
     GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
