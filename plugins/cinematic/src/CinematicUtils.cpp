@@ -52,12 +52,6 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
         return false;
     }
 
-    auto err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
     this->init_once = true;
 
     return true;
