@@ -1,2 +1,0 @@
-
-    outColor = color;

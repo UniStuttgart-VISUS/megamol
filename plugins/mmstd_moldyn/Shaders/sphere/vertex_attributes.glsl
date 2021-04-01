@@ -10,9 +10,9 @@ out vec4 vertColor;
 out float pointSize;
 #endif // DEFERRED_SHADING
 
-#ifdef RETICLE
+// OUTLINE / ifdef RETICLE
+out float fragmentRadius;
 out vec2 centerFragment;
-#endif // RETICLE
 
 uniform vec4 viewAttr;
 uniform vec4 lightDir;
