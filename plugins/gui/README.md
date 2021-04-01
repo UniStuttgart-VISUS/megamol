@@ -40,7 +40,7 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
 
 ## Graphical User Interface (GUI)
 
-The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui).
+The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui) *Version 1.82 (Docking Branch)*.
 
 **NOTE**
 * Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considered or recognized. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
@@ -53,15 +53,17 @@ The main menu provides the following options:
 
 * `File`
     * `Load Project` (`Ctrl + l`) Load project from file (lua).
-    * `Save Project` (`Ctrl + s`) Save the current project to file (lua).
+    * `Save Project` (`Ctrl + s`) Save the current project to file (lua). *If you want to save the current **GUI state**, check the option `Save GUI state` in the file dialog!* (corresponding LUA option: `mmSetGUIState(>JSON String>)/mmgetGUIState()`)
     * `Exit` (`Alt + F4`) End the program.
 * `Windows` 
     * `Menu` (`F12`) Show/Hide the menu.
     * `Configurator` (`F11`) Show/Hide the configurator window. See detailed description below.
-    * `Parameters` (`F10`) Show/Hide the parameter window. In order to enable more options to change the parameters appearance (widget presentation), you can switch the `Mode` from `Basic` to `Expert`.
+    * `Parameters` (`F10`) Show/Hide the parameter window. *In order to enable more options to change the parameters appearance (widget), you can switch the `Mode` from `Basic` to `Expert`.*
     * `Log Console` (`F9`) Show/Hide the log console window. In order to prevent automatically showing the log console on errors and warning, disable the `Force Open` option.
     * `Transfer Function Editor` (`F8`) Show/Hide the transfer function editor. You have to `Apply` changes in order to take effect.
     * `Performance Metrics` (`F7`) Show/Hide the performance metrics window showing the fps or ms. 
+    * `Show/Hide All Windows` (`Ctrl + g`) Show/Hide all GUI windows (corresponding LUA/CLI option: `mmSetGUIVisible(<bool>)/mmGetGUIVisible()`/ `guishow`).
+    * `Windows Docking Preset` Load the docking preset for all windows.
 * `Screenshot` 
     * `Select Filename` (`megamol_screenshot.png`) Open file dialog for choosing file name for screenshot. Current filename is shown in menu. After each screenshot triggering a incrementing suffix (`_1`) is appended to the initially given filename. This way the file name does not have to be changed for each screenshot.
     * `Trigger` (`F2`) Trigger screenshot.
@@ -72,7 +74,7 @@ The main menu provides the following options:
     * `Font` Select predefined GUI Style.
         * `Select Available Font` Choose among preloaded fonts.
         * `Load font from file` Load new font from TTF-file (se provided fonts in /share/resources/fonts/) in any desired size.  
-    * `Scale` Select fixed GUI scaling (100%, 150%, 200%, 250%, 300%). Support for high DPI displays.
+    * `Scale` Select fixed GUI scaling (100%, 150%, 200%, 250%, 300%). Support for high DPI displays. (corresponding LUA/CLI option: `mmSetGUIScale(<float>)/mmGetGUIScale()` / `guiscale`)
 * `Help`
     * `About`: Some information and links concerning the currently running MegaMol.
 
