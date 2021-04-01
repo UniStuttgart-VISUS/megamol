@@ -2,11 +2,11 @@
 
 This is the plugin providing the GUI for MegaMol.
 
-**DISCLAIMER: The following description do not apply for the old frontend *mmconsole***
+**DISCLAIMER: The following descriptions are no longer valid for the old frontend *mmconsole***
 
 See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress.
 
-![gui](gui.png)
+![gui](gui.jpg)
 
 <!-- TOC -->
 ## Contents
