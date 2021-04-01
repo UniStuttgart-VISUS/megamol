@@ -9,8 +9,11 @@
 #include <algorithm>
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
+
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
 #include "mmcore/utility/log/Log.h"
@@ -27,7 +30,10 @@ moldyn::MMPLDWriter::MMPLDWriter(void)
     : AbstractDataWriter()
     , filenameSlot("filename", "The path to the MMPLD file to be written")
     , versionSlot("version", "The file format version to be written")
-    , dataSlot("data", "The slot requesting the data to be written") {
+    , dataSlot("data", "The slot requesting the data to be written")
+    , startFrameSlot("startFrame", "the first frame to write")
+    , endFrameSlot("endFrame", "the last frame to write")
+    , subsetSlot("writeSubset", "use the specified start and end"){
 
     this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
@@ -41,6 +47,13 @@ moldyn::MMPLDWriter::MMPLDWriter(void)
     verPar->SetTypePair(103, "1.3");
     this->versionSlot.SetParameter(verPar);
     this->MakeSlotAvailable(&this->versionSlot);
+
+    this->startFrameSlot << new param::IntParam(0);
+    this->MakeSlotAvailable(&startFrameSlot);
+    this->endFrameSlot << new param::IntParam(0);
+    this->MakeSlotAvailable(&this->endFrameSlot);
+    this->subsetSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->subsetSlot);
 
     this->dataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->dataSlot);
@@ -120,9 +133,15 @@ bool moldyn::MMPLDWriter::run(void) {
         }
     }
 
+    const bool overrideSubset = this->subsetSlot.Param<param::BoolParam>()->Value();
+    const UINT32 theStart = overrideSubset ? this->startFrameSlot.Param<param::IntParam>()->Value() : 0;
+    const UINT32 theEnd = overrideSubset ? this->endFrameSlot.Param<param::IntParam>()->Value() + 1 : frameCnt;
+
     // DEBUG
     //    frameCnt = 10;
     // END DEBUG
+    if (overrideSubset)
+        frameCnt = theEnd - theStart;
 
     vislib::sys::FastFile file;
     if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
@@ -156,9 +175,9 @@ bool moldyn::MMPLDWriter::run(void) {
     }
 
     mpdc->Unlock();
-    for (UINT32 i = 0; i < frameCnt; i++) {
+    for (UINT32 i = theStart; i < theEnd; i++) {
         frameOffset = static_cast<UINT64>(file.Tell());
-        file.Seek(seekTable + i * 8);
+        file.Seek(seekTable + (i - theStart) * 8);
         ASSERT_WRITEOUT(&frameOffset, 8);
         file.Seek(frameOffset);
 

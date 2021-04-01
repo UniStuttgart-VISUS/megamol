@@ -27,6 +27,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera_2.h"
 #include "mmcore/view/TimeControl.h"
+#include "ScriptPaths.h"
 
 namespace megamol {
 namespace core {
@@ -270,6 +271,13 @@ public:
 
 
 protected:
+
+    std::vector<std::string> requested_lifetime_resources() override {
+        auto req = Module::requested_lifetime_resources();
+        req.push_back("LuaScriptPaths");
+        return req;
+    }
+
     /** Typedef alias */
     typedef vislib::SingleLinkedList<Hooks*>::Iterator HooksIterator;
 
