@@ -172,6 +172,8 @@ void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_la
 
 void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm::vec2 dim_vp) {
 
+    this->gui_update();
+
     bool valid_imgui_scope =
         ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
 
