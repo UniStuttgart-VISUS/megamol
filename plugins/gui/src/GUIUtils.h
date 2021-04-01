@@ -9,33 +9,6 @@
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
 
-/**
- * USED HOTKEYS:
- *
- * ----- GUIWindows -----
- * - Trigger Screenshot:        F2
- * - Toggle Graph Entry:        F3
- * - Show/hide Windows:         F7-F11
- * - Show/hide Menu:            F12
- * - Show/hide GUI:             Ctrl  + g
- * - Search Parameter:          Ctrl  + p
- * - Save Running Project:      Ctrl  + s
- * - Quit Program:              Alt   + F4
-
- * ----- Configurator -----
- * - Search Module:             Ctrl + Shift + m
- * - Search Parameter:          Ctrl + Shift + p
- * - Save Edited Project:       Ctrl + Shift + s
- *
- * ----- Graph -----
- * - Delete Graph Item:         Entf
- * - Selection, Drag & Drop:    Left Mouse Button
- * - Context Menu:              Right Mouse Button
- * - Zooming:                   Mouse Wheel
- * - Scrolling:                 Middle Mouse Button
- *
- **/
-
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui.h"
@@ -86,8 +59,7 @@
 #define GUI_JSON_TAG_PROJECT ("Project")
 #define GUI_JSON_TAG_MODULES ("Modules")
 #define GUI_JSON_TAG_INTERFACES ("Interfaces")
-/// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
-/// megamol::core::param::AbstractParamPresentation.h
+/// GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") is defined in AbstractParamPresentation.h
 
 #define GUI_START_TAG_SET_GUI_STATE ("mmSetGUIState([=[")
 #define GUI_END_TAG_SET_GUI_STATE ("]=])")

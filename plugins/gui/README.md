@@ -2,7 +2,7 @@
 
 This is the plugin providing the GUI for MegaMol.
 
-**DISCLAIMER: The following description only refers to the use of the new MegaMol frontend provided via the binary called megamol!**
+**DISCLAIMER: The following description do not apply for the old frontend *mmconsole***
 
 See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress.
 
@@ -21,11 +21,13 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
             - [Graph](#graph) 
             - [Module Groups](#module-groups) 
             - [Module Group Interface Slots](#module-group-interface-slots) 
+    - [Hotkey Overview](#hotkey-overview)             
 - [Modules](#modules) 
     - [GUIView](#guiview) 
     - [OverlayRenderer](#overlayrenderer) 
         - [Parameters](#parameters) 
 - [Information for Developers](#information-for-developers) 
+    - [Using ImGui in Modules](#using-imgui-in-modules) 
     - [New Parameter Widgets](#new-parameter-widgets) 
         - [How to add a new parameter widget](#how-to-add-a-new-parameter-widget) 
         - [How to add a new parameter group widget](#how-to-add-a-new-parameter-group-widget) 
@@ -183,7 +185,29 @@ Add a call slot to an existing interface slot via drag and drop (compatible call
 Callee interface slots (on the left side of a group) allow only one connected call slot.
 Interface slots are stored in project files as part of the configurators state parameter.                       
 
----
+### Hotkey Overview
+
+**GUIWindows:**
+* Trigger Screenshot:        **`F2`**
+* Toggle Graph Entry:        **`F3`**
+* Show/hide Windows:         **`F7-F11`**
+* Show/hide Menu:            **`F12`**
+* Show/hide GUI:             **`Ctrl  + g`**
+* Search Parameter:          **`Ctrl  + p`**
+* Save Running Project:      **`Ctrl  + s`**
+* Quit Program:              **`Alt   + F4`**
+
+**Configurator:**
+* Search Module:             **`Ctrl + Shift + m`**
+* Search Parameter:          **`Ctrl + Shift + p`**
+* Save Edited Project:       **`Ctrl + Shift + s`**
+
+**Graph:**
+* Delete Graph Item:         **`Entf`**
+* Selection, Drag & Drop:    **`Left Mouse Button`**
+* Context Menu:              **`Right Mouse Button`**
+* Zooming:                   **`Mouse Wheel`**
+* Scrolling:                 **`Middle Mouse Button`**
 
 ## Modules
 
@@ -224,6 +248,27 @@ The `OverlayRenderer` is a rendering module which provides overlay rendering lik
 
 ## Information for Developers
 
+### Using ImGui in Modules
+
+If you want to use ImGui in your module (in another plugin) you just have to apply the following steps:
+
+**1)** Add imgui as external dependency to your plugin's `CMakeLists.txt`:
+```cmake
+require_external(imgui)
+target_link_libraries(${PROJECT_NAME} PRIVATE imgui)
+```
+**2)** Include the following ImGui headers in your modules's header:
+```c++
+#include "imgui.h"
+#include "imgui_internal.h"
+```
+**3)** Before calling any ImGui function check for active ImGui context and valid scope:
+```c++
+bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
+if (!valid_imgui_scope) return;
+```
+**4)** Then call your own ImGui stuff... See [https://github.com/ocornut/imgui](https://github.com/ocornut/imgui)
+
 ### New Parameter Widgets
 
 Parameter widgets can be defined for the `local` or the `global` scope. The widgets of the local scope are shown inside the parameter list in the `All Parameters` window. The global scope of a parameter widget can contain arbitrary ImGui code.
@@ -258,7 +303,9 @@ The function should be named like: `bool check_group_widget_<NEW_WIDGET_NAME>(..
 This is the default GUI state stored as JSON string in the lua project file:
 
 ```lua
--- <GUI_STATE_JSON>{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":true},"GUIState":{"font_file_name":"","font_size":13,"menu_visible":true,"scale":1.0,"style":2},"WindowConfigurations":{"Configurator":{"log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[300,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[1440.0,810.0],"win_show":false,"win_size":[1440.0,810.0]},"Log Console":{"log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[298,0],"win_position":[0.0,634.0],"win_reset_position":[0.0,634.0],"win_reset_size":[1440.0,176.0],"win_show":false,"win_size":[1440.0,176.0]},"Parameters":{"log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[299,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,500.0],"win_show":true,"win_size":[400.0,500.0]},"Performance Metrics":{"log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":3,"win_collapsed":false,"win_flags":65,"win_hotkey":[296,0],"win_position":[720.0,0.0],"win_reset_position":[720.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]},"Transfer Function Editor":{"log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[400.0,0.0],"win_reset_position":[400.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]}}}</GUI_STATE_JSON>
+mmSetGUIVisible(true)
+mmSetGUIScale(1.000000)
+mmSetGUIState([=[{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":true},"GUIState":{"font_file_name":"","font_size":13,"imgui_settings":"[Window][DockSpaceViewport_11111111]\nPos=0,18\nSize=1280,702\nCollapsed=0\n\n[Window][Debug##Default]\nPos=60,60\nSize=400,400\nCollapsed=0\n\n[Window][Parameters     F10]\nPos=0,18\nSize=400,500\nCollapsed=0\n\n[Window][Log Console     F9]\nPos=0,544\nSize=1280,176\nCollapsed=0\n\n[Window][Save Project (.lua)]\nPos=440,110\nSize=400,500\nCollapsed=0\n\n[Docking][Data]\nDockSpace ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,18 Size=1280,702 CentralNode=1\n\n","menu_visible":true,"style":2},"GraphStates":{"Project":{"canvas_scrolling":[0.0,0.0],"canvas_zooming":1.0,"param_extended_mode":false,"parameter_sidebar_width":300.0,"params_readonly":false,"params_visible":true,"project_name":"Project_1","show_call_label":true,"show_call_slots_label":false,"show_grid":false,"show_module_label":true,"show_parameter_sidebar":true,"show_slot_label":false}},"WindowConfigurations":{"Configurator":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[300,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[1280.0,720.0],"win_show":false,"win_size":[1280.0,720.0]},"Log Console":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[298,0],"win_position":[0.0,544.0],"win_reset_position":[0.0,544.0],"win_reset_size":[1280.0,176.0],"win_show":true,"win_size":[1280.0,176.0]},"Parameters":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[299,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,500.0],"win_show":true,"win_size":[400.0,500.0]},"Performance Metrics":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":3,"win_collapsed":false,"win_flags":65,"win_hotkey":[296,0],"win_position":[640.0,0.0],"win_reset_position":[640.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]},"Transfer Function Editor":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[400.0,0.0],"win_reset_position":[400.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]}}}]=])
 ```
 
 ### Graph Data Structure
