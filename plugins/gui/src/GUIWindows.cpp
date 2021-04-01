@@ -161,7 +161,9 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
 bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
     // Handle multiple ImGui contexts.
-    if (this->state.gui_visible && ImGui::GetCurrentContext()->WithinFrameScope) {
+    bool valid_imgui_scope =
+        ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
+    if (this->state.gui_visible && valid_imgui_scope) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Nesting ImGui contexts is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         this->state.gui_visible = false;
@@ -264,11 +266,23 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { } /// mmconsole
     this->core_instance->SetCurrentImGuiContext(this->context);
 
-    // Create new running gui graph once if core instance graph is used (otherwise graph should already exist) ///
-    // mmconsole?
+    // Create new running gui graph once if core instance graph is used /// mmconsole?
     if (this->configurator.GetGraphCollection().GetRunningGraph() == nullptr) {
         this->SynchronizeGraphs();
     }
+
+    // Update windows
+    const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+        switch (wc.win_callback) {
+        case (WindowCollection::DRAWCALLBACK_LOGCONSOLE):
+            this->console.Update(wc);
+            break;
+        case (WindowCollection::DRAWCALLBACK_PERFORMANCE):
+            this->update_frame_statistics(wc);
+            break;
+        }
+    };
+    this->window_collection.EnumWindows(func);
 
     // Required to prevent change in gui drawing between pre and post draw
     this->state.gui_visible_post = this->state.gui_visible;
@@ -859,6 +873,10 @@ void megamol::gui::GUIWindows::SetClipboardFunc(const char* (*get_clipboard_func
 
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
+
+    // Synchronization is not required when no gui element is visible
+    if (!this->state.gui_visible)
+        return true;
 
     // 1) Load all known calls from core instance ONCE ---------------------------
     if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
