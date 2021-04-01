@@ -1358,7 +1358,8 @@ void megamol::gui::GUIWindows::load_default_fonts(void) {
     std::string default_font_path;
 
     auto get_preset_font_path = [&](std::string directory) {
-        std::string font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_ROBOTOSANS);
+        std::string font_path =
+            megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_ROBOTOSANS);
         if (!font_path.empty()) {
             font_paths.emplace_back(font_path);
             configurator_font_path = font_path;
@@ -2543,7 +2544,8 @@ void megamol::gui::GUIWindows::update_frame_statistics(WindowCollection::WindowC
     if (wc.fpsms_refresh_rate > 0.0f) {
         if (wc.buf_current_delay >= (1.0f / wc.fpsms_refresh_rate)) {
 
-            auto update_values = [](float current_value, float& max_value, std::vector<float>& values, size_t actual_buffer_size) {
+            auto update_values = [](float current_value, float& max_value, std::vector<float>& values,
+                                     size_t actual_buffer_size) {
                 size_t buffer_size = values.size();
                 if (buffer_size != actual_buffer_size) {
                     if (buffer_size > actual_buffer_size) {

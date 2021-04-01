@@ -341,7 +341,6 @@ namespace gui {
      */
     class GUIUtils {
     public:
-
         /** Extract string enclosed in predefined tags. */
         static std::string ExtractTaggedString(
             const std::string& str, const std::string& start_tag, const std::string& end_tag) {

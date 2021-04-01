@@ -292,8 +292,8 @@ namespace gui {
             double stat_averaged_fps;             // current average fps value
             double stat_averaged_ms;              // current average fps value
             size_t stat_frame_count;              // current fame count
-            bool load_docking_preset;                      // Flag indicating docking preset loading
-            bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
+            bool load_docking_preset;             // Flag indicating docking preset loading
+            bool hotkeys_check_once;              // WORKAROUND: Check multiple hotkey assignments once
         };
 
         /** The GUI hotkey array index mapping. */

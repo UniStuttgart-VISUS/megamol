@@ -9,8 +9,8 @@
 #define MEGAMOL_GUI_PARAMETERGROUPVIEWCUBEWIDGET_INCLUDED
 
 
-#include "ImageWidget_gl.h"
 #include "AbstractParameterGroupWidget.h"
+#include "ImageWidget_gl.h"
 #include "mmcore/view/RenderUtils.h"
 
 
@@ -26,8 +26,8 @@ namespace gui {
         PickableCube(void);
         ~PickableCube(void) = default;
 
-        bool Draw(unsigned int id, int& inout_face_index, int& inout_orientation_index,
-                  int& out_hovered_face, int& out_hovered_orientation, const glm::vec4& cube_orientation, ManipVector& pending_manipulations);
+        bool Draw(unsigned int id, int& inout_face_index, int& inout_orientation_index, int& out_hovered_face,
+            int& out_hovered_orientation, const glm::vec4& cube_orientation, ManipVector& pending_manipulations);
 
         InteractVector GetInteractions(unsigned int id) const;
 
@@ -45,7 +45,8 @@ namespace gui {
         PickableTexture(void);
         ~PickableTexture(void) = default;
 
-        bool Draw(unsigned int id, int face_index, int& out_orientation_index_offset, int& out_hovered_arrow, ManipVector& pending_manipulations);
+        bool Draw(unsigned int id, int face_index, int& out_orientation_index_offset, int& out_hovered_arrow,
+            ManipVector& pending_manipulations);
 
         InteractVector GetInteractions(unsigned int id) const;
 

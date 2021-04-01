@@ -55,7 +55,7 @@ namespace gui {
          * Return texture id for external usage.
          */
         GLuint GetTextureID(void) const {
-            return ((this->tex_ptr != nullptr)?(this->tex_ptr->getName()):(0));
+            return ((this->tex_ptr != nullptr) ? (this->tex_ptr->getName()) : (0));
         }
 
     private:

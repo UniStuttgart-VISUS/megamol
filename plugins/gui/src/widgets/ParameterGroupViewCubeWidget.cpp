@@ -17,11 +17,12 @@ using namespace megamol::gui;
 
 // *** Pickable Cube ******************************************************** //
 
-megamol::gui::PickableCube::PickableCube(void) : image_up_arrow(),shader(nullptr) {}
+megamol::gui::PickableCube::PickableCube(void) : image_up_arrow(), shader(nullptr) {}
 
 
 bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, int& inout_orientation_index,
-                                      int& out_hovered_face, int& out_hovered_orientation, const glm::vec4& cube_orientation, ManipVector& pending_manipulations) {
+    int& out_hovered_face, int& out_hovered_orientation, const glm::vec4& cube_orientation,
+    ManipVector& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -83,8 +84,8 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, in
             "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0)); \n"
             "    \n"
             "    const vec3 colors[6] = vec3[6](vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 1.0), \n"
-            "                                   vec3(0.0, 1.0, 0.0), vec3(1.0, 1.0, 0.0), \n"
-            "                                   vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 1.0)); \n"
+            "                                   vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 1.0), \n"
+            "                                   vec3(0.0, 1.0, 0.0), vec3(1.0, 1.0, 0.0)); \n"
             "    // Calculate indices and IDs \n"
             "    float vertex_index = float(gl_VertexID); \n"
             "    float mod_index = vertex_index - (12.0 * floor(vertex_index/12.0)); \n"
@@ -97,11 +98,13 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, in
             "    // Vertex Color \n"
             "    vertex_color = colors[current_face_index] * 0.25; \n"
             "    if (face_index == current_face_index) { \n"
-            "        vertex_color = colors[current_face_index] * (0.5 + (0.5 - 0.5*(current_orientation_index/3.0))); \n"
+            "        vertex_color = colors[current_face_index] * (0.5 + (0.5 - 0.5*(current_orientation_index/3.0))); "
+            "\n"
             "    } \n"
             "    if ((face_hover_index == current_face_index) && \n"
             "            (orientation_hover_index == current_orientation_index)) { \n"
-            "        vertex_color = colors[current_face_index] * (0.6 + (0.4 - 0.4*(current_orientation_index/3.0))); \n"
+            "        vertex_color = colors[current_face_index] * (0.6 + (0.4 - 0.4*(current_orientation_index/3.0))); "
+            "\n"
             "    } \n"
             "    \n"
             "    // Up Arrow Texture \n"
@@ -111,43 +114,45 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_face_index, in
             "    else if ((mod_index == 1) || (mod_index == 9)) tex_coord = vec2(0.0, 0.0); \n"
             "    else if ((mod_index == 3) || (mod_index == 7)) tex_coord = vec2(1.0, 1.0); \n"
             "    else if ((mod_index == 6) || (mod_index == 10)) tex_coord = vec2(0.0, 1.0); \n"
-            "    else if ((mod_index == 2) || (mod_index == 5) || (mod_index == 8) || (mod_index == 11)) tex_coord = vec2(0.5, 0.5); \n"
+            "    else if ((mod_index == 2) || (mod_index == 5) || (mod_index == 8) || (mod_index == 11)) tex_coord = "
+            "vec2(0.5, 0.5); \n"
             "    \n"
             "    // Vertex Position \n"
             "    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID]; \n"
             "}";
 
-        std::string fragment_src = "#version 130  \n"
-                                   "#extension GL_ARB_explicit_attrib_location : require \n"
-                                   "in vec2 tex_coord; \n"
-                                   "flat in vec3 texture_color; \n"
-                                   "flat in vec3 vertex_color; \n"
-                                   "flat in int face_id; \n"
-                                   "uniform sampler2D tex; \n"
-                                   "layout(location = 0) out vec4 outFragColor; \n"
-                                   "layout(location = 1) out vec2 outFragInfo; \n"
-                                   "float supersample(in vec2 uv, float w, float alpha) { \n"
-                                   "    return smoothstep(0.5 - w, 0.5 + w, alpha); \n"
-                                   "} \n"
-                                   "void main(void) { \n"
-                                   "    outFragInfo  = vec2(float(face_id), gl_FragCoord.z); \n"
-                                   "    float alpha = texture(tex, tex_coord).a; \n"
-                                   "    // Supersample - 4 extra points \n"
-                                   "    float smootingEdge = fwidth(alpha); \n"
-                                   "    float dscale = 0.354; // half of 1/sqrt2; you can play with this \n"
-                                   "    vec2 duv = dscale * (dFdx(tex_coord) + dFdy(tex_coord)); \n"
-                                   "    vec4 box = vec4(tex_coord-duv, tex_coord+duv); \n"
-                                   "    float asum = supersample(box.xy, smootingEdge, alpha) \n"
-                                   "               + supersample(box.zw, smootingEdge, alpha) \n"
-                                   "               + supersample(box.xw, smootingEdge, alpha) \n"
-                                   "               + supersample(box.zy, smootingEdge, alpha); \n"
-                                   "    alpha = (alpha + 0.5 * asum) / 3.0; \n"
-                                   "    if (alpha > 0.0) { \n"
-                                   "        outFragColor = mix(vec4(vertex_color, 1.0), vec4(texture_color, 1.0), alpha); \n"
-                                   "    } else { \n"
-                                   "        outFragColor = vec4(vertex_color, 1.0); \n"
-                                   "    } \n"
-                                   "} ";
+        std::string fragment_src =
+            "#version 130  \n"
+            "#extension GL_ARB_explicit_attrib_location : require \n"
+            "in vec2 tex_coord; \n"
+            "flat in vec3 texture_color; \n"
+            "flat in vec3 vertex_color; \n"
+            "flat in int face_id; \n"
+            "uniform sampler2D tex; \n"
+            "layout(location = 0) out vec4 outFragColor; \n"
+            "layout(location = 1) out vec2 outFragInfo; \n"
+            "float supersample(in vec2 uv, float w, float alpha) { \n"
+            "    return smoothstep(0.5 - w, 0.5 + w, alpha); \n"
+            "} \n"
+            "void main(void) { \n"
+            "    outFragInfo  = vec2(float(face_id), gl_FragCoord.z); \n"
+            "    float alpha = texture(tex, tex_coord).a; \n"
+            "    // Supersample - 4 extra points \n"
+            "    float smootingEdge = fwidth(alpha); \n"
+            "    float dscale = 0.354; // half of 1/sqrt2; you can play with this \n"
+            "    vec2 duv = dscale * (dFdx(tex_coord) + dFdy(tex_coord)); \n"
+            "    vec4 box = vec4(tex_coord-duv, tex_coord+duv); \n"
+            "    float asum = supersample(box.xy, smootingEdge, alpha) \n"
+            "               + supersample(box.zw, smootingEdge, alpha) \n"
+            "               + supersample(box.xw, smootingEdge, alpha) \n"
+            "               + supersample(box.zy, smootingEdge, alpha); \n"
+            "    alpha = (alpha + 0.5 * asum) / 3.0; \n"
+            "    if (alpha > 0.0) { \n"
+            "        outFragColor = mix(vec4(vertex_color, 1.0), vec4(texture_color, 1.0), alpha); \n"
+            "    } else { \n"
+            "        outFragColor = vec4(vertex_color, 1.0); \n"
+            "    } \n"
+            "} ";
 
         if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
             return false;
@@ -269,13 +274,13 @@ InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) cons
 }
 
 
-
 // *** Pickable Cube ******************************************************** //
 
 megamol::gui::PickableTexture::PickableTexture(void) : image_rotation_arrow(), shader(nullptr) {}
 
 
-bool megamol::gui::PickableTexture::Draw(unsigned int id, int face_index, int& out_orientation_index_offset, int& out_hovered_arrow, ManipVector& pending_manipulations) {
+bool megamol::gui::PickableTexture::Draw(unsigned int id, int face_index, int& out_orientation_index_offset,
+    int& out_hovered_arrow, ManipVector& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -324,8 +329,8 @@ bool megamol::gui::PickableTexture::Draw(unsigned int id, int face_index, int& o
                                    "    outFragInfo  = vec2(float(arrow_id), gl_FragCoord.z); \n"
                                    "    // Same colors as in vertex shader of pickable cube \n"
                                    "    const vec3 colors[6] = vec3[6](vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 1.0), \n"
-                                   "                                   vec3(0.0, 1.0, 0.0), vec3(1.0, 1.0, 0.0), \n"
-                                   "                                   vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 1.0)); \n"
+                                   "                                   vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 1.0), \n"
+                                   "                                   vec3(0.0, 1.0, 0.0), vec3(1.0, 1.0, 0.0)); \n"
                                    "    vec4 tex_color = texture(tex, tex_coord); \n"
                                    "    float alpha = tex_color.a; \n"
                                    "    // Supersample - 4 extra points \n"
@@ -353,8 +358,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int id, int face_index, int& o
         int orientation_index_offset = 0;
         if (id == manip.obj_id) {
             orientation_index_offset = -1;
-        }
-        else if (id == (id & (manip.obj_id >> 1))) {
+        } else if (id == (id & (manip.obj_id >> 1))) {
             orientation_index_offset = 1;
         }
         if (orientation_index_offset != 0) {
@@ -426,7 +430,6 @@ InteractVector megamol::gui::PickableTexture::GetInteractions(unsigned int id) c
 }
 
 
-
 // *** Parameter Group View Cube Widget ************************************ //
 
 megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget(void)
@@ -462,7 +465,8 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
         }
     }
 
-    return (param_cubeOrientation && param_defaultView && param_showCube && param_defaultOrientation && param_resetView);
+    return (
+        param_cubeOrientation && param_defaultView && param_showCube && param_defaultOrientation && param_resetView);
 }
 
 
@@ -562,18 +566,22 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             int hovered_cube_face = -1;
             int hovered_orientation = -1;
             auto cube_picking_id = param_defaultView->UID();
-            inout_picking_buffer->AddInteractionObject(cube_picking_id, this->cube_widget.GetInteractions(cube_picking_id));
-            bool selected = this->cube_widget.Draw(cube_picking_id, default_view, default_orientation, hovered_cube_face,
-                                                   hovered_orientation, cube_orientation, inout_picking_buffer->GetPendingManipulations());
+            inout_picking_buffer->AddInteractionObject(
+                cube_picking_id, this->cube_widget.GetInteractions(cube_picking_id));
+            bool selected =
+                this->cube_widget.Draw(cube_picking_id, default_view, default_orientation, hovered_cube_face,
+                    hovered_orientation, cube_orientation, inout_picking_buffer->GetPendingManipulations());
 
             int hovered_arrow = 0;
             int orientation_index_offset = 0;
             auto rot_picking_id = param_defaultOrientation->UID();
-            inout_picking_buffer->AddInteractionObject(rot_picking_id, this->texture_widget.GetInteractions(rot_picking_id));
-            this->texture_widget.Draw(rot_picking_id, default_view, orientation_index_offset, hovered_arrow, inout_picking_buffer->GetPendingManipulations());
+            inout_picking_buffer->AddInteractionObject(
+                rot_picking_id, this->texture_widget.GetInteractions(rot_picking_id));
+            this->texture_widget.Draw(rot_picking_id, default_view, orientation_index_offset, hovered_arrow,
+                inout_picking_buffer->GetPendingManipulations());
 
             default_orientation = (default_orientation + orientation_index_offset);
-            default_orientation = (default_orientation < 0)?(3):(default_orientation % 4);
+            default_orientation = (default_orientation < 0) ? (3) : (default_orientation % 4);
             if (selected) {
                 param_resetView->ForceSetValueDirty();
             }
@@ -630,8 +638,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
             if (hovered_arrow < 0) {
                 tooltip_text = "Rotate Right";
-            }
-            else if (hovered_arrow > 0) {
+            } else if (hovered_arrow > 0) {
                 tooltip_text = "Rotate Left";
             }
 
