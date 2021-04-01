@@ -186,7 +186,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                 if (ImGui::BeginTable("cinematic_global_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + A", "Apply current settings to selected/new keyframe.");
-                    this->gui_table_row("HIFT + D", "Delete selected keyframe.");
+                    this->gui_table_row("SHIFT + D", "Delete selected keyframe.");
                     this->gui_table_row("SHIFT + S", "Save keyframes to file.");
                     this->gui_table_row("SHIFT + L", "Load keyframes from file.");
                     this->gui_table_row("SHIFT + Z", "Undo keyframe changes (US Keyboard).");
