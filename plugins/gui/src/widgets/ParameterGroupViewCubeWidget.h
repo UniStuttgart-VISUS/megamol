@@ -26,8 +26,8 @@ namespace gui {
         PickableCube(void);
         ~PickableCube(void) = default;
 
-        bool Draw(unsigned int id, int& inout_face_index, int& inout_orientation_index, int& out_hovered_face,
-            int& out_hovered_orientation, const glm::vec4& cube_orientation, ManipVector& pending_manipulations);
+        bool Draw(unsigned int picking_id, int& inout_face_id, int& inout_orientation_id, int& out_hovered_face_id,
+            int& out_hovered_orientation_id, const glm::vec4& cube_orientation, ManipVector& pending_manipulations);
 
         InteractVector GetInteractions(unsigned int id) const;
 
@@ -45,7 +45,7 @@ namespace gui {
         PickableTexture(void);
         ~PickableTexture(void) = default;
 
-        bool Draw(unsigned int id, int face_index, int& out_orientation_index_offset, int& out_hovered_arrow,
+        bool Draw(unsigned int picking_id, int face_id, int& out_orientation_change, int& out_hovered_arrow_id,
             ManipVector& pending_manipulations);
 
         InteractVector GetInteractions(unsigned int id) const;
