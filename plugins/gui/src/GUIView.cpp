@@ -32,7 +32,7 @@ GUIView::~GUIView() {
 bool GUIView::create() {
 
     if (this->_fbo == nullptr) {
-        this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+        this->_fbo = std::make_shared<glowl::FramebufferObject>(1,1);
     }
 
     if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
@@ -50,8 +50,8 @@ void GUIView::release() {}
 
 
 void GUIView::unpackMouseCoordinates(float& x, float& y) {
-    GLint vpw = _fbo->GetWidth();
-    GLint vph = _fbo->GetHeight();
+    GLint vpw = _fbo->getWidth();
+    GLint vph = _fbo->getHeight();
 
     x *= static_cast<float>(vpw);
     y *= static_cast<float>(vph);
@@ -70,7 +70,7 @@ unsigned int GUIView::GetCameraSyncNumber(void) const {
     return 0u;
 }
 
-void GUIView::Render(double time, double instanceTime) {
+void GUIView::Render(double time, double instanceTime, bool present_fbo) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
@@ -78,7 +78,7 @@ void GUIView::Render(double time, double instanceTime) {
     if (crv) {
         // Camera
         auto viewport =
-            glm::vec2(static_cast<float>(_fbo->GetWidth()), static_cast<float>(_fbo->GetHeight()));
+            glm::vec2(static_cast<float>(_fbo->getWidth()), static_cast<float>(_fbo->getHeight()));
 
         crv->SetFramebufferObject(_fbo);
         crv->SetInstanceTime(instanceTime);
@@ -90,7 +90,7 @@ void GUIView::Render(double time, double instanceTime) {
     } else {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        auto viewport = glm::vec2(static_cast<float>(_fbo->GetWidth()), static_cast<float>(_fbo->GetHeight()));
+        auto viewport = glm::vec2(static_cast<float>(_fbo->getWidth()), static_cast<float>(_fbo->getHeight()));
         this->gui.PreDraw(viewport, viewport, instanceTime);
         this->gui.PostDraw();
     }
@@ -111,12 +111,17 @@ void GUIView::ResetView(void) {
 
 
 void GUIView::Resize(unsigned int width, unsigned int height) {
-    if ((this->_fbo->GetWidth() != width) || (this->_fbo->GetHeight() != height)) {
-        this->_fbo->Release();
-        if (!this->_fbo->Create(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
-            throw vislib::Exception("[View2DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
-            return;
+    if ((this->_fbo->getWidth() != width) || (this->_fbo->getHeight() != height)) {
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+        try {
+            _fbo = std::make_shared<glowl::FramebufferObject>(width, height);
+            _fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+            // TODO: check completness and throw if not?
+        } catch (glowl::FramebufferObjectException const& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[View2DGL] Unable to create image framebuffer object: %s\n", exc.what());
         }
     }
 }
@@ -234,9 +239,9 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
     double instanceTime = crv->InstanceTime();
 
     _camera = crv->GetCamera();
-    this->Resize(crv->GetFramebufferObject()->GetWidth(), crv->GetFramebufferObject()->GetHeight());
+    this->Resize(crv->GetFramebufferObject()->getWidth(), crv->GetFramebufferObject()->getHeight());
 
-    this->Render(time, instanceTime);
+    this->Render(time, instanceTime, false);
 
     return true;
 }

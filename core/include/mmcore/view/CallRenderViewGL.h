@@ -10,7 +10,9 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRenderView.h"
 #include "mmcore/view/Input.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include "glowl/FramebufferObject.hpp"
 
 
 namespace megamol {
@@ -48,13 +50,9 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-			ASSERT(CALL_FREEZE == AbstractCallRender::FunctionCount()
+            ASSERT(CALL_RESETVIEW == AbstractCallRender::FunctionCount()
 				&& "Enum has bad magic number");
-			ASSERT(CALL_UNFREEZE == AbstractCallRender::FunctionCount() + 1
-				&& "Enum has bad magic number");
-			ASSERT(CALL_RESETVIEW  == AbstractCallRender::FunctionCount() + 2
-				&& "Enum has bad magic number");
-            return AbstractCallRender::FunctionCount() + 3;
+            return AbstractCallRender::FunctionCount() + 1;
         }
 
         /**
@@ -65,11 +63,7 @@ namespace view {
          * @return The name of the requested function.
          */
         static const char* FunctionName(unsigned int idx) {
-            if (idx == CALL_FREEZE) {
-                return "freeze";
-            } else if (idx == CALL_UNFREEZE) {
-                return "unfreeze";
-            } else if (idx == CALL_RESETVIEW) {
+            if (idx == CALL_RESETVIEW) {
                 return "ResetView";
             } 
             return AbstractCallRender::FunctionName(idx);
@@ -101,18 +95,17 @@ namespace view {
          */
         CallRenderViewGL& operator=(const CallRenderViewGL& rhs);
 
-        inline void SetFramebufferObject(std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo) {
+        inline void SetFramebufferObject(std::shared_ptr<glowl::FramebufferObject> fbo) {
             _framebuffer = fbo;
         }
 
-        inline std::shared_ptr<vislib::graphics::gl::FramebufferObject> GetFramebufferObject() {
+        inline std::shared_ptr<glowl::FramebufferObject> GetFramebufferObject() {
             return _framebuffer;
         }
 
-
     private:
 
-        std::shared_ptr<vislib::graphics::gl::FramebufferObject> _framebuffer;
+        std::shared_ptr<glowl::FramebufferObject> _framebuffer;
 
     };
 

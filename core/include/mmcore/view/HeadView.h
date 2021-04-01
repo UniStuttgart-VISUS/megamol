@@ -96,7 +96,7 @@ public:
      *
      * @param context
      */
-    virtual void Render(double time, double instanceTime) override;
+    virtual void Render(double time, double instanceTime, bool present_fbo) override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -120,15 +120,6 @@ public:
      * @return The return value
      */
     virtual bool OnRenderView(Call& call);
-
-    /**
-     * Freezes, updates, or unfreezes the view onto the scene (not the
-     * rendering, but camera settings, timing, etc).
-     *
-     * @param freeze true means freeze or update freezed settings,
-     *               false means unfreeze
-     */
-    virtual void UpdateFreeze(bool freeze);
 
     virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 

@@ -89,7 +89,7 @@ public:
      * @param time ...
      * @param instanceTime ...
      */
-    virtual void Render(double time, double instanceTime) override;
+    virtual void Render(double time, double instanceTime, bool present_fbo) override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -228,9 +228,11 @@ private:
 
     vislib::math::Rectangle<float> _clientArea2;
 
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo1;
+    std::shared_ptr<glowl::FramebufferObject> _fboFull;
 
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo2;
+    std::shared_ptr<glowl::FramebufferObject> _fbo1;
+
+    std::shared_ptr<glowl::FramebufferObject> _fbo2;
 
     int _focus;
 

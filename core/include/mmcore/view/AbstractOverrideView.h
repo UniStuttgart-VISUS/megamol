@@ -76,15 +76,6 @@ namespace view {
          */
         virtual void Resize(unsigned int width, unsigned int height);
 
-        /**
-         * Freezes, updates, or unfreezes the view onto the scene (not the
-         * rendering, but camera settings, timing, etc).
-         *
-         * @param freeze true means freeze or update freezed settings,
-         *               false means unfreeze
-         */
-        virtual void UpdateFreeze(bool freeze);
-
         virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 
         virtual bool OnChar(unsigned int codePoint) override;

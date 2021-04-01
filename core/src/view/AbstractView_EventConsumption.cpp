@@ -83,7 +83,7 @@ void view_poke_rendering(AbstractView& view) { // , megamol::frontend::FrontendR
 
         const double time = view.DefaultTime(time);
 
-        view.Render(time, instanceTime);
+        view.Render(time, instanceTime, true);
     };
     
     render();

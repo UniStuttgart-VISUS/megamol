@@ -32,108 +32,15 @@ public:
     /** Function index of 'getExtents' */
     static const unsigned int CALL_EXTENTS = AbstractCallRender::FnGetExtents;
 
-    /** Function index of 'freeze' */
-    static const unsigned int CALL_FREEZE = 7;
-
-    /** Function index of 'unfreeze' */
-    static const unsigned int CALL_UNFREEZE = 8;
-
     /** Function index of 'ResetView' */
-    static const unsigned int CALL_RESETVIEW = 9;
+    static const unsigned int CALL_RESETVIEW = 7;
 
-    /**
-     * Gets the input modifier
-     *
-     * @return The input modifier
-     */
-    inline Modifier InputModifier(void) const {
-        return this->mod;
+    void setRequestedHeight(int height) {
+        _height = height;
     }
 
-    /**
-     * Answers the flag indicating that the background information has been set
-     *
-     * @return 'true' if the background information has been set
-     */
-    inline bool IsBackgroundSet(void) const {
-        return this->flagBkgnd;
-    }
-
-    /**
-     * Answers the flag indicating that the viewport information has been set
-     *
-     * @return 'true' if the viewport information has been set
-     */
-    inline bool IsViewportSet(void) const {
-        return true;
-    }
-
-    /**
-     * Gets the button.
-     *
-     * @return The button
-     */
-    inline unsigned int MouseButton(void) const {
-        return this->btn;
-    }
-
-    /**
-     * Gets the 'down' flag.
-     *
-     * @return The 'down' flag
-     */
-    inline bool MouseButtonDown(void) const{
-        return this->down;
-    }
-
-    /**
-     * Gets the x coordinate.
-     *
-     * @return The x coordinate
-     */
-    inline float MouseX(void) const {
-        return this->x;
-    }
-
-    /**
-     * Gets the y coordinate.
-     *
-     * @return The y coordinate
-     */
-    inline float MouseY(void) const {
-        return this->y;
-    }
-
-    /**
-     * Resets all flags
-     */
-    inline void ResetAll(void) {
-        this->flagBkgnd = false;
-    }
-
-    /**
-     * Resets the flag indicating that the background had been set.
-     */
-    inline void ResetBackground(void) {
-        this->flagBkgnd = false;
-    }
-
-    /**
-     * Gets the height of the viewport in pixel.
-     *
-     * @return The height of the viewport in pixel
-     */
-    inline unsigned int ViewportHeight(void) const {
-        return _framebuffer->height;
-    }
-
-    /**
-     * Gets the width of the viewport in pixel.
-     *
-     * @return The width of the viewport in pixel
-     */
-    inline unsigned int ViewportWidth(void) const {
-        return _framebuffer->width;
+    void setRequestedWidth(int width) {
+        _width = width;
     }
 
     /**
@@ -141,8 +48,8 @@ public:
      *
      * @return The height of the virtual viewport
      */
-    inline float VirtualHeight(void) const {
-        return this->height;
+    inline int getRequestedHeight(void) const {
+        return _height;
     }
 
     /**
@@ -150,8 +57,8 @@ public:
      *
      * @return The width of the virtual viewport
      */
-    inline float VirtualWidth(void) const {
-        return this->width;
+    inline int getRequestedWidth(void) const {
+        return _width;
     }
 
     /**
@@ -171,34 +78,11 @@ protected:
 
 private:
 
-    /** Flag indicating that the background colour information has been set */
-    bool flagBkgnd : 1;
+    /** The height of the requested virtual viewport */
+    int _height;
 
-    /** The height of the virtual viewport */
-    float height;
-
-    /** The width of the virtual viewport */
-    float width;
-
-    /** The button */
-    unsigned int btn;
-
-    /**
-     * Flag whether the button is pressed, or not, or the new input
-     * modifier state
-     */
-    bool down;
-
-    /** The x coordinate */
-    float x;
-
-    /** The y coordinate */
-    float y;
-
-    /** The input modifier to be set */
-    Modifier mod;
-
-    std::shared_ptr<CPUFramebuffer> _framebuffer;
+    /** The width of the requested virtual viewport */
+    int _width;
 };
 
 

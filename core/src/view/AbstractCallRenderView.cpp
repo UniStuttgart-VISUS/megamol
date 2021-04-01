@@ -14,12 +14,7 @@ using namespace megamol::core;
 /*
  * view::CallRenderView::CallRenderView
  */
-view::AbstractCallRenderView::AbstractCallRenderView(void)
-        : AbstractCallRender()
-        ,
-        flagBkgnd(false),
-        height(1.0f), width(1.0f),
-        btn(0), down(false), x(0.0f), y(0.0f), mod(Modifier::SHIFT) {
+view::AbstractCallRenderView::AbstractCallRenderView(void) : AbstractCallRender(), _height(1), _width(1) {
     // intentionally empty
 }
 
@@ -29,13 +24,7 @@ view::AbstractCallRenderView::AbstractCallRenderView(void)
  */
 view::AbstractCallRenderView& view::AbstractCallRenderView::operator=(const view::AbstractCallRenderView& rhs) {
     view::AbstractCallRender::operator=(rhs);
-    this->flagBkgnd = rhs.flagBkgnd;
-    this->height = rhs.height;
-    this->width = rhs.width;
-    this->btn = rhs.btn;
-    this->down = rhs.down;
-    this->x = rhs.x;
-    this->y = rhs.y;
-    this->mod = rhs.mod;
+    _height = rhs._height;
+    _width = rhs._width;
     return *this;
 }

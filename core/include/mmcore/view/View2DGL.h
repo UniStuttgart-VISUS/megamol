@@ -79,7 +79,7 @@ public:
     /**
      * ...
      */
-    virtual void Render(double time, double instanceTime);
+    virtual void Render(double time, double instanceTime, bool present_fbo) override;
 
     /**
      * Resets the view. This normally sets the camera parameters to

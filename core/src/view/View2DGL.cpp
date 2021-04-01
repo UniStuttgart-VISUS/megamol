@@ -82,7 +82,7 @@ unsigned int view::View2DGL::GetCameraSyncNumber(void) const {
 /*
  * view::View2DGL::Render
  */
-void view::View2DGL::Render(double time, double instanceTime) {
+void view::View2DGL::Render(double time, double instanceTime, bool present_fbo) {
 
     AbstractView::beforeRender(time,instanceTime);
 
@@ -110,17 +110,19 @@ void view::View2DGL::Render(double time, double instanceTime) {
     // after render
     AbstractView::afterRender();
 
-    // Blit the final image to the default framebuffer of the window.
-    // Technically, the view's fbo should always match the size of the window so a blit is fine.
-    // Eventually, presenting the fbo will become the frontends job.
-    // Bind and blit framebuffer.
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if (present_fbo) {
+        // Blit the final image to the default framebuffer of the window.
+        // Technically, the view's fbo should always match the size of the window so a blit is fine.
+        // Eventually, presenting the fbo will become the frontends job.
+        // Bind and blit framebuffer.
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    _fbo->bindToRead(0);
-    glBlitFramebuffer(0, 0, _fbo->getWidth(), _fbo->getHeight(), 0, 0, _fbo->getWidth(), _fbo->getHeight(),
-        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        _fbo->bindToRead(0);
+        glBlitFramebuffer(0, 0, _fbo->getWidth(), _fbo->getHeight(), 0, 0, _fbo->getWidth(), _fbo->getHeight(),
+            GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    }
 }
 
 
@@ -203,20 +205,29 @@ void view::View2DGL::Resize(unsigned int width, unsigned int height) {
  * view::View2DGL::OnRenderView
  */
 bool view::View2DGL::OnRenderView(Call& call) {
-    float overBC[3];
     view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
-    if (crv == NULL)
+    if (crv == NULL) {
         return false;
+    }
 
     // get time from incoming call
     double time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
     double instanceTime = crv->InstanceTime();
 
-    // get requested view(port) size from incoming call
-    
+    auto fbo = _fbo;
+    _fbo = crv->GetFramebufferObject();
 
-    this->Render(time, instanceTime);
+    auto cam_cpy = _camera;
+    auto cam_pose = _camera.get<Camera::Pose>();
+    auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+    cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
+    _camera = Camera(cam_pose, cam_intrinsics);
+
+    this->Render(time, instanceTime, false);
+
+    _fbo = fbo;
+    _camera = cam_cpy;
 
     return true;
 }

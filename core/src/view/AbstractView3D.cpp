@@ -418,7 +418,7 @@ bool AbstractView3D::OnRenderView(Call& call) {
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
     double instanceTime = crv->InstanceTime();
 
-    this->Render(time, instanceTime);
+    this->Render(time, instanceTime, false);
 
     return true;
 }

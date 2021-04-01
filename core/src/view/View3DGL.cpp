@@ -52,7 +52,7 @@ View3DGL::~View3DGL(void) {
     this->Release();
 }
 
-void megamol::core::view::View3DGL::Render(double time, double instanceTime) {
+void megamol::core::view::View3DGL::Render(double time, double instanceTime, bool present_fbo) {
     CallRender3DGL* cr3d = this->_rhsRenderSlot.CallAs<CallRender3DGL>();
 
     if (cr3d == NULL) {
@@ -80,17 +80,19 @@ void megamol::core::view::View3DGL::Render(double time, double instanceTime) {
     
     AbstractView3D::afterRender();
 
-    // Blit the final image to the default framebuffer of the window.
-    // Technically, the view's fbo should always match the size of the window so a blit is fine.
-    // Eventually, presenting the fbo will become the frontends job.
-    // Bind and blit framebuffer.
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if (present_fbo) {
+        // Blit the final image to the default framebuffer of the window.
+        // Technically, the view's fbo should always match the size of the window so a blit is fine.
+        // Eventually, presenting the fbo will become the frontends job.
+        // Bind and blit framebuffer.
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    _fbo->bindToRead(0);
-    glBlitFramebuffer(0, 0, _fbo->getWidth(), _fbo->getHeight(), 0, 0, _fbo->getWidth(), _fbo->getHeight(),
-        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        _fbo->bindToRead(0);
+        glBlitFramebuffer(0, 0, _fbo->getWidth(), _fbo->getHeight(), 0, 0, _fbo->getWidth(), _fbo->getHeight(),
+            GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    }
 }
 
 void megamol::core::view::View3DGL::ResetView() {
@@ -125,6 +127,42 @@ void megamol::core::view::View3DGL::Resize(unsigned int width, unsigned int heig
             }
         }
     }
+}
+
+bool megamol::core::view::View3DGL::OnRenderView(Call& call) {
+    view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
+    if (crv == NULL) {
+        return false;
+    }
+
+    // get time from incoming call
+    double time = crv->Time();
+    if (time < 0.0f)
+        time = this->DefaultTime(crv->InstanceTime());
+    double instanceTime = crv->InstanceTime();
+
+    auto fbo = _fbo;
+    _fbo = crv->GetFramebufferObject();
+
+    auto cam_cpy = _camera;
+    auto cam_pose = _camera.get<Camera::Pose>();
+    auto cam_type = _camera.get<Camera::ProjectionType>();
+    if (cam_type == Camera::ORTHOGRAPHIC) {
+        auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+        cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
+        _camera = Camera(cam_pose, cam_intrinsics);
+    } else if (cam_type == Camera::ORTHOGRAPHIC) {
+        auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+        cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
+        _camera = Camera(cam_pose, cam_intrinsics);
+    }
+    
+    this->Render(time, instanceTime, false);
+
+    _fbo = fbo;
+    _camera = cam_cpy;
+
+    return true;
 }
 
 /*

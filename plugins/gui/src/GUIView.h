@@ -71,7 +71,7 @@ namespace gui {
 
         virtual bool OnRenderView(megamol::core::Call& call);
 
-        virtual void Render(double time, double instanceTime) override;
+        virtual void Render(double time, double instanceTime, bool present_fbo) override;
 
         virtual void ResetView(void) override;
 
@@ -107,7 +107,7 @@ namespace gui {
         /** The gui */
         megamol::gui::GUIWindows gui;
 
-        std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
+        std::shared_ptr<glowl::FramebufferObject> _fbo;
 
         // ------------------------------------------------------------------------
     };

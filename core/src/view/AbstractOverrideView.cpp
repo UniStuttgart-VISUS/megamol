@@ -135,19 +135,6 @@ void view::AbstractOverrideView::Resize(unsigned int width, unsigned int height)
 //}
 
 
-/*
- * view::AbstractOverrideView::UpdateFreeze
- */
-void view::AbstractOverrideView::UpdateFreeze(bool freeze) {
-    view::CallRenderViewGL *crv = this->getCallRenderView();
-    if (crv != NULL) {
-        (*crv)(freeze
-            ? view::CallRenderViewGL::CALL_FREEZE
-            : view::CallRenderViewGL::CALL_UNFREEZE);
-    }
-}
-
-
 bool view::AbstractOverrideView::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->getCallRenderView();
     if (cr == NULL) return false;

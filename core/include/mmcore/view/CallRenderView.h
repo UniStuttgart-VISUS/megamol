@@ -47,13 +47,9 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-			ASSERT(CALL_FREEZE == AbstractCallRender::FunctionCount()
+            ASSERT(CALL_RESETVIEW == AbstractCallRender::FunctionCount()
 				&& "Enum has bad magic number");
-			ASSERT(CALL_UNFREEZE == AbstractCallRender::FunctionCount() + 1
-				&& "Enum has bad magic number");
-			ASSERT(CALL_RESETVIEW  == AbstractCallRender::FunctionCount() + 2
-				&& "Enum has bad magic number");
-            return AbstractCallRender::FunctionCount() + 3;
+            return AbstractCallRender::FunctionCount() + 1;
         }
 
         /**
@@ -64,11 +60,7 @@ namespace view {
          * @return The name of the requested function.
          */
         static const char* FunctionName(unsigned int idx) {
-            if (idx == CALL_FREEZE) {
-                return "freeze";
-            } else if (idx == CALL_UNFREEZE) {
-                return "unfreeze";
-            } else if (idx == CALL_RESETVIEW) {
+            if (idx == CALL_RESETVIEW) {
                 return "ResetView";
             } 
             return AbstractCallRender::FunctionName(idx);

@@ -47,7 +47,7 @@ public:
     /** Dtor. */
     virtual ~View3DGL(void);
 
-    virtual void Render(double time, double instanceTime) override;
+    virtual void Render(double time, double instanceTime, bool present_fbo) override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -62,6 +62,15 @@ public:
      * @param height The new height.
      */
     virtual void Resize(unsigned int width, unsigned int height) override;
+
+    /**
+     * Callback requesting a rendering of this view
+     *
+     * @param call The calling call
+     *
+     * @return The return value
+     */
+    virtual bool OnRenderView(Call& call) override;
 
     virtual bool OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) override;
 

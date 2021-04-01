@@ -649,7 +649,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, uint32_t frameI
             auto time = view->View()->DefaultTime(it);
             auto instanceTime = it; 
 
-            view->View()->Render(time, instanceTime);
+            view->View()->Render(time, instanceTime, true);
         }
     }
 }

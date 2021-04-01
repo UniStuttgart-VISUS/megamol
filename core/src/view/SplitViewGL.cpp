@@ -36,8 +36,9 @@ view::SplitViewGL::SplitViewGL()
     , _clientArea()
     , _clientArea1()
     , _clientArea2()
-    , _fbo1()
-    , _fbo2()
+    , _fboFull(nullptr)
+    , _fbo1(nullptr)
+    , _fbo2(nullptr)
     , _focus(0)
     , _mouseX(0.0f)
     , _mouseY(0.0f)
@@ -100,15 +101,11 @@ unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
     return 0u;
 }
 
-void view::SplitViewGL::Render(double time, double instanceTime) {
+void view::SplitViewGL::Render(double time, double instanceTime, bool present_fbo) {
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
-
-    // TODO SplitViewGL needs its own full view fbo
-    unsigned int vpw = 0;
-    unsigned int vph = 0;
 
     if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
         auto cr = this->render1();
@@ -155,10 +152,10 @@ void view::SplitViewGL::Render(double time, double instanceTime) {
     //}
 
     if (this->_splitPositionSlot.IsDirty() || this->_splitOrientationSlot.IsDirty() || this->_splitWidthSlot.IsDirty() ||
-        !this->_fbo1->IsValid() || !this->_fbo2->IsValid() ||
-        !vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(vpw)) ||
-        !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(vph))) {
-        this->updateSize(vpw, vph);
+        this->_fbo1 == nullptr || this->_fbo2 == nullptr ||
+        !vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(_fboFull->getWidth())) ||
+        !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(_fboFull->getHeight()))) {
+        this->updateSize(_fboFull->getWidth(), _fboFull->getHeight());
     }
 
     // Propagate viewport changes to connected views.
@@ -179,12 +176,13 @@ void view::SplitViewGL::Render(double time, double instanceTime) {
     propagateViewport(this->render1(), this->_clientArea1);
     propagateViewport(this->render2(), this->_clientArea2);
 
-    auto renderAndBlit = [&](std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo, CallRenderViewGL* crv,
+    auto renderAndBlit = [&](std::shared_ptr<glowl::FramebufferObject> view_fbo, std::shared_ptr<glowl::FramebufferObject> subview_fbo,
+                             CallRenderViewGL* crv,
                              const vislib::math::Rectangle<float>& ca) {
         if (crv == nullptr) {
             return;
         }
-        crv->SetFramebufferObject(fbo);
+        crv->SetFramebufferObject(subview_fbo);
         crv->SetInstanceTime(instanceTime);
         crv->SetTime(-1.0f);
 
@@ -192,41 +190,21 @@ void view::SplitViewGL::Render(double time, double instanceTime) {
             crv->SetTime(static_cast<float>(time));
         }
 
-#if defined(DEBUG) || defined(_DEBUG)
-        unsigned int otl = vislib::Trace::GetInstance().GetLevel();
-        vislib::Trace::GetInstance().SetLevel(0);
-#endif /* DEBUG || _DEBUG */
-        fbo->Enable();
-#if defined(DEBUG) || defined(_DEBUG)
-        vislib::Trace::GetInstance().SetLevel(otl);
-#endif /* DEBUG || _DEBUG */
-
         // Defer render call to subview that should clear (if it does not,
         // non-splitview rendering will be broken as well).
         (*crv)(CallRenderViewGL::CALL_RENDER);
-
-#if defined(DEBUG) || defined(_DEBUG)
-        vislib::Trace::GetInstance().SetLevel(0);
-#endif /* DEBUG || _DEBUG */
-        fbo->Disable();
-#if defined(DEBUG) || defined(_DEBUG)
-        vislib::Trace::GetInstance().SetLevel(otl);
-#endif /* DEBUG || _DEBUG */
-
+        
         //TODO SplitViewGL need its own full view fbo
 
         // Bind and blit framebuffer.
-        GLint binding, readBuffer;
-        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &binding);
-        glGetIntegerv(GL_READ_BUFFER, &readBuffer);
+        view_fbo->bind();
 
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->GetID());
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
-        glBlitFramebuffer(0, 0, fbo->GetWidth(), fbo->GetHeight(), ca.Left(), this->_clientArea.Height() - ca.Top(),
+        subview_fbo->bindToRead(0);
+        glBlitFramebuffer(0, 0, subview_fbo->getWidth(), subview_fbo->getHeight(), ca.Left(),
+            this->_clientArea.Height() - ca.Top(),
             ca.Right(), this->_clientArea.Height() - ca.Bottom(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, binding);
-        glReadBuffer(readBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     };
 
     // Draw the splitter through clearing without overplotting.
@@ -234,8 +212,22 @@ void view::SplitViewGL::Render(double time, double instanceTime) {
     ::glClearColor(splitColour[0], splitColour[1], splitColour[2], 1.0f);
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    renderAndBlit(this->_fbo1, this->render1(), this->_clientArea1);
-    renderAndBlit(this->_fbo2, this->render2(), this->_clientArea2);
+    renderAndBlit(_fboFull, this->_fbo1, this->render1(), this->_clientArea1);
+    renderAndBlit(_fboFull, this->_fbo2, this->render2(), this->_clientArea2);
+
+    if (present_fbo) {
+        // Blit the final image to the default framebuffer of the window.
+        // Technically, the view's fbo should always match the size of the window so a blit is fine.
+        // Eventually, presenting the fbo will become the frontends job.
+        // Bind and blit framebuffer.
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        _fboFull->bindToRead(0);
+        glBlitFramebuffer(0, 0, _fboFull->getWidth(), _fboFull->getHeight(), 0, 0, _fboFull->getWidth(), _fboFull->getHeight(),
+            GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    }
 }
 
 bool view::SplitViewGL::GetExtents(core::Call& call) {
@@ -265,6 +257,18 @@ void view::SplitViewGL::ResetView() {
 
 void view::SplitViewGL::Resize(unsigned int width, unsigned int height) {
 
+    if (width != _fboFull->getWidth() || height != _fboFull->getHeight()) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+        try {
+            _fboFull = std::make_shared<glowl::FramebufferObject>(width,height);
+            _fboFull->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+        } catch (glowl::FramebufferObjectException const& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[SplitView] Unable to create framebuffer object: %s\n", exc.what());
+        }
+    }
+
     if (!vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(width)) ||
         !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(height))) {
         this->updateSize(width, height);
@@ -281,7 +285,10 @@ bool view::SplitViewGL::OnRenderView(Call& call) {
     }
     auto instanceTime = crv->InstanceTime();
 
-    this->Render(time, instanceTime);
+    auto fbo = _fboFull;
+    _fboFull = crv->GetFramebufferObject();
+    this->Render(time, instanceTime, false);
+    _fboFull = fbo;
 
     return true;
 }
@@ -462,14 +469,15 @@ bool view::SplitViewGL::OnMouseScroll(double dx, double dy) {
 }
 
 bool view::SplitViewGL::create() {
-    this->_fbo1 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
-    this->_fbo2 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    _fboFull = std::make_shared<glowl::FramebufferObject>(1, 1);
+    _fbo1 = std::make_shared<glowl::FramebufferObject>(1, 1);
+    _fbo2 = std::make_shared<glowl::FramebufferObject>(1, 1);
     return true;
 }
 
 void view::SplitViewGL::release() {
-    if (this->_fbo1->IsValid()) this->_fbo1->Release();
-    if (this->_fbo2->IsValid()) this->_fbo2->Release();
+    _fbo1.reset();
+    _fbo2.reset();
 }
 
 void view::SplitViewGL::unpackMouseCoordinates(float& x, float& y) {
@@ -486,15 +494,23 @@ void view::SplitViewGL::updateSize(size_t width, size_t height) {
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
 #endif /* DEBUG || _DEBUG */
-    if (this->_fbo1->IsValid()) this->_fbo1->Release();
-    this->_fbo1->Create(
-        static_cast<unsigned int>(this->_clientArea1.Width()), static_cast<unsigned int>(this->_clientArea1.Height()));
-    this->_fbo1->Disable();
 
-    if (this->_fbo2->IsValid()) this->_fbo2->Release();
-    this->_fbo2->Create(
-        static_cast<unsigned int>(this->_clientArea2.Width()), static_cast<unsigned int>(this->_clientArea2.Height()));
-    this->_fbo2->Disable();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+    try {
+        _fbo1 = std::make_shared<glowl::FramebufferObject>(static_cast<unsigned int>(this->_clientArea1.Width()),
+            static_cast<unsigned int>(this->_clientArea1.Height()));
+        _fbo1->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+        _fbo2 = std::make_shared<glowl::FramebufferObject>(static_cast<unsigned int>(this->_clientArea2.Width()),
+            static_cast<unsigned int>(this->_clientArea2.Height()));
+        _fbo2->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+        // TODO: check completness and throw if not?
+    } catch (glowl::FramebufferObjectException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[SplitView] Unable to create framebuffer object: %s\n", exc.what());
+    }
+
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */

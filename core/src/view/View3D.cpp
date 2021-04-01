@@ -35,7 +35,7 @@ View3D::~View3D(void) {
 /*
  * View3D::Render
  */
-void View3D::Render(double time, double instanceTime) {
+void View3D::Render(double time, double instanceTime, bool present_fbo) {
 
     CallRender3D* cr3d = this->_rhsRenderSlot.CallAs<CallRender3D>();
     this->handleCameraMovement();

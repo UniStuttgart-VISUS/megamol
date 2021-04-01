@@ -22,7 +22,7 @@ namespace view {
 
         enum ProjectionType { PERSPECTIVE, ORTHOGRAPHIC, UNKNOWN };
 
-        //typedef float AspectRation;
+        typedef float AspectRatio;
         //typedef float NearPlane;
         //typedef float FarPlane;
 
@@ -264,6 +264,14 @@ namespace view {
                 return std::get<PerspectiveParameters>(_intrinsics).image_plane_tile;
             } else if (_intrinsics.index() == 2) {
                 return std::get<OrthographicParameters>(_intrinsics).image_plane_tile;
+            }
+        } else if constexpr (std::is_same_v<CameraInfoType, AspectRatio>) {
+            if (_intrinsics.index() == 0) {
+                throw std::exception(); // How dare you
+            } else if (_intrinsics.index() == 1) {
+                return std::get<PerspectiveParameters>(_intrinsics).aspect;
+            } else if (_intrinsics.index() == 2) {
+                return std::get<OrthographicParameters>(_intrinsics).aspect;
             }
         } else {
             return std::get<CameraInfoType>(_intrinsics);

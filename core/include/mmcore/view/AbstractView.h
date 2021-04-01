@@ -139,7 +139,7 @@ public:
      * @param time ...
      * @param instanceTime ...
      */
-    virtual void Render(double time, double instanceTime) = 0;
+    virtual void Render(double time, double instanceTime, bool present_fbo) = 0;
 
     /**
      * Resets the view. This normally sets the camera parameters to
