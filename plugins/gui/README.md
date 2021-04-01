@@ -64,7 +64,7 @@ The main menu provides the following options:
     * **`Performance Metrics`** (`F7`) Show/Hide the performance metrics window showing the fps or ms. 
     * **`Show/Hide All Windows`** (`Ctrl + g`) Show/Hide all GUI windows (corresponding LUA/CLI option: `mmSetGUIVisible(<bool>)/mmGetGUIVisible()`/ `guishow`).
     * **`Windows Docking Preset`** Load the docking preset for all windows.
-* **`Screenshot` 
+* **`Screenshot`** 
     * **`Select Filename`** (`megamol_screenshot.png`) Open file dialog for choosing file name for screenshot. Current filename is shown in menu. After each screenshot triggering a incrementing suffix (`_1`) is appended to the initially given filename. This way the file name does not have to be changed for each screenshot.
     * **`Trigger`** (`F2`) Trigger screenshot.
 * **`Projects`** 
@@ -88,14 +88,10 @@ The project configurator is part of the GUI and can be opened via the main menu:
 #### Main Menu
 
 * **`File`**
-    * **`New Project`** 
-    * **`Load Project`** 
-        * **`File`** Load existing project from a file.
-        * **`Running`** Load currently running project.
-    * **`Add Project`** 
-        * **`File`** Add existing project from a file to currently selected project.
-        * **`Running`** Add currently running project to currently selected project.
-    * **`Save Project`** (`Ctrl + Shift + s`) Save the project of the currently selected tab to file (lua).
+    * **`New Project`** Create new empty project.
+    * **`Open Project`** Open existing project in new tab.
+    * **`Add Project`** Open existing project and add to currently selected project.
+    * **`Save Project`** (`Ctrl + Shift + s`) Save the project of the currently selected tab to file (.lua)
 * **`View`**
     * **`Modules Sidebar`** Show/Hide sidebar with module stock list.
     * **`Parameter Sidebar`** Show/Hide sidebar with parameters of currently selected module.
@@ -190,7 +186,9 @@ Interface slots are stored in project files as part of the configurators state p
 
 ### Hotkey Overview
 
-**GUIWindows:**
+The following hotkeys are used in the GUI plugin:
+
+**Global *(in class GUIWindows)*:**
 * Trigger Screenshot:        **`F2`**
 * Toggle Graph Entry:        **`F3`**
 * Show/hide Windows:         **`F7-F11`**
@@ -200,12 +198,12 @@ Interface slots are stored in project files as part of the configurators state p
 * Save Running Project:      **`Ctrl  + s`**
 * Quit Program:              **`Alt   + F4`**
 
-**Configurator:**
+**Configurator *(in class Configurator)*:**
 * Search Module:             **`Ctrl + Shift + m`**
 * Search Parameter:          **`Ctrl + Shift + p`**
 * Save Edited Project:       **`Ctrl + Shift + s`**
 
-**Graph:**
+**Graph *(in class Graph)*:**
 * Delete Graph Item:         **`Entf`**
 * Selection, Drag & Drop:    **`Left Mouse Button`**
 * Context Menu:              **`Right Mouse Button`**

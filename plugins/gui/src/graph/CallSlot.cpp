@@ -353,8 +353,9 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                     state.interact.button_hovered_uid = this->uid;
                 }
 
-                // Context Menu
                 ImGui::PushFont(state.canvas.gui_font_ptr);
+
+                // Context Menu
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                     state.interact.button_active_uid = this->uid;
 
@@ -380,7 +381,6 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
 
                     ImGui::EndPopup();
                 }
-                ImGui::PopFont();
 
                 // Drag & Drop
                 if (ImGui::BeginDragDropTarget()) {
@@ -405,6 +405,9 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 } else {
                     this->gui_tooltip.Reset();
                 }
+
+                ImGui::PopFont();
+
             } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
                 bool active = (state.interact.button_active_uid == this->uid);

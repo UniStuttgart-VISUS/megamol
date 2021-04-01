@@ -244,8 +244,9 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         state.interact.button_hovered_uid = this->uid;
                     }
 
-                    // Context menu
                     ImGui::PushFont(state.canvas.gui_font_ptr);
+
+                    // Context menu
                     bool popup_rename = false;
                     if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                         state.interact.button_active_uid = this->uid;
@@ -318,7 +319,6 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         }
                         ImGui::EndPopup();
                     }
-                    ImGui::PopFont();
 
                     // Hover Tooltip
                     if ((state.interact.module_hovered_uid == this->uid) && !state.interact.module_show_label) {
@@ -345,6 +345,9 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             }
                         }
                     }
+
+                    ImGui::PopFont();
+
                 } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
                     bool active = (state.interact.button_active_uid == this->uid);
