@@ -172,9 +172,10 @@ void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_la
 
 void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm::vec2 dim_vp) {
 
-    this->gui_update();
+    bool valid_imgui_scope =
+        ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
 
-    if (inout_show) {
+    if (inout_show && valid_imgui_scope) {
         if (this->hotkey_window_setup_once) {
             ImGui::SetNextWindowPos(ImVec2(0.0f, this->menu_height));
             this->hotkey_window_setup_once = false;
