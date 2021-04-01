@@ -51,32 +51,33 @@ The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui) *V
 The main menu provides the following options:
 (Assigned hotkeys are given in brackets.)
 
-* `File`
-    * `Load Project` (`Ctrl + l`) Load project from file (lua).
-    * `Save Project` (`Ctrl + s`) Save the current project to file (lua). *If you want to save the current **GUI state**, check the option `Save GUI state` in the file dialog!* (corresponding LUA option: `mmSetGUIState(>JSON String>)/mmgetGUIState()`)
-    * `Exit` (`Alt + F4`) End the program.
-* `Windows` 
-    * `Menu` (`F12`) Show/Hide the menu.
-    * `Configurator` (`F11`) Show/Hide the configurator window. See detailed description below.
-    * `Parameters` (`F10`) Show/Hide the parameter window. *In order to enable more options to change the parameters appearance (widget), you can switch the `Mode` from `Basic` to `Expert`.*
-    * `Log Console` (`F9`) Show/Hide the log console window. In order to prevent automatically showing the log console on errors and warning, disable the `Force Open` option.
-    * `Transfer Function Editor` (`F8`) Show/Hide the transfer function editor. You have to `Apply` changes in order to take effect.
-    * `Performance Metrics` (`F7`) Show/Hide the performance metrics window showing the fps or ms. 
-    * `Show/Hide All Windows` (`Ctrl + g`) Show/Hide all GUI windows (corresponding LUA/CLI option: `mmSetGUIVisible(<bool>)/mmGetGUIVisible()`/ `guishow`).
-    * `Windows Docking Preset` Load the docking preset for all windows.
-* `Screenshot` 
-    * `Select Filename` (`megamol_screenshot.png`) Open file dialog for choosing file name for screenshot. Current filename is shown in menu. After each screenshot triggering a incrementing suffix (`_1`) is appended to the initially given filename. This way the file name does not have to be changed for each screenshot.
-    * `Trigger` (`F2`) Trigger screenshot.
-* `Render`  
-    * `Toggle Main Views` (`F3`) Toggle between available main views. After toggling last main view intermediate state disables all main views.
-* `Settings`    
-    * `Style` Select predefined GUI Style (ImGui Dark Colors, ImGui Light Colors, Corporate Gray, Corporate White).
-    * `Font` Select predefined GUI Style.
+* **`File`**
+    * **`Load Project`** (`Ctrl + l`) Load project from file (lua).
+    * **`Save Project`** (`Ctrl + s`) Save the current project to file (lua). *If you want to save the current **GUI state**, check the option `Save GUI state` in the file dialog!* (corresponding LUA option: `mmSetGUIState(>JSON String>)/mmgetGUIState()`)
+    * **`Exit`** (`Alt + F4`) End the program.
+* **`Windows`** 
+    * **`Menu`** (`F12`) Show/Hide the menu.
+    * **`Configurator`** (`F11`) Show/Hide the configurator window. See detailed description below.
+    * **`Parameters`** (`F10`) Show/Hide the parameter window. *In order to enable more options to change the parameters appearance (widget), you can switch the `Mode` from **Basic** to **Expert**.*
+    * **`Log Console`** (`F9`) Show/Hide the log console window. In order to prevent automatically showing the log console on errors and warning, disable the `Force Open` option.
+    * **`Transfer Function Editor`** (`F8`) Show/Hide the transfer function editor. You have to `Apply` changes in order to take effect.
+    * **`Performance Metrics`** (`F7`) Show/Hide the performance metrics window showing the fps or ms. 
+    * **`Show/Hide All Windows`** (`Ctrl + g`) Show/Hide all GUI windows (corresponding LUA/CLI option: `mmSetGUIVisible(<bool>)/mmGetGUIVisible()`/ `guishow`).
+    * **`Windows Docking Preset`** Load the docking preset for all windows.
+* **`Screenshot` 
+    * **`Select Filename`** (`megamol_screenshot.png`) Open file dialog for choosing file name for screenshot. Current filename is shown in menu. After each screenshot triggering a incrementing suffix (`_1`) is appended to the initially given filename. This way the file name does not have to be changed for each screenshot.
+    * **`Trigger`** (`F2`) Trigger screenshot.
+* **`Projects`** 
+    * *`<Names of currently opened projects>`* Click circle button to run stopped project.
+      * **`Toggle Graph Entry`** (`F3`) Toggle between available graph entries. After toggling graph entry, intermediate state disables all graph entries.
+* **`Settings`**    
+    * **`Style`** Select predefined GUI Style (ImGui Dark Colors, ImGui Light Colors, Corporate Gray, Corporate White).
+    * **`Font`** Select predefined GUI Style.
         * `Select Available Font` Choose among preloaded fonts.
         * `Load font from file` Load new font from TTF-file (se provided fonts in /share/resources/fonts/) in any desired size.  
-    * `Scale` Select fixed GUI scaling (100%, 150%, 200%, 250%, 300%). Support for high DPI displays. (corresponding LUA/CLI option: `mmSetGUIScale(<float>)/mmGetGUIScale()` / `guiscale`)
-* `Help`
-    * `About`: Some information and links concerning the currently running MegaMol.
+    * **`Scale`** Select fixed GUI scaling (100%, 150%, 200%, 250%, 300%). Support for high DPI displays. (corresponding LUA/CLI option: `mmSetGUIScale(<float>)/mmGetGUIScale()` / `guiscale`)
+* **`Help`**
+    * **`About`**: Some information and links concerning the currently running MegaMol.
 
 ### Configurator
 
@@ -86,18 +87,18 @@ The project configurator is part of the GUI and can be opened via the main menu:
 
 #### Main Menu
 
-* `File`
-    * `New Project` 
-    * `Load Project` 
-        * `File` Load existing project from a file.
-        * `Running` Load currently running project.
-    * `Add Project` 
-        * `File` Add existing project from a file to currently selected project.
-        * `Running` Add currently running project to currently selected project.
-    * `Save Project` (`Ctrl + Shift + s`) Save the project of the currently selected tab to file (lua).
-* `View`
-    * `Modules Sidebar` Show/Hide sidebar with module stock list.
-    * `Parameter Sidebar` Show/Hide sidebar with parameters of currently selected module.
+* **`File`**
+    * **`New Project`** 
+    * **`Load Project`** 
+        * **`File`** Load existing project from a file.
+        * **`Running`** Load currently running project.
+    * **`Add Project`** 
+        * **`File`** Add existing project from a file to currently selected project.
+        * **`Running`** Add currently running project to currently selected project.
+    * **`Save Project`** (`Ctrl + Shift + s`) Save the project of the currently selected tab to file (lua).
+* **`View`**
+    * **`Modules Sidebar`** Show/Hide sidebar with module stock list.
+    * **`Parameter Sidebar`** Show/Hide sidebar with parameters of currently selected module.
 
 #### *Module Stock List* Sidebar
 
@@ -123,7 +124,7 @@ The project configurator is part of the GUI and can be opened via the main menu:
 * `Slot Names` Show/Hide slot names.
 * `Layout Graph` Apply simple layout of the project graph.
 
-##### Graph
+##### Graph *(= Node-Link-Diagram)*
 
 * Call Creation
     * Drag and Drop from Call Slot to another highlighted compatible Call Slot.
