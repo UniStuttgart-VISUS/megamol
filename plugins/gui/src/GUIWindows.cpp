@@ -870,7 +870,7 @@ void megamol::gui::GUIWindows::SetClipboardFunc(const char* (*get_clipboard_func
 
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
-    
+
     // 1) Load all known calls from core instance ONCE ---------------------------
     if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1690,7 +1690,8 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
 
 void GUIWindows::drawMenu(void) {
 
-    if (!this->state.menu_visible) return;
+    if (!this->state.menu_visible)
+        return;
 
     ImGuiStyle& style = ImGui::GetStyle();
 
