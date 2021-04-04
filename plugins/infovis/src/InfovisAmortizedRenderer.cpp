@@ -266,10 +266,12 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
             projMatrix_column[i] = glm::value_ptr(pm)[i];
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4 * ssLevel, 0, GL_RGB, GL_FLOAT, 0);
-
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, imStoreA);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, imStoreB);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
     if (approach == 4) {
@@ -408,9 +410,9 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
                     glm::fvec3((-1.0 * (float) a - 1.0 - 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
             }
         }
-        //glActiveTexture(GL_TEXTURE4);
-        //glBindTexture(GL_TEXTURE_2D, pushImage);
-        //glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, pushImage);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w/a, h/a);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, imStoreA);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
@@ -499,12 +501,14 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
 
     pc_reconstruction_shdr_array[approach]->Enable();
 
-    glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("src_tex2D"), 10);
+    //glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("src_tex2D"), 10);
 
     glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
 
     glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("h"), h);
     glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("w"), w);
+    glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("ow"), windowWidth);
+    glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("oh"), windowHeight);
     glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("approach"), approach);
     glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("frametype"), frametype);
     glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("ssLevel"), ssLevel);
@@ -595,6 +599,8 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         int a = amortLevel.Param<core::param::IntParam>()->Value();
         int w = cam.resolution_gate().width();
         int h = cam.resolution_gate().height();
+        windowWidth = w;
+        windowHeight = h;
         int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
         int approach = this->approachEnumSlot.Param<core::param::EnumParam>()->Value();
 

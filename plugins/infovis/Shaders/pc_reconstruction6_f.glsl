@@ -4,12 +4,14 @@ uniform sampler2D src_tex2D;
 layout (binding=5, rgba32f) uniform image2D StoreA;
 layout (binding=6, rgba32f) uniform image2D StoreB;
 
-layout (binding = 4, rgba32f) uniform image2DArray StoreArray;
+//layout (binding = 4, rgba32f) uniform image2DArray StoreArray;
 
 uniform int frametype;
 uniform int parity;
 uniform int h;
 uniform int w;
+uniform int oh;
+uniform int ow;
 uniform int approach;
 uniform int amortLevel;
 uniform mat4 moveM;
@@ -44,7 +46,7 @@ void main()
         }
         imageStore(StoreA, iCoord, tempColor);
         if(frametype == i){
-            imageStore(StoreA, iCoord, texture(src_tex2D, uv_coord));
+            imageStore(StoreA, iCoord, texelFetch(src_tex2D, iCoord /amortLevel,0));
         }
         frag_out = imageLoad(StoreA, iCoord);
     }else{
@@ -56,10 +58,10 @@ void main()
         }
         imageStore(StoreB, iCoord, tempColor);
         if(frametype == i){
-            imageStore(StoreB, iCoord, texture(src_tex2D, uv_coord));
+            imageStore(StoreB, iCoord, texelFetch(src_tex2D, iCoord/amortLevel, 0));
         }
         frag_out = imageLoad(StoreB, iCoord);
     }
     //imageStore(StoreArray, ivec3(iCoord.x, iCoord.y, frametype % 2), imageLoad(StoreB, iCoord));
-    //frag_out = imageLoad(StoreArray, ivec3(iCoord.x, iCoord.y, frametype % 2));
+    //frag_out = texelFetch(src_tex2D, iCoord/amortLevel, 0);
 }

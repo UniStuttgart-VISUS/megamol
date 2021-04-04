@@ -223,43 +223,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenBuffers(1, &filtersBuffer);
     glGenBuffers(1, &minmaxBuffer);
     glGenBuffers(1, &counterBuffer);
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("GENERATED");
-
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert0", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag0", fragment_shader_src);
-    pc_reconstruction0_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    pc_reconstruction0_shdr->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    pc_reconstruction0_shdr->Link();
-
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert1", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag1", fragment_shader_src);
-    pc_reconstruction1_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    pc_reconstruction1_shdr->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    pc_reconstruction1_shdr->Link();
-
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert2", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag2", fragment_shader_src);
-    pc_reconstruction2_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    pc_reconstruction2_shdr->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    pc_reconstruction2_shdr->Link();
-
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert3", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag3", fragment_shader_src);
-    pc_reconstruction3_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    pc_reconstruction3_shdr->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    pc_reconstruction3_shdr->Link();
-
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert3", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag3h", fragment_shader_src);
-    pc_reconstruction3h_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    pc_reconstruction3h_shdr->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    pc_reconstruction3h_shdr->Link();
-
 
 #ifndef REMOVE_TEXT
     if (!font.Initialise(this->GetCoreInstance()))

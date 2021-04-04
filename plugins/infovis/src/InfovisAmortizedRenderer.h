@@ -103,6 +103,8 @@ namespace infovis {
         int oldH = -1;
         int oldssLevel = -1;
         int oldaLevel = -1;
+        int windowWidth = 1;
+        int windowHeight = 1;
 
         GLint origFBO = 0;
         int framesNeeded = 1;
