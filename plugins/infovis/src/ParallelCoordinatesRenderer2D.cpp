@@ -802,9 +802,12 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
     glUniform2f(prog.ParameterLocation("mousePressed"), x0, y0);
     glUniform2f(prog.ParameterLocation("mouseReleased"), x1, y1);
 
+    glUniform1i(prog.ParameterLocation("width"), windowWidth);
+    glUniform1i(prog.ParameterLocation("height"), windowHeight);
+
     glUniform4fv(prog.ParameterLocation("indicatorColor"), 1, color);
     glDisable(GL_DEPTH_TEST);
-    glDrawArrays(GL_LINES, 0, 2);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     prog.Disable();
 }
 

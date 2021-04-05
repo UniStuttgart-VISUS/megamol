@@ -91,6 +91,9 @@ void main()
       <snippet name="::pc_item_stroke::uniforms" />
       <snippet type="string">
         <![CDATA[
+uniform int width;
+uniform int height;
+
 void main()
 {
 #if 0
@@ -110,9 +113,19 @@ vec2 from = vec2(left,bottom);
 vec2 to = mouseReleased*vec2(right,top);
 #endif
 
-  vec4 vertex = vec4((1 - gl_VertexID) * from + gl_VertexID * to, pc_item_defaultDepth, 1.0);
+  vec2 dir = normalize((projection * modelView * vec4(to,0,0) - projection * modelView * vec4(from,0,0)).xy);
+  dir.x *= width;
+  dir.y *= height;
+  vec2 offset = vec2(-dir.y, dir.x);
 
-  gl_Position = projection * modelView * vertex;
+  offset = normalize(offset);
+
+  int side = gl_VertexID / 2 - gl_VertexID/3;
+  vec4 vertex = vec4((1 - (gl_VertexID % 2)) * from + (gl_VertexID % 2) * to, pc_item_defaultDepth, 1.0);
+  offset = normalize(vec2(offset.x * width, offset.y * height));
+  offset = offset/height;
+
+  gl_Position = (projection * modelView * vertex) + vec4(1 * offset.xy, 0, 0) + side * vec4(2* -offset, 0, 0);
 }
       ]]>
       </snippet>
