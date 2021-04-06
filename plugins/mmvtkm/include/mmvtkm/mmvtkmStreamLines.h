@@ -385,6 +385,7 @@ private:
     bool streamlineUpdate_;
     bool planeUpdate_;
     bool planeAppearanceUpdate_;
+    bool hasBeenTraversed_;
 
 	/** Hack to have the dirtyflag from the psSeedPlaneNormal after its callback function */
 	bool planeNormalDirtyFlag_;

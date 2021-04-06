@@ -63,6 +63,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , streamlineUpdate_(true)
     , planeUpdate_(false)
     , planeAppearanceUpdate_(false)
+    , hasBeenTraversed_(false)
     , planeNormalDirtyFlag_(false)
     , newVersion_(1)
     , meshDataAccess_({nullptr, {}})
@@ -91,7 +92,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , borderLineT_(0.f)
     , borderLineP_(0.f)
     , borderLineQ_(0.f)
-    , liveSeedPlane_{}
+    , liveSeedPlane_{4, glm::vec3(0.f)}
 	, liveCopy_{}
     , originalSeedPlane_{}
     , stpqSeedPlane_{}
@@ -136,7 +137,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->psNumStreamlineSeeds_.SetParameter(new core::param::IntParam(numSeeds_, 0));
     this->MakeSlotAvailable(&this->psNumStreamlineSeeds_);
 
-    this->psSeedStrategy_.SetParameter(new core::param::EnumParam(1));
+    this->psSeedStrategy_.SetParameter(new core::param::EnumParam(0));
     this->psSeedStrategy_.Param<core::param::EnumParam>()->SetTypePair(0, "naive rand()");
     this->psSeedStrategy_.Param<core::param::EnumParam>()->SetTypePair(1, "sobol sequence");
     this->psSeedStrategy_.Param<core::param::EnumParam>()->SetTypePair(2, "uniform");
@@ -926,6 +927,11 @@ void mmvtkmStreamLines::orderPolygonVertices(std::vector<glm::vec3>& vertices) {
  * represented by the triangles.
  */
 std::vector<mmvtkmStreamLines::Triangle> mmvtkmStreamLines::decomposePolygon(const std::vector<glm::vec3>& polygon) {
+    if (polygon.size() == 0) {
+        core::utility::log::Log::DefaultLog.WriteError("An empty vector cannot be decomposed into triangles. File %s at line %d. \n", __FILE__, __LINE__);
+        return {};
+    }
+
     std::vector<Triangle> triangles;
 
     int numVertices = polygon.size();
@@ -1086,8 +1092,8 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
     
     bool vtkmUpdate = rhsVtkmDc->HasUpdate();
     // plane calculation part here
-    if (vtkmUpdate || planeUpdate_) {
-        if (vtkmUpdate) {
+    if (vtkmUpdate || planeUpdate_ || !hasBeenTraversed_) {
+        if (vtkmUpdate || !hasBeenTraversed_) {
             if (!(*rhsVtkmDc)(1)) {
                 return false;
             }
@@ -1125,6 +1131,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         stpqSeedPlane_ = liveSeedPlane_;
 
         planeUpdate_ = false;
+        hasBeenTraversed_ = true;
     }
 
 
@@ -1155,9 +1162,9 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
                 } else if (seedStrategy_ == 1) {
                     s = sobol::sample(cnt, 0);
                     t = sobol::sample(cnt, 1);
-                    std::cout << cnt;
+                    /*std::cout << cnt;
                     std::cout << ": sobol s: " << s << " "
-                              << "sobol t: " << t << "\n";
+                              << "sobol t: " << t << "\n";*/
                 } else if (seedStrategy_ == 2) {
 
                 }
