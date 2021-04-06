@@ -91,9 +91,9 @@ void main(void) {
     vec2 duv = dscale * (dFdx(texCoord) + dFdy(texCoord));
     vec4 box = vec4(texCoord-duv, texCoord+duv);
     float asum = supersample( box.xy, smootingEdge )
-                 + supersample( box.zw, smootingEdge )
-                 + supersample( box.xw, smootingEdge )
-                 + supersample( box.zy, smootingEdge );
+               + supersample( box.zw, smootingEdge )
+               + supersample( box.xw, smootingEdge )
+               + supersample( box.zy, smootingEdge );
     // Weighted average, with 4 extra points having 0.5 weight each, so 1 + 0.5*4 = 3 is the divisor
     // -------------------------------------------------------------------------
        
