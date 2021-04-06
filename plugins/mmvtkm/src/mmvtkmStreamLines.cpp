@@ -61,6 +61,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
           "re-sample", "Press to re-sample the seeds of the streamlines. This deletes current streamlines.")
     , psToggleGhostPlane_("showGhostPlane", "Press to hide/show the ghost plane")
     , streamlineUpdate_(true)
+    , resampleSeeds_(false)
     , planeUpdate_(false)
     , planeAppearanceUpdate_(false)
     , hasBeenTraversed_(false)
@@ -662,7 +663,7 @@ bool mmvtkmStreamLines::planeModeChanged(core::param::ParamSlot& slot) {
  * mmvtkmStreamLines::setResampleSeeds
  */
 bool mmvtkmStreamLines::setResampleSeeds(core::param::ParamSlot& slot) {
-    streamlineUpdate_ = true;
+    resampleSeeds_ = true;
     return true;
 }
 
@@ -1147,7 +1148,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
     }
 
 
-    if (vtkmUpdate || streamlineUpdate_) {
+    if (vtkmUpdate || streamlineUpdate_ || resampleSeeds_) {
         // decompose polygon into triangles
         seedPlaneTriangles_.clear();
         seedPlaneTriangles_ = decomposePolygon(liveSeedPlane_);
@@ -1314,7 +1315,10 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         if (!hasBeenTraversed_) {
             mmvtkmStreamLines::ghostPlane(psSeedPlaneNormal_);
         }
-        mmvtkmStreamLines::assignSTPQ(psSeedPlaneS_);
+
+        if (!resampleSeeds_) {
+            mmvtkmStreamLines::assignSTPQ(psSeedPlaneS_);
+        }
 
         // adds the dummy mdac for the u and v border lines
         createAndAddMeshDataToCall(borderlineIdentifier_, borderLine_, borderColors_, borderIdcs_, borderLine_.size(),
@@ -1328,6 +1332,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
 
         streamlineUpdate_ = false;
+        resampleSeeds_ = false;
         hasBeenTraversed_ = true;
         
         return true;

@@ -386,6 +386,7 @@ private:
 
 	/** Update flags used to separate different calculations */
     bool streamlineUpdate_;
+    bool resampleSeeds_;
     bool planeUpdate_;
     bool planeAppearanceUpdate_;
     bool hasBeenTraversed_;
