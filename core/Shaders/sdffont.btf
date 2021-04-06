@@ -61,15 +61,14 @@ uniform int       renderMode         = RENDERMODE_FILL;
 
 layout(location = 0) out vec4 outFragColor;
 
-float supersample(in vec2 uv, float w, float alpha) {
-    return smoothstep(SDF_THRESHOLD - w, SDF_THRESHOLD + w, alpha);
+float supersample(in vec2 uv, float w) {
+    return smoothstep(SDF_THRESHOLD - w, SDF_THRESHOLD + w, texture(fontTexture, uv).a);
 }
 
 void main(void) {
 
     float outline_fraction = 0.0;
-    float tex_alpha = texture(fontTexture, texCoord).a;
-    float distance = tex_alpha;
+    float distance = texture(fontTexture, texCoord).a;
     if (distance == 0.0)  {
         discard;
     }
@@ -91,10 +90,10 @@ void main(void) {
     float dscale = 0.354; // half of 1/sqrt2; you can play with this
     vec2 duv = dscale * (dFdx(texCoord) + dFdy(texCoord));
     vec4 box = vec4(texCoord-duv, texCoord+duv);
-    float asum = supersample( box.xy, smootingEdge, tex_alpha )
-            + supersample( box.zw, smootingEdge, tex_alpha )
-            + supersample( box.xw, smootingEdge, tex_alpha )
-            + supersample( box.zy, smootingEdge, tex_alpha );
+    float asum = supersample( box.xy, smootingEdge )
+                 + supersample( box.zw, smootingEdge )
+                 + supersample( box.xw, smootingEdge )
+                 + supersample( box.zy, smootingEdge );
     // Weighted average, with 4 extra points having 0.5 weight each, so 1 + 0.5*4 = 3 is the divisor
     // -------------------------------------------------------------------------
        
