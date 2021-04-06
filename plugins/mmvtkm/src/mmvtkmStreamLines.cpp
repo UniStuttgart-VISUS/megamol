@@ -189,7 +189,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
 	this->psSeedPlaneSTPQ_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
 	this->psSeedPlaneSTPQ_.SetUpdateCallback(&mmvtkmStreamLines::setSTQP);
 	this->MakeSlotAvailable(&this->psSeedPlaneSTPQ_);
-        this->psSeedPlaneSTPQ_.Parameter()->SetGUIPresentation(
+    this->psSeedPlaneSTPQ_.Parameter()->SetGUIPresentation(
             core::param::AbstractParamPresentation::Presentation::Knob);
 
     this->psSeedPlaneS_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
@@ -205,21 +205,22 @@ mmvtkmStreamLines::mmvtkmStreamLines()
 	this->psSeedPlaneP_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
 	this->psSeedPlaneP_.SetUpdateCallback(&mmvtkmStreamLines::assignSTPQ);
 	this->MakeSlotAvailable(&this->psSeedPlaneP_);
-        this->psSeedPlaneP_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
+    this->psSeedPlaneP_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
 
 	this->psSeedPlaneQ_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
 	this->psSeedPlaneQ_.SetUpdateCallback(&mmvtkmStreamLines::assignSTPQ);
 	this->MakeSlotAvailable(&this->psSeedPlaneQ_);
-        this->psSeedPlaneQ_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
+    this->psSeedPlaneQ_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
 
 	this->psRotateSeedPlane_.SetParameter(new core::param::FloatParam(0.f));
 	this->psRotateSeedPlane_.SetUpdateCallback(&mmvtkmStreamLines::rotateSeedPlane);
 	this->MakeSlotAvailable(&this->psRotateSeedPlane_);
-        this->psRotateSeedPlane_.Parameter()->SetGUIPresentation(
+    this->psRotateSeedPlane_.Parameter()->SetGUIPresentation(
             core::param::AbstractParamPresentation::Presentation::Knob);
 
     this->psSeedPlaneColor_.SetParameter(
         new core::param::ColorParam(red_.x, red_.y, red_.z, 1.f));
+    this->psSeedPlaneColor_.SetUpdateCallback(&mmvtkmStreamLines::setSeedPlaneColor);
     this->MakeSlotAvailable(&this->psSeedPlaneColor_);
 
     this->psApplyChanges_.SetParameter(new core::param::ButtonParam());
@@ -274,6 +275,18 @@ void mmvtkmStreamLines::rotateGhostPlane(const float spRot) {
 		rotatedGhostCopy_[i] = newV;
 		ghostPlane_[i] = newV + zFight;
 	}
+}
+
+
+/**
+ * mmvtkmStreamLines::setSeedPlaneColor
+ */
+bool mmvtkmStreamLines::setSeedPlaneColor(core::param::ParamSlot& slot) {
+    std::array<float, 4> col = slot.Param<core::param::ColorParam>()->Value();
+    seedPlaneColor_ = glm::vec3(col[0], col[1], col[2]);
+    seedPlaneAlpha_ = col[3];
+
+    return true;
 }
 
 
@@ -740,7 +753,7 @@ bool mmvtkmStreamLines::setPlaneUpdate() {
     seedPlanePoint_ = {point.GetX(), point.GetY(), point.GetZ()};
     // psSeedPlaneDistance_ = this->seedPlaneDistance_.Param<core::param::FloatParam>()->Value();
 
-
+    // TODO: more checks for all other slots
     if (isNullVector(normal)) {
         core::utility::log::Log::DefaultLog.WriteError("Plane normal is null vector.");
 
@@ -1008,7 +1021,6 @@ bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::string const& identifier
         return false;
     }
 
-
     mesh::MeshDataAccessCollection::VertexAttribute va;
     va.data = reinterpret_cast<uint8_t*>(data.data());
     va.byte_size = 3 * (size_t)numPoints * sizeof(float);
@@ -1131,7 +1143,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         stpqSeedPlane_ = liveSeedPlane_;
 
         planeUpdate_ = false;
-        hasBeenTraversed_ = true;
     }
 
 
@@ -1304,6 +1315,9 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             seedPlaneIndices_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
 		// adds the dummy mdac for the ghost plane
+        if (!hasBeenTraversed_) {
+            mmvtkmStreamLines::ghostPlane(psSeedPlaneNormal_);
+        }
         createAndAddMeshDataToCall(ghostPlaneIdentifier_, ghostPlane_, ghostColors_, ghostIdcs_, ghostPlane_.size(), ghostIdcs_.size(), \
             mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
@@ -1311,10 +1325,12 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
 
         streamlineUpdate_ = false;
+        hasBeenTraversed_ = true;
         
         return true;
     }
 
+    hasBeenTraversed_ = true;
     return true;
 }
 

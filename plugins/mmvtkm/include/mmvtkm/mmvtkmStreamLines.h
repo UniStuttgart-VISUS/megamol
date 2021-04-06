@@ -154,6 +154,9 @@ private:
 	/** Function to rotate the ghostplane around its normal */
 	void rotateGhostPlane(const float spRot);
 
+    /** Function to set the seed plane color */
+    bool setSeedPlaneColor(core::param::ParamSlot& slot);
+
 	/** Callback function to rotate the seedplane around its normal. This includes rotating the ghost plane */
 	bool rotateSeedPlane(core::param::ParamSlot& slot);
 
