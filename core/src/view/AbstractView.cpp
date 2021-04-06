@@ -49,7 +49,7 @@ view::AbstractView::AbstractView(void)
         , _autoLoadCamSettingsSlot("camstore::autoLoadSettings",
               "When activated, the view will load the camera settings from disk at startup. "
               "This only works if you use .lua project files")
-        , _resetViewSlot("view::resetView", "Triggers the reset of the view")
+        , _resetViewSlot("defaultView::resetView", "Triggers the reset of the view")
         , _resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
         , _hooks()
         , _timeCtrl()

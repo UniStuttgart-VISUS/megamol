@@ -40,11 +40,6 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
         std::string vertex_src =
             "#version 130 \n"
             "\n"
-            "#define BIT_OFFSET_ID           7 \n"
-            "#define BIT_OFFSET_FACE         2 \n"
-            "#define BIT_OFFSET_ORIENTATION  0 \n"
-            "\n"
-            "uniform int picking_id; \n"
             "uniform mat4 rot_mx; \n"
             "uniform mat4 model_mx; \n"
             "uniform mat4 proj_mx; \n"
@@ -55,7 +50,8 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "out vec2 tex_coord; \n"
             "flat out vec3 texture_color; \n"
             "flat out vec3 vertex_color; \n"
-            "flat out int encoded_id; \n"
+            "flat out int current_face_id; \n"
+            "flat out int current_orientation_id; \n"
             "\n"
             "void main() { \n"
             "    // Vertex indices must fit enum order in megamol::core::view::View3D_2::defaultview \n"
@@ -98,22 +94,19 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "    float vertex_index            = float(gl_VertexID); \n"
             "    float mod_index               = vertex_index - (12.0 * floor(vertex_index/12.0)); \n"
             "    int current_face_index        = int(gl_VertexID / 12);        // in range [0-5] \n"
-            "    int current_face_id           = current_face_index; \n"
+            "    current_face_id               = current_face_index;           // same indices as  in megamol::core::view::AbstractView3D::DefaultView \n"
             "    int current_orientation_index = int(floor(mod_index / 3.0));  // in range [0-3] \n"
-            "    int current_orientation_id    = current_orientation_index; \n"
-            "    encoded_id                    = int((picking_id             << BIT_OFFSET_ID)          | \n"
-            "                                        (current_face_id        << BIT_OFFSET_FACE)        | \n"
-            "                                        (current_orientation_id << BIT_OFFSET_ORIENTATION)  ); \n"
+            "    current_orientation_id        = current_orientation_index;    // same indices as  in megamol::core::view::AbstractView3D::DefaultOrientation \n"
             "    \n"
             "    // Vertex Color \n"
             "    vertex_color = colors[current_face_index] * 0.3; \n"
             "    if (face_id == current_face_id) { \n"
-            "        vertex_color = colors[current_face_index] * (0.4 + (0.6 - 0.6*(float(current_orientation_index)/3.0))); \n"
+            "        vertex_color = colors[current_face_index] * (0.4 + (0.6 - 0.6 * (float(current_orientation_index) / 3.0))); \n"
             "    } \n"
             "    if ((face_hover_id == current_face_id) && (orientation_hover_id == current_orientation_id)) { \n"
             "        vertex_color = colors[current_face_index] + vec3(0.5, 0.5, 0.5); \n"
             "        vertex_color = clamp(vertex_color, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0)); \n"
-            "        vertex_color *= (0.5 + (0.5 - 0.5*(float(current_orientation_index)/3.0))); \n"
+            "        vertex_color *= (0.5 + (0.5 - 0.5 * (float(current_orientation_index) / 3.0))); \n"
             "    } \n"
             "    \n"
             "    // Up Arrow Texture \n"
@@ -133,13 +126,45 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "#version 130  \n"
             "#extension GL_ARB_explicit_attrib_location : require \n"
             "\n"
+            "#define BIT_OFFSET_ID           7 \n"
+            "#define BIT_OFFSET_FACE         2 \n"
+            "#define BIT_OFFSET_ORIENTATION  0 \n"
+            "\n"
+            "#define FACE_FRONT                  0 \n"
+            "#define FACE_BACK                   1 \n"
+            "#define FACE_RIGHT                  2 \n"
+            "#define FACE_LEFT                   3 \n"
+            "#define FACE_TOP                    4 \n"
+            "#define FACE_BOTTOM                 5 \n"
+            "#define CORNER_TOP_LEFT_FRONT       6 \n"
+            "#define CORNER_TOP_RIGHT_FRONT      7 \n"
+            "#define CORNER_TOP_LEFT_BACK        8 \n"
+            "#define CORNER_TOP_RIGHT_BACK       9 \n"
+            "#define CORNER_BOTTOM_LEFT_FRONT    10 \n"
+            "#define CORNER_BOTTOM_RIGHT_FRONT   11 \n"
+            "#define CORNER_BOTTOM_LEFT_BACK     12 \n"
+            "#define CORNER_BOTTOM_RIGHT_BACK    13 \n"
+            "#define EDGE_TOP_FRONT              14 \n"
+            "#define EDGE_TOP_LEFT               15 \n"
+            "#define EDGE_TOP_RIGHT              16 \n"
+            "#define EDGE_TOP_BACK               17 \n"
+            "#define EDGE_BOTTOM_FRONT           18 \n"
+            "#define EDGE_BOTTOM_LEFT            19 \n"
+            "#define EDGE_BOTTOM_RIGHT           20 \n"
+            "#define EDGE_BOTTOM_BACK            21 \n"
+            "#define EDGE_FRONT_LEFT             22 \n"
+            "#define EDGE_FRONT_RIGHT            23 \n"
+            "#define EDGE_BACK_LEFT              24 \n"
+            "#define EDGE_BACK_RIGHT             25 \n"
+            "\n"
             "in vec2 tex_coord; \n"
             "flat in vec3 texture_color; \n"
             "flat in vec3 vertex_color; \n"
-            "flat in int encoded_id; \n"
+            "flat in int current_face_id; \n"
+            "flat in int current_orientation_id; \n"
             "uniform sampler2D tex; \n"
-            "uniform int edge_hover_id; \n"
-            "uniform int corner_hover_id; \n"
+            "uniform int picking_id; \n"
+            "uniform int face_hover_id; \n"
             "layout(location = 0) out vec4 outFragColor; \n"
             "layout(location = 1) out vec2 outFragInfo; \n"
             "\n"
@@ -148,38 +173,107 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "} \n"
             "\n"
             "void main(void) { \n"
+            "    outFragColor = vec4(vertex_color, 1.0); \n"
+            "    \n"
+            "    // Arrow Texture - Supersample 4 extra points \n"
             "    float alpha = texture(tex, tex_coord).a; \n"
-            "    // Supersample - 4 extra points \n"
-            "    float smootingEdge = fwidth(alpha); \n"
-            "    float dscale = 0.354; // half of 1/sqrt2; you can play with this \n"
-            "    vec2 duv = dscale * (dFdx(tex_coord) + dFdy(tex_coord)); \n"
-            "    vec4 box = vec4(tex_coord-duv, tex_coord+duv); \n"
-            "    float asum = supersample(box.xy, smootingEdge, alpha) \n"
-            "               + supersample(box.zw, smootingEdge, alpha) \n"
-            "               + supersample(box.xw, smootingEdge, alpha) \n"
-            "               + supersample(box.zy, smootingEdge, alpha); \n"
-            "    alpha = (alpha + 0.5 * asum) / 3.0; \n"
             "    if (alpha > 0.0) { \n"
-            "        outFragColor = mix(vec4(vertex_color, 1.0), vec4(texture_color, 1.0), alpha); \n"
-            "    } else { \n"
-            "        outFragColor = vec4(vertex_color, 1.0); \n"
+            "        float smootingEdge = fwidth(alpha); \n"
+            "        float dscale = 0.354; // half of 1/sqrt2; you can play with this \n"
+            "        vec2 duv = dscale * (dFdx(tex_coord) + dFdy(tex_coord)); \n"
+            "        vec4 box = vec4(tex_coord-duv, tex_coord+duv); \n"
+            "        float asum = supersample(box.xy, smootingEdge, alpha) \n"
+            "                   + supersample(box.zw, smootingEdge, alpha) \n"
+            "                   + supersample(box.xw, smootingEdge, alpha) \n"
+            "                   + supersample(box.zy, smootingEdge, alpha); \n"
+            "        alpha = (alpha + 0.5 * asum) / 3.0; \n"
+            "        if (alpha > 0.0) { \n"
+            "            outFragColor = mix(vec4(vertex_color, 1.0), vec4(texture_color, 1.0), alpha); \n"
+            "        } \n"
             "    } \n"
-            "    // Edges \n"
-            "    const float de = 0.05; // must be in [0,1]\n"
-            "    if ((tex_coord.x > (1.0 - de)) || (tex_coord.y > (1.0 - de)) || \n"
-            "        (tex_coord.x < de)         || (tex_coord.y < de)) { \n"
-            "        outFragColor = vec4(0.0, 1.0, 0.0, 1.0); \n"
+            "    \n"
+            "    int id = current_face_id; \n"
+            "    const float de = 0.05; // must be in [0,1] \n"
+            "    const float dc = 0.2;  // must be in [0,1] \n"
+            "    bool highlight_corner = false; \n"
+            "    bool highlight_edge   = false; \n"
+            "    // ----- Corners ----- \n"
+            "    if ((tex_coord.x > (1.0 - dc)) && (tex_coord.y > (1.0 - dc))) {  // BOTTOM RIGHT \n "
+            "        if (current_face_id == FACE_FRONT)       id = CORNER_BOTTOM_RIGHT_FRONT; \n"
+            "        else if (current_face_id == FACE_BACK)   id = CORNER_BOTTOM_LEFT_BACK; \n"
+            "        else if (current_face_id == FACE_RIGHT)  id = CORNER_BOTTOM_RIGHT_BACK; \n"
+            "        else if (current_face_id == FACE_LEFT)   id = CORNER_BOTTOM_LEFT_FRONT; \n"
+            "        else if (current_face_id == FACE_TOP)    id = CORNER_TOP_RIGHT_FRONT; \n"
+            "        else if (current_face_id == FACE_BOTTOM) id = CORNER_BOTTOM_RIGHT_BACK; \n"
+            "        if (((current_face_id == FACE_FRONT)  && (face_hover_id == CORNER_BOTTOM_RIGHT_FRONT)) || \n"
+            "           ((current_face_id == FACE_BACK)    && (face_hover_id == CORNER_BOTTOM_LEFT_BACK))   || \n"
+            "           ((current_face_id == FACE_RIGHT)   && (face_hover_id == CORNER_BOTTOM_RIGHT_BACK))  || \n"
+            "           ((current_face_id == FACE_LEFT)    && (face_hover_id == CORNER_BOTTOM_LEFT_FRONT))  || \n"
+            "           ((current_face_id == FACE_TOP)     && (face_hover_id == CORNER_TOP_RIGHT_FRONT))    || \n"
+            "           ((current_face_id == FACE_BOTTOM)  && (face_hover_id == CORNER_BOTTOM_RIGHT_BACK)))  highlight_corner = true; \n"
+            "    } else if ((tex_coord.x < dc) && (tex_coord.y < dc)) {           // TOP LEFT \n"
+            "        if (current_face_id == FACE_FRONT)       id = CORNER_TOP_LEFT_FRONT; \n"
+            "        else if (current_face_id == FACE_BACK)   id = CORNER_TOP_RIGHT_BACK; \n"
+            "        else if (current_face_id == FACE_RIGHT)  id = CORNER_TOP_RIGHT_FRONT; \n"
+            "        else if (current_face_id == FACE_LEFT)   id = CORNER_TOP_LEFT_BACK; \n"
+            "        else if (current_face_id == FACE_TOP)    id = CORNER_TOP_LEFT_BACK; \n"
+            "        else if (current_face_id == FACE_BOTTOM) id = CORNER_BOTTOM_LEFT_FRONT; \n"
+            "        if (((current_face_id == FACE_FRONT) && (face_hover_id == CORNER_TOP_LEFT_FRONT))  || \n"
+            "           ((current_face_id == FACE_BACK)   && (face_hover_id == CORNER_TOP_RIGHT_BACK))  || \n"
+            "           ((current_face_id == FACE_RIGHT)  && (face_hover_id == CORNER_TOP_RIGHT_FRONT)) || \n"
+            "           ((current_face_id == FACE_LEFT)   && (face_hover_id == CORNER_TOP_LEFT_BACK))   || \n"
+            "           ((current_face_id == FACE_TOP)    && (face_hover_id == CORNER_TOP_LEFT_BACK))   || \n"
+            "           ((current_face_id == FACE_BOTTOM) && (face_hover_id == CORNER_BOTTOM_LEFT_FRONT))) highlight_corner = true; \n"
+            "    } else if ((tex_coord.x < dc) && (tex_coord.y > (1.0 - dc))) {   // BOTTOM LEFT \n"
+            "        if (current_face_id == FACE_FRONT)       id = CORNER_BOTTOM_LEFT_FRONT; \n"
+            "        else if (current_face_id == FACE_BACK)   id = CORNER_BOTTOM_RIGHT_BACK; \n"
+            "        else if (current_face_id == FACE_RIGHT)  id = CORNER_BOTTOM_RIGHT_FRONT; \n"
+            "        else if (current_face_id == FACE_LEFT)   id = CORNER_BOTTOM_LEFT_BACK; \n"
+            "        else if (current_face_id == FACE_TOP)    id = CORNER_TOP_LEFT_FRONT; \n"
+            "        else if (current_face_id == FACE_BOTTOM) id = CORNER_BOTTOM_LEFT_BACK; \n"
+            "        if (((current_face_id == FACE_FRONT) && (face_hover_id == CORNER_BOTTOM_LEFT_FRONT))  || \n"
+            "           ((current_face_id == FACE_BACK)   && (face_hover_id == CORNER_BOTTOM_RIGHT_BACK))  || \n"
+            "           ((current_face_id == FACE_RIGHT)  && (face_hover_id == CORNER_BOTTOM_RIGHT_FRONT)) || \n"
+            "           ((current_face_id == FACE_LEFT)   && (face_hover_id == CORNER_BOTTOM_LEFT_BACK))   || \n"
+            "           ((current_face_id == FACE_TOP)    && (face_hover_id == CORNER_TOP_LEFT_FRONT))) highlight_corner = true; \n"
+            "    } else if ((tex_coord.x > (1.0 - dc)) && (tex_coord.y < dc)) {   // TOP RIGHT\n"
+            "        if (current_face_id == FACE_FRONT)       id = CORNER_TOP_RIGHT_FRONT; \n"
+            "        else if (current_face_id == FACE_BACK)   id = CORNER_TOP_LEFT_BACK; \n"
+            "        else if (current_face_id == FACE_RIGHT)  id = CORNER_TOP_RIGHT_BACK; \n"
+            "        else if (current_face_id == FACE_LEFT)   id = CORNER_TOP_LEFT_FRONT; \n"
+            "        else if (current_face_id == FACE_TOP)    id = CORNER_TOP_RIGHT_BACK; \n"
+            "        else if (current_face_id == FACE_BOTTOM) id = CORNER_BOTTOM_RIGHT_FRONT; \n"
+            "        if (((current_face_id == FACE_FRONT) && (face_hover_id == CORNER_TOP_RIGHT_FRONT)) || \n"
+            "           ((current_face_id == FACE_BACK)   && (face_hover_id == CORNER_TOP_LEFT_BACK))   || \n"
+            "           ((current_face_id == FACE_RIGHT)  && (face_hover_id == CORNER_TOP_RIGHT_BACK))  || \n"
+            "           ((current_face_id == FACE_LEFT)   && (face_hover_id == CORNER_TOP_LEFT_FRONT))  || \n"
+            "           ((current_face_id == FACE_TOP)    && (face_hover_id == CORNER_TOP_RIGHT_BACK))  || \n"
+            "           ((current_face_id == FACE_BOTTOM) && (face_hover_id == CORNER_BOTTOM_RIGHT_FRONT))) highlight_corner = true; \n"
+            "    // ----- Edges ----- \n"
+            "    } else if (tex_coord.x > (1.0 - de)) {                           // RIGHT \n"
+            "        \n"
+            "        \n"
+            "        highlight_edge = true; \n"
+            "    } else if (tex_coord.x < de) {                                   // LEFT \n"
+            "        \n"
+            "        \n"
+            "        highlight_edge = true; \n"
+            "    } else if (tex_coord.y > (1.0 - de)) {                           // BOTTOM \n"
+            "        \n"
+            "        \n"
+            "        highlight_edge = true; \n"
+            "    } else if (tex_coord.y < de) {                                   // TOP \n"
+            "        \n"
+            "        \n"
+            "        highlight_edge = true; \n"
             "    } \n"
-            "    // Corners \n"
-            "    const float dc = 0.1; // must be in [0,1]\n"
-            "    if (((tex_coord.x > (1.0 - dc)) && (tex_coord.y > (1.0 - dc))) || \n "
-            "        ((tex_coord.x < 0.1)        && (tex_coord.y < dc))         || \n"
-            "        ((tex_coord.x < dc)         && (tex_coord.y > (1.0 - dc))) || \n"
-            "        ((tex_coord.x > (1.0 - dc)) && (tex_coord.y < dc))) { \n"
-            "        outFragColor = vec4(1.0, 0.0, 0.0, 1.0); \n"
-            "    } \n"
+            "    \n"
+            "    if (highlight_corner) outFragColor = vec4(1.0, 1.0, 1.0, 1.0); \n"
+            "    if (highlight_edge)   outFragColor = vec4(0.25, 0.25, 0.25, 1.0); \n"
             "    // Ecoded ID \n"
-            "    // encoded_id = \n"
+            "    int encoded_id = int((picking_id             << BIT_OFFSET_ID)   | \n"
+            "                         (id                     << BIT_OFFSET_FACE) | \n"
+            "                         (current_orientation_id << BIT_OFFSET_ORIENTATION)); \n"
             "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
             "} ";
 
@@ -199,8 +293,8 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
         // Check for right picking ID
         if (picking_id == (picking_id & (manip.obj_id >> BIT_OFFSET_ID))) {
             // Extract face and orientation ID
-            int picked_face_id        = ((manip.obj_id >> BIT_OFFSET_FACE)        & 0b11111);
-            int picked_orientation_id = ((manip.obj_id >> BIT_OFFSET_ORIENTATION) & 0b11);
+            int picked_face_id        = static_cast<int>((manip.obj_id >> BIT_OFFSET_FACE)        & 0b11111);
+            int picked_orientation_id = static_cast<int>((manip.obj_id >> BIT_OFFSET_ORIENTATION) & 0b11);
 
             if (manip.type == InteractionType::SELECT) {
                 inout_face_id = picked_face_id;
@@ -233,7 +327,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
     glGetIntegerv(GL_VIEWPORT, viewport.data());
     int size = (100 * static_cast<int>(megamol::gui::gui_scaling.Get()));
     int x = viewport[2] - size;
-    int y = viewport[3] - size - ImGui::GetFrameHeightWithSpacing();
+    int y = viewport[3] - size - static_cast<int>(ImGui::GetFrameHeightWithSpacing());
     glViewport(x, y, size, size);
 
     this->shader->use();
@@ -326,7 +420,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int face_id, i
                                    "#extension GL_ARB_explicit_attrib_location : require \n"
                                    "in vec2 tex_coord; \n"
                                    "flat in int encoded_id; \n"
-                                   "uniform int face_id; \n"
+                                   "uniform int face_id; \n"       // XXX -> Only supported when in [0,5]!
                                    "uniform sampler2D tex; \n"
                                    "uniform vec3 color; \n"
                                    "layout(location = 0) out vec4 outFragColor; \n"
@@ -391,7 +485,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int face_id, i
     glGetIntegerv(GL_VIEWPORT, viewport.data());
     int size = (2 * 100 * static_cast<int>(megamol::gui::gui_scaling.Get()));
     int x = viewport[2] - size;
-    int y = viewport[3] - size - ImGui::GetFrameHeightWithSpacing();
+    int y = viewport[3] - size - static_cast<int>(ImGui::GetFrameHeightWithSpacing());
     glViewport(x, y, size, size);
 
     this->shader->use();
@@ -449,7 +543,7 @@ megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget(void)
         , last_presentation(param::AbstractParamPresentation::Presentation::Basic) {
 
     this->InitPresentation(Param_t::GROUP_3D_CUBE);
-    this->name = "view";
+    this->name = "defaultView";
 }
 
 
@@ -647,13 +741,12 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 }
             }
 
-            /*
+            /* DEACTIVATED
             if (hovered_arrow < 0) {
                 tooltip_text = "Rotate Right";
             } else if (hovered_arrow > 0) {
                 tooltip_text = "Rotate Left";
-            }
-            */
+            } */
 
             if (!tooltip_text.empty()) {
                 ImGui::BeginTooltip();

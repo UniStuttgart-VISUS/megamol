@@ -50,10 +50,10 @@ AbstractView3D::AbstractView3D(void)
     , _viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
     , _enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
     , _hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical")
-    , _cameraSetViewChooserParam("view::defaultView", "Choose a default view to look from")
-    , _cameraSetOrientationChooserParam("view::defaultOrientation", "Choose a default orientation to look from")
-    , _cameraViewOrientationParam("view::cubeOrientation", "Current camera orientation used for view cube.")
-    , _showViewCubeParam("view::showViewCube", "Shows view cube.")
+    , _cameraSetViewChooserParam("defaultView::defaultView", "Choose a default view to look from")
+    , _cameraSetOrientationChooserParam("defaultView::defaultOrientation", "Choose a default orientation to look from")
+    , _cameraViewOrientationParam("defaultView::cubeOrientation", "Current camera orientation used for view cube.")
+    , _showViewCubeParam("defaultView::showViewCube", "Shows view cube.")
     , _cameraPositionParam("cam::position", "")
     , _cameraOrientationParam("cam::orientation", "")
     , _cameraProjectionTypeParam("cam::projectiontype", "")
@@ -181,16 +181,36 @@ AbstractView3D::AbstractView3D(void)
     this->_orbitAltitudeManipulator.enable();
 
     auto defaultViewParam = new param::EnumParam(0);
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_FRONT, "Front");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_BACK, "Back");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_RIGHT, "Right");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_LEFT, "Left");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_TOP, "Top");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_BOTTOM, "Bottom");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_FRONT,               "FACE - Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_BACK,                "FACE - Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_RIGHT,               "FACE - Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_LEFT,                "FACE - Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_TOP,                 "FACE - Top");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_BOTTOM,              "FACE - Bottom");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_LEFT_FRONT,    "CORNER - Top Left Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT,   "CORNER - Top Right Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_LEFT_BACK ,    "CORNER - Top Left Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_RIGHT_BACK ,   "CORNER - Top Right Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT, "CORNER - Bottom Left Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT,"CORNER - Bottom Right Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK,  "CORNER - Bottom Left Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK, "CORNER - Bottom Right Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_FRONT,           "EDGE - Top Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_LEFT,            "EDGE - Top Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_RIGHT,           "EDGE - Top Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_BACK,            "EDGE - Top Nack");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_FRONT,        "EDGE - Bottom Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_LEFT,         "EDGE - Bottom Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_RIGHT,        "EDGE - Bottom Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_BACK,         "EDGE - Bottom Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_FRONT_LEFT,          "EDGE - Front Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_FRONT_RIGHT ,        "EDGE - Front Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BACK_LEFT,           "EDGE - Back Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BACK_RIGHT,          "EDGE - Back Right");
     defaultViewParam->SetGUIVisible(camparamvisibility);
     this->_cameraSetViewChooserParam.SetParameter(defaultViewParam),
-        this->MakeSlotAvailable(&this->_cameraSetViewChooserParam);
     this->_cameraSetViewChooserParam.SetUpdateCallback(&AbstractView::OnResetView);
+    this->MakeSlotAvailable(&this->_cameraSetViewChooserParam);
 
     auto defaultOrientationParam = new param::EnumParam(0);
     defaultOrientationParam->SetTypePair(DEFAULTORIENTATION_TOP, "Top");
@@ -199,7 +219,7 @@ AbstractView3D::AbstractView3D(void)
     defaultOrientationParam->SetTypePair(DEFAULTORIENTATION_LEFT, "Left");
     defaultOrientationParam->SetGUIVisible(camparamvisibility);
     this->_cameraSetOrientationChooserParam.SetParameter(defaultOrientationParam),
-        this->MakeSlotAvailable(&this->_cameraSetOrientationChooserParam);
+    this->MakeSlotAvailable(&this->_cameraSetOrientationChooserParam);
     this->_cameraSetOrientationChooserParam.SetUpdateCallback(&AbstractView::OnResetView);
 
     this->_cameraViewOrientationParam.SetParameter(

@@ -117,21 +117,21 @@ namespace gui {
         /**
          * Pass current GUI state.
          */
-        std::string GetState(bool as_lua) {
+        inline std::string GetState(bool as_lua) {
             return this->project_to_lua_string(as_lua);
         }
 
         /**
          * Pass current GUI visibility.
          */
-        bool GetVisibility(void) {
+        inline bool GetVisibility(void) const {
             return this->state.gui_visible;
         }
 
         /**
          * Pass current GUI scale.
          */
-        float GetScale() {
+        inline float GetScale() const {
             return gui_scaling.Get();
         }
 
@@ -150,7 +150,7 @@ namespace gui {
         bool GetTriggeredScreenshot(void);
 
         // Valid filename is only ensured after screenshot was triggered.
-        inline const std::string GetScreenshotFileName(void) const {
+        inline std::string GetScreenshotFileName(void) const {
             return this->state.screenshot_filepath;
         }
 
