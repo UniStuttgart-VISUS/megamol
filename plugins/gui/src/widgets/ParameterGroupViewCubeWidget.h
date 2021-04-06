@@ -34,6 +34,24 @@ namespace gui {
     private:
         ImageWidget image_up_arrow;
         std::shared_ptr<glowl::GLSLProgram> shader;
+
+        /// TEMP
+        enum Corners : int  {
+            CORNER_NONE          = 0,
+            CORNER_TOP_LEFT      = 1 << 0,
+            CORNER_TOP_RIGHT     = 1 << 1,
+            CORNER_BOTTOM_LEFT   = 1 << 2,
+            CORNER_BOTTOM_RIGHT  = 1 << 3
+        };
+        enum Edges : int  {
+            EDGE_NONE          = 0,
+            EDGE_TOP_LEFT      = 1 << 0,
+            EDGE_TOP_RIGHT     = 1 << 1,
+            EDGE_BOTTOM_LEFT   = 1 << 2,
+            EDGE_BOTTOM_RIGHT  = 1 << 3
+        };
+        Edges   edge_hover_id;
+        Corners corner_hover_id;
     };
 
 

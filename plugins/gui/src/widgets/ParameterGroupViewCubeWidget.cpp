@@ -17,7 +17,12 @@ using namespace megamol::gui;
 
 // *** Pickable Cube ******************************************************** //
 
-megamol::gui::PickableCube::PickableCube(void) : image_up_arrow(), shader(nullptr) {}
+megamol::gui::PickableCube::PickableCube(void)
+    : image_up_arrow()
+    , shader(nullptr)
+    , edge_hover_id(EDGE_NONE)
+    , corner_hover_id(corner_hover_id) {
+}
 
 
 bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_id, int& inout_orientation_id, int& out_hovered_face_id,
@@ -36,6 +41,11 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
         // INFO: IDs of the six cube faces are encoded via bit shift by face index of given parameter id.
         std::string vertex_src =
             "#version 130 \n"
+            "#define BIT_OFFSET_ID          19 \n"
+            "#define BIT_OFFSET_FACE        13 \n"
+            "#define BIT_OFFSET_ORIENTATION  9 \n"
+            "#define BIT_OFFSET_CORNER       5 \n"
+            "#define BIT_OFFSET_EDGE         0 \n"
             "uniform int picking_id; \n"
             "uniform mat4 rot_mx; \n"
             "uniform mat4 model_mx; \n"
@@ -48,6 +58,10 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "flat out vec3 texture_color; \n"
             "flat out vec3 vertex_color; \n"
             "flat out int encoded_id; \n"
+
+            "flat out int edge_hover_id; \n"
+            "flat out int corner_hover_id; \n"
+
             "void main() { \n"
             "    // Vertex indices must fit enum order in megamol::core::view::View3D_2::defaultview \n"
             "    const vec4 vertices[72] = vec4[72]( \n"
@@ -92,7 +106,9 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "    int current_face_id           = (1 << current_face_index); \n"
             "    int current_orientation_index = int(floor(mod_index / 3.0)); // in range [0-3] \n"
             "    int current_orientation_id    = int(1 << current_orientation_index); \n"
-            "    encoded_id                    = int((picking_id << (current_face_index + 4)) | current_orientation_id); \n"
+            "    encoded_id                    = int((picking_id             << BIT_OFFSET_ID)          | \n"
+            "                                        (current_face_id        << BIT_OFFSET_FACE)        | \n"
+            "                                        (current_orientation_id << BIT_OFFSET_ORIENTATION)  ); \n"
             "    \n"
             "    // Vertex Color \n"
             "    vertex_color = colors[current_face_index] * 0.25; \n"
@@ -125,15 +141,16 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "flat in vec3 vertex_color; \n"
             "flat in int encoded_id; \n"
             "uniform sampler2D tex; \n"
+
+            "flat in int edge_hover_id; \n"
+            "flat in int corner_hover_id; \n"
+
             "layout(location = 0) out vec4 outFragColor; \n"
             "layout(location = 1) out vec2 outFragInfo; \n"
             "float supersample(in vec2 uv, float w, float alpha) { \n"
             "    return smoothstep(0.5 - w, 0.5 + w, alpha); \n"
             "} \n"
             "void main(void) { \n"
-            "    const float de = 0.05; // must be in [0,1]\n"
-            "    const float dc = 0.1; // must be in [0,1]\n"
-            "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
             "    float alpha = texture(tex, tex_coord).a; \n"
             "    // Supersample - 4 extra points \n"
             "    float smootingEdge = fwidth(alpha); \n"
@@ -150,16 +167,22 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "    } else { \n"
             "        outFragColor = vec4(vertex_color, 1.0); \n"
             "    } \n"
+            "    // Edges \n"
+            "    const float de = 0.05; // must be in [0,1]\n"
             "    if ((tex_coord.x > (1.0 - de)) || (tex_coord.y > (1.0 - de)) || \n"
             "        (tex_coord.x < de)         || (tex_coord.y < de)) { \n"
             "        outFragColor = vec4(0.0, 1.0, 0.0, 1.0); \n"
             "    } \n"
+            "    // Corners \n"
+            "    const float dc = 0.1; // must be in [0,1]\n"
             "    if (((tex_coord.x > (1.0 - dc)) && (tex_coord.y > (1.0 - dc))) || \n "
             "        ((tex_coord.x < 0.1)        && (tex_coord.y < dc))         || \n"
             "        ((tex_coord.x < dc)         && (tex_coord.y > (1.0 - dc))) || \n"
             "        ((tex_coord.x > (1.0 - dc)) && (tex_coord.y < dc))) { \n"
             "        outFragColor = vec4(1.0, 0.0, 0.0, 1.0); \n"
             "    } \n"
+            "    \n"
+            "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
             "} ";
 
         if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
@@ -168,44 +191,53 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
     }
 
     // Process pending manipulations ------------------------------------------
+    const int BIT_OFFSET_ID          = 19;
+    const int BIT_OFFSET_FACE        = 13;
+    const int BIT_OFFSET_ORIENTATION = 9;
+    const int BIT_OFFSET_CORNER      = 5;
+    const int BIT_OFFSET_EDGE        = 0;
+    assert(sizeof(int) >= 4); //32 bit -1 sign bit - 13 offset bit - 6 faces = 12 bit for picking id
+    assert(picking_id < (1 << 12)); // < 2^12 = 4096] max count parameters
+
     out_hovered_orientation_id = -1;
     out_hovered_face_id = -1;
     for (auto& manip : pending_manipulations) {
+        // Check for picking ID
+        if (picking_id == (picking_id & (manip.obj_id >> BIT_OFFSET_ID))) {
 
-        // ID is shifted by at least 4 bits and at most 9 bits.
-        // Leaving at least 23 bit for actual id (meaning max id can be ....?)
-        /// Indices must fit enum order in megamol::core::view::View3D_2::defaultview
-        int picked_face_id = -1;
-        if (picking_id == (picking_id & (manip.obj_id >> 4)))
-            picked_face_id = (1 << 0); // = DEFAULTVIEW_FRONT
-        else if (picking_id == (picking_id & (manip.obj_id >> 5)))
-            picked_face_id = (1 << 1); // = DEFAULTVIEW_BACK
-        else if (picking_id == (picking_id & (manip.obj_id >> 6)))
-            picked_face_id = (1 << 2); // = DEFAULTVIEW_RIGHT
-        else if (picking_id == (picking_id & (manip.obj_id >> 7)))
-            picked_face_id = (1 << 3); // = DEFAULTVIEW_LEFT
-        else if (picking_id == (picking_id & (manip.obj_id >> 8)))
-            picked_face_id = (1 << 4); // = DEFAULTVIEW_TOP
-        else if (picking_id == (picking_id & (manip.obj_id >> 9)))
-            picked_face_id = (1 << 5); // = DEFAULTVIEW_BOTTOM
+            /// FACEs
+            // Indices must fit enum order in megamol::core::view::View3D_2::DefaultView
+            int picked_face_id = -1;
+            if ((1 << (BIT_OFFSET_FACE + 0)) & manip.obj_id)
+                picked_face_id = (1 << 0); // = DEFAULTVIEW_FRONT
+            else if ((1 << (BIT_OFFSET_FACE + 1)) & manip.obj_id)
+                picked_face_id = (1 << 1); // = DEFAULTVIEW_BACK
+            else if ((1 << (BIT_OFFSET_FACE + 2)) & manip.obj_id)
+                picked_face_id = (1 << 2); // = DEFAULTVIEW_RIGHT
+            else if ((1 << (BIT_OFFSET_FACE + 3)) & manip.obj_id)
+                picked_face_id = (1 << 3); // = DEFAULTVIEW_LEFT
+            else if ((1 << (BIT_OFFSET_FACE + 4)) & manip.obj_id)
+                picked_face_id = (1 << 4); // = DEFAULTVIEW_TOP
+            else if ((1 << (BIT_OFFSET_FACE + 5)) & manip.obj_id)
+                picked_face_id = (1 << 5); // = DEFAULTVIEW_BOTTOM
 
-        if (picked_face_id >= 0) {
-            // First 4 bit indicate currently hovered orientation
-            // Orientation is given by triangle order in shader of pickable cube
+            /// ORIENTATIONs
+            // Indices must fit enum order in megamol::core::view::View3D_2::DefaultOrientation
             int picked_orientation_id = -1;
-            if ((1 >> 0) & manip.obj_id)
+            if ((1 << (BIT_OFFSET_ORIENTATION + 0)) & manip.obj_id)
                 picked_orientation_id = (1 << 0); // = DEFAULTORIENTATION_TOP
-            else if ((1 << 1) & manip.obj_id)
+            else if ((1 << (BIT_OFFSET_ORIENTATION + 1)) & manip.obj_id)
                 picked_orientation_id = (1 << 1); // = DEFAULTORIENTATION_RIGHT
-            else if ((1 << 2) & manip.obj_id)
+            else if ((1 << (BIT_OFFSET_ORIENTATION + 2)) & manip.obj_id)
                 picked_orientation_id = (1 << 2); // = DEFAULTORIENTATION_BOTTOM
-            else if ((1 << 3) & manip.obj_id)
+            else if ((1 << (BIT_OFFSET_ORIENTATION + 3)) & manip.obj_id)
                 picked_orientation_id = (1 << 3); // = DEFAULTORIENTATION_LEFT
 
             if (manip.type == InteractionType::SELECT) {
                 inout_face_id = picked_face_id;
                 inout_orientation_id = picked_orientation_id;
                 selected = true;
+                std::cout << sizeof(int) << std::endl;
             } else if (manip.type == InteractionType::HIGHLIGHT) {
                 out_hovered_face_id = picked_face_id;
                 out_hovered_orientation_id = picked_orientation_id;

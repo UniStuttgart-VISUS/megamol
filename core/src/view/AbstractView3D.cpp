@@ -181,22 +181,22 @@ AbstractView3D::AbstractView3D(void)
     this->_orbitAltitudeManipulator.enable();
 
     auto defaultViewParam = new param::EnumParam(0);
-    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_FRONT, "Front");
-    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_BACK, "Back");
-    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_RIGHT, "Right");
-    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_LEFT, "Left");
-    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_TOP, "Top");
-    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_BOTTOM, "Bottom");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FRONT, "Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_BACK, "Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_RIGHT, "Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_LEFT, "Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_TOP, "Top");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_BOTTOM, "Bottom");
     defaultViewParam->SetGUIVisible(camparamvisibility);
     this->_cameraSetViewChooserParam.SetParameter(defaultViewParam),
         this->MakeSlotAvailable(&this->_cameraSetViewChooserParam);
     this->_cameraSetViewChooserParam.SetUpdateCallback(&AbstractView::OnResetView);
 
     auto defaultOrientationParam = new param::EnumParam(0);
-    defaultOrientationParam->SetTypePair(defaultorientation::DEFAULTORIENTATION_TOP, "Top");
-    defaultOrientationParam->SetTypePair(defaultorientation::DEFAULTORIENTATION_RIGHT, "Right");
-    defaultOrientationParam->SetTypePair(defaultorientation::DEFAULTORIENTATION_BOTTOM, "Bottom");
-    defaultOrientationParam->SetTypePair(defaultorientation::DEFAULTORIENTATION_LEFT, "Left");
+    defaultOrientationParam->SetTypePair(DEFAULTORIENTATION_TOP, "Top");
+    defaultOrientationParam->SetTypePair(DEFAULTORIENTATION_RIGHT, "Right");
+    defaultOrientationParam->SetTypePair(DEFAULTORIENTATION_BOTTOM, "Bottom");
+    defaultOrientationParam->SetTypePair(DEFAULTORIENTATION_LEFT, "Left");
     defaultOrientationParam->SetGUIVisible(camparamvisibility);
     this->_cameraSetOrientationChooserParam.SetParameter(defaultOrientationParam),
         this->MakeSlotAvailable(&this->_cameraSetOrientationChooserParam);
@@ -299,7 +299,7 @@ void AbstractView3D::ResetView(void) {
     double pseudoHeight = this->_bboxs.BoundingBox().Height();
     double pseudoDepth = this->_bboxs.BoundingBox().Depth();
     auto dor_axis = glm::vec3(0.0f, 0.0f, 0.0f);
-    defaultview dv = static_cast<defaultview>(this->_cameraSetViewChooserParam.Param<param::EnumParam>()->Value());
+    auto dv = static_cast<DefaultView>(this->_cameraSetViewChooserParam.Param<param::EnumParam>()->Value());
     switch (dv) {
     case DEFAULTVIEW_FRONT:
         dor_axis = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -349,8 +349,7 @@ void AbstractView3D::ResetView(void) {
     const double sin0 = 1.0;
     const double sin45 = cos45;
     const double sin90 = 0.0;
-    defaultorientation dor =
-        static_cast<defaultorientation>(this->_cameraSetOrientationChooserParam.Param<param::EnumParam>()->Value());
+    auto dor = static_cast<DefaultOrientation>(this->_cameraSetOrientationChooserParam.Param<param::EnumParam>()->Value());
     auto dor_rotation = cam_type::quaternion_type(0.0f, 0.0f, 0.0f, 1.0f);
     switch (dor) {
     case DEFAULTORIENTATION_TOP: // 0 degree

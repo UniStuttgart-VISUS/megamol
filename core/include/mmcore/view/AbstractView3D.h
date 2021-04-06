@@ -26,7 +26,7 @@ class MEGAMOLCORE_API AbstractView3D : public view::AbstractView {
 public:
 
     /** Enum for default views from the respective direction */
-    enum defaultview: int {
+    enum DefaultView: int {
         DEFAULTVIEW_FRONT   = 1 << 0,
         DEFAULTVIEW_BACK    = 1 << 1,
         DEFAULTVIEW_RIGHT   = 1 << 2,
@@ -36,7 +36,7 @@ public:
     };
 
     /** Enum for default orientations from the respective direction */
-    enum defaultorientation : int {
+    enum DefaultOrientation : int {
         DEFAULTORIENTATION_TOP    = 1 << 0,
         DEFAULTORIENTATION_RIGHT  = 1 << 1,
         DEFAULTORIENTATION_BOTTOM = 1 << 2,
