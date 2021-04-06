@@ -609,10 +609,11 @@ bool mmvtkmStreamLines::applyChanges(core::param::ParamSlot& slot) {
     this->psSeedPlaneColor_.ResetDirty();
 
 
-	psSeedPlaneS_.Param<core::param::FloatParam>()->SetValue(0.f, false);
+	/*psSeedPlaneS_.Param<core::param::FloatParam>()->SetValue(0.f, false);
 	psSeedPlaneT_.Param<core::param::FloatParam>()->SetValue(0.f, false);
 	psSeedPlaneP_.Param<core::param::FloatParam>()->SetValue(0.f, false);
 	psSeedPlaneQ_.Param<core::param::FloatParam>()->SetValue(0.f, false);
+    psSeedPlaneSTPQ_.Param<core::param::FloatParam>()->SetValue(0.f, false);*/
 
 
     return true;
@@ -759,7 +760,6 @@ bool mmvtkmStreamLines::setPlaneUpdate() {
 
         return false;
     }
-
 
     planeUpdate_ = true;
     streamlineUpdate_ = true;
@@ -1137,6 +1137,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             liveSeedPlane_ = {planeOrigin_, planeConnectionVertex1_, newPoint, planeConnectionVertex2_};
         }
 
+
         // copy of seedplane used in mmvtkmStreamLines::assignUV to restore plane
         // if u and/or v are reverted
         originalSeedPlane_ = liveSeedPlane_;
@@ -1306,18 +1307,20 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
                 numIndices, mesh::MeshDataAccessCollection::PrimitiveType::LINE_STRIP);
         }
 
-        // adds the dummy mdac for the u and v border lines
-        createAndAddMeshDataToCall(borderlineIdentifier_, borderLine_, borderColors_, borderIdcs_, borderLine_.size(), borderIdcs_.size(), \
-            mesh::MeshDataAccessCollection::PrimitiveType::LINES);
-
 		// adds the mdac for the seed plane
         createAndAddMeshDataToCall(seedPlaneIdentifier_, liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_, liveSeedPlane_.size(), \
             seedPlaneIndices_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
-		// adds the dummy mdac for the ghost plane
         if (!hasBeenTraversed_) {
             mmvtkmStreamLines::ghostPlane(psSeedPlaneNormal_);
         }
+        mmvtkmStreamLines::assignSTPQ(psSeedPlaneS_);
+
+        // adds the dummy mdac for the u and v border lines
+        createAndAddMeshDataToCall(borderlineIdentifier_, borderLine_, borderColors_, borderIdcs_, borderLine_.size(),
+            borderIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::LINES);
+
+        // adds the dummy mdac for the ghost plane
         createAndAddMeshDataToCall(ghostPlaneIdentifier_, ghostPlane_, ghostColors_, ghostIdcs_, ghostPlane_.size(), ghostIdcs_.size(), \
             mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
