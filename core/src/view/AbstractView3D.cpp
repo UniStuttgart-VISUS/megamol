@@ -181,12 +181,12 @@ AbstractView3D::AbstractView3D(void)
     this->_orbitAltitudeManipulator.enable();
 
     auto defaultViewParam = new param::EnumParam(0);
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FRONT, "Front");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_BACK, "Back");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_RIGHT, "Right");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_LEFT, "Left");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_TOP, "Top");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_BOTTOM, "Bottom");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_FRONT, "Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_BACK, "Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_RIGHT, "Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_LEFT, "Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_TOP, "Top");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_BOTTOM, "Bottom");
     defaultViewParam->SetGUIVisible(camparamvisibility);
     this->_cameraSetViewChooserParam.SetParameter(defaultViewParam),
         this->MakeSlotAvailable(&this->_cameraSetViewChooserParam);
@@ -283,6 +283,12 @@ void AbstractView3D::afterRender(const mmcRenderViewContext& context) {
  * AbstractView3D::ResetView
  */
 void AbstractView3D::ResetView(void) {
+
+    // TODO set distance between eyes
+    if (!this->_bboxs.IsBoundingBoxValid()) {
+        this->_bboxs.SetBoundingBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
     if (!this->_valuesFromOutside) {
         this->_camera.near_clipping_plane(0.1f);
         this->_camera.far_clipping_plane(100.0f);
@@ -290,116 +296,11 @@ void AbstractView3D::ResetView(void) {
         this->_camera.disparity(0.05f);
         this->_camera.eye(thecam::Eye::mono);
         this->_camera.projection_type(thecam::Projection_type::perspective);
-    }
-    // TODO set distance between eyes
-    if (!this->_bboxs.IsBoundingBoxValid()) {
-        this->_bboxs.SetBoundingBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-    }
-    double pseudoWidth = this->_bboxs.BoundingBox().Width();
-    double pseudoHeight = this->_bboxs.BoundingBox().Height();
-    double pseudoDepth = this->_bboxs.BoundingBox().Depth();
-    auto dor_axis = glm::vec3(0.0f, 0.0f, 0.0f);
-    auto dv = static_cast<DefaultView>(this->_cameraSetViewChooserParam.Param<param::EnumParam>()->Value());
-    switch (dv) {
-    case DEFAULTVIEW_FRONT:
-        dor_axis = glm::vec3(0.0f, 0.0f, -1.0f);
-        break;
-    case DEFAULTVIEW_BACK:
-        dor_axis = glm::vec3(0.0f, 0.0f, 1.0f);
-        break;
-    case DEFAULTVIEW_RIGHT:
-        dor_axis = glm::vec3(-1.0f, 0.0f, 0.0f);
-        pseudoWidth = this->_bboxs.BoundingBox().Depth();
-        pseudoHeight = this->_bboxs.BoundingBox().Height();
-        pseudoDepth = this->_bboxs.BoundingBox().Width();
-        break;
-    case DEFAULTVIEW_LEFT:
-        dor_axis = glm::vec3(1.0f, 0.0f, 0.0f);
-        pseudoWidth = this->_bboxs.BoundingBox().Depth();
-        pseudoHeight = this->_bboxs.BoundingBox().Height();
-        pseudoDepth = this->_bboxs.BoundingBox().Width();
-        break;
-    case DEFAULTVIEW_TOP:
-        dor_axis = glm::vec3(0.0f, -1.0f, 0.0f);
-        pseudoWidth = this->_bboxs.BoundingBox().Width();
-        pseudoHeight = this->_bboxs.BoundingBox().Depth();
-        pseudoDepth = this->_bboxs.BoundingBox().Height();
-        break;
-    case DEFAULTVIEW_BOTTOM:
-        dor_axis = glm::vec3(0.0f, 1.0f, 0.0f);
-        pseudoWidth = this->_bboxs.BoundingBox().Width();
-        pseudoHeight = this->_bboxs.BoundingBox().Depth();
-        pseudoDepth = this->_bboxs.BoundingBox().Height();
-        break;
-    default:;
-    }
-    auto dim = this->_camera.resolution_gate();
-    double halfFovX =
-        (static_cast<double>(dim.width()) * static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)) /
-        static_cast<double>(dim.height());
-    double distX = pseudoWidth / (2.0 * tan(halfFovX));
-    double distY = pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)));
-    float dist = static_cast<float>((distX > distY) ? distX : distY);
-    dist = dist + (pseudoDepth / 2.0f);
-    auto bbc = this->_bboxs.BoundingBox().CalcCenter();
-    auto bbcglm = glm::vec4(bbc.GetX(), bbc.GetY(), bbc.GetZ(), 1.0f);
-    const double cos0 = 0.0;
-    const double cos45 = sqrt(2.0) / 2.0;
-    const double cos90 = 1.0;
-    const double sin0 = 1.0;
-    const double sin45 = cos45;
-    const double sin90 = 0.0;
-    auto dor = static_cast<DefaultOrientation>(this->_cameraSetOrientationChooserParam.Param<param::EnumParam>()->Value());
-    auto dor_rotation = cam_type::quaternion_type(0.0f, 0.0f, 0.0f, 1.0f);
-    switch (dor) {
-    case DEFAULTORIENTATION_TOP: // 0 degree
-        break;
-    case DEFAULTORIENTATION_RIGHT: // 90 degree
-        dor_axis *= sin45;
-        dor_rotation = cam_type::quaternion_type(dor_axis.x, dor_axis.y, dor_axis.z, cos45);
-        break;
-    case DEFAULTORIENTATION_BOTTOM: { // 180 degree
-        // Using euler angles to get quaternion for 180 degree rotation
-        glm::quat flip_quat = glm::quat(dor_axis * static_cast<float>(M_PI));
-        dor_rotation = cam_type::quaternion_type(flip_quat.x, flip_quat.y, flip_quat.z, flip_quat.w);
-    } break;
-    case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
-        dor_axis *= -sin45;
-        dor_rotation = cam_type::quaternion_type(dor_axis.x, dor_axis.y, dor_axis.z, cos45);
-        break;
-    default:;
-    }
-    if (!this->_valuesFromOutside) {
-        // quat rot(theta) around axis(x,y,z) -> q = (sin(theta/2)*x, sin(theta/2)*y, sin(theta/2)*z, cos(theta/2))
-        switch (dv) {
-        case DEFAULTVIEW_FRONT:
-            this->_camera.orientation(dor_rotation * cam_type::quaternion_type::create_identity());
-            this->_camera.position(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f));
-            break;
-        case DEFAULTVIEW_BACK: // 180 deg around y axis
-            this->_camera.orientation(dor_rotation * cam_type::quaternion_type(0, 1.0, 0, 0.0f));
-            this->_camera.position(bbcglm + glm::vec4(0.0f, 0.0f, -dist, 0.0f));
-            break;
-        case DEFAULTVIEW_RIGHT: // 90 deg around y axis
-            this->_camera.orientation(dor_rotation * cam_type::quaternion_type(0, sin45 * 1.0, 0, cos45));
-            this->_camera.position(bbcglm + glm::vec4(dist, 0.0f, 0.0f, 0.0f));
-            break;
-        case DEFAULTVIEW_LEFT: // 90 deg reverse around y axis
-            this->_camera.orientation(dor_rotation * cam_type::quaternion_type(0, -sin45 * 1.0, 0, cos45));
-            this->_camera.position(bbcglm + glm::vec4(-dist, 0.0f, 0.0f, 0.0f));
-            break;
-        case DEFAULTVIEW_TOP: // 90 deg around x axis
-            this->_camera.orientation(dor_rotation * cam_type::quaternion_type(-sin45 * 1.0, 0, 0, cos45));
-            this->_camera.position(bbcglm + glm::vec4(0.0f, dist, 0.0f, 0.0f));
-            break;
-        case DEFAULTVIEW_BOTTOM: // 90 deg reverse around x axis
-            this->_camera.orientation(dor_rotation * cam_type::quaternion_type(sin45 * 1.0, 0, 0, cos45));
-            this->_camera.position(bbcglm + glm::vec4(0.0f, -dist, 0.0f, 0.0f));
-            break;
-        default:;
-        }
+        this->_camera.orientation(this->get_default_camera_orientation());
+        this->_camera.position(this->get_default_camera_position());
     }
 
+    auto bbc = this->_bboxs.BoundingBox().CalcCenter();
     this->_rotCenter = glm::vec3(bbc.GetX(), bbc.GetY(), bbc.GetZ());
 
     // TODO Further manipulators? better value?
@@ -836,4 +737,153 @@ bool AbstractView3D::cameraOvrCallback(param::ParamSlot& p) {
     this->_rotCenter = lookat;
 
     return true;
+}
+
+/*
+ * AbstractView3D::get_default_camera_position
+ */
+glm::vec4 AbstractView3D::get_default_camera_position() {
+
+    glm::vec4 default_position = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    auto dv = static_cast<DefaultView>(this->_cameraSetViewChooserParam.Param<param::EnumParam>()->Value());
+
+    double pseudoWidth = this->_bboxs.BoundingBox().Width();
+    double pseudoHeight = this->_bboxs.BoundingBox().Height();
+    double pseudoDepth = this->_bboxs.BoundingBox().Depth();
+    switch (dv) {
+        case DEFAULTVIEW_FACE_FRONT:
+        case DEFAULTVIEW_FACE_BACK:
+            break;
+        case DEFAULTVIEW_FACE_RIGHT:
+        case DEFAULTVIEW_FACE_LEFT:
+            pseudoWidth = this->_bboxs.BoundingBox().Depth();
+            pseudoHeight = this->_bboxs.BoundingBox().Height();
+            pseudoDepth = this->_bboxs.BoundingBox().Width();
+            break;
+        case DEFAULTVIEW_FACE_TOP:
+        case DEFAULTVIEW_FACE_BOTTOM:
+            pseudoWidth = this->_bboxs.BoundingBox().Width();
+            pseudoHeight = this->_bboxs.BoundingBox().Depth();
+            pseudoDepth = this->_bboxs.BoundingBox().Height();
+            break;
+        default: break;
+    }
+
+    auto dim = this->_camera.resolution_gate();
+    double halfFovX =
+            (static_cast<double>(dim.width()) * static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)) /
+            static_cast<double>(dim.height());
+    double distX = pseudoWidth / (2.0 * tan(halfFovX));
+    double distY = pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)));
+    float dist = static_cast<float>((distX > distY) ? distX : distY);
+    dist = dist + (pseudoDepth / 2.0f);
+    auto bbc = this->_bboxs.BoundingBox().CalcCenter();
+    auto bbcglm = glm::vec4(bbc.GetX(), bbc.GetY(), bbc.GetZ(), 1.0f);
+
+    switch (dv) {
+        case DEFAULTVIEW_FACE_FRONT:
+            default_position = bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f);
+            break;
+        case DEFAULTVIEW_FACE_BACK:
+            default_position = bbcglm + glm::vec4(0.0f, 0.0f, -dist, 0.0f);
+            break;
+        case DEFAULTVIEW_FACE_RIGHT:
+            default_position = bbcglm + glm::vec4(dist, 0.0f, 0.0f, 0.0f);
+            break;
+        case DEFAULTVIEW_FACE_LEFT:
+            default_position = bbcglm + glm::vec4(-dist, 0.0f, 0.0f, 0.0f);
+            break;
+        case DEFAULTVIEW_FACE_TOP:
+            default_position = bbcglm + glm::vec4(0.0f, dist, 0.0f, 0.0f);
+            break;
+        case DEFAULTVIEW_FACE_BOTTOM:
+            default_position = bbcglm + glm::vec4(0.0f, -dist, 0.0f, 0.0f);
+            break;
+        default: break;
+    }
+    return default_position;
+}
+
+/*
+ * AbstractView3D::get_default_camera_orientation
+ */
+glm::quat AbstractView3D::get_default_camera_orientation() {
+
+    glm::quat default_orientation = cam_type::quaternion_type::create_identity();
+    auto dv = static_cast<DefaultView>(this->_cameraSetViewChooserParam.Param<param::EnumParam>()->Value());
+    auto dor = static_cast<DefaultOrientation>(this->_cameraSetOrientationChooserParam.Param<param::EnumParam>()->Value());
+
+    auto dor_axis = glm::vec3(0.0f, 0.0f, 0.0f);
+    switch (dv) {
+        case DEFAULTVIEW_FACE_FRONT:
+            dor_axis = glm::vec3(0.0f, 0.0f, -1.0f);
+            break;
+        case DEFAULTVIEW_FACE_BACK:
+            dor_axis = glm::vec3(0.0f, 0.0f, 1.0f);
+            break;
+        case DEFAULTVIEW_FACE_RIGHT:
+            dor_axis = glm::vec3(-1.0f, 0.0f, 0.0f);
+            break;
+        case DEFAULTVIEW_FACE_LEFT:
+            dor_axis = glm::vec3(1.0f, 0.0f, 0.0f);
+            break;
+        case DEFAULTVIEW_FACE_TOP:
+            dor_axis = glm::vec3(0.0f, -1.0f, 0.0f);
+            break;
+        case DEFAULTVIEW_FACE_BOTTOM:
+            dor_axis = glm::vec3(0.0f, 1.0f, 0.0f);
+            break;
+        default:;
+    }
+
+    const double cos0 = 0.0;
+    const double cos45 = sqrt(2.0) / 2.0;
+    const double cos90 = 1.0;
+    const double sin0 = 1.0;
+    const double sin45 = cos45;
+    const double sin90 = 0.0;
+
+    auto dor_rotation = cam_type::quaternion_type(0.0f, 0.0f, 0.0f, 1.0f);
+    switch (dor) {
+        case DEFAULTORIENTATION_TOP: // 0 degree
+            break;
+        case DEFAULTORIENTATION_RIGHT: // 90 degree
+            dor_axis *= sin45;
+            dor_rotation = cam_type::quaternion_type(dor_axis.x, dor_axis.y, dor_axis.z, cos45);
+            break;
+        case DEFAULTORIENTATION_BOTTOM: { // 180 degree
+            // Using euler angles to get quaternion for 180 degree rotation
+            glm::quat flip_quat = glm::quat(dor_axis * static_cast<float>(M_PI));
+            dor_rotation = cam_type::quaternion_type(flip_quat.x, flip_quat.y, flip_quat.z, flip_quat.w);
+        } break;
+        case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+            dor_axis *= -sin45;
+            dor_rotation = cam_type::quaternion_type(dor_axis.x, dor_axis.y, dor_axis.z, cos45);
+            break;
+        default: break;
+    }
+
+    // quat rot(theta) around axis(x,y,z) -> q = (sin(theta/2)*x, sin(theta/2)*y, sin(theta/2)*z, cos(theta/2))
+    switch (dv) {
+        case DEFAULTVIEW_FACE_FRONT:
+            default_orientation = dor_rotation * cam_type::quaternion_type::create_identity();
+            break;
+        case DEFAULTVIEW_FACE_BACK: // 180 deg around y axis
+            default_orientation = dor_rotation * cam_type::quaternion_type(0, 1.0, 0, 0.0f);
+            break;
+        case DEFAULTVIEW_FACE_RIGHT: // 90 deg around y axis
+            default_orientation = dor_rotation * cam_type::quaternion_type(0, sin45 * 1.0, 0, cos45);
+            break;
+        case DEFAULTVIEW_FACE_LEFT: // 90 deg reverse around y axis
+            default_orientation = dor_rotation * cam_type::quaternion_type(0, -sin45 * 1.0, 0, cos45);
+            break;
+        case DEFAULTVIEW_FACE_TOP: // 90 deg around x axis
+            default_orientation = dor_rotation * cam_type::quaternion_type(-sin45 * 1.0, 0, 0, cos45);
+            break;
+        case DEFAULTVIEW_FACE_BOTTOM: // 90 deg reverse around x axis
+            default_orientation = dor_rotation * cam_type::quaternion_type(sin45 * 1.0, 0, 0, cos45);
+            break;
+        default:;
+    }
+    return default_orientation;
 }

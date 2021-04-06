@@ -19,9 +19,7 @@ using namespace megamol::gui;
 
 megamol::gui::PickableCube::PickableCube(void)
     : image_up_arrow()
-    , shader(nullptr)
-    , edge_hover_id(EDGE_NONE)
-    , corner_hover_id(corner_hover_id) {
+    , shader(nullptr) {
 }
 
 
@@ -41,11 +39,11 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
         // INFO: IDs of the six cube faces are encoded via bit shift by face index of given parameter id.
         std::string vertex_src =
             "#version 130 \n"
-            "#define BIT_OFFSET_ID          19 \n"
-            "#define BIT_OFFSET_FACE        13 \n"
-            "#define BIT_OFFSET_ORIENTATION  9 \n"
-            "#define BIT_OFFSET_CORNER       5 \n"
-            "#define BIT_OFFSET_EDGE         0 \n"
+            "\n"
+            "#define BIT_OFFSET_ID           7 \n"
+            "#define BIT_OFFSET_FACE         2 \n"
+            "#define BIT_OFFSET_ORIENTATION  0 \n"
+            "\n"
             "uniform int picking_id; \n"
             "uniform mat4 rot_mx; \n"
             "uniform mat4 model_mx; \n"
@@ -58,10 +56,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "flat out vec3 texture_color; \n"
             "flat out vec3 vertex_color; \n"
             "flat out int encoded_id; \n"
-
-            "flat out int edge_hover_id; \n"
-            "flat out int corner_hover_id; \n"
-
+            "\n"
             "void main() { \n"
             "    // Vertex indices must fit enum order in megamol::core::view::View3D_2::defaultview \n"
             "    const vec4 vertices[72] = vec4[72]( \n"
@@ -102,26 +97,27 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "    // IDs and indices \n"
             "    float vertex_index            = float(gl_VertexID); \n"
             "    float mod_index               = vertex_index - (12.0 * floor(vertex_index/12.0)); \n"
-            "    int current_face_index        = int(gl_VertexID / 12); // in range [0-5] \n"
-            "    int current_face_id           = (1 << current_face_index); \n"
-            "    int current_orientation_index = int(floor(mod_index / 3.0)); // in range [0-3] \n"
-            "    int current_orientation_id    = int(1 << current_orientation_index); \n"
+            "    int current_face_index        = int(gl_VertexID / 12);        // in range [0-5] \n"
+            "    int current_face_id           = current_face_index; \n"
+            "    int current_orientation_index = int(floor(mod_index / 3.0));  // in range [0-3] \n"
+            "    int current_orientation_id    = current_orientation_index; \n"
             "    encoded_id                    = int((picking_id             << BIT_OFFSET_ID)          | \n"
             "                                        (current_face_id        << BIT_OFFSET_FACE)        | \n"
             "                                        (current_orientation_id << BIT_OFFSET_ORIENTATION)  ); \n"
             "    \n"
             "    // Vertex Color \n"
-            "    vertex_color = colors[current_face_index] * 0.25; \n"
+            "    vertex_color = colors[current_face_index] * 0.3; \n"
             "    if (face_id == current_face_id) { \n"
-            "        vertex_color = colors[current_face_index] * (0.5 + (0.5 - 0.5*(current_orientation_index/3.0))); \n"
+            "        vertex_color = colors[current_face_index] * (0.4 + (0.6 - 0.6*(float(current_orientation_index)/3.0))); \n"
             "    } \n"
             "    if ((face_hover_id == current_face_id) && (orientation_hover_id == current_orientation_id)) { \n"
-            "        vertex_color = colors[current_face_index] * (0.6 + (0.4 - 0.4*(current_orientation_index/3.0))); \n"
+            "        vertex_color = colors[current_face_index] + vec3(0.5, 0.5, 0.5); \n"
+            "        vertex_color = clamp(vertex_color, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0)); \n"
+            "        vertex_color *= (0.5 + (0.5 - 0.5*(float(current_orientation_index)/3.0))); \n"
             "    } \n"
             "    \n"
             "    // Up Arrow Texture \n"
-            "    texture_color = colors[current_face_index] * 0.5; \n"
-            "    if (face_id == current_face_id) texture_color /= 2.0; // = 0.25 \n"
+            "    texture_color = vertex_color * 0.5; \n"
             "    if ((mod_index == 0) || (mod_index == 4))      tex_coord = vec2(1.0, 0.0); \n"
             "    else if ((mod_index == 1) || (mod_index == 9)) tex_coord = vec2(0.0, 0.0); \n"
             "    else if ((mod_index == 3) || (mod_index == 7)) tex_coord = vec2(1.0, 1.0); \n"
@@ -136,20 +132,21 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
         std::string fragment_src =
             "#version 130  \n"
             "#extension GL_ARB_explicit_attrib_location : require \n"
+            "\n"
             "in vec2 tex_coord; \n"
             "flat in vec3 texture_color; \n"
             "flat in vec3 vertex_color; \n"
             "flat in int encoded_id; \n"
             "uniform sampler2D tex; \n"
-
-            "flat in int edge_hover_id; \n"
-            "flat in int corner_hover_id; \n"
-
+            "uniform int edge_hover_id; \n"
+            "uniform int corner_hover_id; \n"
             "layout(location = 0) out vec4 outFragColor; \n"
             "layout(location = 1) out vec2 outFragInfo; \n"
+            "\n"
             "float supersample(in vec2 uv, float w, float alpha) { \n"
             "    return smoothstep(0.5 - w, 0.5 + w, alpha); \n"
             "} \n"
+            "\n"
             "void main(void) { \n"
             "    float alpha = texture(tex, tex_coord).a; \n"
             "    // Supersample - 4 extra points \n"
@@ -181,7 +178,8 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
             "        ((tex_coord.x > (1.0 - dc)) && (tex_coord.y < dc))) { \n"
             "        outFragColor = vec4(1.0, 0.0, 0.0, 1.0); \n"
             "    } \n"
-            "    \n"
+            "    // Ecoded ID \n"
+            "    // encoded_id = \n"
             "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
             "} ";
 
@@ -191,47 +189,18 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_face_i
     }
 
     // Process pending manipulations ------------------------------------------
-    const int BIT_OFFSET_ID          = 19;
-    const int BIT_OFFSET_FACE        = 13;
-    const int BIT_OFFSET_ORIENTATION = 9;
-    const int BIT_OFFSET_CORNER      = 5;
-    const int BIT_OFFSET_EDGE        = 0;
-    assert(sizeof(int) >= 4); //32 bit -1 sign bit - 13 offset bit - 6 faces = 12 bit for picking id
-    assert(picking_id < (1 << 12)); // < 2^12 = 4096] max count parameters
+    const int BIT_OFFSET_ID          = 7;
+    const int BIT_OFFSET_FACE        = 2;  // uses 5 bits
+    const int BIT_OFFSET_ORIENTATION = 0;  // uses 2 bits
 
+    out_hovered_face_id        = -1;
     out_hovered_orientation_id = -1;
-    out_hovered_face_id = -1;
     for (auto& manip : pending_manipulations) {
-        // Check for picking ID
+        // Check for right picking ID
         if (picking_id == (picking_id & (manip.obj_id >> BIT_OFFSET_ID))) {
-
-            /// FACEs
-            // Indices must fit enum order in megamol::core::view::View3D_2::DefaultView
-            int picked_face_id = -1;
-            if ((1 << (BIT_OFFSET_FACE + 0)) & manip.obj_id)
-                picked_face_id = (1 << 0); // = DEFAULTVIEW_FRONT
-            else if ((1 << (BIT_OFFSET_FACE + 1)) & manip.obj_id)
-                picked_face_id = (1 << 1); // = DEFAULTVIEW_BACK
-            else if ((1 << (BIT_OFFSET_FACE + 2)) & manip.obj_id)
-                picked_face_id = (1 << 2); // = DEFAULTVIEW_RIGHT
-            else if ((1 << (BIT_OFFSET_FACE + 3)) & manip.obj_id)
-                picked_face_id = (1 << 3); // = DEFAULTVIEW_LEFT
-            else if ((1 << (BIT_OFFSET_FACE + 4)) & manip.obj_id)
-                picked_face_id = (1 << 4); // = DEFAULTVIEW_TOP
-            else if ((1 << (BIT_OFFSET_FACE + 5)) & manip.obj_id)
-                picked_face_id = (1 << 5); // = DEFAULTVIEW_BOTTOM
-
-            /// ORIENTATIONs
-            // Indices must fit enum order in megamol::core::view::View3D_2::DefaultOrientation
-            int picked_orientation_id = -1;
-            if ((1 << (BIT_OFFSET_ORIENTATION + 0)) & manip.obj_id)
-                picked_orientation_id = (1 << 0); // = DEFAULTORIENTATION_TOP
-            else if ((1 << (BIT_OFFSET_ORIENTATION + 1)) & manip.obj_id)
-                picked_orientation_id = (1 << 1); // = DEFAULTORIENTATION_RIGHT
-            else if ((1 << (BIT_OFFSET_ORIENTATION + 2)) & manip.obj_id)
-                picked_orientation_id = (1 << 2); // = DEFAULTORIENTATION_BOTTOM
-            else if ((1 << (BIT_OFFSET_ORIENTATION + 3)) & manip.obj_id)
-                picked_orientation_id = (1 << 3); // = DEFAULTORIENTATION_LEFT
+            // Extract face and orientation ID
+            int picked_face_id        = ((manip.obj_id >> BIT_OFFSET_FACE)        & 0b11111);
+            int picked_orientation_id = ((manip.obj_id >> BIT_OFFSET_ORIENTATION) & 0b11);
 
             if (manip.type == InteractionType::SELECT) {
                 inout_face_id = picked_face_id;
@@ -384,13 +353,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int face_id, i
                                    "               + supersample(box.zy, smootingEdge, alpha); \n"
                                    "    alpha = (alpha + 0.5 * asum) / 3.0; \n"
                                    "    if (alpha <= 0.0) discard; \n"
-                                   "    int color_index = 0; \n"
-                                   "    if (((1 << 1) & face_id) != 0)      color_index = 1; \n"
-                                   "    else if (((1 << 2) & face_id) != 0) color_index = 2; \n"
-                                   "    else if (((1 << 3) & face_id) != 0) color_index = 3; \n"
-                                   "    else if (((1 << 4) & face_id) != 0) color_index = 4; \n"
-                                   "    else if (((1 << 5) & face_id) != 0) color_index = 5; \n"
-                                   "    outFragColor = vec4(colors[color_index] * 0.75, alpha); \n"
+                                   "    outFragColor = vec4(colors[face_id] * 0.75, alpha); \n"
                                    "} ";
 
         if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
@@ -625,10 +588,10 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             this->texture_widget.Draw(arrow_picking_id, default_view, orientation_change,
                                       hovered_arrow, inout_picking_buffer->GetPendingManipulations());
             if (orientation_change < 0) {
-                default_orientation = (default_orientation & (1 << 0))?(1 << 3):(default_orientation >> 1);
+                default_orientation = ((default_orientation-1) < 0)?(3):(default_orientation-1);
             }
             else if (orientation_change > 0) {
-                default_orientation = (default_orientation & (1 << 3))?(1 << 0):(default_orientation << 1);
+                default_orientation = ((default_orientation+1) > 3)?(0):(default_orientation+1);
             }
 
             if (selected) {
@@ -640,24 +603,23 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             // Tooltip
             std::string tooltip_text;
             if (hovered_face >= 0) {
-                /// Indices must fit enum order in view::View3D_2::defaultview
                 switch (hovered_face) {
-                case (1 << 0): // = DEFAULTVIEW_FRONT
+                case (DefaultView_t::DEFAULTVIEW_FACE_FRONT):
                     tooltip_text += "[Front]";
                     break;
-                case (1 << 1): // = DEFAULTVIEW_BACK
+                case (DefaultView_t::DEFAULTVIEW_FACE_BACK):
                     tooltip_text += "[Back]";
                     break;
-                case (1 << 2): // = DEFAULTVIEW_RIGHT
+                case (DefaultView_t::DEFAULTVIEW_FACE_RIGHT):
                     tooltip_text += "[Right]";
                     break;
-                case (1 << 3): // = DEFAULTVIEW_LEFT
+                case (DefaultView_t::DEFAULTVIEW_FACE_LEFT):
                     tooltip_text += "[Left]";
                     break;
-                case (1 << 4): // = DEFAULTVIEW_TOP
+                case (DefaultView_t::DEFAULTVIEW_FACE_TOP):
                     tooltip_text += "[Top]";
                     break;
-                case (1 << 5): // = DEFAULTVIEW_BOTTOM
+                    case (DefaultView_t::DEFAULTVIEW_FACE_BOTTOM):
                     tooltip_text += "[Bottom]";
                     break;
                 default:
@@ -668,16 +630,16 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             if (hovered_orientation >= 0) {
                 tooltip_text += " ";
                 switch (hovered_orientation) {
-                case (1 << 0): // = DEFAULTORIENTATION_TOP
+                case (DefaultOrientation_t::DEFAULTORIENTATION_TOP):
                     tooltip_text += "0 degree";
                     break;
-                case (1 << 1): // = DEFAULTORIENTATION_RIGHT
+                case (DefaultOrientation_t::DEFAULTORIENTATION_RIGHT):
                     tooltip_text += "90 degree";
                     break;
-                case (1 << 2): // = DEFAULTORIENTATION_BOTTOM
+                case (DefaultOrientation_t::DEFAULTORIENTATION_BOTTOM):
                     tooltip_text += "180 degree";
                     break;
-                case (1 << 3): // = DEFAULTORIENTATION_LEFT
+                case (DefaultOrientation_t::DEFAULTORIENTATION_LEFT):
                     tooltip_text += "270 degree";
                     break;
                 default:
@@ -685,11 +647,13 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 }
             }
 
+            /*
             if (hovered_arrow < 0) {
                 tooltip_text = "Rotate Right";
             } else if (hovered_arrow > 0) {
                 tooltip_text = "Rotate Left";
             }
+            */
 
             if (!tooltip_text.empty()) {
                 ImGui::BeginTooltip();
