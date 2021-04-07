@@ -106,6 +106,7 @@ private:
     bool _light_has_changed;
     bool _cam_has_changed;
     bool _transformation_has_changed;
+    bool _clipping_geo_changed;
 
     core::view::Camera_2 _cam;
     float _time;

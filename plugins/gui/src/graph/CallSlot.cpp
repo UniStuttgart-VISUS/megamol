@@ -489,10 +489,10 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                     tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }
-                const float segment_number = (20.0f * megamol::gui::gui_scaling.Get());
+
                 const float thickness = (2.0f * megamol::gui::gui_scaling.Get());
-                draw_list->AddCircleFilled(slot_position, radius, slot_background_color, segment_number);
-                draw_list->AddCircle(slot_position, radius, slot_border_color, segment_number, thickness);
+                draw_list->AddCircleFilled(slot_position, radius, slot_background_color);
+                draw_list->AddCircle(slot_position, radius, slot_border_color, 0, thickness);
 
                 // Text
                 if (state.interact.callslot_show_label) {

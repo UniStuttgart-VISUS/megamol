@@ -48,6 +48,9 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     // get transformation parameter
     this->processTransformation();
 
+    // fill clipping plane container
+    this->processClippingPlane();
+
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();

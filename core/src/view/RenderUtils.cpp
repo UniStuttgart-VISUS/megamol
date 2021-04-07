@@ -192,12 +192,6 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
     glDisableVertexAttribArray(Buffers::TEXTURE_COORD);
     glDisableVertexAttribArray(Buffers::ATTRIBUTES);
 
-    auto err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
     this->init_once = true;
 
     return true;
@@ -383,12 +377,6 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, const glm::m
         return;
 
     this->sortPrimitiveQueue(primitive);
-
-    auto err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenGL Error: %i [%s, %s, line %d]\n ",  err, __FILE__, __FUNCTION__, __LINE__);
-        return;
-    }
 
     auto texture_id = this->queues[primitive].texture_id;
     this->buffers[Buffers::POSITION]->rebuffer(this->queues[primitive].position);
