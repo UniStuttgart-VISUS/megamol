@@ -202,7 +202,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         draw_list->AddLine(
                             caller_pos, callee_pos, color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
                     } else {
-                        draw_list->AddBezierCurve(caller_pos,
+                        draw_list->AddBezierCubic(caller_pos,
                             caller_pos + ImVec2((50.0f * megamol::gui::gui_scaling.Get()), 0.0f),
                             callee_pos + ImVec2((-50.0f * megamol::gui::gui_scaling.Get()), 0.0f), callee_pos,
                             color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);

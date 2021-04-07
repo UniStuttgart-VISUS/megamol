@@ -329,6 +329,10 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         default:
             break;
         }
+
+        // Set tesselation error: Smaller value => better tesselation of circles and round corners.
+        style.CircleTessellationMaxError = 0.3f;
+
         this->state.style_changed = false;
     }
 

@@ -68,6 +68,9 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     // get transformation parameter
     //this->processTransformation();
 
+    // fill clipping plane container
+    this->processClippingPlane();
+
     // read Data, calculate  shape parameters, fill data vectors
     auto os = dynamic_cast<CallOSPRayStructure*>(&call);
     auto cd = this->getDataSlot.CallAs<megamol::core::misc::VolumetricDataCall>();

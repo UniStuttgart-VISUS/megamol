@@ -2483,7 +2483,7 @@ void megamol::gui::Graph::draw_canvas_dragged_call(void) {
                         p2 = tmp;
                     }
                     if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_SLOT_RADIUS) {
-                        draw_list->AddBezierCurve(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
+                        draw_list->AddBezierCubic(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
                             GUI_LINE_THICKNESS * this->gui_graph_state.canvas.zooming);
                     }
                 }
@@ -2518,11 +2518,11 @@ void megamol::gui::Graph::draw_canvas_multiselection(void) {
         const ImU32 COLOR_MULTISELECT_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
         draw_list->AddRectFilled(this->gui_multiselect_start_pos, this->gui_multiselect_end_pos,
-            COLOR_MULTISELECT_BACKGROUND, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
+            COLOR_MULTISELECT_BACKGROUND, GUI_RECT_CORNER_RADIUS, ImDrawFlags_RoundCornersAll);
 
         float border = (1.0f * megamol::gui::gui_scaling.Get());
         draw_list->AddRect(this->gui_multiselect_start_pos, this->gui_multiselect_end_pos, COLOR_MULTISELECT_BORDER,
-            GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
+            GUI_RECT_CORNER_RADIUS, ImDrawFlags_RoundCornersAll, border);
     } else if (this->gui_multiselect_done && ImGui::IsWindowHovered() && ImGui::IsMouseReleased(0)) {
         ImVec2 outer_rect_min = ImVec2(std::min(this->gui_multiselect_start_pos.x, this->gui_multiselect_end_pos.x),
             std::min(this->gui_multiselect_start_pos.y, this->gui_multiselect_end_pos.y));

@@ -582,7 +582,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             }
             auto header_color = (this->gui_selected) ? (GUI_COLOR_GROUP_HEADER_HIGHLIGHT) : (GUI_COLOR_GROUP_HEADER);
             draw_list->AddRectFilled(group_rect_min, header_rect_max, ImGui::ColorConvertFloat4ToU32(header_color),
-                GUI_RECT_CORNER_RADIUS, (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
+                GUI_RECT_CORNER_RADIUS, (ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight));
             draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name.c_str());
         }
 
