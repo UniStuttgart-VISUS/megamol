@@ -436,13 +436,6 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
 
     Base::Render(context, call);
 
-    auto err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
-        return;
-    }
-
     // Write frame to file
     if (this->rendering) {
         // Check if fbo in cr3d was reset by renderer to indicate that no new frame is available (e.g. see
@@ -498,11 +491,6 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     // Draw 2D ----------------------------------------------------------------
     this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
 
-    err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
-    }
 }
 
 

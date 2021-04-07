@@ -210,17 +210,14 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     this->utils.DrawAll(mvp, viewport);
 
     // Push hotkey list ------------------------------------------------------
-    // Draw help text 
-    if (this->showHelpText) {
-        this->utils.PushHotkeyList(ortho, viewport);
-    }
+    this->utils.HotkeyWindow(this->showHelpText, ortho, viewport);
 
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " TRACKING SHOT ";
     std::string midLabel = "";
-    std::string rightLabel = " [Shift+h] Show Help Text ";
+    std::string rightLabel = " [Shift+h] Show Hotkeys ";
     if (this->showHelpText) {
-        rightLabel = " [Shift+h] Hide Help Text ";
+        rightLabel = " [Shift+h] Hide Hotkeys ";
     }
     this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, viewport);
 

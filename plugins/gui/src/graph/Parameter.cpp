@@ -1349,7 +1349,8 @@ bool megamol::gui::Parameter::widget_bool(
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-        retval = ImGui::Checkbox(label.c_str(), &value);
+        retval = megamol::gui::ButtonWidgets::ToggleButton(label, value);
+        /// retval = ImGui::Checkbox(label.c_str(), &value);
     }
     return retval;
 }

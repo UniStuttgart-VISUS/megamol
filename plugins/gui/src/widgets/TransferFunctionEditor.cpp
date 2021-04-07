@@ -835,7 +835,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
             // Draw node point
             drawList->AddCircle(point, pointAndBorderRadius, pointBorderColor, circle_subdiv, point_border_width);
-            drawList->AddCircleFilled(point, point_radius, pointColor, 12);
+            drawList->AddCircleFilled(point, point_radius, pointColor);
         }
     }
     drawList->PopClipRect();
