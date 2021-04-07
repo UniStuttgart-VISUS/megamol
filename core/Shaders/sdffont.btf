@@ -61,7 +61,7 @@ uniform int       renderMode         = RENDERMODE_FILL;
 
 layout(location = 0) out vec4 outFragColor;
 
-float supersample(in vec2 uv, float w) {
+float supersample(const in vec2 uv, const in float w) {
     return smoothstep(SDF_THRESHOLD - w, SDF_THRESHOLD + w, texture(fontTexture, uv).a);
 }
 
