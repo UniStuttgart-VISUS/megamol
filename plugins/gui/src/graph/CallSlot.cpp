@@ -332,12 +332,14 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
             }
         } else {
             std::string button_label = "callslot_" + std::to_string(this->uid);
-
-            ImGui::PushID(this->uid);
+            bool slot_required = ((this->necessity == megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED) &&
+                                  (!this->CallsConnected()));
             std::string slot_label = this->name;
-            if (this->necessity == megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED) {
+            if (slot_required) {
                 slot_label.append(" [REQUIRED]");
             }
+
+            ImGui::PushID(this->uid);
 
             if (phase == megamol::gui::PresentPhase::INTERACTION) {
 
@@ -473,7 +475,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 // Draw Slot
                 ImU32 slot_border_color = COLOR_SLOT_BORDER;
                 ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
-                if (this->necessity == megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED) {
+                if (slot_required) {
                     slot_border_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_REQUIRED);
                 }
                 if (this->gui_compatible) {

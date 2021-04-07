@@ -57,7 +57,7 @@ public:
             &RendererModule::GetExtentsChainCallback);
         // Do not make it available yet (extensibility).
 
-        this->renderSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
+        this->renderSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
     }
 
     /** Dtor. */
