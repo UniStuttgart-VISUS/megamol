@@ -126,7 +126,7 @@ struct OSPRayStructureContainer {
     bool parameterChanged;
     bool isValid = false;
     ClippingPlane clippingPlane;
-    bool clippingPlaneChanged;
+    bool clippingPlaneChanged = false;
 
     std::variant<sphereStructure, structuredVolumeStructure, meshStructure, apiStructure, curveStructure> structure;
 };
