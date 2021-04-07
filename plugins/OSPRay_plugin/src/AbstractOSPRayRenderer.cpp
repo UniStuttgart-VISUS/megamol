@@ -244,11 +244,6 @@ namespace ospray {
 
     void AbstractOSPRayRenderer::fillLightArray(std::array<float,4> eyeDir) {
         // clear current lights
-        if (!_lightArray.empty()) {
-            for (auto& l : _lightArray) {
-                ospRelease(l.handle());
-            }
-        }
         _lightArray.clear();
 
         // create custom ospray light
