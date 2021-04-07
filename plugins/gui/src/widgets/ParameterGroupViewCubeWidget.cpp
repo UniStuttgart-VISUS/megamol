@@ -325,7 +325,6 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
                 inout_selected_face_id = picked_face_id;
                 inout_selected_orientation_id = picked_orientation_id;
                 selected = true;
-                std::cout << sizeof(int) << std::endl;
             } else if (manip.type == InteractionType::HIGHLIGHT) {
                 out_hovered_face_id = picked_face_id;
                 out_hovered_orientation_id = picked_orientation_id;
@@ -470,8 +469,8 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
                                    "               + supersample(box.zy, smootingEdge, alpha); \n"
                                    "    alpha = (alpha + 0.5 * asum) / 3.0; \n"
                                    "    if (alpha <= 0.0) discard; \n"
-                                   "    if (selected_face_id > 5) discard; \n"
-                                   "    outFragColor = vec4(colors[selected_face_id] * 0.75, alpha); \n"
+                                   "    if (selected_face_id < 6) outFragColor = vec4(colors[selected_face_id] * 0.75, alpha); \n"
+                                   "    else discard; //outFragColor = vec4(0.75, 0.75, 0.75, alpha); \n"
                                    "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
                                    "} ";
 
