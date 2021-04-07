@@ -402,12 +402,6 @@ protected:
     /** Triggers the restore of the camera settings */
     param::ParamSlot _restoreCameraSettingsSlot;
 
-    /** Slot activating or deactivating the override of already present camera settings */
-    param::ParamSlot _overrideCamSettingsSlot;
-
-    /** Slot activating or deactivating the automatic save of camera parameters to disk when a camera is saved */
-    param::ParamSlot _autoSaveCamSettingsSlot;
-
     /** Slot activating or deactivating the automatic load of camera parameters at program startup */
     param::ParamSlot _autoLoadCamSettingsSlot;
 

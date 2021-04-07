@@ -39,13 +39,6 @@ view::AbstractView::AbstractView(void)
         , _restoreCameraSettingsSlot("camstore::restorecam",
               "Triggers the restore of the camera settings. This only works "
               "for multiple cameras if you use .lua project files")
-        , _overrideCamSettingsSlot("camstore::overrideSettings",
-              "When activated, existing camera settings files will be overwritten by this "
-              "module. This only works if you use .lua project files")
-        , _autoSaveCamSettingsSlot("camstore::autoSaveSettings",
-              "When activated, the camera settings will be stored to disk whenever a camera checkpoint is saved or "
-              "MegaMol "
-              "is closed. This only works if you use .lua project files")
         , _autoLoadCamSettingsSlot("camstore::autoLoadSettings",
               "When activated, the view will load the camera settings from disk at startup. "
               "This only works if you use .lua project files")
@@ -90,12 +83,6 @@ view::AbstractView::AbstractView(void)
     this->_restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
     this->_restoreCameraSettingsSlot.SetUpdateCallback(&AbstractView::onRestoreCamera);
     this->MakeSlotAvailable(&this->_restoreCameraSettingsSlot);
-
-    this->_overrideCamSettingsSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->_overrideCamSettingsSlot);
-
-    this->_autoSaveCamSettingsSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->_autoSaveCamSettingsSlot);
 
     this->_autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->_autoLoadCamSettingsSlot);
@@ -500,20 +487,6 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
         return false;
     }
 
-    if (!this->_overrideCamSettingsSlot.Param<param::BoolParam>()->Value()) {
-        // check if the file already exists
-        std::ifstream file(path);
-        if (file.good()) {
-            file.close();
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "The camera output file path already contains a camera file with the name '%s'. Override mode is "
-                "deactivated, so no camera is stored",
-                path.c_str());
-            return false;
-        }
-    }
-
-
     this->_cameraSerializer.setPrettyMode();
     auto outString = this->_cameraSerializer.serialize(this->_savedCameras);
 
@@ -624,3 +597,4 @@ glm::vec4 view::AbstractView::BkgndColour(void) const {
     }
     return this->_bkgndCol;
 }
+

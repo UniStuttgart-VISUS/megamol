@@ -52,8 +52,6 @@ public:
      */
     virtual void Render(const mmcRenderViewContext& context, Call* call) override;
 
-    virtual bool OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) override;
-
     virtual bool OnChar(unsigned int codePoint) override;
 
     virtual bool OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) override;

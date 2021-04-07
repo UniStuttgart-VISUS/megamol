@@ -496,9 +496,9 @@ bool AbstractView3D::OnKey(Key key, KeyAction action, Modifiers mods) {
         if (mods.test(Modifier::CTRL)) {
             this->_savedCameras[index].first = this->_camera.get_minimal_state(this->_savedCameras[index].first);
             this->_savedCameras[index].second = true;
-            if (this->_autoSaveCamSettingsSlot.Param<param::BoolParam>()->Value()) {
+            //if (this->_autoSaveCamSettingsSlot.Param<param::BoolParam>()->Value()) {
                 this->onStoreCamera(this->_storeCameraSettingsSlot); // manually trigger the storing
-            }
+            //}
         } else {
             if (this->_savedCameras[index].second) {
                 // As a change of camera position should not change the display resolution, we actively save and restore
