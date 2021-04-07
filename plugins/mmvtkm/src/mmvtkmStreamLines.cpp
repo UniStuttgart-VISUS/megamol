@@ -1127,6 +1127,8 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
             liveSeedPlane_ = calcPlaneBboxIntersectionPoints(samplePlane, dataSetBounds_);
 
+            mmvtkmStreamLines::ghostPlane(psSeedPlaneNormal_);
+
         } else if (planeMode_ == 1) {
             glm::vec3 dir1 = planeConnectionVertex1_ - planeOrigin_;
             glm::vec3 dir2 = planeConnectionVertex2_ - planeOrigin_;
@@ -1311,10 +1313,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 		// adds the mdac for the seed plane
         createAndAddMeshDataToCall(seedPlaneIdentifier_, liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_, liveSeedPlane_.size(), \
             seedPlaneIndices_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
-
-        if (!hasBeenTraversed_) {
-            mmvtkmStreamLines::ghostPlane(psSeedPlaneNormal_);
-        }
 
         if (!resampleSeeds_) {
             mmvtkmStreamLines::assignSTPQ(psSeedPlaneS_);
