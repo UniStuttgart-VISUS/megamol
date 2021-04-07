@@ -365,16 +365,19 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 data.max_value = max;
             }
         } else {
+            int total_cluster_cnt = 0;
             for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
                 auto generic_probe = probes->getGenericProbe(probe_idx);
 
-                auto visitor = [draw_command, scale, probe_idx, this](auto&& arg) {
+                auto visitor = [draw_command, scale, probe_idx, &total_cluster_cnt, this](auto&& arg) {
                     using T = std::decay_t<decltype(arg)>;
 
                     auto glyph_data = createClusterIDGlyphData(arg, probe_idx, scale);
                     m_clusterID_gylph_draw_commands.push_back(draw_command);
                     this->m_clusterID_glyph_data.push_back(glyph_data);
+
+                    total_cluster_cnt = std::max(total_cluster_cnt, glyph_data.cluster_id);
 
                     m_clusterID_glyph_identifiers.push_back(
                         std::string(FullName()) + "_cg_" + std::to_string(probe_idx));
@@ -383,6 +386,10 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 };
 
                 std::visit(visitor, generic_probe);
+            }
+
+            for (auto& glyph_data : m_clusterID_glyph_data) {
+                glyph_data.total_cluster_cnt = total_cluster_cnt;
             }
         }
 

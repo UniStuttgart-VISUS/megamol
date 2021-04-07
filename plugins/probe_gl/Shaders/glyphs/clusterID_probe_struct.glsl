@@ -11,7 +11,7 @@ struct MeshShaderParams
     float sample_cnt;
     
     int cluster_id;
-    int padding0;
+    int total_cluster_cnt;
     int padding1;
     int padding2;
 };

@@ -15,7 +15,7 @@
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="Extensions"       type="file">glyphs/extensions.glsl</snippet>
         <snippet name="MeshParamStruct"  type="file">glyphs/clusterID_probe_struct.glsl</snippet>
-        <snippet name="ColorLUT"         type="file">utility/random_colors_lut.glsl</snippet>
+        <snippet name="ColorLUT"         type="file">utility/hsv-spiral_colors.glsl</snippet>
         <snippet name="Main"             type="file">glyphs/clusterID_probe_glyph_fragment.glsl</snippet>
     </shader>
 
