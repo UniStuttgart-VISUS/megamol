@@ -770,9 +770,10 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
     double pseudoWidth  = this->_bboxs.BoundingBox().Width();
     double pseudoHeight = this->_bboxs.BoundingBox().Height();
     double pseudoDepth  = this->_bboxs.BoundingBox().Depth();
-    double diagWidthDepth  = sqrt(pseudoWidth*pseudoWidth + pseudoDepth*pseudoDepth);
-    double diagHeightDepth = sqrt(pseudoHeight*pseudoHeight + pseudoDepth*pseudoDepth);
-    double diagHeightWidth = sqrt(pseudoHeight*pseudoHeight + pseudoWidth*pseudoWidth);
+    double diagWidthDepth  = glm::length(glm::vec2(pseudoWidth, pseudoDepth));
+    double diagHeightDepth = glm::length(glm::vec2(pseudoHeight, pseudoDepth));
+    double diagHeightWidth = glm::length(glm::vec2( pseudoWidth, pseudoHeight));
+    double diagDepthHeightWidth = glm::length(glm::vec3(pseudoHeight, pseudoWidth, pseudoDepth));
 
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
@@ -793,28 +794,16 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
             break;
         // CORNERS --------------------------------------------------------------------------------
         case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
-
-            break;
         case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
-
-            break;
         case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
-
-            break;
         case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
-
-            break;
         case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
-
-            break;
         case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
-
-            break;
         case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
-
-            break;
         case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
-
+            pseudoWidth = diagWidthDepth;
+            pseudoHeight = diagDepthHeightWidth;
+            pseudoDepth = diagDepthHeightWidth;
             break;
         // EDGES ----------------------------------------------------------------------------------
         case DEFAULTVIEW_EDGE_TOP_FRONT:
@@ -852,8 +841,8 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
     double distY = pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)));
     float face_dist = static_cast<float>((distX > distY) ? distX : distY);
     face_dist = face_dist + (pseudoDepth / 2.0f);
-    float edge_dist = (glm::normalize(glm::vec2(1.0, 1.0)) * face_dist).x;
-    float corner_dist = (glm::normalize(glm::vec3(1.0, 1.0, 1.0)) * face_dist).x;
+    float edge_dist = (glm::normalize(glm::vec2(1.0, 1.0))).x * face_dist;
+    float corner_dist = (glm::normalize(glm::vec3(1.0, 1.0, 1.0))).x * face_dist;
 
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
@@ -980,70 +969,6 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
         case DEFAULTVIEW_FACE_BOTTOM:
             axis = glm::vec3(0.0f, 1.0f, 0.0f);
             break;
-/*
-        // CORNERS ----------------------------------------------------------------------------------
-        case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
-            axis = glm::vec3(1.0, -1.0, -1.0);
-            break;
-        case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
-            axis = glm::vec3(-1.0, -1.0, -1.0);
-            break;
-        case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
-            axis = glm::vec3(1.0, -1.0, 1.0);
-            break;
-        case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
-            axis = glm::vec3(-1.0, -1.0, 1.0);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
-            axis = glm::vec3(1.0, 1.0, -1.0);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
-            axis = glm::vec3(-1.0, 1.0, -1.0);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
-            axis = glm::vec3(1.0, 1.0, 1.0);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
-            axis = glm::vec3(-1.0, 1.0, 1.0);
-            break;
-        // EDGES ----------------------------------------------------------------------------------
-        case DEFAULTVIEW_EDGE_TOP_FRONT:
-            axis = glm::vec3(0.0f, -1.0, -1.0);
-            break;
-        case DEFAULTVIEW_EDGE_TOP_LEFT:
-            axis = glm::vec3(1.0, -1.0, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_TOP_RIGHT :
-            axis = glm::vec3(-1.0, -1.0, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_TOP_BACK:
-            axis = glm::vec3(0.0f, -1.0, 1.0);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_FRONT:
-            axis = glm::vec3(0.0f, 1.0, -1.0);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_LEFT:
-            axis = glm::vec3(1.0, 1.0, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_RIGHT :
-            axis = glm::vec3(-1.0, 1.0, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_BACK:
-            axis = glm::vec3(0.0f, 1.0, 1.0);
-            break;
-        case DEFAULTVIEW_EDGE_FRONT_LEFT:
-            axis = glm::vec3(1.0, 0.0f, -1.0);
-            break;
-        case DEFAULTVIEW_EDGE_FRONT_RIGHT:
-            axis = glm::vec3(-1.0, 0.0f, -1.0);
-            break;
-        case DEFAULTVIEW_EDGE_BACK_LEFT:
-            axis = glm::vec3(1.0, 0.0f, 1.0);
-            break;
-        case DEFAULTVIEW_EDGE_BACK_RIGHT:
-            axis = glm::vec3(-1.0, 0.0f, 1.0);
-            break;
-*/
         default: break;
     }
     switch (dor) {
@@ -1088,40 +1013,40 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
             break;
         // CORNERS --------------------------------------------------------------------------------
         case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
-            default_orientation = cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+            default_orientation = cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5) *
+                    cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5); //!
             break;
         case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
-            default_orientation = cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+            default_orientation = cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5) *
+                    cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5); //!
             break;
         case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
             default_orientation = cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
-                    cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+                    cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5) *
+                    cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5);
             break;
         case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
             default_orientation = cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
-                    cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+                    cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5) *
+                    cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5);
             break;
         case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
-            default_orientation = cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+            default_orientation = cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5) *
+                    cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5);
             break;
         case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
-            default_orientation = cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+            default_orientation =cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5) *
+                    cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5);
             break;
         case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
             default_orientation = cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
-                    cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+                    cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5) *
+                    cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5);
             break;
         case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
             default_orientation = cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
-                    cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+                       cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5) *
+                       cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5);
             break;
         // EDGES ----------------------------------------------------------------------------------
         case DEFAULTVIEW_EDGE_TOP_FRONT:
