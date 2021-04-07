@@ -492,7 +492,10 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }
 
-                const float thickness = (2.0f * megamol::gui::gui_scaling.Get());
+                float thickness = (1.0f * state.canvas.zooming);
+                if (slot_required) {
+                    thickness = (2.0f * state.canvas.zooming);
+                }
                 draw_list->AddCircleFilled(slot_position, radius, slot_background_color);
                 draw_list->AddCircle(slot_position, radius, slot_border_color, 0, thickness);
 
