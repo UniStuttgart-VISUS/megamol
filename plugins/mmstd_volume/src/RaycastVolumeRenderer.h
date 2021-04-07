@@ -14,7 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 
-#include "mmcore/utility/graphics/GLSLShader.h"
+#include "mmcore/utility/ShaderFactory.h"
 
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -107,11 +107,11 @@ namespace stdplugin {
             bool updateTransferFunction();
 
         private:
-            std::unique_ptr<core::utility::graphics::GLSLShader> rvc_dvr_shdr;
-            std::unique_ptr<core::utility::graphics::GLSLShader> rvc_iso_shdr;
-            std::unique_ptr<core::utility::graphics::GLSLShader> rvc_aggr_shdr;
-            std::unique_ptr<core::utility::graphics::GLSLShader> rtf_shdr;
-            std::unique_ptr<core::utility::graphics::GLSLShader> rtf_aggr_shdr;
+            std::unique_ptr<glowl::GLSLProgram> rvc_dvr_shdr;
+            std::unique_ptr<glowl::GLSLProgram> rvc_iso_shdr;
+            std::unique_ptr<glowl::GLSLProgram> rvc_aggr_shdr;
+            std::unique_ptr<glowl::GLSLProgram> rtf_shdr;
+            std::unique_ptr<glowl::GLSLProgram> rtf_aggr_shdr;
 
             std::unique_ptr<glowl::Texture2D> m_render_target;
             std::unique_ptr<glowl::Texture2D> m_normal_target;

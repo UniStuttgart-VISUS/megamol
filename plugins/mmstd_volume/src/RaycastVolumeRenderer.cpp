@@ -24,7 +24,6 @@
 #include <limits>
 #include <memory>
 #include <vector>
-#include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
@@ -118,17 +117,17 @@ bool RaycastVolumeRenderer::create() {
         // create shader program
         auto const shdr_cp_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
 
-        rvc_dvr_shdr = std::make_unique<core::utility::graphics::GLSLShader>(
+        rvc_dvr_shdr = core::utility::make_glowl_shader(
             shdr_cp_options, std::filesystem::path("RaycastVolumeRenderer-Compute.comp.glsl"));
-        rvc_iso_shdr = std::make_unique<core::utility::graphics::GLSLShader>(
+        rvc_iso_shdr = core::utility::make_glowl_shader(
             shdr_cp_options, std::filesystem::path("RaycastVolumeRenderer-Compute-Iso.comp.glsl"));
-        rvc_aggr_shdr = std::make_unique<core::utility::graphics::GLSLShader>(
+        rvc_aggr_shdr = core::utility::make_glowl_shader(
             shdr_cp_options, std::filesystem::path("RaycastVolumeRenderer-Compute-Aggr.comp.glsl"));
 
-        rtf_shdr = std::make_unique<core::utility::graphics::GLSLShader>(shdr_cp_options,
+        rtf_shdr = core::utility::make_glowl_shader(shdr_cp_options,
             std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
             std::filesystem::path("RaycastVolumeRenderer-Fragment.frag.glsl"));
-        rtf_aggr_shdr = std::make_unique<core::utility::graphics::GLSLShader>(shdr_cp_options,
+        rtf_aggr_shdr = core::utility::make_glowl_shader(shdr_cp_options,
             std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
             std::filesystem::path("RaycastVolumeRenderer-Fragment-Aggr.frag.glsl"));
     } catch (...) {
@@ -259,7 +258,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
         return false;
 
     // enable raycast volume rendering program
-    core::utility::graphics::GLSLShader* compute_shdr;
+    glowl::GLSLProgram* compute_shdr;
 
     // pick shader based on selected mode
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
