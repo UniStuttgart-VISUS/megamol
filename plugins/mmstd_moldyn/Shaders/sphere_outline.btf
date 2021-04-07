@@ -33,7 +33,6 @@
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>        
         <snippet name="MainStart"        type="file">sphere/fragment_mainstart.glsl</snippet>         
         <snippet name="CutOut"           type="file">sphere/outline_fragment_cutout.glsl</snippet>
-        <snippet name="NoLighting"       type="file">sphere/outline_fragment_nolighting.glsl</snippet>
         <snippet name="OutDepth"         type="file">sphere/fragment_out-depth.glsl</snippet>
         <snippet name="MainEnd"          type="file">sphere/fragment_mainend.glsl</snippet>
     </shader>

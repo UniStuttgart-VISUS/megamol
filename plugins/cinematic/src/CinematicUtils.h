@@ -71,14 +71,13 @@ public:
 
     void SetBackgroundColor(glm::vec4 bc) { this->background_color = bc; };
 
-    void PushMenu(const std::string& left_label, const std::string& middle_label, const std::string& right_label,
-        float viewport_width, float viewport_height);
+    void PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp);
 
-    void PushHotkeyList(float viewport_width, float viewport_height);
+    void PushHotkeyList(const glm::mat4& ortho, glm::vec2 dim_vp);
 
-    void PushText(const std::string& text, float x, float y, float z);
+    void Push2DText(const glm::mat4& ortho, const std::string& text, float x, float y);
 
-    void DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp);
+    void DrawAll(const glm::mat4& mvp, glm::vec2 dim_vp);
 
     float GetTextLineHeight(void);
 

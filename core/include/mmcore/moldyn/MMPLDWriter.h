@@ -1,7 +1,7 @@
 /*
  * MMPLDWriter.h
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2010-2021 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -118,6 +118,10 @@ namespace moldyn {
 
         /** The file format version to be written */
         param::ParamSlot versionSlot;
+
+        param::ParamSlot startFrameSlot;
+        param::ParamSlot endFrameSlot;
+        param::ParamSlot subsetSlot;
 
         /** The slot asking for data */
         CallerSlot dataSlot;
