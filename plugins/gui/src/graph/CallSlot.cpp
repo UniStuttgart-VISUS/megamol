@@ -331,10 +331,10 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 }
             }
         } else {
+            std::string slot_label = this->name;
             std::string button_label = "callslot_" + std::to_string(this->uid);
             bool slot_required = ((this->necessity == megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED) &&
                                   (!this->CallsConnected()));
-            std::string slot_label = this->name;
             if (slot_required) {
                 slot_label.append(" [REQUIRED]");
             }
