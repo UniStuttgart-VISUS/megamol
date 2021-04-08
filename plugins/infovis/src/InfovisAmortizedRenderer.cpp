@@ -309,11 +309,11 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         pm = jit * pm;
         for (int i = 0; i < 16; i++)
             projMatrix_column[i] = glm::value_ptr(pm)[i];
-
+        
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedPushFBO);
+        
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, pushImage);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, 0);
+
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, pushImage, 0);
     }
     glClear(GL_COLOR_BUFFER_BIT);
@@ -326,7 +326,8 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 }
 
 void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLevel) {
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("%i , %i ", w,h);
+    glDeleteTextures(1, &imStoreA);
+    glDeleteTextures(1, &imStoreB);
 
     if (approach == 0) {
         framesNeeded = 2;
@@ -412,7 +413,7 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
         }
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, pushImage);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w/a, h/a);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w/a, h/a, 0, GL_RGBA, GL_FLOAT, NULL);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, imStoreA);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
