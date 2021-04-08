@@ -952,7 +952,7 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
         case DEFAULTVIEW_FACE_FRONT:
-            axis = glm::vec3(-1.0f, 1.0f, 1.0f);
+            axis = glm::vec3(0.0f, 0.0f, -1.0f);
             break;
         case DEFAULTVIEW_FACE_BACK:
             axis = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -971,7 +971,7 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
             break;
         // CORNERS ----------------------------------------------------------------------------------
         case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
-            axis = glm::vec3(0.0, 0.0, -1.0);
+            axis = glm::vec3(1.0, -1.0, -1.0);
             break;
         case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
             axis = glm::vec3(-1.0, -1.0, -1.0);
