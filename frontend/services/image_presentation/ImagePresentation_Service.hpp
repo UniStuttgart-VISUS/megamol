@@ -14,6 +14,8 @@
 #include "Framebuffer_Events.h"
 
 #include <utility>
+#include <tuple>
+#include <list>
 
 namespace megamol {
 namespace frontend {

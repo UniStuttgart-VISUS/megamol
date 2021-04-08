@@ -193,7 +193,7 @@ static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
     }
 
     log_error("Fatal Error setting Graph Entry Point callback functions. Unknown Entry Point type.");
-    throw std::exception("Fatal Error setting Graph Entry Point callback functions");
+    throw std::exception();
 }
 
 std::vector<FrontendResource> ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
@@ -261,7 +261,7 @@ const ResourceType* maybeGetResource(std::string const& name, std::vector<Fronte
     if (no_resource)
         return nullptr;
 
-    return &resource_it->getResource<ResourceType>();
+    return &resource_it->template getResource<ResourceType>();
 }
 
 void ImagePresentation_Service::distribute_changed_resources_to_entry_points() {
@@ -430,7 +430,7 @@ void ImagePresentation_Service::register_lua_framebuffer_callbacks() {
         }
 
         auto clear = [](std::string name) {
-            auto forbidden = "<>:“/\|?*";
+            auto forbidden = "<>:“/\\|?*";
             auto replace = '_';
 
             // credit goes to https://thispointer.com/find-and-replace-all-occurrences-of-a-sub-string-in-c/
