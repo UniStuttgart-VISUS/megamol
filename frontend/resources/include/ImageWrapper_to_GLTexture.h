@@ -26,11 +26,14 @@ namespace frontend_resources {
         gl_texture& operator=(gl_texture const& other);
         gl_texture& operator=(gl_texture&& other) noexcept;
 
+        gl_texture& operator=(ImageWrapper const& image);
+
         unsigned int as_gl_handle();
 
         private:
         void assign(gl_texture const& other);
         void clear();
+        void from_image(ImageWrapper const& image);
     };
 
     gl_texture to_gl_texture(ImageWrapper const& image);

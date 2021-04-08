@@ -23,7 +23,12 @@ namespace frontend_resources {
 
         byte_texture(ImageWrapper const& image);
 
+        byte_texture& operator=(ImageWrapper const& image);
+
         std::vector<byte> const& as_byte_vector();
+
+        private:
+        void from_image(ImageWrapper const& image);
     };
 
     byte_texture to_bytes(ImageWrapper const& image);
