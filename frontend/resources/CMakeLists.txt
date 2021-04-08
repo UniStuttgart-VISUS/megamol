@@ -8,6 +8,8 @@
 project(frontend_resources)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+require_external(glad)
+
 #  # Check option dependencies: First list item is always the current build option,
 #  # afterwards list the dependencies.
 #  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
@@ -22,6 +24,8 @@ add_library(${PROJECT_NAME}
 set_target_properties(${PROJECT_NAME}
   PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
   OUTPUT_NAME ${PROJECT_NAME})
+
+target_link_libraries(${PROJECT_NAME} PRIVATE PUBLIC glad)
   
 set(INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 # target_include_directories(${PROJECT_NAME} INTERFACE ${INCLUDE_DIRS})
