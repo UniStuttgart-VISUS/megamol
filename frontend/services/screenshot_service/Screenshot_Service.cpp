@@ -116,10 +116,15 @@ megamol::frontend_resources::ImageWrapperScreenshotSource::ImageWrapperScreensho
     : m_image{& const_cast<ImageWrapper&>(image)}
 {}
 
-megamol::frontend_resources::ScreenshotImageData megamol::frontend_resources::ImageWrapperScreenshotSource::take_screenshot() const {
-    ScreenshotImageData screenshot_image;
+megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resources::ImageWrapperScreenshotSource::take_screenshot() const {
+    static ScreenshotImageData screenshot_image;
 
-    auto image_bytes = megamol::frontend_resources::to_bytes(*m_image);
+    // keep allocated vector memory around
+    // note that this initially holds a nullptr texture - bad!
+    static frontend_resources::byte_texture image_bytes({});
+
+    // fill bytes with image data
+    image_bytes = *m_image;
     auto& byte_vector = image_bytes.as_byte_vector();
 
     screenshot_image.resize(m_image->size().width, m_image->size().height);
@@ -164,7 +169,7 @@ void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer
     }
 }
 
-megamol::frontend_resources::ScreenshotImageData megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
+megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
     // TODO: in FBO-based rendering the FBO object carries its size and we dont need to look it up
     // simpler and more correct approach would be to observe Framebuffer_Events resource
     // but this is our naive implementation for now
@@ -173,7 +178,7 @@ megamol::frontend_resources::ScreenshotImageData megamol::frontend_resources::GL
     GLint fbWidth = viewport_dims[2];
     GLint fbHeight = viewport_dims[3];
 
-    ScreenshotImageData result;
+    static ScreenshotImageData result;
     result.resize(static_cast<size_t>(fbWidth), static_cast<size_t>(fbHeight));
 
     glReadBuffer(m_read_buffer);
@@ -182,11 +187,11 @@ megamol::frontend_resources::ScreenshotImageData megamol::frontend_resources::GL
     for (auto& pixel : result.image)
         pixel.a = default_alpha_value;
 
-    return std::move(result);
+    return result;
 }
 
-bool megamol::frontend_resources::ScreenshotImageDataToPNGWriter::write_image(ScreenshotImageData image, std::string const& filename) const {
-    return write_png_to_file(std::move(image), filename);
+bool megamol::frontend_resources::ScreenshotImageDataToPNGWriter::write_image(ScreenshotImageData const& image, std::string const& filename) const {
+    return write_png_to_file(image, filename);
 }
 
 namespace megamol {

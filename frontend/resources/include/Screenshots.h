@@ -50,7 +50,7 @@ struct ScreenshotImageData {
 
 class IScreenshotSource {
 public:
-    virtual ScreenshotImageData take_screenshot() const = 0;
+    virtual ScreenshotImageData const& take_screenshot() const = 0;
 
     ~IScreenshotSource() = default;
 };
@@ -58,10 +58,10 @@ public:
 class IImageDataWriter {
 public:
     bool write_screenshot(IScreenshotSource const& image_source, std::string const& filename) const {
-        return this->write_image(std::move(image_source.take_screenshot()), filename);
+        return this->write_image(image_source.take_screenshot(), filename);
     }
 
-    virtual bool write_image(ScreenshotImageData image, std::string const& filename) const = 0;
+    virtual bool write_image(ScreenshotImageData const& image, std::string const& filename) const = 0;
 
     ~IImageDataWriter() = default;
 };
@@ -69,9 +69,10 @@ public:
 struct ImageWrapper;
 class ImageWrapperScreenshotSource : public IScreenshotSource {
 public:
+    ImageWrapperScreenshotSource() = default;
     ImageWrapperScreenshotSource(ImageWrapper const& image);
 
-    ScreenshotImageData take_screenshot() const override;
+    ScreenshotImageData const& take_screenshot() const override;
 
 private:
     ImageWrapper* m_image = nullptr;
@@ -83,7 +84,7 @@ public:
 
     void set_read_buffer(ReadBuffer buffer);
 
-    ScreenshotImageData take_screenshot() const override;
+    ScreenshotImageData const& take_screenshot() const override;
 
 private:
     ReadBuffer m_read_buffer = FRONT;
@@ -91,7 +92,7 @@ private:
 
 class ScreenshotImageDataToPNGWriter : public IImageDataWriter {
 public:
-    bool write_image(ScreenshotImageData image, std::string const& filename) const override;
+    bool write_image(ScreenshotImageData const& image, std::string const& filename) const override;
 };
 
 
