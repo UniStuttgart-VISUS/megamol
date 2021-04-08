@@ -773,59 +773,60 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
     float pseudoDepth  = this->_bboxs.BoundingBox().Depth();
     float diagWidthDepth  = glm::length(glm::vec2(pseudoWidth, pseudoDepth));
     float diagHeightDepth = glm::length(glm::vec2(pseudoHeight, pseudoDepth));
-    float diagHeightWidth = glm::length(glm::vec2( pseudoWidth, pseudoHeight));
-    float diagDepthHeightWidth = glm::length(glm::vec3(pseudoHeight, pseudoWidth, pseudoDepth));
+    float diagHeightWidth = glm::length(glm::vec2( pseudoHeight, pseudoWidth));
+    float diagDepthHeightWidth = glm::length(glm::vec3(pseudoDepth, pseudoHeight, pseudoWidth));
 
+    float dh = 0.0f;
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
         case DEFAULTVIEW_FACE_FRONT:
         case DEFAULTVIEW_FACE_BACK:
             switch (dor) {
-                case DEFAULTORIENTATION_TOP:  // 0 degree
-                case DEFAULTORIENTATION_BOTTOM:  // 180 degree
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
                 break;
-                case DEFAULTORIENTATION_RIGHT:  // 90 degree
-                case DEFAULTORIENTATION_LEFT: { // 270 degree (= -90 degree)
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
                     pseudoWidth  = this->_bboxs.BoundingBox().Height();
                     pseudoHeight = this->_bboxs.BoundingBox().Width();
                     pseudoDepth  = this->_bboxs.BoundingBox().Depth();
-                } break;
+                break;
                 default: break;
             }
             break;
         case DEFAULTVIEW_FACE_RIGHT:
         case DEFAULTVIEW_FACE_LEFT:
             switch (dor) {
-                case DEFAULTORIENTATION_TOP:  // 0 degree
-                case DEFAULTORIENTATION_BOTTOM: { // 180 degree
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
                     pseudoWidth = this->_bboxs.BoundingBox().Depth();
                     pseudoHeight = this->_bboxs.BoundingBox().Height();
                     pseudoDepth = this->_bboxs.BoundingBox().Width();
-                } break;
-                case DEFAULTORIENTATION_RIGHT:  // 90 degree
-                case DEFAULTORIENTATION_LEFT: { // 270 degree (= -90 degree)
+                break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
                     pseudoWidth = this->_bboxs.BoundingBox().Height();
                     pseudoHeight = this->_bboxs.BoundingBox().Depth();
                     pseudoDepth = this->_bboxs.BoundingBox().Width();
-                } break;
+                break;
                 default: break;
             }
             break;
         case DEFAULTVIEW_FACE_TOP:
         case DEFAULTVIEW_FACE_BOTTOM:
             switch (dor) {
-                case DEFAULTORIENTATION_TOP:  // 0 degree
-                case DEFAULTORIENTATION_BOTTOM: { // 180 degree
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
                     pseudoWidth = this->_bboxs.BoundingBox().Width();
                     pseudoHeight = this->_bboxs.BoundingBox().Depth();
                     pseudoDepth = this->_bboxs.BoundingBox().Height();
-                } break;
-                case DEFAULTORIENTATION_RIGHT:  // 90 degree
-                case DEFAULTORIENTATION_LEFT: { // 270 degree (= -90 degree)
+                break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
                     pseudoWidth = this->_bboxs.BoundingBox().Depth();
                     pseudoHeight = this->_bboxs.BoundingBox().Width();
                     pseudoDepth = this->_bboxs.BoundingBox().Height();
-                } break;
+                break;
                 default: break;
             }
             break;
@@ -839,18 +840,18 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
         case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
         case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
             switch (dor) {
-                case DEFAULTORIENTATION_TOP:  // 0 degree
-                case DEFAULTORIENTATION_BOTTOM: { // 180 degree
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
                     pseudoWidth = diagWidthDepth;
                     pseudoHeight = diagDepthHeightWidth;
                     pseudoDepth = diagDepthHeightWidth;
-                } break;
+                break;
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
-                case DEFAULTORIENTATION_LEFT: { // 270 degree (= -90 degree)
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
                     pseudoWidth = diagDepthHeightWidth;
                     pseudoHeight = diagWidthDepth;
                     pseudoDepth = diagDepthHeightWidth;
-                } break;
+                break;
                 default: break;
             }
             break;
@@ -860,18 +861,19 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
         case DEFAULTVIEW_EDGE_TOP_BACK:
         case DEFAULTVIEW_EDGE_BOTTOM_BACK:
             switch (dor) {
-                case DEFAULTORIENTATION_TOP:  // 0 degree
-                case DEFAULTORIENTATION_BOTTOM: { // 180 degree
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
                     pseudoWidth = diagHeightDepth;
-                    pseudoHeight = this->_bboxs.BoundingBox().Height();
+                    pseudoHeight = this->_bboxs.BoundingBox().Width();
                     pseudoDepth = diagHeightDepth;
-                } break;
-                case DEFAULTORIENTATION_RIGHT:  // 90 degree
-                case DEFAULTORIENTATION_LEFT: { // 270 degree (= -90 degree)
-                    pseudoWidth = this->_bboxs.BoundingBox().Height();
+                break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    pseudoWidth = this->_bboxs.BoundingBox().Width();
                     pseudoHeight = diagHeightDepth;
                     pseudoDepth = diagHeightDepth;
-                } break;
+                    dh = diagHeightDepth/2.0f;
+                break;
                 default: break;
             }
             break;
@@ -880,18 +882,19 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
         case DEFAULTVIEW_EDGE_BOTTOM_LEFT:
         case DEFAULTVIEW_EDGE_BOTTOM_RIGHT :
             switch (dor) {
-                case DEFAULTORIENTATION_TOP:  // 0 degree
-                case DEFAULTORIENTATION_BOTTOM: { // 180 degree
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
                     pseudoWidth = diagHeightWidth;
                     pseudoHeight = this->_bboxs.BoundingBox().Depth();
                     pseudoDepth = diagHeightWidth;
-                } break;
-                case DEFAULTORIENTATION_RIGHT:  // 90 degree
-                case DEFAULTORIENTATION_LEFT: { // 270 degree (= -90 degree)
+                break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
                     pseudoWidth = this->_bboxs.BoundingBox().Depth();
                     pseudoHeight = diagHeightWidth;
                     pseudoDepth = diagHeightWidth;
-                } break;
+                    dh = diagHeightWidth/2.0f;
+                break;
                 default: break;
             }
             break;
@@ -901,17 +904,18 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
         case DEFAULTVIEW_EDGE_BACK_LEFT:
             switch (dor) {
                 case DEFAULTORIENTATION_TOP:  // 0 degree
-                case DEFAULTORIENTATION_BOTTOM: { // 180 degree
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
                     pseudoWidth = diagWidthDepth;
                     pseudoHeight = this->_bboxs.BoundingBox().Height();
                     pseudoDepth = diagWidthDepth;
-                } break;
-                case DEFAULTORIENTATION_RIGHT:  // 90 degree
-                case DEFAULTORIENTATION_LEFT: { // 270 degree (= -90 degree)
+                break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
                     pseudoWidth = this->_bboxs.BoundingBox().Height();
                     pseudoHeight = diagWidthDepth;
                     pseudoDepth = diagWidthDepth;
-                } break;
+                    dh = diagWidthDepth/2.0f;
+                break;
                 default: break;
             }
             break;
@@ -923,11 +927,11 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
     auto bbcglm = glm::vec4(bbc.GetX(), bbc.GetY(), bbc.GetZ(), 1.0f);
     double halfFovX = (static_cast<double>(dim.width()) * static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)) / static_cast<double>(dim.height());
     double distX = pseudoWidth / (2.0 * tan(halfFovX));
-    double distY = pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)));
+    double distY = pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f))) - dh;
     auto face_dist = static_cast<float>((distX > distY) ? distX : distY);
     face_dist = face_dist + (pseudoDepth / 2.0f);
-    float edge_dist = (glm::normalize(glm::vec2(1.0, 1.0))).x * face_dist;
     float corner_dist = (glm::normalize(glm::vec3(1.0, 1.0, 1.0))).x * face_dist;
+    float edge_dist = (glm::normalize(glm::vec2(1.0, 1.0))).x * face_dist;
 
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
@@ -1031,116 +1035,59 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
     const float cos22_5 = cosf(M_PI_4/2.0f);
     const float sin22_5 = sinf(M_PI_4/2.0f);
 
+    // FACES --------------------------------------------------------------------------------------
     auto axis = glm::vec3(0.0f, 0.0f, 0.0f);
     auto orientation = cam_type::quaternion_type::create_identity();
-    float axis_angle = sin45;
-    float orientation_angle = cos45;
-
+    bool calc_axis_orientation = false;
     switch (dv) {
-        // FACES ----------------------------------------------------------------------------------
         case DEFAULTVIEW_FACE_FRONT:
             axis = glm::vec3(0.0f, 0.0f, -1.0f);
+            calc_axis_orientation = true;
             break;
         case DEFAULTVIEW_FACE_BACK:
             axis = glm::vec3(0.0f, 0.0f, 1.0f);
+            calc_axis_orientation = true;
             break;
         case DEFAULTVIEW_FACE_RIGHT:
             axis = glm::vec3(-1.0f, 0.0f, 0.0f);
+            calc_axis_orientation = true;
             break;
         case DEFAULTVIEW_FACE_LEFT:
             axis = glm::vec3(1.0f, 0.0f, 0.0f);
+            calc_axis_orientation = true;
             break;
         case DEFAULTVIEW_FACE_TOP:
             axis = glm::vec3(0.0f, -1.0f, 0.0f);
+            calc_axis_orientation = true;
             break;
         case DEFAULTVIEW_FACE_BOTTOM:
             axis = glm::vec3(0.0f, 1.0f, 0.0f);
-            break;
-        // CORNERS ----------------------------------------------------------------------------------
-        case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
-            axis = glm::vec3(1.0, -1.0, -1.0);
-            break;
-        case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
-            axis = glm::vec3(-1.0, -1.0, -1.0);
-            break;
-        case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
-            axis = glm::vec3(1.0, -1.0, 1.0);
-            break;
-        case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
-            axis = glm::vec3(-1.0, -1.0, 1.0);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
-            axis = glm::vec3(1.0, 1.0, -1.0);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
-            axis = glm::vec3(-1.0, 1.0, -1.0);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
-            axis = glm::vec3(1.0, 1.0, 1.0);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
-            axis = glm::vec3(-1.0, 1.0, 1.0);
-            break;
-        // EDGES ----------------------------------------------------------------------------------
-        case DEFAULTVIEW_EDGE_TOP_FRONT:
-            axis_angle = sin22_5;
-            orientation_angle = cos22_5;
-            axis = glm::vec3(0.0f, -1.0, -1.0);
-            break;
-        case DEFAULTVIEW_EDGE_TOP_LEFT:
-            axis = glm::vec3(1.0, -1.0, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_TOP_RIGHT :
-            axis = glm::vec3(-1.0, -1.0, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_TOP_BACK:
-            axis = glm::vec3(0.0f, -1.0, 1.0);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_FRONT:
-            axis = glm::vec3(0.0f, 1.0, -1.0);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_LEFT:
-            axis = glm::vec3(1.0, 1.0, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_RIGHT :
-            axis = glm::vec3(-1.0, 1.0, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_BACK:
-            axis = glm::vec3(0.0f, 1.0, 1.0);
-            break;
-        case DEFAULTVIEW_EDGE_FRONT_LEFT:
-            axis = glm::vec3(1.0, 0.0f, -1.0);
-            break;
-        case DEFAULTVIEW_EDGE_FRONT_RIGHT:
-            axis = glm::vec3(-1.0, 0.0f, -1.0);
-            break;
-        case DEFAULTVIEW_EDGE_BACK_LEFT:
-            axis = glm::vec3(1.0, 0.0f, 1.0);
-            break;
-        case DEFAULTVIEW_EDGE_BACK_RIGHT:
-            axis = glm::vec3(-1.0, 0.0f, 1.0);
+            calc_axis_orientation = true;
             break;
         default: break;
     }
-    switch (dor) {
-        case DEFAULTORIENTATION_TOP: // 0 degree
-            break;
-        case DEFAULTORIENTATION_RIGHT: // 90 degree
-            axis *= axis_angle;
-            orientation = cam_type::quaternion_type(axis.x, axis.y, axis.z, orientation_angle);
-            break;
-        case DEFAULTORIENTATION_BOTTOM: { // 180 degree
-            // Using euler angles to get quaternion for 180 degree rotation
-            glm::quat flip_quat = glm::quat(axis * static_cast<float>(M_PI));
-            orientation = cam_type::quaternion_type(flip_quat.x, flip_quat.y, flip_quat.z, flip_quat.w);
-        } break;
-        case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
-            axis *= -axis_angle;
-            orientation = cam_type::quaternion_type(axis.x, axis.y, axis.z, orientation_angle);
-            break;
-        default: break;
+    if (calc_axis_orientation) {
+        switch (dor) {
+            case DEFAULTORIENTATION_TOP: // 0 degree
+                break;
+            case DEFAULTORIENTATION_RIGHT: // 90 degree
+                axis *= sin45;
+                orientation = cam_type::quaternion_type(axis.x, axis.y, axis.z, cos45);
+                break;
+            case DEFAULTORIENTATION_BOTTOM: { // 180 degree
+                // Using euler angles to get quaternion for 180 degree rotation
+                glm::quat flip_quat = glm::quat(axis * static_cast<float>(M_PI));
+                orientation = cam_type::quaternion_type(flip_quat.x, flip_quat.y, flip_quat.z, flip_quat.w);
+            }
+                break;
+            case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                axis *= -sin45;
+                orientation = cam_type::quaternion_type(axis.x, axis.y, axis.z, cos45);
+                break;
+            default:
+                break;
+        }
     }
-    orientation = normalise(orientation);
 
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
@@ -1208,66 +1155,224 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
             break;
         // EDGES ----------------------------------------------------------------------------------
         case DEFAULTVIEW_EDGE_TOP_FRONT:
-            default_orientation = orientation *
-                    cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, 0.0, -sin45, cos45);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5) *
+                                          cam_type::quaternion_type(0.0, 0.0, -sin45, cos45);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+                    default_orientation = cam_type::quaternion_type(0.0, 0.0, 1.0, 0.0) *
+                            cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5);
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+                    default_orientation = cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5) *
+                                          cam_type::quaternion_type(0.0, 0.0, sin45, cos45);
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    default_orientation = cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5);
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_TOP_LEFT:
-            default_orientation = orientation *
-                    cam_type::quaternion_type(-sin45, 0.0, 0.0, cos45) *
-                    cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(-sin45, 0.0, 0.0, cos45) *
+                                          cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_TOP_RIGHT :
-            default_orientation = orientation *
-                    cam_type::quaternion_type(-sin45, 0.0, 0.0, cos45) *
-                    cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(-sin45, 0.0, 0.0, cos45) *
+                                          cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_TOP_BACK:
-            default_orientation = orientation *
-                    cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
-                    cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, 0.0, sin45, cos45);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
+                                          cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5) *
+                                          cam_type::quaternion_type(0.0, 0.0, sin45, cos45);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_BOTTOM_FRONT:
-            default_orientation = orientation *
-                    cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, 0.0, -sin45, cos45);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5) *
+                                          cam_type::quaternion_type(0.0, 0.0, -sin45, cos45);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_BOTTOM_LEFT:
-            default_orientation = orientation *
-                    cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
-                    cam_type::quaternion_type(sin45, 0.0, 0.0, cos45) *
-                    cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
+                                          cam_type::quaternion_type(sin45, 0.0, 0.0, cos45) *
+                                          cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_BOTTOM_RIGHT :
-            default_orientation = orientation *
-                    cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
-                    cam_type::quaternion_type(sin45, 0.0, 0.0, cos45) *
-                    cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
+                                          cam_type::quaternion_type(sin45, 0.0, 0.0, cos45) *
+                                          cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_BOTTOM_BACK:
-            default_orientation = orientation *
-                    cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
-                    cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5) *
-                    cam_type::quaternion_type(0.0, 0.0, sin45, cos45);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
+                                          cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5) *
+                                          cam_type::quaternion_type(0.0, 0.0, sin45, cos45);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_FRONT_LEFT:
-            default_orientation = orientation *
-                    cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_FRONT_RIGHT:
-            default_orientation = orientation *
-                    cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_BACK_LEFT:
-            default_orientation = orientation *
-                    cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
-                    cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
+                                          cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         case DEFAULTVIEW_EDGE_BACK_RIGHT:
-            default_orientation = orientation *
-                    cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
-                    cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+            switch (dor) {
+                case DEFAULTORIENTATION_TOP: // 0 degree
+                    default_orientation = orientation *
+                                          cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0) *
+                                          cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+                    break;
+                case DEFAULTORIENTATION_RIGHT: // 90 degree
+
+                    break;
+                case DEFAULTORIENTATION_BOTTOM: // 180 degree
+
+                    break;
+                case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    break;
+                default: break;
+            }
             break;
         default: break;
     }
