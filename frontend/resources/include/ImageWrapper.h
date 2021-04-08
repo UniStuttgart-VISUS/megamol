@@ -47,9 +47,9 @@ struct ImageWrapper {
     ImageWrapper(ImageSize size, DataChannels channels, WrappedImageType type, const void* data);
     ImageWrapper() = default;
 
-    WrappedImageType image_type{};
-    ImageSize image_size{};
-    DataChannels channels{};
+    WrappedImageType image_type = WrappedImageType::ByteArray;
+    ImageSize image_size = {0, 0};
+    DataChannels channels = DataChannels::RGBA8;
 
     void* borrowed_image_handle = nullptr;
 
