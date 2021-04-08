@@ -470,7 +470,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
                                    "    alpha = (alpha + 0.5 * asum) / 3.0; \n"
                                    "    if (alpha <= 0.0) discard; \n"
                                    "    if (selected_face_id < 6) outFragColor = vec4(colors[selected_face_id] * 0.75, alpha); \n"
-                                   "    else discard; //outFragColor = vec4(0.75, 0.75, 0.75, alpha); \n"
+                                   "    else outFragColor = vec4(0.75, 0.75, 0.75, alpha); \n"
                                    "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
                                    "} ";
 
