@@ -131,19 +131,30 @@ CinematicView::CinematicView(void)
 
 CinematicView::~CinematicView(void) {
 
+    if (this->_fbo != nullptr) {
+        if (this->_fbo->IsEnabled()) {
+            this->_fbo->Disable();
+        }
+        this->_fbo->Release();
+        this->_fbo.reset();
+    }
     this->render_to_file_cleanup();
+    this->Release();
 }
+
 
 
 void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call) {
 
     // Get update data from keyframe keeper -----------------------------------
     auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
-    if (cr3d == nullptr)
+    if (cr3d == nullptr) {
         return;
+    }
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
-    if (ccc == nullptr)
+    if (ccc == nullptr) {
         return;
+    }
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData))
         return;
     ccc->SetBboxCenter(vislib_point_to_glm(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
@@ -318,7 +329,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     // Set camera settings ----------------------------------------------------
     auto res = cam_type::screen_size_type(glm::ivec2(fboWidth, fboHeight));
     this->_camera.resolution_gate(res);
-    auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, 0, fboWidth, fboHeight});
+    auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, fboHeight, fboWidth, 0}); // left, top, right, bottom!
     this->_camera.image_tile(tile);
 
     // Set camera parameters of selected keyframe for this view.
@@ -336,7 +347,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
             auto aper = skf.GetCameraState().half_aperture_angle_radians;
             this->_camera.half_aperture_angle_radians(aper);
         } else {
-            /// XXX this->ResetView();
+            this->ResetView();
         }
     }
 
@@ -475,7 +486,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     glm::vec3 pos_upper_right = {right, up, 0.0f};
     glm::vec3 pos_bottom_right = {right, bottom, 0.0f};
     this->utils.Push2DColorTexture(this->_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left,
-        pos_upper_right, pos_bottom_right, false, glm::vec4(0.0f), true);
+        pos_upper_right, pos_bottom_right, true, glm::vec4(0.0f), true);
     
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " CINEMATIC ";

@@ -213,7 +213,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
     const std::string& in_module_fullname, const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
-    if (inout_param.Type() == Param_t::TRANSFERFUNCTION) {
+    if (inout_param.Type() == ParamType_t::TRANSFERFUNCTION) {
         inout_param.TransferFunctionEditor_ConnectExternal(in_external_tf_editor, false);
     }
 
@@ -237,7 +237,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
             if (inout_param.Draw(in_scope, in_module_fullname)) {
 
                 // Open window calling the transfer function editor callback
-                if ((inout_param.Type() == Param_t::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
+                if ((inout_param.Type() == ParamType_t::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
                     if (out_open_external_tf_editor != nullptr) {
                         (*out_open_external_tf_editor) = true;
                     }
