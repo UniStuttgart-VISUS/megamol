@@ -440,11 +440,10 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
-    // First call chained renderer
-    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
-    if (chainedCall != nullptr) {
-        *chainedCall = call;
-        if (!(*chainedCall)(view::AbstractCallRender::FnRender)) {
+    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
+    if (cr3d_out != nullptr) {
+        *cr3d_out = call;
+        if (!(*cr3d_out)(view::AbstractCallRender::FnRender)) {
             return false;
         }
     }

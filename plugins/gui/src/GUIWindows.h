@@ -116,6 +116,9 @@ namespace gui {
 
         /**
          * Pass current GUI state.
+         *
+         * @param as_lua   If true, GUI state, scale and visibility are returned wrapped into respective LUA commands.
+         *                 If false, only GUI state JSON string is returned.
          */
         inline std::string GetState(bool as_lua) {
             return this->project_to_lua_string(as_lua);
@@ -131,8 +134,8 @@ namespace gui {
         /**
          * Pass current GUI scale.
          */
-        inline float GetScale() const {
-            return gui_scaling.Get();
+        float GetScale(void) const {
+            return megamol::gui::gui_scaling.Get();
         }
 
         /**
@@ -158,11 +161,7 @@ namespace gui {
          * Pass project load request.
          * Request is consumed when calling this function.
          */
-        std::string GetProjectLoadRequest(void) {
-            auto project_file_name = this->state.request_load_projet_file;
-            this->state.request_load_projet_file.clear();
-            return project_file_name;
-        }
+        std::string GetProjectLoadRequest(void);
 
         /**
          * Pass current mouse cursor request.
@@ -269,7 +268,6 @@ namespace gui {
             bool style_changed;      // Flag indicating changed style
             std::string new_gui_state; // If set, new gui state is applied in next graph synchronisation step
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
-            ImGuiID graph_uid;                             // UID of currently running graph
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
             bool load_fonts;                               // Flag indicating font loading
             std::string win_delete;                        // Name of the window to delete.

@@ -103,7 +103,7 @@ namespace gui {
         struct StockParameter {
             std::string full_name;
             std::string description;
-            Param_t type;
+            ParamType_t type;
             std::string default_value;
             Min_t minval;
             Max_t maxval;
@@ -132,8 +132,8 @@ namespace gui {
         static bool WriteCoreParameterValue(
             megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr);
 
-        Parameter(ImGuiID uid, Param_t type, Stroage_t store, Min_t minval, Max_t maxval, const std::string& full_name,
-            const std::string& description);
+        Parameter(ImGuiID uid, ParamType_t type, Stroage_t store, Min_t minval, Max_t maxval,
+            const std::string& full_name, const std::string& description);
 
         ~Parameter(void);
 
@@ -226,7 +226,7 @@ namespace gui {
         inline size_t GetTransferFunctionHash(void) const {
             return this->tf_string_hash;
         }
-        inline const Param_t Type(void) const {
+        inline const ParamType_t Type(void) const {
             return this->type;
         }
         inline const std::string FloatFormat(void) const {
@@ -237,6 +237,9 @@ namespace gui {
         }
         inline vislib::SmartPtr<megamol::core::param::AbstractParam> CoreParamPtr(void) const {
             return this->core_param_ptr;
+        }
+        inline void ResetCoreParamPtr(void) {
+            this->core_param_ptr = nullptr;
         }
 
         // SET ----------------------------------------------------------------
@@ -262,12 +265,12 @@ namespace gui {
                         this->value_dirty = true;
                     }
 
-                    if (this->type == Param_t::FLEXENUM) {
+                    if (this->type == ParamType_t::FLEXENUM) {
                         // Flex Enum
                         auto storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
                         storage.insert(std::get<std::string>(this->value));
                         this->SetStorage(storage);
-                    } else if (this->type == Param_t::TRANSFERFUNCTION) {
+                    } else if (this->type == ParamType_t::TRANSFERFUNCTION) {
                         // Transfer Function
                         if constexpr (std::is_same_v<T, std::string>) {
                             int texture_width, texture_height;
@@ -335,7 +338,7 @@ namespace gui {
         // VARIABLES --------------------------------------------------------------
 
         const ImGuiID uid;
-        const Param_t type;
+        const ParamType_t type;
         std::string full_name;
         std::string description;
 

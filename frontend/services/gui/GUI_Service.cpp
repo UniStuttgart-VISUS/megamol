@@ -309,9 +309,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 
 std::string GUI_Service::resource_request_gui_state(bool as_lua) {
 
-    if (is_gui_nullptr) {
-        return std::string();
-    }
+    if (is_gui_nullptr) return std::string();
     auto gui = this->m_gui->Get();
     return gui->GetState(as_lua);
 }
@@ -319,9 +317,7 @@ std::string GUI_Service::resource_request_gui_state(bool as_lua) {
 
 bool GUI_Service::resource_request_gui_visibility() {
 
-    if (is_gui_nullptr) {
-        return false;
-    }
+    if (is_gui_nullptr) return false;
     auto gui = this->m_gui->Get();
     return gui->GetVisibility();
 }
@@ -329,9 +325,7 @@ bool GUI_Service::resource_request_gui_visibility() {
 
 float GUI_Service::resource_request_gui_scale() {
 
-    if (is_gui_nullptr) {
-        return 1.0f;
-    }
+    if (is_gui_nullptr) return 1.0f;
     auto gui = this->m_gui->Get();
     return gui->GetScale();
 }
@@ -351,6 +345,7 @@ void GUI_Service::resource_provide_gui_visibility(bool show) {
     auto gui = this->m_gui->Get();
     gui->SetVisibility(show);
 }
+
 
 void GUI_Service::resource_provide_gui_scale(float scale) {
 
