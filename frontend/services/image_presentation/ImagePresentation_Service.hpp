@@ -138,6 +138,8 @@ private:
     void register_lua_framebuffer_callbacks();
     std::function<bool(std::string const&, std::string const&)> m_entrypointToPNG_trigger;
 
+    void present_images_to_glfw_window(std::list<frontend_resources::ImageEntry> const& images, unsigned int framebuffer_width, unsigned int framebuffer_height);
+
     Config m_config;
 };
 

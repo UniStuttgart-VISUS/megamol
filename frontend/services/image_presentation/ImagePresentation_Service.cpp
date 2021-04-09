@@ -9,6 +9,11 @@
 // you should also delete the FAQ comments in these template files after you read and understood them
 #include "ImagePresentation_Service.hpp"
 
+#include "WindowManipulation.h"
+
+#include "ImageWrapper_to_GLTexture.h"
+#include "ImagePresentation_Sinks.hpp"
+
 #include "mmcore/view/AbstractView_EventConsumption.h"
 #include "LuaCallbacksCollection.h"
 
@@ -76,6 +81,8 @@ bool ImagePresentation_Service::init(const Config& config) {
           "FrontendResources" // std::vector<FrontendResource>
         , "RegisterLuaCallbacks"
         , "ImageWrapperToPNG_ScreenshotTrigger"
+        , "WindowManipulation"
+        , "WindowFramebufferEvents"
     };
 
     m_config = config;
@@ -137,6 +144,28 @@ void ImagePresentation_Service::setRequestedResources(std::vector<FrontendResour
     this->m_requestedResourceReferences = resources;
 
     m_frontend_resources_ptr = & m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>();
+
+    auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
+    auto& window_framebuffer_events = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::FramebufferEvents>();
+
+    auto glfw_framebuffer_sink =
+        [&](std::list<frontend_resources::ImageEntry> const& images) {
+            // sink needs to know current glfw framebuffer size
+            unsigned int fbo_width = 0, fbo_height = 0;
+
+            fbo_width = window_framebuffer_events.previous_state.width;
+            fbo_height = window_framebuffer_events.previous_state.height;
+            if (window_framebuffer_events.size_events.size()) {
+                fbo_width = window_framebuffer_events.size_events.back().width;
+                fbo_height = window_framebuffer_events.size_events.back().height;
+            }
+
+            present_images_to_glfw_window(images, fbo_width, fbo_height);
+            window_manipulation.swap_buffers();
+        };
+    // TODO FRONTEND IMAGES: uncomment this to blit frontend images into GLFW window
+    // attention, this uses results of the views directly and does not show the GUI!
+    //m_presentation_sink_registry_resource.add("GLFW Window Image Sink", glfw_framebuffer_sink);
 
     register_lua_framebuffer_callbacks();
 }
@@ -511,6 +540,19 @@ void ImagePresentation_Service::register_lua_framebuffer_callbacks() {
     auto& register_lua_callbacks = *maybe_register_lua_callbacks_ptr; // we requested this resource as a service - if it was not present MegaMol would have shut down
 
     register_lua_callbacks(callbacks);
+}
+
+void ImagePresentation_Service::present_images_to_glfw_window(std::list<frontend_resources::ImageEntry> const& images, unsigned int framebuffer_width, unsigned int framebuffer_height) {
+    static glfw_window_sink glfw_sink;
+    // TODO: glfw_window_sink destuctor gets called after GL context died
+
+    glfw_sink.resize(framebuffer_width, framebuffer_height);
+
+    for (auto& elem: images) {
+        auto& image = elem.second;
+        frontend_resources::gl_texture gl_image = image;
+        glfw_sink.blit_texture(gl_image.as_gl_handle(), image.size().width, image.size().height);
+    }
 }
 
 } // namespace frontend
