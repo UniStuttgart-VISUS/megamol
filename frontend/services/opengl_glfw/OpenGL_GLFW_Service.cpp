@@ -505,6 +505,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {"WindowManipulation", m_windowManipulation}
     };
 
+    m_requestedResourcesNames = {
+          "FrameStatistics"
+    };
+
     m_pimpl->last_time = std::chrono::system_clock::now();
 
     log("initialized successfully");
@@ -720,10 +724,12 @@ std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {
 }
 
 const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() const {
-    return {"FrameStatistics"};
+    return m_requestedResourcesNames;
 }
 
 void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> resources) {
+    m_requestedResourceReferences = resources;
+
     m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
 }
 
