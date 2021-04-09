@@ -17,6 +17,8 @@ struct WindowManipulation {
     void set_swap_interval(const unsigned int wait_frames) const; // DANGER: assumes there is a GL context active
     std::function<void(const int)> set_mouse_cursor;
 
+    void swap_buffers() const;
+
     enum class Fullscreen {
         Maximize,
         Restore
