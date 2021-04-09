@@ -11,6 +11,7 @@
 
 #include "ImageWrapper.h"
 #include "ImagePresentationEntryPoints.h"
+#include "ImagePresentationSink.h"
 #include "Framebuffer_Events.h"
 
 #include <utility>
@@ -88,8 +89,7 @@ private:
     std::vector<FrontendResource> m_requestedResourceReferences;
 
     using ImageWrapper = megamol::frontend_resources::ImageWrapper;
-    using ImageEntry = std::pair<std::string, ImageWrapper>;
-    std::list<ImageEntry> m_images;
+    std::list<frontend_resources::ImageEntry> m_images;
 
     megamol::frontend_resources::ImageRegistry m_image_registry_resource; // resource to expose requesting/renaming/deleting images
     megamol::frontend_resources::ImagePresentationEntryPoints m_entry_points_registry_resource; // resorce to add/remove entry points
@@ -120,6 +120,9 @@ private:
     std::list<GraphEntryPoint> m_entry_points;
     GraphEntryPoint::FboEventsSource m_default_fbo_events_source = GraphEntryPoint::FboEventsSource::WindowSize;
     ViewportTile m_viewport_tile = {{0.0, 0.0}, {1.0, 1.0}};
+
+    std::list<std::pair<std::string/*name*/, frontend_resources::ImagePresentationSink /*handler*/>> m_presentation_sinks;
+    frontend_resources::ImagePresentationSinkRegistry m_presentation_sink_registry_resource;
 
     std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
     void remap_individual_resources(GraphEntryPoint& entry);

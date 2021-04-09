@@ -60,11 +60,15 @@ bool ImagePresentation_Service::init(const Config& config) {
     m_entry_points_registry_resource.rename_entry_point = [&](std::string oldName, std::string newName) -> bool { return rename_entry_point(oldName, newName); };
     m_entry_points_registry_resource.clear_entry_points = [&]() { clear_entry_points(); };
 
+    m_presentation_sink_registry_resource.add    = [&](std::string const& name, auto const& sink) { m_presentation_sinks.push_back({name, sink}); };
+    m_presentation_sink_registry_resource.remove = [&](std::string const& name)                   { m_presentation_sinks.remove_if([&](auto const& element) { return element.first == name; }); };
+
     this->m_providedResourceReferences =
     {
           {"ImageRegistry", m_image_registry_resource} // mostly we use this resource, but other services like Screenshots may access it too
         , {"ImagePresentationEntryPoints", m_entry_points_registry_resource} // used by MegaMolGraph to set entry points
         , {"EntryPointToPNG_ScreenshotTrigger", m_entrypointToPNG_trigger}
+        , {"ImagePresentationSinkRegistry", m_presentation_sink_registry_resource}
     };
 
     this->m_requestedResourcesNames =
@@ -165,6 +169,10 @@ void ImagePresentation_Service::RenderNextFrame() {
 }
 
 void ImagePresentation_Service::PresentRenderedImages() {
+    for (auto& sink: m_presentation_sinks) {
+        auto& present = sink.second;
+        present(m_images);
+    }
 }
 
 // clang-format off
