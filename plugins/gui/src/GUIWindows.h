@@ -39,7 +39,6 @@
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/versioninfo.h"
-#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include "vislib/math/Rectangle.h"
 
@@ -196,6 +195,19 @@ namespace gui {
          * Set GUI scale.
          */
         void SetScale(float scale);
+
+        /**
+         * Experimental Frontend Images UI
+         */
+        std::vector<std::tuple<std::string /*name*/,unsigned int /*GL handle*/, unsigned int /*widht*/, unsigned int /*height*/>> m_textures_test;
+        void SetEntryPointTextures(std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int>> textures) { m_textures_test = textures; }
+        void ShowTextures();
+
+        std::function<void(unsigned int, std::string const&)>* m_headnode_remote_control = nullptr;
+        void SetRemoteControlCallback(std::function<void(unsigned int, std::string const&)> const& remote_control) {
+            m_headnode_remote_control = &const_cast<std::function<void(unsigned int, std::string const&)>&>(remote_control);
+        }
+        void ShowHeadnodeRemoteControl();
 
         /**
          * Set project script paths.

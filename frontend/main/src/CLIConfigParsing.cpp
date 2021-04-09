@@ -86,7 +86,20 @@ static std::string topmost_option       = "topmost";
 static std::string nocursor_option      = "nocursor";
 static std::string interactive_option   = "i,interactive";
 static std::string guishow_option       = "guishow";
+static std::string nogui_option         = "nogui";
 static std::string guiscale_option      = "guiscale";
+static std::string entryfbos_option     = "entryfbos";
+static std::string framebuffer_option   = "framebuffer";
+static std::string viewport_tile_option = "tile";
+static std::string remote_head_option   = "headnode";
+static std::string remote_render_option = "rendernode";
+static std::string remote_mpi_option    = "mpi";
+static std::string remote_mpi_broadcast_rank_option  = "mpi-broadcaster-rank";
+static std::string remote_zmq_control_send_option    = "zmq-control-send-to";
+static std::string remote_zmq_control_receive_option = "zmq-control-receive-from";
+static std::string remote_head_broadcast_quit_option    = "headnode-broadcast-quit";
+static std::string remote_head_broadcast_project_option = "headnode-broadcast-project";
+static std::string remote_head_connect_at_start_option  = "headnode-connect-at-start";
 static std::string help_option          = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -109,9 +122,64 @@ static void guishow_handler(std::string const& option_name, cxxopts::ParseResult
     config.gui_show = parsed_options[option_name].as<bool>();
 };
 
+static void nogui_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.gui_show = !parsed_options[option_name].as<bool>();
+};
+
 static void guiscale_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.gui_scale = parsed_options[option_name].as<float>();
+};
+
+static void entryfbos_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.gui_show_entryfbos = parsed_options[option_name].as<bool>();
+};
+
+static void remote_head_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_headnode = parsed_options[option_name].as<bool>();
+};
+
+static void remote_render_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_rendernode = parsed_options[option_name].as<bool>();
+};
+
+static void remote_mpirender_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_mpirendernode = parsed_options[option_name].as<bool>();
+};
+
+static void remote_mpirank_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_mpi_broadcast_rank = parsed_options[option_name].as<unsigned int>();
+};
+
+static void remote_zmqsend_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_zmq_control_send_to = parsed_options[option_name].as<std::string>();
+};
+
+static void remote_zmqreceive_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_zmq_control_receive_from = parsed_options[option_name].as<std::string>();
+};
+
+static void remote_head_broadcast_quit_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_head_broadcast_quit = parsed_options[option_name].as<bool>();
+};
+
+static void remote_head_broadcast_project_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_head_broadcast_initial_project = parsed_options[option_name].as<bool>();
+};
+
+static void remote_head_connect_at_start_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.remote_head_connect_on_start = parsed_options[option_name].as<bool>();
 };
 
 static void config_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -148,14 +216,35 @@ static void logfile_handler(std::string const& option_name, cxxopts::ParseResult
     config.log_file = parsed_options[option_name].as<std::string>();
 };
 
+static const std::string accepted_log_level_strings = "('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')";
+static unsigned int parse_log_level(std::string const& value) {
+    if (value.front()=='-')
+        exit("log level value must be positive. seems to be negative: " + value);
+
+    unsigned int value_as_uint = 0;
+
+    try {
+        if (std::string(value).find_first_of("0123456789") != std::string::npos) {
+            value_as_uint = std::stoi(value);
+        } else {
+            value_as_uint = megamol::core::utility::log::Log::ParseLevelAttribute(value);
+        }
+    }
+    catch (...) {
+        exit("Could not parse valid log level string or positive integer from argument \"" + value + "\"");
+    }
+
+    return value_as_uint;
+}
+
 static void loglevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.log_level = parsed_options[option_name].as<unsigned int>();
+    config.log_level = parse_log_level(parsed_options[option_name].as<std::string>());
 };
 
 static void echolevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.echo_level = parsed_options[option_name].as<unsigned int>();
+    config.echo_level = parse_log_level(parsed_options[option_name].as<std::string>());
 };
 
 static void project_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -240,6 +329,44 @@ static void window_handler(std::string const& option_name, cxxopts::ParseResult 
     }
 };
 
+static void framebuffer_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    auto string = parsed_options[option_name].as<std::string>();
+    // WIDTHxHEIGHT
+    std::regex geometry("(\\d+)x(\\d+)");
+    std::smatch match;
+    if (std::regex_match(string, match, geometry)) {
+        unsigned int width = std::stoul(match[1].str(), nullptr, 10);
+        unsigned int height = std::stoul(match[2].str(), nullptr, 10);
+        config.framebuffer_size = {{width, height}};
+    } else {
+        exit("framebuffer option needs to be in the following format: WIDTHxHEIGHT, e.g. 200x100");
+    }
+};
+
+static void viewport_tile_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    auto string = parsed_options[option_name].as<std::string>();
+    // x,y;LWIDTHxLHEIGHT;GWIDTHxGHEIGHT
+    std::regex geometry("(\\d+),(\\d+):(\\d+)x(\\d+):(\\d+)x(\\d+)");
+    std::smatch match;
+    if (std::regex_match(string, match, geometry)) {
+        using UintPair = std::pair<unsigned int, unsigned int>;
+
+        auto read_pair = [&](int index) {
+            return UintPair{std::stoul(match[index].str(), nullptr, 10), std::stoul(match[index+1].str(), nullptr, 10)};
+        };
+
+        UintPair start_pixel       = read_pair(1);
+        UintPair local_resolution  = read_pair(3);
+        UintPair global_resolution = read_pair(5);
+
+        config.viewport_tile = {start_pixel, local_resolution, global_resolution};
+    } else {
+        exit("viewport tile option needs to be in the following format: x,y:LWIDTHxLHEIGHT:GWIDTHxGHEIGHT, e.g. 0,0:200x100:400x200");
+    }
+};
+
 using OptionsListEntry = std::tuple<std::string, std::string, std::shared_ptr<cxxopts::Value>, std::function<void(std::string const&, cxxopts::ParseResult const&, megamol::frontend::RuntimeConfig&)>>;
 
 std::vector<OptionsListEntry> cli_options_list =
@@ -249,8 +376,8 @@ std::vector<OptionsListEntry> cli_options_list =
         , {resourcedir_option,   "Add resource directory(ies)",                                                     cxxopts::value<std::vector<std::string>>(), resourcedir_handler}
         , {shaderdir_option,     "Add shader directory(ies)",                                                       cxxopts::value<std::vector<std::string>>(), shaderdir_handler}
         , {logfile_option,       "Set log file",                                                                    cxxopts::value<std::string>(),              logfile_handler}
-        , {loglevel_option,      "Set logging level",                                                               cxxopts::value<unsigned int>(),             loglevel_handler}
-        , {echolevel_option,     "Set echo level",                                                                  cxxopts::value<unsigned int>(),             echolevel_handler}
+        , {loglevel_option,      "Set logging level, accepted values: "+accepted_log_level_strings,                 cxxopts::value<std::string>(),              loglevel_handler}
+        , {echolevel_option,     "Set echo level, accepted values see above",                                       cxxopts::value<std::string>(),              echolevel_handler}
         , {project_option,       "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
         , {global_option,        "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
@@ -264,8 +391,24 @@ std::vector<OptionsListEntry> cli_options_list =
         , {nocursor_option,      "Do not show mouse cursor inside window",                                          cxxopts::value<bool>(),                     nocursor_handler     }
         , {interactive_option,   "Run MegaMol even if some project file failed to load",                            cxxopts::value<bool>(),                     interactive_handler  }
         , {project_files_option, "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
-        , {guishow_option,       "Render GUI overlay, use '=false' to disable",                                     cxxopts::value<bool>(),                     guishow_handler}
+        , {guishow_option,       "Render GUI overlay",                                                              cxxopts::value<bool>(),                     guishow_handler}
+        , {nogui_option,         "Dont render GUI overlay",                                                         cxxopts::value<bool>(),                     nogui_handler}
         , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
+        , {entryfbos_option,     "[Experimental] Show result images of graph entry point views in GUI",             cxxopts::value<bool>(),                     entryfbos_handler}
+        , {framebuffer_option,   "Size of framebuffer, syntax: --framebuffer WIDTHxHEIGHT",                         cxxopts::value<std::string>(),              framebuffer_handler}
+        , {viewport_tile_option, "Geometry of local viewport tile, syntax: --tile x,y:LWIDTHxLHEIGHT:GWIDTHxGHEIGHT"
+                                 "where x,y is the lower left start pixel of the local tile, "
+                                 "LWIDTHxLHEIGHT is the local framebuffer resolution, "
+                                 "GWIDTHxGHEIGHT is the global framebuffer resolution",                             cxxopts::value<std::string>(),              viewport_tile_handler}
+        , {remote_head_option,   "[Experimental] Start HeadNode server and run Remote_Service test ",               cxxopts::value<bool>(),                     remote_head_handler}
+        , {remote_render_option, "[Experimental] Start RenderNode client and run Remote_Service test ",             cxxopts::value<bool>(),                     remote_render_handler}
+        , {remote_mpi_option,    "[Experimental] Start MPI RenderNode client and run Remote_Service test ",         cxxopts::value<bool>(),                     remote_mpirender_handler}
+        , {remote_mpi_broadcast_rank_option, "[Experimental] MPI rank that broadcasts to others, default: 0",       cxxopts::value<unsigned int>(),             remote_mpirank_handler}
+        , {remote_zmq_control_send_option,   "[Experimental] Address and port where to send state via ZMQ",         cxxopts::value<std::string>(),              remote_zmqsend_handler}
+        , {remote_zmq_control_receive_option,"[Experimental] Address and port where to receive state via ZMQ from", cxxopts::value<std::string>(),              remote_zmqreceive_handler}
+        , {remote_head_broadcast_quit_option,   "[Experimental] Headnode broadcasts mmQuit to rendernodes on shutdown",                    cxxopts::value<bool>(), remote_head_broadcast_quit_handler}
+        , {remote_head_broadcast_project_option,"[Experimental] Headnode broadcasts initial graph state after project loading at startup", cxxopts::value<bool>(), remote_head_broadcast_project_handler}
+        , {remote_head_connect_at_start_option, "[Experimental] Headnode starts sender thread at startup",                                 cxxopts::value<bool>(), remote_head_connect_at_start_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 
@@ -365,33 +508,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         };
     };
 
-    // helper to make options that parse a log level
-    auto make_log_level_callback = [&](std::string const& optname) {
-        return [optname, &cli_options_from_configs](std::string value) -> VoidResult {
-
-            sane(value);
-
-            if (value.front()=='-')
-                return Error {"log level value string seems to be negative"};
-
-            unsigned int value_as_uint = 0;
-
-            try {
-                if (std::string(value).find_first_of("0123456789") != std::string::npos) {
-                    value_as_uint = std::stoi(value);
-                } else {
-                    value_as_uint = megamol::core::utility::log::Log::ParseLevelAttribute(value);
-                }
-            }
-            catch (...) {
-                return Error{"Could not parse valid log level string or positive integer from argument \"" + value + "\""};
-            }
-
-            add_cli(optname, std::to_string(value_as_uint));
-            return VoidResult{};
-        };
-    };
-
     std::vector<std::string> all_options_separate;
     for (auto& opt : cli_options_list) {
         // split "h,help"
@@ -487,13 +603,13 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
 
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetLogLevel",
-        "(string level)\n\tSets the level of log events to include. Level values: ('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')",
-        { make_log_level_callback(loglevel_option) });
+        "(string level)\n\tSets the level of log events to include. Accepted values: "+accepted_log_level_strings,
+        { make_option_callback(loglevel_option) });
 
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetEchoLevel",
-        "(string level)\n\tSets the level of log events to output to the console. Level values: ('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')",
-        { make_log_level_callback(echolevel_option) });
+        "(string level)\n\tSets the level of log events to output to the console. Accepted values: "+accepted_log_level_strings,
+        { make_option_callback(echolevel_option) });
 
     lua.AddCallbacks(lua_config_callbacks);
 

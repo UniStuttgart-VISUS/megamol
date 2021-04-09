@@ -10,12 +10,14 @@
 #include "Window_Events.h"
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
-#include "Screenshot_Service.hpp"
 #include "ScriptPaths.h"
 #include "ProjectLoader.h"
 #include "FrameStatistics.h"
 #include "RuntimeConfig.h"
 #include "WindowManipulation.h"
+
+#include "ImageWrapper.h"
+#include "ImageWrapper_to_GLTexture.h"
 
 #include "mmcore/utility/log/Log.h"
 
@@ -39,11 +41,11 @@ bool GUI_Service::init(void* configPtr) {
 
 
 bool GUI_Service::init(const Config& config) {
+    m_config_frontend_fbos_test = config;
 
     this->m_time = 0.0;
     this->m_framebuffer_size = glm::vec2(1.0f, 1.0f);
     this->m_window_size = glm::vec2(1.0f, 1.0f);
-    this->m_opengl_context_ptr = nullptr;
     this->m_megamol_graph = nullptr;
     this->m_gui = nullptr;
 
@@ -56,14 +58,22 @@ bool GUI_Service::init(const Config& config) {
         "KeyboardEvents",                        // 2 - key press
         "MouseEvents",                           // 3 - mouse click
         "IOpenGL_Context",                       // 4 - graphics api for imgui context
-        "FramebufferEvents",                     // 5 - viewport size
-        "GLFrontbufferToPNG_ScreenshotTrigger",  // 6 - trigger screenshot
+        "WindowFramebufferEvents",               // 5 - viewport size
+        "EntryPointToPNG_ScreenshotTrigger",     // 6 - trigger screenshot
         "LuaScriptPaths",                        // 7 - current project path
         "ProjectLoader",                         // 8 - trigger loading of new running project
         "FrameStatistics",                       // 9 - current fps and ms value
         "RuntimeConfig",                         // 10 - resource paths
         "WindowManipulation"                     // 11 - GLFW window pointer
+        , "ImageRegistry" // 12 - frontend images test
     };
+
+    // head node remote control resource is only available when remote service active
+    if (config.show_headnode_remote_control) {
+        m_requestedResourcesNames.push_back(
+         "HeadNodeRemoteControl" // 13 - remote headnode controller UI
+        );
+    }
 
     // init gui
     if (config.imgui_api == GUI_Service::ImGuiAPI::OPEN_GL) { 
@@ -203,8 +213,9 @@ void GUI_Service::digestChangedRequestedResources() {
     const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->buttons_events = pass_mouse_btn_events;
 
     /// IOpenGL_Context = resource index 4
-    this->m_opengl_context_ptr =
-        &this->m_requestedResourceReferences[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
+    // Resource not actively used, requesting IOpenGL_Context makes sure there is a GL context present and active.
+    //this->m_opengl_context_ptr =
+    //    &this->m_requestedResourceReferences[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
 
     /// FramebufferEvents = resource index 5
     auto framebuffer_events =
@@ -217,8 +228,10 @@ void GUI_Service::digestChangedRequestedResources() {
     /// Trigger Screenshot = resource index 6
     if (gui->GetTriggeredScreenshot()) {
         auto& screenshot_to_file_trigger =
-            this->m_requestedResourceReferences[6].getResource<std::function<bool(std::string const&)>>();
-        screenshot_to_file_trigger(gui->GetScreenshotFileName());
+            this->m_requestedResourceReferences[6].getResource<std::function<bool(std::string const&, std::string const&)>>();
+
+        std::string entrypoint_name = "currently not handled";
+        screenshot_to_file_trigger(entrypoint_name, gui->GetScreenshotFileName());
     }
 
     /// Pipe lua script paths to gui = resource index 7
@@ -260,30 +273,37 @@ void GUI_Service::preGraphRender() {
     if (is_gui_nullptr) return;
     auto gui = this->m_gui->Get();
 
-    if (this->m_opengl_context_ptr) {
-        this->m_opengl_context_ptr->activate();
-
         if (this->m_megamol_graph != nullptr) {
             // Requires enabled OpenGL context, e.g. for textures used in parameters
             gui->SynchronizeGraphs(this->m_megamol_graph);
         }
 
         gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
-        this->m_opengl_context_ptr->close();
-    }
 }
 
 
 void GUI_Service::postGraphRender() {
 
     if (is_gui_nullptr) return;
+
     auto gui = this->m_gui->Get();
 
-    if (this->m_opengl_context_ptr) {
-        this->m_opengl_context_ptr->activate();
-        gui->PostDraw();
-        this->m_opengl_context_ptr->close();
+    if (m_config_frontend_fbos_test.show_fbos_test) {
+        std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int>> textures;
+        this->m_requestedResourceReferences[12]
+            .getResource<megamol::frontend_resources::ImageRegistry>()
+            .iterate_over_entries([&](std::string const& image_name, megamol::frontend_resources::ImageWrapper const& image)
+                {
+                    textures.push_back({image_name, megamol::frontend_resources::to_gl_texture(image).as_gl_handle(), image.size().width, image.size().height});
+                });
+        gui->SetEntryPointTextures(textures);
     }
+    if (m_config_frontend_fbos_test.show_headnode_remote_control) {
+        const auto& remote_control = this->m_requestedResourceReferences[13].getResource<std::function<void(unsigned int, std::string const&)>>();
+        gui->SetRemoteControlCallback(remote_control);
+    }
+
+    gui->PostDraw();
 }
 
 

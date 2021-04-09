@@ -178,6 +178,15 @@ private:
     float _width;
 
     std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
+
+    ImageWrapper GetRenderingResult() const override {
+        ImageWrapper::DataChannels channels = ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+        unsigned int fbo_color_buffer_gl_handle = _fbo->GetColourTextureID(0); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+        size_t fbo_width = _fbo->GetWidth();
+        size_t fbo_height = _fbo->GetHeight();
+
+        return frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
+    }
 };
 } /* end namespace view */
 } /* end namespace core */

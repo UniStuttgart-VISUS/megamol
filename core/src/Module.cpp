@@ -24,8 +24,6 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
 
-#include "IOpenGL_Context.h"
-
 using namespace megamol::core;
 
 
@@ -121,9 +119,6 @@ vislib::StringA Module::GetDemiRootName() const {
  */
 void Module::Release(std::vector<megamol::frontend::FrontendResource> resources) {
     using megamol::core::utility::log::Log;
-
-    auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
-        [&](megamol::frontend::FrontendResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
 
     if (this->created) {
         this->release();

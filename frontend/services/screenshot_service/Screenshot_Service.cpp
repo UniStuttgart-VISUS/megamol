@@ -9,8 +9,10 @@
 
  // to grab GL front buffer
 #include <glad/glad.h>
-#include "IOpenGL_Context.h"
 #include "GUIState.h"
+
+#include "ImageWrapper.h"
+#include "ImageWrapper_to_ByteArray.h"
 
 #include "mmcore/MegaMolGraph.h"
 
@@ -19,19 +21,29 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "vislib/sys/FastFile.h"
 
-
-// local logging wrapper for your convenience
 #include "mmcore/utility/log/Log.h"
-static void log(const char* text) {
-    const std::string msg = "Screenshot_Service: " + std::string(text);
+
+static const std::string service_name = "Screenshot_Service: ";
+static void log(std::string const& text) {
+    const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
-static void log(std::string text) { log(text.c_str()); }
+
+static void log_error(std::string const& text) {
+    const std::string msg = service_name + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
+}
+
+static void log_warning(std::string const& text) {
+    const std::string msg = service_name + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
+}
 
 // need this to pass GL context to screenshot source. this a hack and needs to be properly designed.
-static megamol::frontend_resources::IOpenGL_Context* gl_context_ptr = nullptr;
 static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
 static megamol::frontend_resources::GUIState* guistate_resources_ptr = nullptr;
+
+static unsigned char default_alpha_value = 0;
 
 static void PNGAPI pngErrorFunc(png_structp pngPtr, png_const_charp msg) {
     log("PNG Error: " + std::string(msg));
@@ -51,7 +63,7 @@ static void PNGAPI pngFlushFileFunc(png_structp pngPtr) {
     f->Flush();
 }
 
-static bool write_png_to_file(megamol::frontend_resources::ImageData const& image, std::string const& filename) {
+static bool write_png_to_file(megamol::frontend_resources::ScreenshotImageData const& image, std::string const& filename) {
     vislib::sys::FastFile file;
     try {
         // open final image file
@@ -100,6 +112,35 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
     return true;
 }
 
+megamol::frontend_resources::ImageWrapperScreenshotSource::ImageWrapperScreenshotSource(ImageWrapper const& image)
+    : m_image{& const_cast<ImageWrapper&>(image)}
+{}
+
+megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resources::ImageWrapperScreenshotSource::take_screenshot() const {
+    static ScreenshotImageData screenshot_image;
+
+    // keep allocated vector memory around
+    // note that this initially holds a nullptr texture - bad!
+    static frontend_resources::byte_texture image_bytes({});
+
+    // fill bytes with image data
+    image_bytes = *m_image;
+    auto& byte_vector = image_bytes.as_byte_vector();
+
+    screenshot_image.resize(m_image->size().width, m_image->size().height);
+
+    for (size_t i = 0, j = 0; i < byte_vector.size();) {
+        auto r = [&]() { return byte_vector[i++]; };
+        auto g = [&]() { return byte_vector[i++]; };
+        auto b = [&]() { return byte_vector[i++]; };
+        auto a = [&]() { return (m_image->channels == ImageWrapper::DataChannels::RGBA8) ? byte_vector[i++] : default_alpha_value; }; // alpha either from image or 1.0
+        ScreenshotImageData::Pixel pixel = { r(), g(), b(), a() };
+        screenshot_image.image[j++] = pixel;
+    }
+
+    return screenshot_image;
+}
+
 void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer buffer) {
     m_read_buffer = buffer;
     GLenum read_buffer;
@@ -128,10 +169,7 @@ void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer
     }
 }
 
-megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
-    if (gl_context_ptr)
-        gl_context_ptr->activate();
-
+megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
     // TODO: in FBO-based rendering the FBO object carries its size and we dont need to look it up
     // simpler and more correct approach would be to observe Framebuffer_Events resource
     // but this is our naive implementation for now
@@ -140,23 +178,20 @@ megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshot
     GLint fbWidth = viewport_dims[2];
     GLint fbHeight = viewport_dims[3];
 
-    ImageData result;
+    static ScreenshotImageData result;
     result.resize(static_cast<size_t>(fbWidth), static_cast<size_t>(fbHeight));
 
     glReadBuffer(m_read_buffer);
     glReadPixels(0, 0, fbWidth, fbHeight, GL_RGBA, GL_UNSIGNED_BYTE, result.image.data());
 
     for (auto& pixel : result.image)
-        pixel.a = 255;
+        pixel.a = default_alpha_value;
 
-    if (gl_context_ptr)
-        gl_context_ptr->close();
-
-    return std::move(result);
+    return result;
 }
 
-bool megamol::frontend_resources::ImageDataToPNGWriter::write_image(ImageData image, std::string const& filename) const {
-    return write_png_to_file(std::move(image), filename);
+bool megamol::frontend_resources::ScreenshotImageDataToPNGWriter::write_image(ScreenshotImageData const& image, std::string const& filename) const {
+    return write_png_to_file(image, filename);
 }
 
 namespace megamol {
@@ -187,6 +222,12 @@ bool Screenshot_Service::init(const Config& config) {
         return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
     };
 
+    this->m_genericimageToPNG_trigger = [&](megamol::frontend_resources::ImageWrapper const& image, std::string const& filename) -> bool
+    {
+        log("write screenshot to " + filename);
+        return m_toFileWriter_resource.write_screenshot(megamol::frontend_resources::ImageWrapperScreenshotSource(image), filename);
+    };
+
     log("initialized successfully");
     return true;
 }
@@ -202,7 +243,8 @@ std::vector<FrontendResource>& Screenshot_Service::getProvidedResources() {
     {
         {"GLScreenshotSource", m_frontbufferSource_resource},
         {"ImageDataToPNGWriter", m_toFileWriter_resource},
-        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger}
+        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger},
+        {"ImageWrapperToPNG_ScreenshotTrigger", m_genericimageToPNG_trigger}
     };
 
     return m_providedResourceReferences;
@@ -213,7 +255,6 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 }
 
 void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> resources) {
-    gl_context_ptr = const_cast<megamol::frontend_resources::IOpenGL_Context*>(&resources[0].getResource<megamol::frontend_resources::IOpenGL_Context>());
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
     guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(&resources[2].getResource<megamol::frontend_resources::GUIState>());
 }

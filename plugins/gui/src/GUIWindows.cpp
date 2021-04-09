@@ -403,6 +403,9 @@ bool GUIWindows::PostDraw(void) {
     // Main Menu ---------------------------------------------------------------
     this->drawMenu();
 
+    this->ShowTextures();
+    this->ShowHeadnodeRemoteControl();
+
     // Draw Windows ------------------------------------------------------------
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
         // Update transfer function
@@ -962,9 +965,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
                 if (megamol_graph != nullptr) {
-                    megamol_graph->SetGraphEntryPoint(data.name_id,
-                        megamol::core::view::get_gl_view_runtime_resources_requests(),
-                        megamol::core::view::view_rendering_execution, megamol::core::view::view_init_rendering_state);
+                    megamol_graph->SetGraphEntryPoint(data.name_id);
                 } else if ((this->core_instance != nullptr) &&
                            core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
                     /* XXX Currently not supported by core graph
@@ -2679,3 +2680,92 @@ bool megamol::gui::GUIWindows::create_not_existing_png_filepath(std::string& ino
 std::string megamol::gui::GUIWindows::full_window_title(WindowCollection::WindowConfiguration& wc) const {
     return (wc.win_name + "     " + wc.win_hotkey.ToString());
 }
+
+void megamol::gui::GUIWindows::ShowTextures() {
+    auto render_image = [&](std::string const& name, unsigned int gl_texture, unsigned int width, unsigned int height) {
+        ImGui::Begin((name + " Rendering Result").c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysAutoResize);
+            ImGui::Image((ImTextureID) gl_texture, ImVec2(width, height), ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::End();
+    };
+
+    #define val(X) std::get<X>(image)
+
+    for (auto& image : m_textures_test)
+        render_image(val(0), val(1), val(2), val(3));
+
+    #undef val
+}
+
+void megamol::gui::GUIWindows::ShowHeadnodeRemoteControl() {
+    if (!m_headnode_remote_control)
+        return;
+
+    static bool headnode_running = false;
+    static std::string lua_command = "";
+    static std::string param_send_modules = "all";
+    static bool keep_sending_params = false;
+
+
+    auto command_value = [&](unsigned int cmd, std::string const& value) {
+        (*this->m_headnode_remote_control)(cmd, value);
+    };
+    auto command = [&](unsigned int cmd) {
+        command_value(cmd, "");
+    };
+
+    auto window_name = "Head Node Remote Control";
+    ImGui::Begin(window_name, nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    {
+        if (headnode_running) {
+            ImGui::Text("(Server running) ");
+            ImGui::SameLine();
+            // CloseHeadNode - 2
+            if (ImGui::Button("Stop Head Node Server")) {
+                command(2);
+                headnode_running = false;
+            }
+        } else {
+            ImGui::Text("(Server stopped) ");
+            ImGui::SameLine();
+            //  StartHeadNode - 1
+            if (ImGui::Button("Start Head Node Server")) {
+                command(1);
+                headnode_running = true;
+            }
+        }
+
+        // ClearGraph - 3
+        if (ImGui::Button("Clear Rendernode Graphs")) {
+            command(3);
+            keep_sending_params = false;
+            command(6);
+        }
+        ImGui::SameLine();
+        // SendGraph  - 4
+        if (ImGui::Button("Broadcast Local Graph"))
+            command(4);
+
+        if (ImGui::RadioButton("Sync Module Params", keep_sending_params)) {
+            keep_sending_params = !keep_sending_params;
+            // KeepSendingParams - 5
+            // DontSendParams    - 6
+            keep_sending_params
+                ? command(5)
+                : command(6);
+        }
+        ImGui::SameLine();
+        if (ImGui::InputText("Sync Modules", &param_send_modules, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            command_value(7, param_send_modules);
+        }
+
+        if (ImGui::Button("Send Lua Command")) {
+            // SendLuaCommand - 8
+            command_value(8, lua_command);
+        }
+        ImGui::SameLine();
+        ImGui::InputText("Lua Command", &lua_command);
+
+    }
+    ImGui::End();
+}
+

@@ -11,19 +11,62 @@ if(BUILD_FRONTEND_SERVICES)
   
   require_external(glad)
 
+
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   #set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.hpp" "cuda/*h" "cuda/*hpp" "opengl_glfw/*.h"  "opengl_glfw/*.hpp" "service_collection/*.hpp" "gui/*.hpp" "lua_service_wrapper/*.hpp" "screenshot_service/*.hpp" "framestatistics_service/*.hpp" "project_loader/*.hpp")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "cuda/*cpp" "opengl_glfw/*.cpp" "service_collection/*.cpp" "gui/*.cpp" "lua_service_wrapper/*.cpp" "screenshot_service/*.cpp" "framestatistics_service/*.cpp" "project_loader/*.cpp")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+    "include/*.h"
+    "include/*.hpp"
+    "cuda/*h"
+    "cuda/*hpp"
+    "opengl_glfw/*.h"
+    "opengl_glfw/*.hpp"
+    "service_collection/*.hpp"
+    "gui/*.hpp"
+    "lua_service_wrapper/*.hpp"
+    "screenshot_service/*.hpp"
+    "framestatistics_service/*.hpp"
+    "project_loader/*.hpp"
+    "image_presentation/*.hpp"
+    "remote_service/*.hpp"
+#   "service_template/*.hpp"
+    )
+  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+    "cuda/*cpp"
+    "opengl_glfw/*.cpp"
+    "service_collection/*.cpp"
+    "gui/*.cpp"
+    "lua_service_wrapper/*.cpp"
+    "screenshot_service/*.cpp"
+    "framestatistics_service/*.cpp"
+    "project_loader/*.cpp"
+    "image_presentation/*.cpp"
+    "remote_service/*.cpp"
+#   "service_template/*.cpp"
+    )
 
   # Add target
   add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files})
   set_target_properties(${PROJECT_NAME}
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
-  target_include_directories(${PROJECT_NAME} PUBLIC "cuda" "opengl_glfw" "include" "service_collection" "gui" "lua_service_wrapper" "screenshot_service" "framestatistics_service" "project_loader")
+
+  target_include_directories(${PROJECT_NAME} PUBLIC
+    "include"
+    "cuda"
+    "opengl_glfw"
+    "service_collection"
+    "gui"
+    "lua_service_wrapper"
+    "screenshot_service"
+    "framestatistics_service"
+    "project_loader"
+    "image_presentation"
+    "remote_service"
+#   "service_template"
+    )
 
   add_library(abstract_frontend_service INTERFACE)
   target_include_directories(abstract_frontend_service INTERFACE
@@ -36,6 +79,10 @@ if(BUILD_FRONTEND_SERVICES)
     find_package(CUDAToolkit)
     target_compile_definitions(${PROJECT_NAME} PUBLIC MM_CUDA_ENABLED)
     target_link_libraries(${PROJECT_NAME} PRIVATE CUDA::cuda_driver)
+  endif()
+
+  if(MPI_C_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
   
   #if(WIN32)

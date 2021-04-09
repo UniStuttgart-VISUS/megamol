@@ -10,15 +10,13 @@
 #define _WINSOCKAPI_
 #include "Lua_Service_Wrapper.hpp"
 
-#include "mmcore/utility/LuaHostService.h"
+#include "LuaRemoteConnectionsBroker.h"
 
 #include "Screenshots.h"
 #include "FrameStatistics.h"
 #include "WindowManipulation.h"
 #include "GUIState.h"
 #include "GlobalValueStore.h"
-
-#include "mmcore/view/AbstractView_EventConsumption.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -59,7 +57,7 @@ bool Lua_Service_Wrapper::init(void* configPtr) {
 }
 
 #define luaAPI (*m_config.lua_api_ptr)
-#define m_network_host reinterpret_cast<megamol::core::utility::LuaHostNetworkConnectionsBroker*>(m_network_host_pimpl.get())
+#define m_network_host reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(m_network_host_pimpl.get())
 
 bool Lua_Service_Wrapper::init(const Config& config) {
     if (!config.lua_api_ptr) {
@@ -97,7 +95,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics", // for LastFrameTime
-        "WindowManipulation", // for Framebuffer resize
+        "WindowManipulation", // for window resize
         "GUIResource", // propagate GUI state and visibility
         "MegaMolGraph", // LuaAPI manipulates graph
         "RenderNextFrame", // LuaAPI can render one frame
@@ -105,8 +103,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
-        new megamol::core::utility::LuaHostNetworkConnectionsBroker{},
-        [](void* ptr) { delete reinterpret_cast<megamol::core::utility::LuaHostNetworkConnectionsBroker*>(ptr); }
+        new megamol::frontend_resources::LuaRemoteConnectionsBroker{},
+        [](void* ptr) { delete reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(ptr); }
     );
 
     bool host_ok = m_network_host->spawn_connection_broker(m_config.host_address, m_config.retry_socket_port);
@@ -238,15 +236,6 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
             return StringResult{answer.str().c_str()};
         }});
 
-    callbacks.add<VoidResult, std::string>(
-        "mmScreenshot",
-        "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.",
-        {[&](std::string file) -> VoidResult
-        {
-            m_requestedResourceReferences[1].getResource<std::function<bool(std::string const&)> >()(file);
-            return VoidResult{};
-        }});
-
     callbacks.add<DoubleResult>(
         "mmLastFrameTime",
         "()\n\tReturns the graph execution time of the last frame in ms.",
@@ -257,16 +246,16 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
         }});
 
     callbacks.add<VoidResult, int, int>(
-        "mmSetFramebufferSize",
-        "(int width, int height)\n\tSet framebuffer dimensions to width x height.",
+        "mmSetWindowSize",
+        "(int width, int height)\n\tSet GLFW window dimensions to width x height.",
         {[&](int width, int height) -> VoidResult
         {
             if (width <= 0 || height <= 0) {
-                return Error {"framebuffer dimensions must be positive, but given values are: " + std::to_string(width) + " x " + std::to_string(height)};
+                return Error {"window dimensions must be positive, but given values are: " + std::to_string(width) + " x " + std::to_string(height)};
             }
 
             auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
-            window_manipulation.set_framebuffer_size(width, height);
+            window_manipulation.set_window_size(width, height);
             return VoidResult{};
         }});
 
@@ -434,11 +423,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 return Error{"graph could not create module for: " + baseName + " , " + className + " , " + instanceName};
             }
 
-            if (!graph.SetGraphEntryPoint(
-                instanceName,
-                megamol::core::view::get_gl_view_runtime_resources_requests(),
-                megamol::core::view::view_rendering_execution,
-                megamol::core::view::view_init_rendering_state))
+            if (!graph.SetGraphEntryPoint(instanceName))
             {
                 return Error{"graph could not set graph entry point for: " + baseName + " , " + className + " , " + instanceName};
             }
@@ -635,6 +620,15 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             }
 
             return StringResult{answer.str().c_str()};
+        }});
+
+    callbacks.add<VoidResult>(
+        "mmClearGraph",
+        "()\n\tClear the MegaMol Graph from all Modules and Calls",
+        {[&]() -> VoidResult
+        {
+            graph.Clear();
+            return VoidResult{};
         }});
 
     callbacks.add<StringResult>(
