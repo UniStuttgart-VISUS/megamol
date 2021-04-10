@@ -173,11 +173,6 @@ void gl_texture::clear() {
     this->texture           = 0;
 }
 
-gl_texture megamol::frontend_resources::to_gl_texture(ImageWrapper const& image)
-{
-    return gl_texture(image);
-}
-
 
 byte_texture::byte_texture(ImageWrapper const& image)
 {
@@ -212,9 +207,5 @@ void byte_texture::from_image(ImageWrapper const& image)
         this->texture_ptr = &this->texture;
         break;
     }
-}
-
-byte_texture megamol::frontend_resources::to_bytes(ImageWrapper const& image) {
-    return byte_texture(image);
 }
 

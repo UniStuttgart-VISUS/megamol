@@ -36,7 +36,5 @@ namespace frontend_resources {
         void from_image(ImageWrapper const& image);
     };
 
-    gl_texture to_gl_texture(ImageWrapper const& image);
-
 } /* end namespace frontend_resources */
 } /* end namespace megamol */

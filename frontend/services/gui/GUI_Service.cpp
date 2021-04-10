@@ -287,7 +287,7 @@ void GUI_Service::postGraphRender() {
             .getResource<megamol::frontend_resources::ImageRegistry>()
             .iterate_over_entries([&](std::string const& image_name, megamol::frontend_resources::ImageWrapper const& image)
                 {
-                    textures.push_back({image_name, megamol::frontend_resources::to_gl_texture(image).as_gl_handle(), image.size().width, image.size().height});
+                    textures.push_back({image_name, megamol::frontend_resources::gl_texture(image).as_gl_handle(), image.size().width, image.size().height});
                 });
         gui->SetEntryPointTextures(textures);
     }

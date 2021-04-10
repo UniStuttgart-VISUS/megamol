@@ -31,7 +31,5 @@ namespace frontend_resources {
         void from_image(ImageWrapper const& image);
     };
 
-    byte_texture to_bytes(ImageWrapper const& image);
-
 } /* end namespace frontend_resources */
 } /* end namespace megamol */
