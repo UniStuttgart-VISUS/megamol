@@ -15,7 +15,7 @@ namespace frontend_resources {
     // RAII manager for on-the-fly gl texture handle
     struct gl_texture {
         unsigned int texture = 0;
-        bool texture_owned = false;
+        unsigned int texture_reference = 0;
         ImageWrapper* image_wrapper_ptr = nullptr;
 
         gl_texture(ImageWrapper const& image);
@@ -31,7 +31,7 @@ namespace frontend_resources {
         unsigned int as_gl_handle();
 
         private:
-        void assign(gl_texture const& other);
+        void assign(gl_texture const& other, bool take_ownership);
         void clear();
         void from_image(ImageWrapper const& image);
     };

@@ -75,6 +75,16 @@ namespace /*gl texture handling*/ {
     }
 }
 
+namespace {
+    unsigned int to_uint(void* ptr) {
+        return static_cast<unsigned int>(reinterpret_cast<long>(ptr));
+    }
+
+    std::vector<byte>* to_vector(void* ptr) {
+        return static_cast<std::vector<byte>*>(ptr);
+    }
+}
+
 gl_texture::gl_texture(ImageWrapper const& image)
 {
     this->from_image(image);
@@ -82,51 +92,36 @@ gl_texture::gl_texture(ImageWrapper const& image)
 
 unsigned int gl_texture::as_gl_handle()
 {
-    return this->texture;
+    return this->texture_reference;
 }
 
 gl_texture::~gl_texture()
 {
+    if (this->texture != 0) {
+        gl_delete_texture(this->texture);
+    }
     this->clear();
 }
 
 gl_texture::gl_texture(gl_texture const& other)
 {
-    this->assign(other);
-
-    if (other.texture_owned) {
-        this->texture = 0;
-        auto& image = *this->image_wrapper_ptr;
-        gl_set_and_resize_texture(this->texture, image.size(), image.channels);
-        gl_copy_texture(other.texture, this->texture, image.size());
-    }
+    this->assign(other, false);
 }
 gl_texture& gl_texture::operator=(gl_texture const& other)
 {
-    this->clear();
-    this->assign(other);
-
-    if (other.texture_owned) {
-        this->texture = 0;
-        auto& image = *this->image_wrapper_ptr;
-        gl_set_and_resize_texture(this->texture, image.size(), image.channels);
-        gl_copy_texture(other.texture, this->texture, image.size());
-    }
+    this->assign(other, false);
 
     return *this;
 }
 
 gl_texture::gl_texture(gl_texture&& other) noexcept
 {
-    this->assign(other);
-    other.texture_owned = false;
+    this->assign(other, true);
     other.clear();
 }
 gl_texture& gl_texture::operator=(gl_texture&& other) noexcept
 {
-    this->clear();
-    this->assign(other);
-    other.texture_owned = false;
+    this->assign(other, true);
     other.clear();
 
     return *this;
@@ -138,16 +133,11 @@ void gl_texture::from_image(ImageWrapper const& image)
 
     switch (image.image_type) {
     case WrappedImageType::ByteArray:
-        this->texture_owned = true;
-        gl_set_and_resize_texture(this->texture, image.size(), image.channels, static_cast<std::vector<byte> const*>(image.borrowed_image_handle)->data());
+        gl_set_and_resize_texture(this->texture, image.size(), image.channels, to_vector(image.borrowed_image_handle)->data());
+        this->texture_reference = this->texture;
         break;
     case WrappedImageType::GLTexureHandle:
-        // avoid dangling gl texture handle if we owned one before
-        if (this->texture != 0 || this->texture_owned) {
-            gl_delete_texture(this->texture);
-        }
-        this->texture_owned = false;
-        this->texture = static_cast<unsigned int>(reinterpret_cast<long>(image.borrowed_image_handle));
+        this->texture_reference = to_uint(image.borrowed_image_handle);
         break;
     }
 }
@@ -159,17 +149,28 @@ gl_texture& gl_texture::operator=(ImageWrapper const& image)
     return *this;
 }
 
-void gl_texture::assign(gl_texture const& other) {
+void gl_texture::assign(gl_texture const& other, bool take_ownership) {
     this->image_wrapper_ptr = other.image_wrapper_ptr;
-    this->texture_owned     = other.texture_owned;
-    this->texture           = other.texture;
+
+    if (take_ownership) {
+        this->texture = other.texture;
+    } else {
+        if (other.texture != 0) {
+            auto& image = *this->image_wrapper_ptr;
+            gl_set_and_resize_texture(this->texture, image.size(), image.channels);
+            gl_copy_texture(other.texture, this->texture, image.size());
+        }
+    }
+
+    if (other.texture_reference == other.texture) {
+        this->texture_reference = this->texture;
+    } else {
+        this->texture_reference = other.texture_reference;
+    }
 }
 void gl_texture::clear() {
-    if (this->texture_owned) {
-        gl_delete_texture(this->texture);
-    }
     this->image_wrapper_ptr = nullptr;
-    this->texture_owned     = false;
+    this->texture_reference = 0;
     this->texture           = 0;
 }
 
@@ -198,11 +199,11 @@ void byte_texture::from_image(ImageWrapper const& image)
     switch (image.image_type) {
     case WrappedImageType::ByteArray:
         this->texture_owned = false;
-        this->texture_ptr = static_cast<std::vector<byte>*>(image.borrowed_image_handle);
+        this->texture_ptr = to_vector(image.borrowed_image_handle);
         break;
     case WrappedImageType::GLTexureHandle:
         this->texture_owned = true;
-        auto gl_texture = static_cast<unsigned int>(reinterpret_cast<long>(image.borrowed_image_handle));
+        auto gl_texture = to_uint(image.borrowed_image_handle);
         gl_download_texture_to_vector(gl_texture, image.size(), image.channels, this->texture);
         this->texture_ptr = &this->texture;
         break;
