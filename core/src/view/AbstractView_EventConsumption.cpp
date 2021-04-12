@@ -96,24 +96,13 @@ void view_poke_rendering(AbstractView& view) { // , megamol::frontend::FrontendR
 }
 
 std::vector<std::string> get_gl_view_runtime_resources_requests() {
-    return {"KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
+    return {"KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents"};
 }
 
 bool view_rendering_execution(megamol::core::Module::ptr_type module_ptr, std::vector<megamol::frontend::FrontendResource> const& resources) {
     megamol::core::view::AbstractView* view_ptr =
         dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
 
-    megamol::frontend_resources::IOpenGL_Context const * maybe_opengl = nullptr;
-
-    // if available, we make the opengl context current for all following operations performed by the view/entry point
-    // views and modules may use the GL context to issue GL calls not only during rendering, 
-    // but also when consuming other events, like key presses or framebuffer resizes
-    if (resources.size() >= 5 && resources[4].getIdentifier() == "IOpenGL_Context")
-        maybe_opengl = &resources[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
-
-    if (maybe_opengl)
-        maybe_opengl->activate(); // makes GL context current
-    
     if (!view_ptr) {
         std::cout << "error. module is not a view module. could not use as rendering entry point." << std::endl;
         return false;
@@ -127,9 +116,6 @@ bool view_rendering_execution(megamol::core::Module::ptr_type module_ptr, std::v
     megamol::core::view::view_consume_window_events(view, resources[2]);
     megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
     megamol::core::view::view_poke_rendering(view);//, resources[4]);
-
-    if (maybe_opengl)
-        maybe_opengl->close();
     
     return true;
 }
@@ -138,17 +124,6 @@ bool view_init_rendering_state(megamol::core::Module::ptr_type module_ptr, std::
     megamol::core::view::AbstractView* view_ptr =
         dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
 
-    megamol::frontend_resources::IOpenGL_Context const * maybe_opengl = nullptr;
-
-    // if available, we make the opengl context current for all following operations performed by the view/entry point
-    // views and modules may use the GL context to issue GL calls not only during rendering, 
-    // but also when consuming other events, like key presses or framebuffer resizes
-    if (resources.size() >= 5 && resources[4].getIdentifier() == "IOpenGL_Context")
-        maybe_opengl = &resources[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
-
-    if (maybe_opengl)
-        maybe_opengl->activate(); // makes GL context current
-    
     if (!view_ptr) {
         std::cout << "error. module is not a view module. could not use as rendering entry point." << std::endl;
         return false;
@@ -180,9 +155,6 @@ bool view_init_rendering_state(megamol::core::Module::ptr_type module_ptr, std::
     megamol::core::view::view_consume_window_events(view, resources[2]);
     megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
 
-    if (maybe_opengl)
-        maybe_opengl->close();
-    
     return true;
 }
 
