@@ -18,14 +18,23 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "vislib/sys/FastFile.h"
 
-
-// local logging wrapper for your convenience
 #include "mmcore/utility/log/Log.h"
-static void log(const char* text) {
-    const std::string msg = "Screenshot_Service: " + std::string(text);
+
+static const std::string service_name = "Screenshot_Service: ";
+static void log(std::string const& text) {
+    const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
-static void log(std::string text) { log(text.c_str()); }
+
+static void log_error(std::string const& text) {
+    const std::string msg = service_name + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
+}
+
+static void log_warning(std::string const& text) {
+    const std::string msg = service_name + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
+}
 
 // need this to pass GL context to screenshot source. this a hack and needs to be properly designed.
 static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
