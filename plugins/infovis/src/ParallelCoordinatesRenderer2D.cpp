@@ -734,8 +734,6 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #endif
 
     this->enableProgramAndBind(prog);
-    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0],
-    // tf->Range()[1]);
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);

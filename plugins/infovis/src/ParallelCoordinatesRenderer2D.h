@@ -294,17 +294,6 @@ namespace infovis {
         core::param::ParamSlot thicknessFloatP;
         core::param::ParamSlot axesThicknessFloatP;
         core::param::ParamSlot legacyMode;
-
-        // res should be a parameter
-        GLfloat res[2];
-        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction0_shdr;
-        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction1_shdr;
-        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction2_shdr;
-        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction3_shdr;
-        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction3h_shdr;
-
-        vislib::graphics::gl::ShaderSource vertex_shader_src;
-        vislib::graphics::gl::ShaderSource fragment_shader_src;
     };
 
 } /* end namespace infovis */
