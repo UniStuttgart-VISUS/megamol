@@ -45,15 +45,18 @@ megamol::optix_hpg::Renderer::~Renderer() {
 
 
 void megamol::optix_hpg::Renderer::setup() {
-    raygen_module_ =
-        MMOptixModule(embedded_raygen_programs, optix_ctx_->GetOptiXContext(), &optix_ctx_->GetModuleCompileOptions(),
-            &optix_ctx_->GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_RAYGEN, {"raygen_program"});
-    miss_module_ =
-        MMOptixModule(embedded_miss_programs, optix_ctx_->GetOptiXContext(), &optix_ctx_->GetModuleCompileOptions(),
-            &optix_ctx_->GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_MISS, {"miss_program"});
-    miss_occlusion_module_ =
-        MMOptixModule(embedded_miss_programs, optix_ctx_->GetOptiXContext(), &optix_ctx_->GetModuleCompileOptions(),
-            &optix_ctx_->GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_MISS, {"miss_program_occlusion"});
+    raygen_module_ = MMOptixModule(embedded_raygen_programs, optix_ctx_->GetOptiXContext(),
+        &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
+        MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_RAYGEN,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_GENERIC, "raygen_program"}});
+    miss_module_ = MMOptixModule(embedded_miss_programs, optix_ctx_->GetOptiXContext(),
+        &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
+        MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_MISS,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_GENERIC, "miss_program"}});
+    miss_occlusion_module_ = MMOptixModule(embedded_miss_programs, optix_ctx_->GetOptiXContext(),
+        &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
+        MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_MISS,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_GENERIC, "miss_program_occlusion"}});
 
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(raygen_module_, &_sbt_raygen_record));
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_module_, &sbt_miss_records_[0]));
