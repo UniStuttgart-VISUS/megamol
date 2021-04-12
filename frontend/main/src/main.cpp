@@ -224,9 +224,14 @@ int main(const int argc, const char** argv) {
     }
 
     auto frontend_resources = services.getProvidedResources();
-    graph.AddModuleDependencies(frontend_resources);
+    bool graph_resources_ok = graph.AddFrontendResources(frontend_resources);
+    if (!graph_resources_ok) {
+        log_error("Graph did not get resources he needs from frontend. Abort.");
+        run_megamol = false;
+    }
 
     // load project files via lua
+    if (graph_resources_ok)
     for (auto& file : config.project_files) {
         if (!projectloader_service.load_file(file)) {
             log("Project file \"" + file + "\" did not execute correctly");
