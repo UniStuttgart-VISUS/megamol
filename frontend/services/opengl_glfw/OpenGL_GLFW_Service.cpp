@@ -269,6 +269,11 @@ void megamol::frontend_resources::WindowManipulation::set_swap_interval(const un
     glfwSwapInterval(wait_frames);
 }
 
+void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
+    glfwSwapBuffers(reinterpret_cast<GLFWwindow*>(window_ptr));
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
+}
+
 void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fullscreen action) const {
     switch (action) {
         case Fullscreen::Maximize:
