@@ -69,7 +69,7 @@ void view_consume_framebuffer_events(AbstractView& view, megamol::frontend::Fron
 // this is a weird place to measure passed program time, but we do it here so we satisfy _mmcRenderViewContext and nobody else needs to know
 static std::chrono::high_resolution_clock::time_point render_view_context_timer_start;
 
-void view_poke_rendering(AbstractView& view) {
+void view_poke_rendering(AbstractView& view, megamol::frontend_resources::ImageWrapper& result_image) {
     static bool started_timer = false;
     if (!started_timer) {
         render_view_context_timer_start = std::chrono::high_resolution_clock::now();
@@ -90,6 +90,7 @@ void view_poke_rendering(AbstractView& view) {
             dummyRenderViewContext.Time = view.DefaultTime(time);
 
         view.Render(dummyRenderViewContext);
+        result_image = view.GetRenderingResult();
     };
     
     render();
@@ -119,7 +120,7 @@ bool view_rendering_execution(
     megamol::core::view::view_consume_mouse_events(view, resources[1]);
     megamol::core::view::view_consume_window_events(view, resources[2]);
     megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
-    megamol::core::view::view_poke_rendering(view);//, resources[4]);
+    megamol::core::view::view_poke_rendering(view, result_image);
     
     return true;
 }
