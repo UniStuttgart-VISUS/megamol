@@ -549,7 +549,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
     glUniformMatrix4fv(
         amort_reconstruction_shdr_array[approach]->ParameterLocation("moveM"), 1, GL_FALSE, &movePush[0][0]);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0]);
+    //glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0]);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("errorCode: %s", glGetError());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

@@ -726,7 +726,6 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #ifdef USE_TESSELLATION
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
 #else
-    // vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
     vislib::graphics::gl::GLSLShader& prog = this->legacyMode.Param<core::param::BoolParam>()->Value()
                                                  ? this->drawItemsDiscreteProgram
                                                  : this->drawItemsTriangleProgram;
@@ -764,7 +763,6 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #else
     // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
     // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
-    // glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
     if (this->legacyMode.Param<core::param::BoolParam>()->Value()) {
         glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
     } else {
