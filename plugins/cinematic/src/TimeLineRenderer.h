@@ -22,6 +22,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
 
+#include "RuntimeConfig.h"
+
 #include "vislib/String.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/graphics/BitmapImage.h"
@@ -44,6 +46,12 @@ namespace cinematic {
 	*/
 	class TimeLineRenderer : public core::view::Renderer2DModule {
 	public:
+
+        std::vector<std::string> requested_lifetime_resources() {
+            auto lifetime_resources = Module::requested_lifetime_resources();
+            lifetime_resources.push_back("RuntimeConfig");
+            return lifetime_resources;
+        }
 
 		/**
 		* Answer the name of this module.

@@ -305,6 +305,8 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
                 state.interact.button_hovered_uid = this->uid;
             }
 
+            ImGui::PushFont(state.canvas.gui_font_ptr);
+
             // Context Menu
             if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                 state.interact.button_active_uid = this->uid;
@@ -347,6 +349,9 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
             } else {
                 this->gui_tooltip.Reset();
             }
+
+            ImGui::PopFont();
+
         } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
             bool active = (state.interact.button_active_uid == this->uid);
@@ -424,9 +429,8 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
             }
 
             // Draw Slot
-            const float segment_numer = (20.0f * megamol::gui::gui_scaling.Get());
-            draw_list->AddCircleFilled(actual_position, radius, slot_color, segment_numer);
-            draw_list->AddCircle(actual_position, radius, COLOR_INTERFACE_BORDER, segment_numer);
+            draw_list->AddCircleFilled(actual_position, radius, slot_color);
+            draw_list->AddCircle(actual_position, radius, COLOR_INTERFACE_BORDER);
 
             // Draw Curves
             if (!this->gui_group_collapsed_view) {

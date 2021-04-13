@@ -15,12 +15,12 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 
-#include "AbstractGPURenderTaskDataSource.h"
+#include "mesh/AbstractGPURenderTaskDataSource.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/GPUMeshCollection.h"
 #include "vislib/math/Matrix.h"
 
-#include "3DInteractionCollection.h"
+#include "mesh/3DInteractionCollection.h"
 
 namespace megamol {
 namespace mesh {
@@ -55,6 +55,13 @@ namespace mesh {
         ~ThreeDimensionalUIRenderTaskDataSource();
     
     protected:
+        /**
+         * Implementation of 'Create'.
+         *
+         * @return 'true' on success, 'false' otherwise.
+         */
+        virtual bool create(void);
+
         bool getDataCallback(core::Call& caller);
 
         bool getInteractionCallback(core::Call& caller);
@@ -82,11 +89,11 @@ namespace mesh {
 
         std::shared_ptr<ThreeDimensionalInteractionCollection> m_interaction_collection;
 
+        std::shared_ptr<GPUMaterialCollection> m_material_collection;
+
         megamol::core::CalleeSlot m_3DInteraction_calleeSlot;
         megamol::core::CallerSlot m_3DInteraction_callerSlot;
         megamol::core::CallerSlot m_glTF_callerSlot;
-
-        size_t m_glTF_cached_hash;
     };
 
 }

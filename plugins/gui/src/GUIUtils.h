@@ -9,33 +9,6 @@
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
 
-/**
- * USED HOTKEYS:
- *
- * ----- GUIWindows -----
- * - Trigger Screenshot:        F2
- * - Toggle Graph Entry:        F3
- * - Show/hide Windows:         F7-F11
- * - Show/hide Menu:            F12
- * - Show/hide GUI:             Ctrl  + g
- * - Search Parameter:          Ctrl  + p
- * - Save Running Project:      Ctrl  + s
- * - Quit Program:              Alt   + F4
-
- * ----- Configurator -----
- * - Search Module:             Ctrl + Shift + m
- * - Search Parameter:          Ctrl + Shift + p
- * - Save Edited Project:       Ctrl + Shift + s
- * - Delete Graph Item:         Delete
- *
- * ----- Graph -----
- * - Selection, Drag & Drop:    Left Mouse Button
- * - Context Menu:              Right Mouse Button
- * - Zooming:                   Mouse Wheel
- * - Scrolling:                 Middle Mouse Button
- *
- **/
-
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui.h"
@@ -86,20 +59,27 @@
 #define GUI_JSON_TAG_PROJECT ("Project")
 #define GUI_JSON_TAG_MODULES ("Modules")
 #define GUI_JSON_TAG_INTERFACES ("Interfaces")
-/// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
-/// megamol::core::param::AbstractParamPresentation.h
+/// GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") is defined in AbstractParamPresentation.h
 
-#define GUI_PROJECT_GUI_STATE_START_TAG ("-- <GUI_STATE_JSON>")
-#define GUI_PROJECT_GUI_STATE_END_TAG ("</GUI_STATE_JSON>")
+#define GUI_START_TAG_SET_GUI_STATE ("mmSetGUIState([=[")
+#define GUI_END_TAG_SET_GUI_STATE ("]=])")
+#define GUI_START_TAG_SET_GUI_VISIBILITY ("mmSetGUIVisible(")
+#define GUI_END_TAG_SET_GUI_VISIBILITY (")")
+#define GUI_START_TAG_SET_GUI_SCALE ("mmSetGUIScale(")
+#define GUI_END_TAG_SET_GUI_SCALE (")")
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.1f, 0.0f, 1.0f))
 #define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.0f, 1.0f))
+
 #define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.75f, 0.0f, 0.25f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.25f, 1.0f))
+
 #define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 0.75f, 1.0f, 1.0f))
 #define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
-#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.5f, 0.9f, 0.0f, 1.0f))
+#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.5f, 0.9f, 0.25f, 1.0f))
+#define GUI_COLOR_SLOT_REQUIRED (ImVec4(0.9f, 0.75f, 0.1f, 1.0f))
+
 #define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.5f, 0.25f, 1.0f))
 #define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
@@ -140,6 +120,7 @@ namespace gui {
 
     /********** Global GUI Scaling Factor **********/
 
+    // Forward declaration
     class GUIWindows;
 
     class GUIScaling {
@@ -153,7 +134,7 @@ namespace gui {
             return this->scale;
         }
 
-        float TransitonFactor(void) const {
+        float TransitionFactor(void) const {
             return (this->scale / this->last_scale);
         }
 
@@ -170,7 +151,7 @@ namespace gui {
 
         void Set(float s) {
             this->last_scale = this->scale;
-            this->scale = std::max(1.0f, s);
+            this->scale = std::max(0.0f, s);
             if (this->scale != this->last_scale) {
                 this->pending_change = true;
             }
@@ -212,7 +193,7 @@ namespace gui {
     typedef std::array<megamol::gui::HotkeyData_t, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArray_t;
 
     typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;
-    typedef megamol::core::param::AbstractParamPresentation::ParamType Param_t;
+    typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType_t;
     typedef std::map<int, std::string> EnumStorage_t;
 
     typedef std::array<float, 5> FontScalingArray_t;
@@ -233,11 +214,12 @@ namespace gui {
 
     /* Data type holding information of graph canvas. */
     typedef struct _canvas_ {
-        ImVec2 position;  // in
-        ImVec2 size;      // in
-        ImVec2 scrolling; // in
-        float zooming;    // in
-        ImVec2 offset;    // in
+        ImVec2 position;      // in
+        ImVec2 size;          // in
+        ImVec2 scrolling;     // in
+        float zooming;        // in
+        ImVec2 offset;        // in
+        ImFont* gui_font_ptr; // in
     } GraphCanvas_t;
 
     enum GraphCoreInterface {
@@ -301,14 +283,15 @@ namespace gui {
 
     /* Data type holding shared state of graphs. */
     typedef struct _graph_state_ {
-        FontScalingArray_t font_scalings;    // in
-        float graph_width;                   // in
-        bool show_parameter_sidebar;         // in
-        megamol::gui::HotkeyArray_t hotkeys; // in out
-        ImGuiID graph_selected_uid;          // out
-        bool graph_delete;                   // out
-        bool configurator_graph_save;        // out
-        bool global_graph_save;              // out
+        FontScalingArray_t graph_zoom_font_scalings; // in
+        float graph_width;                           // in
+        bool show_parameter_sidebar;                 // in
+        megamol::gui::HotkeyArray_t hotkeys;         // in out
+        ImGuiID graph_selected_uid;                  // out
+        bool graph_delete;                           // out
+        bool configurator_graph_save;                // out
+        bool global_graph_save;                      // out
+        ImGuiID new_running_graph_uid;               // out
     } GraphState_t;
 
     enum class HeaderType { MODULE_GROUP, MODULE, PARAMETERG_ROUP };
@@ -320,14 +303,15 @@ namespace gui {
      */
     class GUIUtils {
     public:
-        /** Extract gui state enclosed in predefined tags. */
-        static std::string ExtractGUIState(std::string& str) {
+        /** Extract string enclosed in predefined tags. */
+        static std::string ExtractTaggedString(
+            const std::string& str, const std::string& start_tag, const std::string& end_tag) {
             std::string return_str;
-            auto start_idx = str.find(GUI_PROJECT_GUI_STATE_START_TAG);
+            auto start_idx = str.find(start_tag);
             if (start_idx != std::string::npos) {
-                auto end_idx = str.find(GUI_PROJECT_GUI_STATE_END_TAG);
+                auto end_idx = str.find(end_tag, start_idx);
                 if ((end_idx != std::string::npos) && (start_idx < end_idx)) {
-                    start_idx += std::string(GUI_PROJECT_GUI_STATE_START_TAG).length();
+                    start_idx += std::string(start_tag).length();
                     return_str = str.substr(start_idx, (end_idx - start_idx));
                 }
             }

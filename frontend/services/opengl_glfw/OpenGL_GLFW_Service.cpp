@@ -7,6 +7,8 @@
 
 #include "OpenGL_GLFW_Service.hpp"
 
+#include "FrameStatistics.h"
+
 #include <array>
 #include <chrono>
 #include <vector>
@@ -294,7 +296,9 @@ struct OpenGL_GLFW_Service::PimplData {
     GLFWwindow* glfwContextWindowPtr{nullptr};
     OpenGL_GLFW_Service::Config config;    // keep copy of user-provided config
     std::string fullWindowTitle;
-    std::chrono::system_clock::time_point topmost_before_time;
+    std::chrono::system_clock::time_point last_time;
+    megamol::frontend_resources::FrameStatistics* frame_statistics{nullptr};
+    std::array<GLFWcursor*, 9> mouse_cursors;
 };
 
 OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {
@@ -452,6 +456,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     if (config.windowPlacement.noCursor) {
         ::glfwSetInputMode(window_ptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    } else {
+        create_glfw_mouse_cursors();
     }
 
     // note the m_data window position got overwritten with monitor position for fullscreen mode
@@ -478,6 +484,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     m_windowManipulation.window_ptr = window_ptr;
 
+    m_windowManipulation.set_mouse_cursor = [&](const int cursor_id) -> void {
+        update_glfw_mouse_cursors(cursor_id);
+    };
+
     // make the events and resources managed/provided by this service available to the outside world
     m_renderResourceReferences = {
         {"KeyboardEvents", m_keyboardEvents},
@@ -488,24 +498,41 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {"WindowManipulation", m_windowManipulation}
     };
 
-    m_pimpl->topmost_before_time = std::chrono::system_clock::now();
+    m_pimpl->last_time = std::chrono::system_clock::now();
 
     log("initialized successfully");
     return true;
 }
 
-void OpenGL_GLFW_Service::reset_window_topmost() {
-#ifdef _WIN32
+void OpenGL_GLFW_Service::do_every_second() {
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    auto& topmost_before_time = m_pimpl->topmost_before_time;
+    auto& last_time = m_pimpl->last_time;
 
-    if (now - topmost_before_time > std::chrono::seconds(1)) {
-        topmost_before_time = now;
+    if (now - last_time > std::chrono::seconds(1)) {
+        last_time = now;
+
+        auto const cut_off = [](std::string const& s) -> std::string {
+            const auto found_dot = s.find_first_of(".,");
+            const auto substr = s.substr(0, found_dot + 1 + 1);
+            return substr;
+        };
+
+        std::string fps = std::to_string(m_pimpl->frame_statistics->last_averaged_fps);
+        std::string mspf = std::to_string(m_pimpl->frame_statistics->last_averaged_mspf);
+        std::string title =
+            m_pimpl->config.windowTitlePrefix
+            + " [" + cut_off(fps) + "f/s, " + cut_off(mspf) + "ms/f]";
+        glfwSetWindowTitle(m_pimpl->glfwContextWindowPtr, title.c_str());
+
+#ifdef _WIN32
         // TODO fix this for EGL + Win
         //log("Periodic reordering of windows.");
-        SetWindowPos(glfwGetWin32Window(m_pimpl->glfwContextWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-    }
+        if (m_pimpl->config.windowPlacement.topMost) {
+            SetWindowPos(glfwGetWin32Window(m_pimpl->glfwContextWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+        }
 #endif
+
+    }
 }
 
 #define that static_cast<OpenGL_GLFW_Service*>(::glfwGetWindowUserPointer(wnd))
@@ -611,6 +638,11 @@ void OpenGL_GLFW_Service::close() {
 
     ::glfwMakeContextCurrent(m_pimpl->glfwContextWindowPtr);
 
+    for (auto& mouse_cursor_ptr : m_pimpl->mouse_cursors) {
+        ::glfwDestroyCursor(mouse_cursor_ptr);
+        mouse_cursor_ptr = nullptr;
+    }
+
     // GL context and destruction of all other things happens in destructors of pimpl data members
     if (m_pimpl->glfwContextWindowPtr) ::glfwDestroyWindow(m_pimpl->glfwContextWindowPtr);
     m_pimpl->glfwContextWindowPtr = nullptr;
@@ -669,9 +701,7 @@ void OpenGL_GLFW_Service::postGraphRender() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
     //::glfwMakeContextCurrent(nullptr);
 
-    if (m_pimpl->config.windowPlacement.topMost) {
-        reset_window_topmost();
-    }
+    do_every_second();
 }
 
 std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {
@@ -679,12 +709,11 @@ std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {
 }
 
 const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() const {
-    // we dont depend on outside resources
-    return {};
+    return {"FrameStatistics"};
 }
 
 void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> resources) {
-    // we dont depend on outside resources
+    m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
 }
 
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {
@@ -775,6 +804,51 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
     this->m_windowEvents.dropped_path_events.push_back(paths_);
 }
 
+void OpenGL_GLFW_Service::create_glfw_mouse_cursors(void) {
+    // See imgui_impl_glfw.cpp for reference
+    for (auto& mouse_cursor_ptr : m_pimpl->mouse_cursors) {
+        mouse_cursor_ptr = nullptr;
+    }
+    if (m_pimpl->mouse_cursors.size() != 9) {
+        return;
+    }
+    // See imgui.h: enum ImGuiMouseCursor_ 
+    GLFWerrorfun prev_error_callback = ::glfwSetErrorCallback(nullptr);
+    m_pimpl->mouse_cursors[0] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_Arrow
+    m_pimpl->mouse_cursors[1] = ::glfwCreateStandardCursor(GLFW_IBEAM_CURSOR); // ImGuiMouseCursor_TextInput
+    m_pimpl->mouse_cursors[3] = ::glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR); // ImGuiMouseCursor_ResizeNS
+    m_pimpl->mouse_cursors[4] = ::glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR); // ImGuiMouseCursor_ResizeEW
+    m_pimpl->mouse_cursors[7] = ::glfwCreateStandardCursor(GLFW_HAND_CURSOR);    // ImGuiMouseCursor_Hand
+#if ((GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100) >= 3400) // glfw 3.4+
+    m_pimpl->mouse_cursors[2] = ::glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR); // ImGuiMouseCursor_ResizeAll
+    m_pimpl->mouse_cursors[5] = ::glfwCreateStandardCursor(GLFW_RESIZE_NESW_CURSOR); // ImGuiMouseCursor_ResizeNESW
+    m_pimpl->mouse_cursors[6] = ::glfwCreateStandardCursor(GLFW_RESIZE_NWSE_CURSOR); // ImGuiMouseCursor_ResizeNWSE
+    m_pimpl->mouse_cursors[8] = ::glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR); // ImGuiMouseCursor_NotAllowed
+#else
+    m_pimpl->mouse_cursors[2] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_ResizeAll
+    m_pimpl->mouse_cursors[5] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_ResizeNESW
+    m_pimpl->mouse_cursors[6] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_ResizeNWSE
+    m_pimpl->mouse_cursors[8] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_NotAllowed
+#endif
+    ::glfwSetErrorCallback(prev_error_callback);
+}
+
+void OpenGL_GLFW_Service::update_glfw_mouse_cursors(const int cursor_id) {
+    if (m_pimpl->config.windowPlacement.noCursor) {
+        ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        return;
+    }
+
+    if ((cursor_id >= 0) && (cursor_id < m_pimpl->mouse_cursors.size())) {
+        ::glfwSetCursor(m_pimpl->glfwContextWindowPtr,
+            m_pimpl->mouse_cursors[cursor_id] ? m_pimpl->mouse_cursors[cursor_id]
+                                              : m_pimpl->mouse_cursors[static_cast<int>(GLFW_ARROW_CURSOR)]);
+        ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    } else {
+        ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    }
+}
+
 // { glfw calls used somewhere by imgui but not covered by this class
 // glfwGetWin32Window(g_Window);
 //
@@ -782,12 +856,7 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
 // glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
 // glfwSetCursorPos(g_Window, (double)mouse_pos_backup.x, (double)mouse_pos_backup.y);
 //
-// glfwSetCursor(g_Window, g_MouseCursors);
 // glfwGetInputMode(g_Window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
-// glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-// glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-// glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
-// glfwDestroyCursor(g_MouseCursors[cursor_n]);
 // }
 
 } // namespace frontend

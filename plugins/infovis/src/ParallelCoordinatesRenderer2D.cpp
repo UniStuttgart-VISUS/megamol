@@ -5,7 +5,7 @@
 #include "glm/gtc/functions.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCall_GL.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -87,7 +87,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         , needSelectionUpdate(false)
         , needFlagsUpdate(false)
         , lastTimeStep(0)
-        , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
+        , font(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -623,7 +623,7 @@ bool ParallelCoordinatesRenderer2D::OnKey(
     return false;
 }
 
-void ParallelCoordinatesRenderer2D::drawAxes(void) {
+void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
     debugPush(1, "drawAxes");
     if (this->columnCount > 0) {
         this->enableProgramAndBind(this->drawAxesProgram);
@@ -676,8 +676,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
             }
             float x = this->marginX + this->axisDistance * c;
 #if 0
-            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #else
             float bottom = filters[realCol].lower;
             // bottom *= (maximums[realCol] - minimums[realCol]);
@@ -685,16 +685,16 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
             float top = filters[realCol].upper;
             // top *= (maximums[realCol] - minimums[realCol]);
             // top += minimums[realCol];
-            this->font.DrawString(color, x, this->marginY * 0.5f, fontSize, false, std::to_string(bottom).c_str(),
-                core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
-                std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 0.5f, fontSize, false,
+                std::to_string(bottom).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
+                std::to_string(top).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
 #endif
-            this->font.DrawString(color, x,
+            this->font.DrawString(ortho, color, x,
                 this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontSize * 2.0f, false,
-                names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+                names[realCol].c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
         }
-        this->font.BatchDrawString();
+        this->font.BatchDrawString(ortho);
 #endif
     }
     debugPop();
@@ -1003,12 +1003,9 @@ void ParallelCoordinatesRenderer2D::load_filters() {
 }
 
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
-    // get camera
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
 
-    cam_type::matrix_type view, proj;
-    cam.calc_matrices(view, proj);
+    megamol::core::view::Camera_2 cam;
+    call.GetCamera(cam);
 
     windowAspect = static_cast<float>(cam.resolution_gate_aspect());
 
@@ -1029,6 +1026,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     // end suck
+
+    glm::mat4 ortho = glm::make_mat4(projMatrix_column) * glm::make_mat4(modelViewMatrix_column);
 
     this->assertData(call);
 
@@ -1127,7 +1126,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
 
 
     if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
-        drawAxes();
+        drawAxes(ortho);
     }
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

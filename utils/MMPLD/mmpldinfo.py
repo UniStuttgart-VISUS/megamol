@@ -269,7 +269,7 @@ for filename in parseResult.inputfiles:
             timeStampString = ""
             if (version >= 102):
                 timeStampString = "(%f)" % timeStamp
-            listFramedata(parseResult, fi) and (sys.stdout.write("Frame # %u %s" % (fi, timeStampString)), print("- %u list%s" % pluralTuple(numLists)))
+            listFramedata(parseResult, fi) and (sys.stdout.write("Frame # %u (offset %lu = %s) %s" % (fi, frameTable[fi], hex(frameTable[fi]), timeStampString)), print("- %u list%s" % pluralTuple(numLists)))
             if (fi == 0):
                 minNumLists = maxNumLists = numLists
             else:

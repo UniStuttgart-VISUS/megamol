@@ -155,10 +155,7 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
             "Failed to create depth texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::POSITION, "inPosition");
-    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::COLOR, "inColor");
-    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
-    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
+    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocations(location_name_pairs);
 
     // Create buffers
     this->buffers[Buffers::POSITION] =
@@ -196,7 +193,7 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
     glDisableVertexAttribArray(Buffers::ATTRIBUTES);
 
     this->init_once = true;
- 
+
     return true;
 }
 
@@ -307,7 +304,7 @@ void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm:
 
 void RenderUtils::Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bottom_left,
     const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y,
-    const glm::vec4& color) {
+    const glm::vec4& color, bool force_opaque) {
 
     glm::vec3 pbl = pos_bottom_left;
     glm::vec3 pul = pos_upper_left;
@@ -319,7 +316,7 @@ void RenderUtils::Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bot
         pur.y = pos_bottom_right.y;
         pbr.y = pos_upper_right.y;
     }
-    glm::vec4 attributes = {0.0f, 0.0f, 0.0f, 0.0f};
+    glm::vec4 attributes = {((force_opaque) ? (1.0f) : (0.0f)), 0.0f, 0.0f, 0.0f};
     this->pushQuad(RenderUtils::Primitives::COLOR_TEXTURE, texture_id, pbl, pul, pur, pbr, color, attributes);
 }
 
@@ -367,7 +364,7 @@ unsigned int RenderUtils::GetTextureHeight(GLuint texture_id) const {
 }
 
 
-void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -382,10 +379,10 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     this->sortPrimitiveQueue(primitive);
 
     auto texture_id = this->queues[primitive].texture_id;
-    this->buffers[Buffers::POSITION]->rebuffer<std::vector<float>>(this->queues[primitive].position);
-    this->buffers[Buffers::COLOR]->rebuffer<std::vector<float>>(this->queues[primitive].color);
-    this->buffers[Buffers::TEXTURE_COORD]->rebuffer<std::vector<float>>(this->queues[primitive].texture_coord);
-    this->buffers[Buffers::ATTRIBUTES]->rebuffer<std::vector<float>>(this->queues[primitive].attributes);
+    this->buffers[Buffers::POSITION]->rebuffer(this->queues[primitive].position);
+    this->buffers[Buffers::COLOR]->rebuffer(this->queues[primitive].color);
+    this->buffers[Buffers::TEXTURE_COORD]->rebuffer(this->queues[primitive].texture_coord);
+    this->buffers[Buffers::ATTRIBUTES]->rebuffer(this->queues[primitive].attributes);
 
     // Set OpenGL state ----------------------------------------------------
     // Blending
@@ -623,13 +620,13 @@ void RenderUtils::clearQueue(Primitives primitive) {
 }
 
 
-void RenderUtils::pushQueue(DataType& d, float v, UINT cnt) {
+void RenderUtils::pushQueue(std::vector<float>& d, float v, UINT cnt) {
 
     d.emplace_back(v);
 }
 
 
-void RenderUtils::pushQueue(DataType& d, glm::vec2 v, UINT cnt) {
+void RenderUtils::pushQueue(std::vector<float>& d, glm::vec2 v, UINT cnt) {
 
     for (unsigned int i = 0; i < cnt; ++i) {
         d.emplace_back(v.x);
@@ -638,7 +635,7 @@ void RenderUtils::pushQueue(DataType& d, glm::vec2 v, UINT cnt) {
 }
 
 
-void RenderUtils::pushQueue(DataType& d, glm::vec3 v, UINT cnt) {
+void RenderUtils::pushQueue(std::vector<float>& d, glm::vec3 v, UINT cnt) {
 
     for (unsigned int i = 0; i < cnt; ++i) {
         d.emplace_back(v.x);
@@ -648,7 +645,7 @@ void RenderUtils::pushQueue(DataType& d, glm::vec3 v, UINT cnt) {
 }
 
 
-void RenderUtils::pushQueue(DataType& d, glm::vec4 v, UINT cnt) {
+void RenderUtils::pushQueue(std::vector<float>& d, glm::vec4 v, UINT cnt) {
 
     for (unsigned int i = 0; i < cnt; ++i) {
         d.emplace_back(v.x);

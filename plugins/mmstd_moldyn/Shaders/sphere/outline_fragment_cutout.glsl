@@ -21,5 +21,11 @@
     //
     //if (throwaway) discard;
 
-    if (delta > outlineSize) discard;
-    // TODO make this independent of the sphere radius
+    // dependent on the sphere radius
+    //if (delta > outlineWidth) discard;
+
+    if (length(gl_FragCoord.xy - centerFragment) < (fragmentRadius - outlineWidth)) {
+        discard;
+    }
+
+    outColor = color;
