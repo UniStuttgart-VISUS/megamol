@@ -13,11 +13,13 @@
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
+#include "glowl/FramebufferObject.hpp"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
 #include "Renderer2D.h"
 
 #include <map>
+#include "glm/matrix.hpp"
 
 namespace megamol {
 namespace infovis {
@@ -238,6 +240,7 @@ namespace infovis {
         vislib::graphics::gl::GLSLShader drawScalesProgram;
         vislib::graphics::gl::GLSLShader drawFilterIndicatorsProgram;
         vislib::graphics::gl::GLSLShader drawItemsDiscreteProgram;
+        vislib::graphics::gl::GLSLShader drawItemsTriangleProgram;
         vislib::graphics::gl::GLSLTesselationShader drawItemsDiscreteTessProgram;
         vislib::graphics::gl::GLSLShader drawPickIndicatorProgram;
         vislib::graphics::gl::GLSLShader drawStrokeIndicatorProgram;
@@ -287,6 +290,10 @@ namespace infovis {
         GLint maxWorkgroupCount[3];
 
         megamol::core::utility::SDFFont font;
+
+        core::param::ParamSlot thicknessFloatP;
+        core::param::ParamSlot axesThicknessFloatP;
+        core::param::ParamSlot legacyMode;
     };
 
 } /* end namespace infovis */
