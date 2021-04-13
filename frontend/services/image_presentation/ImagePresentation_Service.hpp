@@ -46,6 +46,8 @@ public:
     // that are triggered to render something into images.
     // The resulting images are then presented in some appropriate way: drawn into a window, written to disk, sent via network, ...
     void RenderNextFrame();
+    void PresentRenderedImages();
+
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
     //

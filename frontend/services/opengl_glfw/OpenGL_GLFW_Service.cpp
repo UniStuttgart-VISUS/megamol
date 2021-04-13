@@ -707,14 +707,6 @@ void OpenGL_GLFW_Service::preGraphRender() {
 }
 
 void OpenGL_GLFW_Service::postGraphRender() {
-    // end frame timer
-    // update window name
-
-    ::glfwSwapBuffers(m_pimpl->glfwContextWindowPtr);
-
-    //::glfwMakeContextCurrent(window_ptr);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-    //::glfwMakeContextCurrent(nullptr);
 
     do_every_second();
 }

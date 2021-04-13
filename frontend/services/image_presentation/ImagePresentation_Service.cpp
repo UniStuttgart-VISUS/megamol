@@ -9,6 +9,7 @@
 // you should also delete the FAQ comments in these template files after you read and understood them
 #include "ImagePresentation_Service.hpp"
 
+#include "WindowManipulation.h"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -64,6 +65,7 @@ bool ImagePresentation_Service::init(const Config& config) {
     this->m_requestedResourcesNames =
     {
           "FrontendResources" // std::vector<FrontendResource>
+        , "WindowManipulation"
     };
 
     log("initialized successfully");
@@ -108,6 +110,11 @@ void ImagePresentation_Service::RenderNextFrame() {
     for (auto& entry : m_entry_points) {
         entry.execute(entry.modulePtr, entry.entry_point_resources, entry.execution_result_image.get());
     }
+}
+
+void ImagePresentation_Service::PresentRenderedImages() {
+    static auto& window_manipulation = m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowManipulation>();
+    window_manipulation.swap_buffers();
 }
 
 // clang-format off
