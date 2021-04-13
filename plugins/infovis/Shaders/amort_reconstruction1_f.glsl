@@ -11,8 +11,7 @@ in vec2 uv_coord;
 //layout(early_fragment_tests) in;
 out vec4 frag_out;
 
-void main()
-{
+void main() {
     int line = int(uv_coord.y * h) % 2;
     int col = int(uv_coord.x * w) % 2;
     vec4 p = vec4(2*uv_coord-vec2(1.0), 0.0, 1.0);

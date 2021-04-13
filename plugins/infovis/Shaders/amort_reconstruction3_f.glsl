@@ -14,25 +14,24 @@ in vec2 uv_coord;
 //layout(early_fragment_tests) in;
 out vec4 frag_out;
 
-void main()
-{
+void main() {
     int sSquare = ssLevel * ssLevel;
     int line = int(uv_coord.y * h);
     int col = int(uv_coord.x * w);
     int t = 0;
     vec4 p = vec4(2*uv_coord-vec2(1.0), 0.0, 1.0);
-    if(line % 2 == 1){
-        if(col % 2 == 0){
+    if (line % 2 == 1){
+        if (col % 2 == 0){
             t = 3;
-        }else{
+        } else {
             t = 2;
         }
     } else {
-        if(col % 2 == 1){
+        if (col % 2 == 1){
             t = 0;
-        }else{
+        } else {
             t = 1;
-        }  
+        }
     }
     vec4 r;
     for (int i = 0; i < ssLevel; i++){

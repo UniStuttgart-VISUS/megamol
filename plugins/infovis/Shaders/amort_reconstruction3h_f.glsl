@@ -11,7 +11,6 @@ in vec2 uv_coord;
 //layout(early_fragment_tests) in;
 out vec4 frag_out;
 
-void main()
-{
+void main() {
     frag_out = texture(result_tx2D, uv_coord);
 }

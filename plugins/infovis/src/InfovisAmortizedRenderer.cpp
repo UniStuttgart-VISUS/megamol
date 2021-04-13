@@ -306,9 +306,9 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         pm = jit * pm;
         for (int i = 0; i < 16; i++)
             projMatrix_column[i] = glm::value_ptr(pm)[i];
-        
+
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedPushFBO);
-        
+
         glActiveTexture(GL_TEXTURE4);
 
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, pushImage, 0);
@@ -419,7 +419,7 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
         }
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, pushImage);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w/a, h/a, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w / a, h / a, 0, GL_RGBA, GL_FLOAT, NULL);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, imStoreA);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
@@ -483,7 +483,7 @@ bool InfovisAmortizedRenderer::OnChar(unsigned int codePoint) {
         evt.charData.codePoint = codePoint;
         cr->SetInputEvent(evt);
         if ((*cr)(megamol::core::view::CallRender2DGL::FnOnChar))
-            return true;       
+            return true;
     }
     return false;
 }
@@ -498,7 +498,8 @@ bool InfovisAmortizedRenderer::OnKey(
         evt.keyData.action = action;
         evt.keyData.mods = mods;
         cr->SetInputEvent(evt);
-        if((*cr)(megamol::core::view::CallRender2DGL::FnOnKey)) return true;
+        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnKey))
+            return true;
     }
     return false;
 }
@@ -525,8 +526,8 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("src_tex2D"), 10);
     if (approach == 4) {
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
-        glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), a * a, GL_FALSE,
-            &moveMatrices[0][0][0]);
+        glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), a * a,
+            GL_FALSE, &moveMatrices[0][0][0]);
     } else {
         glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), 4, GL_FALSE,
             &moveMatrices[0][0][0]);
@@ -549,7 +550,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
     glUniformMatrix4fv(
         amort_reconstruction_shdr_array[approach]->ParameterLocation("moveM"), 1, GL_FALSE, &movePush[0][0]);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
-    //glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0]);
+    // glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0]);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("errorCode: %s", glGetError());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

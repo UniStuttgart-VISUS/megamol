@@ -800,8 +800,8 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
 
     glUniform1i(prog.ParameterLocation("width"), windowWidth);
     glUniform1i(prog.ParameterLocation("height"), windowHeight);
-    glUniform1f(prog.ParameterLocation("thickness"),
-        this->axesThicknessFloatP.Param<core::param::FloatParam>()->Value());
+    glUniform1f(
+        prog.ParameterLocation("thickness"), this->axesThicknessFloatP.Param<core::param::FloatParam>()->Value());
 
     glUniform4fv(prog.ParameterLocation("indicatorColor"), 1, color);
     glDisable(GL_DEPTH_TEST);
