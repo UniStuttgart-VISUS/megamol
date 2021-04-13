@@ -777,7 +777,7 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
     float diagDepthHeightWidth = glm::length(glm::vec3(pseudoDepth, pseudoHeight, pseudoWidth));
 
     auto delta_dist = glm::vec2(0.0f, 0.0f);
-    /// XXX auto delta_pos = glm::vec4(pseudoWidth, pseudoHeight, pseudoDepth, 0.0);
+
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
         case DEFAULTVIEW_FACE_FRONT:
@@ -935,8 +935,8 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
     double distY = (pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)))) - delta_dist.y;
     auto face_dist = static_cast<float>((distX > distY) ? distX : distY);
     face_dist = face_dist + (pseudoDepth / 2.0f);
-    float corner_dist = 1.0f / sqrt(3.0f) * face_dist;
     float edge_dist   = 1.0f / sqrt(2.0f) * face_dist;
+    float corner_dist = 1.0f / sqrt(2.0f) * edge_dist;
 
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
@@ -960,28 +960,28 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
             break;
         // CORNERS --------------------------------------------------------------------------------
         case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
-            default_position = bbcglm + glm::vec4(-corner_dist, corner_dist, corner_dist, 0.0f) ; // + glm::vec4(this->_bboxs.BoundingBox().Width(), this->_bboxs.BoundingBox().Height(), -this->_bboxs.BoundingBox().Depth(), 0.0f) / 1.5f;
+            default_position = bbcglm + glm::vec4(-corner_dist, edge_dist, corner_dist, 0.0f);
             break;
         case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
-            default_position = bbcglm + glm::vec4(corner_dist, corner_dist, corner_dist, 0.0f);
+            default_position = bbcglm + glm::vec4(corner_dist, edge_dist, corner_dist, 0.0f);
             break;
         case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
-            default_position = bbcglm + glm::vec4(-corner_dist, corner_dist, -corner_dist, 0.0f);
+            default_position = bbcglm + glm::vec4(-corner_dist, edge_dist, -corner_dist, 0.0f);
             break;
         case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
-            default_position = bbcglm + glm::vec4(corner_dist, corner_dist, -corner_dist, 0.0f);
+            default_position = bbcglm + glm::vec4(corner_dist, edge_dist, -corner_dist, 0.0f);
             break;
         case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
-            default_position = bbcglm + glm::vec4(-corner_dist, -corner_dist, corner_dist, 0.0f);
+            default_position = bbcglm + glm::vec4(-corner_dist, -edge_dist, corner_dist, 0.0f);
             break;
         case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
-            default_position = bbcglm + glm::vec4(corner_dist, -corner_dist, corner_dist, 0.0f);
+            default_position = bbcglm + glm::vec4(corner_dist, -edge_dist, corner_dist, 0.0f);
             break;
         case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
-            default_position = bbcglm + glm::vec4(-corner_dist, -corner_dist, -corner_dist, 0.0f);
+            default_position = bbcglm + glm::vec4(-corner_dist, -edge_dist, -corner_dist, 0.0f);
             break;
         case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
-            default_position = bbcglm + glm::vec4(corner_dist, -corner_dist, -corner_dist, 0.0f);
+            default_position = bbcglm + glm::vec4(corner_dist, -edge_dist, -corner_dist, 0.0f);
             break;
         // EDGES ----------------------------------------------------------------------------------
         case DEFAULTVIEW_EDGE_TOP_FRONT:
@@ -1167,12 +1167,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_n45 * qx_n45;
                     break;
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 default: break;
             }
@@ -1183,12 +1184,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p45 * qx_n45;
                     break;
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 default: break;
             }
@@ -1199,12 +1201,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p180 * qy_p45 * qx_n45;
                     break;
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 default: break;
             }
@@ -1215,12 +1218,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p180 * qy_n45 * qx_n45;
                     break;
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 default: break;
             }
@@ -1231,12 +1235,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_n45 * qx_p45;
                     break;
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 default: break;
             }
@@ -1247,12 +1252,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p45 * qx_p45;
                     break;
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 default: break;
             }
@@ -1263,12 +1269,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p180 * qy_p45 * qx_p45;
                     break;
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 default: break;
             }
@@ -1279,12 +1286,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p180 * qy_n45 * qx_p45;
                     break;
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
-
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+                    default_orientation = cam_type::quaternion_type::create_identity();
                     break;
                 default: break;
             }
