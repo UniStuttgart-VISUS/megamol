@@ -931,12 +931,12 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
     auto bbc = this->_bboxs.BoundingBox().CalcCenter();
     auto bbcglm = glm::vec4(bbc.GetX(), bbc.GetY(), bbc.GetZ(), 1.0f);
     double halfFovX = (static_cast<double>(dim.width()) * static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)) / static_cast<double>(dim.height());
-    double distX = pseudoWidth / (2.0 * tan(halfFovX)) - delta_dist.x;
-    double distY = pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f))) - delta_dist.y;
+    double distX = (pseudoWidth / (2.0 * tan(halfFovX))) - delta_dist.x;
+    double distY = (pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)))) - delta_dist.y;
     auto face_dist = static_cast<float>((distX > distY) ? distX : distY);
     face_dist = face_dist + (pseudoDepth / 2.0f);
-    float corner_dist = (glm::normalize(glm::vec3(1.0, 1.0, 1.0))).x * face_dist;
-    float edge_dist = (glm::normalize(glm::vec2(1.0, 1.0))).x * face_dist;
+    float corner_dist = 1.0f / sqrt(3.0f) * face_dist;
+    float edge_dist   = 1.0f / sqrt(2.0f) * face_dist;
 
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
@@ -960,7 +960,7 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
             break;
         // CORNERS --------------------------------------------------------------------------------
         case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
-            default_position = bbcglm + glm::vec4(-corner_dist, corner_dist, corner_dist, 0.0f);
+            default_position = bbcglm + glm::vec4(-corner_dist, corner_dist, corner_dist, 0.0f) ; // + glm::vec4(this->_bboxs.BoundingBox().Width(), this->_bboxs.BoundingBox().Height(), -this->_bboxs.BoundingBox().Depth(), 0.0f) / 1.5f;
             break;
         case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
             default_position = bbcglm + glm::vec4(corner_dist, corner_dist, corner_dist, 0.0f);
@@ -1296,8 +1296,7 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qx_n45 * qz_n90;
                     break;
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
-                    default_orientation = qz_p180 *
-                            qx_p45;
+                    default_orientation = qz_p180 * qx_p45;
                     break;
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
                     default_orientation = qx_n45 * qz_p90;
