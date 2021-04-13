@@ -11,6 +11,7 @@
 
 #include "ImagePresentationEntryPoints.h"
 #include "ImageWrapper.h"
+#include "ImagePresentationSink.h"
 
 #include <list>
 
@@ -55,6 +56,8 @@ public:
     // void setShutdown(const bool s = true);
 
     using ImageWrapper = megamol::frontend_resources::ImageWrapper;
+    using ImagePresentationSink = frontend_resources::ImagePresentationSink;
+
     using EntryPointExecutionCallback =
         std::function<bool(
               void*
@@ -88,6 +91,9 @@ private:
     bool remove_entry_point(std::string name);
     bool rename_entry_point(std::string oldName, std::string newName);
     bool clear_entry_points();
+
+    std::list<ImagePresentationSink> m_presentation_sinks;
+    void present_images_to_glfw_window(std::vector<ImageWrapper> const& images);
 
     std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
     const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;

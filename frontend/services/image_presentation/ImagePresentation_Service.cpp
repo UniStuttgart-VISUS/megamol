@@ -57,6 +57,9 @@ bool ImagePresentation_Service::init(const Config& config) {
     m_entry_points_registry_resource.rename_entry_point = [&](std::string oldName, std::string newName) -> bool { return rename_entry_point(oldName, newName); };
     m_entry_points_registry_resource.clear_entry_points = [&]() { clear_entry_points(); };
 
+    m_presentation_sinks.push_back(
+        {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
+
     this->m_providedResourceReferences =
     {
           {"ImagePresentationEntryPoints", m_entry_points_registry_resource} // used by MegaMolGraph to set entry points
@@ -113,8 +116,19 @@ void ImagePresentation_Service::RenderNextFrame() {
 }
 
 void ImagePresentation_Service::PresentRenderedImages() {
-    static auto& window_manipulation = m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowManipulation>();
-    window_manipulation.swap_buffers();
+    // pull result images into separate list
+    static std::vector<ImageWrapper> wrapped_images;
+    wrapped_images.clear();
+    wrapped_images.reserve(m_entry_points.size());
+
+    // rendering results are presented in order of execution of entry points
+    for (auto& entry : m_entry_points) {
+        wrapped_images.push_back(entry.execution_result_image);
+    }
+
+    for (auto& sink: m_presentation_sinks) {
+        sink.present_images(wrapped_images);
+    }
 }
 
 // clang-format off
@@ -221,6 +235,11 @@ bool ImagePresentation_Service::clear_entry_points() {
     m_entry_points.clear();
 
     return true;
+}
+
+void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {
+    static auto& window_manipulation = m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowManipulation>();
+    window_manipulation.swap_buffers();
 }
 
 } // namespace frontend
