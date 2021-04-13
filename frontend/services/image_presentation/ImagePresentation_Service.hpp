@@ -10,6 +10,7 @@
 #include "AbstractFrontendService.hpp"
 
 #include "ImagePresentationEntryPoints.h"
+#include "ImageWrapper.h"
 
 #include <list>
 
@@ -51,10 +52,12 @@ public:
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
 
+    using ImageWrapper = megamol::frontend_resources::ImageWrapper;
     using EntryPointExecutionCallback =
         std::function<bool(
               void*
             , std::vector<megamol::frontend::FrontendResource> const&
+            , ImageWrapper&
             )>;
 
 private:
@@ -75,6 +78,7 @@ private:
         std::vector<megamol::frontend::FrontendResource> entry_point_resources;
 
         EntryPointExecutionCallback execute;
+        std::reference_wrapper<ImageWrapper> execution_result_image;
     };
     std::list<GraphEntryPoint> m_entry_points;
 
@@ -82,6 +86,8 @@ private:
     bool remove_entry_point(std::string name);
     bool rename_entry_point(std::string oldName, std::string newName);
     bool clear_entry_points();
+
+    std::list<ImageWrapper> m_wrapped_images;
 
     std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
     const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;

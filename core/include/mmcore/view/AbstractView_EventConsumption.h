@@ -9,6 +9,7 @@
 
 #include "AbstractView.h"
 #include "FrontendResource.h"
+#include "ImageWrapper.h"
 
 namespace megamol {
 namespace core {
@@ -33,6 +34,7 @@ namespace view {
     MEGAMOLCORE_API bool view_rendering_execution(
           void* module_ptr
         , std::vector<megamol::frontend::FrontendResource> const& resources
+        , megamol::frontend_resources::ImageWrapper& result_image
     );
 
     // before rendering the first frame views need to know the current framebuffer size
@@ -40,6 +42,7 @@ namespace view {
     MEGAMOLCORE_API bool view_init_rendering_state(
           void* module_ptr
         , std::vector<megamol::frontend::FrontendResource> const& resources
+        , megamol::frontend_resources::ImageWrapper& result_image
     );
 
 } /* end namespace view */
