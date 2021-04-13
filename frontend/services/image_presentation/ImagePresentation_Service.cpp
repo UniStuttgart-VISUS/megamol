@@ -10,6 +10,10 @@
 #include "ImagePresentation_Service.hpp"
 
 #include "WindowManipulation.h"
+#include "Framebuffer_Events.h"
+
+#include "ImageWrapper_to_GLTexture.h"
+#include "ImagePresentation_Sinks.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -69,6 +73,7 @@ bool ImagePresentation_Service::init(const Config& config) {
     {
           "FrontendResources" // std::vector<FrontendResource>
         , "WindowManipulation"
+        , "FramebufferEvents"
     };
 
     log("initialized successfully");
@@ -238,7 +243,21 @@ bool ImagePresentation_Service::clear_entry_points() {
 }
 
 void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {
-    static auto& window_manipulation = m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowManipulation>();
+    static auto& window_manipulation       = m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowManipulation>();
+    static auto& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
+    static glfw_window_blit glfw_sink;
+    // TODO: glfw_window_blit destuctor gets called after GL context died
+
+    // glfw sink needs to know current glfw framebuffer size
+    auto framebuffer_width = window_framebuffer_events.previous_state.width;
+    auto framebuffer_height = window_framebuffer_events.previous_state.height;
+    glfw_sink.set_framebuffer_size(framebuffer_width, framebuffer_height);
+
+    for (auto& image: images) {
+        static frontend_resources::gl_texture gl_image = image;
+        glfw_sink.blit_texture(gl_image.as_gl_handle(), image.size.width, image.size.height);
+    }
+
     window_manipulation.swap_buffers();
 }
 
