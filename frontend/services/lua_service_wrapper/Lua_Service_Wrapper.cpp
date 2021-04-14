@@ -18,8 +18,6 @@
 #include "GUIState.h"
 #include "GlobalValueStore.h"
 
-#include "mmcore/view/AbstractView_EventConsumption.h"
-
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
 static void log(const char* text) {
@@ -434,11 +432,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 return Error{"graph could not create module for: " + baseName + " , " + className + " , " + instanceName};
             }
 
-            if (!graph.SetGraphEntryPoint(
-                instanceName,
-                megamol::core::view::get_gl_view_runtime_resources_requests(),
-                megamol::core::view::view_rendering_execution,
-                megamol::core::view::view_init_rendering_state))
+            if (!graph.SetGraphEntryPoint(instanceName))
             {
                 return Error{"graph could not set graph entry point for: " + baseName + " , " + className + " , " + instanceName};
             }
