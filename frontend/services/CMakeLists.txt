@@ -28,6 +28,7 @@ if(BUILD_FRONTEND_SERVICES)
     "screenshot_service/*.hpp"
     "framestatistics_service/*.hpp"
     "project_loader/*.hpp"
+    "image_presentation/*.hpp"
 #   "service_template/*.hpp"
     )
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -39,6 +40,7 @@ if(BUILD_FRONTEND_SERVICES)
     "screenshot_service/*.cpp"
     "framestatistics_service/*.cpp"
     "project_loader/*.cpp"
+    "image_presentation/*.cpp"
 #   "service_template/*.cpp"
     )
 
@@ -58,6 +60,7 @@ if(BUILD_FRONTEND_SERVICES)
     "screenshot_service"
     "framestatistics_service"
     "project_loader"
+    "image_presentation"
 #   "service_template"
     )
 
