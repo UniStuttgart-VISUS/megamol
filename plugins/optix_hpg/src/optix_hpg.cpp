@@ -14,6 +14,7 @@
 #include "optix/Renderer.h"
 #include "optix/MeshGeometry.h"
 #include "optix/TransitionCalculator.h"
+#include "CUDAToGL.h"
 
 #include "optix/CallGeometry.h"
 #include "CallRender3DCUDA.h"
@@ -47,6 +48,7 @@ namespace megamol::optix_hpg {
             this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::Renderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::MeshGeometry>();
             this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::TransitionCalculator>();
+            this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::CUDAToGL>();
             //
             // TODO: Register your plugin's modules here
             // like:
