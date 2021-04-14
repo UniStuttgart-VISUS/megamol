@@ -16,6 +16,7 @@
 #include "optix/TransitionCalculator.h"
 
 #include "optix/CallGeometry.h"
+#include "CallRender3DCUDA.h"
 
 namespace megamol::optix_hpg {
     /** Implementing the instance class of this plugin */
@@ -56,6 +57,7 @@ namespace megamol::optix_hpg {
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::optix_hpg::CallGeometry>();
+            this->call_descriptions.RegisterAutoDescription<megamol::optix_hpg::CallRender3DCUDA>();
             //
             // TODO: Register your plugin's calls here
             // like:
