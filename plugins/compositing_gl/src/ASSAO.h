@@ -224,8 +224,9 @@ private:
     typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
 
-    void PrepareDepths(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs);
-    void FullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm,
+    void prepareDepths(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs);
+    void generateSSAO(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass);
+    void fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm,
         const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>>& input_textures,
         std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>>& output_textures,
         bool add_constants = true);
@@ -248,9 +249,8 @@ private:
     std::unique_ptr<GLSLComputeShader> m_prepare_depths_half_prgm;
     std::unique_ptr<GLSLComputeShader> m_prepare_depths_and_normals_prgm;
     std::unique_ptr<GLSLComputeShader> m_prepare_depths_and_normals_half_prgm;
-    std::unique_ptr<GLSLComputeShader> m_prepare_depth_mip1_prgm;
-    std::unique_ptr<GLSLComputeShader> m_prepare_depth_mip2_prgm;
-    std::unique_ptr<GLSLComputeShader> m_prepare_depth_mip3_prgm;
+    std::vector<std::unique_ptr<GLSLComputeShader>> m_prepare_depth_mip_prgms;
+    std::array<std::unique_ptr<GLSLComputeShader>, 5> m_generate_prgms;
     std::unique_ptr<GLSLComputeShader> m_generate_q0_prgm;
     std::unique_ptr<GLSLComputeShader> m_generate_q1_prgm;
     std::unique_ptr<GLSLComputeShader> m_generate_q2_prgm;

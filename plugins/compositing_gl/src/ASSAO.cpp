@@ -152,9 +152,13 @@ bool megamol::compositing::ASSAO::create() {
             m_prepare_depths_half_prgm = std::make_unique<GLSLComputeShader>();
             m_prepare_depths_and_normals_prgm = std::make_unique<GLSLComputeShader>();
             m_prepare_depths_and_normals_half_prgm = std::make_unique<GLSLComputeShader>();
-            m_prepare_depth_mip1_prgm = std::make_unique<GLSLComputeShader>();
-            m_prepare_depth_mip2_prgm = std::make_unique<GLSLComputeShader>();
-            m_prepare_depth_mip3_prgm = std::make_unique<GLSLComputeShader>();
+            m_prepare_depth_mip_prgms.resize(SSAO_DEPTH_MIP_LEVELS - 1);
+            for (auto& cs : m_prepare_depth_mip_prgms) {
+                cs = std::make_unique<GLSLComputeShader>();
+            }
+            for (auto& cs : m_generate_prgms) {
+                cs = std::make_unique<GLSLComputeShader>();
+            }
             m_generate_q0_prgm = std::make_unique<GLSLComputeShader>();
             m_generate_q1_prgm = std::make_unique<GLSLComputeShader>();
             m_generate_q2_prgm = std::make_unique<GLSLComputeShader>();
@@ -169,9 +173,8 @@ bool megamol::compositing::ASSAO::create() {
             vislib::graphics::gl::ShaderSource cs_prepare_depths_half;
             vislib::graphics::gl::ShaderSource cs_prepare_depths_and_normals;
             vislib::graphics::gl::ShaderSource cs_prepare_depths_and_normals_half;
-            vislib::graphics::gl::ShaderSource cs_prepare_depth_mip1;
-            vislib::graphics::gl::ShaderSource cs_prepare_depth_mip2;
-            vislib::graphics::gl::ShaderSource cs_prepare_depth_mip3;
+            std::vector<vislib::graphics::gl::ShaderSource> cs_prepare_depth_mip(SSAO_DEPTH_MIP_LEVELS - 1);
+            std::vector<vislib::graphics::gl::ShaderSource> cs_generate(5);
             vislib::graphics::gl::ShaderSource cs_generate_q0;
             vislib::graphics::gl::ShaderSource cs_generate_q1;
             vislib::graphics::gl::ShaderSource cs_generate_q2;
@@ -216,29 +219,32 @@ bool megamol::compositing::ASSAO::create() {
             if (!m_prepare_depths_and_normals_half_prgm->Link())
                 return false;
 
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepthMip1", cs_prepare_depth_mip1))
-                return false;
-            if (!m_prepare_depth_mip1_prgm->Compile(cs_prepare_depth_mip1.Code(), cs_prepare_depth_mip1.Count()))
-                return false;
-            if (!m_prepare_depth_mip1_prgm->Link())
-                return false;
+            for (int i = 1; i < SSAO_DEPTH_MIP_LEVELS; ++i) {
+                std::string identifier = "Compositing::assao::CSPrepareDepthMip" + std::to_string(i);
+                if (!instance()->ShaderSourceFactory().MakeShaderSource(
+                        identifier.c_str(), cs_prepare_depth_mip[i]))
+                    return false;
+                if (!m_prepare_depth_mip_prgms[i]->Compile(
+                        cs_prepare_depth_mip[i].Code(), cs_prepare_depth_mip[i].Count()))
+                    return false;
+                if (!m_prepare_depth_mip_prgms[i]->Link())
+                    return false;
+            }
 
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepthMip2", cs_prepare_depth_mip2))
-                return false;
-            if (!m_prepare_depth_mip2_prgm->Compile(cs_prepare_depth_mip2.Code(), cs_prepare_depth_mip2.Count()))
-                return false;
-            if (!m_prepare_depth_mip2_prgm->Link())
-                return false;
+            for (int i = 1; i < 5; ++i) {
+                std::string identifier = "Compositing::assao::CSGenerateQ" + std::to_string(i);
+                if (i < 4)
+                    identifier = "Compositing::assao::CSGenerateQ" + std::to_string(i);
+                else
+                    identifier = "Compositing::assao::CSGenerateQ3Base";
 
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepthMip3", cs_prepare_depth_mip3))
-                return false;
-            if (!m_prepare_depth_mip3_prgm->Compile(cs_prepare_depth_mip3.Code(), cs_prepare_depth_mip3.Count()))
-                return false;
-            if (!m_prepare_depth_mip3_prgm->Link())
-                return false;
+                if (!instance()->ShaderSourceFactory().MakeShaderSource(identifier.c_str(), cs_generate[i]))
+                    return false;
+                if (!m_generate_prgms[i]->Compile(cs_generate[i].Code(), cs_generate[i].Count()))
+                    return false;
+                if (!m_generate_prgms[i]->Link())
+                    return false;
+            }
 
             if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSGenerateQ0", cs_generate_q0))
                 return false;
@@ -423,8 +429,7 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             updateConstants(m_settings, m_inputs, 0);
         }
 
-        PrepareDepths(m_settings, m_inputs);
-
+        // only required when scissors are used
         /*if (m_requiresClear) {
             m_halfDepths[0]->reload(m_halfDepths[0]->getTextureLayout(), nullptr);
             m_halfDepths[1]->reload(m_halfDepths[1]->getTextureLayout(), nullptr);
@@ -442,7 +447,9 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             m_requiresClear = false;
         }*/
 
-        
+        prepareDepths(m_settings, m_inputs);
+
+        generateSSAO(m_settings, m_inputs, false);
     }
         
 
@@ -453,49 +460,170 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
     return true;
 }
 
-void megamol::compositing::ASSAO::PrepareDepths(
+void megamol::compositing::ASSAO::prepareDepths(
     const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs) {
     bool generateNormals = inputs->normalTexture == nullptr;
 
-    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> input_textures;
-    input_textures.push_back({inputs->depthTexture, (std::string)"g_DepthSource"});
+    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures;
+    inputTextures.push_back({inputs->depthTexture, (std::string)"g_DepthSource"});
 
-    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> output_textures;
-    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> output_four_depths = {
+    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> outputTextures;
+    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputFourDepths = {
         {m_halfDepths[0], 0}, {m_halfDepths[1], 1}, {m_halfDepths[2], 2}, {m_halfDepths[3], 3}};
-    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> output_two_depths = {
+    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTwoDepths = {
         {m_halfDepths[0], 0}, {m_halfDepths[3], 3}};
 
 
     if (!generateNormals) {
         if (settings.QualityLevel < 0) {
-            FullscreenPassDraw(m_prepare_depths_half_prgm, input_textures, output_two_depths);
+            fullscreenPassDraw(m_prepare_depths_half_prgm, inputTextures, outputTwoDepths);
         } else {
-            FullscreenPassDraw(m_prepare_depths_prgm, input_textures, output_four_depths);
+            fullscreenPassDraw(m_prepare_depths_prgm, inputTextures, outputFourDepths);
         }
     } else {
         // TODO: is there a equivalent of UAV from hlsl in opengl?
         // intel originally uses a UAV for the normals
-        std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> input_textures_normals = input_textures;
-        input_textures_normals.push_back({inputs->normalTexture, (std::string) "g_NormalsOutputUAV"});
+        std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTexturesNormals = inputTextures;
+        inputTexturesNormals.push_back({inputs->normalTexture, (std::string) "g_NormalsOutputUAV"});
 
         if (settings.QualityLevel < 0) {
-            FullscreenPassDraw(m_prepare_depths_half_prgm, input_textures_normals, output_two_depths);
+            fullscreenPassDraw(m_prepare_depths_half_prgm, inputTexturesNormals, outputTwoDepths);
         } else {
-            FullscreenPassDraw(m_prepare_depths_prgm, input_textures_normals, output_four_depths);
+            fullscreenPassDraw(m_prepare_depths_prgm, inputTexturesNormals, outputFourDepths);
         }
     }
 
-    // TODO: continue here
+    // only do mipmaps for higher quality levels (not beneficial on quality level 1, and detrimental on quality level 0)
+    if (settings.QualityLevel > 1) {
+
+        for (int i = 1; i < m_depthMipLevels; ++i) {
+            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputFourDepthMipsM1 = {
+                {m_halfDepthsMipViews[0][i - 1LL], (std::string) "g_ViewspaceDepthSource"},
+                {m_halfDepthsMipViews[1][i - 1LL], (std::string) "g_ViewspaceDepthSource1"},
+                {m_halfDepthsMipViews[2][i - 1LL], (std::string) "g_ViewspaceDepthSource2"},
+                {m_halfDepthsMipViews[3][i - 1LL], (std::string) "g_ViewspaceDepthSource3"}};
+
+            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputFourDepthMips = {
+                {m_halfDepthsMipViews[0][i], 0}, {m_halfDepthsMipViews[1][i], 1}, {m_halfDepthsMipViews[2][i], 2},
+                {m_halfDepthsMipViews[3][i], 3}};
+
+            // dx11Context->RSSetViewports( 1, &viewport ); --> TODO: problem if not set?
+            // i dont think so, because we launch a compute shader specifically made for this case
+
+            fullscreenPassDraw(m_prepare_depth_mip_prgms[i - 1LL], inputFourDepthMipsM1, outputFourDepthMips);
+        }
+    }
 }
+
+void megamol::compositing::ASSAO::generateSSAO(
+    const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass) {
+
+    // omitted viewport and scissor code from intel here
+
+    if (adaptiveBasePass) {
+        assert(settings.QualityLevel == 3);
+    }
+
+    int passCount = 4;
+
+    for (int pass = 0; pass < passCount; ++pass) {
+        if ((settings.QualityLevel < 0) && ((pass == 1) || (pass == 2)))
+            continue;
+
+        int blurPasses = settings.BlurPassCount;
+        blurPasses = std::min(blurPasses, m_max_blur_pass_count);
+
+        // CHECK FOR ADAPTIVE SSAO
+#ifdef INTEL_SSAO_ENABLE_ADAPTIVE_QUALITY
+        if (settings.QualityLevel == 3) {
+            // if adaptive, at least one blur pass needed as the first pass needs to read the final texture results -
+            // kind of awkward
+            if (adaptiveBasePass)
+                blurPasses = 0;
+            else
+                blurPasses = Max(1, blurPasses);
+        } else
+#endif
+            if (settings.QualityLevel <= 0) {
+            // just one blur pass allowed for minimum quality
+            // MM simply uses one blur pass
+            blurPasses = std::min(1, settings.BlurPassCount);
+        }
+
+        updateConstants(settings, inputs, pass);
+
+        // Generate
+        {
+            std::shared_ptr<glowl::Texture2D> rts = m_pingPongHalfResultA;
+
+            // no blur?
+            if (blurPasses == 0)
+                rts = m_finalResultsArrayViews[pass];
+
+            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
+                {rts, 0}}; // TODO: binding correct?
+
+            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures(5);
+            inputTextures[0] = {m_halfDepths[pass], "g_ViewSpaceDepthSource"};
+            inputTextures[1] = {m_normals, "g_NormalmapSource"};
+            inputTextures[2] = {NULL, ""};
+            inputTextures[3] = {NULL, ""};
+            inputTextures[4] = {NULL, ""};
+
+            // CHECK FOR ADAPTIVE SSAO
+#ifdef INTEL_SSAO_ENABLE_ADAPTIVE_QUALITY
+            if (!adaptiveBasePass && (settings.QualityLevel == 3)) {
+                inputTextures[2] = {m_loadCounterSRV, "g_LoadCounter"};
+                inputTextures[3] = {m_importanceMap.SRV, "g_ImportanceMap"};
+                inputTextures[4] = {m_finalResults.SRV, "g_FinalSSAO"};
+            }
+#endif
+
+            int shaderIndex = std::max(0, !adaptiveBasePass ? settings.QualityLevel : 4);
+            fullscreenPassDraw(m_generate_prgms[shaderIndex], {}, outputTextures);
+        }
+
+        // Blur
+        if (blurPasses > 0) {
+            int wideBlursRemaining = std::max(0, blurPasses - 2);
+
+            for (int i = 0; i < blurPasses; ++i) {
+                std::shared_ptr<glowl::Texture2D> rts = m_pingPongHalfResultB;
+
+                if (i == blurPasses - 1)
+                    rts = m_finalResultsArrayViews[pass];
+
+                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
+                    {rts, 0}}; // TODO: binding correct?
+
+                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures = {{m_pingPongHalfResultA, "g_ViewspaceDepthSource2"}};
+
+                if (settings.QualityLevel > 0) {
+                    if (wideBlursRemaining > 0) {
+                        fullscreenPassDraw(m_smart_blur_wide_prgm, inputTextures, outputTextures);
+                        wideBlursRemaining--;
+                    } else {
+                        fullscreenPassDraw(m_smart_blur_prgm, inputTextures, outputTextures);
+                    }
+                } else {
+                    fullscreenPassDraw(m_non_smart_blur_prgm, inputTextures, outputTextures);
+                }
+
+                std::swap(m_pingPongHalfResultA, m_pingPongHalfResultB);
+            }
+        }
+    }
+}
+
+
 
 // intel originally uses some blending state parameter, but it isnt used here, so we omit this
 // but could easily be extended with glEnable(GL_BLEND) and a blendfunc
-void megamol::compositing::ASSAO::FullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm,
+void megamol::compositing::ASSAO::fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm,
     const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>>& input_textures,
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>>& output_textures,
     bool add_constants) {
-
+    
     prgm->Enable();
 
     if (add_constants)
