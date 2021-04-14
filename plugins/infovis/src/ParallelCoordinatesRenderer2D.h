@@ -1,7 +1,14 @@
 #ifndef MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
 #define MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
 
-#include "json.hpp"
+#include <map>
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include <glm/matrix.hpp>
+#include <glowl/FramebufferObject.hpp>
+#include <json.hpp>
+
+#include "Renderer2D.h"
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -12,14 +19,7 @@
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/table/TableDataCall.h"
-
-#include "glowl/FramebufferObject.hpp"
 #include "vislib/graphics/gl/FramebufferObject.h"
-
-#include "Renderer2D.h"
-
-#include <map>
-#include "glm/matrix.hpp"
 
 namespace megamol {
 namespace infovis {
@@ -219,6 +219,10 @@ namespace infovis {
 
         core::param::ParamSlot filterStateSlot;
 
+        core::param::ParamSlot triangleModeSlot;
+        core::param::ParamSlot lineThicknessSlot;
+        core::param::ParamSlot axesLineThicknessSlot;
+
         float marginX, marginY;
         float axisDistance;
         float axisHeight;
@@ -290,10 +294,6 @@ namespace infovis {
         GLint maxWorkgroupCount[3];
 
         megamol::core::utility::SDFFont font;
-
-        core::param::ParamSlot thicknessFloatP;
-        core::param::ParamSlot axesThicknessFloatP;
-        core::param::ParamSlot legacyMode;
     };
 
 } /* end namespace infovis */
