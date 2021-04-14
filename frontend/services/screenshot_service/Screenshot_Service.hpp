@@ -15,9 +15,6 @@
 namespace megamol {
 namespace frontend {
 
-// for detailed service API documentation see Template_Service.{hpp,cpp}
-// 
-// 
 class Screenshot_Service final : public AbstractFrontendService {
 public:
 

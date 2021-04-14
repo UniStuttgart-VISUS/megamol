@@ -18,12 +18,14 @@ using namespace megamol::gui;
 
 
 megamol::gui::CallSlot::CallSlot(ImGuiID uid, const std::string& name, const std::string& description,
-    const std::vector<size_t>& compatible_call_idxs, CallSlotType type)
+    const std::vector<size_t>& compatible_call_idxs, CallSlotType type,
+    megamol::core::AbstractCallSlotPresentation::Necessity necessity)
         : uid(uid)
         , name(name)
         , description(description)
         , compatible_call_idxs(compatible_call_idxs)
         , type(type)
+        , necessity(necessity)
         , parent_module(nullptr)
         , connected_calls()
         , gui_interfaceslot_ptr(nullptr)
@@ -149,9 +151,9 @@ bool megamol::gui::CallSlot::IsParentModuleConnected(void) const {
 }
 
 
-bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t parent_module) {
+bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t pm) {
 
-    if (parent_module == nullptr) {
+    if (pm == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] Pointer to given parent module is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -161,7 +163,7 @@ bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t paren
             "[GUI] Pointer to parent module is already set. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    this->parent_module = parent_module;
+    this->parent_module = pm;
     return true;
 }
 
@@ -329,7 +331,13 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 }
             }
         } else {
+            std::string slot_label = this->name;
             std::string button_label = "callslot_" + std::to_string(this->uid);
+            bool slot_required = ((this->necessity == megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED) &&
+                                  (!this->CallsConnected()));
+            if (slot_required) {
+                slot_label.append(" [REQUIRED]");
+            }
 
             ImGui::PushID(this->uid);
 
@@ -347,8 +355,9 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                     state.interact.button_hovered_uid = this->uid;
                 }
 
-                // Context Menu
                 ImGui::PushFont(state.canvas.gui_font_ptr);
+
+                // Context Menu
                 if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                     state.interact.button_active_uid = this->uid;
 
@@ -374,7 +383,6 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
 
                     ImGui::EndPopup();
                 }
-                ImGui::PopFont();
 
                 // Drag & Drop
                 if (ImGui::BeginDragDropTarget()) {
@@ -395,10 +403,13 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
 
                 // Hover Tooltip
                 if ((state.interact.callslot_hovered_uid == this->uid) && !state.interact.callslot_show_label) {
-                    this->gui_tooltip.ToolTip(this->name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
+                    this->gui_tooltip.ToolTip(slot_label, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                 } else {
                     this->gui_tooltip.Reset();
                 }
+
+                ImGui::PopFont();
+
             } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
                 bool active = (state.interact.button_active_uid == this->uid);
@@ -460,9 +471,13 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
+
                 // Draw Slot
                 ImU32 slot_border_color = COLOR_SLOT_BORDER;
                 ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
+                if (slot_required) {
+                    slot_border_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_REQUIRED);
+                }
                 if (this->gui_compatible) {
                     tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
                     tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);
@@ -476,9 +491,13 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                     tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }
-                const float segment_numer = (20.0f * megamol::gui::gui_scaling.Get());
-                draw_list->AddCircleFilled(slot_position, radius, slot_background_color, segment_numer);
-                draw_list->AddCircle(slot_position, radius, slot_border_color, segment_numer);
+
+                float thickness = (1.0f * state.canvas.zooming);
+                if (slot_required) {
+                    thickness = (2.0f * state.canvas.zooming);
+                }
+                draw_list->AddCircleFilled(slot_position, radius, slot_background_color);
+                draw_list->AddCircle(slot_position, radius, slot_border_color, 0, thickness);
 
                 // Text
                 if (state.interact.callslot_show_label) {

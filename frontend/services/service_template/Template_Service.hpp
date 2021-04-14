@@ -115,7 +115,7 @@ public:
     void resetProvidedResources() override;
 
     // gets called before graph rendering, you may prepare rendering with some API, e.g. set frame-timers, etc
-    void preGraphRender() override;  
+    void preGraphRender() override;
     // clean up after rendering, e.g. render gui over graph rendering, stop and show frame-timers in GLFW window, swap buffers, glClear for next framebuffer
     void postGraphRender() override;
 

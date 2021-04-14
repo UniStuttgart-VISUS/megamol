@@ -109,6 +109,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
     _data_has_changed = false;
     _material_has_changed = false;
     _transformation_has_changed = false;
+    _clipping_geo_changed = false;
     for (auto element : this->_structureMap) {
         auto structure = element.second;
         if (structure.dataChanged) {
@@ -119,6 +120,9 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         }
         if (structure.transformationChanged) {
             _transformation_has_changed = true;
+        }
+        if (structure.clippingPlaneChanged) {
+            _clipping_geo_changed = true;
         }
     }
 
@@ -186,7 +190,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
 
     // if nothing changes, the image is rendered multiple times
     if (_data_has_changed || _material_has_changed || _light_has_changed || _cam_has_changed || _renderer_has_changed ||
-        _transformation_has_changed || !(this->_accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
+        _transformation_has_changed || _clipping_geo_changed ||
+        !(this->_accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
         _frameID != static_cast<size_t>(cr.Time()) || this->InterfaceIsDirty()) {
 
         

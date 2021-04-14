@@ -380,7 +380,7 @@ namespace rendering {
 
 		// Affects only Outline rendering: --------------------------
 
-		megamol::core::param::ParamSlot outlineSizeSlot;
+		megamol::core::param::ParamSlot outlineWidthSlot;
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */

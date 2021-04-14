@@ -43,7 +43,6 @@ bool GUI_Service::init(const Config& config) {
     this->m_time = 0.0;
     this->m_framebuffer_size = glm::vec2(1.0f, 1.0f);
     this->m_window_size = glm::vec2(1.0f, 1.0f);
-    this->m_opengl_context_ptr = nullptr;
     this->m_megamol_graph = nullptr;
     this->m_gui = nullptr;
 
@@ -203,8 +202,8 @@ void GUI_Service::digestChangedRequestedResources() {
     const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->buttons_events = pass_mouse_btn_events;
 
     /// IOpenGL_Context = resource index 4
-    this->m_opengl_context_ptr =
-        &this->m_requestedResourceReferences[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
+    // IOpenGL_Context resource is not actively used, requesting IOpenGL_Context makes sure there is a GL context present and active.
+    //    this->m_requestedResourceReferences[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
 
     /// FramebufferEvents = resource index 5
     auto framebuffer_events =
@@ -260,30 +259,22 @@ void GUI_Service::preGraphRender() {
     if (is_gui_nullptr) return;
     auto gui = this->m_gui->Get();
 
-    if (this->m_opengl_context_ptr) {
-        this->m_opengl_context_ptr->activate();
-
-        if (this->m_megamol_graph != nullptr) {
-            // Requires enabled OpenGL context, e.g. for textures used in parameters
-            gui->SynchronizeGraphs(this->m_megamol_graph);
-        }
-
-        gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
-        this->m_opengl_context_ptr->close();
+    if (this->m_megamol_graph != nullptr) {
+        // Requires enabled OpenGL context, e.g. for textures used in parameters
+        gui->SynchronizeGraphs(this->m_megamol_graph);
     }
+
+    gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
 }
 
 
 void GUI_Service::postGraphRender() {
 
     if (is_gui_nullptr) return;
+
     auto gui = this->m_gui->Get();
 
-    if (this->m_opengl_context_ptr) {
-        this->m_opengl_context_ptr->activate();
-        gui->PostDraw();
-        this->m_opengl_context_ptr->close();
-    }
+    gui->PostDraw();
 }
 
 
@@ -308,9 +299,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 
 std::string GUI_Service::resource_request_gui_state(bool as_lua) {
 
-    if (is_gui_nullptr) {
-        return std::string();
-    }
+    if (is_gui_nullptr) return std::string();
     auto gui = this->m_gui->Get();
     return gui->GetState(as_lua);
 }
@@ -318,9 +307,7 @@ std::string GUI_Service::resource_request_gui_state(bool as_lua) {
 
 bool GUI_Service::resource_request_gui_visibility() {
 
-    if (is_gui_nullptr) {
-        return false;
-    }
+    if (is_gui_nullptr) return false;
     auto gui = this->m_gui->Get();
     return gui->GetVisibility();
 }
@@ -328,9 +315,7 @@ bool GUI_Service::resource_request_gui_visibility() {
 
 float GUI_Service::resource_request_gui_scale() {
 
-    if (is_gui_nullptr) {
-        return 1.0f;
-    }
+    if (is_gui_nullptr) return 1.0f;
     auto gui = this->m_gui->Get();
     return gui->GetScale();
 }
@@ -350,6 +335,7 @@ void GUI_Service::resource_provide_gui_visibility(bool show) {
     auto gui = this->m_gui->Get();
     gui->SetVisibility(show);
 }
+
 
 void GUI_Service::resource_provide_gui_scale(float scale) {
 

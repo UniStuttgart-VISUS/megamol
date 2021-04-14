@@ -66,7 +66,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     string(REGEX REPLACE "^include\\\\mmcore" "Public Header Files" GROUP_NAME ${GROUP_NAME})
     source_group(${GROUP_NAME} FILES ${FILE_NAME})
   endforeach()
-  source_group("Version" FILES ${version_files})
   source_group("ImGui Files" FILES ${imgui_files})
   source_group("Resources" FILES ${resource_files})
 

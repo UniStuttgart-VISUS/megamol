@@ -78,8 +78,8 @@ bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
             "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0)); \n "
             "    \n"
             "    const vec4 colors[6] = vec4[6](vec4(0.0, 0.0, 1.0, 1.0), vec4(0.0, 1.0, 1.0, 1.0), \n "
-            "                                   vec4(0.0, 1.0, 0.0, 1.0), vec4(1.0, 1.0, 0.0, 1.0), \n "
-            "                                   vec4(1.0, 0.0, 0.0, 1.0), vec4(1.0, 0.0, 1.0, 1.0)); \n "
+            "                                   vec4(1.0, 0.0, 0.0, 1.0), vec4(1.0, 0.0, 1.0, 1.0), \n "
+            "                                   vec4(0.0, 1.0, 0.0, 1.0), vec4(1.0, 1.0, 0.0, 1.0)); \n "
             "    // Calculate indices and IDs \n"
             "    float vertex_index = float(gl_VertexID); \n"
             "    float mod_index = vertex_index - (12.0 * floor(vertex_index/12.0)); \n"
@@ -232,7 +232,7 @@ megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget(void)
         , cube_widget()
         , last_presentation(param::AbstractParamPresentation::Presentation::Basic) {
 
-    this->InitPresentation(Param_t::GROUP_3D_CUBE);
+    this->InitPresentation(ParamType_t::GROUP_3D_CUBE);
     this->name = "view";
 }
 
@@ -245,15 +245,15 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
     bool param_resetView = false;
     bool param_showCube = false;
     for (auto& param_ptr : params) {
-        if ((param_ptr->Name() == "cubeOrientation") && (param_ptr->Type() == Param_t::VECTOR4F)) {
+        if ((param_ptr->Name() == "cubeOrientation") && (param_ptr->Type() == ParamType_t::VECTOR4F)) {
             param_cubeOrientation = true;
-        } else if ((param_ptr->Name() == "defaultView") && (param_ptr->Type() == Param_t::ENUM)) {
+        } else if ((param_ptr->Name() == "defaultView") && (param_ptr->Type() == ParamType_t::ENUM)) {
             param_defaultView = true;
-        } else if ((param_ptr->Name() == "defaultOrientation") && (param_ptr->Type() == Param_t::ENUM)) {
+        } else if ((param_ptr->Name() == "defaultOrientation") && (param_ptr->Type() == ParamType_t::ENUM)) {
             param_defaultOrientation = true;
-        } else if ((param_ptr->Name() == "resetView") && (param_ptr->Type() == Param_t::BUTTON)) {
+        } else if ((param_ptr->Name() == "resetView") && (param_ptr->Type() == ParamType_t::BUTTON)) {
             param_resetView = true;
-        } else if ((param_ptr->Name() == "showViewCube") && (param_ptr->Type() == Param_t::BOOL)) {
+        } else if ((param_ptr->Name() == "showViewCube") && (param_ptr->Type() == ParamType_t::BOOL)) {
             param_showCube = true;
         }
     }
@@ -279,15 +279,15 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
     Parameter* param_showCube = nullptr;
     /// Find specific parameters of group by name because parameter type can occure multiple times.
     for (auto& param_ptr : params) {
-        if ((param_ptr->Name() == "cubeOrientation") && (param_ptr->Type() == Param_t::VECTOR4F)) {
+        if ((param_ptr->Name() == "cubeOrientation") && (param_ptr->Type() == ParamType_t::VECTOR4F)) {
             param_cubeOrientation = param_ptr;
-        } else if ((param_ptr->Name() == "defaultView") && (param_ptr->Type() == Param_t::ENUM)) {
+        } else if ((param_ptr->Name() == "defaultView") && (param_ptr->Type() == ParamType_t::ENUM)) {
             param_defaultView = param_ptr;
-        } else if ((param_ptr->Name() == "defaultOrientation") && (param_ptr->Type() == Param_t::ENUM)) {
+        } else if ((param_ptr->Name() == "defaultOrientation") && (param_ptr->Type() == ParamType_t::ENUM)) {
             param_defaultOrientation = param_ptr;
-        } else if ((param_ptr->Name() == "resetView") && (param_ptr->Type() == Param_t::BUTTON)) {
+        } else if ((param_ptr->Name() == "resetView") && (param_ptr->Type() == ParamType_t::BUTTON)) {
             param_resetView = param_ptr;
-        } else if ((param_ptr->Name() == "showViewCube") && (param_ptr->Type() == Param_t::BOOL)) {
+        } else if ((param_ptr->Name() == "showViewCube") && (param_ptr->Type() == ParamType_t::BOOL)) {
             param_showCube = param_ptr;
         }
     }

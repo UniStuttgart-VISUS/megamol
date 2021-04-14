@@ -204,7 +204,10 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes, smoothLines);
     }
+
+    *chainedCall = call;
     renderRes &= (*chainedCall)(view::AbstractCallRender::FnRender);
+
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes, smoothLines);
     }

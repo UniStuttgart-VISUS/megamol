@@ -18,6 +18,7 @@
 #include "OpenGL_GLFW_Service.hpp"
 #include "Screenshot_Service.hpp"
 #include "ProjectLoader_Service.hpp"
+#include "ImagePresentation_Service.hpp"
 
 
 static void log(std::string const& text) {
@@ -117,6 +118,9 @@ int main(const int argc, const char** argv) {
     megamol::frontend::ProjectLoader_Service::Config projectloaderConfig;
     projectloader_service.setPriority(1);
 
+    megamol::frontend::ImagePresentation_Service imagepresentation_service;
+    megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
+    imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -143,6 +147,7 @@ int main(const int argc, const char** argv) {
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);
     services.add(projectloader_service, &projectloaderConfig);
+    services.add(imagepresentation_service, &imagepresentationConfig);
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
 #endif
@@ -198,7 +203,7 @@ int main(const int argc, const char** argv) {
         {
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
 
-            graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
+            imagepresentation_service.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
         }
@@ -212,6 +217,10 @@ int main(const int argc, const char** argv) {
     const std::function<bool()> render_next_frame_func = [&]() -> bool { return render_next_frame(); };
     services.getProvidedResources().push_back({"RenderNextFrame", render_next_frame_func});
 
+    // image presentation service needs to assign frontend resources to entry points
+    auto& frontend_resources = services.getProvidedResources();
+    services.getProvidedResources().push_back({"FrontendResources",frontend_resources});
+
     // distribute registered resources among registered services.
     const bool resources_ok = services.assignRequestedResources();
     // for each service we call their resource callbacks here:
@@ -223,10 +232,14 @@ int main(const int argc, const char** argv) {
         run_megamol = false;
     }
 
-    auto frontend_resources = services.getProvidedResources();
-    graph.AddModuleDependencies(frontend_resources);
+    bool graph_resources_ok = graph.AddFrontendResources(frontend_resources);
+    if (!graph_resources_ok) {
+        log_error("Graph did not get resources he needs from frontend. Abort.");
+        run_megamol = false;
+    }
 
     // load project files via lua
+    if (graph_resources_ok)
     for (auto& file : config.project_files) {
         if (!projectloader_service.load_file(file)) {
             log("Project file \"" + file + "\" did not execute correctly");
