@@ -90,13 +90,13 @@ void main()
     ]]>
   </snippet>
 
-    <snippet name="vertexShaderMainT" type="string">
-		<![CDATA[
+  <snippet name="vertexShaderMainT" type="string">
+    <![CDATA[
 uniform vec2 res = vec2(1,1);
 uniform float widthR = 1.0;
 uniform float heightR = 1.0;
 uniform float thicknessP;
-		
+
 void main()
 {
 #define DOLINES
@@ -111,9 +111,9 @@ void main()
 
   out_.dataDimension = pc_dimension(theID);
   out_.worldSpaceAxis = theID;
-  
+
   out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
-  
+
   float value = out_.itemID / float(itemCount - 1);
   if (colorColumn != -1) {
     value = pc_item_dataValue_unscaled(pc_item_dataID(out_.itemID, colorColumn));
@@ -123,75 +123,75 @@ void main()
   } else {
     out_.color = mix(color, tflookup(value), tfColorFactor);
   }
-  
-  //aktuell betrachteter Vertex
+
+  // aktuell betrachteter Vertex
   vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
-  //Vertices auf der linken und rechten Achse
+  // Vertices auf der linken und rechten Achse
   vec4 vertexL = pc_item_vertex(out_.itemID, pc_item_dataID(out_.itemID, pc_dimension(theID-1)), pc_dimension(theID-1), out_.worldSpaceAxis-1);
   vec4 vertexR = pc_item_vertex(out_.itemID, pc_item_dataID(out_.itemID, pc_dimension(theID+1)), pc_dimension(theID+1), out_.worldSpaceAxis+1);
-  
+
   //vertex.y += (gl_VertexID % 2) * axisHeight * 0.002;
-  
+
   vec2 tempL = vec2(0, 0.0);
   vec2 tempR = vec2(0.0, 0.0);
   // magic number, to be changed to resolution based calculation
   float thickness = thicknessP * sqrt(1/pow(widthR,2) + 1/pow(heightR,2));
-  
-  if(out_.worldSpaceAxis != 0 && out_.worldSpaceAxis != dimensionCount){
-	//Vektoren von linken zum aktuellen Vertex, dies ist die Linie die von links kommt
-	tempL =  (projection * modelView * vertex - projection * modelView * vertexL).xy;
-	//Linie zur naechsten Achse
-	tempR =  (projection * modelView * vertexR - projection * modelView * vertex).xy;
-	
-	tempL = normalize(tempL);
-	tempR = normalize(tempR);
-	tempL.x *= widthR;
-	tempR.x *= widthR;
-	tempL.y *= heightR;
-	tempR.y *= heightR;
-	
-	//Bestimmung der Orthogonalen durch Drehung
-	//vec2 oL = vec2(-tempL.y * res.y / res.x, tempL.x * res.x / res.y);
-	vec2 oL = vec2(-tempL.y, tempL.x);
-	//vec2 oR = vec2(-tempR.y * res.y/res.x, tempR.x*res.x/res.y);
-	vec2 oR = vec2(-tempR.y, tempR.x);
-    
-	//benoetigt zur berechnung des laenge des offset vektors
-	oL = thickness * normalize(oL);
-	oR = thickness * normalize(oR);
-    
-	// h ist winkelhalbierende
+
+  if (out_.worldSpaceAxis != 0 && out_.worldSpaceAxis != dimensionCount) {
+    // Vektoren von linken zum aktuellen Vertex, dies ist die Linie die von links kommt
+    tempL =  (projection * modelView * vertex - projection * modelView * vertexL).xy;
+    // Linie zur naechsten Achse
+    tempR =  (projection * modelView * vertexR - projection * modelView * vertex).xy;
+
+    tempL = normalize(tempL);
+    tempR = normalize(tempR);
+    tempL.x *= widthR;
+    tempR.x *= widthR;
+    tempL.y *= heightR;
+    tempR.y *= heightR;
+
+    // Bestimmung der Orthogonalen durch Drehung
+    //vec2 oL = vec2(-tempL.y * res.y / res.x, tempL.x * res.x / res.y);
+    vec2 oL = vec2(-tempL.y, tempL.x);
+    //vec2 oR = vec2(-tempR.y * res.y/res.x, tempR.x*res.x/res.y);
+    vec2 oR = vec2(-tempR.y, tempR.x);
+
+    // benoetigt zur berechnung des laenge des offset vektors
+    oL = thickness * normalize(oL);
+    oR = thickness * normalize(oR);
+
+    // h ist winkelhalbierende
     vec2 h = normalize(oL + oR);
-	//out_.color = vec4(heightR/widthR,0, 0.0, 1.0);
-	
-	//laenge der winkelhalbierenden um dicke zu garantieren, berechnet aus Winkel der rechten orthogonalen und der winkelhalbierenden
-	h = h * thickness / dot(oR, h) * (length(oR)*length(h));
-	h.x *= 1.0*heightR/widthR ;
-	tempL = h;
+    //out_.color = vec4(heightR / widthR, 0.0 , 0.0, 1.0);
+
+    // laenge der winkelhalbierenden um dicke zu garantieren, berechnet aus Winkel der rechten orthogonalen und der winkelhalbierenden
+    h = h * thickness / dot(oR, h) * (length(oR) * length(h));
+    h.x *= 1.0 * heightR / widthR ;
+    tempL = h;
   }
-  
-  if(out_.worldSpaceAxis == 0){
-	tempR = (projection * modelView * vertexR - projection * modelView * vertex).xy;
-	tempR = normalize(tempR);
-	tempR.x *= widthR;
-	tempR.y *= heightR;
-	vec2 oR = vec2(-tempR.y, tempR.x);
-	oR = thickness * normalize(oR);
-	tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oR, vec2(0.0, 1.0));
-	//out_.color = vec4(pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID+1)), pc_dimension(theID+1)), 0.0, 1.0, 1.0);
+
+  if (out_.worldSpaceAxis == 0) {
+    tempR = (projection * modelView * vertexR - projection * modelView * vertex).xy;
+    tempR = normalize(tempR);
+    tempR.x *= widthR;
+    tempR.y *= heightR;
+    vec2 oR = vec2(-tempR.y, tempR.x);
+    oR = thickness * normalize(oR);
+    tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oR, vec2(0.0, 1.0));
+    //out_.color = vec4(pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID + 1)), pc_dimension(theID + 1)), 0.0, 1.0, 1.0);
   }
-  if(out_.worldSpaceAxis == dimensionCount - 1){
+  if (out_.worldSpaceAxis == dimensionCount - 1) {
     //tempL =  (projection * modelView * vertex - projection * modelView * vertexL).xy;
     //vec2 oL = vec2(-tempL.y, tempL.x);
-	//tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
-	//out_.color = vec4(1.0, 0.0, 1.0, 1.0);
+    //tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
+    //out_.color = vec4(1.0, 0.0, 1.0, 1.0);
     tempL = (projection * modelView * vertex - projection * modelView * vertexL).xy;
-	tempL = normalize(tempL);
-	tempL.x *= widthR;
-	tempL.y *= heightR;
-	vec2 oL = vec2(-tempL.y, tempL.x);
-	oL = thickness * normalize(oL);
-	tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
+    tempL = normalize(tempL);
+    tempL.x *= widthR;
+    tempL.y *= heightR;
+    vec2 oL = vec2(-tempL.y, tempL.x);
+    oL = thickness * normalize(oL);
+    tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
   }
   vec2 offset = (-0.5 + (gl_VertexID % 2)) * tempL;
   //offset.y *= 2.3839096683;
@@ -276,11 +276,7 @@ layout(early_fragment_tests) in;
 void main()
 {
   if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
-  //if (bitflag_test(flags[in_.itemID], 5, 1)) {
-    //gl_FragDepth = 0.0;
-	
-	//fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
-	fragColor = in_.color;
+    fragColor = in_.color;
   } else {
     discard;
     //fragColor = vec4(vec3(0.2), 1.0);
@@ -292,81 +288,74 @@ void main()
     </shader>
   </namespace>
 
-	<namespace name="discreteT">
-		<shader name="vert">
-			<snippet type="version">440</snippet>
-			<snippet name="::core_utils::tflookup" />
-			<snippet name="::core_utils::tfconvenience" />
-			<snippet name="::pc::extensions" />
-			<snippet name="::pc::useLineStrip" />
-			<snippet name="::pc::buffers" />
-			<snippet name="::pc::uniforms" />
-			<snippet name="::pc::instancingOffset" />
-			<snippet name="::pc::common" />
-			<snippet name="::bitflags::main" />
-			<!-- BEGIN Output data -->
-			<snippet type="string">
-				<![CDATA[
+  <namespace name="discreteT">
+    <shader name="vert">
+      <snippet type="version">440</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::useLineStrip" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::instancingOffset" />
+      <snippet name="::pc::common" />
+      <snippet name="::bitflags::main" />
+      <!-- BEGIN Output data -->
+      <snippet type="string">
+        <![CDATA[
 out Interface
 {
       ]]>
-			</snippet>
-			<snippet name="::pc_item_draw::interface" />
-			<snippet type="string">
-				<![CDATA[
+      </snippet>
+      <snippet name="::pc_item_draw::interface" />
+      <snippet type="string">
+        <![CDATA[
 } out_;
         ]]>
-			</snippet>
-			<!-- END Output data -->
-			<snippet name="::pc_item_draw::vertexShaderMainT" />
-		</shader>
+      </snippet>
+      <!-- END Output data -->
+      <snippet name="::pc_item_draw::vertexShaderMainT" />
+    </shader>
 
-		<shader name="frag">
-			<snippet type="version">440</snippet>
-			<snippet name="::pc::extensions" />
-			<snippet name="::pc::useLineStrip" />
-			<snippet name="::pc::earlyFragmentTests" />
-			<snippet name="::pc::buffers" />
-			<snippet name="::pc::uniforms" />
-			<snippet name="::pc::common" />
-			<snippet name="::bitflags::main" />
-			<!-- Input data -->
-			<snippet type="string">
-				<![CDATA[
+    <shader name="frag">
+      <snippet type="version">440</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::useLineStrip" />
+      <snippet name="::pc::earlyFragmentTests" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet name="::bitflags::main" />
+      <!-- Input data -->
+      <snippet type="string">
+        <![CDATA[
 in Interface
 {
       ]]>
-			</snippet>
-			<snippet name="::pc_item_draw::interface" />
-			<snippet type="string">
-				<![CDATA[
+      </snippet>
+      <snippet name="::pc_item_draw::interface" />
+      <snippet type="string">
+        <![CDATA[
 } in_;
         ]]>
-			</snippet>
-			<snippet type="string">
-				<![CDATA[
+      </snippet>
+      <snippet type="string">
+        <![CDATA[
 layout(location = 0) out vec4 fragColor;
 layout(early_fragment_tests) in;
-//out float gl_FragDepth;
 
 void main()
 {
   if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
-  //if (bitflag_test(flags[in_.itemID], 5, 1)) {
-    //gl_FragDepth = 0.0;
-	
-	//fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
-	fragColor = in_.color;
+    fragColor = in_.color;
   } else {
     discard;
-    //fragColor = vec4(vec3(0.2), 1.0);
   }
-  
 }
       ]]>
-			</snippet>
-		</shader>
-	</namespace>
+      </snippet>
+    </shader>
+  </namespace>
 
   <namespace name="continuous">
     <snippet name="uniforms" type="string">
@@ -687,7 +676,6 @@ void main()
   if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
   //if (bitflag_test(flags[in_.itemID], 5, 1)) {
     fragColor = in_.color;
-    //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
   } else {
     discard;
     //fragColor = vec4(vec3(0.2), 1.0);
@@ -718,7 +706,7 @@ void main()
         <![CDATA[
 //out Interface
 //{
-//	flat uint baseItemID;
+//  flat uint baseItemID;
 //} out_;
         ]]>
       </snippet>
@@ -745,7 +733,7 @@ void main(void) {
 layout (vertices = 1) out;
 //in InterfaceI
 //{
-//	flat uint baseItemID;
+//  flat uint baseItemID;
 //} in_[];
 //patch out InterfaceTCO
 //{
@@ -826,8 +814,8 @@ void main(void) {
 
   vec4 vertex = pc_item_vertex(itemID, dataID, dataDimension, worldSpaceAxis);
   //vertex = vec4(
-  //	margin.x + axisDistance * gl_TessCoord.x * 100
-  //	, margin.y + axisHeight * gl_TessCoord.y * 100
+  //  margin.x + axisDistance * gl_TessCoord.x * 100
+  //  , margin.y + axisHeight * gl_TessCoord.y * 100
   //  , pc_item_defaultDepth
   //  , 1.0
   //);
@@ -856,6 +844,7 @@ struct Interface
   uint itemID;
   vec4 color;
 };
+
 layout(early_fragment_tests) in;
 layout(location = 0) flat in Interface in_;
         ]]>
@@ -864,12 +853,12 @@ layout(location = 0) flat in Interface in_;
         <![CDATA[
 layout(location = 0) out vec4 fragColor;
 layout(early_fragment_tests) in;
+
 void main()
 {
   if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
   //if (true) {
     fragColor = in_.color;
-    //fragColor = vec4(vec3(gl_FragCoord.z), 1.0);;
   } else {
     discard;
     //fragColor = vec4(vec3(0.2), 1.0);
@@ -879,5 +868,5 @@ void main()
       ]]>
       </snippet>
     </shader>
-  </namespace></btf>
-
+  </namespace>
+</btf>
