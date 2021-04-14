@@ -102,7 +102,9 @@ namespace optix_hpg {
                 frame_idx = 0.0f;
                 self.colorBufferPtr[pixelIdx].w = 0.0f;
             }*/
-            auto const old_col = self.colorBufferPtr[pixelIdx];
+            // auto const old_col = self.colorBufferPtr[pixelIdx];
+            float4 old_col;
+            surf2Dread(&old_col, self.surface, pixelID.x * sizeof(float4), pixelID.y, cudaBoundaryModeZero);
 
             unsigned int seed = tea<16>(pixelID.y * self.fbSize.x + pixelID.x, fs->frameIdx);
 
@@ -155,10 +157,19 @@ namespace optix_hpg {
 
             if (fs->frameIdx > 0) {
                 const float a = 1.0f / static_cast<float>(fs->frameIdx + 1);
-                col = lerp(old_col, col, a);
+                col = lerp(glm::vec4(static_cast<float>(old_col.x), static_cast<float>(old_col.y),
+                               static_cast<float>(old_col.z), static_cast<float>(old_col.w)),
+                    col, a);
                 // col.w = frame_idx + 1;
             }
-            self.colorBufferPtr[pixelIdx] = col;
+            // self.colorBufferPtr[pixelIdx] = col;
+            /*glm::u8vec4(static_cast<unsigned char>(col.r * 255.0f), static_cast<unsigned char>(col.g * 255.0f),
+                static_cast<unsigned char>(col.b * 255.0f), static_cast<unsigned char>(col.a * 255.0f));*/
+
+            surf2Dwrite(make_float4(col.r, col.g, col.b, col.a), self.surface, pixelID.x * sizeof(float4), pixelID.y,
+                cudaBoundaryModeZero);
+
+            // self.colorBufferPtr[pixelIdx] = glm::u8vec4(255, 0, 0, 255);
         }
     } // namespace device
 } // namespace optix_hpg

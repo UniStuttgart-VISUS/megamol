@@ -31,7 +31,11 @@ namespace optix_hpg {
             const float q = b + copysignf(sqrtf(delta), b);
 
             {
-                const float t = fminf(c / q, q);
+                const float ta = c / q;
+                const float tb = q;
+                const float t = fminf(ta, tb);
+                if (t < 0.f)
+                    return;
                 if (t > ray.tmin && t < ray.tmax) {
                     optixReportIntersection(t, 0);
                 }

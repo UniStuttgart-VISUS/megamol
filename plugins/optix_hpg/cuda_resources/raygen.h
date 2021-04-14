@@ -7,6 +7,8 @@
 
 #include "glm/glm.hpp"
 
+#include "cuda.h"
+
 namespace megamol {
 namespace optix_hpg {
     namespace device {
@@ -16,6 +18,7 @@ namespace optix_hpg {
             glm::uvec2 fbSize;
             glm::vec4* colorBufferPtr;
             FrameState* frameStateBuffer;
+            CUsurfObject surface;
         };
     } // namespace device
 } // namespace optix_hpg
