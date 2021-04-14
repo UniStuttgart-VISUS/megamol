@@ -158,21 +158,37 @@ void ProjectLoader_Service::updateProvidedResources() {
 }
 
 void ProjectLoader_Service::digestChangedRequestedResources() {
+    // if a project file that containts mmRenderNextFrame is dropped into the window
+    // we get into a recursion here where the RenderNextFrame calls back into
+    // this digestion function - from where we again execute the projet file and call RenderNextFrame
+    // break this recursion
+    if (m_digestion_recursion)
+        return;
+    m_digestion_recursion = true;
+
     // execute lua files dropped into megamol window
     using WindowEventsType = megamol::frontend_resources::WindowEvents;
     WindowEventsType& window_events =
         const_cast<WindowEventsType&>(this->m_requestedResourceReferences[2].getResource<WindowEventsType>());
 
-    for(auto& events: window_events.dropped_path_events)
+    // in mmRenderNextFrame recursion the dropped paths get cleared. remember them.
+    auto possible_files = window_events.dropped_path_events;
+
+    for(auto& events: possible_files)
         std::remove_if(events.begin(), events.end(),
             [&](auto& filename) -> bool {
                 return this->load_file(filename);
             });
 
-    std::remove_if(window_events.dropped_path_events.begin(), window_events.dropped_path_events.end(),
+    std::remove_if(possible_files.begin(), possible_files.end(),
         [&](auto& events) -> bool {
             return events.empty();
         });
+
+    // restore, this gets cleared by the service outside of the recursion again
+    window_events.dropped_path_events = possible_files;
+
+    m_digestion_recursion = false;
 }
 
 void ProjectLoader_Service::resetProvidedResources() {

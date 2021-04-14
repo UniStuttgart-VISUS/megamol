@@ -13,18 +13,19 @@
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
 
+static const std::string service_name = "Template_Service: ";
 static void log(std::string const& text) {
-    const std::string msg = "Template_Service: " + text;
+    const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
 static void log_error(std::string const& text) {
-    const std::string msg = "Template_Service: " + text;
+    const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
 }
 
 static void log_warning(std::string const& text) {
-    const std::string msg = "Template_Service: " + text;
+    const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
 }
 
