@@ -110,6 +110,11 @@ namespace optix_hpg {
             glm::vec3 P = ray.origin + ray.tmax * ray.direction;
             glm::vec3 N = glm::normalize(P - glm::vec3(particle.pos));
 
+            if (prd.countDepth) {
+                prd.ray_depth = ray.tmax;
+                prd.countDepth = false;
+            }
+
             glm::vec3 ffN = faceforward(N, -ray.direction, N);
 
             glm::vec3 geo_col = glm::vec3(self.globalColor);

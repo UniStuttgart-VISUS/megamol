@@ -24,6 +24,8 @@ namespace optix_hpg {
             glm::vec4 background;
 
             int frameIdx;
+
+            glm::vec3 depth_params;
         };
     } // namespace device
 } // namespace optix_hpg

@@ -104,21 +104,9 @@ private:
 
     CUdeviceptr _frame_state_buffer;
 
-    CUdeviceptr color_buffer_;
-
     device::FrameState _frame_state;
 
     vislib::math::Rectangle<int> _current_fb_size;
-
-    GLuint _fb_texture = 0;
-
-    GLuint _fbo_pbo = 0;
-
-    CUdeviceptr _old_pbo_ptr = 0;
-
-    CUarray old_cu_array = 0;
-
-    CUgraphicsResource _fbo_res = nullptr;
 
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 

@@ -104,7 +104,7 @@ namespace optix_hpg {
             }*/
             // auto const old_col = self.colorBufferPtr[pixelIdx];
             float4 old_col;
-            surf2Dread(&old_col, self.surface, pixelID.x * sizeof(float4), pixelID.y, cudaBoundaryModeZero);
+            surf2Dread(&old_col, self.col_surf, pixelID.x * sizeof(float4), pixelID.y, cudaBoundaryModeZero);
 
             unsigned int seed = tea<16>(pixelID.y * self.fbSize.x + pixelID.x, fs->frameIdx);
 
@@ -116,13 +116,18 @@ namespace optix_hpg {
 
             auto i = fs->samplesPerPixel;
 
-            do {
+            float depth = FLT_MAX;
 
+            do {
                 PerRayData prd;
+                
                 prd.depth = 0;
 
                 prd.radiance = glm::vec3(0.f);
                 prd.pdf = 1.0f;
+
+                prd.countDepth = true;
+                prd.ray_depth = FLT_MAX;
 
                 prd.beta = glm::vec3(1.f);
 
@@ -150,6 +155,8 @@ namespace optix_hpg {
                 prd.ldir = fs->camera_front;
 
                 col += traceRay(self, ray /*, rnd*/, prd, bg, fs->maxBounces);
+
+                depth = fminf(depth, prd.ray_depth);
             } while (--i);
             col /= (float) fs->samplesPerPixel;
             // col.w = frame_idx + 1;
@@ -166,8 +173,16 @@ namespace optix_hpg {
             /*glm::u8vec4(static_cast<unsigned char>(col.r * 255.0f), static_cast<unsigned char>(col.g * 255.0f),
                 static_cast<unsigned char>(col.b * 255.0f), static_cast<unsigned char>(col.a * 255.0f));*/
 
-            surf2Dwrite(make_float4(col.r, col.g, col.b, col.a), self.surface, pixelID.x * sizeof(float4), pixelID.y,
+            surf2Dwrite(make_float4(col.r, col.g, col.b, col.a), self.col_surf, pixelID.x * sizeof(float4), pixelID.y,
                 cudaBoundaryModeZero);
+
+            
+            if (depth < FLT_MAX) {
+                depth = (fs->depth_params.z / depth) - fs->depth_params.x;
+            } else {
+                depth = 1.f;
+            }
+            surf2Dwrite(depth, self.depth_surf, pixelID.x * sizeof(float), pixelID.y, cudaBoundaryModeZero);
 
             // self.colorBufferPtr[pixelIdx] = glm::u8vec4(255, 0, 0, 255);
         }

@@ -25,7 +25,7 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     CUDA_CHECK_ERROR(cuGraphicsGLRegisterImage(
@@ -42,6 +42,29 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics
     surf_desc.flags = 0;
 
     CUDA_CHECK_ERROR(cuSurfObjectCreate(&fbo->data.col_surface, &surf_desc));
+
+    glGenTextures(1, (GLuint*) &fbo->data.depth_tex);
+    glBindTexture(GL_TEXTURE_2D, fbo->data.depth_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    CUDA_CHECK_ERROR(cuGraphicsGLRegisterImage(
+        &fbo->data.depth_tex_ref, fbo->data.depth_tex, GL_TEXTURE_2D, CU_GRAPHICS_REGISTER_FLAGS_NONE));
+
+    CUDA_CHECK_ERROR(cuGraphicsMapResources(1, &fbo->data.depth_tex_ref, fbo->data.exec_stream));
+
+    cuarr;
+    CUDA_CHECK_ERROR(cuGraphicsSubResourceGetMappedArray(&cuarr, fbo->data.depth_tex_ref, 0, 0));
+
+    surf_desc.resType = CU_RESOURCE_TYPE_ARRAY;
+    surf_desc.res.array.hArray = cuarr;
+    surf_desc.flags = 0;
+
+    CUDA_CHECK_ERROR(cuSurfObjectCreate(&fbo->data.depth_surface, &surf_desc));
 
     // if (lhs_fbo != nullptr) {
     //    auto color_image = lhs_fbo->GetColourTextureID();
@@ -87,6 +110,8 @@ inline constexpr auto cuda_to_gl_ren_func = [](std::shared_ptr<vislib::graphics:
     glm::vec3 pos_bottom_right = {right, bottom, 0.0f};
     utils.Push2DColorTexture(
         fbo->data.col_tex, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true);
+    utils.Push2DDepthTexture(
+        fbo->data.depth_tex, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true);
     glm::mat4 ortho = glm::ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -1.0f, 1.0f);
     utils.DrawTextures(ortho, glm::vec2(width, height));
     CUDA_CHECK_ERROR(cuGraphicsMapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));

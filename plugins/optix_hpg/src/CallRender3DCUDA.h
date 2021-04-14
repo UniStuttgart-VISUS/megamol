@@ -11,6 +11,9 @@ struct CUDAFramebufferData {
     unsigned int col_tex = 0;
     CUgraphicsResource col_tex_ref = 0;
     CUsurfObject col_surface = 0;
+    unsigned int depth_tex = 0;
+    CUgraphicsResource depth_tex_ref = 0;
+    CUsurfObject depth_surface = 0;
     CUstream exec_stream = 0;
 };
 

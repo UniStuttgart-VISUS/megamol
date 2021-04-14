@@ -13,6 +13,9 @@ namespace optix_hpg {
             glm::vec3 radiance;
             float pdf;
 
+            bool countDepth;
+            float ray_depth;
+
             glm::vec3 origin;
             glm::vec3 direction;
 

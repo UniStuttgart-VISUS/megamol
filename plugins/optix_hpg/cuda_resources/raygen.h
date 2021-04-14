@@ -16,9 +16,9 @@ namespace optix_hpg {
             OptixTraversableHandle world;
             int rec_depth;
             glm::uvec2 fbSize;
-            glm::vec4* colorBufferPtr;
             FrameState* frameStateBuffer;
-            CUsurfObject surface;
+            CUsurfObject col_surf;
+            CUsurfObject depth_surf;
         };
     } // namespace device
 } // namespace optix_hpg

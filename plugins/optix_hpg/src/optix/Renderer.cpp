@@ -84,12 +84,9 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
     if (not_init) {
         setup();
 
-        CUDA_CHECK_ERROR(cuMemAlloc(&color_buffer_, width * height * 4 * sizeof(float)));
-
         _sbt_raygen_record.data.fbSize = glm::uvec2(viewport.Width(), viewport.Height());
-        _sbt_raygen_record.data.colorBufferPtr = (glm::vec4*)color_buffer_;
-        _sbt_raygen_record.data.surface = call.GetFramebuffer()->data.col_surface;
-        call.GetFramebuffer()->colorBuffer = color_buffer_;
+        _sbt_raygen_record.data.col_surf = call.GetFramebuffer()->data.col_surface;
+        _sbt_raygen_record.data.depth_surf = call.GetFramebuffer()->data.depth_surface;
         call.GetFramebuffer()->data.exec_stream = optix_ctx_->GetExecStream();
 
         _current_fb_size = viewport;
@@ -109,10 +106,6 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
 
     if (viewport != _current_fb_size) {
         _sbt_raygen_record.data.fbSize = glm::uvec2(viewport.Width(), viewport.Height());
-        CUDA_CHECK_ERROR(cuMemFree(color_buffer_));
-        CUDA_CHECK_ERROR(cuMemAlloc(&color_buffer_, viewport.Width() * viewport.Height() * 4 * sizeof(float)));
-        _sbt_raygen_record.data.colorBufferPtr = (glm::vec4*) color_buffer_;
-        call.GetFramebuffer()->colorBuffer = color_buffer_;
 
         rebuild_sbt = true;
 
@@ -126,6 +119,10 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
     cam_type::matrix_type viewTemp, projTemp;
     // Generate complete snapshot and calculate matrices
     cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+    auto const depth_A = projTemp(2, 2);
+    auto const depth_B = projTemp(2, 3);
+    auto const depth_D = projTemp(3, 2);
+    auto const depth_params = glm::vec3(depth_A, depth_B, depth_D);
     auto curCamPos = snapshot.position;
     auto curCamView = snapshot.view_vector;
     auto curCamRight = snapshot.right_vector;
@@ -150,6 +147,8 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
     _frame_state.samplesPerPixel = spp_slot_.Param<core::param::IntParam>()->Value();
     _frame_state.maxBounces = max_bounces_slot_.Param<core::param::IntParam>()->Value();
     _frame_state.accumulate = accumulate_slot_.Param<core::param::BoolParam>()->Value();
+
+    _frame_state.depth_params = depth_params;
 
     if (old_cam_snap.position != snapshot.position || old_cam_snap.view_vector != snapshot.view_vector ||
         old_cam_snap.right_vector != snapshot.right_vector || old_cam_snap.up_vector != snapshot.up_vector ||
