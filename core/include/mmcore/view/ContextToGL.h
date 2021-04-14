@@ -54,7 +54,7 @@ public:
     /** Ctor. */
     ContextToGL(void) : Renderer3DModuleGL(), _getContextSlot("getContext", "Slot for non-GL context") {
 
-        this->_getContextSlot.SetCompatibleCall<core::factories::CallAutoDescription<CALL>>();
+        this->_getContextSlot. template SetCompatibleCall<core::factories::CallAutoDescription<CALL>>();
         this->MakeSlotAvailable(&this->_getContextSlot);
     }
 
