@@ -347,6 +347,7 @@ bool megamol::compositing::ASSAO::create() {
     m_finalResultsArrayViews[2] = std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews2", tx_layout, nullptr);
     m_finalResultsArrayViews[3] = std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews3", tx_layout, nullptr);
     m_normals = std::make_shared<glowl::Texture2D>("m_normals", tx_layout, nullptr);
+    m_restored_texture = std::make_shared<glowl::Texture2D>("m_restored_texture", tx_layout, nullptr);
 
     m_inputs = std::make_shared<ASSAO_Inputs>();
 
@@ -393,7 +394,7 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
         if (call_camera == NULL)
             return false;
 
-        
+
         auto normal_tx2D = call_normal->getData();
         auto depth_tx2D = call_depth->getData();
         std::array<int, 2> tx_res_normal = {(int) normal_tx2D->getWidth(), (int) normal_tx2D->getHeight()};
@@ -429,27 +430,68 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             updateConstants(m_settings, m_inputs, 0);
         }
 
-        // only required when scissors are used
-        /*if (m_requiresClear) {
-            m_halfDepths[0]->reload(m_halfDepths[0]->getTextureLayout(), nullptr);
-            m_halfDepths[1]->reload(m_halfDepths[1]->getTextureLayout(), nullptr);
-            m_halfDepths[2]->reload(m_halfDepths[2]->getTextureLayout(), nullptr);
-            m_halfDepths[3]->reload(m_halfDepths[3]->getTextureLayout(), nullptr);
-            m_pingPongHalfResultA->reload(m_pingPongHalfResultA->getTextureLayout(), nullptr);
-            m_pingPongHalfResultB->reload(m_pingPongHalfResultB->getTextureLayout(), nullptr);
-            m_finalResultsArrayViews[0]->reload(m_finalResultsArrayViews[0]->getTextureLayout(), nullptr);
-            m_finalResultsArrayViews[1]->reload(m_finalResultsArrayViews[1]->getTextureLayout(), nullptr);
-            m_finalResultsArrayViews[2]->reload(m_finalResultsArrayViews[2]->getTextureLayout(), nullptr);
-            m_finalResultsArrayViews[3]->reload(m_finalResultsArrayViews[3]->getTextureLayout(), nullptr);
-            if (m_normals != nullptr)
-                m_normals->reload(m_normals->getTextureLayout(), nullptr);
+        {
+            // only required when scissors are used
+            /*if (m_requiresClear) {
+                m_halfDepths[0]->reload(m_halfDepths[0]->getTextureLayout(), nullptr);
+                m_halfDepths[1]->reload(m_halfDepths[1]->getTextureLayout(), nullptr);
+                m_halfDepths[2]->reload(m_halfDepths[2]->getTextureLayout(), nullptr);
+                m_halfDepths[3]->reload(m_halfDepths[3]->getTextureLayout(), nullptr);
+                m_pingPongHalfResultA->reload(m_pingPongHalfResultA->getTextureLayout(), nullptr);
+                m_pingPongHalfResultB->reload(m_pingPongHalfResultB->getTextureLayout(), nullptr);
+                m_finalResultsArrayViews[0]->reload(m_finalResultsArrayViews[0]->getTextureLayout(), nullptr);
+                m_finalResultsArrayViews[1]->reload(m_finalResultsArrayViews[1]->getTextureLayout(), nullptr);
+                m_finalResultsArrayViews[2]->reload(m_finalResultsArrayViews[2]->getTextureLayout(), nullptr);
+                m_finalResultsArrayViews[3]->reload(m_finalResultsArrayViews[3]->getTextureLayout(), nullptr);
+                if (m_normals != nullptr)
+                    m_normals->reload(m_normals->getTextureLayout(), nullptr);
 
-            m_requiresClear = false;
-        }*/
+                m_requiresClear = false;
+            }*/
 
-        prepareDepths(m_settings, m_inputs);
+            // TODO: Set effect samplers
 
-        generateSSAO(m_settings, m_inputs, false);
+            // TODO: Set constant buffer
+
+            prepareDepths(m_settings, m_inputs);
+
+            generateSSAO(m_settings, m_inputs, false);
+
+            // TODO: presumably unnecessary but we want it to keep in mind
+            /*if( inputs->OverrideOutputRTV != nullptr )
+            {
+                // drawing into OverrideOutputRTV
+                dx11Context->OMSetRenderTargets( 1, &inputs->OverrideOutputRTV, NULL );
+            }
+            else
+            {
+                // restore previous RTs
+                d3d11StatesBackup.RestoreRTs( );
+            }*/
+
+            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
+                {m_restored_texture, 0}
+            };
+
+            // Apply
+            {
+                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures = {
+                    {m_finalResults, "g_FinalSSAO"}};
+
+                // TODO: blending states????????????????????
+
+                if (m_settings.QualityLevel < 0)
+                    fullscreenPassDraw(m_non_smart_half_apply_prgm, inputTextures, outputTextures);
+                else if (m_settings.QualityLevel == 0)
+                    fullscreenPassDraw(m_non_smart_apply_prgm, inputTextures, outputTextures);
+                else
+                    fullscreenPassDraw(m_apply_prgm, inputTextures, outputTextures);
+            }
+
+            // TODO: presumably also unnecessary, see also a few lines above
+            // restore previous RTs again (because of the viewport hack)
+            // d3d11StatesBackup.RestoreRTs();
+        }
     }
         
 
@@ -557,8 +599,10 @@ void megamol::compositing::ASSAO::generateSSAO(
             std::shared_ptr<glowl::Texture2D> rts = m_pingPongHalfResultA;
 
             // no blur?
-            if (blurPasses == 0)
+            if (blurPasses == 0) {
                 rts = m_finalResultsArrayViews[pass];
+                m_restored_texture = rts;
+            }
 
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
                 {rts, 0}}; // TODO: binding correct?
@@ -590,8 +634,10 @@ void megamol::compositing::ASSAO::generateSSAO(
             for (int i = 0; i < blurPasses; ++i) {
                 std::shared_ptr<glowl::Texture2D> rts = m_pingPongHalfResultB;
 
-                if (i == blurPasses - 1)
+                if (i == blurPasses - 1) {
                     rts = m_finalResultsArrayViews[pass];
+                    m_restored_texture = rts;
+                }
 
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
                     {rts, 0}}; // TODO: binding correct?
@@ -606,7 +652,7 @@ void megamol::compositing::ASSAO::generateSSAO(
                         fullscreenPassDraw(m_smart_blur_prgm, inputTextures, outputTextures);
                     }
                 } else {
-                    fullscreenPassDraw(m_non_smart_blur_prgm, inputTextures, outputTextures);
+                    fullscreenPassDraw(m_non_smart_blur_prgm, inputTextures, outputTextures); // just for quality level 0 (and -1)
                 }
 
                 std::swap(m_pingPongHalfResultA, m_pingPongHalfResultB);

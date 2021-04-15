@@ -272,6 +272,7 @@ private:
     std::shared_ptr<glowl::Texture2D> m_finalResults;
     std::array<std::shared_ptr<glowl::Texture2D>, 4> m_finalResultsArrayViews;
     std::shared_ptr<glowl::Texture2D> m_normals;
+    std::shared_ptr<glowl::Texture2D> m_restored_texture;
 
     glowl::TextureLayout m_tx_layout_samplerStatePointClamp;
     glowl::TextureLayout m_tx_layout_samplerStatePointMirror;
