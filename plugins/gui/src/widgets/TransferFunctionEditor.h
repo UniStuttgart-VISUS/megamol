@@ -104,8 +104,8 @@ namespace gui {
     private:
         /** The global input widget state buffer. */
         struct WidgetBuffer {
-            float min_range;
-            float max_range;
+            float left_range;
+            float right_range;
             float gauss_sigma;
             float range_value;
             int tex_size;
@@ -120,7 +120,7 @@ namespace gui {
         std::string connected_parameter_name;
 
         /** Array holding current colors and function values. */
-        megamol::core::param::TransferFunctionParam::TFNodeType nodes;
+        megamol::core::param::TransferFunctionParam::TransferFunctionNode_t nodes;
 
         /** Min/Max intervall the data should be mapped. */
         std::array<float, 2> range;
@@ -145,13 +145,13 @@ namespace gui {
         std::array<bool, 4> activeChannels;
 
         /** Currently selected node. */
-        unsigned int currentNode;
+        unsigned int selected_node_index;
 
         /** Currently selected color channel of selected node. */
-        unsigned int currentChannel;
+        unsigned int selected_channel_index;
 
         /** Offset from center of point to initial drag position. */
-        glm::vec2 currentDragChange;
+        glm::vec2 mouse_drag_change;
 
         /** Flag for applying all changes immediately. */
         bool immediateMode;

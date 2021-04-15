@@ -63,7 +63,7 @@ bool TransferFunction::requestTF(Call& call) {
     auto tmp_range = this->range;
     auto tmp_interpol = this->interpolMode;
     auto tmp_tex_size = this->texSize;
-    param::TransferFunctionParam::TFNodeType tmp_nodes;
+    param::TransferFunctionParam::TransferFunctionNode_t tmp_nodes;
     
     // Check if range of initially loaded project value should be ignored
     if (this->check_ignore_project_range) {
