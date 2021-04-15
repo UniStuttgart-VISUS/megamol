@@ -23,7 +23,19 @@ namespace view {
 
         enum ProjectionType { PERSPECTIVE, ORTHOGRAPHIC, UNKNOWN };
 
-        typedef float AspectRatio;
+        class AspectRatio {
+            float _aspect_ratio;
+        public:
+            AspectRatio() : _aspect_ratio(0.0f) {}
+            AspectRatio(float aspect_ratio) : _aspect_ratio(aspect_ratio) {}
+            operator float&() {
+                return _aspect_ratio;
+            }
+            operator float() const {
+                return _aspect_ratio;
+            }
+        };
+
         //typedef float NearPlane;
         //typedef float FarPlane;
 
@@ -60,7 +72,7 @@ namespace view {
 
         struct PerspectiveParameters {
             float fovy; //< vertical field of view
-            float aspect; //< aspect ratio of the camera frustrum
+            AspectRatio aspect; //< aspect ratio of the camera frustrum
             float near_plane; //< near clipping plane
             float far_plane; //< far clipping plane
 
@@ -69,7 +81,7 @@ namespace view {
 
         struct OrthographicParameters {
             float frustrum_height; //< vertical size of the orthographic frustrum in world space
-            float aspect; //< aspect ratio of the camera frustrum
+            AspectRatio aspect;    //< aspect ratio of the camera frustrum
             float near_plane; //< near clipping plane
             float far_plane;  //< far clipping plane
 

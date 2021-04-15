@@ -741,13 +741,13 @@ bool AbstractView3D::adaptCameraValues(Camera& cam) {
         Camera::ImagePlaneTile tile;
         if (curr_proj_type == Camera::ProjectionType::PERSPECTIVE) {
             fovy = _camera.get<Camera::PerspectiveParameters>().fovy;
-            aspect = _camera.get<Camera::PerspectiveParameters>().aspect;
+            aspect = _camera.get<Camera::AspectRatio>();
             near_plane = _camera.get<Camera::PerspectiveParameters>().near_plane;
             far_plane = _camera.get<Camera::PerspectiveParameters>().far_plane;
             vertical_height = std::tan(fovy) * orbitalAltitude;
             tile = _camera.get<Camera::PerspectiveParameters>().image_plane_tile;
         } else if (curr_proj_type == Camera::ProjectionType::ORTHOGRAPHIC) {
-            aspect = _camera.get<Camera::OrthographicParameters>().aspect;
+            aspect = _camera.get<Camera::AspectRatio>();
             near_plane = _camera.get<Camera::OrthographicParameters>().near_plane;
             far_plane = _camera.get<Camera::OrthographicParameters>().far_plane;
             vertical_height = _camera.get<Camera::OrthographicParameters>().frustrum_height;
