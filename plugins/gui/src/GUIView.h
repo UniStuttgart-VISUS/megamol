@@ -71,7 +71,9 @@ namespace gui {
 
         virtual bool OnRenderView(megamol::core::Call& call);
 
-        virtual void Render(double time, double instanceTime, bool present_fbo) override;
+        virtual ImageWrapper Render(double time, double instanceTime, bool present_fbo) override;
+
+        ImageWrapper GetRenderingResult() const override;
 
         virtual void ResetView(void) override;
 

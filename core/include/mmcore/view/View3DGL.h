@@ -47,7 +47,9 @@ public:
     /** Dtor. */
     virtual ~View3DGL(void);
 
-    virtual void Render(double time, double instanceTime, bool present_fbo) override;
+    virtual ImageWrapper Render(double time, double instanceTime, bool present_fbo) override;
+
+    ImageWrapper GetRenderingResult() const override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -97,15 +99,6 @@ protected:
     virtual void release(void);
 
     std::shared_ptr<glowl::FramebufferObject> _fbo;
-
-    ImageWrapper GetRenderingResult() const override {
-        ImageWrapper::DataChannels channels = ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
-        unsigned int fbo_color_buffer_gl_handle = _fbo->GetColourTextureID(0); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
-        size_t fbo_width = _fbo->GetWidth();
-        size_t fbo_height = _fbo->GetHeight();
-
-        return frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
-    }
 
 private:
 

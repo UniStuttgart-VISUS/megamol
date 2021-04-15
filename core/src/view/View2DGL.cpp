@@ -82,33 +82,32 @@ unsigned int view::View2DGL::GetCameraSyncNumber(void) const {
 /*
  * view::View2DGL::Render
  */
-void view::View2DGL::Render(double time, double instanceTime, bool present_fbo) {
+view::ImageWrapper view::View2DGL::Render(double time, double instanceTime, bool present_fbo) {
 
     AbstractView::beforeRender(time,instanceTime);
 
     CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
 
-    if (cr2d == NULL) {
-        return;
+    if (cr2d != NULL) {
+
+        // clear fbo before sending it down the rendering call
+        // the view is the owner of this fbo and therefore responsible
+        // for clearing it at the beginning of a render frame
+        this->_fbo->bind();
+        auto bgcol = this->BkgndColour();
+        glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+        glClearDepth(1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        cr2d->SetFramebufferObject(_fbo);
+        cr2d->SetCamera(_camera);
+
+        (*cr2d)(AbstractCallRender::FnRender);
+
+        // after render
+        AbstractView::afterRender();
     }
-
-    // clear fbo before sending it down the rendering call
-    // the view is the owner of this fbo and therefore responsible
-    // for clearing it at the beginning of a render frame
-    this->_fbo->bind();
-    auto bgcol = this->BkgndColour();
-    glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glBindFramebuffer(GL_FRAMEBUFFER,0);
-
-    cr2d->SetFramebufferObject(_fbo);
-    cr2d->SetCamera(_camera);
-
-    (*cr2d)(AbstractCallRender::FnRender);
-
-    // after render
-    AbstractView::afterRender();
 
     if (present_fbo) {
         // Blit the final image to the default framebuffer of the window.
@@ -123,6 +122,15 @@ void view::View2DGL::Render(double time, double instanceTime, bool present_fbo) 
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     }
+
+    ImageWrapper::DataChannels channels =
+        ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+    unsigned int fbo_color_buffer_gl_handle =
+        _fbo->getColorAttachment(0)->getTextureHandle(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+    size_t fbo_width = _fbo->getWidth();
+    size_t fbo_height = _fbo->getHeight();
+
+    return frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
 }
 
 

@@ -142,7 +142,12 @@ public:
      * @param time ...
      * @param instanceTime ...
      */
-    virtual void Render(double time, double instanceTime, bool present_fbo) = 0;
+    using ImageWrapper = megamol::frontend_resources::ImageWrapper;
+    virtual ImageWrapper Render(double time, double instanceTime, bool present_fbo) = 0;
+
+    virtual ImageWrapper GetRenderingResult() const {
+        return {};
+    }
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -244,11 +249,6 @@ public:
      * @return true
      */
     bool OnResetView(param::ParamSlot& p);
-
-    using ImageWrapper = megamol::frontend_resources::ImageWrapper;
-    virtual ImageWrapper GetRenderingResult() const {
-        return {};
-    }
 
 protected:
 

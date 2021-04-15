@@ -101,7 +101,7 @@ unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
     return 0u;
 }
 
-void view::SplitViewGL::Render(double time, double instanceTime, bool present_fbo) {
+view::ImageWrapper view::SplitViewGL::Render(double time, double instanceTime, bool present_fbo) {
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
@@ -228,6 +228,15 @@ void view::SplitViewGL::Render(double time, double instanceTime, bool present_fb
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     }
+
+    ImageWrapper::DataChannels channels =
+        ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+    unsigned int fbo_color_buffer_gl_handle =
+        _fboFull->getColorAttachment(0)->getTextureHandle(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+    size_t fbo_width = _fboFull->getWidth();
+    size_t fbo_height = _fboFull->getHeight();
+
+    return frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
 }
 
 bool view::SplitViewGL::GetExtents(core::Call& call) {

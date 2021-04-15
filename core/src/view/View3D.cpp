@@ -35,24 +35,29 @@ View3D::~View3D(void) {
 /*
  * View3D::Render
  */
-void View3D::Render(double time, double instanceTime, bool present_fbo) {
+ImageWrapper View3D::Render(double time, double instanceTime, bool present_fbo) {
 
     CallRender3D* cr3d = this->_rhsRenderSlot.CallAs<CallRender3D>();
     this->handleCameraMovement();
 
     if (cr3d == NULL) {
-        return;
+        cr3d->SetFramebuffer(_framebuffer);
+    
+        AbstractView3D::beforeRender(time, instanceTime);
+    
+        cr3d->SetCamera(this->_camera);
+        (*cr3d)(view::CallRender3D::FnRender);
+    
+        AbstractView3D::afterRender();
     }
 
-    cr3d->SetFramebuffer(_framebuffer);
+    ImageWrapper::DataChannels channels =
+        ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+    void* data_pointer = _framebuffer->colorBuffer.data();
+    size_t fbo_width = _framebuffer->width;
+    size_t fbo_height = _framebuffer->height;
 
-    AbstractView3D::beforeRender(time, instanceTime);
-
-    cr3d->SetCamera(this->_camera);
-    (*cr3d)(view::CallRender3D::FnRender);
-
-    AbstractView3D::afterRender();
-
+    return frontend_resources::wrap_image<WrappedImageType::ByteArray>({fbo_width, fbo_height}, data_pointer, channels);
 }
 
 void megamol::core::view::View3D::ResetView() {

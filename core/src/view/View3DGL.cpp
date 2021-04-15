@@ -54,33 +54,32 @@ View3DGL::~View3DGL(void) {
     this->Release();
 }
 
-void megamol::core::view::View3DGL::Render(double time, double instanceTime, bool present_fbo) {
+ImageWrapper megamol::core::view::View3DGL::Render(double time, double instanceTime, bool present_fbo) {
     CallRender3DGL* cr3d = this->_rhsRenderSlot.CallAs<CallRender3DGL>();
 
-    if (cr3d == NULL) {
-        return;
+    if (cr3d != NULL) {
+
+        AbstractView3D::beforeRender(time, instanceTime);
+
+        // clear fbo before sending it down the rendering call
+        // the view is the owner of this fbo and therefore responsible
+        // for clearing it at the beginning of a render frame
+        _fbo->bind();
+        auto bgcol = this->BkgndColour();
+        glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+        glClearDepth(1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // set camera and fbo in rendering call
+        cr3d->SetFramebufferObject(_fbo);
+        cr3d->SetCamera(this->_camera);
+
+        // call the rendering call
+        (*cr3d)(view::CallRender3DGL::FnRender);
+
+        AbstractView3D::afterRender();
     }
-
-    AbstractView3D::beforeRender(time, instanceTime);
-
-    // clear fbo before sending it down the rendering call
-    // the view is the owner of this fbo and therefore responsible
-    // for clearing it at the beginning of a render frame
-    _fbo->bind();
-    auto bgcol = this->BkgndColour();
-    glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // set camera and fbo in rendering call
-    cr3d->SetFramebufferObject(_fbo);
-    cr3d->SetCamera(this->_camera);
-
-    // call the rendering call
-    (*cr3d)(view::CallRender3DGL::FnRender);
-    
-    AbstractView3D::afterRender();
 
     if (present_fbo) {
         // Blit the final image to the default framebuffer of the window.
@@ -95,6 +94,19 @@ void megamol::core::view::View3DGL::Render(double time, double instanceTime, boo
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     }
+
+    return GetRenderingResult();
+}
+
+ImageWrapper megamol::core::view::View3DGL::GetRenderingResult() const {
+    ImageWrapper::DataChannels channels =
+        ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+    unsigned int fbo_color_buffer_gl_handle =
+        _fbo->getColorAttachment(0)->getTextureHandle(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+    size_t fbo_width = _fbo->getWidth();
+    size_t fbo_height = _fbo->getHeight();
+
+    return frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
 }
 
 void megamol::core::view::View3DGL::ResetView() {

@@ -70,7 +70,7 @@ unsigned int GUIView::GetCameraSyncNumber(void) const {
     return 0u;
 }
 
-void GUIView::Render(double time, double instanceTime, bool present_fbo) {
+core::view::ImageWrapper GUIView::Render(double time, double instanceTime, bool present_fbo) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
@@ -99,6 +99,20 @@ void GUIView::Render(double time, double instanceTime, bool present_fbo) {
     }
 
     this->gui.SynchronizeGraphs();
+
+    return GetRenderingResult();
+}
+
+core::view::ImageWrapper megamol::gui::GUIView::GetRenderingResult() const {
+
+    ImageWrapper::DataChannels channels =
+        ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+    unsigned int fbo_color_buffer_gl_handle =
+        _fbo->getColorAttachment(0)->getTextureHandle(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+    size_t fbo_width = _fbo->getWidth();
+    size_t fbo_height = _fbo->getHeight();
+
+    return frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
 }
 
 

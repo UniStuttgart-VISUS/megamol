@@ -79,8 +79,8 @@ void view::HeadView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 /*
  * view::HeadView::Render
  */
-void view::HeadView::Render(double time, double instanceTime, bool present_fbo) {
-    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
+view::ImageWrapper view::HeadView::Render(double time, double instanceTime, bool present_fbo) {
+    CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
         std::unique_ptr<CallRenderViewGL> last_view_call = nullptr;
@@ -98,6 +98,7 @@ void view::HeadView::Render(double time, double instanceTime, bool present_fbo) 
         }
 
         (*view)(CallRenderViewGL::CALL_RENDER);
+        auto fbo = view->GetFramebufferObject();
 
         if (this->doHookCode()) {
             this->doAfterRenderHook();
@@ -106,16 +107,26 @@ void view::HeadView::Render(double time, double instanceTime, bool present_fbo) 
         if (last_view_call != nullptr) {
             *view = *last_view_call;
         }
+
+        ImageWrapper::DataChannels channels =
+            ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+        unsigned int fbo_color_buffer_gl_handle =
+            fbo->getColorAttachment(0)->getTextureHandle(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+        size_t fbo_width = fbo->getWidth();
+        size_t fbo_height = fbo->getHeight();
+
+        return frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
     }
 
     auto* tick = this->tickSlot.CallAs<job::TickCall>();
 
-    if (tick != nullptr)
-    {
+    if (tick != nullptr) {
         (*tick)(0);
     }
-}
 
+    return frontend_resources::wrap_image<WrappedImageType::ByteArray>(
+        {0, 0}, nullptr, ImageWrapper::DataChannels::RGBA8);
+}
 
 /*
  * view::HeadView::ResetView
