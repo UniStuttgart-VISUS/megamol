@@ -48,6 +48,8 @@ static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
 static megamol::frontend_resources::GUIState* guistate_resources_ptr = nullptr;
 static bool screenshot_show_privacy_note = true;
 
+static unsigned char default_alpha_value = 0;
+
 static void PNGAPI pngErrorFunc(png_structp pngPtr, png_const_charp msg) {
     log("PNG Error: " + std::string(msg));
 }
@@ -164,7 +166,7 @@ megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resour
     glReadPixels(0, 0, fbWidth, fbHeight, GL_RGBA, GL_UNSIGNED_BYTE, result.image.data());
 
     for (auto& pixel : result.image)
-        pixel.a = 255;
+        pixel.a = default_alpha_value;
 
     return result;
 }
