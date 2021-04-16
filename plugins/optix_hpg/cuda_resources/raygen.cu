@@ -120,7 +120,7 @@ namespace optix_hpg {
 
             do {
                 PerRayData prd;
-                
+
                 prd.depth = 0;
 
                 prd.radiance = glm::vec3(0.f);
@@ -169,22 +169,17 @@ namespace optix_hpg {
                     col, a);
                 // col.w = frame_idx + 1;
             }
-            // self.colorBufferPtr[pixelIdx] = col;
-            /*glm::u8vec4(static_cast<unsigned char>(col.r * 255.0f), static_cast<unsigned char>(col.g * 255.0f),
-                static_cast<unsigned char>(col.b * 255.0f), static_cast<unsigned char>(col.a * 255.0f));*/
 
             surf2Dwrite(make_float4(col.r, col.g, col.b, col.a), self.col_surf, pixelID.x * sizeof(float4), pixelID.y,
                 cudaBoundaryModeZero);
 
-            
             if (depth < FLT_MAX) {
-                depth = (fs->depth_params.z / depth) - fs->depth_params.x;
+                depth = (fs->depth_params.z / depth) - (fs->depth_params.x);
+                depth = 0.5f * (depth + 1.0f);
             } else {
                 depth = 1.f;
             }
             surf2Dwrite(depth, self.depth_surf, pixelID.x * sizeof(float), pixelID.y, cudaBoundaryModeZero);
-
-            // self.colorBufferPtr[pixelIdx] = glm::u8vec4(255, 0, 0, 255);
         }
     } // namespace device
 } // namespace optix_hpg

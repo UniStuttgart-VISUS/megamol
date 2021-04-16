@@ -17,6 +17,18 @@ inline constexpr char cudatogl_desc[] = "Merges content to the input GL buffer";
 
 inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics::gl::FramebufferObject>& lhs_fbo,
                                                  std::shared_ptr<CUDAFramebuffer>& fbo, int width, int height) -> void {
+    if (fbo != nullptr) {
+        CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
+        CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.depth_tex_ref, fbo->data.exec_stream));
+        CUDA_CHECK_ERROR(cuSurfObjectDestroy(fbo->colorBuffer));
+        CUDA_CHECK_ERROR(cuSurfObjectDestroy(fbo->depthBuffer));
+        CUDA_CHECK_ERROR(cuGraphicsUnregisterResource(fbo->data.col_tex_ref));
+        CUDA_CHECK_ERROR(cuGraphicsUnregisterResource(fbo->data.depth_tex_ref));
+        glDeleteTextures(1, &fbo->data.col_tex);
+        glDeleteTextures(1, &fbo->data.depth_tex);
+        fbo.reset();
+    }
+
     fbo = std::make_shared<CUDAFramebuffer>();
 
     glGenTextures(1, (GLuint*) &fbo->data.col_tex);
@@ -41,7 +53,7 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics
     surf_desc.res.array.hArray = cuarr;
     surf_desc.flags = 0;
 
-    CUDA_CHECK_ERROR(cuSurfObjectCreate(&fbo->data.col_surface, &surf_desc));
+    CUDA_CHECK_ERROR(cuSurfObjectCreate(&fbo->colorBuffer, &surf_desc));
 
     glGenTextures(1, (GLuint*) &fbo->data.depth_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.depth_tex);
@@ -64,7 +76,7 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics
     surf_desc.res.array.hArray = cuarr;
     surf_desc.flags = 0;
 
-    CUDA_CHECK_ERROR(cuSurfObjectCreate(&fbo->data.depth_surface, &surf_desc));
+    CUDA_CHECK_ERROR(cuSurfObjectCreate(&fbo->depthBuffer, &surf_desc));
 
     // if (lhs_fbo != nullptr) {
     //    auto color_image = lhs_fbo->GetColourTextureID();

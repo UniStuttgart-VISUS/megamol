@@ -110,6 +110,8 @@ private:
     std::shared_ptr<typename CALL::FBO_TYPE> _framebuffer;
 
     RenderUtils _utils;
+
+    glm::uvec2 viewport = {0, 0};
 };
 
 template<typename CALL, INITFUNC<typename CALL::FBO_TYPE> init_func, RENFUNC<typename CALL::FBO_TYPE> ren_func,
@@ -152,8 +154,9 @@ bool ContextToGL<CALL, init_func, ren_func, CN, DESC>::Render(CallRender3DGL& ca
 
     auto lhs_fbo = call.GetFramebufferObject();
 
-    if (!_framebuffer) {
+    if (!_framebuffer || width != viewport.x || height != viewport.y) {
         init_func(lhs_fbo, _framebuffer, width, height);
+        viewport = {width, height};
     }
     cr->SetFramebuffer(_framebuffer);
     cr->SetInputEvent(call.GetInputEvent());

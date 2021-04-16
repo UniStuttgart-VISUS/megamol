@@ -85,8 +85,8 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
         setup();
 
         _sbt_raygen_record.data.fbSize = glm::uvec2(viewport.Width(), viewport.Height());
-        _sbt_raygen_record.data.col_surf = call.GetFramebuffer()->data.col_surface;
-        _sbt_raygen_record.data.depth_surf = call.GetFramebuffer()->data.depth_surface;
+        _sbt_raygen_record.data.col_surf = call.GetFramebuffer()->colorBuffer;
+        _sbt_raygen_record.data.depth_surf = call.GetFramebuffer()->depthBuffer;
         call.GetFramebuffer()->data.exec_stream = optix_ctx_->GetExecStream();
 
         _current_fb_size = viewport;
@@ -106,6 +106,9 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
 
     if (viewport != _current_fb_size) {
         _sbt_raygen_record.data.fbSize = glm::uvec2(viewport.Width(), viewport.Height());
+        _sbt_raygen_record.data.col_surf = call.GetFramebuffer()->colorBuffer;
+        _sbt_raygen_record.data.depth_surf = call.GetFramebuffer()->depthBuffer;
+        _frame_state.frameIdx = 0;
 
         rebuild_sbt = true;
 
@@ -121,8 +124,8 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
     cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
     auto const depth_A = projTemp(2, 2);
     auto const depth_B = projTemp(2, 3);
-    auto const depth_D = projTemp(3, 2);
-    auto const depth_params = glm::vec3(depth_A, depth_B, depth_D);
+    auto const depth_C = projTemp(3, 2);
+    auto const depth_params = glm::vec3(depth_A, depth_B, depth_C);
     auto curCamPos = snapshot.position;
     auto curCamView = snapshot.view_vector;
     auto curCamRight = snapshot.right_vector;
