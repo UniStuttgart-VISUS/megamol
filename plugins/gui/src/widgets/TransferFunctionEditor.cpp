@@ -398,7 +398,10 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
         // Sigma slider -------------------------------------------------------
         if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-            if (ImGui::SliderFloat("Selected Sigma", &this->widget_buffer.gauss_sigma, 0.0f, 1.0f)) {
+            const float sigma_min = 0.0f;
+            const float sigma_max = 2.0f;
+            if (ImGui::SliderFloat("Selected Sigma", &this->widget_buffer.gauss_sigma, sigma_min, sigma_max)) {
+                this->widget_buffer.gauss_sigma = std::clamp(this->widget_buffer.gauss_sigma, sigma_min, sigma_max);
                 this->nodes[this->selected_node_index][5] = this->widget_buffer.gauss_sigma;
                 this->textureInvalid = true;
             }
@@ -434,8 +437,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         }
         if (ImGui::SliderFloat(
                 "Selected Value", &this->widget_buffer.range_value, this->range[0], this->range[1])) {
+            this->widget_buffer.range_value = std::clamp(this->widget_buffer.range_value, this->range[0], this->range[1]);
             float new_x = (this->widget_buffer.range_value - this->range[0]) / (this->range[1] - this->range[0]);
-            this->nodes[this->selected_node_index][4] = new_x;
+            this->nodes[this->selected_node_index][4] = std::clamp(new_x, 0.0f, 1.0f);;
             this->sortNodes(this->nodes, this->selected_node_index);
             this->textureInvalid = true;
         }
@@ -675,7 +679,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
 
     label_stream.str("");
     label_stream.clear();
-    label_stream << (this->range[0] + (this->range[1] - this->range[0] / 2.0f));
+    label_stream << (this->range[0] + ((this->range[1] - this->range[0]) / 2.0f));
     std::string mid_label_str = label_stream.str();
     float mid_item_width = ImGui::CalcTextSize(mid_label_str.c_str()).x;
 
@@ -875,10 +879,10 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             // Move selected node
             if ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size())) {
                 float new_x = (mouse_cur_pos.x - canvas_pos.x + this->mouse_drag_change.x) / canvas_size.x;
-                new_x = std::max(0.0f, std::min(new_x, 1.0f));
+                new_x = std::clamp(new_x, 0.0f, 1.0f);
+
                 this->nodes[this->selected_node_index][4] = new_x;
-                this->widget_buffer.range_value =
-                    (this->nodes[this->selected_node_index][4] * (this->range[1] - this->range[0])) + this->range[0];
+                this->widget_buffer.range_value = (new_x * (this->range[1] - this->range[0])) + this->range[0];
 
                 float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y + this->mouse_drag_change.y) / canvas_size.y);
                 new_y = std::max(0.0f, std::min(new_y, 1.0f));
@@ -900,7 +904,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             } else {
                 // Add new node at current position
                 float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
-                new_x = std::max(0.0f, std::min(new_x, 1.0f));
+                new_x = std::clamp(new_x, 0.0f, 1.0f);
 
                 float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y) / canvas_size.y);
                 new_y = std::max(0.0f, std::min(new_y, 1.0f));

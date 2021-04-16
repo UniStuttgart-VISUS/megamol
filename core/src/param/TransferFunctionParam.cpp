@@ -390,26 +390,26 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
 std::vector<float> TransferFunctionParam::LinearInterpolation(unsigned int in_texsize, const NodeVector_t& in_nodes) {
 
     std::vector<float> out_texdata;
-    if ((in_texsize == 0) || (in_nodes.size() < 1)) {
+    if ((in_texsize == 0) || (in_nodes.size() < 2)) {
         return out_texdata;
     }
     out_texdata.resize(4 * in_texsize);
     out_texdata.assign(out_texdata.size(), 0.0f);
 
-    int p1 = 0;
-    int p2 = 0;
     NodeData_t cx1 = in_nodes[0];
-    NodeData_t cx2 = in_nodes[0];
+    NodeData_t cx2 = cx1;
+    int p1 = static_cast<int>(cx1[4] * static_cast<float>(in_texsize - 1));
+    int p2 = p1;
 
     size_t data_cnt = in_nodes.size();
     for (size_t i = 1; i < data_cnt; i++) {
-        p1 = p2;
-        p2 = static_cast<int>(cx2[4] * static_cast<float>(in_texsize - 1));
+
         cx1 = cx2;
         cx2 = in_nodes[i];
+        p1 = p2;
+        p2 = static_cast<int>(cx2[4] * static_cast<float>(in_texsize - 1));
 
         assert(cx2[4] <= 1.0f + 1e-5f); // 1e-5f = vislib::math::FLOAT_EPSILON
-        assert(p2 < static_cast<int>(in_texsize));
 
         for (int p = p1; p <= p2; p++) {
             float al = (static_cast<float>(p - p1) + 0.5f) / static_cast<float>(p2 - p1);
