@@ -182,7 +182,7 @@ namespace gui {
 
         void drawFunctionPlot(const ImVec2& size);
 
-        void sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int &selected_node_idx) const;
+        void sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const;
     };
 
 } // namespace gui
