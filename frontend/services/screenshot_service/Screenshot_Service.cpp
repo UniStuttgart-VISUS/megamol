@@ -66,7 +66,7 @@ static void PNGAPI pngFlushFileFunc(png_structp pngPtr) {
     f->Flush();
 }
 
-static bool write_png_to_file(megamol::frontend_resources::ImageData const& image, std::filesystem::path const& filename) {
+static bool write_png_to_file(megamol::frontend_resources::ScreenshotImageData const& image, std::filesystem::path const& filename) {
     vislib::sys::FastFile file;
     try {
         // open final image file
@@ -148,7 +148,7 @@ void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer
     }
 }
 
-megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
+megamol::frontend_resources::ScreenshotImageData const& megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
     // TODO: in FBO-based rendering the FBO object carries its size and we dont need to look it up
     // simpler and more correct approach would be to observe Framebuffer_Events resource
     // but this is our naive implementation for now
@@ -157,7 +157,7 @@ megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshot
     GLint fbWidth = viewport_dims[2];
     GLint fbHeight = viewport_dims[3];
 
-    ImageData result;
+    static ScreenshotImageData result;
     result.resize(static_cast<size_t>(fbWidth), static_cast<size_t>(fbHeight));
 
     glReadBuffer(m_read_buffer);
@@ -166,11 +166,11 @@ megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshot
     for (auto& pixel : result.image)
         pixel.a = 255;
 
-    return std::move(result);
+    return result;
 }
 
-bool megamol::frontend_resources::ImageDataToPNGWriter::write_image(ImageData image, std::filesystem::path const& filename) const {
-    return write_png_to_file(std::move(image), filename);
+bool megamol::frontend_resources::ScreenshotImageDataToPNGWriter::write_image(ScreenshotImageData const& image, std::filesystem::path const& filename) const {
+    return write_png_to_file(image, filename);
 }
 
 namespace megamol {
