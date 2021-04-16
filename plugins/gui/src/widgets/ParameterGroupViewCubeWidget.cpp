@@ -572,7 +572,7 @@ megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget(void)
         , last_presentation(param::AbstractParamPresentation::Presentation::Basic) {
 
     this->InitPresentation(ParamType_t::GROUP_3D_CUBE);
-    this->name = "defaultView";
+    this->name = "view";
 }
 
 
