@@ -21,6 +21,8 @@
 #include <iomanip>
 #include <sstream>
 
+using namespace megamol::core::param;
+
 
 namespace megamol {
 namespace gui {
@@ -120,7 +122,7 @@ namespace gui {
         std::string connected_parameter_name;
 
         /** Array holding current colors and function values. */
-        megamol::core::param::TransferFunctionParam::TransferFunctionNode_t nodes;
+        TransferFunctionParam::NodeVector_t nodes;
 
         /** Min/Max intervall the data should be mapped. */
         std::array<float, 2> range;
@@ -130,7 +132,7 @@ namespace gui {
         bool range_overwrite;
 
         /** Current interpolation option. */
-        megamol::core::param::TransferFunctionParam::InterpolationMode mode;
+        TransferFunctionParam::InterpolationMode mode;
 
         /** Indicating modified transfer function. Recalculate texture data. */
         bool textureInvalid;
@@ -165,6 +167,7 @@ namespace gui {
         /** Legend alignment flag. */
         bool flip_legend;
 
+        /** Check for forced range overwrite once. */
         bool check_once_force_set_overwrite_range;
 
         // Widgets
@@ -178,6 +181,8 @@ namespace gui {
         void drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy);
 
         void drawFunctionPlot(const ImVec2& size);
+
+        void sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int &selected_node_idx) const;
     };
 
 } // namespace gui

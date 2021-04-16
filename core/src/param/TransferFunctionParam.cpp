@@ -111,12 +111,10 @@ bool megamol::core::param::TransferFunctionParam::IgnoreProjectRange(const std::
 }
 
 
-bool TransferFunctionParam::GetParsedTransferFunctionData(const std::string& in_tfs, TransferFunctionNode_t& out_nodes,
+bool TransferFunctionParam::GetParsedTransferFunctionData(const std::string& in_tfs, NodeVector_t& out_nodes,
     InterpolationMode& out_interpolmode, unsigned int& out_texsize, std::array<float, 2>& out_range) {
 
-    TransferFunctionNode_t tmp_nodes;
-    tmp_nodes.push_back({0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f});
-    tmp_nodes.push_back({1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f});
+    NodeVector_t tmp_nodes;
     std::string tmp_interpolmode_str;
     InterpolationMode tmp_interpolmode = InterpolationMode::LINEAR;
     unsigned int tmp_texsize = 256;
@@ -166,7 +164,7 @@ bool TransferFunctionParam::GetParsedTransferFunctionData(const std::string& in_
 }
 
 
-bool TransferFunctionParam::GetDumpedTransferFunction(std::string& out_tfs, const TransferFunctionNode_t& in_nodes,
+bool TransferFunctionParam::GetDumpedTransferFunction(std::string& out_tfs, const NodeVector_t& in_nodes,
     const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range,
     bool in_ignore_project_range) {
 
@@ -222,7 +220,7 @@ bool TransferFunctionParam::GetDumpedTransferFunction(std::string& out_tfs, cons
 }
 
 
-bool TransferFunctionParam::CheckTransferFunctionData(const TransferFunctionNode_t& nodes, const InterpolationMode interpolmode,
+bool TransferFunctionParam::CheckTransferFunctionData(const NodeVector_t& nodes, const InterpolationMode interpolmode,
     const unsigned int texsize, const std::array<float, 2> range) {
 
     bool check = true;
@@ -309,12 +307,6 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
             // Check transfer function node data
             if (json.at("Nodes").is_array()) {
                 unsigned int tmp_size = (unsigned int)json.at("Nodes").size();
-                if (tmp_size < 2) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "There should be at least two entries in 'Nodes' array. [%s, %s, line %d]\n", __FILE__,
-                        __FUNCTION__, __LINE__);
-                    check = false;
-                }
                 for (unsigned int i = 0; i < tmp_size; ++i) {
                     if (!json.at("Nodes")[i].is_array()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -395,10 +387,10 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
 }
 
 
-std::vector<float> TransferFunctionParam::LinearInterpolation(unsigned int in_texsize, const TransferFunctionNode_t& in_nodes) {
+std::vector<float> TransferFunctionParam::LinearInterpolation(unsigned int in_texsize, const NodeVector_t& in_nodes) {
 
     std::vector<float> out_texdata;
-    if (in_texsize == 0) {
+    if ((in_texsize == 0) || (in_nodes.size() < 1)) {
         return out_texdata;
     }
     out_texdata.resize(4 * in_texsize);
@@ -406,8 +398,8 @@ std::vector<float> TransferFunctionParam::LinearInterpolation(unsigned int in_te
 
     int p1 = 0;
     int p2 = 0;
-    std::array<float, TFP_VAL_CNT> cx1 = in_nodes[0];
-    std::array<float, TFP_VAL_CNT> cx2 = in_nodes[0];
+    NodeData_t cx1 = in_nodes[0];
+    NodeData_t cx2 = in_nodes[0];
 
     size_t data_cnt = in_nodes.size();
     for (size_t i = 1; i < data_cnt; i++) {
@@ -418,7 +410,6 @@ std::vector<float> TransferFunctionParam::LinearInterpolation(unsigned int in_te
 
         assert(cx2[4] <= 1.0f + 1e-5f); // 1e-5f = vislib::math::FLOAT_EPSILON
         assert(p2 < static_cast<int>(in_texsize));
-        //assert(p2 >= p1);
 
         for (int p = p1; p <= p2; p++) {
             float al = (static_cast<float>(p - p1) + 0.5f) / static_cast<float>(p2 - p1);
@@ -434,10 +425,10 @@ std::vector<float> TransferFunctionParam::LinearInterpolation(unsigned int in_te
 }
 
 
-std::vector<float> TransferFunctionParam::GaussInterpolation(unsigned int in_texsize, const TransferFunctionNode_t& in_nodes) {
+std::vector<float> TransferFunctionParam::GaussInterpolation(unsigned int in_texsize, const NodeVector_t& in_nodes) {
 
     std::vector<float> out_texdata;
-    if (in_texsize == 0) {
+    if ((in_texsize == 0) || (in_nodes.size() < 1)) {
         return out_texdata;
     }
     out_texdata.resize(4 * in_texsize);
@@ -476,7 +467,7 @@ std::vector<float> TransferFunctionParam::GaussInterpolation(unsigned int in_tex
     out_tex_data.clear();
     unsigned int tmp_texture_size;
     std::array<float, 2> tmp_range;
-    megamol::core::param::TransferFunctionParam::TransferFunctionNode_t tmp_nodes;
+    megamol::core::param::TransferFunctionParam::NodeVector_t tmp_nodes;
     megamol::core::param::TransferFunctionParam::InterpolationMode tmp_mode;
 
     if (!megamol::core::param::TransferFunctionParam::GetParsedTransferFunctionData(in_tfs, tmp_nodes, tmp_mode, tmp_texture_size, tmp_range)) {

@@ -38,7 +38,8 @@ public:
         GAUSS = 1 
     };
 
-    typedef std::vector<std::array<float, TFP_VAL_CNT>> TransferFunctionNode_t;
+    typedef std::array<float, TFP_VAL_CNT>  NodeData_t;
+    typedef std::vector<NodeData_t>         NodeVector_t;
 
     // ------------------------------------------------------------------------
 
@@ -81,7 +82,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function data, false otherwise.
     */
-    static bool GetParsedTransferFunctionData(const std::string& in_tfs, TransferFunctionNode_t& out_nodes,
+    static bool GetParsedTransferFunctionData(const std::string& in_tfs, NodeVector_t& out_nodes,
         InterpolationMode& out_interpolmode, unsigned int& out_texsize, std::array<float, 2>& out_range);
 
     /**
@@ -95,7 +96,7 @@ public:
      *
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
-    static bool GetDumpedTransferFunction(std::string& out_tfs, const TransferFunctionNode_t& in_nodes,
+    static bool GetDumpedTransferFunction(std::string& out_tfs, const NodeVector_t& in_nodes,
         const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range,
         bool in_ignore_project_range = true);
 
@@ -108,7 +109,7 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionData(const TransferFunctionNode_t &nodes, const InterpolationMode interpolmode, const unsigned int texsize, const std::array<float, 2> range);
+    static bool CheckTransferFunctionData(const NodeVector_t &nodes, const InterpolationMode interpolmode, const unsigned int texsize, const std::array<float, 2> range);
 
     /**
      * Check given transfer function JSON string.
@@ -126,7 +127,7 @@ public:
     * @param in_texsize   The transfer function texture size input.
     * @param in_nodes    The transfer function node data input.
     */
-    static std::vector<float> LinearInterpolation(unsigned int in_texsize, const TransferFunctionNode_t& in_nodes);
+    static std::vector<float> LinearInterpolation(unsigned int in_texsize, const NodeVector_t& in_nodes);
 
     /**
     * Gauss interpolation of transfer function data in range [0..texsize]
@@ -135,7 +136,7 @@ public:
     * @param in_texsize   The transfer function texture size input.
     * @param in_nodes    The transfer function node data input.
     */
-    static std::vector<float> GaussInterpolation(unsigned int in_texsize, const TransferFunctionNode_t& in_nodes);
+    static std::vector<float> GaussInterpolation(unsigned int in_texsize, const NodeVector_t& in_nodes);
 
     /**
      * Return texture data for given transfer function JSON string.
