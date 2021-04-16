@@ -172,7 +172,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
         , textureInvalid(true)
         , textureSize(256)
         , pendingChanges(true)
-        , activeChannels{true, true, true, true}
+        , activeChannels{false, false, false, false}
         , currentNode(0)
         , currentChannel(0)
         , currentDragChange()
@@ -361,6 +361,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         if (!this->range_overwrite) {
             GUIUtils::ReadOnlyWigetStyle(true);
         }
+
         ImGui::InputFloat("###min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->range[0] =
@@ -372,6 +373,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->textureInvalid = true;
         }
         ImGui::SameLine();
+
         ImGui::InputFloat("###max", &this->widget_buffer.max_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->range[1] =
@@ -382,10 +384,12 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->widget_buffer.max_range = this->range[1];
             this->textureInvalid = true;
         }
+
         if (!this->range_overwrite) {
             GUIUtils::ReadOnlyWigetStyle(false);
         }
         ImGui::PopItemWidth();
+
         ImGui::SameLine(0.0f, (style.ItemSpacing.x + style.ItemInnerSpacing.x));
         ImGui::TextUnformatted("Value Range");
 
@@ -470,26 +474,6 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                "[CTRL + Left Click] on individual component to input value.\n"
                "[Right Click] on the individual color widget to show options.";
         this->tooltip.Marker(help);
-
-        // Invert Colors
-        if (ImGui::Button("All Nodes")) {
-            for (auto& col : this->nodes) {
-                col[0] = 1.0f - col[0];
-                col[1] = 1.0f - col[1];
-                col[2] = 1.0f - col[2];
-            }
-            this->textureInvalid = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Selected Node")) {
-            this->nodes[this->currentNode][0] = 1.0f - this->nodes[this->currentNode][0];
-            this->nodes[this->currentNode][1] = 1.0f - this->nodes[this->currentNode][1];
-            this->nodes[this->currentNode][2] = 1.0f - this->nodes[this->currentNode][2];
-            this->textureInvalid = true;
-        }
-        ImGui::SameLine();
-        ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
-        ImGui::TextUnformatted("Invert Colors");
 
         // Interpolation mode -------------------------------------------------
         std::map<param::TransferFunctionParam::InterpolationMode, std::string> opts;
@@ -863,7 +847,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         (mouse_cur_pos.x < (canvas_pos.x + canvas_size.x + delta_border.x)) &&
         (mouse_cur_pos.y < (canvas_pos.y + canvas_size.y + delta_border.y))) {
 
-        if (ImGui::IsMouseClicked(0)) {
+        if (io.MouseClicked[0]) {
             // Left Click -> Change selected node selected node
             if (selected_node != GUI_INVALID_ID) {
                 this->currentNode = selected_node;
@@ -874,7 +858,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                     (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
                 this->widget_buffer.gauss_sigma = this->nodes[this->currentNode][5];
             }
-        } else if (ImGui::IsMouseDragging(0)) {
+        } else if (io.MouseDown[0]) {
             // Left Move -> Move selected node
             float new_x = (mouse_cur_pos.x - canvas_pos.x + this->currentDragChange.x) / canvas_size.x;
             new_x = std::max(0.0f, std::min(new_x, 1.0f));
@@ -908,7 +892,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             }
             this->textureInvalid = true;
 
-        } else if (ImGui::IsMouseClicked(1)) {
+        } else if (io.MouseClicked[1]) {
             // Right Click -> Add/delete Node
             if (selected_node == GUI_INVALID_ID) {
                 // Add new at current position
