@@ -151,6 +151,7 @@ private:
     /** Param Slots */
     core::param::ParamSlot dumpdot;
     core::param::ParamSlot dumpdotpath;
+    core::param::ParamSlot distanceFilePath;
     core::param::ParamSlot selectionmode;
     core::param::ParamSlot linkagemodeparam;
     core::param::ParamSlot distancemultiplier;
@@ -167,6 +168,8 @@ private:
     std::map<std::string, std::vector<float>> slot1Features;
     std::map<std::string, std::vector<float>> slot2Features;
     std::map<std::string, std::vector<float>> slot3Features;
+
+    std::map<std::string, std::map<std::string, double>> distanceMatrix;
 };
 
 enum ClusteringMode {

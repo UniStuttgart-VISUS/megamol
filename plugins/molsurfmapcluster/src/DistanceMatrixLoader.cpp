@@ -82,3 +82,7 @@ double DistanceMatrixLoader::GetDistance(std::string pdbid1, std::string pdbid2)
     double dir2 = distanceMap.at(pdbid2).at(pdbid1);
     return std::min(dir1, dir2);
 }
+
+std::map<std::string, std::map<std::string, double>> DistanceMatrixLoader::getDistanceMap(void) {
+    return DistanceMatrixLoader::distanceMap;
+}

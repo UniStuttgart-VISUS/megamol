@@ -12,6 +12,7 @@
 #include "CallCluster.h"
 #include "CallClusteringLoader.h"
 #include "CallPNGPics.h"
+#include "DistanceMatrixLoader.h"
 #include "image_calls/Image2DCall.h"
 
 #include <fstream>
@@ -42,6 +43,7 @@ Clustering::Clustering(void)
         , outSlot("outClusteringSlot", "OUtput slot for the Clustering")
         , dumpdot("Dump Dot-File", "")
         , dumpdotpath("File-Path for Dot-File", "")
+        , distanceFilePath("distFile", "File-Path for the distance override csv file")
         , selectionmode("Mode for selection of similar nodes", "")
         , linkagemodeparam("Linkage Mode", "")
         , distancemultiplier("Distance Multiplier", "")
@@ -74,6 +76,9 @@ Clustering::Clustering(void)
 
     this->dumpdotpath.SetParameter(new core::param::FilePathParam(""));
     this->MakeSlotAvailable(&this->dumpdotpath);
+
+    this->distanceFilePath.SetParameter(new core::param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->distanceFilePath);
 
     core::param::EnumParam* cluster_mode_param =
         new core::param::EnumParam(static_cast<int>(ClusteringMode::EUCLIDIAN));
@@ -186,12 +191,12 @@ void Clustering::clusterData(
     mode = mode > 4 ? mode - 4 : mode;
 
     if (cpp2 == nullptr && cpp3 == nullptr) {
-        this->clustering = new HierarchicalClustering(this->picdata, this->picturecount, this->slot1Features, mode, bla,
+        this->clustering = new HierarchicalClustering(this->picdata, this->picturecount, this->slot1Features, this->distanceMatrix, mode, bla,
             this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
             this->momentsmethode.Param<core::param::EnumParam>()->Value());
     } else {
         this->clustering =
-            new HierarchicalClustering(this->picdata, this->slot1Features, this->slot2Features, this->slot3Features,
+            new HierarchicalClustering(this->picdata, this->slot1Features, this->slot2Features, this->slot3Features, this->distanceMatrix,
                 cpp, cpp2, cpp3, mode, bla, this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
                 this->momentsmethode.Param<core::param::EnumParam>()->Value());
         this->picturecount = this->picdata.size();
@@ -209,7 +214,7 @@ void Clustering::clusterData(CallClusteringLoader* ccl) {
     // Clustering
     core::utility::log::Log::DefaultLog.WriteMsg(
         core::utility::log::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
-    this->clustering = new HierarchicalClustering(ccl->getLeaves(), ccl->Count(),
+    this->clustering = new HierarchicalClustering(ccl->getLeaves(), this->distanceMatrix, ccl->Count(),
         this->momentsmethode.Param<core::param::EnumParam>()->Value(),
         this->selectionmode.Param<core::param::EnumParam>()->Value(),
         this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
@@ -253,6 +258,13 @@ bool Clustering::getDataCallback(core::Call& caller) {
     if (this->datatocluster) {
         // reset new data flag
         this->datatocluster = false;
+
+        if (!this->distanceFilePath.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
+            std::string pathstring = this->distanceFilePath.Param<core::param::FilePathParam>()->Value().PeekBuffer();
+            std::filesystem::path dpath(pathstring);
+            DistanceMatrixLoader::load(dpath);
+            this->distanceMatrix = DistanceMatrixLoader::getDistanceMap();
+        }
 
         if (imageloader && clusterloader) {
             return false;

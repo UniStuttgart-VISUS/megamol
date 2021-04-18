@@ -69,16 +69,19 @@ public:
 
     /** Constructor */
     HierarchicalClustering(void);
-    HierarchicalClustering(std::vector<PictureData>&, SIZE_T, const std::map<std::string, std::vector<float>>&, int = 2,
+    HierarchicalClustering(std::vector<PictureData>&, SIZE_T, const std::map<std::string, std::vector<float>>&,
+        const std::map<std::string, std::map<std::string, double>>&, int = 2,
         int = 1, int = 1,
         int = 1); // Standard Euclidian Distance, Avarage Linkage, Imge-Moments
 
     HierarchicalClustering(std::vector<PictureData>&, const std::map<std::string, std::vector<float>>&,
         const std::map<std::string, std::vector<float>>&, const std::map<std::string, std::vector<float>>&,
+        const std::map<std::string, std::map<std::string, double>>&,
         image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr,
         int = 2, int = 1, int = 1, int = 1);
 
-    HierarchicalClustering(HierarchicalClustering::CLUSTERNODE*, SIZE_T, int = 2, int = 1, int = 1, int = 1);
+    HierarchicalClustering(HierarchicalClustering::CLUSTERNODE*,
+        const std::map<std::string, std::map<std::string, double>>&, SIZE_T, int = 2, int = 1, int = 1, int = 1);
 
     /** Destructor */
     virtual ~HierarchicalClustering(void);
@@ -144,6 +147,7 @@ private:
     HierarchicalClustering::CLUSTERNODE* getRootOfNode(HierarchicalClustering::CLUSTERNODE*);
 
     void calculatePCA(std::vector<HierarchicalClustering::CLUSTERNODE*>*);
+    std::map<std::string, std::map<std::string, double>> distanceMatrix;
 
     std::pair<float, float> loadValueImage(const std::filesystem::path& originalPicture, std::vector<float>& outValueImage);
 
@@ -154,3 +158,4 @@ private:
 } // namespace megamol
 
 #endif
+

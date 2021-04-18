@@ -42,7 +42,9 @@ HierarchicalClustering::HierarchicalClustering() {}
 HierarchicalClustering::~HierarchicalClustering() {}
 
 HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, SIZE_T picturecount,
-    const std::map<std::string, std::vector<float>>& features, int method, int mode, int linkage, int moments) {
+    const std::map<std::string, std::vector<float>>& features,
+    const std::map<std::string, std::map<std::string, double>>& distmatrix,
+    int method, int mode, int linkage, int moments) {
 
     // Initalize Variables
     this->cluster = new std::vector<CLUSTERNODE*>();
@@ -53,6 +55,7 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, S
     this->mode = mode;
     this->linkagemethod = linkage;
     this->momentsmethode = moments;
+    this->distanceMatrix = distmatrix;
 
     this->clusteringfinished = false;
 
@@ -104,7 +107,9 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, S
 HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pictures,
     const std::map<std::string, std::vector<float>>& features1,
     const std::map<std::string, std::vector<float>>& features2,
-    const std::map<std::string, std::vector<float>>& features3, image_calls::Image2DCall* call1,
+    const std::map<std::string, std::vector<float>>& features3,
+    const std::map<std::string, std::map<std::string, double>>& distmatrix,
+    image_calls::Image2DCall* call1,
     image_calls::Image2DCall* call2, image_calls::Image2DCall* call3, int method, int mode, int linkage, int moments) {
 
     // Initalize Variables
@@ -116,6 +121,7 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
     this->mode = mode;
     this->linkagemethod = linkage;
     this->momentsmethode = moments;
+    this->distanceMatrix = distmatrix;
 
     this->clusteringfinished = false;
 
@@ -266,8 +272,9 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
     this->clusterthedata();
 }
 
-HierarchicalClustering::HierarchicalClustering(
-    HierarchicalClustering::CLUSTERNODE* node, SIZE_T picturecount, int method, int mode, int linkage, int moments) {
+HierarchicalClustering::HierarchicalClustering(HierarchicalClustering::CLUSTERNODE* node,
+    const std::map<std::string, std::map<std::string, double>>& distmatrix, SIZE_T picturecount, int method, int mode, int linkage,
+    int moments) {
 
     // Initalize Variables
     this->cluster = new std::vector<CLUSTERNODE*>();
@@ -278,6 +285,7 @@ HierarchicalClustering::HierarchicalClustering(
     this->mode = mode;
     this->linkagemethod = linkage;
     this->momentsmethode = moments;
+    this->distanceMatrix = distmatrix;
 
     this->clusteringfinished = false;
 
@@ -515,6 +523,15 @@ double HierarchicalClustering::nodeDistance(
             }
             if (this->mode == SIMILARITYMODE) {
                 distance = this->similarity(node1->features, node2->features, distanceMode);
+            }
+            if (this->distanceMatrix.size() > 0) {
+                std::string key1 = node1->pic->pdbid;
+                std::string key2 = node2->pic->pdbid;
+                if (this->distanceMatrix.find(key1) != this->distanceMatrix.end()) {
+                    if (this->distanceMatrix.at(key1).find(key2) != this->distanceMatrix.at(key1).end()) {
+                        distance = this->distanceMatrix.at(key1).at(key2);
+                    }
+                }
             }
         }
         if (node1->left == nullptr && node2->left != nullptr) { // case 3
