@@ -838,14 +838,17 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
         case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
             switch (dor) {
                 case DEFAULTORIENTATION_TOP: // 0 degree
+                    /// TODO
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
+                    /// TODO
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
+                    /// TODO
                 case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
-                    pseudoWidth = diagWidthDepth;
-                    pseudoHeight = diagDepthHeightWidth;
+                    pseudoWidth = diagWidthDepth; /// TODO
+                    pseudoHeight = diagDepthHeightWidth;  /// TODO
                     pseudoDepth = diagDepthHeightWidth;
-                    delta_dist.x = pseudoWidth / 2.0f;
-                    delta_dist.y = pseudoHeight / 2.0f;
+                    delta_dist.x = pseudoDepth * 0.25f; /// TODO
+                    delta_dist.y = pseudoDepth * 0.25f; /// TODO
                     break;
                 default: break;
             }
@@ -856,14 +859,17 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
         case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
             switch (dor) {
                 case DEFAULTORIENTATION_TOP: // 0 degree
+                    /// TODO
                 case DEFAULTORIENTATION_BOTTOM: // 180 degree
+                    /// TODO
                 case DEFAULTORIENTATION_RIGHT: // 90 degree
+                    /// TODO
                 case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
-                    pseudoWidth = diagWidthDepth;
-                    pseudoHeight = diagDepthHeightWidth;
+                    pseudoWidth = diagWidthDepth; /// TODO
+                    pseudoHeight = diagDepthHeightWidth;  /// TODO
                     pseudoDepth = diagDepthHeightWidth;
-                    delta_dist.x = pseudoWidth / 2.0f;
-                    delta_dist.y = pseudoHeight / 2.0f;
+                    delta_dist.x = pseudoDepth * 0.25f; /// TODO
+                    delta_dist.y = pseudoDepth * 0.25f; /// TODO
                 break;
                 default: break;
             }
@@ -943,8 +949,8 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
     double distY = (pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)))) - delta_dist.y;
     auto face_dist = static_cast<float>((distX > distY) ? distX : distY);
     face_dist = face_dist + (pseudoDepth / 2.0f);
-    float edge_dist   = 1.0f / sqrt(2.0f) * face_dist;
-    float corner_dist = 1.0f / sqrt(2.0f) * edge_dist;
+    float edge_dist   = face_dist / sqrt(2.0f);
+    float corner_dist = edge_dist / sqrt(2.0f);
 
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
