@@ -77,6 +77,7 @@ namespace gui {
             bool disable;
             bool show;
             std::string note;
+            unsigned int level;
         };
         std::vector<LogPopUp> log_popups;
 
@@ -86,6 +87,8 @@ namespace gui {
         // FUNCTIONS --------------------------------------------------------------
 
         bool connect_log(void);
+
+        void print_message(LogBuffer::LogEntry entry, unsigned int global_log_level);
     };
 
 

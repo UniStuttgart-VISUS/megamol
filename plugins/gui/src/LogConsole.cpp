@@ -71,6 +71,7 @@ megamol::gui::LogConsole::LogConsole()
     screenshot_privacy_note_popup.disable = false;
     screenshot_privacy_note_popup.show = false;
     screenshot_privacy_note_popup.note = "";
+    screenshot_privacy_note_popup.level = megamol::core::utility::log::Log::LEVEL_ALL;
     log_popups.push_back(screenshot_privacy_note_popup);
 
     LogPopUp module_params_missing_file_popup;
@@ -78,6 +79,7 @@ megamol::gui::LogConsole::LogConsole()
     module_params_missing_file_popup.disable = false;
     module_params_missing_file_popup.show = false;
     module_params_missing_file_popup.note = "";
+    module_params_missing_file_popup.level = megamol::core::utility::log::Log::LEVEL_ALL;
     log_popups.push_back(module_params_missing_file_popup);
 
     // Create log stream target
@@ -122,6 +124,7 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                 auto note_pos = entry.message.find(log_popup.log_tag);
                 if (note_pos != std::string::npos) {
                     log_popup.show = true;
+                    log_popup.level = entry.level;
                     // Append messages
                     log_popup.note += entry.message.substr(note_pos + log_popup.log_tag.length());
                 }
@@ -209,15 +212,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
 
     // Print messages
     for (auto& entry : this->echo_log_buffer.log()) {
-        if (entry.level <= wc.log_level) {
-            if (entry.level >= megamol::core::utility::log::Log::LEVEL_INFO) {
-                ImGui::TextUnformatted(entry.message.c_str());
-            } else if (entry.level >= megamol::core::utility::log::Log::LEVEL_WARN) {
-                ImGui::TextColored(GUI_COLOR_TEXT_WARN, entry.message.c_str());
-            } else if (entry.level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
-                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, entry.message.c_str());
-            }
-        }
+        this->print_message(entry, wc.log_level);
     }
 
     return true;
@@ -251,4 +246,17 @@ bool megamol::gui::LogConsole::connect_log(void) {
     }
 
     return true;
+}
+
+
+void megamol::gui::LogConsole::print_message(LogBuffer::LogEntry entry, unsigned int global_log_level) {
+    if (entry.level <= global_log_level) {
+        if (entry.level >= megamol::core::utility::log::Log::LEVEL_INFO) {
+            ImGui::TextUnformatted(entry.message.c_str());
+        } else if (entry.level >= megamol::core::utility::log::Log::LEVEL_WARN) {
+            ImGui::TextColored(GUI_COLOR_TEXT_WARN, entry.message.c_str());
+        } else if (entry.level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
+            ImGui::TextColored(GUI_COLOR_TEXT_ERROR, entry.message.c_str());
+        }
+    }
 }
