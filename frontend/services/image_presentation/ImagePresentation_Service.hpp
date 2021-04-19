@@ -136,6 +136,8 @@ private:
     std::function<ViewportTile()> m_viewport_tile_handler;
 
     void fill_lua_callbacks();
+
+    std::function<bool(std::string const&, std::string const&)> m_entrypointToPNG_trigger;
 };
 
 } // namespace frontend
