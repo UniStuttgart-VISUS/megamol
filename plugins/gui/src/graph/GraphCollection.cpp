@@ -116,8 +116,7 @@ megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetRunningGraph(void) {
             return graph_ptr;
         }
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Unable to find running graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-
+    //megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Unable to find running graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return nullptr;
 }
 
