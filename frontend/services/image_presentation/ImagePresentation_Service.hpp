@@ -98,6 +98,10 @@ private:
     std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
     const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;
 
+    void register_lua_callbacks();
+
+    std::function<bool(std::string const&, std::string const&)> m_entrypointToPNG_trigger;
+
 };
 
 } // namespace frontend
