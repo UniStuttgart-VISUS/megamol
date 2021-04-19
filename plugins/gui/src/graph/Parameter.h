@@ -257,6 +257,10 @@ namespace gui {
 
         inline void SetFullName(const std::string& full_name) {
             this->param_fullname = full_name;
+            /// XXX Strip '::::' at beginning
+            if (this->param_fullname.find("::::") != std::string::npos) {
+                this->param_fullname = this->param_fullname.substr(2);
+            }
         }
 
         inline void SetDescription(const std::string& desc) {

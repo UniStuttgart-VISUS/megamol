@@ -417,7 +417,7 @@ bool GUIWindows::PostDraw(void) {
                         std::string module_full_name = module_ptr->FullName();
                         for (auto& param : module_ptr->Parameters()) {
                             std::string param_full_name = param.FullName();
-                            if (case_insensitive_str_comp(wc.tfe_active_param, param_full_name) &&
+                            if (GUIUtils::CaseInsensitiveStringCompare(wc.tfe_active_param, param_full_name) &&
                                 (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
                                 this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
                                 param.TransferFunctionEditor_ConnectExternal(this->tf_editor_ptr, true);
@@ -501,9 +501,9 @@ bool GUIWindows::PostDraw(void) {
     if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
         for (auto& module_ptr : graph_ptr->Modules()) {
 
-            module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_ptr->FullName(),
-                vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr,
-                GUI_INVALID_ID, &this->picking_buffer);
+            module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), "", vislib::math::Ternary::TRI_UNKNOWN,
+                false, Parameter::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr, GUI_INVALID_ID,
+                &this->picking_buffer);
         }
     }
 
@@ -1064,7 +1064,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                             if (param_slot != nullptr) {
                                 std::string param_full_name(param_slot->FullName().PeekBuffer());
                                 for (auto& parameter : module_ptr->Parameters()) {
-                                    if (case_insensitive_str_comp(parameter.FullName(), param_full_name)) {
+                                    if (GUIUtils::CaseInsensitiveStringCompare(parameter.FullName(), param_full_name)) {
                                         megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                             (*param_slot), parameter, true, false, true);
                                     }

@@ -520,7 +520,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
 
                     if (use_stock) {
                         for (auto& parameter : new_module_ptr->Parameters()) {
-                            if (case_insensitive_str_comp(parameter.FullName(), param_full_name)) {
+                            if (GUIUtils::CaseInsensitiveStringCompare(parameter.FullName(), param_full_name)) {
                                 megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                     (*param_slot), parameter, true, false, false);
                             }
@@ -653,8 +653,8 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                 bool add_new_call = true;
                 for (auto& call_info : gui_graph_call_info) {
                     if ((call_info.class_name == call.request.className) &&
-                        case_insensitive_str_comp(call_info.from, call.request.from) &&
-                        case_insensitive_str_comp(call_info.to, call.request.to)) {
+                        GUIUtils::CaseInsensitiveStringCompare(call_info.from, call.request.from) &&
+                        GUIUtils::CaseInsensitiveStringCompare(call_info.to, call.request.to)) {
                         add_new_call = false;
                     }
                 }
@@ -711,9 +711,9 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
         for (auto& cd : call_data) {
             CallSlotPtr_t callslot_1 = nullptr;
             for (auto& mod : graph_ptr->Modules()) {
-                if (case_insensitive_str_comp(mod->FullName(), cd.caller_module_full_name)) {
+                if (GUIUtils::CaseInsensitiveStringCompare(mod->FullName(), cd.caller_module_full_name)) {
                     for (auto& callslot : mod->CallSlots(CallSlotType::CALLER)) {
-                        if (case_insensitive_str_comp(callslot->Name(), cd.caller_module_callslot_name)) {
+                        if (GUIUtils::CaseInsensitiveStringCompare(callslot->Name(), cd.caller_module_callslot_name)) {
                             callslot_1 = callslot;
                         }
                     }
@@ -721,9 +721,9 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
             }
             CallSlotPtr_t callslot_2 = nullptr;
             for (auto& mod : graph_ptr->Modules()) {
-                if (case_insensitive_str_comp(mod->FullName(), cd.callee_module_full_name)) {
+                if (GUIUtils::CaseInsensitiveStringCompare(mod->FullName(), cd.callee_module_full_name)) {
                     for (auto& callslot : mod->CallSlots(CallSlotType::CALLEE)) {
-                        if (case_insensitive_str_comp(callslot->Name(), cd.callee_module_callslot_name)) {
+                        if (GUIUtils::CaseInsensitiveStringCompare(callslot->Name(), cd.callee_module_callslot_name)) {
                             callslot_2 = callslot;
                         }
                     }
@@ -1002,7 +1002,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         if (module_name_idx != std::string::npos) {
                             for (auto& callslot_map : mod->CallSlots()) {
                                 for (auto& callslot : callslot_map.second) {
-                                    if (case_insensitive_str_comp(caller_slot_name, callslot->Name())) {
+                                    if (GUIUtils::CaseInsensitiveStringCompare(caller_slot_name, callslot->Name())) {
                                         caller_slot = callslot;
                                     }
                                 }
@@ -1013,7 +1013,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         if (module_name_idx != std::string::npos) {
                             for (auto& callslot_map : mod->CallSlots()) {
                                 for (auto& callslot : callslot_map.second) {
-                                    if (case_insensitive_str_comp(callee_slot_name, callslot->Name())) {
+                                    if (GUIUtils::CaseInsensitiveStringCompare(callee_slot_name, callslot->Name())) {
                                         callee_slot = callslot;
                                     }
                                 }
@@ -1136,7 +1136,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 if (graph_ptr != nullptr) {
                     for (auto& module_ptr : graph_ptr->Modules()) {
                         for (auto& parameter : module_ptr->Parameters()) {
-                            if (case_insensitive_str_comp(parameter.FullName(), param_slot_full_name)) {
+                            if (GUIUtils::CaseInsensitiveStringCompare(parameter.FullName(), param_slot_full_name)) {
                                 parameter.SetValueString(value_str);
                             }
                         }
@@ -1597,7 +1597,7 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
             // Case-Insensitive call slot comparison
-            if (case_insensitive_str_comp(this->calls_stock[idx].class_name, callName)) {
+            if (GUIUtils::CaseInsensitiveStringCompare(this->calls_stock[idx].class_name, callName)) {
                 retval.emplace_back(idx);
             }
         }
@@ -1621,7 +1621,7 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
             // Case-Insensitive call slot comparison
-            if (case_insensitive_str_comp(this->calls_stock[idx].class_name, comp_call_class_name)) {
+            if (GUIUtils::CaseInsensitiveStringCompare(this->calls_stock[idx].class_name, comp_call_class_name)) {
                 retval.emplace_back(idx);
             }
         }

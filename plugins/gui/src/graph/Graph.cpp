@@ -1855,9 +1855,9 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
                     if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
                         // Draw parameters
-                        selected_mod_ptr->GUIParameterGroups().Draw(selected_mod_ptr->Parameters(),
-                            selected_mod_ptr->FullName(), vislib::math::Ternary::TRI_UNKNOWN, false,
-                            Parameter::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID, nullptr);
+                        selected_mod_ptr->GUIParameterGroups().Draw(selected_mod_ptr->Parameters(), "",
+                            vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::LOCAL, nullptr, nullptr,
+                            GUI_INVALID_ID, nullptr);
 
                         ImVec2 popup_pos = ImGui::GetWindowPos();
                         ImVec2 popup_size = ImGui::GetWindowSize();

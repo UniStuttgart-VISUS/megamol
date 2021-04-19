@@ -223,9 +223,8 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
 
         auto param_fullname = inout_param.FullName();
         bool param_searched = true;
-        bool module_searched = true;
         if (in_scope == Parameter::WidgetScope::LOCAL) {
-            param_searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(param_fullname, in_search);
+            param_searched = GUIUtils::FindCaseInsensitiveSubstring(param_fullname, in_search);
         }
         bool visible = (inout_param.IsGUIVisible() || inout_param.IsExtended()) && param_searched;
 
@@ -269,7 +268,7 @@ void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_
     // Open namespace header when parameter search is active.
     auto search_string = in_search;
     bool param_group_header_open = megamol::gui::GUIUtils::GroupHeader(
-        megamol::gui::HeaderType::PARAMETERG_ROUP, in_group_name, search_string, in_override_header_state);
+        megamol::gui::HeaderType::PARAMETER_GROUP, in_group_name, search_string, in_override_header_state);
 
     if (param_group_header_open) {
         ImGui::Indent();
