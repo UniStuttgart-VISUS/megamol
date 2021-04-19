@@ -14,7 +14,7 @@
 #include "gui-wrapper.h"
 
 #include "IOpenGL_Context.h"
-#include "GUI_Resource.h"
+#include "GUIState.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -75,14 +75,13 @@ private:
     glm::vec2 m_framebuffer_size;
     glm::vec2 m_window_size;
     megamol::core::MegaMolGraph* m_megamol_graph;
-    megamol::frontend_resources::IOpenGL_Context const* m_opengl_context_ptr;
     std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;
     std::vector<std::string> m_queuedProjectFiles;
 
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<FrontendResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
-    megamol::frontend_resources::GUIResource m_providedResource;
+    megamol::frontend_resources::GUIState m_providedResource;
 
     std::string resource_request_gui_state(bool as_lua);
     bool resource_request_gui_visibility(void);

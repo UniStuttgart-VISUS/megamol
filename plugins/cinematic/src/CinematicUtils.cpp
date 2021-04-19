@@ -14,9 +14,11 @@ using namespace megamol::cinematic;
 
 CinematicUtils::CinematicUtils(void) : core::view::RenderUtils()
     , font(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
-    , font_size(20.0f)
     , init_once(false)
-    , background_color(0.0f, 0.0f, 0.0f, 0.0f) {
+    , menu_font_size(20.0f)
+    , menu_height(20.0f)
+    , background_color(0.0f, 0.0f, 0.0f, 0.0f)
+    , hotkey_window_setup_once (true) {
 
 }
 
@@ -47,12 +49,6 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
     // Initialise rendering
     if (!this->InitPrimitiveRendering(core_instance->ShaderSourceFactory())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    auto err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -138,25 +134,25 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
 
 void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp) {
 
-    const float menu_height = this->font_size;
-
+    this->gui_update();
+   
     // Push menu background quad
-    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, 0.0f), glm::vec3(0.0f, dim_vp.y - menu_height, 0.0f), 
-        glm::vec3(dim_vp.x, dim_vp.y - menu_height, 0.0f), glm::vec3(dim_vp.x, dim_vp.y, 0.0f), this->Color(CinematicUtils::Colors::MENU));
+    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, 0.0f), glm::vec3(0.0f, dim_vp.y - this->menu_height, 0.0f), 
+        glm::vec3(dim_vp.x, dim_vp.y - this->menu_height, 0.0f), glm::vec3(dim_vp.x, dim_vp.y, 0.0f), this->Color(CinematicUtils::Colors::MENU));
 
     // Push menu labels
     float vpWhalf = dim_vp.x / 2.0f;
-    float new_font_size = this->font_size;
-    float leftLabelWidth = this->font.LineWidth(this->font_size, left_label.c_str());
-    float midleftLabelWidth = this->font.LineWidth(this->font_size, middle_label.c_str());
-    float rightLabelWidth = this->font.LineWidth(this->font_size, right_label.c_str());
+    float new_font_size = this->menu_font_size;
+    float leftLabelWidth = this->font.LineWidth(this->menu_font_size, left_label.c_str());
+    float midleftLabelWidth = this->font.LineWidth(this->menu_font_size, middle_label.c_str());
+    float rightLabelWidth = this->font.LineWidth(this->menu_font_size, right_label.c_str());
     while (((leftLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf) || ((rightLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf)) {
         new_font_size -= 0.5f;
         leftLabelWidth = this->font.LineWidth(new_font_size, left_label.c_str());
         midleftLabelWidth = this->font.LineWidth(new_font_size, middle_label.c_str());
         rightLabelWidth = this->font.LineWidth(new_font_size, right_label.c_str());
     }
-    float textPosY = dim_vp.y - (menu_height / 2.0f) + (new_font_size / 2.0f);
+    float textPosY = dim_vp.y - menu_height + this->menu_font_size;
     auto current_back_color = this->Color(CinematicUtils::Colors::BACKGROUND);
     this->SetBackgroundColor(this->Color(CinematicUtils::Colors::MENU));
     auto color = this->Color(CinematicUtils::Colors::FONT);
@@ -168,56 +164,80 @@ void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_la
 }
 
 
-void CinematicUtils::PushHotkeyList(const glm::mat4& ortho, glm::vec2 dim_vp) {
+void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm::vec2 dim_vp) {
 
-    std::string hotkey_str = "";
-    hotkey_str += "-----[ GLOBAL ]-----\n";
-    hotkey_str += "[Shift+a] Apply current settings to selected/new keyframe. \n";
-    hotkey_str += "[Shift+d] Delete selected keyframe. \n";
-    hotkey_str += "[Shift+s] Save keyframes to file. \n";
-    hotkey_str += "[Shift+l] Load keyframes from file. \n";
-    hotkey_str += "[Shift+z] Undo keyframe changes. \n";
-    hotkey_str += "[Shift+y] Redo keyframe changes. \n";
-    hotkey_str += "-----[ TRACKING SHOT ]----- \n";
-    hotkey_str += "[Shift+q] Toggle different manipulators for the selected keyframe. \n";
-    hotkey_str += "[Shift+w] Show manipulators inside/outside of model bounding box. \n";
-    hotkey_str += "[Shift+u] Reset look-at vector of selected keyframe. \n";
-    hotkey_str += "-----[ CINEMATIC ]----- \n";
-    hotkey_str += "[Shift+r] Start/Stop rendering complete animation. \n";
-    hotkey_str += "[Shift+Space] Start/Stop animation preview. \n";
-    hotkey_str += "-----[ TIMELINE ]----- \n";
-    hotkey_str += "[Shift+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
-    hotkey_str += "[Shift+f] Snap all keyframes to animation frames. \n";
-    hotkey_str += "[Shift+g] Snap all keyframes to simulation frames. \n";
-    hotkey_str += "[Shift+t] Linearize simulation time between two keyframes. \n";
-    //hotkey_str += "[Shift+v] Set same velocity between all keyframes (Experimental).\n"; ///XXX Calcualation is not correct yet ...
-    hotkey_str += "[Shift+p] Reset shifted and scaled time axes. \n";
-    hotkey_str += "[Left Mouse Button] Select keyframe. \n";
-    hotkey_str += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
-    hotkey_str += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
+    this->gui_update();
 
-    const float border = 10.0f;
-    size_t line_count = std::count(hotkey_str.begin(), hotkey_str.end(), '\n');
-    float hotkey_font_size = (dim_vp.y - 2.0f * this->font_size - 2.0f*border) / static_cast<float>(line_count);
-    hotkey_font_size = (hotkey_font_size > this->font_size) ? (this->font_size) : (hotkey_font_size);
-    float line_height = this->font.LineHeight(hotkey_font_size);
-    float line_width = this->font.LineWidth(hotkey_font_size, hotkey_str.c_str());
-    float quad_width = line_width + 2.0f * border;
-    float quad_height = line_height * line_count + 2.0f * border;
+    bool valid_imgui_scope =
+        ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
 
-    // Push background quad
-    this->PushQuadPrimitive(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, quad_height, 0.0f), glm::vec3(quad_width, quad_height, 0.0f), glm::vec3(quad_width, 0.0f, 0.0f), this->Color(CinematicUtils::Colors::MENU));
+    if (inout_show && valid_imgui_scope) {
+        if (this->hotkey_window_setup_once) {
+            ImGui::SetNextWindowPos(ImVec2(0.0f, this->menu_height));
+            this->hotkey_window_setup_once = false;
+        }
+        auto window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse;
+        auto header_flags = ImGuiTreeNodeFlags_DefaultOpen;
+        auto table_flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize;
+        auto column_flags = ImGuiTableColumnFlags_WidthStretch;
 
-    // Push hotkey text
-    auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(ortho, glm::value_ptr(color), border, quad_height - border, hotkey_font_size, false, hotkey_str.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
+        if (ImGui::Begin("[Cinematic] HOTKEYS", &inout_show, window_flags)) {
+            if (ImGui::CollapsingHeader("  GLOBAL###cinematic_global_header", header_flags)) {
+                if (ImGui::BeginTable("cinematic_global_hotkeys", 2, table_flags)) {
+                    ImGui::TableSetupColumn("", column_flags);
+                    this->gui_table_row("SHIFT + A", "Apply current settings to selected/new keyframe.");
+                    this->gui_table_row("SHIFT + D", "Delete selected keyframe.");
+                    this->gui_table_row("SHIFT + S", "Save keyframes to file.");
+                    this->gui_table_row("SHIFT + L", "Load keyframes from file.");
+                    this->gui_table_row("SHIFT + Z", "Undo keyframe changes (US Keyboard).");
+                    this->gui_table_row("SHIFT + Y", "Redo keyframe changes (US Keyboard).");
+                    ImGui::EndTable();
+                }
+            }
+            if (ImGui::CollapsingHeader("  TRACKING SHOT###cinematic_tracking_header", header_flags)) {
+                if (ImGui::BeginTable("cinematic_tracking_shot_hotkeys", 2, table_flags)) {
+                    ImGui::TableSetupColumn("", column_flags);
+                    this->gui_table_row("SHIFT + Q", "Toggle different manipulators for the selected keyframe.");
+                    this->gui_table_row("SHIFT + W", "Show manipulators inside/outside of model bounding box.");
+                    this->gui_table_row("SHIFT + U", "Reset look-at vector of selected keyframe.");
+                    ImGui::EndTable();
+                }
+            }
+            if (ImGui::CollapsingHeader("  CINEMATIC###cinematic_cineamtic_header", header_flags)) {
+                if (ImGui::BeginTable("cinematic_cinematic_hotkeys", 2, table_flags)) {
+                    ImGui::TableSetupColumn("", column_flags);
+                    this->gui_table_row("SHIFT + R", "Start/Stop rendering complete animation.");
+                    this->gui_table_row("SHIFT + SPACE", "Start/Stop animation preview.");
+                    ImGui::EndTable();
+                }
+            }
+            if (ImGui::CollapsingHeader("  TIMELINE###cinematic_timeline_header", header_flags)) {
+                if (ImGui::BeginTable("cinematic_timeline_hotkeys", 2, table_flags)) {
+                    ImGui::TableSetupColumn("", column_flags);
+                    this->gui_table_row("SHIFT + RIGHT/LEFT Arrow", "Move selected keyframe on animation time axis.");
+                    this->gui_table_row("SHIFT + F", "Snap all keyframes to animation frames.");
+                    this->gui_table_row("SHIFT + G", "Snap all keyframes to simulation frames.");
+                    this->gui_table_row("SHIFT + T", "Linearize simulation time between two keyframes.");
+                    this->gui_table_row("SHIFT + P", "Reset shifted and scaled time axes.");
+                    this->gui_table_row("LEFT Mouse Button", "Select keyframe.");
+                    this->gui_table_row("MIDDLE Mouse Button", "Axes scaling in mouse direction.");
+                    this->gui_table_row("RIGHT Mouse Button", "Drag & drop keyframe / pan axes.");
+                    /// XXX Calcualation is not correct yet ...
+                    //this->gui_table_row("SHIFT + v","Set same velocity between all keyframes (Experimental).");
+                    ImGui::EndTable();
+                }
+            }
+            ImGui::End();
+        }
+    }
 }
 
 
 void CinematicUtils::Push2DText(const glm::mat4& ortho, const std::string& text, float x, float y) {
 
+    this->gui_update();
     auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(ortho, glm::value_ptr(color), x, y, this->font_size, false, text.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(ortho, glm::value_ptr(color), x, y, this->menu_font_size, false, text.c_str(), megamol::core::utility::SDFFont::ALIGN_LEFT_TOP);
 }
 
 
@@ -239,13 +259,15 @@ void CinematicUtils::DrawAll(const glm::mat4&mvp, glm::vec2 dim_vp) {
 
 float CinematicUtils::GetTextLineHeight(void) {
 
-    return this->font.LineHeight(this->font_size);
+    this->gui_update();
+    return this->font.LineHeight(this->menu_font_size);
 }
 
 
 float CinematicUtils::GetTextLineWidth(const std::string& text_line) {
 
-    return this->font.LineWidth(this->font_size, text_line.c_str());
+    this->gui_update();
+    return this->font.LineWidth(this->menu_font_size, text_line.c_str());
 }
 
 
@@ -258,4 +280,21 @@ void CinematicUtils::SetTextRotation(float a, float x, float y, float z) {
 const float CinematicUtils::lightness(glm::vec4 background) const {
 
     return ((glm::max(background[0], glm::max(background[1], background[2])) + glm::min(background[0], glm::min(background[1], background[2]))) / 2.0f);
+}
+
+
+void megamol::cinematic::CinematicUtils::gui_update(void) {
+
+    this->menu_font_size   = ImGui::GetFontSize() * 1.5f;
+    this->menu_height = this->menu_font_size; // +ImGui::GetFrameHeightWithSpacing();
+}
+
+
+void megamol::cinematic::CinematicUtils::gui_table_row(const char* left, const char* right) {
+
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    ImGui::TextUnformatted(left);
+    ImGui::TableNextColumn();
+    ImGui::TextUnformatted(right);
 }

@@ -47,6 +47,8 @@ View3DGL::View3DGL(void) : view::AbstractView3D(), _cursor2d() {
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
+
+    this->_rhsRenderSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 }
 
 /*
@@ -74,12 +76,12 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
     auto bgcol = this->BkgndColour();
 
     if (call == nullptr) {
-        bool tgt_res_ok = (_camera.resolution_gate().width() != 0) && (_camera.resolution_gate().height() != 0);
-        bool fbo_update_needed = (_fbo->GetWidth() != _camera.resolution_gate().width()) ||
-                                 (_fbo->GetHeight() != _camera.resolution_gate().height()) || (!_fbo->IsValid());
+        bool tgt_res_ok = (_camera.image_tile().width() != 0) && (_camera.image_tile().height() != 0);
+        bool fbo_update_needed = (_fbo->GetWidth() != _camera.image_tile().width()) ||
+                                 (_fbo->GetHeight() != _camera.image_tile().height()) || (!_fbo->IsValid());
 
         std::pair<int, int> tgt_res =
-            tgt_res_ok ? std::make_pair<int, int>(_camera.resolution_gate().width(), _camera.resolution_gate().height())
+            tgt_res_ok ? std::make_pair<int, int>(_camera.image_tile().width(), _camera.image_tile().height())
                        : std::make_pair<int, int>(1, 1);
 
         if (fbo_update_needed) {

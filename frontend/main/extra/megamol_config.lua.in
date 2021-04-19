@@ -67,7 +67,9 @@ mmSetCliOption("vsync",       "off")       -- CLI: --vsync=false
 mmSetCliOption("interactive", "off")       -- CLI: --interactive=false
 mmSetCliOption("window",      "1920x1080") -- CLI: --window 1920x1080
 mmSetCliOption("khrdebug",    "off")       -- CLI: --khrdebug=false
+mmSetCliOption("privacynote", "on")        -- CLI: --privacynote=true
 mmSetGlobalValue("arcball",   "off")       -- CLI: -g arcball:off
+
 
 -- You can queue Lua files (project files) for execution after MegaMol started
 -- Project files provided via CLI get loaded after those provided via config

@@ -53,12 +53,13 @@ namespace gui {
 
         bool AddEmptyProject(void);
 
-        ImGuiID AddGraph(GraphCoreInterface graph_core_interface);
+        ImGuiID AddGraph(void);
         bool DeleteGraph(ImGuiID in_graph_uid);
         GraphPtr_t GetGraph(ImGuiID in_graph_uid);
         const GraphPtrVector_t& GetGraphs(void) {
             return this->graphs;
         }
+        GraphPtr_t GetRunningGraph(void);
 
         bool LoadModuleStock(const megamol::core::CoreInstance* core_instance);
         bool LoadCallStock(const megamol::core::CoreInstance* core_instance);
@@ -88,7 +89,7 @@ namespace gui {
          * @return                 True on success, false otherwise.
          */
         bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
-            megamol::core::MegaMolGraph* megamol_graph, bool sync);
+            megamol::core::MegaMolGraph* megamol_graph);
 
         ImGuiID LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 
@@ -96,6 +97,10 @@ namespace gui {
             ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json);
 
         void Draw(GraphState_t& state);
+
+        void RequestNewRunningGraph(ImGuiID graph_uid) {
+            this->change_running_graph(graph_uid);
+        }
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -143,6 +148,10 @@ namespace gui {
         }
 
         bool load_state_from_file(const std::string& filename, ImGuiID graph_id);
+
+        bool save_graph_dialog(ImGuiID graph_uid, bool open_dialog);
+
+        bool change_running_graph(ImGuiID graph_uid);
     };
 
 
