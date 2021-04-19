@@ -116,7 +116,7 @@ megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetRunningGraph(void) {
             return graph_ptr;
         }
     }
-    /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Unable to find running graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Unable to find running graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     return nullptr;
 }
@@ -1835,8 +1835,7 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool op
 
         popup_failed = !this->SaveProjectToFile(graph_uid, project_filename, gui_state);
     }
-    PopUps::Minimal("Failed to Save Project", popup_failed, "See console log output for more information.", "",
-        confirmed, "Cancel", aborted);
+    PopUps::Minimal("Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
 
     return !popup_failed;
 }

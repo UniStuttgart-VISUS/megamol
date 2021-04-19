@@ -62,8 +62,6 @@ private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
-
-    bool show_privacy_message;
 };
 
 } // namespace frontend
