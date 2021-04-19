@@ -84,24 +84,29 @@
 #define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
 
-namespace {
-
-/********** Global Operators **********/
-
-bool operator==(const ImVec2& left, const ImVec2& right) {
-    return ((left.x == right.x) && (left.y == right.y));
-}
-
-bool operator!=(const ImVec2& left, const ImVec2& right) {
-    return !(left == right);
-}
-
-} // namespace
-
-
 namespace megamol {
 namespace gui {
 
+    namespace {
+
+        /********** Global Operators **********/
+
+        bool operator==(const ImVec2& left, const ImVec2& right) {
+            return ((left.x == right.x) && (left.y == right.y));
+        }
+
+        bool operator!=(const ImVec2& left, const ImVec2& right) {
+            return !(left == right);
+        }
+
+        bool case_insensitive_str_comp(std::string const& str1, std::string const& str2) {
+            return ((str1.size() == str2.size()) &&
+                    std::equal(str1.begin(), str1.end(), str2.begin(), [](char const& c1, char const& c2) {
+                        return (c1 == c2 || std::toupper(c1) == std::toupper(c2));
+                    }));
+        }
+
+    } // namespace
 
     /********** Global Unique ID **********/
 

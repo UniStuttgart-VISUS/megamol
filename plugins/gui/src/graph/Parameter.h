@@ -102,6 +102,7 @@ namespace gui {
 
         struct StockParameter {
             std::string param_name;
+            std::string param_fullname;
             std::string description;
             ParamType_t type;
             std::string default_value;
@@ -137,7 +138,7 @@ namespace gui {
         // ----------------------------
 
         Parameter(ImGuiID uid, ParamType_t type, Stroage_t store, Min_t minval, Max_t maxval,
-            const std::string& param_name, const std::string& description, const std::string& module_name);
+            const std::string& param_name, const std::string& param_fullname, const std::string& description);
 
         ~Parameter(void);
 
@@ -181,12 +182,8 @@ namespace gui {
         inline const ImGuiID UID(void) const {
             return this->uid;
         }
-        // <param_namespace>::<param_name>
-        inline std::string ParamFullName(void) const {
-            return this->param_name;
-        }
         // <param_name>
-        inline std::string ParamName(void) const {
+        inline std::string Name(void) const {
             std::string name = this->param_name;
             auto idx = this->param_name.rfind(':');
             if (idx != std::string::npos) {
@@ -195,7 +192,7 @@ namespace gui {
             return name;
         }
         // <param_namespace>
-        inline std::string ParamNameSpace(void) const {
+        inline std::string NameSpace(void) const {
             std::string name_space = "";
             auto idx = this->param_name.rfind(':');
             if (idx != std::string::npos) {
@@ -204,13 +201,9 @@ namespace gui {
             }
             return name_space;
         }
-        // <module_name>
-        inline std::string ModuleName(void) const {
-            return this->module_name;
-        }
         // <module_name>::<param_namespace>::<param_name>
-        inline std::string FullNameXXX(void) const {
-            return this->module_name + "::" + this->param_name;
+        inline std::string FullName(void) const {
+            return this->param_fullname;
         }
 
         std::string GetValueString(void) const;
@@ -258,8 +251,12 @@ namespace gui {
 
         // SET ----------------------------------------------------------------
 
-        inline void SetNameXXX(const std::string& name) {
-            this->param_nameXXX = name;
+        inline void SetName(const std::string& name) {
+            this->param_name = name;
+        }
+
+        inline void SetFullName(const std::string& full_name) {
+            this->param_fullname = full_name;
         }
 
         inline void SetDescription(const std::string& desc) {
@@ -296,11 +293,13 @@ namespace gui {
                             this->tf_string_hash = std::hash<std::string>()(val);
                         }
                     } else if (this->type == ParamType_t::FILEPATH) {
-                        // XXX [Screenshot] is the required tag to enable gui popup of this log message (see gui::LogConsole.cpp CTOR)
+                        // XXX [Screenshot] is the required tag to enable gui popup of this log message (see
+                        // gui::LogConsole.cpp CTOR)
                         auto file = std::get<std::string>(this->value);
                         if (!megamol::core::utility::FileUtils::FileExists(file)) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[File] Parameter '%s' - File not found: '%s' \n",
-                                this->FullName().c_str(), file.c_str());
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                                "[File] Parameter '%s' - File not found: '%s' \n", this->FullName().c_str(),
+                                file.c_str());
                         }
                     }
                 }
@@ -361,8 +360,8 @@ namespace gui {
         const ImGuiID uid;
         const ParamType_t type;
         std::string param_name;
+        std::string param_fullname;
         std::string description;
-        std::string module_name;
 
         vislib::SmartPtr<megamol::core::param::AbstractParam> core_param_ptr;
 

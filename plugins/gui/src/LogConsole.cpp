@@ -181,7 +181,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
         // Scrolling
         std::string scroll_label = "Scroll";
         ImGui::SameLine(0.0f, ImGui::GetContentRegionAvail().x - (2.25f * ImGui::GetFrameHeightWithSpacing()) -
-                              ImGui::CalcTextSize(scroll_label.c_str()).x);
+                                  ImGui::CalcTextSize(scroll_label.c_str()).x);
         ImGui::TextUnformatted(scroll_label.c_str());
         ImGui::SameLine();
         if (ImGui::ArrowButton("scroll_up", ImGuiDir_Up)) {
@@ -228,8 +228,8 @@ void megamol::gui::LogConsole::PopUps() {
 
     for (auto& log_popup : log_popups) {
         bool confirmed = false;
-        PopUps::Minimal("LogConsole - " + log_popup.log_tag, (!log_popup.disable && log_popup.show),
-                        log_popup.note, "Ok", confirmed, "Ok, disable further notification.", log_popup.disable);
+        PopUps::Minimal("LogConsole - " + log_popup.log_tag, (!log_popup.disable && log_popup.show), log_popup.note,
+            "Ok", confirmed, "Ok, disable further notification.", log_popup.disable);
         log_popup.show = false;
     }
 }

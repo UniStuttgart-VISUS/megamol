@@ -192,7 +192,8 @@ bool megamol::gui::ButtonWidgets::ExtendedModeButton(const std::string& id, bool
 }
 
 
-bool megamol::gui::ButtonWidgets::LuaButton(const std::string& id, const megamol::gui::Parameter& param, const std::string& param_fullname) {
+bool megamol::gui::ButtonWidgets::LuaButton(
+    const std::string& id, const megamol::gui::Parameter& param, const std::string& param_fullname) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -229,8 +230,7 @@ bool megamol::gui::ButtonWidgets::LuaButton(const std::string& id, const megamol
         bool copy_to_clipboard = false;
         std::string lua_param_cmd;
         if (ImGui::MenuItem("Copy mmSetParamValue")) {
-            lua_param_cmd =
-                "mmSetParamValue(\"" + param_fullname + "\",[=[" + param.GetValueString() + "]=])";
+            lua_param_cmd = "mmSetParamValue(\"" + param_fullname + "\",[=[" + param.GetValueString() + "]=])";
             copy_to_clipboard = true;
         }
         if (ImGui::MenuItem("Copy mmGetParamValue")) {

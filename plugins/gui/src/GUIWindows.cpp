@@ -416,8 +416,8 @@ bool GUIWindows::PostDraw(void) {
                     for (auto& module_ptr : graph_ptr->Modules()) {
                         std::string module_full_name = module_ptr->FullName();
                         for (auto& param : module_ptr->Parameters()) {
-                            std::string param_full_name = module_full_name + "::" + param.FullName();
-                            if ((wc.tfe_active_param == param_full_name) &&
+                            std::string param_full_name = param.FullName();
+                            if (case_insensitive_str_comp(wc.tfe_active_param, param_full_name) &&
                                 (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
                                 this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
                                 param.TransferFunctionEditor_ConnectExternal(this->tf_editor_ptr, true);
@@ -501,7 +501,7 @@ bool GUIWindows::PostDraw(void) {
     if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
         for (auto& module_ptr : graph_ptr->Modules()) {
 
-            module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_ptr->FullName(), "",
+            module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_ptr->FullName(),
                 vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr,
                 GUI_INVALID_ID, &this->picking_buffer);
         }
@@ -1062,9 +1062,9 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                              si != se; ++si) {
                             auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
                             if (param_slot != nullptr) {
-                                std::string param_full_name(param_slot->Name().PeekBuffer());
+                                std::string param_full_name(param_slot->FullName().PeekBuffer());
                                 for (auto& parameter : module_ptr->Parameters()) {
-                                    if (parameter.FullName() == param_full_name) {
+                                    if (case_insensitive_str_comp(parameter.FullName(), param_full_name)) {
                                         megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                             (*param_slot), parameter, true, false, true);
                                     }
@@ -1604,7 +1604,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                     // Draw parameters
                     if (module_header_open) {
                         bool out_open_external_tf_editor;
-                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_label, search_string,
+                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
                             vislib::math::Ternary(wc.param_extended_mode), true, Parameter::WidgetScope::LOCAL,
                             this->tf_editor_ptr, &out_open_external_tf_editor, override_header_state, nullptr);
                         if (out_open_external_tf_editor) {
@@ -2489,8 +2489,7 @@ bool megamol::gui::GUIWindows::state_from_string(const std::string& state) {
                 module_ptr->GUIParameterGroups().StateFromJSON(state_json, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->Parameters()) {
-                    std::string param_full_name = module_full_name + "::" + param.FullName();
-                    param.StateFromJSON(state_json, param_full_name);
+                    param.StateFromJSON(state_json, param.FullName());
                     param.ForceSetGUIStateDirty();
                 }
             }
@@ -2538,8 +2537,7 @@ bool megamol::gui::GUIWindows::state_to_string(std::string& out_state) {
                 module_ptr->GUIParameterGroups().StateToJSON(json_state, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->Parameters()) {
-                    std::string param_full_name = module_full_name + "::" + param.FullName();
-                    param.StateToJSON(json_state, param_full_name);
+                    param.StateToJSON(json_state, param.FullName());
                 }
             }
         }
