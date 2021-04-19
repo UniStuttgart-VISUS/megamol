@@ -23,7 +23,6 @@ int megamol::gui::LogBuffer::sync(void) {
             while (split_index != std::string::npos) {
                 // Assuming new line of log message of format "<level>|<message>\r\n"
                 auto new_message = message_str.substr(0, split_index + 1);
-                unsigned int log_level = megamol::core::utility::log::Log::LEVEL_NONE;
                 bool extracted_new_message = false;
                 auto seperator_index = new_message.find("|");
                 if (seperator_index != std::string::npos) {
@@ -63,6 +62,7 @@ megamol::gui::LogConsole::LogConsole()
         , scroll_down(2)
         , scroll_up(0)
         , last_window_height(0.0f)
+        , screenshot_note_disable(false)
         , screenshot_note_show(false)
         , screenshot_note()
         , tooltip() {
@@ -81,6 +81,38 @@ LogConsole::~LogConsole() {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(nullptr);
     }
     this->echo_log_target.reset();
+}
+
+
+void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc) {
+
+    auto new_log_msg_count = this->echo_log_buffer.log().size();
+    if (new_log_msg_count > this->log_msg_count) {
+        // Scroll down if new message came in
+        this->scroll_down = 2;
+
+        for (size_t i = this->log_msg_count; i < new_log_msg_count; i++) {
+            auto entry = this->echo_log_buffer.log()[i];
+
+            // Bring log console to front on new warnings and errors
+            if (wc.log_force_open) {
+                if (entry.level < megamol::core::utility::log::Log::LEVEL_INFO) {
+                    if (wc.log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
+                        wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                    }
+                    wc.win_show = true;
+                }
+            }
+
+            // Check for screenshot privacy note
+            auto note_pos = entry.message.find("[Screenshot]");
+            if (note_pos != std::string::npos) {
+                this->screenshot_note_show = true;
+                this->screenshot_note = entry.message;
+            }
+        }
+    }
+    this->log_msg_count = new_log_msg_count;
 }
 
 
@@ -133,7 +165,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
         // Scrolling
         std::string scroll_label = "Scroll";
         ImGui::SameLine(0.0f, ImGui::GetContentRegionAvail().x - (2.25f * ImGui::GetFrameHeightWithSpacing()) -
-                                  ImGui::CalcTextSize(scroll_label.c_str()).x);
+                              ImGui::CalcTextSize(scroll_label.c_str()).x);
         ImGui::TextUnformatted(scroll_label.c_str());
         ImGui::SameLine();
         if (ImGui::ArrowButton("scroll_up", ImGuiDir_Up)) {
@@ -176,38 +208,11 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
 }
 
 
-void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc) {
-
-    auto new_log_msg_count = this->echo_log_buffer.log().size();
-    if (new_log_msg_count > this->log_msg_count) {
-        // Scroll down if new message came in
-        this->scroll_down = 2;
-
-        for (size_t i = this->log_msg_count; i < new_log_msg_count; i++) {
-            auto entry = this->echo_log_buffer.log()[i];
-
-            // Bring log console to front on new warnings and errors
-            if (wc.log_force_open) {
-                if (entry.level < megamol::core::utility::log::Log::LEVEL_INFO) {
-                    if (wc.log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
-                        wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
-                    }
-                    wc.win_show = true;
-                }
-            }
-
-            // Check for screenshot privacy note
-            auto note_pos = entry.message.find("[Screenshot]");
-            if (note_pos != std::string::npos) {
-                this->screenshot_note_show = true;
-                this->screenshot_note = entry.message;
-            }
-        }
-    }
-    this->log_msg_count = new_log_msg_count;
-
+void megamol::gui::LogConsole::PopUp() {
     // Show screenshot privacy note pop-up
-    PopUps::Minimal("LogConsole", this->screenshot_note_show, this->screenshot_note, "Ok");
+    bool confirmed;
+    PopUps::Minimal("LogConsole", (!this->screenshot_note_disable && this->screenshot_note_show), this->screenshot_note,
+                    "Ok", confirmed, "Ok, disable further notification.", this->screenshot_note_disable);
     this->screenshot_note_show = false;
 }
 

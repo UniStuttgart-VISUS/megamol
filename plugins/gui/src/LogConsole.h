@@ -54,12 +54,11 @@ namespace gui {
         LogConsole();
         ~LogConsole();
 
-        /**
-         * Draw log console window.
-         */
+        void Update(WindowCollection::WindowConfiguration& wc);
+
         bool Draw(WindowCollection::WindowConfiguration& wc);
 
-        void Update(WindowCollection::WindowConfiguration& wc);
+        void PopUp(void);
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -73,6 +72,7 @@ namespace gui {
         unsigned int scroll_up;
         float last_window_height;
 
+        bool screenshot_note_disable;
         bool screenshot_note_show;
         std::string screenshot_note;
 
