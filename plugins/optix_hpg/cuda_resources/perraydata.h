@@ -32,6 +32,8 @@ namespace optix_hpg {
             bool countEmitted;
             glm::vec3 emitted;
 
+            float intensity;
+
             OptixTraversableHandle world;
         };
     } // namespace device

@@ -71,13 +71,15 @@ private:
     void setup();
 
     bool is_dirty() {
-        return spp_slot_.IsDirty() || max_bounces_slot_.IsDirty() || accumulate_slot_.IsDirty();
+        return spp_slot_.IsDirty() || max_bounces_slot_.IsDirty() || accumulate_slot_.IsDirty() ||
+               intensity_slot_.IsDirty();
     }
 
     void reset_dirty() {
         spp_slot_.ResetDirty();
         max_bounces_slot_.ResetDirty();
         accumulate_slot_.ResetDirty();
+        intensity_slot_.ResetDirty();
     }
 
     core::CallerSlot _in_geo_slot;
@@ -87,6 +89,8 @@ private:
     core::param::ParamSlot max_bounces_slot_;
 
     core::param::ParamSlot accumulate_slot_;
+
+    core::param::ParamSlot intensity_slot_;
 
     SBTRecord<device::RayGenData> _sbt_raygen_record;
 

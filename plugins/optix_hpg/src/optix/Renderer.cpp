@@ -2,6 +2,7 @@
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/view/Camera_2.h"
 
 #include "raygen.h"
@@ -24,7 +25,8 @@ megamol::optix_hpg::Renderer::Renderer()
         : _in_geo_slot("inGeo", "")
         , spp_slot_("spp", "")
         , max_bounces_slot_("max bounces", "")
-        , accumulate_slot_("accumulate", "") {
+        , accumulate_slot_("accumulate", "")
+        , intensity_slot_("intensity", "") {
     _in_geo_slot.SetCompatibleCall<CallGeometryDescription>();
     MakeSlotAvailable(&_in_geo_slot);
 
@@ -36,6 +38,9 @@ megamol::optix_hpg::Renderer::Renderer()
 
     accumulate_slot_ << new core::param::BoolParam(true);
     MakeSlotAvailable(&accumulate_slot_);
+
+    intensity_slot_ << new core::param::FloatParam(1.0f, std::numeric_limits<float>::min());
+    MakeSlotAvailable(&intensity_slot_);
 
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
@@ -152,6 +157,7 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
     _frame_state.accumulate = accumulate_slot_.Param<core::param::BoolParam>()->Value();
 
     _frame_state.depth_params = depth_params;
+    _frame_state.intensity = intensity_slot_.Param<core::param::FloatParam>()->Value();
 
     if (old_cam_snap.position != snapshot.position || old_cam_snap.view_vector != snapshot.view_vector ||
         old_cam_snap.right_vector != snapshot.right_vector || old_cam_snap.up_vector != snapshot.up_vector ||

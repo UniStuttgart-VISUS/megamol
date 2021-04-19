@@ -67,7 +67,7 @@ namespace optix_hpg {
                     col += prd.result;
                 }*/
 
-                col += prd.emitted;
+                // col += prd.emitted;
                 col += prd.radiance * prd.beta;
 
                 if (prd.done || prd.depth >= maxBounces)
@@ -78,7 +78,7 @@ namespace optix_hpg {
                 ray.origin = prd.origin;
                 ray.direction = prd.direction;
             }
-            // col += prd.emitted;
+            col += prd.emitted;
             return glm::vec4(col.x, col.y, col.z, 1.0f);
             // return glm::vec4(prd.radiance, 1.0f);
         }
@@ -139,6 +139,7 @@ namespace optix_hpg {
                 prd.countEmitted = true;
                 prd.emitted = glm::vec3(0.f);
 
+                prd.intensity = fs->intensity;
 
                 // Random rnd(pixelIdx, 0);
 
