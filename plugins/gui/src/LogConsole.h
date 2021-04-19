@@ -58,7 +58,7 @@ namespace gui {
 
         bool Draw(WindowCollection::WindowConfiguration& wc);
 
-        void PopUp(void);
+        void PopUps(void);
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -72,10 +72,13 @@ namespace gui {
         unsigned int scroll_up;
         float last_window_height;
 
-        bool screenshot_note_disable;
-        bool screenshot_note_show;
-        std::string screenshot_note;
-
+        struct LogPopUp {
+            std::string log_tag;
+            bool disable;
+            bool show;
+            std::string note;
+        };
+        std::vector<LogPopUp> log_popups;
 
         // Widgets
         HoverToolTip tooltip;

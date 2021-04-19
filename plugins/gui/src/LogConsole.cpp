@@ -62,14 +62,21 @@ megamol::gui::LogConsole::LogConsole()
         , scroll_down(2)
         , scroll_up(0)
         , last_window_height(0.0f)
-        , screenshot_note_disable(false)
-        , screenshot_note_show(false)
-        , screenshot_note()
+        , log_popups()
         , tooltip() {
 
+    // Register log popups
+    LogPopUp screenshot_privacy_note_popup;
+    screenshot_privacy_note_popup.log_tag = "[Screenshot]";
+    screenshot_privacy_note_popup.disable = false;
+    screenshot_privacy_note_popup.show = false;
+    screenshot_privacy_note_popup.note = "";
+
+    log_popups.push_back(screenshot_privacy_note_popup);
+
+    // Create log stream target
     this->echo_log_target = std::make_shared<megamol::core::utility::log::StreamTarget>(
         this->echo_log_stream, megamol::core::utility::log::Log::LEVEL_ALL);
-
     this->connect_log();
 }
 
@@ -104,11 +111,13 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                 }
             }
 
-            // Check for screenshot privacy note
-            auto note_pos = entry.message.find("[Screenshot]");
-            if (note_pos != std::string::npos) {
-                this->screenshot_note_show = true;
-                this->screenshot_note = entry.message;
+            // Check for log notes
+            for (auto& log_popup : log_popups) {
+                auto note_pos = entry.message.find(log_popup.log_tag);
+                if (note_pos != std::string::npos) {
+                    log_popup.show = true;
+                    log_popup.note = entry.message.substr(note_pos + log_popup.log_tag.length());
+                }
             }
         }
     }
@@ -208,12 +217,14 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
 }
 
 
-void megamol::gui::LogConsole::PopUp() {
-    // Show screenshot privacy note pop-up
-    bool confirmed;
-    PopUps::Minimal("LogConsole", (!this->screenshot_note_disable && this->screenshot_note_show), this->screenshot_note,
-                    "Ok", confirmed, "Ok, disable further notification.", this->screenshot_note_disable);
-    this->screenshot_note_show = false;
+void megamol::gui::LogConsole::PopUps() {
+
+    for (auto& log_popup : log_popups) {
+        bool confirmed;
+        PopUps::Minimal("LogConsole - " + log_popup.log_tag, (!log_popup.disable && log_popup.show),
+                        log_popup.note, "Ok", confirmed, "Ok, disable further notification.", log_popup.disable);
+        log_popup.show = false;
+    }
 }
 
 

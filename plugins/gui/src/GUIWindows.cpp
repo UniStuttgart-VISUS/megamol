@@ -2130,7 +2130,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     this->state.open_popup_screenshot = false;
 
     // Screenshot Privacy note
-    this->console.PopUp();
+    this->console.PopUps();
 }
 
 
