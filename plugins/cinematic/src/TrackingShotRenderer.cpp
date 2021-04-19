@@ -175,8 +175,8 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     glm::mat4 mvp = proj * view;
 
     // Get current viewport
-    const float vp_fw = static_cast<float>(fbo->GetWidth());
-    const float vp_fh = static_cast<float>(fbo->GetHeight());
+    const float vp_fw = static_cast<float>(fbo->getWidth());
+    const float vp_fh = static_cast<float>(fbo->getHeight());
 
     // Get matrix for orthogonal projection of 2D rendering
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
@@ -204,10 +204,10 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     }
 
     // Draw 3D ---------------------------------------------------------------
-    this->utils.DrawAll(mvp, viewport);
+    this->utils.DrawAll(mvp, {vp_fw,vp_fh});
 
     // Push hotkey list ------------------------------------------------------
-    this->utils.HotkeyWindow(this->showHelpText, ortho, viewport);
+    this->utils.HotkeyWindow(this->showHelpText, ortho, {vp_fw, vp_fh});
 
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " TRACKING SHOT ";
@@ -216,10 +216,10 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     if (this->showHelpText) {
         rightLabel = " [Shift+h] Hide Hotkeys ";
     }
-    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, viewport);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, {vp_fw, vp_fh});
 
     // Draw 2D ---------------------------------------------------------------
-    this->utils.DrawAll(ortho, viewport);
+    this->utils.DrawAll(ortho, {vp_fw, vp_fh});
 
     return true;
 }

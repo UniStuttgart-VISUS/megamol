@@ -48,7 +48,7 @@ KeyframeManipulators::KeyframeManipulators(void)
     this->state.mvp = glm::mat4();
     this->state.first_ctrl_point = glm::vec3(0.0f, 0.0f, 0.0f);
     this->state.last_ctrl_point = glm::vec3(0.0f, 0.0f, 0.0f);
-    this->state.cam_min_snapshot = camera_state_type();
+    this->state.cam = view::Camera();
     this->state.bbox = vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     this->state.hit.reset();
     this->state.last_mouse = glm::vec2(0.0f, 0.0f);
@@ -172,13 +172,11 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
 
         // Update keyframe position selectors
         this->selectors.resize(keyframe_count);
-        std::array<float, 3> pos;
         for (size_t i = 0; i < keyframe_count; ++i) {
             this->selectors[i].show = true;
             this->selectors[i].variety = Manipulator::Variety::SELECTOR_KEYFRAME_POSITION;
             this->selectors[i].rigging = Manipulator::Rigging::NONE;
-            pos = keyframes->operator[](i).GetCamera().position;
-            this->selectors[i].vector = glm::vec3(pos[0], pos[1], pos[2]);
+            this->selectors[i].vector = keyframes->operator[](i).GetCamera().get<view::Camera::Pose>().position;
             if (keyframes->operator[](i) == this->state.selected_keyframe) {
                 this->state.selected_index = i;
             }
@@ -186,9 +184,7 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
     }
 
     // Update selected keyframe manipulators
-    view::Camera_2 selected_camera(this->state.selected_keyframe.GetCamera());
-    cam_type::snapshot_type snapshot;
-    selected_camera.take_snapshot(snapshot, thecam::snapshot_content::view_vector | thecam::snapshot_content::up_vector);
+    view::Camera selected_camera = this->state.selected_keyframe.GetCamera();
 
     for (auto& m : this->manipulators) {
 
@@ -239,14 +235,13 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
             } break;
             case(Manipulator::Rigging::VECTOR_DIRECTION): {
                 if (m.variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_POSITION_USING_LOOKAT) {
-                    glm::vec4 view = snapshot.view_vector;
-                    m.vector = glm::vec3(view.x, view.y, view.z) * (-1.0f);
+                    glm::vec3 view = selected_camera.get<view::Camera::Pose>().direction;
+                    m.vector = view * (-1.0f);
                 }
             } break;
             case(Manipulator::Rigging::ROTATION): {
                 if (m.variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_UP_VECTOR) {
-                    glm::vec4 up = snapshot.up_vector;
-                    m.vector = glm::vec3(up.x, up.y, up.z);
+                    m.vector = selected_camera.get<view::Camera::Pose>().up;
                 }
             } break;
             default: break;
@@ -397,15 +392,13 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
 
     auto selected_camera = this->state.selected_keyframe.GetCamera();
     auto selected_camera_pose = selected_camera.get<core::view::Camera::Pose>();
-    glm::vec3 camera_position = selected_camera_pose.up;
+    glm::vec3 camera_position = selected_camera_pose.position;
 
     if (this->state.hit->variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_LOOKAT_VECTOR) {
         // Handle position of look at manipulator
-        glm::vec3 up = selected_camera_pose.up;
-
         glm::vec3 new_view = (manipulator_origin - camera_position) + diff_world_vector;
-        glm::quat new_orientation = view::quaternion_from_vectors(new_view, up);
-        selected_camera.orientation(new_orientation);
+        selected_camera_pose.direction = new_view;
+
         this->state.lookat_length = glm::length(new_view);
     }
     else if (this->state.hit->variety == Manipulator::Variety::MANIPULATOR_FIRST_CTRLPOINT_POSITION) {
@@ -419,12 +412,8 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
     else if ((this->state.hit->variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_UP_VECTOR) &&
             (this->state.hit->rigging == Manipulator::Rigging::ROTATION)) {
         // Handle rotation of up vector
-        cam_type::snapshot_type snapshot;
-        selected_camera.take_snapshot(snapshot, megamol::core::thecam::snapshot_content::all);
-        glm::vec4 snap_view = snapshot.view_vector;
-        glm::vec4 snap_right = snapshot.right_vector;
-        glm::vec3 view = static_cast<glm::vec3>(snap_view);
-        glm::vec3 right = static_cast<glm::vec3>(snap_right);
+        glm::vec3 view = selected_camera_pose.direction;
+        glm::vec3 right = glm::cross(selected_camera_pose.direction, selected_camera_pose.up);
 
         // Using right vector as delta vector for manipulating up vector rotating around view vector
         glm::vec3 right_position = manipulator_origin + glm::normalize(right) * world_length;
@@ -437,20 +426,18 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
         diff_world_vector = right * diff_world_length;
 
         glm::vec3 new_up = world_vector + diff_world_vector;
-        glm::quat new_orientation = view::quaternion_from_vectors(view, new_up);
-        selected_camera.orientation(new_orientation);
+        selected_camera_pose.up = new_up;
 
         this->state.hit->vector = glm::normalize(new_up);
     }
     else {
-        glm::vec4 new_camera_position = camera_position + glm::vec4(diff_world_vector.x, diff_world_vector.y, diff_world_vector.z, 1.0f);
-        selected_camera.position(new_camera_position);
+        glm::vec3 new_camera_position = camera_position + glm::vec3(diff_world_vector.x, diff_world_vector.y, diff_world_vector.z);
+        selected_camera_pose.position = new_camera_position;
     }
 
     // Apply changed camera state to selected keyframe
-    cam_type::minimal_state_type new_camera_state;
-    selected_camera.get_minimal_state(new_camera_state);
-    this->state.selected_keyframe.SetCameraState(new_camera_state);
+    selected_camera.setPose(selected_camera_pose);
+    this->state.selected_keyframe.SetCameraState(selected_camera);
 
     this->state.last_mouse = current_mouse;
 
@@ -472,26 +459,20 @@ glm::vec3 KeyframeManipulators::getManipulatorOrigin(Manipulator& manipulator) {
             position = this->state.last_ctrl_point;
         } break;
         case(Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_POSITION): {
-            auto pos = this->state.selected_keyframe.GetCamera().position;
-            position = glm::vec3(pos[0], pos[1], pos[2]);
+            position = this->state.selected_keyframe.GetCamera().get<view::Camera::Pose>().position;
         } break;
         case(Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_POSITION_USING_LOOKAT): {
-            auto pos = this->state.selected_keyframe.GetCamera().position;
-            position = glm::vec3(pos[0], pos[1], pos[2]);
+            position = this->state.selected_keyframe.GetCamera().get<view::Camera::Pose>().position;
         } break;
         case(Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_LOOKAT_VECTOR): {
-            auto pos = this->state.selected_keyframe.GetCamera().position;
-            position = glm::vec3(pos[0], pos[1], pos[2]);
-            view::Camera_2 cam(this->state.selected_keyframe.GetCamera());
-            cam_type::snapshot_type snapshot;
-            cam.take_snapshot(snapshot, megamol::core::thecam::snapshot_content::view_vector);
-            glm::vec4 snap_view = snapshot.view_vector;
+            position = this->state.selected_keyframe.GetCamera().get<view::Camera::Pose>().position;
+            view::Camera cam(this->state.selected_keyframe.GetCamera());
+            glm::vec3 snap_view = cam.get<view::Camera::Pose>().direction;
             snap_view = glm::normalize(snap_view);
             position = position + glm::vec3(snap_view.x, snap_view.y, snap_view.z) * this->state.lookat_length;
         } break;
         case(Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_UP_VECTOR): {
-            auto pos = this->state.selected_keyframe.GetCamera().position;
-            position = glm::vec3(pos[0], pos[1], pos[2]);
+            position = this->state.selected_keyframe.GetCamera().get<view::Camera::Pose>().position;
         } break;
         default: break;
     }

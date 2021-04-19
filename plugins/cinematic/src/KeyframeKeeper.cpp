@@ -416,9 +416,11 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             Keyframe tmp_kf = this->selectedKeyframe;
             glm::vec3 pos_v = view::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
             std::array<float, 3> pos = { pos_v.x, pos_v.y, pos_v.z };
-            auto cam_state = this->selectedKeyframe.GetCamera();
-            cam_state.position = pos;
-            this->selectedKeyframe.SetCameraState(cam_state);
+            auto cam = this->selectedKeyframe.GetCamera();
+            auto cam_pose = cam.get<view::Camera::Pose>();
+            cam_pose.position = glm::vec3(pos[0], pos[1], pos[2]);
+            cam.setPose(cam_pose);
+            this->selectedKeyframe.SetCameraState(cam);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
             this->refreshInterpolCamPos(this->interpolSteps);
         }
@@ -863,12 +865,12 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 
             for (unsigned int j = 0; j < s; j++) {
                 kf = this->interpolateKeyframe(startTime + deltaTimeStep*(float)j);
-                auto p = kf.GetCamera().position;
+                auto p = kf.GetCamera().get<view::Camera::Pose>().position;
                 this->interpolCamPos.emplace_back(glm::vec3(p[0], p[1], p[2]));
             }
         }
         // Add last existing camera position
-        auto p = this->keyframes.back().GetCamera().position;
+        auto p = this->keyframes.back().GetCamera().get<view::Camera::Pose>().position;
         this->interpolCamPos.emplace_back(glm::vec3(p[0], p[1], p[2]));
     }
 }

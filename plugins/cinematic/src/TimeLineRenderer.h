@@ -9,7 +9,7 @@
 #define MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
@@ -44,7 +44,7 @@ namespace cinematic {
 	/**
 	* Timeline rendering.
 	*/
-	class TimeLineRenderer : public core::view::Renderer2DModule {
+	class TimeLineRenderer : public core::view::Renderer2DModuleGL {
 	public:
 
         std::vector<std::string> requested_lifetime_resources() {
