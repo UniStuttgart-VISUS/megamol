@@ -77,7 +77,7 @@ bool megamol::gui::PopUps::Minimal(const std::string& label_id, bool open_popup,
 
     ImGui::PushID(label_id.c_str());
 
-    if (open_popup) {
+    if (open_popup && !ImGui::IsPopupOpen(label_id.c_str())) {
         ImGui::OpenPopup(label_id.c_str());
         float max_width = std::max(ImGui::CalcTextSize(label_id.c_str()).x, ImGui::CalcTextSize(info_text.c_str()).x);
         max_width += (style.ItemSpacing.x * 2.0f);

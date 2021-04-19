@@ -106,11 +106,12 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
     png_destroy_write_struct(&pngPtr, &pngInfoPtr);
 
     if (runtime_config_ptr->screenshot_show_privacy_note) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[Screenshot] <<<< PRIVACY NOTE >>>>> \n"
+        // XXX [Screenshot] is the required tag to enable gui popup of this log message (see gui::LogConsole.cpp CTOR)
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[Screenshot]<<<< PRIVACY NOTE >>>>> \n"
                                                                "Please note that the complete MegaMol project is also stored in the header of the screenshot image file. \n"
                                                                "Before giving away the screenshot, clear privacy relevant information (e.g. username in file paths) in project file before taking screenshot. \n"
                                                                "Permanently turn off privacy notification for screenshots in megamol_config.lua: mmSetCliOption(\"privacynote\", \"off\") \n"
-                                                               );
+                                                               "<<<< PRIVACY NOTE >>>>>");
     }
     return true;
 }

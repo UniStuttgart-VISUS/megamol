@@ -71,8 +71,14 @@ megamol::gui::LogConsole::LogConsole()
     screenshot_privacy_note_popup.disable = false;
     screenshot_privacy_note_popup.show = false;
     screenshot_privacy_note_popup.note = "";
-
     log_popups.push_back(screenshot_privacy_note_popup);
+
+    LogPopUp module_params_missing_file_popup;
+    module_params_missing_file_popup.log_tag = "[File]";
+    module_params_missing_file_popup.disable = false;
+    module_params_missing_file_popup.show = false;
+    module_params_missing_file_popup.note = "";
+    log_popups.push_back(module_params_missing_file_popup);
 
     // Create log stream target
     this->echo_log_target = std::make_shared<megamol::core::utility::log::StreamTarget>(
@@ -116,7 +122,8 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                 auto note_pos = entry.message.find(log_popup.log_tag);
                 if (note_pos != std::string::npos) {
                     log_popup.show = true;
-                    log_popup.note = entry.message.substr(note_pos + log_popup.log_tag.length());
+                    // Append messages
+                    log_popup.note += entry.message.substr(note_pos + log_popup.log_tag.length());
                 }
             }
         }
@@ -220,7 +227,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
 void megamol::gui::LogConsole::PopUps() {
 
     for (auto& log_popup : log_popups) {
-        bool confirmed;
+        bool confirmed = false;
         PopUps::Minimal("LogConsole - " + log_popup.log_tag, (!log_popup.disable && log_popup.show),
                         log_popup.note, "Ok", confirmed, "Ok, disable further notification.", log_popup.disable);
         log_popup.show = false;

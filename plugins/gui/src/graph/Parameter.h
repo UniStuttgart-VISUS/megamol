@@ -281,6 +281,12 @@ namespace gui {
                             }
                             this->tf_string_hash = std::hash<std::string>()(val);
                         }
+                    } else if (this->type == ParamType_t::FILEPATH) {
+                        // XXX [Screenshot] is the required tag to enable gui popup of this log message (see gui::LogConsole.cpp CTOR)
+                        auto file = std::get<std::string>(this->value);
+                        if (!megamol::core::utility::FileUtils::FileExists(file)) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[File] Parameter '%s' - File not found: '%s' \n", this->full_name.c_str(), file.c_str());
+                        }
                     }
                 }
 
