@@ -7,6 +7,7 @@
 
 
 #include "ImageWrapper_to_GLTexture.hpp"
+#include "ImageWrapper_to_ByteArray.hpp"
 
 #include "glad/glad.h"
 #include <tuple>
@@ -171,5 +172,41 @@ void gl_texture::clear() {
     this->image_wrapper_ptr = nullptr;
     this->texture_reference = 0;
     this->texture           = 0;
+}
+
+
+byte_texture::byte_texture(ImageWrapper const& image)
+{
+    this->from_image(image);
+}
+
+byte_texture& byte_texture::operator=(ImageWrapper const& image)
+{
+    this->from_image(image);
+
+    return *this;
+}
+
+std::vector<byte> const& byte_texture::as_byte_vector()
+{
+    return *this->texture_ptr;
+}
+
+void byte_texture::from_image(ImageWrapper const& image)
+{
+    this->image_wrapper_ptr = const_cast<ImageWrapper*>(&image);
+
+    switch (image.type) {
+    case WrappedImageType::ByteArray:
+        this->texture_owned = false;
+        this->texture_ptr = to_vector(image.referenced_image_handle);
+        break;
+    case WrappedImageType::GLTexureHandle:
+        this->texture_owned = true;
+        auto gl_texture = to_uint(image.referenced_image_handle);
+        gl_download_texture_to_vector(gl_texture, image.size, image.channels, this->texture);
+        this->texture_ptr = &this->texture;
+        break;
+    }
 }
 
