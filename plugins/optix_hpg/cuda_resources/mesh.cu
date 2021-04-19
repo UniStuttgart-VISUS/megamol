@@ -76,58 +76,8 @@ namespace optix_hpg {
 
             glm::vec3 geo_col = glm::vec3(1.f, 1.f, 0.f);
 
-            if (prd.countEmitted)
-                prd.emitted = geo_col * 0.2f;
-            // prd.emitted = N;
-            /*else
-                prd.emitted = glm::vec3(0.0f);*/
-
-
-            unsigned int seed = prd.seed;
-
-            {
-                const float z1 = rnd(seed);
-                const float z2 = rnd(seed);
-
-                glm::vec3 w_in;
-                w_in = CosineSampleHemisphere(glm::vec2(z1, z2));
-                Onb onb(ffN);
-                onb.inverse_transform(w_in);
-                prd.direction = w_in;
-                prd.origin = P + 0.0001f * w_in;
-
-                prd.beta *= geo_col;
-                prd.countEmitted = false;
-            }
-
-            /*const float z1 = rnd(seed);
-            const float z2 = rnd(seed);*/
-
-
-            // Calculate properties of light sample (for area based pdf)
-            const float Ldist = length(prd.lpos - P);
-            const glm::vec3 L = normalize(prd.lpos - P);
-            const float nDl = dot(ffN, L);
-            const float LnDl = -dot(prd.ldir, L);
-
-            float weight = 0.0f;
-            if (nDl > 0.0f /* && LnDl > 0.0f*/) {
-                // const bool occluded = traceOcclusion(params.handle, P, L,
-                //    0.01f,        // tmin
-                //    Ldist - 0.01f // tmax
-                //);
-                float3 Pn = make_float3(P.x, P.y, P.z);
-                float3 Ln = make_float3(L.x, L.y, L.z);
-                unsigned int occluded = 0;
-                optixTrace(prd.world, Pn, Ln, 0.01f, Ldist - 0.01f, 0.0f, (OptixVisibilityMask) -1,
-                    OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT, 1, 2, 1, occluded);
-
-                if (!occluded) {
-                    weight = nDl /* LnDl*/ / (MMO_PI * Ldist * Ldist);
-                }
-            }
-
-            prd.radiance += glm::vec3(prd.intensity) * weight;
+            set_depth(prd, ray.tmax);
+            lighting(prd, geo_col, P, ffN);
         }
 
         MM_OPTIX_CLOSESTHIT_KERNEL(mesh_closesthit_occlusion)() {

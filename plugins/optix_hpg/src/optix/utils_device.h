@@ -7,6 +7,9 @@
 
 #include "glm/glm.hpp"
 
+#include "perraydata.h"
+#include "random.h"
+
 #ifndef __CUDACC__
 #error "CUDA device-only include"
 #endif
@@ -203,7 +206,109 @@ namespace optix_hpg {
             return cosTheta * MMO_INV_PI;
         }
 
-        
+
+        // megamol
+
+
+        inline __device__ void set_depth(PerRayData& prd, float depth) {
+            if (prd.countDepth) {
+                prd.ray_depth = depth;
+                prd.countDepth = false;
+            }
+        }
+
+        // OptiX SDK
+        // Path tracer example
+
+        //
+        // Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
+        //
+        // Redistribution and use in source and binary forms, with or without
+        // modification, are permitted provided that the following conditions
+        // are met:
+        //  * Redistributions of source code must retain the above copyright
+        //    notice, this list of conditions and the following disclaimer.
+        //  * Redistributions in binary form must reproduce the above copyright
+        //    notice, this list of conditions and the following disclaimer in the
+        //    documentation and/or other materials provided with the distribution.
+        //  * Neither the name of NVIDIA CORPORATION nor the names of its
+        //    contributors may be used to endorse or promote products derived
+        //    from this software without specific prior written permission.
+        //
+        // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
+        // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+        // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+        // PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+        // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+        // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+        // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+        // PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+        // OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+        // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+        // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+        //
+
+        //
+        // Modified 2021 MegaMol Dev Team
+        //
+
+        inline __device__ void lighting(
+            PerRayData& prd, glm::vec3 const& geo_col, glm::vec3 const& P, glm::vec3 const& ffN) {
+            if (prd.countEmitted)
+                prd.emitted = geo_col * 0.2f;
+            // prd.emitted = N;
+            /*else
+                prd.emitted = glm::vec3(0.0f);*/
+
+
+            unsigned int seed = prd.seed;
+
+            {
+                const float z1 = rnd(seed);
+                const float z2 = rnd(seed);
+
+                glm::vec3 w_in;
+                w_in = CosineSampleHemisphere(glm::vec2(z1, z2));
+                Onb onb(ffN);
+                onb.inverse_transform(w_in);
+                prd.direction = w_in;
+                prd.origin = P + 0.0001f * w_in;
+
+                prd.beta *= geo_col;
+                prd.countEmitted = false;
+            }
+
+            /*const float z1 = rnd(seed);
+            const float z2 = rnd(seed);*/
+
+
+            // Calculate properties of light sample (for area based pdf)
+            const float Ldist = length(prd.lpos - P);
+            const glm::vec3 L = normalize(prd.lpos - P);
+            const float nDl = dot(ffN, L);
+            const float LnDl = -dot(prd.ldir, L);
+
+            float weight = 0.0f;
+            if (nDl > 0.0f /* && LnDl > 0.0f*/) {
+                // const bool occluded = traceOcclusion(params.handle, P, L,
+                //    0.01f,        // tmin
+                //    Ldist - 0.01f // tmax
+                //);
+                float3 Pn = make_float3(P.x, P.y, P.z);
+                float3 Ln = make_float3(L.x, L.y, L.z);
+                unsigned int occluded = 0;
+                optixTrace(prd.world, Pn, Ln, 0.01f, Ldist - 0.01f, 0.0f, (OptixVisibilityMask) -1,
+                    OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT, 1, 2, 1, occluded);
+
+                if (!occluded) {
+                    weight = nDl /* LnDl*/ / (MMO_PI * Ldist * Ldist);
+                }
+            }
+
+            prd.radiance += glm::vec3(prd.intensity) * weight;
+        }
+
+
     } // namespace device
 } // namespace optix_hpg
 } // namespace megamol
