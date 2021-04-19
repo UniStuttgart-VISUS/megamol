@@ -20,6 +20,7 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "mmcore/profiler/Connection.h"
+#include "mmcore/AbstractCallSlotPresentation.h"
 
 
 namespace megamol {
@@ -32,7 +33,7 @@ namespace core {
     /**
      * A slot connection a Call to member pointers of a module.
      */
-    class MEGAMOLCORE_API CalleeSlot : public AbstractSlot {
+    class MEGAMOLCORE_API CalleeSlot : public AbstractSlot, public AbstractCallSlotPresentation {
     public:
 
         /**

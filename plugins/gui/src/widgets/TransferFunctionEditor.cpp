@@ -273,7 +273,7 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
     this->connected_parameter_ptr = nullptr;
     this->connected_parameter_name = "";
     if (param_ptr != nullptr) {
-        if (param_ptr->Type() == Param_t::TRANSFERFUNCTION) {
+        if (param_ptr->Type() == ParamType_t::TRANSFERFUNCTION) {
             if (this->connected_parameter_ptr != param_ptr) {
                 this->connected_parameter_ptr = param_ptr;
                 this->connected_parameter_name = param_full_name;
@@ -567,7 +567,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 if (this->connected_parameter_ptr != nullptr) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
-                        if (this->connected_parameter_ptr->Type() == Param_t::TRANSFERFUNCTION) {
+                        if (this->connected_parameter_ptr->Type() == ParamType_t::TRANSFERFUNCTION) {
                             this->connected_parameter_ptr->SetValue(tf);
                             this->connected_parameter_ptr->TransferFunctionEditor_SetHash(
                                 this->connected_parameter_ptr->GetTransferFunctionHash());
@@ -835,7 +835,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
             // Draw node point
             drawList->AddCircle(point, pointAndBorderRadius, pointBorderColor, circle_subdiv, point_border_width);
-            drawList->AddCircleFilled(point, point_radius, pointColor, 12);
+            drawList->AddCircleFilled(point, point_radius, pointColor);
         }
     }
     drawList->PopClipRect();

@@ -197,18 +197,17 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
             }
 
             // Check for screenshot privacy note
-            auto note_pos = entry.message.find("<<<< PRIVACY NOTE >>>>>");
+            auto note_pos = entry.message.find("[Screenshot]");
             if (note_pos != std::string::npos) {
                 this->screenshot_note_show = true;
-                this->screenshot_note = entry.message.substr(note_pos);
+                this->screenshot_note = entry.message;
             }
         }
     }
     this->log_msg_count = new_log_msg_count;
 
-
     // Show screenshot privacy note pop-up
-    PopUps::Minimal("Screenshot", this->screenshot_note_show, this->screenshot_note, "Ok");
+    PopUps::Minimal("LogConsole", this->screenshot_note_show, this->screenshot_note, "Ok");
     this->screenshot_note_show = false;
 }
 

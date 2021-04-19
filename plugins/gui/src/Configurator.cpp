@@ -41,13 +41,14 @@ megamol::gui::Configurator::Configurator()
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
         false};
 
-    this->graph_state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
+    this->graph_state.graph_zoom_font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.graph_width = 0.0f;
     this->graph_state.show_parameter_sidebar = false;
     this->graph_state.graph_selected_uid = GUI_INVALID_ID;
     this->graph_state.graph_delete = false;
     this->graph_state.configurator_graph_save = false;
     this->graph_state.global_graph_save = false;
+    this->graph_state.new_running_graph_uid = GUI_INVALID_ID;
 }
 
 
@@ -79,11 +80,11 @@ bool megamol::gui::Configurator::Draw(WindowCollection::WindowConfiguration& wc)
     if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].is_pressed &&
         (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
 
-        bool graph_has_core_interface = false;
+        bool is_running_graph = false;
         if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-            graph_has_core_interface = graph_ptr->HasCoreInterface();
+            is_running_graph = graph_ptr->IsRunning();
         }
-        if (graph_has_core_interface) {
+        if (is_running_graph) {
             this->graph_state.global_graph_save = true;
         } else {
             this->graph_state.configurator_graph_save = true;
@@ -159,11 +160,11 @@ void megamol::gui::Configurator::draw_window_menu(void) {
             if (ImGui::MenuItem("Save Project",
                     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str(),
                     false, ((this->graph_state.graph_selected_uid != GUI_INVALID_ID)))) {
-                bool graph_has_core_interface = false;
+                bool is_running_graph = false;
                 if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-                    graph_has_core_interface = graph_ptr->HasCoreInterface();
+                    is_running_graph = graph_ptr->IsRunning();
                 }
-                if (graph_has_core_interface) {
+                if (is_running_graph) {
                     this->graph_state.global_graph_save = true;
                 } else {
                     this->graph_state.configurator_graph_save = true;
@@ -381,7 +382,7 @@ bool megamol::gui::Configurator::StateToJSON(nlohmann::json& inout_json) {
         // Write graph states
         for (auto& graph_ptr : this->GetGraphCollection().GetGraphs()) {
             // For graphs with no interface to core save only file name of loaded project
-            if (graph_ptr->HasCoreInterface()) {
+            if (graph_ptr->IsRunning()) {
                 graph_ptr->StateToJSON(inout_json);
             } else {
                 std::string filename = graph_ptr->GetFilename();
@@ -430,7 +431,7 @@ bool megamol::gui::Configurator::StateFromJSON(const nlohmann::json& in_json) {
 
         // Read graph states
         for (auto& graph_ptr : this->GetGraphCollection().GetGraphs()) {
-            if (graph_ptr->HasCoreInterface()) {
+            if (graph_ptr->IsRunning()) {
                 if (graph_ptr->StateFromJSON(in_json)) {
                     // Disable layouting if graph state was found
                     graph_ptr->SetLayoutGraph(false);

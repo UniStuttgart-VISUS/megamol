@@ -449,8 +449,9 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                 state.interact.button_hovered_uid = this->uid;
             }
 
-            // Context menu
             ImGui::PushFont(state.canvas.gui_font_ptr);
+
+            // Context menu
             bool popup_rename = false;
             if (ImGui::BeginPopupContextItem("invisible_button_context")) { /// this->allow_context &&
 
@@ -479,7 +480,6 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                 }
                 ImGui::EndPopup();
             } /// else { this->allow_context = false; }
-            ImGui::PopFont();
 
             // Rename pop-up
             if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
@@ -503,6 +503,9 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                     this->UpdatePositionSize(state.canvas);
                 }
             }
+
+            ImGui::PopFont();
+
         } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
             bool active = (state.interact.button_active_uid == this->uid);
@@ -556,7 +559,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_GROUP_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
             /// COLOR_GROUP_BACKGROUND_HIGHTLIGHT
-            tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
+            tmpcol = style.Colors[ImGuiCol_FrameBgActive];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_GROUP_BACKGROUND_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
             /// COLOR_GROUP_BORDER
@@ -582,7 +585,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             }
             auto header_color = (this->gui_selected) ? (GUI_COLOR_GROUP_HEADER_HIGHLIGHT) : (GUI_COLOR_GROUP_HEADER);
             draw_list->AddRectFilled(group_rect_min, header_rect_max, ImGui::ColorConvertFloat4ToU32(header_color),
-                GUI_RECT_CORNER_RADIUS, (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
+                GUI_RECT_CORNER_RADIUS, (ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight));
             draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name.c_str());
         }
 

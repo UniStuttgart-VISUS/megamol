@@ -16,8 +16,8 @@ using namespace megamol::core;
 /*
  * CallerSlot::CallerSlot
  */
-CallerSlot::CallerSlot(const vislib::StringA& name,
-        const vislib::StringA& desc) : AbstractSlot(name, desc),
+CallerSlot::CallerSlot(const vislib::StringA& name, const vislib::StringA& desc)
+        : AbstractSlot(name, desc), AbstractCallSlotPresentation(), 
         call(NULL), compDesc() {
     // intentionally empty
 }

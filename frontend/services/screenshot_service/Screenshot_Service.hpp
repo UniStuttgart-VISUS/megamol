@@ -15,9 +15,6 @@
 namespace megamol {
 namespace frontend {
 
-// for detailed service API documentation see Template_Service.{hpp,cpp}
-// 
-// 
 class Screenshot_Service final : public AbstractFrontendService {
 public:
 
@@ -65,6 +62,8 @@ private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
+
+    bool show_privacy_message;
 };
 
 } // namespace frontend
