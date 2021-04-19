@@ -21,33 +21,16 @@ namespace view {
     class Camera {
     public:
 
-        enum ProjectionType { PERSPECTIVE, ORTHOGRAPHIC, UNKNOWN };
-
-        class AspectRatio {
-            float _aspect_ratio;
-        public:
-            AspectRatio() : _aspect_ratio(0.0f) {}
-            AspectRatio(float aspect_ratio) : _aspect_ratio(aspect_ratio) {}
-            operator float&() {
-                return _aspect_ratio;
-            }
-            operator float() const {
-                return _aspect_ratio;
-            }
-        };
-
-        //typedef float NearPlane;
-        //typedef float FarPlane;
-
         struct Pose {
             Pose() = default;
-            Pose(Pose const& cpy) : position(cpy.position), direction(cpy.direction), up(cpy.up) {}
-            Pose(glm::vec3 const& position, glm::vec3 const& direction, glm::vec3 const& up)
-                    : position(position), direction(direction), up(up) {}
+            Pose(Pose const& cpy) : position(cpy.position), direction(cpy.direction), up(cpy.up), right(cpy.right) {}
+            Pose(glm::vec3 const& position, glm::vec3 const& direction, glm::vec3 const& up, glm::vec3 const& right)
+                    : position(position), direction(direction), up(up), right(right) {}
             Pose(glm::vec3 const& position, glm::quat const& orientation)
                     : position(position) {
                 direction = glm::rotate(orientation, glm::vec3(0.0, 0.0, -1.0));
                 up = glm::rotate(orientation, glm::vec3(0.0, 1.0, 0.0));
+                right = glm::cross(direction,up);
             }
 
             glm::quat to_quat() const {
@@ -57,6 +40,60 @@ namespace view {
             glm::vec3 position;
             glm::vec3 direction;
             glm::vec3 up;
+            glm::vec3 right; //store additional right vector to avoid inconsistent computation
+        };
+
+        enum ProjectionType { PERSPECTIVE, ORTHOGRAPHIC, UNKNOWN };
+
+        class AspectRatio {
+            float _aspect_ratio;
+
+        public:
+            AspectRatio() : _aspect_ratio(0.0f) {}
+            AspectRatio(float aspect_ratio) : _aspect_ratio(aspect_ratio) {}
+            float value() const {
+                return _aspect_ratio;
+            }
+            operator float&() {
+                return _aspect_ratio;
+            }
+            operator float() const {
+                return _aspect_ratio;
+            }
+        };
+
+        class NearPlane {
+            float _near_plane_distance; // double?
+
+        public:
+            NearPlane() : _near_plane_distance(0.0f) {}
+            NearPlane(float aspect_ratio) : _near_plane_distance(aspect_ratio) {}
+            float value() const {
+                return _near_plane_distance;
+            }
+            operator float&() {
+                return _near_plane_distance;
+            }
+            operator float() const {
+                return _near_plane_distance;
+            }
+        };
+
+        class FarPlane {
+            float _far_plane_distance; // double?
+
+        public:
+            FarPlane() : _far_plane_distance(0.0f) {}
+            FarPlane(float aspect_ratio) : _far_plane_distance(aspect_ratio) {}
+            float value() const {
+                return _far_plane_distance;
+            }
+            operator float&() {
+                return _far_plane_distance;
+            }
+            operator float() const {
+                return _far_plane_distance;
+            }
         };
 
         // Use image plane tile defintion to shift the image plane
@@ -73,8 +110,8 @@ namespace view {
         struct PerspectiveParameters {
             float fovy; //< vertical field of view
             AspectRatio aspect; //< aspect ratio of the camera frustrum
-            float near_plane; //< near clipping plane
-            float far_plane; //< far clipping plane
+            NearPlane near_plane; //< near clipping plane
+            FarPlane far_plane; //< far clipping plane
 
             ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
         };
@@ -82,8 +119,8 @@ namespace view {
         struct OrthographicParameters {
             float frustrum_height; //< vertical size of the orthographic frustrum in world space
             AspectRatio aspect;    //< aspect ratio of the camera frustrum
-            float near_plane; //< near clipping plane
-            float far_plane;  //< far clipping plane
+            NearPlane near_plane; //< near clipping plane
+            FarPlane far_plane;  //< far clipping plane
 
             ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
         };
@@ -216,7 +253,7 @@ namespace view {
         const auto local_frustum_right_top   = center_and_map(right_top_tile);
 
         _projection_matrix =
-            glm::frustum(
+            glm::frustum<float>(
                 local_frustum_left_bottom.x, // left
                 local_frustum_right_top.x,   // right
                 local_frustum_left_bottom.y, // botom
@@ -254,7 +291,7 @@ namespace view {
 
         const glm::vec2 local_frustum_left_bottom = normalized_tile_to_frustum(tile_start);
         const glm::vec2 local_frustum_right_top   = normalized_tile_to_frustum(tile_end);
-        _projection_matrix = glm::ortho(
+        _projection_matrix = glm::ortho<float>(
             local_frustum_left_bottom.x, // left
             local_frustum_right_top.x,   // right
             local_frustum_left_bottom.y, // bottom
