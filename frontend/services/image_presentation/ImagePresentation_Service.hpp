@@ -80,7 +80,7 @@ private:
         std::vector<megamol::frontend::FrontendResource> entry_point_resources;
 
         EntryPointExecutionCallback execute;
-        std::reference_wrapper<ImageWrapper> execution_result_image;
+        ImageWrapper execution_result_image;
     };
     std::list<GraphEntryPoint> m_entry_points;
 
@@ -88,8 +88,6 @@ private:
     bool remove_entry_point(std::string name);
     bool rename_entry_point(std::string oldName, std::string newName);
     bool clear_entry_points();
-
-    std::list<ImageWrapper> m_wrapped_images;
 
     std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
     const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;

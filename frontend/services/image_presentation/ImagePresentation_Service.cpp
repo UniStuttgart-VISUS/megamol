@@ -108,7 +108,7 @@ void ImagePresentation_Service::postGraphRender() {
 
 void ImagePresentation_Service::RenderNextFrame() {
     for (auto& entry : m_entry_points) {
-        entry.execute(entry.modulePtr, entry.entry_point_resources, entry.execution_result_image.get());
+        entry.execute(entry.modulePtr, entry.entry_point_resources, entry.execution_result_image);
     }
 }
 
@@ -167,9 +167,6 @@ std::vector<FrontendResource> ImagePresentation_Service::map_resources(std::vect
 }
 
 bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
-    m_wrapped_images.push_back({name});
-    auto& image = m_wrapped_images.back();
-
     auto [execute_etry, init_entry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
 
     auto resource_requests = entry_resource_requests();
@@ -185,7 +182,7 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
         module_raw_ptr,
         resources,
         execute_etry,
-        image
+        {name} // image
         });
 
     auto& entry_point = m_entry_points.back();
