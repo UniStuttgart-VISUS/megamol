@@ -104,7 +104,7 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                 }
             }
 
-            // Check for log message pop-ups
+            // Check for tags indicating log message pop-up
             auto start_tag_pos = entry.message.find(LOGMESSAGE_GUI_POPUP_START_TAG);
             auto end_tag_pos   = entry.message.find(LOGMESSAGE_GUI_POPUP_END_TAG, start_tag_pos);
             if ((start_tag_pos != std::string::npos) && (end_tag_pos != std::string::npos)) {
@@ -145,7 +145,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
         this->scroll_down = 2;
     }
 
-    // Menu
+    // Menu -------------------------------------------------------------------
     if (ImGui::BeginMenuBar()) {
 
         // Force Open on Warnings and Errors
@@ -201,7 +201,6 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
 
         ImGui::EndMenuBar();
     }
-
     // Scroll - Requires 2 frames for being applied!
     if (this->scroll_down > 0) {
         ImGui::SetScrollY(ImGui::GetScrollMaxY());
@@ -212,7 +211,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
         this->scroll_up--;
     }
 
-    // Print messages
+    // Print messages ---------------------------------------------------------
     for (auto& entry : this->echo_log_buffer.log()) {
         this->print_message(entry, wc.log_level);
     }
@@ -266,19 +265,10 @@ void megamol::gui::LogConsole::draw_popup(LogPopUpData& log_popup) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle &style = ImGui::GetStyle();
 
-    std::string popup_title = this->window_title + " - " + log_popup.title;
+    std::string popup_title = this->window_title + " -  [" + log_popup.title + "]";
 
     if ((!log_popup.disable && log_popup.show) && !ImGui::IsPopupOpen(popup_title.c_str())) {
         ImGui::OpenPopup(popup_title.c_str());
-
-        /*
-        float max_width = ImGui::CalcTextSize(popup_title.c_str()).x;
-        for (auto entry : log_popup.entries) {
-            max_width = std::max(max_width, ImGui::CalcTextSize(entry.message.c_str()).x);
-        }
-        max_width += (style.ItemSpacing.x * 4.0f);
-        ImGui::SetNextWindowSize(ImVec2(max_width, 0.0f));
-        */
     }
 
     if (ImGui::BeginPopupModal(popup_title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar)) {
@@ -288,7 +278,6 @@ void megamol::gui::LogConsole::draw_popup(LogPopUpData& log_popup) {
             ImGui::Separator();
         }
 
-        ImGui::Spacing();
         if (ImGui::Button("Ok")) {
             ImGui::CloseCurrentPopup();
         }
@@ -300,7 +289,6 @@ void megamol::gui::LogConsole::draw_popup(LogPopUpData& log_popup) {
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
             ImGui::CloseCurrentPopup();
         }
-
         ImGui::EndPopup();
     }
 

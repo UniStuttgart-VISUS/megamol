@@ -297,7 +297,7 @@ namespace gui {
                             this->tf_string_hash = std::hash<std::string>()(val);
                         }
                     } else if (this->type == ParamType_t::FILEPATH) {
-                        // Push log message to GUI pop-up
+                        // Push log message to GUI pop-up for not existing files
                         auto file = std::get<std::string>(this->value);
                         if (!megamol::core::utility::FileUtils::FileExists(file)) {
                             megamol::core::utility::log::Log::DefaultLog.WriteWarn("%sFile Parameter%sFile not found: '%s' > Parameter '%s'\n\n",
