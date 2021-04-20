@@ -1,7 +1,7 @@
 /*
  * MoleculeSESRenderer.cpp
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2009-2021 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
@@ -39,15 +39,10 @@ using namespace megamol::protein;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;
 
-#pragma push_macro("min")
-#undef min
-#pragma push_macro("max")
-#undef max
-
 /*
  * MoleculeSESRenderer::MoleculeSESRenderer
  */
-MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
+MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleGL (),
         molDataCallerSlot ( "getData", "Connects the protein SES rendering with protein data storage" ),
         bsDataCallerSlot ("getBindingSites", "Connects the molecule rendering with binding site data storage"),
         postprocessingParam( "postProcessingMode", "Enable Postprocessing Mode: "),
@@ -835,35 +830,6 @@ bool MoleculeSESRenderer::GetExtents(Call& call) {
     cr3d->AccessBoundingBoxes().MakeScaledWorld( scale);
     cr3d->SetTimeFramesCount( mol->FrameCount());
 
-    /*
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-    protein::CallProteinData *protein = this->molDataCallerSlot.CallAs<protein::CallProteinData>();
-    if (protein == NULL) return false;
-    if (!(*protein)()) return false;
-
-    float scale, xoff, yoff, zoff;
-    vislib::math::Point<float, 3> bbc = protein->BoundingBox().CalcCenter();
-    xoff = -bbc.X();
-    yoff = -bbc.Y();
-    zoff = -bbc.Z();
-    scale = 2.0f / vislib::math::Max(vislib::math::Max(protein->BoundingBox().Width(),
-        protein->BoundingBox().Height()), protein->BoundingBox().Depth());
-
-    BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
-    bbox.SetObjectSpaceBBox(protein->BoundingBox());
-    bbox.SetWorldSpaceBBox(
-        (protein->BoundingBox().Left() + xoff) * scale,
-        (protein->BoundingBox().Bottom() + yoff) * scale,
-        (protein->BoundingBox().Back() + zoff) * scale,
-        (protein->BoundingBox().Right() + xoff) * scale,
-        (protein->BoundingBox().Top() + yoff) * scale,
-        (protein->BoundingBox().Front() + zoff) * scale);
-    bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
-    bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
-    */
-
     return true;
 }
 
@@ -906,43 +872,6 @@ bool MoleculeSESRenderer::Render( Call& call ) {
 
     if( this->currentRendermode == GPU_RAYCASTING ) {
 
-        /*
-        // init the reduced surfaces
-        if( this->reducedSurfaceAllFrames.empty() ) {
-            time_t t = clock();
-            // create the reduced surfaces
-            unsigned int chainIds;
-            this->reducedSurfaceAllFrames.resize( mol->FrameCount());
-            // compute RS for all frames
-            for( unsigned int cntFrames = 0; cntFrames < mol->FrameCount(); ++cntFrames ) {
-                    // execute the call
-                mol->SetFrameID(static_cast<int>( cntFrames));
-                if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
-                // compute RS
-                for( chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds ) {
-                    this->reducedSurfaceAllFrames[cntFrames].push_back(
-                        new ReducedSurface( atoi( this->molIdxList[chainIds]), mol, this->probeRadius) );
-                        }
-            }
-            int framecounter, molcounter;
-
-            for( framecounter = 0; framecounter < this->reducedSurfaceAllFrames.size(); ++framecounter ) {
-                // compute RS
-                for( unsigned int molcounter = 0; molcounter < this->reducedSurfaceAllFrames[framecounter].size(); ++molcounter ) {
-                    this->reducedSurfaceAllFrames[framecounter][molcounter]->ComputeReducedSurfaceMolecule();
-                        }
-            }
-                        std::cout << "RS for all frames computed in: " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
-                }
-        unsigned int currentFrame = static_cast<unsigned int>( callTime);
-        this->reducedSurface.resize( this->reducedSurfaceAllFrames[cntRS].size());
-        for( cntRS = 0; cntRS < this->reducedSurfaceAllFrames[currentFrame].size(); ++cntRS ) {
-            this->reducedSurface[cntRS] = this->reducedSurfaceAllFrames[currentFrame][cntRS];
-        }
-        this->ComputeRaycastingArrays();
-        */
-
-        // ----------------------------------------------------------------------------
 		this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
         
         // init the reduced surfaces
@@ -980,26 +909,6 @@ bool MoleculeSESRenderer::Render( Call& call ) {
                 this->ComputeRaycastingArrays( cntRS);
             }
         }
-        /*
-        // init the reduced surfaces
-        if( this->reducedSurface.empty() ) {
-            time_t t = clock();
-            // create the reduced surface
-            unsigned int chainIds;
-            for( chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds ) {
-                this->reducedSurface.push_back(
-                    new ReducedSurface( atoi( this->molIdxList[chainIds]), mol, this->probeRadius) );
-                this->reducedSurface.back()->ComputeReducedSurfaceMolecule();
-            }
-            std::cout << "RS computed in: " << ( double( clock() - t) / double( CLOCKS_PER_SEC) ) << std::endl;
-        }
-        // update the data / the RS
-        for( cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS ) {
-            if( this->reducedSurface[cntRS]->UpdateData( 1.0f, 5.0f) ) {
-                this->ComputeRaycastingArrays( cntRS);
-            }
-        }
-        */
     }
 
     if( !this->preComputationDone ) {
@@ -1040,21 +949,6 @@ bool MoleculeSESRenderer::Render( Call& call ) {
     // ==================== Scale & Translate ====================
 
     glPushMatrix();
-
-    /*
-        float scale, xoff, yoff, zoff;
-        vislib::math::Point<float, 3> bbc = protein->BoundingBox().CalcCenter();
-
-        xoff = -bbc.X();
-        yoff = -bbc.Y();
-        zoff = -bbc.Z();
-
-        scale = 2.0f / vislib::math::Max ( vislib::math::Max ( protein->BoundingBox().Width(),
-                                           protein->BoundingBox().Height() ), protein->BoundingBox().Depth() );
-
-        glScalef ( scale, scale, scale );
-        glTranslatef ( xoff, yoff, zoff );
-    */
 
     // compute scale factor and scale world
     float scale;
@@ -1877,107 +1771,6 @@ void MoleculeSESRenderer::RenderDebugStuff(
     v2 = v3 = n1 = v1;
 
     //////////////////////////////////////////////////////////////////////////
-    // Render the atom positions as GL_POINTS
-    //////////////////////////////////////////////////////////////////////////
-    /*
-    glDisable( GL_LIGHTING);
-    glEnable( GL_BLEND);
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable( GL_POINT_SIZE);
-    glEnable( GL_POINT_SMOOTH);
-    glPointSize( 5.0f);
-    glBegin( GL_POINTS);
-    glColor3f( 1.0f, 0.0f, 0.0f);
-    if( this->currentRendermode == GPU_SIMPLIFIED )
-        max1 = this->simpleRS.size();
-    else
-        max1 = this->reducedSurface.size();
-    for( unsigned int cntRS = 0; cntRS < max1; ++cntRS)
-    {
-        if( this->currentRendermode == GPU_SIMPLIFIED )
-            max2 = this->simpleRS[cntRS]->GetRSVertexCount();
-        else
-            max2 = this->reducedSurface[cntRS]->GetRSVertexCount();
-        for( unsigned int i = 0; i < max2; ++i )
-        {
-            if( this->currentRendermode == GPU_SIMPLIFIED )
-                v1 = this->simpleRS[cntRS]->GetRSVertex( i)->GetPosition();
-            else
-                v1 = this->reducedSurface[cntRS]->GetRSVertex( i)->GetPosition();
-            glVertex3fv( v1.PeekComponents());
-        }
-    }
-    glEnd(); // GL_POINTS
-    glDisable( GL_POINT_SMOOTH);
-    glDisable( GL_POINT_SIZE);
-    glDisable( GL_BLEND);
-    glEnable( GL_LIGHTING);
-    */
-
-    //////////////////////////////////////////////////////////////////////////
-    // Render the probe positions
-    //////////////////////////////////////////////////////////////////////////
-    /*
-    glDisable( GL_LIGHTING);
-    glEnable( GL_BLEND);
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable( GL_POINT_SIZE);
-    glEnable( GL_POINT_SMOOTH);
-    glPointSize( 5.0f);
-    for( unsigned int i = 0; i < this->rsFace.size(); ++i )
-    {
-        glColor3f( 1.0f, 0.0f, 0.0f);
-        glBegin( GL_POINTS);
-            glVertex3fv( this->rsFace[i]->GetProbeCenter().PeekComponents());
-        glEnd(); // GL_POINTS
-    }
-    glDisable( GL_POINT_SMOOTH);
-    glDisable( GL_POINT_SIZE);
-    glDisable( GL_BLEND);
-    glEnable( GL_LIGHTING);
-    */
-
-    /*
-    //////////////////////////////////////////////////////////////////////////
-    // Render the probes that cut edges
-    //////////////////////////////////////////////////////////////////////////
-    // set viewport
-    float viewportStuff[4] =
-    {
-        this->cameraInfo->TileRect().Left(),
-        this->cameraInfo->TileRect().Bottom(),
-        this->cameraInfo->TileRect().Width(),
-        this->cameraInfo->TileRect().Height()
-    };
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-    // enable sphere shader
-    this->sphereShader.Enable();
-    // set shader variables
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-    glColor3f( 0.8f, 0.8f, 0.8f);
-    unsigned int i, j;
-    glBegin( GL_POINTS);
-    for( i = 0; i < this->rsEdge.size(); ++i )
-    {
-        for( j = 0; j < this->rsEdge[i]->cuttingProbes.size(); ++j )
-        {
-            glVertex4f( this->rsEdge[i]->cuttingProbes[j]->GetProbeCenter().GetX(),
-                this->rsEdge[i]->cuttingProbes[j]->GetProbeCenter().GetY(),
-                this->rsEdge[i]->cuttingProbes[j]->GetProbeCenter().GetZ(),
-                this->probeRadius);
-        }
-    }
-    glEnd(); // GL_POINTS
-    sphereShader.Disable();
-    */
-
-    //////////////////////////////////////////////////////////////////////////
     // Draw reduced surface
     //////////////////////////////////////////////////////////////////////////
     this->RenderAtomsGPU( mol, 0.2f);
@@ -2068,212 +1861,6 @@ void MoleculeSESRenderer::RenderDebugStuff(
     }
     this->lightShader.Disable();
     glDisable( GL_COLOR_MATERIAL);
-
-    /*
-    //////////////////////////////////////////////////////////////////////////
-    // Draw double edges as thick lines
-    //////////////////////////////////////////////////////////////////////////
-    glDisable( GL_LIGHTING);
-    glLineWidth( 5.0f);
-    glEnable( GL_LINE_WIDTH);
-
-    glPushAttrib( GL_POLYGON_BIT);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE);
-    unsigned int i;
-    for( i = 0; i < this->doubleEdgeList.size(); i=i+2 )
-    {
-        glColor3f( 1.0f, 1.0f, 0.0f);
-        glBegin( GL_LINES );
-            glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetVertex1()->GetIndex()].PeekComponents());
-            glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetVertex2()->GetIndex()].PeekComponents());
-        glEnd(); //GL_LINES
-        glBegin( GL_TRIANGLES);
-        // draw the coincident face
-        if( this->doubleEdgeList[i]->GetFace1() == this->doubleEdgeList[i+1]->GetFace1() ||
-                this->doubleEdgeList[i]->GetFace1() == this->doubleEdgeList[i+1]->GetFace2() )
-        {
-            glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace1()->GetVertex1()->GetIndex()].PeekComponents() );
-            glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace1()->GetVertex2()->GetIndex()].PeekComponents() );
-            glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace1()->GetVertex3()->GetIndex()].PeekComponents() );
-            //draw the inner and outer faces
-            if( fabs( this->doubleEdgeList[i]->GetRotationAngle() ) < fabs( this->doubleEdgeList[i+1]->GetRotationAngle() ) )
-            {
-                glColor3f( 0.0f, 1.0f, 0.0f);
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace2()->GetVertex1()->GetIndex()].PeekComponents() );
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace2()->GetVertex2()->GetIndex()].PeekComponents() );
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace2()->GetVertex3()->GetIndex()].PeekComponents() );
-                glColor3f( 1.0f, 0.0f, 0.0f);
-                if( this->doubleEdgeList[i]->GetFace1() == this->doubleEdgeList[i+1]->GetFace1() )
-                {
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex1()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex2()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex3()->GetIndex()].PeekComponents() );
-                }
-                else
-                {
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex1()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex2()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex3()->GetIndex()].PeekComponents() );
-                }
-            }
-            else
-            {
-                glColor3f( 1.0f, 0.0f, 0.0f);
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace2()->GetVertex1()->GetIndex()].PeekComponents() );
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace2()->GetVertex2()->GetIndex()].PeekComponents() );
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace2()->GetVertex3()->GetIndex()].PeekComponents() );
-                glColor3f( 0.0f, 1.0f, 0.0f);
-                if( this->doubleEdgeList[i]->GetFace1() == this->doubleEdgeList[i+1]->GetFace1() )
-                {
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex1()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex2()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex3()->GetIndex()].PeekComponents() );
-                }
-                else
-                {
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex1()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex2()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex3()->GetIndex()].PeekComponents() );
-                }
-            }
-        }
-        else
-        {
-            glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace2()->GetVertex1()->GetIndex()].PeekComponents() );
-            glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace2()->GetVertex2()->GetIndex()].PeekComponents() );
-            glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace2()->GetVertex3()->GetIndex()].PeekComponents() );
-            //draw the inner and outer faces
-            if( fabs( this->doubleEdgeList[i]->GetRotationAngle() ) < fabs( this->doubleEdgeList[i+1]->GetRotationAngle() ) )
-            {
-                glColor3f( 0.0f, 1.0f, 0.0f);
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace1()->GetVertex1()->GetIndex()].PeekComponents() );
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace1()->GetVertex2()->GetIndex()].PeekComponents() );
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace1()->GetVertex3()->GetIndex()].PeekComponents() );
-                glColor3f( 1.0f, 0.0f, 0.0f);
-                if( this->doubleEdgeList[i]->GetFace2() == this->doubleEdgeList[i+1]->GetFace1() )
-                {
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex1()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex2()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex3()->GetIndex()].PeekComponents() );
-                }
-                else
-                {
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex1()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex2()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex3()->GetIndex()].PeekComponents() );
-                }
-            }
-            else
-            {
-                glColor3f( 1.0f, 0.0f, 0.0f);
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace1()->GetVertex1()->GetIndex()].PeekComponents() );
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace1()->GetVertex2()->GetIndex()].PeekComponents() );
-                glVertex3fv( this->atomPos[this->doubleEdgeList[i]->GetFace1()->GetVertex3()->GetIndex()].PeekComponents() );
-                glColor3f( 0.0f, 1.0f, 0.0f);
-                if( this->doubleEdgeList[i]->GetFace2() == this->doubleEdgeList[i+1]->GetFace1() )
-                {
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex1()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex2()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace2()->GetVertex3()->GetIndex()].PeekComponents() );
-                }
-                else
-                {
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex1()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex2()->GetIndex()].PeekComponents() );
-                    glVertex3fv( this->atomPos[this->doubleEdgeList[i+1]->GetFace1()->GetVertex3()->GetIndex()].PeekComponents() );
-                }
-            }
-        }
-        glEnd(); // GL_TRIANGLES
-    }
-    glPopAttrib();
-
-    glDisable( GL_LINE_WIDTH);
-    glEnable( GL_LIGHTING);
-    */
-
-    /*
-    //////////////////////////////////////////////////////////////////////////
-    // Draw tetrahedra defining the convace spherical triangles
-    //////////////////////////////////////////////////////////////////////////
-    glDisable( GL_LIGHTING);
-    glLineWidth( 3.0f);
-    glEnable( GL_LINE_WIDTH);
-    for( i = 0; i < this->rsFace.size(); ++i )
-    {
-        glColor3f( 1.0f, 1.0f, 0.0f);
-        glBegin( GL_LINES );
-            glVertex3fv( this->atomPos[this->rsFace[i]->GetVertex1()->GetIndex()].PeekComponents());
-            glVertex3fv( this->rsFace[i]->GetProbeCenter().PeekComponents());
-            glVertex3fv( this->atomPos[this->rsFace[i]->GetVertex2()->GetIndex()].PeekComponents());
-            glVertex3fv( this->rsFace[i]->GetProbeCenter().PeekComponents());
-            glVertex3fv( this->atomPos[this->rsFace[i]->GetVertex3()->GetIndex()].PeekComponents());
-            glVertex3fv( this->rsFace[i]->GetProbeCenter().PeekComponents());
-        glEnd(); //GL_LINES
-    }
-    glDisable( GL_LINE_WIDTH);
-    glEnable( GL_LIGHTING);
-    */
-
-    /*
-    for( i = 0; i < this->rsFace.size(); ++i )
-    {
-        this->RenderProbe( this->rsFace[i]->GetProbeCenter(), info);
-    }
-    */
-
-    /*
-    //////////////////////////////////////////////////////////////////////////
-    // Draw edges
-    //////////////////////////////////////////////////////////////////////////
-    glPushAttrib( GL_LINE_BIT);
-    glLineWidth( 3.0f);
-    glEnable( GL_LINE_WIDTH);
-    glDisable( GL_LIGHTING);
-    glBegin( GL_LINES);
-    for( i = 0; i < this->rsEdge.size(); ++i )
-    {
-        if( this->rsEdge[i]->GetFace2() < 0 ||
-            ( *this->rsEdge[i]->GetFace1() == *this->rsEdge[i]->GetFace2() ) )
-        {
-            glColor3f( 1.0f, 0.0f, 1.0f);
-            //std::cout << "Edge: " << i << " (" <<
-            //      this->rsEdge[i]->GetFace1() << ")--(" << this->rsEdge[i]->GetFace2() << ") " <<
-            //      this->rsEdge[i].GetRotationAngle() << std::endl;
-        }
-        else
-        {
-            glColor3f( 0.0f, 1.0f, 0.0f);
-        }
-        glVertex3fv( this->atomPos[this->rsEdge[i]->GetVertex1()->GetIndex()].PeekComponents());
-        glVertex3fv( this->atomPos[this->rsEdge[i]->GetVertex2()->GetIndex()].PeekComponents());
-    }
-    glEnd(); // GL_LINES
-    glEnable( GL_LIGHTING);
-    glDisable( GL_LINE_WIDTH);
-    glPopAttrib();
-    */
-
-    /*
-    //////////////////////////////////////////////////////////////////////////
-    // Draw lines between probes
-    //////////////////////////////////////////////////////////////////////////
-    glPushAttrib( GL_LINE_BIT);
-    glEnable( GL_LINE_WIDTH);
-    glLineWidth( 5.0f);
-    glDisable( GL_LIGHTING);
-    glBegin( GL_LINES);
-    for( i = 0; i < this->rsEdge.size(); ++i )
-    {
-        glColor3f( 1.0f, 1.0f, 0.0f);
-        glVertex3fv( this->rsFace[this->rsEdge[i]->GetFace1()]->GetProbeCenter().PeekComponents());
-        glVertex3fv( this->rsFace[this->rsEdge[i]->GetFace2()]->GetProbeCenter().PeekComponents());
-    }
-    glEnd(); // GL_LINES
-    glEnable( GL_LIGHTING);
-    glDisable( GL_LINE_WIDTH);
-    glPopAttrib();
-    */
 }
 
 
@@ -2730,10 +2317,6 @@ void MoleculeSESRenderer::ComputeRaycastingArrays( unsigned int idxRS) {
     ///////////////////////////////////////////////////////////
     // compute arrays for ray casting the spheres on the GPU //
     ///////////////////////////////////////////////////////////
-    /*
-    this->sphereVertexArray[idxRS].SetCount( this->reducedSurface[idxRS]->GetRSVertexCount() * 4);
-    this->sphereColors[idxRS].SetCount( this->reducedSurface[idxRS]->GetRSVertexCount() * 3);
-    */
     this->sphereVertexArray[idxRS].AssertCapacity(
                     this->reducedSurface[idxRS]->GetRSVertexCount() * 4);
     this->sphereVertexArray[idxRS].Clear();
@@ -2765,21 +2348,6 @@ void MoleculeSESRenderer::ComputeRaycastingArrays( unsigned int idxRS) {
             this->sphereVertexArray[idxRS].Append(
                 this->reducedSurface[idxRS]->GetRSVertex( i)->GetRadius());
         }
-        /*
-        // set vertex color
-        this->sphereColors[idxRS][i*3+0] = this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()*3+0];
-        this->sphereColors[idxRS][i*3+1] = this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()*3+1];
-        this->sphereColors[idxRS][i*3+2] = this->atomColor[this->reducedSurface[idxRS]->GetRSVertex( i)->GetIndex()*3+2];
-        // set vertex position
-        this->sphereVertexArray[idxRS][i*4+0] =
-            this->reducedSurface[idxRS]->GetRSVertex( i)->GetPosition().GetX();
-        this->sphereVertexArray[idxRS][i*4+1] =
-            this->reducedSurface[idxRS]->GetRSVertex( i)->GetPosition().GetY();
-        this->sphereVertexArray[idxRS][i*4+2] =
-            this->reducedSurface[idxRS]->GetRSVertex( i)->GetPosition().GetZ();
-        this->sphereVertexArray[idxRS][i*4+3] =
-            this->reducedSurface[idxRS]->GetRSVertex( i)->GetRadius();
-        */
     }
 }
 
@@ -2793,13 +2361,6 @@ float MoleculeSESRenderer::CodeColor( const float *col) const {
         + (int)( col[1] * 255.0f)*1000      // green
         + (int)( col[2] * 255.0f) );        // blue
 }
- /*
-float MoleculeSESRenderer::CodeColor( const vislib::math::Vector<float, 3> &col) const {
-    return float(
-          (int)( col.GetX() * 255.0f)*1000000   // red
-        + (int)( col.GetY() * 255.0f)*1000      // green
-        + (int)( col.GetZ() * 255.0f) );        // blue
-}*/
 
 
 /*

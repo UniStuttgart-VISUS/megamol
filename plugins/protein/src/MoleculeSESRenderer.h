@@ -1,7 +1,7 @@
 /*
  * MoleculeSESRenderer.h
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
+ * Copyright (C) 2009-2021 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
 #ifndef MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED
@@ -15,10 +15,10 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "Color.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "ReducedSurface.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/GLSLComputeShader.h"
@@ -37,7 +37,7 @@ namespace protein {
      * Molecular Surface Renderer class.
      * Computes and renders the solvent excluded (Connolly) surface.
      */
-    class MoleculeSESRenderer : public megamol::core::view::Renderer3DModuleDS {
+    class MoleculeSESRenderer : public megamol::core::view::Renderer3DModuleGL {
     public:
 
         /** postprocessing modi */
