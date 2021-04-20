@@ -300,8 +300,10 @@ namespace gui {
                         // Push log message to GUI pop-up for not existing files
                         auto file = std::get<std::string>(this->value);
                         if (!megamol::core::utility::FileUtils::FileExists(file)) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteWarn("%sFile Parameter%sFile not found: '%s' > Parameter '%s'\n\n",
-                                LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG, this->FullName().c_str(), file.c_str());
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                                "%sFile Parameter%sFile not found: '%s' > Parameter '%s'\n\n",
+                                LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG, this->FullName().c_str(),
+                                file.c_str());
                         }
                     }
                 }

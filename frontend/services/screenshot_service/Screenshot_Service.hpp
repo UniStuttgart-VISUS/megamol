@@ -19,6 +19,7 @@ class Screenshot_Service final : public AbstractFrontendService {
 public:
 
     struct Config {
+        bool show_privacy_note;
     };
 
     std::string serviceName() const override { return "Screenshot_Service"; }

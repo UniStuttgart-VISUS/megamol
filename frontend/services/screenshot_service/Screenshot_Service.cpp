@@ -10,7 +10,6 @@
  // to grab GL front buffer
 #include <glad/glad.h>
 #include "GUIState.h"
-#include "RuntimeConfig.h"
 #include "mmcore/MegaMolGraph.h"
 
 // to write png files
@@ -39,7 +38,7 @@ static void log_warning(std::string const& text) {
 // need this to pass GL context to screenshot source. this a hack and needs to be properly designed.
 static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
 static megamol::frontend_resources::GUIState* guistate_resources_ptr = nullptr;
-static megamol::frontend_resources::RuntimeConfig* runtime_config_ptr = nullptr;
+static bool screenshot_show_privacy_note = true;
 
 static void PNGAPI pngErrorFunc(png_structp pngPtr, png_const_charp msg) {
     log("PNG Error: " + std::string(msg));
@@ -105,7 +104,7 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
 
     png_destroy_write_struct(&pngPtr, &pngInfoPtr);
 
-    if (runtime_config_ptr->screenshot_show_privacy_note) {
+    if (screenshot_show_privacy_note) {
         // Push log message to GUI pop-up
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("%sScreenshot%s--- PRIVACY NOTE ---\n"
            "Please note that the complete MegaMol project is also stored in the header of the screenshot image file. \n"
@@ -198,6 +197,8 @@ bool Screenshot_Service::init(const Config& config) {
         return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
     };
 
+    screenshot_show_privacy_note = config.show_privacy_note;
+
     log("initialized successfully");
     return true;
 }
@@ -226,7 +227,6 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
     guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(&resources[2].getResource<megamol::frontend_resources::GUIState>());
-    runtime_config_ptr = const_cast<megamol::frontend_resources::RuntimeConfig*>(&resources[3].getResource<megamol::frontend_resources::RuntimeConfig>());
 }
 
 void Screenshot_Service::updateProvidedResources() {

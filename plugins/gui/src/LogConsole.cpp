@@ -106,7 +106,7 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
 
             // Check for tags indicating log message pop-up
             auto start_tag_pos = entry.message.find(LOGMESSAGE_GUI_POPUP_START_TAG);
-            auto end_tag_pos   = entry.message.find(LOGMESSAGE_GUI_POPUP_END_TAG, start_tag_pos);
+            auto end_tag_pos = entry.message.find(LOGMESSAGE_GUI_POPUP_END_TAG, start_tag_pos);
             if ((start_tag_pos != std::string::npos) && (end_tag_pos != std::string::npos)) {
                 start_tag_pos += std::string(LOGMESSAGE_GUI_POPUP_START_TAG).length();
                 auto title = entry.message.substr(start_tag_pos, (end_tag_pos - start_tag_pos));
@@ -263,7 +263,7 @@ void megamol::gui::LogConsole::print_message(LogBuffer::LogEntry entry, unsigned
 void megamol::gui::LogConsole::draw_popup(LogPopUpData& log_popup) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiStyle &style = ImGui::GetStyle();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     std::string popup_title = this->window_title + " -  [" + log_popup.title + "]";
 
@@ -271,22 +271,28 @@ void megamol::gui::LogConsole::draw_popup(LogPopUpData& log_popup) {
         ImGui::OpenPopup(popup_title.c_str());
     }
 
-    if (ImGui::BeginPopupModal(popup_title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar)) {
+    if (ImGui::BeginPopupModal(popup_title.c_str(), nullptr,
+            ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar)) {
 
         for (auto& entry : log_popup.entries) {
             this->print_message(entry, megamol::core::utility::log::Log::LEVEL_ALL);
             ImGui::Separator();
         }
 
+        bool close = false;
         if (ImGui::Button("Ok")) {
-            ImGui::CloseCurrentPopup();
+            close = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Ok, disable further notification.")) {
             log_popup.disable = true;
-            ImGui::CloseCurrentPopup();
+            close = true;
         }
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            close = true;
+        }
+        if (close) {
+            log_popup.entries.clear();
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
