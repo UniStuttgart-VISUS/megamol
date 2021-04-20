@@ -9,16 +9,16 @@
 #define MEGAMOL_GUI_PARAMETERGROUPVIEWCUBEWIDGET_INCLUDED
 
 
-#include "mmcore/view/AbstractView3D.h"
 #include "AbstractParameterGroupWidget.h"
 #include "ImageWidget_gl.h"
+#include "mmcore/view/AbstractView3D.h"
 #include "mmcore/view/RenderUtils.h"
 
 
 namespace megamol {
 namespace gui {
 
-    typedef megamol::core::view::AbstractView3D::DefaultView        DefaultView_t;
+    typedef megamol::core::view::AbstractView3D::DefaultView DefaultView_t;
     typedef megamol::core::view::AbstractView3D::DefaultOrientation DefaultOrientation_t;
 
     /** ***********************************************************************
@@ -29,8 +29,9 @@ namespace gui {
         PickableCube(void);
         ~PickableCube(void) = default;
 
-        bool Draw(unsigned int picking_id, int& inout_selected_face_id, int& inout_selected_orientation_id, int& out_hovered_face_id,
-            int& out_hovered_orientation_id, const glm::vec4& cube_orientation, ManipVector& pending_manipulations);
+        bool Draw(unsigned int picking_id, int& inout_selected_face_id, int& inout_selected_orientation_id,
+            int& out_hovered_face_id, int& out_hovered_orientation_id, const glm::vec4& cube_orientation,
+            ManipVector& pending_manipulations);
 
         InteractVector GetInteractions(unsigned int id) const;
 
@@ -74,7 +75,6 @@ namespace gui {
             megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer);
 
     private:
-
         // VARIABLES --------------------------------------------------------------
 
         HoverToolTip tooltip;

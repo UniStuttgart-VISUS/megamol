@@ -393,7 +393,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         ImGui::SameLine(0.0f, (style.ItemSpacing.x + style.ItemInnerSpacing.x));
         ImGui::TextUnformatted("Value Range");
 
-        if (megamol::gui::ButtonWidgets::ToggleButton("Overwrite Value Range", this->range_overwrite)) {
+        if (ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite)) {
             if (this->range_overwrite) {
                 // Save last range before overwrite
                 this->last_range = this->range;
@@ -447,13 +447,13 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         this->drawFunctionPlot(canvas_size);
 
         // Color channels -----------------------------------------------------
-        megamol::gui::ButtonWidgets::ToggleButton("Red", this->activeChannels[0]);
+        ImGui::Checkbox("Red", &this->activeChannels[0]);
         ImGui::SameLine();
-        megamol::gui::ButtonWidgets::ToggleButton("Green", this->activeChannels[1]);
+        ImGui::Checkbox("Green", &this->activeChannels[1]);
         ImGui::SameLine();
-        megamol::gui::ButtonWidgets::ToggleButton("Blue", this->activeChannels[2]);
+        ImGui::Checkbox("Blue", &this->activeChannels[2]);
         ImGui::SameLine();
-        megamol::gui::ButtonWidgets::ToggleButton("Alpha", this->activeChannels[3]);
+        ImGui::Checkbox("Alpha", &this->activeChannels[3]);
         ImGui::SameLine();
         ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
         ImGui::TextUnformatted("Color Channels");
