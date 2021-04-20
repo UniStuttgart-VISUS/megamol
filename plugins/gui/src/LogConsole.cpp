@@ -284,7 +284,7 @@ void megamol::gui::LogConsole::draw_popup(LogPopUpData& log_popup) {
             close = true;
         }
         ImGui::SameLine();
-        if (ImGui::Button("Ok, disable further notification.")) {
+        if (ImGui::Button("Ok, disable further notifications.")) {
             log_popup.disable = true;
             close = true;
         }
