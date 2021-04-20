@@ -15,8 +15,7 @@ extern "C" const char embedded_sphere_programs[];
 }
 
 
-megamol::optix_hpg::SphereGeometry::SphereGeometry()
-        : _out_geo_slot("outGeo", ""), _in_data_slot("inData", "") {
+megamol::optix_hpg::SphereGeometry::SphereGeometry() : _out_geo_slot("outGeo", ""), _in_data_slot("inData", "") {
     _out_geo_slot.SetCallback(CallGeometry::ClassName(), CallGeometry::FunctionName(0), &SphereGeometry::get_data_cb);
     _out_geo_slot.SetCallback(
         CallGeometry::ClassName(), CallGeometry::FunctionName(1), &SphereGeometry::get_extents_cb);
@@ -58,10 +57,16 @@ void megamol::optix_hpg::SphereGeometry::release() {
 
 void megamol::optix_hpg::SphereGeometry::init(Context const& ctx) {
     sphere_module_ = MMOptixModule(embedded_sphere_programs, ctx.GetOptiXContext(), &ctx.GetModuleCompileOptions(),
-        &ctx.GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_HITGROUP, {"sphere_intersect", "sphere_closesthit"});
+        &ctx.GetPipelineCompileOptions(), MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "sphere_intersect"},
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "sphere_closesthit"},
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds"}});
     sphere_occlusion_module_ = MMOptixModule(embedded_sphere_programs, ctx.GetOptiXContext(),
-        &ctx.GetModuleCompileOptions(), &ctx.GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_HITGROUP,
-        {"sphere_intersect", "sphere_closesthit_occlusion"});
+        &ctx.GetModuleCompileOptions(), &ctx.GetPipelineCompileOptions(),
+        MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "sphere_intersect"},
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "sphere_closesthit_occlusion"},
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds"}});
 
     // OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_module_, &_sbt_record));
 }
