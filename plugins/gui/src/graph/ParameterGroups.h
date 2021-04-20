@@ -31,22 +31,21 @@ namespace gui {
         ParameterGroups(void);
         ~ParameterGroups(void);
 
-        bool Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_module_fullname,
-            const std::string& in_search, vislib::math::Ternary in_extended, bool in_indent,
-            megamol::gui::Parameter::WidgetScope in_scope,
+        bool Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search,
+            vislib::math::Ternary in_extended, bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
             const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
             ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer);
 
         bool StateFromJSON(const nlohmann::json& in_json, const std::string& module_fullname);
         bool StateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
 
-        static void DrawParameter(megamol::gui::Parameter& inout_param, const std::string& in_module_fullname,
-            const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
+        static void DrawParameter(megamol::gui::Parameter& inout_param, const std::string& in_search,
+            megamol::gui::Parameter::WidgetScope in_scope,
             const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor);
 
         static void DrawGroupedParameters(const std::string& in_group_name,
-            AbstractParameterGroupWidget::ParamPtrVector_t& params, const std::string& in_module_fullname,
-            const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
+            AbstractParameterGroupWidget::ParamPtrVector_t& params, const std::string& in_search,
+            megamol::gui::Parameter::WidgetScope in_scope,
             const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
             ImGuiID in_override_header_state);
 

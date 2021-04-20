@@ -100,6 +100,7 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::Screenshot_Service screenshot_service;
     megamol::frontend::Screenshot_Service::Config screenshotConfig;
+    screenshotConfig.show_privacy_note = config.screenshot_show_privacy_note;
     screenshot_service.setPriority(30);
 
     megamol::frontend::FrameStatistics_Service framestatistics_service;
