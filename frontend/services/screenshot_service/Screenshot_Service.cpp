@@ -10,7 +10,6 @@
  // to grab GL front buffer
 #include <glad/glad.h>
 #include "GUIState.h"
-
 #include "mmcore/MegaMolGraph.h"
 
 // to write png files
@@ -39,6 +38,7 @@ static void log_warning(std::string const& text) {
 // need this to pass GL context to screenshot source. this a hack and needs to be properly designed.
 static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
 static megamol::frontend_resources::GUIState* guistate_resources_ptr = nullptr;
+static bool screenshot_show_privacy_note = true;
 
 static void PNGAPI pngErrorFunc(png_structp pngPtr, png_const_charp msg) {
     log("PNG Error: " + std::string(msg));
@@ -104,6 +104,14 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
 
     png_destroy_write_struct(&pngPtr, &pngInfoPtr);
 
+    if (screenshot_show_privacy_note) {
+        // Push log message to GUI pop-up
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("%sScreenshot%s--- PRIVACY NOTE ---\n"
+           "Please note that the complete MegaMol project is also stored in the header of the screenshot image file. \n"
+           "Before giving away the screenshot, clear privacy relevant information (e.g. username in file paths) in project file before taking screenshot. \n"
+           ">>> In [megamol_config.lua] set mmSetCliOption(\"privacynote\", \"off\") to permanently turn off privacy notification for screenshots. \n"
+           , LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG);
+    }
     return true;
 }
 
@@ -179,7 +187,8 @@ bool Screenshot_Service::init(const Config& config) {
     {
         "IOpenGL_Context",
         "MegaMolGraph",
-        "GUIResource"
+        "GUIResource",
+        "RuntimeConfig"
     };
 
     this->m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
@@ -187,6 +196,8 @@ bool Screenshot_Service::init(const Config& config) {
         log("write screenshot to " + filename);
         return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
     };
+
+    screenshot_show_privacy_note = config.show_privacy_note;
 
     log("initialized successfully");
     return true;
