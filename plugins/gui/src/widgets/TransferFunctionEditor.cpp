@@ -180,6 +180,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
         , widget_buffer()
         , flip_legend(false)
         , check_once_force_set_overwrite_range(true)
+        , plot_paint_mode(false)
         , tooltip()
         , image_widget() {
 
@@ -360,7 +361,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         ImGui::SameLine(0.0f, (style.ItemSpacing.x + style.ItemInnerSpacing.x));
         ImGui::TextUnformatted("Value Range");
 
-        if (ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite)) {
+        if (megamol::gui::ButtonWidgets::ToggleButton("Overwrite Value Range", this->range_overwrite)) {
             if (this->range_overwrite) {
                 // Save last range before overwrite
                 this->last_range = this->range;
@@ -384,7 +385,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                "NB: This option will be disabled when running animation propagates new range every frame.";
         this->tooltip.Marker(help);
 
-        // START selected NODE
+        // START selected NODE options ----------------------------------------
         bool node_selected =
             ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size()));
         if (!node_selected) {
@@ -442,7 +443,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         help = "[Ctrl + Left Click] for keyboard input";
         this->tooltip.Marker(help);
 
-        // END selected NODE
+        // END selected NODE options ------------------------------------------
         if (!node_selected) {
             megamol::gui::GUIUtils::ReadOnlyWigetStyle(false);
         }
@@ -451,14 +452,17 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         ImVec2 canvas_size = ImVec2(tfw_item_width, (150.0f * megamol::gui::gui_scaling.Get()));
         this->drawFunctionPlot(canvas_size);
 
+        // Plot paint mode
+        megamol::gui::ButtonWidgets::ToggleButton("Paint Mode", this->plot_paint_mode);
+
         // Color channels -----------------------------------------------------
-        ImGui::Checkbox("Red", &this->activeChannels[0]);
+        megamol::gui::ButtonWidgets::ToggleButton("Red", this->activeChannels[0]);
         ImGui::SameLine();
-        ImGui::Checkbox("Green", &this->activeChannels[1]);
+        megamol::gui::ButtonWidgets::ToggleButton("Green", this->activeChannels[1]);
         ImGui::SameLine();
-        ImGui::Checkbox("Blue", &this->activeChannels[2]);
+        megamol::gui::ButtonWidgets::ToggleButton("Blue", this->activeChannels[2]);
         ImGui::SameLine();
-        ImGui::Checkbox("Alpha", &this->activeChannels[3]);
+        megamol::gui::ButtonWidgets::ToggleButton("Alpha", this->activeChannels[3]);
         ImGui::SameLine();
         ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
         ImGui::TextUnformatted("Color Channels");
@@ -920,6 +924,22 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                 this->textureInvalid = true;
                 sort_nodes = true;
             }
+
+            // Process paint mode
+            if (this->plot_paint_mode) {
+
+
+
+
+
+
+
+
+
+
+
+            }
+
         } else if (ImGui::IsMouseClicked(1)) { // Right Click
 
             // Delete currently hovered node

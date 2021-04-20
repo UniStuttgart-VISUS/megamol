@@ -170,6 +170,9 @@ namespace gui {
         /** Check for forced range overwrite once. */
         bool check_once_force_set_overwrite_range;
 
+        /** Plot node paint mode. */
+        bool plot_paint_mode;
+
         // Widgets
         HoverToolTip tooltip;
         ImageWidget image_widget;
