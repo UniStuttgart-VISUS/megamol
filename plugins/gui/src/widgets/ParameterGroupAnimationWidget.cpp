@@ -45,8 +45,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
 }
 
 
-bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_module_fullname,
-    const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
+bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_search,
+    megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -82,7 +82,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         if (in_scope == Parameter::WidgetScope::LOCAL) {
 
             ParameterGroups::DrawGroupedParameters(
-                this->name, params, in_module_fullname, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
+                this->name, params, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
             return true;
 

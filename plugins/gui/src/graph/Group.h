@@ -10,7 +10,7 @@
 
 
 #include "GUIUtils.h"
-#include "widgets/RenamePopUp.h"
+#include "widgets/PopUps.h"
 
 #include "Call.h"
 #include "InterfaceSlot.h"
@@ -104,7 +104,7 @@ namespace gui {
         bool gui_allow_context;
         bool gui_update;
 
-        RenamePopUp gui_rename_popup;
+        PopUps gui_rename_popup;
 
         // FUNCTIONS --------------------------------------------------------------
 

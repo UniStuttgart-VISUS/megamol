@@ -11,8 +11,7 @@
 
 #include "GUIUtils.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/MinimalPopUp.h"
-#include "widgets/RenamePopUp.h"
+#include "widgets/PopUps.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
 
@@ -219,7 +218,7 @@ namespace gui {
         float gui_current_font_scaling;
         StringSearchWidget gui_search_widget;
         SplitterWidget gui_splitter_widget;
-        RenamePopUp gui_rename_popup;
+        PopUps gui_rename_popup;
         HoverToolTip gui_tooltip;
 
         // FUNCTIONS --------------------------------------------------------------

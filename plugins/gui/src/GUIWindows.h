@@ -27,7 +27,7 @@
 #include "widgets/DefaultStyle.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/MinimalPopUp.h"
+#include "widgets/PopUps.h"
 #include "widgets/StringSearchWidget.h"
 #include "widgets/TransferFunctionEditor.h"
 #include "widgets/WidgetPicking_gl.h"
@@ -228,15 +228,14 @@ namespace gui {
         /**
          * Synchronise changes between core graph <-> gui graph.
          *
-         * - 'Old' core instance graph:    Call this function after(!) rendering of current frame.
-         *                                 This way, graph changes will be applied next frame (and not 2 frames later).
-         *                                 In this case in PreDraw() a gui graph is created once.
-         * - 'New' megamol graph:          Call this function in GUI_Service::digestChangedRequestedResources() as
-         *                                 pre-rendering step. In this case a new gui graph is created before first
-         *                                 call of PreDraw() and a gui graph already exists.
+         * - 'Old' core instance graph:  Call this function after(!) rendering of current frame.
+         *                               This way, graph changes will be applied next frame (and not 2 frames later).
+         *                               In this case in PreDraw() a gui graph is created once.
+         * - 'New' megamol graph:        Call this function in GUI_Service::digestChangedRequestedResources() as
+         *                               pre-rendering step. In this case a new gui graph is created before first
+         *                               call of PreDraw() and a gui graph already exists.
          *
-         * @param megamol_graph            If no megamol_graph is given, 'old' graph is synchronised via
-         * core_instance.
+         * @param megamol_graph          If no megamol_graph is given, 'old' graph in core instance is synchronised.
          */
         bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
 

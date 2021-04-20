@@ -491,7 +491,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                         __FILE__, __FUNCTION__, __LINE__);
                 }
             } else {
-                if (this->gui_rename_popup.PopUp("Rename Group", popup_rename, this->name)) {
+                if (this->gui_rename_popup.Rename("Rename Group", popup_rename, this->name)) {
                     for (auto& module_ptr : this->modules) {
                         std::string last_module_name = module_ptr->FullName();
                         module_ptr->SetGroupName(this->name);

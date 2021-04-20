@@ -253,7 +253,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
         // Filter module by given search string
         search_filter = true;
         if (!search_string.empty()) {
-            search_filter = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(mod.class_name, search_string);
+            search_filter = GUIUtils::FindCaseInsensitiveSubstring(mod.class_name, search_string);
         }
 
         // Filter module by compatible call slots
@@ -481,8 +481,7 @@ void megamol::gui::Configurator::drawPopUps(void) {
                         this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename));
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
-    MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
-        confirmed, "Cancel", aborted);
+    PopUps::Minimal("Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
     this->open_popup_load = false;
 
     // Module Stock List Child Window ------------------------------------------

@@ -262,8 +262,8 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
 }
 
 
-bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, const std::string& in_module_fullname,
-    const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
+bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, const std::string& in_search,
+    megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -320,7 +320,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             // LOCAL
 
             ParameterGroups::DrawGroupedParameters(
-                this->name, params, in_module_fullname, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
+                this->name, params, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
             return true;
 
@@ -336,7 +336,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             // LOCAL
 
             ParameterGroups::DrawGroupedParameters(
-                this->name, params, "", in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
+                this->name, params, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
             return true;
 

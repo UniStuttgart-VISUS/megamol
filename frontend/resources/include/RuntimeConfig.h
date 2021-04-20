@@ -57,6 +57,7 @@ struct RuntimeConfig {
     unsigned int window_monitor = 0;
     bool gui_show = true;
     float gui_scale = 1.0f;
+    bool screenshot_show_privacy_note = true;
 
     std::string as_string() const {
         auto summarize = [](std::vector<std::string> const& vec) -> std::string {
