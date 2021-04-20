@@ -164,21 +164,6 @@ public:
     virtual void Resize(unsigned int width, unsigned int height) = 0;
 
     /**
-     * Answers the desired window position configuration of this view.
-     *
-     * @param x To receive the coordinate of the upper left corner
-     * @param y To recieve the coordinate of the upper left corner
-     * @param w To receive the width
-     * @param h To receive the height
-     * @param nd To receive the flag deactivating window decorations
-     *
-     * @return 'true' if this view has a desired window position
-     *         configuration, 'false' if not. In the latter case the value
-     *         the parameters are pointing to are not altered.
-     */
-    virtual bool DesiredWindowPosition(int* x, int* y, int* w, int* h, bool* nd);
-
-    /**
      * Registers a hook
      *
      * @param hook The hook to register
@@ -262,23 +247,6 @@ protected:
     typedef vislib::SingleLinkedList<Hooks*>::Iterator HooksIterator;
 
     /**
-     * Tries to load the desired window position configuration form the
-     * configuration value with the given name.
-     *
-     * @param str The value to be parsed
-     * @param x To receive the coordinate of the upper left corner
-     * @param y To recieve the coordinate of the upper left corner
-     * @param w To receive the width
-     * @param h To receive the height
-     * @param nd To receive the flag deactivating window decorations
-     *
-     * @return 'true' if this view has a desired window position
-     *         configuration, 'false' if not. In the latter case the value
-     *         the parameters are pointing to are not altered.
-     */
-    bool desiredWindowPosition(const vislib::StringW& str, int* x, int* y, int* w, int* h, bool* nd);
-
-    /**
      * Answer if hook code should be executed.
      *
      * @return 'true' if hook code should be run
@@ -321,15 +289,6 @@ protected:
      * ...
      */
     void afterRender();
-
-    /**
-     * Unpacks the mouse coordinates, which are relative to the virtual
-     * viewport size.
-     *
-     * @param x The x coordinate of the mouse position
-     * @param y The y coordinate of the mouse position
-     */
-    virtual void unpackMouseCoordinates(float& x, float& y);
 
         /**
      * Stores the current camera settings
@@ -399,6 +358,12 @@ protected:
 
     /** whether to reset the view when the object bounding box changes */
     param::ParamSlot _resetViewOnBBoxChangeSlot;
+
+    /** Flag showing the look at point */
+    param::ParamSlot _showLookAt;
+
+    /** Shows the view cube helper */
+    param::ParamSlot _showViewCubeParam;
 
     /** Array that holds the saved camera states */
     std::array<std::pair<Camera, bool>, 11> _savedCameras;

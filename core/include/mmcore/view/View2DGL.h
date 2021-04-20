@@ -14,8 +14,11 @@
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/BaseView.h"
 #include "mmcore/view/TimeControl.h"
+
+#include "mmcore/view/CameraControllers.h"
+#include "mmcore/view/CameraParameterSlots.h"
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/FramebufferObject.hpp>
@@ -29,11 +32,33 @@ namespace view {
  */
 class CallRenderViewGL;
 
+//TODO share this function with View3DGL
+inline constexpr auto gl2D_fbo_create_or_resize = [](std::shared_ptr<glowl::FramebufferObject>& fbo, int width,
+                                                      int height) -> void {
+    bool create_fbo = false;
+    if (fbo == nullptr) {
+        create_fbo = true;
+    } else if ((fbo->getWidth() != width) || (fbo->getHeight() != height)) {
+        create_fbo = true;
+    }
+
+    if (create_fbo) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+        try {
+            fbo = std::make_shared<glowl::FramebufferObject>(width, height);
+            fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+            // TODO: check completness and throw if not?
+        } catch (glowl::FramebufferObjectException const& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[View2DGL] Unable to create framebuffer object: %s\n", exc.what());
+        }
+    }
+};
 
 /**
  * Base class of rendering graph calls
  */
-class View2DGL: public AbstractView {
+class View2DGL : public BaseView<glowl::FramebufferObject, gl2D_fbo_create_or_resize, Camera2DController, Camera2DParameters> {
 public:
 
     /**
@@ -52,15 +77,6 @@ public:
      */
     static const char *Description(void) {
         return "2D View Module";
-    }
-
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) {
-        return true;
     }
 
     /** Ctor. */
@@ -106,18 +122,6 @@ public:
 
     virtual bool GetExtents(Call& call) override;
 
-    virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
-
-    virtual bool OnChar(unsigned int codePoint) override;
-
-    virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
-
-    virtual bool OnMouseMove(double x, double y) override;
-
-    virtual bool OnMouseScroll(double dx, double dy) override;
-
-    enum MouseMode : uint8_t { Propagate, Pan, Zoom };
-
     /**
      * Implementation of 'Create'.
      *
@@ -125,30 +129,10 @@ public:
      */
     virtual bool create(void);
 
-    /**
-     * Implementation of 'Release'.
-     */
-    virtual void release(void);
-
 private:
-
-    /** Track state of ctrl key for camera controls */
-    bool _ctrlDown;
-
-    /** The mouse drag mode */
-    MouseMode _mouseMode;
-
-    /** The mouse x coordinate */
-    float _mouseX;
-
-    /** The mouse y coordinate */
-    float _mouseY;
 
     /** the update counter for the view settings */
     unsigned int _viewUpdateCnt;
-
-    std::shared_ptr<glowl::FramebufferObject> _fbo;
-
 };
 } /* end namespace view */
 } /* end namespace core */

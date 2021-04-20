@@ -137,15 +137,6 @@ protected:
      */
     void release() override;
 
-    /**
-     * Unpacks the mouse coordinates, which are relative to the virtual
-     * viewport size.
-     *
-     * @param x The x coordinate of the mouse position
-     * @param y The y coordinate of the mouse position
-     */
-    void unpackMouseCoordinates(float& x, float& y) override;
-
     /** Override of GetExtents */
     virtual bool GetExtents(core::Call& call) override;
 

@@ -18,6 +18,9 @@ struct CPUFramebuffer {
     unsigned int height = 0;
     int x = 0;
     int y = 0;
+
+    int getWidth() { return width; }
+    int getHeight() { return height; }
 };
 
 }

@@ -51,7 +51,7 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(
             screen_type dy = y - lastSy;
 
             // get camera pose
-            auto cam_pose = cam->get<Camera::Pose>();
+            auto cam_pose = cam->get<view::Camera::Pose>();
             auto cam_right = glm::cross(cam_pose.direction, cam_pose.up);
 
             // split movement into horizontal and vertical (in camera space)

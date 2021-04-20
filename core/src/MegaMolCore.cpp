@@ -750,21 +750,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
 
 
 /*
- * mmcDesiredViewWindowConfig
- */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcDesiredViewWindowConfig(void *hView,
-        int *x, int *y, int *w, int *h, bool *nd) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
-    if ((view != NULL) && (view->View() != NULL)) {
-        return view->View()->DesiredWindowPosition(x, y, w, h, nd);
-    }
-    return false;
-}
-
-
-/*
  * mmcIsJobRunning
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsJobRunning(void *hJob) {

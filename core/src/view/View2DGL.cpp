@@ -30,11 +30,7 @@ using namespace megamol::core;
  * view::View2DGL::View2DGL
  */
 view::View2DGL::View2DGL(void)
-        : view::AbstractView()
-        , _ctrlDown(false)
-        , _mouseMode(MouseMode::Propagate)
-        , _mouseX(0.0f)
-        , _mouseY(0.0f)
+        : view::BaseView<glowl::FramebufferObject, gl2D_fbo_create_or_resize, Camera2DController, Camera2DParameters>()
         , _viewUpdateCnt(0) {
 
     // Override renderSlot behavior
@@ -240,163 +236,6 @@ bool view::View2DGL::OnRenderView(Call& call) {
     return true;
 }
 
-
-bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
-    auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
-    if (cr == NULL)
-        return false;
-
-    if (key == Key::KEY_HOME) {
-        OnResetView(this->_resetViewSlot);
-    }
-    _ctrlDown = mods.test(core::view::Modifier::CTRL);
-
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Key;
-    evt.keyData.key = key;
-    evt.keyData.action = action;
-    evt.keyData.mods = mods;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender2DGL::FnOnKey))
-        return false;
-
-    return true;
-}
-
-
-bool view::View2DGL::OnChar(unsigned int codePoint) {
-    auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
-    if (cr == NULL)
-        return false;
-
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Char;
-    evt.charData.codePoint = codePoint;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender2DGL::FnOnChar))
-        return false;
-
-    return true;
-}
-
-
-bool view::View2DGL::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
-    this->_mouseMode = MouseMode::Propagate;
-
-    auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
-    if (cr) {
-        InputEvent evt;
-        evt.tag = InputEvent::Tag::MouseButton;
-        evt.mouseButtonData.button = button;
-        evt.mouseButtonData.action = action;
-        evt.mouseButtonData.mods = mods;
-        cr->SetInputEvent(evt);
-        if ((*cr)(view::CallRender2DGL::FnOnMouseButton))
-            return true;
-    }
-
-    if (_ctrlDown) {
-        auto down = action == MouseButtonAction::PRESS;
-        if (button == MouseButton::BUTTON_LEFT && down) {
-            this->_mouseMode = MouseMode::Pan;
-        } else if (button == MouseButton::BUTTON_MIDDLE && down) {
-            this->_mouseMode = MouseMode::Zoom;
-        }
-    } else {
-        if (button == MouseButton::BUTTON_MIDDLE && action == MouseButtonAction::PRESS) {
-            this->_mouseMode = MouseMode::Pan;
-        }
-    }
-    
-    return true;
-}
-
-
-bool view::View2DGL::OnMouseMove(double x, double y) {
-    if (this->_mouseMode == MouseMode::Propagate) {
-        auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
-        if (cr) {
-            InputEvent evt;
-            evt.tag = InputEvent::Tag::MouseMove;
-            evt.mouseMoveData.x = x;
-            evt.mouseMoveData.y = y;
-            cr->SetInputEvent(evt);
-            if ((*cr)(view::CallRender2DGL::FnOnMouseMove))
-                return true;
-        }
-    } else if (this->_mouseMode == MouseMode::Pan) {
-
-        if (_cameraIsMutable) { // check if view is in control of the camera
-            // compute size of a pixel in world space
-            float stepSize = _camera.get<Camera::OrthographicParameters>().frustrum_height / _fbo->getHeight();
-            auto dx = (this->_mouseX - x) * stepSize;
-            auto dy = (this->_mouseY - y) * stepSize;
-
-            auto cam_pose = _camera.get<Camera::Pose>();
-            cam_pose.position += glm::vec3(dx,-dy,0.0f);
-
-            _camera.setPose(cam_pose);
-
-            if (dx > 0.0f || dy > 0.0f) {
-                this->_viewUpdateCnt++;
-            }
-        }
-
-    } else if (this->_mouseMode == MouseMode::Zoom) {
-
-        if (_cameraIsMutable) {
-            auto dy = (this->_mouseY - y);
-
-            auto cam_pose = _camera.get<Camera::Pose>();
-            auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
-
-            float bbox_height = cam_intrinsics.frustrum_height;
-            CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
-            if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
-                bbox_height = cr2d->GetBoundingBoxes().BoundingBox().Height();
-            }
-            cam_intrinsics.frustrum_height -= (dy / _fbo->getHeight()) * (cam_intrinsics.frustrum_height);
-
-            _camera = Camera(cam_pose, cam_intrinsics);
-        }
-    }
-
-    this->_mouseX = x;
-    this->_mouseY = y;
-
-    return true;
-}
-
-
-bool view::View2DGL::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
-    if (cr == NULL)
-        return false;
-
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::MouseScroll;
-    evt.mouseScrollData.dx = dx;
-    evt.mouseScrollData.dy = dy;
-    cr->SetInputEvent(evt);
-    if ((*cr)(view::CallRender2DGL::FnOnMouseScroll)) return true;
-
-    if (_cameraIsMutable) {
-        auto cam_pose = _camera.get<Camera::Pose>();
-        auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
-        float bbox_height = cam_intrinsics.frustrum_height;
-        CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
-        if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
-            bbox_height = cr2d->GetBoundingBoxes().BoundingBox().Height();
-        }
-        cam_intrinsics.frustrum_height -= (dy/10.0) * (cam_intrinsics.frustrum_height);
-
-        _camera = Camera(cam_pose, cam_intrinsics);
-    }
-
-    return true;
-}
-
-
 /*
  * view::View2DGL::create
  */
@@ -408,14 +247,6 @@ bool view::View2DGL::create(void) {
     this->_fbo = std::make_shared<glowl::FramebufferObject>(1,1);
 
     return true;
-}
-
-
-/*
- * view::View2DGL::release
- */
-void view::View2DGL::release(void) {
-    // intentionally empty
 }
 
 

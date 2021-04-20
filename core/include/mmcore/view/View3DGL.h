@@ -9,6 +9,9 @@
 #include "mmcore/view/AbstractView3D.h"
 #include "vislib/graphics/Cursor2D.h"
 
+#include "mmcore/view/CameraControllers.h"
+#include "mmcore/view/CameraParameterSlots.h"
+
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
 
@@ -16,7 +19,29 @@ namespace megamol {
 namespace core {
 namespace view {
 
-class MEGAMOLCORE_API View3DGL : public view::AbstractView3D {
+    inline constexpr auto gl3D_fbo_create_or_resize = [](std::shared_ptr<glowl::FramebufferObject>& fbo, int width,
+                                              int height) -> void {
+        bool create_fbo = false;
+        if (fbo == nullptr) {
+            create_fbo = true;
+        } else if ((fbo->getWidth() != width) || (fbo->getHeight() != height)) {
+            create_fbo = true;
+        }
+
+        if (create_fbo) {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+            try {
+                fbo = std::make_shared<glowl::FramebufferObject>(width, height);
+                fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+                // TODO: check completness and throw if not?
+            } catch (glowl::FramebufferObjectException const& exc) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[View3DGL] Unable to create framebuffer object: %s\n", exc.what());
+            }
+        }
+    };
+
+class MEGAMOLCORE_API View3DGL : public view::AbstractView3D<glowl::FramebufferObject, gl3D_fbo_create_or_resize, Camera3DController, Camera3DParameters> {
 
 public:
 
@@ -33,13 +58,6 @@ public:
      * @return A human readable description of this module.
      */
     static const char* Description(void) { return "New and improved 3D View Module"; }
-
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) { return true; }
 
     /** Ctor. */
     View3DGL(void);
@@ -58,14 +76,6 @@ public:
     void ResetView();
 
     /**
-     * Resizes the View2DGl framebuffer object.
-     *
-     * @param width The new width.
-     * @param height The new height.
-     */
-    virtual void Resize(unsigned int width, unsigned int height) override;
-
-    /**
      * Callback requesting a rendering of this view
      *
      * @param call The calling call
@@ -73,16 +83,6 @@ public:
      * @return The return value
      */
     virtual bool OnRenderView(Call& call) override;
-
-    virtual bool OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) override;
-
-    virtual bool OnChar(unsigned int codePoint) override;
-
-    virtual bool OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) override;
-
-    virtual bool OnMouseMove(double x, double y) override;
-
-    virtual bool OnMouseScroll(double dx, double dy) override;
 
 protected:
 
@@ -92,25 +92,6 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     virtual bool create(void);
-
-    /**
-     * Implementation of 'Release'.
-     */
-    virtual void release(void);
-
-    std::shared_ptr<glowl::FramebufferObject> _fbo;
-
-private:
-
-    /** The mouse x coordinate */
-    float _mouseX;
-
-    /** The mouse y coordinate */
-    float _mouseY;
-
-    /** the 2d cursor of this view */
-    vislib::graphics::Cursor2D _cursor2d;
-
 };
 
 } // namespace view

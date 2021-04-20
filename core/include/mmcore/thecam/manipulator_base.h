@@ -119,7 +119,7 @@ public:
      *
      * @param cam A reference to the camera to be manipulated.
      */
-    inline void set_target(camera_type& cam) { this->cam = &cam; }
+    inline void set_target(camera_type* cam) { this->cam = cam; }
 
 protected:
     /** Disallow instances except from derived classes. */

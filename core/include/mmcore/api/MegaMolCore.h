@@ -621,23 +621,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
     float dx, float dy);
 
 /**
- * Answers the desired window position configuration of this view.
- *
- * @param hView The view instance handle.
- * @param x To receive the coordinate of the upper left corner
- * @param y To recieve the coordinate of the upper left corner
- * @param w To receive the width
- * @param h To receive the height
- * @param nd To receive the flag deactivating window decorations
- *
- * @return 'true' if this view has a desired window position configuration,
- *         'false' if not. In the latter case the value the parameters are
- *         pointing to are not altered.
- */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcDesiredViewWindowConfig(void *hView,
-    int *x, int *y, int *w, int *h, bool *nd);
-
-/**
  * Gets whether or not a given job is running.
  *
  * @param hJob The job to be tested.

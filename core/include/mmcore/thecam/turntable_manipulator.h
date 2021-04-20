@@ -67,7 +67,7 @@ public:
                 screen_type dy = y - m_last_sy;
 
                 // get camera pose
-                auto cam_pose = cam->get<Camera::Pose>();
+                auto cam_pose = cam->get<view::Camera::Pose>();
                 auto cam_right = glm::cross(cam_pose.direction, cam_pose.up);
 
                 // split movement into horizontal and vertical (in camera space)

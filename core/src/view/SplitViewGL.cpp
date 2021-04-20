@@ -489,11 +489,6 @@ void view::SplitViewGL::release() {
     _fbo2.reset();
 }
 
-void view::SplitViewGL::unpackMouseCoordinates(float& x, float& y) {
-    x *= this->_clientArea.Width();
-    y *= this->_clientArea.Height();
-}
-
 void view::SplitViewGL::updateSize(size_t width, size_t height) {
     this->_clientArea.SetWidth(static_cast<float>(width));
     this->_clientArea.SetHeight(static_cast<float>(height));
