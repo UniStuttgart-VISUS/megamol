@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <btf namespace="pc_axes_draw" type="MegaMolGLSLShader" version="1.0">
 
   <include file="pc" />
@@ -13,19 +13,25 @@
       <snippet type="string">
         <![CDATA[
 out vec4 actualColor;
+uniform float axesThickness;
+uniform int width;
+uniform int height;
 
 void main()
 {
-  uint dimension = pc_dimension(gl_InstanceID);
-	vec4 vertex = axis_line(gl_InstanceID, gl_VertexID);
-	
+    uint dimension = pc_dimension(gl_InstanceID);
+    int realID = gl_VertexID % 2;
+    int side = gl_VertexID / 2 - gl_VertexID/3;
+
+	vec4 vertex = axis_line(gl_InstanceID, realID);
+
   if (dimension == pickedAxis) {
   	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
   } else {
   	actualColor = color;
   }
   
-  gl_Position = projection * modelView * vertex;
+  gl_Position = projection * modelView * vertex + axesThickness * (vec4(2.0 / width, 0, 0, 0) + side * vec4(-4.0 / width, 0, 0, 0));
 }
 		    ]]>
       </snippet>
@@ -61,6 +67,9 @@ void main()
       <snippet type="string">
         <![CDATA[
 out vec4 actualColor;
+uniform float axesThickness;
+uniform int width;
+uniform int height;
         
 void main()
 {
@@ -68,19 +77,23 @@ void main()
   uint dimension = pc_dimension(gl_InstanceID / numTicks);
 	vec4 bottom = axis_line(gl_InstanceID / numTicks, 0);
 	vec4 top = axis_line(gl_InstanceID / numTicks, 1);
+
+  int realID = gl_VertexID %2;
   
   vec4 vertex = vec4(
-  bottom.x - axisHalfTick + 2 * gl_VertexID * axisHalfTick,
+  bottom.x - axisHalfTick + 2 * realID * axisHalfTick,
   mix(bottom.y, top.y, (gl_InstanceID % numTicks) / float(numTicks - 1)),
   bottom.z,
   bottom.w);
+  
+  int side = gl_VertexID / 2 - gl_VertexID/3;
   
   if (dimension == pickedAxis) {
   	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
   } else {
   	actualColor = color;
   }
-  gl_Position = projection * modelView * vertex;
+  gl_Position = projection * modelView * vertex + axesThickness * (vec4(0, 2.0/height, 0, 0) + side * vec4(0, -4.0/height, 0, 0));
 }
 		    ]]>
       </snippet>
@@ -117,6 +130,9 @@ void main()
         <![CDATA[
 out vec4 actualColor;
 uniform ivec2 pickedIndicator;
+uniform float axesThickness;
+uniform int width;
+uniform int height;
         
 void main()
 {
@@ -124,17 +140,22 @@ void main()
   uint dimension = pc_dimension(gl_InstanceID / 2);
 	vec4 bottom = axis_line(gl_InstanceID / 2, 0);
 	vec4 top = axis_line(gl_InstanceID / 2, 1);
-  
+
+    int realID = int(gl_VertexID / 6) + gl_VertexID % 2;
+    int side = gl_VertexID / 2 - gl_VertexID/3 - gl_VertexID / 6;
+
   float iAmTop = (gl_InstanceID % 2);
   float topOffset = iAmTop * 2.0 - 1.0; // top -> 1, bottom -> -1
   float val = (topOffset > 0) ? filters[dimension].upper : filters[dimension].lower;
   val = val - dataMinimum[dimension];
   val /= dataMaximum[dimension] - dataMinimum[dimension];
   vec4 vertex = vec4(
-  bottom.x - axisHalfTick + gl_VertexID * axisHalfTick,
-  mix(bottom.y, top.y, val) + axisHalfTick * (-topOffset * (-1 + gl_VertexID % 2)),
+  bottom.x - axisHalfTick + realID * axisHalfTick,
+  mix(bottom.y, top.y, val) + axisHalfTick * (-topOffset * (-1 + realID % 2)),
   bottom.z,
   bottom.w);
+
+  
   
   if ((dimension == pickedIndicator.x) && (abs(iAmTop - pickedIndicator.y) < 0.1)) {
   	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -142,6 +163,7 @@ void main()
   	actualColor = color;
   }
   gl_Position = projection * modelView * vertex;
+  gl_Position = gl_Position + axesThickness * (iAmTop * side * vec4(0, 16.0 / height, 0, 0) + side * vec4(0, -8.0 / height, 0, 0));
 }
 		    ]]>
       </snippet>
