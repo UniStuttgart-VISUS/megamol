@@ -297,12 +297,11 @@ namespace gui {
                             this->tf_string_hash = std::hash<std::string>()(val);
                         }
                     } else if (this->type == ParamType_t::FILEPATH) {
-                        // XXX [File] is the required tag to enable gui popup of this log message (see gui::LogConsole.cpp CTOR)
+                        // Push log message to GUI pop-up
                         auto file = std::get<std::string>(this->value);
                         if (!megamol::core::utility::FileUtils::FileExists(file)) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                                "[File] File not found: '%s' \n        >>> Parameter '%s'\n\n", this->FullName().c_str(),
-                                file.c_str());
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn("%sFile Parameter%sFile not found: '%s' > Parameter '%s'\n\n",
+                                LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG, this->FullName().c_str(), file.c_str());
                         }
                     }
                 }

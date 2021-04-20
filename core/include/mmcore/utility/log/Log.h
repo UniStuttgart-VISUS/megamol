@@ -16,6 +16,10 @@
 #include <iostream>
 #include <thread>
 
+// Enclose title of log message between start and and tag to get it pushed in GUI popup
+#define LOGMESSAGE_GUI_POPUP_START_TAG "<<<<<"
+#define LOGMESSAGE_GUI_POPUP_END_TAG   ">>>>>"
+
 
 namespace megamol {
 namespace core {
