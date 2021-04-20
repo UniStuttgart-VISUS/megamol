@@ -11,6 +11,7 @@
 
 #include "WindowManipulation.h"
 #include "Framebuffer_Events.h"
+#include "GUIState.h"
 
 #include "ImageWrapper_to_GLTexture.h"
 #include "ImagePresentation_Sinks.hpp"
@@ -74,6 +75,7 @@ bool ImagePresentation_Service::init(const Config& config) {
           "FrontendResources" // std::vector<FrontendResource>
         , "WindowManipulation"
         , "FramebufferEvents"
+        , "GUIResource"
     };
 
     log("initialized successfully");
@@ -257,6 +259,11 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
         static frontend_resources::gl_texture gl_image = image;
         glfw_sink.blit_texture(gl_image.as_gl_handle(), image.size.width, image.size.height);
     }
+
+    // EXPERIMENTAL: until the GUI Service provides rendering of the GUI on its own
+    // render UI overlay
+    static auto& gui_state = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::GUIState>();
+    gui_state.provide_gui_render();
 
     window_manipulation.swap_buffers();
 }
