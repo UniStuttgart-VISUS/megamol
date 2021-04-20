@@ -34,6 +34,10 @@ struct GUIState {
     // Provide GUI scale from argument of lua command
     /// (e.g. Lua_Service_Wrapper loads project providing GUI scale via mmSetScaleGUI)
     std::function<void(float)> provide_gui_scale;
+
+    // Provide GUI rendering into currently active OpenGL framebuffer
+    /// (e.g. ImagePresentation Service renders UI on top of view rendering results)
+    std::function<void()> provide_gui_render;
 };
 
 } /* end namespace frontend_resources */
