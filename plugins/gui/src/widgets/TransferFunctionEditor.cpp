@@ -167,26 +167,26 @@ TransferFunctionEditor::TransferFunctionEditor(void)
         , range({0.0f, 1.0f})
         , last_range({0.0f, 1.0f})
         , range_overwrite(false)
-        , mode(TransferFunctionParam::InterpolationMode::LINEAR)
-        , textureInvalid(true)
-        , textureSize(256)
-        , pendingChanges(true)
-        , activeChannels{true, true, true, true}
-        , selected_node_index(GUI_INVALID_ID)
+        , interpolation_mode(TransferFunctionParam::InterpolationMode::LINEAR)
+        , reload_texture(true)
+        , texture_size(256)
+        , pending_changes(true)
+        , immediate_mode(false)
+        , active_color_channels{true, true, true, true}
         , selected_channel_index(GUI_INVALID_ID)
-        , mouse_drag_change()
-        , immediateMode(false)
-        , showOptions(true)
+        , selected_node_index(GUI_INVALID_ID)
+        , selected_node_drag_delta()
+        , show_options(true)
         , widget_buffer()
         , flip_legend(false)
         , check_once_force_set_overwrite_range(true)
         , plot_paint_mode(false)
         , tooltip()
         , image_widget() {
-
+    
     this->widget_buffer.left_range = this->range[0];
     this->widget_buffer.right_range = this->range[1];
-    this->widget_buffer.tex_size = this->textureSize;
+    this->widget_buffer.tex_size = this->texture_size;
     this->widget_buffer.gauss_sigma = 0.05f;
     this->widget_buffer.range_value = 0.0f;
 }
@@ -201,19 +201,19 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
 
     this->selected_node_index = GUI_INVALID_ID;
     this->selected_channel_index = GUI_INVALID_ID;
-    this->mouse_drag_change = glm::vec2(0.0f, 0.0f);
+    this->selected_node_drag_delta = glm::vec2(0.0f, 0.0f);
 
     unsigned int new_tex_size = 0;
     std::array<float, 2> new_range;
     TransferFunctionParam::NodeVector_t new_nodes;
-    TransferFunctionParam::InterpolationMode new_mode;
-    if (!TransferFunctionParam::GetParsedTransferFunctionData(tfs, new_nodes, new_mode, new_tex_size, new_range)) {
+    TransferFunctionParam::InterpolationMode new_interpolation_mode;
+    if (!TransferFunctionParam::GetParsedTransferFunctionData(tfs, new_nodes, new_interpolation_mode, new_tex_size, new_range)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not parse transfer function");
         return;
     }
     bool tf_changed = false;
-    if (this->mode != new_mode) {
-        this->mode = new_mode;
+    if (this->interpolation_mode != new_interpolation_mode) {
+        this->interpolation_mode = new_interpolation_mode;
         tf_changed = true;
     }
     if (this->nodes != new_nodes) {
@@ -232,8 +232,9 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
         this->check_once_force_set_overwrite_range = false;
     }
 
-    if (this->widget_buffer.tex_size != static_cast<int>(new_tex_size)) {
-        this->widget_buffer.tex_size = static_cast<int>(new_tex_size);
+    if (this->texture_size != static_cast<int>(new_tex_size)) {
+        this->texture_size = static_cast<int>(new_tex_size);
+        this->widget_buffer.tex_size = this->texture_size;
         tf_changed = true;
     }
 
@@ -248,13 +249,13 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
             this->widget_buffer.range_value = this->widget_buffer.left_range;
             this->widget_buffer.gauss_sigma = 0.05f;
         }
-        this->textureInvalid = true;
+        this->reload_texture = true;
     }
 }
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
-    return TransferFunctionParam::GetDumpedTransferFunction(tfs, this->nodes, this->mode,
-        static_cast<unsigned int>(this->textureSize), this->range, !this->range_overwrite);
+    return TransferFunctionParam::GetDumpedTransferFunction(tfs, this->nodes, this->interpolation_mode,
+        static_cast<unsigned int>(this->texture_size), this->range, !this->range_overwrite);
 }
 
 
@@ -295,10 +296,10 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
     const float height = (30.0f * megamol::gui::gui_scaling.Get());
     const float width = (300.0f * megamol::gui::gui_scaling.Get());
-    const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
+    const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.775f;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
     ImVec2 image_size = ImVec2(width, height);
-    if (this->showOptions) {
+    if (this->show_options) {
         image_size = ImVec2(tfw_item_width, height);
         if (this->flip_legend) {
             image_size = ImVec2(height, width);
@@ -316,23 +317,23 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
     ImGui::SameLine();
 
-    if (ImGui::ArrowButton("Options_", this->showOptions ? ImGuiDir_Down : ImGuiDir_Up)) {
-        this->showOptions = !this->showOptions;
+    if (ImGui::ArrowButton("Options_", this->show_options ? ImGuiDir_Down : ImGuiDir_Up)) {
+        this->show_options = !this->show_options;
     }
 
-    if (this->showOptions) {
+    if (this->show_options) {
         ImGui::Separator();
 
         // Legend alignment ---------------------------------------------------
         ImGui::BeginGroup();
         if (ImGui::RadioButton("Vertical", this->flip_legend)) {
             this->flip_legend = true;
-            this->textureInvalid = true;
+            this->reload_texture = true;
         }
         ImGui::SameLine();
         if (ImGui::RadioButton("Horizontal", !this->flip_legend)) {
             this->flip_legend = false;
-            this->textureInvalid = true;
+            this->reload_texture = true;
         }
         ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
         ImGui::TextUnformatted("Legend Alignment");
@@ -346,13 +347,13 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         ImGui::InputFloat("###min", &this->widget_buffer.left_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->range[0] = this->widget_buffer.left_range;
-            this->textureInvalid = true;
+            this->reload_texture = true;
         }
         ImGui::SameLine();
         ImGui::InputFloat("###max", &this->widget_buffer.right_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->range[1] = this->widget_buffer.right_range;
-            this->textureInvalid = true;
+            this->reload_texture = true;
         }
         if (!this->range_overwrite) {
             GUIUtils::ReadOnlyWigetStyle(false);
@@ -377,7 +378,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 } else {
                     this->widget_buffer.range_value = this->widget_buffer.left_range;
                 }
-                this->textureInvalid = true;
+                this->reload_texture = true;
             }
         }
         help = "[Enable] for overwriting value range propagated from connected module(s).\n"
@@ -393,13 +394,13 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         }
 
         // Sigma slider -------------------------------------------------------
-        if (this->mode == TransferFunctionParam::InterpolationMode::GAUSS) {
+        if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::GAUSS) {
             const float sigma_min = 0.0f;
             const float sigma_max = 2.0f;
             if (ImGui::SliderFloat("Selected Sigma", &this->widget_buffer.gauss_sigma, sigma_min, sigma_max)) {
                 this->widget_buffer.gauss_sigma = std::clamp(this->widget_buffer.gauss_sigma, sigma_min, sigma_max);
                 this->nodes[this->selected_node_index][5] = this->widget_buffer.gauss_sigma;
-                this->textureInvalid = true;
+                this->reload_texture = true;
             }
             help = "[Ctrl + Left Click] for keyboard input";
             this->tooltip.Marker(help);
@@ -419,7 +420,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->nodes[this->selected_node_index][1] = edit_col[1];
             this->nodes[this->selected_node_index][2] = edit_col[2];
             this->nodes[this->selected_node_index][3] = edit_col[3];
-            this->textureInvalid = true;
+            this->reload_texture = true;
         }
         help = "[Left Click] on the colored square to open a color picker.\n"
                "[CTRL + Left Click] on individual component to input value.\n"
@@ -436,9 +437,8 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 std::clamp(this->widget_buffer.range_value, this->range[0], this->range[1]);
             float new_x = (this->widget_buffer.range_value - this->range[0]) / (this->range[1] - this->range[0]);
             this->nodes[this->selected_node_index][4] = std::clamp(new_x, 0.0f, 1.0f);
-            ;
             this->sortNodes(this->nodes, this->selected_node_index);
-            this->textureInvalid = true;
+            this->reload_texture = true;
         }
         help = "[Ctrl + Left Click] for keyboard input";
         this->tooltip.Marker(help);
@@ -449,22 +449,30 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         }
 
         // Plot ---------------------------------------------------------------
-        ImVec2 canvas_size = ImVec2(tfw_item_width, (150.0f * megamol::gui::gui_scaling.Get()));
+        ImVec2 canvas_size = ImVec2(tfw_item_width, tfw_item_width/2.0f);
         this->drawFunctionPlot(canvas_size);
 
-        // Plot paint mode
+        // Paint mode for plot
+        if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::GAUSS) {
+            megamol::gui::GUIUtils::ReadOnlyWigetStyle(true);
+        }
         megamol::gui::ButtonWidgets::ToggleButton("Paint Mode", this->plot_paint_mode);
+        this->tooltip.Marker("[Left Drag] Create new nodes at mouse position.");
+        if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::GAUSS) {
+            megamol::gui::GUIUtils::ReadOnlyWigetStyle(false);
+        }
 
         // Color channels -----------------------------------------------------
-        megamol::gui::ButtonWidgets::ToggleButton("Red", this->activeChannels[0]);
+        float available_width = tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX();
+        megamol::gui::ButtonWidgets::ToggleButton("Red", this->active_color_channels[0]);
         ImGui::SameLine();
-        megamol::gui::ButtonWidgets::ToggleButton("Green", this->activeChannels[1]);
+        megamol::gui::ButtonWidgets::ToggleButton("Green", this->active_color_channels[1]);
         ImGui::SameLine();
-        megamol::gui::ButtonWidgets::ToggleButton("Blue", this->activeChannels[2]);
+        megamol::gui::ButtonWidgets::ToggleButton("Blue", this->active_color_channels[2]);
         ImGui::SameLine();
-        megamol::gui::ButtonWidgets::ToggleButton("Alpha", this->activeChannels[3]);
+        megamol::gui::ButtonWidgets::ToggleButton("Alpha", this->active_color_channels[3]);
         ImGui::SameLine();
-        ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
+        ImGui::SameLine(available_width);
         ImGui::TextUnformatted("Color Channels");
 
         // Invert Colors
@@ -474,7 +482,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                     col[i] = 1.0f - col[i];
                 }
             }
-            this->textureInvalid = true;
+            this->reload_texture = true;
         }
         ImGui::SameLine();
         if (!node_selected) {
@@ -484,7 +492,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             for (int i = 0; i < 4; i++) {
                 this->nodes[this->selected_node_index][i] = 1.0f - this->nodes[this->selected_node_index][i];
             }
-            this->textureInvalid = true;
+            this->reload_texture = true;
         }
         if (!node_selected) {
             megamol::gui::GUIUtils::ReadOnlyWigetStyle(false);
@@ -498,12 +506,16 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         opts[TransferFunctionParam::InterpolationMode::LINEAR] = "Linear";
         opts[TransferFunctionParam::InterpolationMode::GAUSS] = "Gauss";
         const size_t opts_cnt = opts.size();
-        if (ImGui::BeginCombo("Interpolation", opts[this->mode].c_str())) {
+        if (ImGui::BeginCombo("Interpolation", opts[this->interpolation_mode].c_str())) {
             for (size_t i = 0; i < opts_cnt; ++i) {
                 if (ImGui::Selectable(opts[(TransferFunctionParam::InterpolationMode) i].c_str(),
-                        (this->mode == (TransferFunctionParam::InterpolationMode) i))) {
-                    this->mode = (TransferFunctionParam::InterpolationMode) i;
-                    this->textureInvalid = true;
+                        (this->interpolation_mode == (TransferFunctionParam::InterpolationMode) i))) {
+
+                    this->interpolation_mode = (TransferFunctionParam::InterpolationMode) i;
+                    if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::GAUSS) {
+                        this->plot_paint_mode = false;
+                    }
+                    this->reload_texture = true;
                 }
             }
             ImGui::EndCombo();
@@ -513,8 +525,8 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         if (ImGui::BeginCombo("Load Preset", std::get<0>(PRESETS[0]).c_str())) {
             for (auto preset : PRESETS) {
                 if (ImGui::Selectable(std::get<0>(preset).c_str())) {
-                    std::get<1>(preset)(this->nodes, this->textureSize);
-                    this->textureInvalid = true;
+                    std::get<1>(preset)(this->nodes, this->texture_size);
+                    this->reload_texture = true;
                 }
             }
             ImGui::EndCombo();
@@ -523,43 +535,41 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         // Texture size -------------------------------------------------------
         ImGui::InputInt("Texture Size", &this->widget_buffer.tex_size, 1, 10, ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            this->textureSize = std::max(1, this->widget_buffer.tex_size);
-            this->widget_buffer.tex_size = this->textureSize;
-            this->textureInvalid = true;
+            this->texture_size = std::max(1, this->widget_buffer.tex_size);
+            this->widget_buffer.tex_size = this->texture_size;
+            this->reload_texture = true;
         }
     }
     // --------------------------------------------------------------------
 
     // Create current texture data
-    if (this->textureInvalid) {
-        this->pendingChanges = true;
+    if (this->reload_texture) {
+        this->pending_changes = true;
         std::vector<float> texture_data;
-        if (this->mode == TransferFunctionParam::InterpolationMode::LINEAR) {
+        if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::LINEAR) {
             texture_data =
-                TransferFunctionParam::LinearInterpolation(static_cast<unsigned int>(this->textureSize), this->nodes);
-        } else if (this->mode == TransferFunctionParam::InterpolationMode::GAUSS) {
+                TransferFunctionParam::LinearInterpolation(static_cast<unsigned int>(this->texture_size), this->nodes);
+        } else if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::GAUSS) {
             texture_data =
-                TransferFunctionParam::GaussInterpolation(static_cast<unsigned int>(this->textureSize), this->nodes);
+                TransferFunctionParam::GaussInterpolation(static_cast<unsigned int>(this->texture_size), this->nodes);
         }
-
         if (!this->flip_legend) {
-            this->image_widget.LoadTextureFromData(this->textureSize, 1, texture_data.data());
+            this->image_widget.LoadTextureFromData(this->texture_size, 1, texture_data.data());
         } else {
-            this->image_widget.LoadTextureFromData(1, this->textureSize, texture_data.data());
+            this->image_widget.LoadTextureFromData(1, this->texture_size, texture_data.data());
         }
-
-        this->textureInvalid = false;
+        this->reload_texture = false;
     }
 
     // Apply -------------------------------------------------------
     bool apply_changes = false;
-    if (this->showOptions) {
+    if (this->show_options) {
 
         // Return true for current changes being applied
         ImGui::PushStyleColor(
-            ImGuiCol_Button, this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
+            ImGuiCol_Button, this->pending_changes ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-            this->pendingChanges ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
+            this->pending_changes ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
         if (ImGui::Button("Apply")) {
             apply_changes = true;
@@ -568,16 +578,16 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
         ImGui::SameLine();
 
-        if (ImGui::Checkbox("Auto-apply", &this->immediateMode)) {
-            apply_changes = this->immediateMode;
+        if (ImGui::Checkbox("Auto-apply", &this->immediate_mode)) {
+            apply_changes = this->immediate_mode;
         }
 
-        if (this->immediateMode && this->pendingChanges) {
+        if (this->immediate_mode && this->pending_changes) {
             apply_changes = true;
         }
 
         if (apply_changes) {
-            this->pendingChanges = false;
+            this->pending_changes = false;
         }
 
         if (connected_parameter_mode) {
@@ -616,7 +626,7 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend
         uv0 = ImVec2(1.0f, 1.0f);
         uv1 = ImVec2(0.0f, 0.0f);
     }
-    if (textureSize == 0 || !this->image_widget.IsLoaded()) {
+    if (texture_size == 0 || !this->image_widget.IsLoaded()) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImGui::Dummy(image_size);
@@ -757,7 +767,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         canvas_size.x = 100.0f;
     if (canvas_size.y < 100.0f)
         canvas_size.y = 100.0f;
-    ImVec2 mouse_cur_pos = io.MousePos; // current mouse position
+    ImVec2 mouse_pos = io.MousePos; // current mouse position
 
     ImVec4 tmp_frameBkgrd = style.Colors[ImGuiCol_FrameBg];
     tmp_frameBkgrd.w = 1.0f;
@@ -776,7 +786,6 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     const float point_radius = (6.0f * megamol::gui::gui_scaling.Get());
     const float point_border_width = (1.5f * megamol::gui::gui_scaling.Get());
     const float point_border_radius = point_radius + point_border_width;
-    const int circle_subdiv = 12;
     ImVec2 delta_border = style.ItemInnerSpacing;
 
     // Draw a background rectangle.
@@ -794,7 +803,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
     unsigned int current_selected_node_index = GUI_INVALID_ID;
     unsigned int current_selected_channel_index = GUI_INVALID_ID;
-    glm::vec2 selected_delta = glm::vec2(0.0f, 0.0f);
+    glm::vec2 current_selected_node_drag_delta = glm::vec2(0.0f, 0.0f);
     float dist_delta = FLT_MAX;
 
     // Draw line for selected node
@@ -810,10 +819,9 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
     // For each enabled color channel
     for (unsigned int c = 0; c < channelColors.size(); ++c) {
-        if (!this->activeChannels[c]) {
+        if (!this->active_color_channels[c]) {
             continue;
         }
-
         const auto node_count = this->nodes.size();
 
         // Draw lines.
@@ -822,9 +830,9 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
             ImVec2 point = ImVec2(canvas_pos.x + this->nodes[i][4] * canvas_size.x,
                 canvas_pos.y + (1.0f - this->nodes[i][c]) * canvas_size.y);
-            if (this->mode == TransferFunctionParam::InterpolationMode::LINEAR) {
+            if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::LINEAR) {
                 drawList->PathLineTo(point);
-            } else if (this->mode == TransferFunctionParam::InterpolationMode::GAUSS) {
+            } else if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::GAUSS) {
                 const float ga = this->nodes[i][c];
                 const float gb = this->nodes[i][4];
                 const float gc = this->nodes[i][5];
@@ -843,13 +851,13 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             }
 
             // Test for intersection of mouse position with node circle
-            glm::vec2 mouse_delta = glm::vec2(point.x - mouse_cur_pos.x, point.y - mouse_cur_pos.y);
+            glm::vec2 mouse_delta = glm::vec2(point.x - mouse_pos.x, point.y - mouse_pos.y);
             auto dist = glm::length(mouse_delta);
             // Select node with minimized mouse delta
             if ((dist <= point_border_radius) && (dist < dist_delta)) {
                 current_selected_node_index = i;
                 current_selected_channel_index = c;
-                selected_delta = mouse_delta;
+                current_selected_node_drag_delta = mouse_delta;
                 dist_delta = dist;
             }
         }
@@ -880,138 +888,191 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
     drawList->PopClipRect();
 
-    // Process mouse interaction
+    // Process plot interaction -----------------------------------------------
     ImGui::InvisibleButton("plot", canvas_size); // Needs to catch mouse input
-    if (ImGui::IsItemHovered() && (mouse_cur_pos.x > (canvas_pos.x - delta_border.x)) &&
-        (mouse_cur_pos.y > (canvas_pos.y - delta_border.y)) &&
-        (mouse_cur_pos.x < (canvas_pos.x + canvas_size.x + delta_border.x)) &&
-        (mouse_cur_pos.y < (canvas_pos.y + canvas_size.y + delta_border.y))) {
+    if (ImGui::IsItemHovered() && (mouse_pos.x > (canvas_pos.x - delta_border.x)) &&
+        (mouse_pos.y > (canvas_pos.y - delta_border.y)) &&
+        (mouse_pos.x < (canvas_pos.x + canvas_size.x + delta_border.x)) &&
+        (mouse_pos.y < (canvas_pos.y + canvas_size.y + delta_border.y))) {
 
-        bool sort_nodes = false;
+        if (ImGui::IsMouseClicked(0)) { // Left Mouse Click
+            if (!this->plot_paint_mode) {
+                this->changeNodeSelection(current_selected_node_index, current_selected_channel_index, current_selected_node_drag_delta);
+            }
+            else {
 
-        if (ImGui::IsMouseClicked(0)) { // Left Click
-
-            // Change selected node
-            this->selected_node_index = current_selected_node_index;
-            this->selected_channel_index = current_selected_channel_index;
-            this->mouse_drag_change = selected_delta;
-            if ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size())) {
-                this->widget_buffer.range_value =
-                    (this->nodes[this->selected_node_index][4] * (this->range[1] - this->range[0])) + this->range[0];
-                this->widget_buffer.gauss_sigma = this->nodes[this->selected_node_index][5];
+            }
+        } else if (ImGui::IsMouseDragging(0)) { // Left Mouse Drag
+            if (!this->plot_paint_mode) {
+                this->moveSelectedNode(this->selected_node_index, mouse_pos, canvas_pos, canvas_size);
             } else {
-                this->widget_buffer.range_value = this->widget_buffer.left_range;
-                this->widget_buffer.gauss_sigma = 0.05f;
+                this->paintModeNode(mouse_pos, canvas_pos, canvas_size);
             }
-        } else if (ImGui::IsMouseDragging(0)) { // Left Move
-
-            // Move selected node
-            if ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size())) {
-                float new_x = (mouse_cur_pos.x - canvas_pos.x + this->mouse_drag_change.x) / canvas_size.x;
-                new_x = std::clamp(new_x, 0.0f, 1.0f);
-
-                this->nodes[this->selected_node_index][4] = new_x;
-                this->widget_buffer.range_value = (new_x * (this->range[1] - this->range[0])) + this->range[0];
-
-                float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y + this->mouse_drag_change.y) / canvas_size.y);
-                new_y = std::max(0.0f, std::min(new_y, 1.0f));
-
-                for (unsigned int cc = 0; cc < 4; cc++) {
-                    if (this->activeChannels[cc] && (this->selected_channel_index == cc)) {
-                        this->nodes[this->selected_node_index][cc] = new_y;
-                    }
-                }
-                this->textureInvalid = true;
-                sort_nodes = true;
+        } else if (ImGui::IsMouseClicked(1)) { // Right Mouse Click
+            if (!this->deleteNode(current_selected_node_index)) {
+                this->addNode(mouse_pos, canvas_pos, canvas_size);
             }
-
-            // Process paint mode
-            if (this->plot_paint_mode) {
-
-
-
-
-
-
-
-
-
-
-
-            }
-
-        } else if (ImGui::IsMouseClicked(1)) { // Right Click
-
-            // Delete currently hovered node
-            if (current_selected_node_index != GUI_INVALID_ID) {
-                this->nodes.erase(this->nodes.begin() + current_selected_node_index);
-                this->selected_node_index = GUI_INVALID_ID;
-            } else {
-                // Add new node at current position
-                float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
-                new_x = std::clamp(new_x, 0.0f, 1.0f);
-
-                float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y) / canvas_size.y);
-                new_y = std::max(0.0f, std::min(new_y, 1.0f));
-
-                TransferFunctionParam::NodeData_t new_col = {0.0f, 0.0f, 0.0f, 0.0f, new_x, 0.05f};
-                for (unsigned int cc = 0; cc < 4; cc++) {
-                    if (this->activeChannels[cc]) {
-                        new_col[cc] = new_y;
-                    }
-                }
-
-                if (this->nodes.empty()) {
-                    this->nodes.push_back(new_col);
-                } else {
-                    for (auto it = this->nodes.begin(); it != this->nodes.end(); ++it) {
-
-                        auto new_col = (*it);
-                        for (unsigned int cc = 0; cc < 4; cc++) {
-                            if (this->activeChannels[cc]) {
-                                new_col[cc] = new_y;
-                            }
-                        }
-                        new_col[4] = new_x;
-                        new_col[5] = 0.05f;
-
-                        if (new_x < (*it)[4]) {
-                            if (it != this->nodes.begin()) {
-                                auto pre_col = (*(it - 1));
-                                auto post_col = (*it);
-                                new_col = {(pre_col[0] + post_col[0]) / 2.0f, (pre_col[1] + post_col[1]) / 2.0f,
-                                    (pre_col[2] + post_col[2]) / 2.0f, (pre_col[3] + post_col[3]) / 2.0f, new_x, 0.05f};
-                                for (unsigned int cc = 0; cc < 4; cc++) {
-                                    if (this->activeChannels[cc]) {
-                                        new_col[cc] = new_y;
-                                    }
-                                }
-                            }
-                            this->nodes.insert(it, new_col);
-                            break;
-                        } else if (new_x > (*it)[4]) {
-                            this->nodes.push_back(new_col);
-                            break;
-                        }
-                    }
-                }
-            }
-            this->textureInvalid = true;
-            sort_nodes = true;
-        }
-
-        if (sort_nodes) {
-            this->sortNodes(this->nodes, this->selected_node_index);
         }
     }
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
+    ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Function Plot");
-    this->tooltip.Marker("First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
-                         "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
+    this->tooltip.Marker("[Left Click] Select Node\n[Left Drag] Move Node\n[Right Click] Add Node/Delete Selected Node");
 }
 
 
-void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const {
+bool TransferFunctionEditor::addNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
+
+    float new_x = (mouse_pos.x - canvas_pos.x) / canvas_size.x;
+    new_x = std::clamp(new_x, 0.0f, 1.0f);
+
+    float new_y = 1.0f - ((mouse_pos.y - canvas_pos.y) / canvas_size.y);
+    new_y = std::max(0.0f, std::min(new_y, 1.0f));
+
+    TransferFunctionParam::NodeData_t new_node = {0.0f, 0.0f, 0.0f, 0.0f, new_x, 0.05f};
+    for (unsigned int cc = 0; cc < 4; cc++) {
+        if (this->active_color_channels[cc]) {
+            new_node[cc] = new_y;
+        }
+    }
+
+    if (this->nodes.empty()) {
+        this->nodes.push_back(new_node);
+    } else {
+        bool added_node = false;
+        for (auto it = this->nodes.begin(); it != this->nodes.end(); ++it) {
+            new_node = (*it);
+            for (unsigned int cc = 0; cc < 4; cc++) {
+                if (this->active_color_channels[cc]) {
+                    new_node[cc] = new_y;
+                }
+            }
+            new_node[4] = new_x;
+            new_node[5] = 0.05f;
+
+            if (new_x < (*it)[4]) {
+                if (it != this->nodes.begin()) {
+                    auto pre_col = (*(it - 1));
+                    auto post_col = (*it);
+                    new_node = {(pre_col[0] + post_col[0]) / 2.0f, (pre_col[1] + post_col[1]) / 2.0f,
+                               (pre_col[2] + post_col[2]) / 2.0f, (pre_col[3] + post_col[3]) / 2.0f, new_x, 0.05f};
+                    for (unsigned int cc = 0; cc < 4; cc++) {
+                        if (this->active_color_channels[cc]) {
+                            new_node[cc] = new_y;
+                        }
+                    }
+                }
+                this->nodes.insert(it, new_node);
+                added_node = true;
+                break;
+            }
+        }
+        if (!added_node) {
+            this->nodes.push_back(new_node);
+        }
+    }
+
+    this->sortNodes(this->nodes, this->selected_node_index);
+    this->reload_texture = true;
+    return true;
+}
+
+
+bool TransferFunctionEditor::paintModeNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
+
+    this->selected_node_index = GUI_INVALID_ID;
+
+    /// Create new nodes depending on texture size - overwrite/delete existing nodes
+    float x = (mouse_pos.x - canvas_pos.x) / canvas_size.x;
+    float texel_delta = 1.0f / static_cast<float>(this->texture_size);
+    float texel_cnt = floorf(x / texel_delta);
+    float pre_texel = texel_delta * texel_cnt;
+    float post_texel = texel_delta * (texel_cnt + 1.0f);
+    texel_cnt = ((pre_texel - x) > (x - post_texel))?(texel_cnt):(texel_cnt + 1.0f);
+    float new_x = std::clamp((texel_delta * texel_cnt), 0.0f, 1.0f);
+
+    std::vector<unsigned int> delete_nodes_indices;
+    unsigned int node_count = this->nodes.size();
+    float tmp_value;
+    // Sort indices of deletable nodes descending in order to keep indices valid while erasing
+    for (unsigned int i = (node_count - 1); i > 0; i--) {
+        tmp_value = this->nodes[i][4];
+        if ((tmp_value > (new_x - texel_delta + 1e-5f)) && (tmp_value < (new_x + texel_delta - 1e-5f))) {
+            delete_nodes_indices.push_back(i);
+        }
+    }
+    for (auto delete_node_index : delete_nodes_indices) {
+        this->nodes.erase(this->nodes.begin() + delete_node_index);
+    }
+
+    float new_mouse_pos_x = (new_x * canvas_size.x) + canvas_pos.x;
+    ImVec2 new_pos = ImVec2(new_mouse_pos_x, mouse_pos.y);
+    this->addNode(new_pos, canvas_pos, canvas_size);
+
+    return true;
+}
+
+bool TransferFunctionEditor::changeNodeSelection(unsigned int new_selected_node_index, unsigned int new_selected_channel_index, glm::vec2 new_selected_node_drag_delta) {
+
+    this->selected_node_index = new_selected_node_index;
+    this->selected_channel_index = new_selected_channel_index;
+    this->selected_node_drag_delta = new_selected_node_drag_delta;
+
+    if ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size())) {
+        this->widget_buffer.range_value =
+                (this->nodes[this->selected_node_index][4] * (this->range[1] - this->range[0])) + this->range[0];
+        this->widget_buffer.gauss_sigma = this->nodes[this->selected_node_index][5];
+    } else {
+        this->widget_buffer.range_value = this->widget_buffer.left_range;
+        this->widget_buffer.gauss_sigma = 0.05f;
+    }
+    return true;
+}
+
+
+bool TransferFunctionEditor::moveSelectedNode(unsigned int selected_node_index, const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
+
+    if ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size())) {
+
+        float new_x = (mouse_pos.x - canvas_pos.x + this->selected_node_drag_delta.x) / canvas_size.x;
+        new_x = std::clamp(new_x, 0.0f, 1.0f);
+
+        float new_y = 1.0f - ((mouse_pos.y - canvas_pos.y + this->selected_node_drag_delta.y) / canvas_size.y);
+        new_y = std::max(0.0f, std::min(new_y, 1.0f));
+
+        this->nodes[selected_node_index][4] = new_x;
+        this->widget_buffer.range_value = (new_x * (this->range[1] - this->range[0])) + this->range[0];
+
+        for (unsigned int cc = 0; cc < 4; cc++) {
+            if (this->active_color_channels[cc] && (this->selected_channel_index == cc)) {
+                this->nodes[selected_node_index][cc] = new_y;
+            }
+        }
+
+        this->sortNodes(this->nodes, this->selected_node_index);
+        this->reload_texture = true;
+        return true;
+    }
+    return false;
+}
+
+
+bool TransferFunctionEditor::deleteNode(unsigned int node_index) {
+
+    if ((node_index != GUI_INVALID_ID) && (node_index < this->nodes.size())) {
+
+        this->nodes.erase(this->nodes.begin() + node_index);
+        this->selected_node_index = GUI_INVALID_ID;
+
+        this->sortNodes(this->nodes, this->selected_node_index);
+        this->reload_texture = true;
+        return true;
+    }
+    return false;
+}
+
+
+bool TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const {
 
     const auto n_count = n.size();
     float value = 0.0f;

@@ -398,7 +398,7 @@ std::vector<float> TransferFunctionParam::LinearInterpolation(unsigned int in_te
 
     NodeData_t cx1 = in_nodes[0];
     NodeData_t cx2 = cx1;
-    int p1 = static_cast<int>(cx1[4] * static_cast<float>(in_texsize - 1));
+    int p1 = static_cast<int>(floorf(cx1[4] * static_cast<float>(in_texsize - 1)));
     int p2 = p1;
 
     size_t data_cnt = in_nodes.size();
@@ -412,7 +412,7 @@ std::vector<float> TransferFunctionParam::LinearInterpolation(unsigned int in_te
         assert(cx2[4] <= 1.0f + 1e-5f); // 1e-5f = vislib::math::FLOAT_EPSILON
 
         for (int p = p1; p <= p2; p++) {
-            float al = (static_cast<float>(p - p1) + 0.5f) / static_cast<float>(p2 - p1);
+            float al = (static_cast<float>(p - p1)) / static_cast<float>(p2 - p1);
             float be = 1.0f - al;
 
             out_texdata[p * 4] = cx1[0] * be + cx2[0] * al;
