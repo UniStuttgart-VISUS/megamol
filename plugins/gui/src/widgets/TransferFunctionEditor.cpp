@@ -1072,7 +1072,7 @@ bool TransferFunctionEditor::deleteNode(unsigned int node_index) {
 }
 
 
-bool TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const {
+void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const {
 
     const auto n_count = n.size();
     float value = 0.0f;
