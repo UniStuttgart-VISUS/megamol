@@ -54,6 +54,8 @@ namespace gui {
 
         HoverToolTip tooltip;
         PickableCube cube_widget;
+
+        megamol::core::param::AbstractParamPresentation::Presentation last_presentation;
     };
 
 

@@ -2,6 +2,13 @@
 #include "ParallelCoordinatesRenderer2D.h"
 
 #include <algorithm>
+#include <array>
+#include <iostream>
+
+#include <glm/gtc/functions.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/BoolParam.h"
@@ -10,16 +17,14 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmstd_datatools/table/TableDataCall.h"
+#include "vislib/graphics/InputModifiers.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-
-#include <array>
-#include <iostream>
-#include "vislib/graphics/InputModifiers.h"
 
 //#define FUCK_THE_PIPELINE
 //#define USE_TESSELLATION
@@ -59,6 +64,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
         , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
         , filterStateSlot("filterState", "stores filter state for serialization")
+        , triangleModeSlot("triangleMode", "Enables triangles instead of GL_LINES")
+        , lineThicknessSlot("lineThickness", "Float value to incease line thickness")
+        , axesLineThicknessSlot("axesLineThickness", "Float value to incease line thickness of Axes and Indicators")
         , numTicks(5)
         , columnCount(0)
         , itemCount(0)
@@ -79,7 +87,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         , needSelectionUpdate(false)
         , needFlagsUpdate(false)
         , lastTimeStep(0)
-        , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
+        , font(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -165,6 +173,14 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     // filterStateSlot.Param<core::param::StringParam>()->SetGUIVisible(false);
     this->MakeSlotAvailable(&filterStateSlot);
 
+    this->triangleModeSlot << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&triangleModeSlot);
+
+    this->lineThicknessSlot << new core::param::FloatParam(1.5);
+    this->MakeSlotAvailable(&lineThicknessSlot);
+
+    this->axesLineThicknessSlot << new core::param::FloatParam(1.0);
+    this->MakeSlotAvailable(&axesLineThicknessSlot);
 
     fragmentMinMax.resize(2);
 }
@@ -227,6 +243,8 @@ bool ParallelCoordinatesRenderer2D::create(void) {
         return false;
 
     if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram))
+        return false;
+    if (!makeProgram("::pc_item_draw::discreteT", this->drawItemsTriangleProgram))
         return false;
     if (!makeProgram("::pc_item_draw::muhaha", this->traceItemsDiscreteProgram))
         return false;
@@ -604,14 +622,18 @@ bool ParallelCoordinatesRenderer2D::OnKey(
     return false;
 }
 
-void ParallelCoordinatesRenderer2D::drawAxes(void) {
+void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
     debugPush(1, "drawAxes");
     if (this->columnCount > 0) {
         this->enableProgramAndBind(this->drawAxesProgram);
         glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1,
             this->axesColorSlot.Param<core::param::ColorParam>()->Value().data());
         glUniform1i(this->drawAxesProgram.ParameterLocation("pickedAxis"), pickedAxis);
-        glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount);
+        glUniform1i(this->drawAxesProgram.ParameterLocation("width"), windowWidth);
+        glUniform1i(this->drawAxesProgram.ParameterLocation("height"), windowHeight);
+        glUniform1f(this->drawAxesProgram.ParameterLocation("axesThickness"),
+            axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount);
         this->drawAxesProgram.Disable();
 
         this->enableProgramAndBind(this->drawScalesProgram);
@@ -620,7 +642,11 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
         glUniform1ui(this->drawScalesProgram.ParameterLocation("numTicks"), this->numTicks);
         glUniform1f(this->drawScalesProgram.ParameterLocation("axisHalfTick"), 2.0f);
         glUniform1i(this->drawScalesProgram.ParameterLocation("pickedAxis"), pickedAxis);
-        glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount * this->numTicks);
+        glUniform1i(this->drawScalesProgram.ParameterLocation("width"), windowWidth);
+        glUniform1i(this->drawScalesProgram.ParameterLocation("height"), windowHeight);
+        glUniform1f(this->drawScalesProgram.ParameterLocation("axesThickness"),
+            axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount * this->numTicks);
         this->drawScalesProgram.Disable();
 
         this->enableProgramAndBind(this->drawFilterIndicatorsProgram);
@@ -629,7 +655,11 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
         glUniform1f(this->drawFilterIndicatorsProgram.ParameterLocation("axisHalfTick"), 2.0f);
         glUniform2i(this->drawFilterIndicatorsProgram.ParameterLocation("pickedIndicator"), pickedIndicatorAxis,
             pickedIndicatorIndex);
-        glDrawArraysInstanced(GL_LINE_STRIP, 0, 3, this->columnCount * 2);
+        glUniform1i(this->drawFilterIndicatorsProgram.ParameterLocation("width"), windowWidth);
+        glUniform1i(this->drawFilterIndicatorsProgram.ParameterLocation("height"), windowHeight);
+        glUniform1f(this->drawFilterIndicatorsProgram.ParameterLocation("axesThickness"),
+            axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 12, this->columnCount * 2);
         this->drawScalesProgram.Disable();
         float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
         const float* color;
@@ -645,8 +675,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
             }
             float x = this->marginX + this->axisDistance * c;
 #if 0
-            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #else
             float bottom = filters[realCol].lower;
             // bottom *= (maximums[realCol] - minimums[realCol]);
@@ -654,16 +684,16 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
             float top = filters[realCol].upper;
             // top *= (maximums[realCol] - minimums[realCol]);
             // top += minimums[realCol];
-            this->font.DrawString(color, x, this->marginY * 0.5f, fontSize, false, std::to_string(bottom).c_str(),
-                core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
-                std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 0.5f, fontSize, false,
+                std::to_string(bottom).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
+                std::to_string(top).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
 #endif
-            this->font.DrawString(color, x,
+            this->font.DrawString(ortho, color, x,
                 this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontSize * 2.0f, false,
-                names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+                names[realCol].c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
         }
-        this->font.BatchDrawString();
+        this->font.BatchDrawString(ortho);
 #endif
     }
     debugPop();
@@ -695,17 +725,18 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #ifdef USE_TESSELLATION
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
 #else
-    vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
+    vislib::graphics::gl::GLSLShader& prog = this->triangleModeSlot.Param<core::param::BoolParam>()->Value()
+                                                 ? this->drawItemsTriangleProgram
+                                                 : this->drawItemsDiscreteProgram;
 #endif
 #endif
 
     this->enableProgramAndBind(prog);
-    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0],
-    // tf->Range()[1]);
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
-
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
+    glUniform1f(prog.ParameterLocation("widthR"), this->windowWidth);
+    glUniform1f(prog.ParameterLocation("heightR"), this->windowHeight);
     try {
         auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
         glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
@@ -718,6 +749,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
     glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
 
+    glUniform1f(prog.ParameterLocation("thicknessP"), lineThicknessSlot.Param<core::param::FloatParam>()->Value());
+
     glEnable(GL_CLIP_DISTANCE0);
 #ifdef FUCK_THE_PIPELINE
     glDrawArrays(GL_TRIANGLES, 0, 6 * ((this->itemCount / 128) + 1));
@@ -729,8 +762,12 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #else
     // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
     // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
-    glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
-    // glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
+    if (this->triangleModeSlot.Param<core::param::BoolParam>()->Value()) {
+        glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
+    } else {
+        glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
+    }
+
 #endif
 #endif
     prog.Disable();
@@ -749,7 +786,6 @@ void ParallelCoordinatesRenderer2D::drawPickIndicator(float x, float y, float pi
     glUniform4fv(program.ParameterLocation("indicatorColor"), 1, color);
     glDisable(GL_DEPTH_TEST);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glEnable(GL_DEPTH_TEST);
     program.Disable();
 }
 
@@ -761,10 +797,13 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
     glUniform2f(prog.ParameterLocation("mousePressed"), x0, y0);
     glUniform2f(prog.ParameterLocation("mouseReleased"), x1, y1);
 
+    glUniform1i(prog.ParameterLocation("width"), windowWidth);
+    glUniform1i(prog.ParameterLocation("height"), windowHeight);
+    glUniform1f(prog.ParameterLocation("thickness"), axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
+
     glUniform4fv(prog.ParameterLocation("indicatorColor"), 1, color);
     glDisable(GL_DEPTH_TEST);
-    glDrawArrays(GL_LINES, 0, 2);
-    glEnable(GL_DEPTH_TEST);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     prog.Disable();
 }
 
@@ -803,7 +842,6 @@ void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, flo
     strokeProgram.Disable();
     debugPop();
 }
-
 
 void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     debugPush(4, "doFragmentCount");
@@ -962,15 +1000,10 @@ void ParallelCoordinatesRenderer2D::load_filters() {
     }
 }
 
-
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
 
-    // get camera
-    core::view::Camera_2 cam;
+    megamol::core::view::Camera_2 cam;
     call.GetCamera(cam);
-
-    cam_type::matrix_type view, proj;
-    cam.calc_matrices(view, proj);
 
     windowAspect = static_cast<float>(cam.resolution_gate_aspect());
 
@@ -981,10 +1014,18 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     windowWidth = cam.resolution_gate().width();
     windowHeight = cam.resolution_gate().height();
     auto bg = call.BackgroundColor();
-    backgroundColor[0] = bg[0] / 255.0f;
-    backgroundColor[1] = bg[1] / 255.0f;
-    backgroundColor[2] = bg[2] / 255.0f;
-    backgroundColor[3] = bg[3] / 255.0f;
+
+    backgroundColor[0] = bg[0];
+    backgroundColor[1] = bg[1];
+    backgroundColor[2] = bg[2];
+    backgroundColor[3] = bg[3];
+
+    // this is the apex of suck and must die
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    // end suck
+
+    glm::mat4 ortho = glm::make_mat4(projMatrix_column) * glm::make_mat4(modelViewMatrix_column);
 
     this->assertData(call);
 
@@ -1028,7 +1069,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
 
         this->needFlagsUpdate = true;
     }
-
     drawParcos();
 
     // Draw stroking/picking indicator
@@ -1082,8 +1122,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
         }
     }
 
+
     if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
-        drawAxes();
+        drawAxes(ortho);
     }
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

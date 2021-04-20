@@ -22,7 +22,7 @@ megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget(void)
         , image_buttons()
         , tooltip() {
 
-    this->InitPresentation(Param_t::GROUP_ANIMATION);
+    this->InitPresentation(ParamType_t::GROUP_ANIMATION);
     this->name = "anim";
 }
 
@@ -33,11 +33,11 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
     bool param_time = false;
     bool param_speed = false;
     for (auto& param_ptr : params) {
-        if ((param_ptr->Name() == "play") && (param_ptr->Type() == Param_t::BOOL)) {
+        if ((param_ptr->Name() == "play") && (param_ptr->Type() == ParamType_t::BOOL)) {
             param_play = true;
-        } else if ((param_ptr->Name() == "time") && (param_ptr->Type() == Param_t::FLOAT)) {
+        } else if ((param_ptr->Name() == "time") && (param_ptr->Type() == ParamType_t::FLOAT)) {
             param_time = true;
-        } else if ((param_ptr->Name() == "speed") && (param_ptr->Type() == Param_t::FLOAT)) {
+        } else if ((param_ptr->Name() == "speed") && (param_ptr->Type() == ParamType_t::FLOAT)) {
             param_speed = true;
         }
     }
@@ -60,11 +60,11 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
     Parameter* param_speed = nullptr;
     /// Find specific parameters of group by name because parameter type can occure multiple times.
     for (auto& param_ptr : params) {
-        if ((param_ptr->Name() == "play") && (param_ptr->Type() == Param_t::BOOL)) {
+        if ((param_ptr->Name() == "play") && (param_ptr->Type() == ParamType_t::BOOL)) {
             param_play = param_ptr;
-        } else if ((param_ptr->Name() == "time") && (param_ptr->Type() == Param_t::FLOAT)) {
+        } else if ((param_ptr->Name() == "time") && (param_ptr->Type() == ParamType_t::FLOAT)) {
             param_time = param_ptr;
-        } else if ((param_ptr->Name() == "speed") && (param_ptr->Type() == Param_t::FLOAT)) {
+        } else if ((param_ptr->Name() == "speed") && (param_ptr->Type() == ParamType_t::FLOAT)) {
             param_speed = param_ptr;
         }
     }

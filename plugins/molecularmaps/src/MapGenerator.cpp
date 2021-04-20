@@ -17,7 +17,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "protein_calls/MolecularDataCall.h"
 
 #include <numeric>
@@ -32,7 +32,7 @@ using namespace megamol::protein_calls;
  * MapGenerator::MapGenerator
  */
 MapGenerator::MapGenerator(void)
-        : Renderer3DModule_2()
+        : Renderer3DModuleGL()
         , aoActive("ambientOcclusion::useAO", "Flag whether or not use Ambient Occlusion for the tunnel detection.")
         , aoAngleFactorParam("ambientOcclusion::angleFactor", "Factor for the angle between two sample directions")
         , aoEvalParam("ambientOcclusion::eval", "Scaling factor for the final brightness value")
@@ -379,7 +379,7 @@ bool MapGenerator::allElementsTrue(const std::vector<bool>& p_vec) {
  * MapGenerator::capColouring
  */
 bool MapGenerator::capColouring(
-    CallTriMeshData* p_cap_data_call, view::CallRender3D_2& p_cr3d, protein_calls::BindingSiteCall* p_bs) {
+    CallTriMeshData* p_cap_data_call, view::CallRender3DGL& p_cr3d, protein_calls::BindingSiteCall* p_bs) {
     // Check the calls.
     if (p_bs == nullptr) {
         return false;
@@ -1378,7 +1378,7 @@ void MapGenerator::drawMap(void) {
 /*
  * MapGenerator::GetExtents
  */
-bool MapGenerator::GetExtents(core::view::CallRender3D_2& call) {
+bool MapGenerator::GetExtents(core::view::CallRender3DGL& call) {
     CallTriMeshData* ctmd = this->meshDataSlot.CallAs<CallTriMeshData>();
     if (ctmd == nullptr)
         return false;
@@ -3691,7 +3691,7 @@ void MapGenerator::rebuildSurface(
 /*
  * MapGenerator::Render
  */
-bool MapGenerator::Render(core::view::CallRender3D_2& call) {
+bool MapGenerator::Render(core::view::CallRender3DGL& call) {
     // Check if we need to reload the shaders.
     bool shaderReloaded = false;
     if (this->shaderReloadButtonParam.IsDirty()) {

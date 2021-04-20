@@ -55,7 +55,7 @@ namespace gui {
          * Returns required font scalings for graph canvas
          */
         inline const FontScalingArray_t& GetGraphFontScalings(void) const {
-            return this->graph_state.font_scalings;
+            return this->graph_state.graph_zoom_font_scalings;
         }
 
         /**

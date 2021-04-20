@@ -85,15 +85,9 @@ static std::string nodecoration_option  = "nodecoration";
 static std::string topmost_option       = "topmost";
 static std::string nocursor_option      = "nocursor";
 static std::string interactive_option   = "i,interactive";
+static std::string guishow_option       = "guishow";
+static std::string guiscale_option      = "guiscale";
 static std::string help_option          = "h,help";
-
-static std::string loong(std::string const& option) {
-    auto f = option.find(',');
-    if (f == std::string::npos)
-        return option;
-
-    return option.substr(f+1);
-}
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
     for (const auto& file : vec) {
@@ -107,6 +101,17 @@ static void files_exist(std::vector<std::string> vec, std::string const& type) {
 // this is a handler template
 static void empty_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
+    // config.option = parsed_options[option_name].as<bool>();
+};
+
+static void guishow_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.gui_show = parsed_options[option_name].as<bool>();
+};
+
+static void guiscale_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.gui_scale = parsed_options[option_name].as<float>();
 };
 
 static void config_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -143,14 +148,35 @@ static void logfile_handler(std::string const& option_name, cxxopts::ParseResult
     config.log_file = parsed_options[option_name].as<std::string>();
 };
 
+static const std::string accepted_log_level_strings = "('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')";
+static unsigned int parse_log_level(std::string const& value) {
+    if (value.front()=='-')
+        exit("log level value must be positive. seems to be negative: " + value);
+
+    unsigned int value_as_uint = 0;
+
+    try {
+        if (std::string(value).find_first_of("0123456789") != std::string::npos) {
+            value_as_uint = std::stoi(value);
+        } else {
+            value_as_uint = megamol::core::utility::log::Log::ParseLevelAttribute(value);
+        }
+    }
+    catch (...) {
+        exit("Could not parse valid log level string or positive integer from argument \"" + value + "\"");
+    }
+
+    return value_as_uint;
+}
+
 static void loglevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.log_level = parsed_options[option_name].as<unsigned int>();
+    config.log_level = parse_log_level(parsed_options[option_name].as<std::string>());
 };
 
 static void echolevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.echo_level = parsed_options[option_name].as<unsigned int>();
+    config.echo_level = parse_log_level(parsed_options[option_name].as<std::string>());
 };
 
 static void project_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -244,8 +270,8 @@ std::vector<OptionsListEntry> cli_options_list =
         , {resourcedir_option,   "Add resource directory(ies)",                                                     cxxopts::value<std::vector<std::string>>(), resourcedir_handler}
         , {shaderdir_option,     "Add shader directory(ies)",                                                       cxxopts::value<std::vector<std::string>>(), shaderdir_handler}
         , {logfile_option,       "Set log file",                                                                    cxxopts::value<std::string>(),              logfile_handler}
-        , {loglevel_option,      "Set logging level",                                                               cxxopts::value<unsigned int>(),             loglevel_handler}
-        , {echolevel_option,     "Set echo level",                                                                  cxxopts::value<unsigned int>(),             echolevel_handler}
+        , {loglevel_option,      "Set logging level, accepted values: "+accepted_log_level_strings,                 cxxopts::value<std::string>(),              loglevel_handler}
+        , {echolevel_option,     "Set echo level, accepted values see above",                                       cxxopts::value<std::string>(),              echolevel_handler}
         , {project_option,       "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
         , {global_option,        "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
@@ -259,8 +285,18 @@ std::vector<OptionsListEntry> cli_options_list =
         , {nocursor_option,      "Do not show mouse cursor inside window",                                          cxxopts::value<bool>(),                     nocursor_handler     }
         , {interactive_option,   "Run MegaMol even if some project file failed to load",                            cxxopts::value<bool>(),                     interactive_handler  }
         , {project_files_option, "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
+        , {guishow_option,       "Render GUI overlay, use '=false' to disable",                                     cxxopts::value<bool>(),                     guishow_handler}
+        , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
+
+static std::string loong(std::string const& option) {
+    auto f = option.find(',');
+    if (f == std::string::npos)
+        return option;
+
+    return option.substr(f+1);
+}
 
 std::vector<std::string> megamol::frontend::extract_config_file_paths(const int argc, const char** argv) {
     // load config files from default paths
@@ -322,24 +358,31 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
     using StringPair = megamol::frontend_resources::RuntimeConfig::StringPair;
     std::vector<StringPair> cli_options_from_configs;
 
+    using megamol::frontend_resources::LuaCallbacksCollection;
+    using Error = megamol::frontend_resources::LuaCallbacksCollection::LuaError;
+    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
+
     #define sane(s) \
                 if (s.empty() || s.find_first_of(" =") != std::string::npos) \
-                    return false;
+                    return Error{"Value \"" + s + "\" is empty, has space or ="};
+
     #define file_exists(f) \
                 if (!stdfs::exists(f)) \
-                    return false;
-    #define add(o,v) \
-                cli_options_from_configs.push_back({loong(o),v})
+                    return Error{"File does not exist: " + f};
 
+    #define add_cli(o,v) \
+                cli_options_from_configs.push_back({loong(o),v});
+
+    // helper to make options that take a string and maybe check for a file to exist
     auto make_option_callback = [&](std::string const& optname, bool file_check = false) {
-        return [file_check, optname, &cli_options_from_configs](std::string const& value) {
+        return [file_check, optname, &cli_options_from_configs](std::string value) -> VoidResult {
             sane(value);
-            if (file_check) {
-                file_exists(value);
-            }
-            add(optname, value);
 
-            return true;
+            if (file_check)
+                file_exists(value);
+
+            add_cli(optname, value);
+            return VoidResult{};
         };
     };
 
@@ -356,18 +399,14 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         }
     }
 
-    // the thing with the lua callbacks is: 
-    // lua should not know how CLI options are named.
-    // we might want to rename --logfile or --loglevel at some point
-    // but the important thing is that lua should not care. it shoult simply interpret lua.
-    // so we have one callback for each lua config function and we resolve the CLI option names here.
-    // if lua does the name resolving, someone might change cli options in this file and not in the lua callbacks,
-    // and then lua might accept the wrong CLI arguments.
+    LuaCallbacksCollection lua_config_callbacks;
 
-    auto lua_config_callbacks = megamol::core::LuaAPI::LuaConfigCallbacks
-    {
-        // mmSetCliOption_callback_
-        [&](std::string const& clioption, std::string const& value) {
+    // mmSetCliOption
+    // VoidResult, std::string, std::string
+    lua_config_callbacks.add<VoidResult, std::string, std::string>(
+        "mmSetCliOption",
+        "(string name, string value)\n\tSet CLI option to a specific value.",
+        {[&](std::string clioption, std::string value) -> VoidResult {
             // the usual CLI options
             sane(clioption);
             sane(value);
@@ -388,32 +427,69 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
             auto option_it = std::find(all_options_separate.begin(), all_options_separate.end(), clioption);
             bool option_unknown = option_it == all_options_separate.end();
             if (option_unknown)
-                return false;
+                return Error{"unknown option: " + clioption};
 
             // if has option of length one, take the long version
             auto finalopt = clioption;
             if (option_it->size() == 1)
                 finalopt = *(option_it+1);
 
-            add(finalopt,map_value(value));
+            add_cli(finalopt,map_value(value));
+            return VoidResult{};
+        }});
 
-            return true;
-        } ,
-        // mmSetGlobalValue_callback_
-        [&](std::string const& key, std::string const& value) {
+    // mmSetGlobalValue
+    // std::string, std::string 
+    lua_config_callbacks.add<VoidResult, std::string, std::string>(
+        "mmSetGlobalValue",
+        "(string key, string value)\n\tSets the value of name <key> to <value> in the global key-value store.",
+        {[&](std::string key, std::string value) -> VoidResult {
             sane(key);
             sane(value);
-            add(global_option, key + ":" + value);
-            return true;
-        },
-        make_option_callback(appdir_option, true), // mmSetAppDir_callback_ std::function<void(std::string const&)>
-        make_option_callback(resourcedir_option, true), // mmAddResourceDir_callback_
-        make_option_callback(shaderdir_option, true), // mmAddShaderDir_callback_
-        make_option_callback(logfile_option), // mmSetLogFile_callback_
-        make_option_callback(loglevel_option), // mmSetLogLevel_callback_
-        make_option_callback(echolevel_option), // mmSetEchoLevel_callback_
-        make_option_callback(project_option, true) // mmLoadProject_callback_
-    };
+            add_cli(global_option, key + ":" + value);
+            return VoidResult{};
+        }});
+
+#undef sane
+#undef file_exists
+#undef add_cli
+
+    lua_config_callbacks.add<VoidResult, std::string>(
+        "mmSetAppDir",
+        "(string dir)\n\tSets the path where the mmconsole.exe is located.",
+        { make_option_callback(appdir_option, true) });
+
+    lua_config_callbacks.add<VoidResult, std::string>(
+        "mmAddShaderDir",
+        "(string dir)\n\tAdds a shader/btf search path.",
+        { make_option_callback(shaderdir_option, true) });
+
+    lua_config_callbacks.add<VoidResult, std::string>(
+        "mmAddResourceDir",
+        "(string dir)\n\tAdds a resource search path.",
+        { make_option_callback(resourcedir_option, true) });
+
+    lua_config_callbacks.add<VoidResult, std::string>(
+        "mmLoadProject",
+        "(string path)\n\tLoad lua (project) file after MegaMol startup.",
+        { make_option_callback(project_option, true) });
+
+    lua_config_callbacks.add<VoidResult, std::string>(
+        "mmSetLogFile",
+        "(string path)\n\tSets the full path of the log file.",
+        { make_option_callback(logfile_option) });
+
+    lua_config_callbacks.add<VoidResult, std::string>(
+        "mmSetLogLevel",
+        "(string level)\n\tSets the level of log events to include. Accepted values: "+accepted_log_level_strings,
+        { make_option_callback(loglevel_option) });
+
+    lua_config_callbacks.add<VoidResult, std::string>(
+        "mmSetEchoLevel",
+        "(string level)\n\tSets the level of log events to output to the console. Accepted values: "+accepted_log_level_strings,
+        { make_option_callback(echolevel_option) });
+
+    lua.AddCallbacks(lua_config_callbacks);
 
     for (auto& file : config.configuration_files) {
         cli_options_from_configs.clear();
@@ -422,7 +498,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
 
         // interpret lua config commands as CLI commands
         std::string lua_result_string;
-        bool lua_config_ok = lua.FillConfigFromString(file_contents, lua_result_string, lua_config_callbacks);
+        bool lua_config_ok = lua.RunString(file_contents, lua_result_string);
 
         if (!lua_config_ok) {
             exit("Error in Lua config file " + file + "\n Lua Error: " + lua_result_string);
@@ -472,6 +548,8 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
             std::accumulate(file_contents_as_cli.begin(), file_contents_as_cli.end(), std::string(""),
                 [](std::string const& init, std::string const& elem) { return init + elem + " "; }));
     }
+
+    lua.ClearCallbacks();
 
     return config;
 }

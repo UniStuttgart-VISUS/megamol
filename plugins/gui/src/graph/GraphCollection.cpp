@@ -28,7 +28,7 @@ megamol::gui::GraphCollection::~GraphCollection(void) {}
 
 bool megamol::gui::GraphCollection::AddEmptyProject(void) {
 
-    ImGuiID graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
+    ImGuiID graph_uid = this->AddGraph();
     if (graph_uid != GUI_INVALID_ID) {
         /// Setup new empty graph ...
     } else {
@@ -40,12 +40,12 @@ bool megamol::gui::GraphCollection::AddEmptyProject(void) {
 }
 
 
-ImGuiID megamol::gui::GraphCollection::AddGraph(GraphCoreInterface graph_core_interface) {
+ImGuiID megamol::gui::GraphCollection::AddGraph(void) {
 
     ImGuiID retval = GUI_INVALID_ID;
 
     try {
-        GraphPtr_t graph_ptr = std::make_shared<Graph>(this->generate_unique_graph_name(), graph_core_interface);
+        GraphPtr_t graph_ptr = std::make_shared<Graph>(this->generate_unique_graph_name());
         if (graph_ptr != nullptr) {
             this->graphs.emplace_back(graph_ptr);
             retval = graph_ptr->UID();
@@ -104,6 +104,21 @@ megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetGraph(ImGuiID in_grap
             "[GUI] Unable to find graph for given graph uid: %i [%s, %s, line %d]\n", in_graph_uid, __FILE__,
             __FUNCTION__, __LINE__);
     }
+    return nullptr;
+}
+
+
+megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetRunningGraph(void) {
+
+    for (auto& graph_ptr : this->graphs) {
+        if (graph_ptr->IsRunning()) {
+            // Return first found running graph
+            return graph_ptr;
+        }
+    }
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "[GUI] Unable to find running graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+
     return nullptr;
 }
 
@@ -300,19 +315,15 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 }
 
 
-bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid,
-    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph, bool sync) {
+bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
+    ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph) {
 
     bool created_new_graph = false;
     ImGuiID valid_graph_id = inout_graph_uid;
+
     if (valid_graph_id == GUI_INVALID_ID) {
         // Create new graph
-        GraphCoreInterface graph_core_interface = GraphCoreInterface::NO_INTERFACE;
-        if (sync) {
-            graph_core_interface = (megamol_graph != nullptr) ? (GraphCoreInterface::MEGAMOL_GRAPH)
-                                                              : (GraphCoreInterface::CORE_INSTANCE_GRAPH);
-        }
-        valid_graph_id = this->AddGraph(graph_core_interface);
+        valid_graph_id = this->AddGraph();
         if (valid_graph_id == GUI_INVALID_ID) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -369,6 +380,9 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                 "[GUI] Missing references to any graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
+        graph_ptr->SetCoreInterface(((megamol_graph != nullptr) ? (GraphCoreInterface::MEGAMOL_GRAPH)
+                                                                : (GraphCoreInterface::CORE_INSTANCE_GRAPH)));
+        graph_ptr->SetRunning(true);
 
         // Collect new call connections to temporary data structure and apply in the end,
         // since not all call slots might be available for being connected while modules are created consecutively.
@@ -474,11 +488,11 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                     new_module_ptr->SetGraphEntryName(view_inst_iter->second);
                     Graph::QueueData queue_data;
                     // Remove all graph entries
-                    // for (auto module_ptr : graph_ptr->GetModules()) {
-                    //    if (module_ptr->is_view && module_ptr->IsGraphEntry()) {
-                    //        module_ptr->graph_entry_name.clear();
+                    // for (auto module_ptr : graph_ptr->Modules()) {
+                    //    if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                    //        module_ptr->SetGraphEntryName("");
                     //        queue_data.name_id = module_ptr->FullName();
-                    //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_graph_entry, queue_data);
+                    //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                     //    }
                     //}
                     // Add new graph entry
@@ -542,7 +556,8 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                         auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID(),
                             std::string(caller_slot->Name().PeekBuffer()),
                             std::string(caller_slot->Description().PeekBuffer()),
-                            this->get_compatible_caller_idxs(caller_slot.get()), CallSlotType::CALLER);
+                            this->get_compatible_caller_idxs(caller_slot.get()), CallSlotType::CALLER,
+                            caller_slot->GetNecessity());
                         callslot_ptr->ConnectParentModule(new_module_ptr);
                         new_module_ptr->AddCallSlot(callslot_ptr);
                     }
@@ -553,7 +568,8 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                     auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID(),
                         std::string(callee_slot->Name().PeekBuffer()),
                         std::string(callee_slot->Description().PeekBuffer()),
-                        this->get_compatible_callee_idxs(callee_slot.get()), CallSlotType::CALLEE);
+                        this->get_compatible_callee_idxs(callee_slot.get()), CallSlotType::CALLEE,
+                        callee_slot->GetNecessity());
                     callslot_ptr->ConnectParentModule(new_module_ptr);
                     new_module_ptr->AddCallSlot(callslot_ptr);
                 }
@@ -592,7 +608,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
             ImGuiID uid;
         };
         std::vector<CallInfo> gui_graph_call_info;
-        for (auto& call_ptr : graph_ptr->GetCalls()) {
+        for (auto& call_ptr : graph_ptr->Calls()) {
             CallInfo call_info;
             call_info.class_name = call_ptr->ClassName();
             call_info.uid = call_ptr->UID();
@@ -758,7 +774,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
     ImGuiID retval = in_graph_uid;
     // Create new graph if necessary
     if (graph_ptr == nullptr) {
-        ImGuiID new_graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
+        ImGuiID new_graph_uid = this->AddGraph();
         if (new_graph_uid == GUI_INVALID_ID) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Load Project File '%s': Unable to create new graph. [%s, %s, line %d]\n",
@@ -850,25 +866,21 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
 
                 // Remove all graph entries
-                // for (auto module_ptr : graph_ptr->GetModules()) {
-                //    if (module_ptr->is_view && module_ptr->IsGraphEntry()) {
-                //        module_ptr->graph_entry_name.clear();
+                // for (auto module_ptr : graph_ptr->Modules()) {
+                //    if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                //        module_ptr->SetGraphEntryName("");
                 //        queue_data.name_id = module_ptr->FullName();
-                //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_graph_entry, queue_data);
+                //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                 //    }
                 //}
-
                 // Add new graph entry
                 queue_data.name_id = queue_data.rename_id;
                 graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
-
-                // Allow only one graph entry at a time
-                /// XXX TODO reset other graph entry
             }
         }
 
         // Save filename for graph
-        graph_ptr->SetFilename(project_filename);
+        graph_ptr->SetFilename(project_filename, true);
 
         // Find and create modules
         for (unsigned int i = 0; i < lines_count; i++) {
@@ -1205,8 +1217,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         // - Write all parameters for running graph (default value is not available)
                         // - For other graphs only write parameters with other values than the default
                         // - Ignore button parameters
-                        if ((graph_ptr->HasCoreInterface() || parameter.DefaultValueMismatch()) &&
-                            (parameter.Type() != Param_t::BUTTON)) {
+                        if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
+                            (parameter.Type() != ParamType_t::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(
@@ -1239,7 +1251,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         project_filename.c_str());
 
                     // Save filename for graph
-                    graph_ptr->SetFilename(project_filename);
+                    graph_ptr->SetFilename(project_filename, true);
 
                     return true;
                 }
@@ -1343,6 +1355,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
             csd.description = std::string(caller_slot->Description().PeekBuffer());
             csd.compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot.get());
             csd.type = CallSlotType::CALLER;
+            csd.necessity = caller_slot->GetNecessity();
 
             mod.callslots[csd.type].emplace_back(csd);
         }
@@ -1354,6 +1367,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
             csd.description = std::string(callee_slot->Description().PeekBuffer());
             csd.compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot.get());
             csd.type = CallSlotType::CALLEE;
+            csd.necessity = callee_slot->GetNecessity();
 
             mod.callslots[csd.type].emplace_back(csd);
         }
@@ -1734,19 +1748,18 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
         // Assuming only one closed tab/graph per frame.
         bool popup_close_unsaved = false;
 
-        // Draw Graphs
+        // Draw Graphs --------------------------------------------------------
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
         ImGui::BeginTabBar("Graphs", tab_bar_flags);
 
-        for (auto& graph : this->GetGraphs()) {
+        for (auto& graph_ptr : this->GetGraphs()) {
 
-            // Draw graph
-            graph->Draw(state);
+            graph_ptr->Draw(state);
 
             // Do not delete graph while looping through graphs list
             if (state.graph_delete) {
                 this->gui_graph_delete_uid = state.graph_selected_uid;
-                if (graph->IsDirty()) {
+                if (graph_ptr->IsDirty()) {
                     popup_close_unsaved = true;
                 }
                 state.graph_delete = false;
@@ -1757,42 +1770,24 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
                 if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
                     ImGuiID* dragged_slot_uid_ptr = (ImGuiID*) payload->Data;
                     auto drag_slot_uid = (*dragged_slot_uid_ptr);
-                    auto drop_slot_uid = graph->GetDropSlot();
-                    graph->AddCall(this->GetCallsStock(), drag_slot_uid, drop_slot_uid);
+                    auto drop_slot_uid = graph_ptr->GetDropSlot();
+                    graph_ptr->AddCall(this->GetCallsStock(), drag_slot_uid, drop_slot_uid);
                 }
             }
         }
         ImGui::EndTabBar();
 
-        // Save selected graph in configurator
-        bool confirmed, aborted;
-        bool popup_failed = false;
-        std::string project_filename;
-        GraphPtr_t graph_ptr;
-        if (state.configurator_graph_save) {
-            if (auto graph_ptr = this->GetGraph(state.graph_selected_uid)) {
-                project_filename = graph_ptr->GetFilename();
-            }
-        }
-        vislib::math::Ternary save_gui_state(
-            vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
-        if (this->gui_file_browser.PopUp(project_filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
-                state.configurator_graph_save, "lua", save_gui_state)) {
+        // Process changed running graph --------------------------------------
+        this->change_running_graph(state.new_running_graph_uid);
+        state.new_running_graph_uid = GUI_INVALID_ID;
 
-            std::string gui_state;
-            if (save_gui_state.IsTrue()) {
-                gui_state = this->get_state(state.graph_selected_uid, project_filename);
-            }
-
-            popup_failed = !this->SaveProjectToFile(state.graph_selected_uid, project_filename, gui_state);
-        }
-        MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
-            confirmed, "Cancel", aborted);
+        // Save selected graph in configurator --------------------------------
+        this->save_graph_dialog(state.graph_selected_uid, state.configurator_graph_save);
         state.configurator_graph_save = false;
 
-        // Delete selected graph when tab is closed and unsaved changes should be discarded.
-        confirmed = false;
-        aborted = false;
+        // Delete selected graph when tab is closed and unsaved changes should be discarded
+        bool confirmed = false;
+        bool aborted = false;
         bool popup_open = MinimalPopUp::PopUp(
             "Closing unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
         if (this->gui_graph_delete_uid != GUI_INVALID_ID) {
@@ -1816,4 +1811,129 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
             "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
+}
+
+
+bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool open_dialog) {
+
+    bool confirmed, aborted;
+    bool popup_failed = false;
+    std::string project_filename;
+    GraphPtr_t graph_ptr;
+    if (open_dialog) {
+        if (auto graph_ptr = this->GetGraph(graph_uid)) {
+            project_filename = graph_ptr->GetFilename();
+        }
+    }
+    // Default for option asking for saving gui state
+    vislib::math::Ternary save_gui_state(vislib::math::Ternary::TRI_FALSE);
+    if (this->gui_file_browser.PopUp(project_filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
+            open_dialog, "lua", save_gui_state)) {
+
+        std::string gui_state;
+        if (save_gui_state.IsTrue()) {
+            gui_state = this->get_state(graph_uid, project_filename);
+        }
+
+        popup_failed = !this->SaveProjectToFile(graph_uid, project_filename, gui_state);
+    }
+    MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+        confirmed, "Cancel", aborted);
+
+    return !popup_failed;
+}
+
+
+bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
+
+    if (graph_uid != GUI_INVALID_ID) {
+        /// There should always be only one running graph at a time
+
+        // Get currently running graph
+        GraphPtr_t last_running_graph = nullptr;
+        for (auto& graph_ptr : this->GetGraphs()) {
+            if (graph_ptr->IsRunning()) {
+                last_running_graph = graph_ptr;
+            }
+            graph_ptr->SetRunning(false);
+        }
+        if (last_running_graph != nullptr) {
+            if (auto running_graph = this->GetGraph(graph_uid)) {
+
+                // 1] Set new graph running to enable queue
+                running_graph->SetRunning(true);
+
+                // 2] Remove all calls and modules from core graph, but keep stopped GUI graph in project untouched
+                for (auto& call_ptr : last_running_graph->Calls()) {
+                    Graph::QueueData queue_data;
+                    auto caller_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLER);
+                    if (caller_ptr != nullptr) {
+                        if (caller_ptr->GetParentModule() != nullptr) {
+                            queue_data.caller = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
+                        }
+                    }
+                    auto callee_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLEE);
+                    if (callee_ptr != nullptr) {
+                        if (callee_ptr->GetParentModule() != nullptr) {
+                            queue_data.callee = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
+                        }
+                    }
+                    running_graph->PushSyncQueue(Graph::QueueAction::DELETE_CALL, queue_data);
+                }
+                for (auto& module_ptr : last_running_graph->Modules()) {
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = module_ptr->FullName();
+                    if (module_ptr->IsGraphEntry()) {
+                        running_graph->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+                    }
+                    running_graph->PushSyncQueue(Graph::QueueAction::DELETE_MODULE, queue_data);
+                    // Reset pointers to core parameters
+                    for (auto& param : module_ptr->Parameters()) {
+                        param.ResetCoreParamPtr();
+                    }
+                }
+
+                // 3] Create new modules and calls in core graph, but keep newly running GUI graph in project
+                // untouched
+                for (auto& module_ptr : running_graph->Modules()) {
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = module_ptr->FullName();
+                    queue_data.class_name = module_ptr->ClassName();
+                    running_graph->PushSyncQueue(Graph::QueueAction::ADD_MODULE, queue_data);
+                    if (module_ptr->IsGraphEntry()) {
+                        running_graph->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                    }
+                    // Set all parameters in GUI graph dirty in order to propagate current values to new core
+                    // modules
+                    for (auto& param : module_ptr->Parameters()) {
+                        if (param.Type() != ParamType_t::BUTTON) {
+                            param.ForceSetValueDirty();
+                            param.ForceSetGUIStateDirty();
+                        }
+                    }
+                }
+                for (auto& call_ptr : running_graph->Calls()) {
+                    Graph::QueueData queue_data;
+                    queue_data.class_name = call_ptr->ClassName();
+                    auto caller_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLER);
+                    if (caller_ptr != nullptr) {
+                        if (caller_ptr->GetParentModule() != nullptr) {
+                            queue_data.caller = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
+                        }
+                    }
+                    auto callee_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLEE);
+                    if (callee_ptr != nullptr) {
+                        if (callee_ptr->GetParentModule() != nullptr) {
+                            queue_data.callee = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
+                        }
+                    }
+                    running_graph->PushSyncQueue(Graph::QueueAction::ADD_CALL, queue_data);
+                }
+
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
