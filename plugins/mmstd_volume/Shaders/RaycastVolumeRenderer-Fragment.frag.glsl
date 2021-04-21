@@ -1,3 +1,5 @@
+#version 430
+
 uniform sampler2D src_tx2D;
 uniform sampler2D normal_tx2D;
 uniform sampler2D depth_tx2D;
