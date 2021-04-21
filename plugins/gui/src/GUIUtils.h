@@ -97,9 +97,9 @@
 namespace megamol {
 namespace gui {
 
-    namespace {
+    /********** Additional Global ImGui Operators ********************************/
 
-        /********** Global Operators **********/
+    namespace {
 
         bool operator==(const ImVec2& left, const ImVec2& right) {
             return ((left.x == right.x) && (left.y == right.y));
@@ -311,6 +311,7 @@ namespace gui {
 
     enum class HeaderType { MODULE_GROUP, MODULE, PARAMETER_GROUP };
 
+
     /********** GUIUtils *****************************************************/
 
     /**
@@ -386,7 +387,7 @@ namespace gui {
         /**
          * Returns true if both strings equal each other case insensitively.
          *
-         * @param source   One string .
+         * @param source   One string.
          * @param search   Second string.
          */
         static bool CaseInsensitiveStringCompare(std::string const& str1, std::string const& str2) {
@@ -407,23 +408,8 @@ namespace gui {
                 return false;
             }
 
-            std::string header_label = name;
-            // switch (type) {
-            // case (megamol::gui::HeaderType::MODULE_GROUP): {
-            //    header_label = "[GROUP] " + header_label;
-            //} break;
-            // case (megamol::gui::HeaderType::MODULE): {
-            //    // header_label = "[MODULE] " + header_label;
-            //} break;
-            // case (megamol::gui::HeaderType::PARAMETER_GROUP): {
-            //    // header_label = "[GROUP] " + header_label;
-            //} break;
-            // default:
-            //    break;
-            //}
-
             // Determine header state and change color depending on active parameter search
-            auto headerId = ImGui::GetID(header_label.c_str());
+            auto headerId = ImGui::GetID(name.c_str());
             auto headerState = override_header_state;
             if (headerState == GUI_INVALID_ID) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
@@ -460,7 +446,7 @@ namespace gui {
                 }
             }
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
-            bool header_open = ImGui::CollapsingHeader(header_label.c_str(), nullptr);
+            bool header_open = ImGui::CollapsingHeader(name.c_str(), nullptr);
             ImGui::PopStyleColor(pop_style_color_number);
 
             // Keep following elements open for one more frame to propagate override changes to headers below.
