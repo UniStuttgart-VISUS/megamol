@@ -1,3 +1,5 @@
+#version 430
+
 out vec2 uv_coord;
 
 void main()

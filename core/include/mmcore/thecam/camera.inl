@@ -28,11 +28,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "glm/gtc/matrix_transform.hpp"
 
 /*
  * megamol::core::thecam::camera<M, P>::projection_matrix_left_handed
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 typename megamol::core::thecam::camera<M, P>::matrix_type&
 megamol::core::thecam::camera<M, P>::projection_matrix_left_handed(matrix_type& outMat, const snapshot_type& snapshot) {
     THE_ASSERT(snapshot.contains(snapshot_content::camera_space_frustum));
@@ -48,26 +49,7 @@ megamol::core::thecam::camera<M, P>::projection_matrix_left_handed(matrix_type& 
     auto n = snapshot.frustum_near;
     auto f = snapshot.frustum_far;
 
-    // https://msdn.microsoft.com/en-us/library/windows/desktop/bb205353(v=vs.85).aspx
-    outMat(0, 0) = (TWO * n) / (r - l);
-    outMat(0, 1) = ZERO;
-    outMat(0, 2) = ZERO;
-    outMat(0, 3) = ZERO;
-
-    outMat(1, 0) = ZERO;
-    outMat(1, 1) = (TWO * n) / (t - b);
-    outMat(1, 2) = ZERO;
-    outMat(1, 3) = ZERO;
-
-    outMat(2, 0) = (l + r) / (r - l); // TODO l - r????
-    outMat(2, 1) = (t + b) / (b - t);
-    outMat(2, 2) = f / (f - n);
-    outMat(2, 3) = ONE;
-
-    outMat(3, 0) = ZERO;
-    outMat(3, 1) = ZERO;
-    outMat(3, 2) = (n * f) / (n - f);
-    outMat(3, 3) = ZERO;
+    outMat = glm::frustumLH(l, r, b, t, n, f);
 
     return outMat;
 }
@@ -76,7 +58,7 @@ megamol::core::thecam::camera<M, P>::projection_matrix_left_handed(matrix_type& 
 /*
  * megamol::core::thecam::camera<M, P>::projection_matrix_right_handed
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 typename megamol::core::thecam::camera<M, P>::matrix_type&
 megamol::core::thecam::camera<M, P>::projection_matrix_right_handed(
     matrix_type& outMat, const snapshot_type& snapshot) {
@@ -93,28 +75,7 @@ megamol::core::thecam::camera<M, P>::projection_matrix_right_handed(
     auto n = snapshot.frustum_near;
     auto f = snapshot.frustum_far;
 
-    // https://msdn.microsoft.com/en-us/library/windows/desktop/bb205354(v=vs.85).aspx
-    // https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/opengl-perspective-projection-matrix
-    // http://seanmiddleditch.com/matrices-handedness-pre-and-post-multiplication-row-vs-column-major-and-notations/
-    outMat(0, 0) = (TWO * n) / (r - l);
-    outMat(0, 1) = ZERO;
-    outMat(0, 2) = ZERO;
-    outMat(0, 3) = ZERO;
-
-    outMat(1, 0) = ZERO;
-    outMat(1, 1) = (TWO * n) / (t - b);
-    outMat(1, 2) = ZERO;
-    outMat(1, 3) = ZERO;
-
-    outMat(2, 0) = (l + r) / (r - l);
-    outMat(2, 1) = (t + b) / (t - b);
-    outMat(2, 2) = f / (n - f); // -((f + n) / (f - n)) // (-f - n) / (-n - f)
-    outMat(2, 3) = -ONE;
-
-    outMat(3, 0) = ZERO;
-    outMat(3, 1) = ZERO;
-    outMat(3, 2) = (n * f) / (n - f); // -((2 * f * n) / (f - n)
-    outMat(3, 3) = ZERO;
+    outMat = glm::frustumRH(l, r, b, t, n, f);
 
     return outMat;
 }
@@ -123,7 +84,7 @@ megamol::core::thecam::camera<M, P>::projection_matrix_right_handed(
 /*
  * megamol::core::thecam::camera<M, P>::view_matrix_left_handed
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 typename megamol::core::thecam::camera<M, P>::matrix_type& megamol::core::thecam::camera<M, P>::view_matrix_left_handed(
     matrix_type& outMat, const snapshot_type& snapshot) {
     static const auto ZERO = static_cast<world_type>(0);
@@ -133,31 +94,8 @@ typename megamol::core::thecam::camera<M, P>::matrix_type& megamol::core::thecam
     auto& yAxis = snapshot.up_vector;
     auto zAxis = snapshot.view_vector;
 
-    // TODO: Does it make sense not raising an error directly?
-    if (maths_type::handedness != Handedness::left_handed) {
-        zAxis *= -ONE;
-    }
-
-    // https://msdn.microsoft.com/de-de/library/windows/desktop/bb205342(v=vs.85).aspx
-    outMat(0, 0) = xAxis.x();
-    outMat(1, 0) = xAxis.y();
-    outMat(2, 0) = xAxis.z();
-    outMat(3, 0) = -math::dot(xAxis, snapshot.position);
-
-    outMat(0, 1) = yAxis.x();
-    outMat(1, 1) = yAxis.y();
-    outMat(2, 1) = yAxis.z();
-    outMat(3, 1) = -math::dot(yAxis, snapshot.position);
-
-    outMat(0, 2) = zAxis.x();
-    outMat(1, 2) = zAxis.y();
-    outMat(2, 2) = zAxis.z();
-    outMat(3, 2) = -math::dot(zAxis, snapshot.position);
-
-    outMat(0, 3) = ZERO;
-    outMat(1, 3) = ZERO;
-    outMat(2, 3) = ZERO;
-    outMat(3, 3) = ONE;
+    outMat = glm::lookAtLH(glm::vec3(glm::vec4(snapshot.position)), glm::vec3(glm::vec4(snapshot.position + zAxis)),
+        glm::vec3(glm::vec4(yAxis)));
 
     return outMat;
 }
@@ -165,7 +103,7 @@ typename megamol::core::thecam::camera<M, P>::matrix_type& megamol::core::thecam
 /*
  * megamol::core::thecam::camera<M, P>::view_matrix_right_handed
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 typename megamol::core::thecam::camera<M, P>::matrix_type&
 megamol::core::thecam::camera<M, P>::view_matrix_right_handed(matrix_type& outMat, const snapshot_type& snapshot) {
     static const auto ZERO = static_cast<world_type>(0);
@@ -175,33 +113,8 @@ megamol::core::thecam::camera<M, P>::view_matrix_right_handed(matrix_type& outMa
     auto& yAxis = snapshot.up_vector;
     auto zAxis = snapshot.view_vector;
 
-    // TODO: Does it make sense not raising an error directly?
-    if (maths_type::handedness != Handedness::right_handed) {
-        zAxis *= -ONE;
-    }
-
-    // https://msdn.microsoft.com/de-de/library/windows/desktop/bb205342(v=vs.85).aspx
-    // EDIT by schatzkn: the signs have been adapted to comply with the opengl coordinate system with inversed z-axis
-    // this is hacky because it does not work for direct3D anymore.
-    outMat(0, 0) = xAxis.x();
-    outMat(1, 0) = xAxis.y();
-    outMat(2, 0) = xAxis.z();
-    outMat(3, 0) = -math::dot(xAxis, snapshot.position);
-
-    outMat(0, 1) = yAxis.x();
-    outMat(1, 1) = yAxis.y();
-    outMat(2, 1) = yAxis.z();
-    outMat(3, 1) = -math::dot(yAxis, snapshot.position);
-
-    outMat(0, 2) = -zAxis.x();
-    outMat(1, 2) = -zAxis.y();
-    outMat(2, 2) = -zAxis.z();
-    outMat(3, 2) = math::dot(zAxis, snapshot.position);
-
-    outMat(0, 3) = ZERO;
-    outMat(1, 3) = ZERO;
-    outMat(2, 3) = ZERO;
-    outMat(3, 3) = ONE;
+    outMat = glm::lookAtRH(glm::vec3(glm::vec4(snapshot.position)), glm::vec3(glm::vec4(snapshot.position + zAxis)),
+        glm::vec3(glm::vec4(yAxis)));
 
     return outMat;
 }
@@ -210,7 +123,7 @@ megamol::core::thecam::camera<M, P>::view_matrix_right_handed(matrix_type& outMa
 /*
  * megamol::core::thecam::camera<M, P>::calc_matrices
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 void megamol::core::thecam::camera<M, P>::calc_matrices(
     snapshot_type& outSnapshot, matrix_type& outView, matrix_type& outProj, snapshot_content sc) const {
     sc |= snapshot_content::camera_coordinate_system; // Just paranoia ...
@@ -237,7 +150,7 @@ void megamol::core::thecam::camera<M, P>::calc_matrices(
 /*
  * megamol::core::thecam::camera<M, P>::focal_length
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 typename megamol::core::thecam::camera<M, P>::world_type megamol::core::thecam::camera<M, P>::focal_length(void) const {
     // See
     // http://www.scratchapixel.com/lessons/3d-basic-rendering/3d-viewing-pinhole-camera/how-pinhole-camera-works-part-2
@@ -252,7 +165,7 @@ typename megamol::core::thecam::camera<M, P>::world_type megamol::core::thecam::
 /*
  * megamol::core::thecam::camera<M, P>::get_minimal_state
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 typename megamol::core::thecam::camera<M, P>::minimal_state_type&
 megamol::core::thecam::camera<M, P>::get_minimal_state(minimal_state_type& outState) {
     outState.centre_offset[0] = this->centre_offset().x();
@@ -287,7 +200,7 @@ megamol::core::thecam::camera<M, P>::get_minimal_state(minimal_state_type& outSt
 /*
  * megamol::core::thecam::camera<M, P>::look_at
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 void megamol::core::thecam::camera<M, P>::look_at(const point_type& lookAt) {
     // http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
     const auto& sv = maths_type::view_vector;
@@ -299,7 +212,7 @@ void megamol::core::thecam::camera<M, P>::look_at(const point_type& lookAt) {
 /*
  * megamol::core::thecam::camera<M, P>::projection_matrix
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 typename megamol::core::thecam::camera<M, P>::matrix_type megamol::core::thecam::camera<M, P>::projection_matrix(
     void) const {
     matrix_type retval;
@@ -327,7 +240,8 @@ typename megamol::core::thecam::camera<M, P>::matrix_type megamol::core::thecam:
 /*
  * megamol::core::thecam::camera<M, P>::reset
  */
-template <class M, template <class> class P> void megamol::core::thecam::camera<M, P>::reset(void) {
+template<class M, template<class> class P>
+void megamol::core::thecam::camera<M, P>::reset(void) {
     const auto WZ = static_cast<world_type>(0);
     const auto WO = static_cast<world_type>(1);
 
@@ -351,7 +265,7 @@ template <class M, template <class> class P> void megamol::core::thecam::camera<
 /*
  * megamol::core::thecam::camera<M, P>::take_snapshot
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 typename megamol::core::thecam::camera<M, P>::snapshot_type& megamol::core::thecam::camera<M, P>::take_snapshot(
     snapshot_type& snapshot, const snapshot_content which) const {
     const auto EYE_DIR = static_cast<world_type>(this->eye());
@@ -607,7 +521,7 @@ typename megamol::core::thecam::camera<M, P>::snapshot_type& megamol::core::thec
 /*
  * megamol::core::thecam::camera<M, P>::operator =
  */
-template <class M, template <class> class P>
+template<class M, template<class> class P>
 megamol::core::thecam::camera<M, P>& megamol::core::thecam::camera<M, P>::operator=(const minimal_state_type& rhs) {
     this->centre_offset(
         {rhs.centre_offset[0], rhs.centre_offset[1]}); // TODO is this correct for all template possibilities?

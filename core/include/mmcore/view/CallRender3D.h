@@ -28,22 +28,31 @@ namespace view {
  * Function "GetExtents" asks the callee to fill the extents member of the
  * call (bounding boxes, temporal extents).
  */
-class MEGAMOLCORE_API CallRender3D : public AbstractCallRender {
+template <typename FBO, const char* NAME, const char* DESC>
+class MEGAMOLCORE_API BaseCallRender3D : public AbstractCallRender {
 public:
+
+    using FBO_TYPE = FBO;
 
     /**
      * Answer the name of the objects of this description.
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallRender3D"; }
+    static const char* ClassName(void) {
+        return NAME;
+    }
+    //{ return "CallRender3D"; }
 
     /**
      * Gets a human readable description of the module.
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "CPU Rendering call"; }
+    static const char* Description(void) {
+        return DESC;
+    }
+    //{ return "CPU Rendering call"; }
 
     /**
      * Answer the number of functions used for this call.
@@ -65,10 +74,10 @@ public:
     }
 
     /** Ctor. */
-    CallRender3D(void);
+    BaseCallRender3D(void) {}
 
     /** Dtor. */
-    virtual ~CallRender3D(void);
+    ~BaseCallRender3D(void) {}
 
     /**
      * Assignment operator
@@ -77,14 +86,18 @@ public:
      *
      * @return A reference to this
      */
-    CallRender3D& operator=(const CallRender3D& rhs);
+    BaseCallRender3D& operator=(const BaseCallRender3D& rhs) {
+        view::AbstractCallRender::operator=(rhs);
+        _framebuffer = rhs._framebuffer;
+        return *this;
+    }
 
-            /**
+    /**
      * Sets the Framebuffer
      *
      * @param fb The framebuffer
      */
-    inline void SetFramebuffer(std::shared_ptr<CPUFramebuffer> fb) {
+    inline void SetFramebuffer(std::shared_ptr<FBO> fb) {
         _framebuffer = fb;
     }
 
@@ -92,14 +105,20 @@ public:
      * Gets the Framebuffer
      *
      */
-    inline std::shared_ptr<CPUFramebuffer> GetFramebuffer() {
+    inline std::shared_ptr<FBO> GetFramebuffer() {
         return _framebuffer;
     }
 
 private:
 
-    std::shared_ptr<CPUFramebuffer> _framebuffer;
+    std::shared_ptr<FBO> _framebuffer;
 };
+
+inline constexpr char callrender3d_name[] = "CallRender3D";
+
+inline constexpr char callrender3d_desc[] = "CPU Rendering call";
+
+using CallRender3D = BaseCallRender3D<CPUFramebuffer, callrender3d_name, callrender3d_desc>;
 
 /** Description class typedef */
 typedef factories::CallAutoDescription<CallRender3D> CallRender3DDescription;
