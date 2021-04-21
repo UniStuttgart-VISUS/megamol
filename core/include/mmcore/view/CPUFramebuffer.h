@@ -8,16 +8,10 @@
 #pragma once
 #include <vector>
 
+#include "Framebuffer.h"
+
 namespace megamol::core::view {
 
-struct CPUFramebuffer {
-    bool depthBufferActive = false;
-    std::vector<uint32_t> colorBuffer;
-    std::vector<float> depthBuffer;
-    unsigned int width = 0;
-    unsigned int height = 0;
-    int x = 0;
-    int y = 0;
-};
+using CPUFramebuffer = Framebuffer<std::vector<uint32_t>, std::vector<float>>;
 
 }
