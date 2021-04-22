@@ -15,8 +15,8 @@ layout(std430, binding = 2) buffer MaxBinValue
     int maxBinValue[];
 };
 
-uniform int binCount = 0;
-uniform int colCount = 0;
+uniform uint binCount = 0;
+uniform uint colCount = 0;
 uniform int logPlot = 0;
 
 uniform mat4 modelView = mat4(1.0);
@@ -27,8 +27,8 @@ out float selection;
 
 void main()
 {
-    int binId = gl_InstanceID / colCount;
-    int colId = gl_InstanceID - colCount * binId; // integer modulo
+    int binId = gl_InstanceID / int(colCount);
+    int colId = gl_InstanceID - int(colCount) * binId; // integer modulo
 
     float histoVal = float(histogram[binId * colCount + colId]);
     float selectedHistoVal = float(selectedHistogram[binId * colCount + colId]);
