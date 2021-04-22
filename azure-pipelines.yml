@@ -25,6 +25,19 @@ jobs:
     - megamol_build_enabled
 
   steps:
+  - task: PowerShell@2
+    displayName: 'Install Python'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $pythonUrl = "https://www.python.org/ftp/python/3.9.4/python-3.9.4-embed-amd64.zip"
+        $python_path = Join-Path (Get-Item .).FullName "python_tmp"
+        $tmp = New-TemporaryFile
+        $tmp = Rename-Item -Path $tmp -NewName "$tmp.zip" -PassThru
+        Invoke-WebRequest -OutFile $tmp $pythonUrl
+        Expand-Archive -Path $tmp -DestinationPath python_tmp -Force
+        $tmp | Remove-Item
+        echo "##vso[task.prependpath]$python_path"
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:

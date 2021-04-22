@@ -53,6 +53,12 @@ static void log_warning(std::string const& text) {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
 }
 
+static void glfw_error_callback(int error, const char* description)
+{
+    log_error("[GLFW Error] " + std::to_string(error) + ": " + description);
+}
+
+
 // See: https://github.com/glfw/glfw/issues/1630
 static int fixGlfwKeyboardMods(int mods, int key, int action) {
     if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT) {
@@ -324,6 +330,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     }
     m_pimpl->config = config;
 
+    glfwSetErrorCallback(glfw_error_callback);
+
     bool success_glfw = glfwInit();
     if (!success_glfw) {
         log_error("could not initialize GLFW for OpenGL window. \nmaybe your machine is using outdated graphics hardware, drivers or you are working remotely?");
@@ -405,11 +413,25 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         m_pimpl->config.windowPlacement.y = mon_y;
     }
 
-    // TODO: OpenGL context hints? version? core profile?
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, m_pimpl->config.versionMajor);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, m_pimpl->config.versionMinor);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, m_pimpl->config.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, m_pimpl->config.enableKHRDebug ? GLFW_TRUE : GLFW_FALSE);
+    // context profiles available since 3.2
+    bool has_profiles = m_pimpl->config.versionMajor > 3 || m_pimpl->config.versionMajor == 3 && m_pimpl->config.versionMinor >= 2;
+    if (has_profiles)
+        glfwWindowHint(GLFW_OPENGL_PROFILE, m_pimpl->config.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
+
+    std::string profile_name =
+        has_profiles
+            ? ((m_pimpl->config.glContextCoreProfile ? "Core" : "Compatibility") + std::string(" Profile"))
+            : "";
+
+    log("Requesting OpenGL "
+        + std::to_string(m_pimpl->config.versionMajor) + "."
+        + std::to_string(m_pimpl->config.versionMinor) + " "
+        + profile_name
+        + (m_pimpl->config.enableKHRDebug ? ", Debug Context" : "" )
+    );
 
     auto& window_ptr = m_pimpl->glfwContextWindowPtr;
     window_ptr = ::glfwCreateWindow(initial_width, initial_height,
@@ -445,6 +467,13 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     gladLoadGLX(display, DefaultScreen(display));
     XCloseDisplay(display);
 #endif
+
+    log(std::string("OpenGL Context Info")
+        + "\n\tVersion:  " + reinterpret_cast<const char*>(glGetString(GL_VERSION))
+        + "\n\tVendor:   " + reinterpret_cast<const char*>(glGetString(GL_VENDOR))
+        + "\n\tRenderer: " + reinterpret_cast<const char*>(glGetString(GL_RENDERER))
+        + "\n\tGLSL:     " + reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION))
+    );
 
     if (m_pimpl->config.enableKHRDebug) {
         glEnable(GL_DEBUG_OUTPUT);

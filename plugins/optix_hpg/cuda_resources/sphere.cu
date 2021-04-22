@@ -31,7 +31,11 @@ namespace optix_hpg {
             const float q = b + copysignf(sqrtf(delta), b);
 
             {
-                const float t = fminf(c / q, q);
+                const float ta = c / q;
+                const float tb = q;
+                const float t = fminf(ta, tb);
+                if (t < 0.f)
+                    return;
                 if (t > ray.tmin && t < ray.tmax) {
                     optixReportIntersection(t, 0);
                 }
@@ -113,57 +117,8 @@ namespace optix_hpg {
                 geo_col = glm::vec3(self.colorBufferPtr[primID]);
             }
 
-            if (prd.countEmitted)
-                prd.emitted = geo_col * 0.2f;
-            else
-                prd.emitted = glm::vec3(0.0f);
-
-
-            unsigned int seed = prd.seed;
-
-            {
-                const float z1 = rnd(seed);
-                const float z2 = rnd(seed);
-
-                glm::vec3 w_in;
-                w_in = CosineSampleHemisphere(glm::vec2(z1, z2));
-                Onb onb(N);
-                onb.inverse_transform(w_in);
-                prd.direction = w_in;
-                prd.origin = P;
-
-                prd.beta *= geo_col;
-                prd.countEmitted = false;
-            }
-
-            const float z1 = rnd(seed);
-            const float z2 = rnd(seed);
-
-
-            // Calculate properties of light sample (for area based pdf)
-            const float Ldist = length(prd.lpos - P);
-            const glm::vec3 L = normalize(prd.lpos - P);
-            const float nDl = dot(N, L);
-            const float LnDl = -dot(prd.ldir, L);
-
-            float weight = 0.0f;
-            if (nDl > 0.0f && LnDl > 0.0f) {
-                // const bool occluded = traceOcclusion(params.handle, P, L,
-                //    0.01f,        // tmin
-                //    Ldist - 0.01f // tmax
-                //);
-                float3 Pn = make_float3(P.x, P.y, P.z);
-                float3 Ln = make_float3(L.x, L.y, L.z);
-                unsigned int occluded = 0;
-                optixTrace(prd.world, Pn, Ln, 0.01f, Ldist - 0.01f, 0.0f, (OptixVisibilityMask) -1,
-                    OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT, 1, 2, 1, occluded);
-
-                if (!occluded) {
-                    weight = nDl * LnDl / (MMO_PI * Ldist * Ldist);
-                }
-            }
-
-            prd.radiance += glm::vec3(0.6f) * weight;
+            set_depth(prd, ray.tmax);
+            lighting(prd, geo_col, P, ffN);
         }
 
 
