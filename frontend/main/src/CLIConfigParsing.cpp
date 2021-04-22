@@ -77,6 +77,7 @@ static std::string global_option      = "g,global";
 // --project and loose project files are both valid ways to provide lua project files
 static std::string project_files_option = "project-files";
 static std::string host_option          = "host";
+static std::string opengl_context_option= "opengl";
 static std::string khrdebug_option      = "khrdebug";
 static std::string vsync_option         = "vsync";
 static std::string window_option        = "w,window";
@@ -208,6 +209,28 @@ static void host_handler(std::string const& option_name, cxxopts::ParseResult co
     config.lua_host_address = parsed_options[option_name].as<std::string>();
 };
 
+
+static void opengl_context_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    auto string = parsed_options[option_name].as<std::string>();
+
+    std::regex version("(\\d+).(\\d+)(core|compat)?");
+    std::smatch match;
+    if (std::regex_match(string, match, version)) {
+        unsigned int major = std::stoul(match[1].str(), nullptr, 10);
+        unsigned int minor = std::stoul(match[2].str(), nullptr, 10);
+        bool profile = false;
+
+        if (match[3].matched) {
+            profile = match[3].str() == std::string("core");
+        }
+
+        config.opengl_context_version = {{major, minor, profile}};
+    } else {
+        exit("opengl option needs to be in the following format: major.minor[core|compat]");
+    }
+};
+
 static void khrdebug_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.opengl_khr_debug = parsed_options[option_name].as<bool>();
@@ -276,6 +299,7 @@ std::vector<OptionsListEntry> cli_options_list =
         , {global_option,        "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
         , {host_option,          "Address of lua host server",                                                      cxxopts::value<std::string>(),              host_handler         }
+        , {opengl_context_option,"OpenGL context to request: major.minor[core|compat], e.g. --opengl 3.2compat",    cxxopts::value<std::string>(),              opengl_context_handler}
         , {khrdebug_option,      "Enable OpenGL KHR debug messages",                                                cxxopts::value<bool>(),                     khrdebug_handler     }
         , {vsync_option,         "Enable VSync in OpenGL window",                                                   cxxopts::value<bool>(),                     vsync_handler        }
         , {window_option,        "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",     cxxopts::value<std::string>(),              window_handler       }

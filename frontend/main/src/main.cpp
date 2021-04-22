@@ -64,8 +64,11 @@ int main(const int argc, const char** argv) {
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
     openglConfig.windowTitlePrefix = "MegaMol";
-    openglConfig.versionMajor = 4;
-    openglConfig.versionMinor = 5;
+    if (config.opengl_context_version.has_value()) {
+        openglConfig.versionMajor         = std::get<0>(config.opengl_context_version.value());
+        openglConfig.versionMinor         = std::get<1>(config.opengl_context_version.value());
+        openglConfig.glContextCoreProfile = std::get<2>(config.opengl_context_version.value());
+    }
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
     openglConfig.enableVsync = config.opengl_vsync;
     // pass window size and position
