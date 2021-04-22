@@ -3,10 +3,11 @@
 
 #include <map>
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glm/matrix.hpp>
-#include <glowl/FramebufferObject.hpp>
 #include <json.hpp>
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include <glowl/glowl.h>
 
 #include "Renderer2D.h"
 #include "mmcore/BoundingBoxes_2.h"
@@ -163,7 +164,7 @@ namespace infovis {
 
         int mouseXtoAxis(float x);
 
-        bool enableProgramAndBind(vislib::graphics::gl::GLSLShader& program);
+        bool enableProgramAndBind(std::unique_ptr<glowl::GLSLProgram>& program);
 
         core::CallerSlot getDataSlot;
 
@@ -240,24 +241,24 @@ namespace infovis {
         GLfloat modelViewMatrix_column[16];
         GLfloat projMatrix_column[16];
 
-        vislib::graphics::gl::GLSLShader drawAxesProgram;
-        vislib::graphics::gl::GLSLShader drawScalesProgram;
-        vislib::graphics::gl::GLSLShader drawFilterIndicatorsProgram;
-        vislib::graphics::gl::GLSLShader drawItemsDiscreteProgram;
-        vislib::graphics::gl::GLSLShader drawItemsTriangleProgram;
-        vislib::graphics::gl::GLSLTesselationShader drawItemsDiscreteTessProgram;
-        vislib::graphics::gl::GLSLShader drawPickIndicatorProgram;
-        vislib::graphics::gl::GLSLShader drawStrokeIndicatorProgram;
+        std::unique_ptr<glowl::GLSLProgram> drawAxesProgram;
+        std::unique_ptr<glowl::GLSLProgram> drawScalesProgram;
+        std::unique_ptr<glowl::GLSLProgram> drawFilterIndicatorsProgram;
+        std::unique_ptr<glowl::GLSLProgram> drawItemsDiscreteProgram;
+        std::unique_ptr<glowl::GLSLProgram> drawItemsTriangleProgram;
+        std::unique_ptr<glowl::GLSLProgram> drawItemsDiscreteTessProgram;
+        std::unique_ptr<glowl::GLSLProgram> drawPickIndicatorProgram;
+        std::unique_ptr<glowl::GLSLProgram> drawStrokeIndicatorProgram;
 
-        vislib::graphics::gl::GLSLShader drawItemContinuousProgram;
-        vislib::graphics::gl::GLSLShader drawItemsHistogramProgram;
-        vislib::graphics::gl::GLSLShader traceItemsDiscreteProgram;
+        std::unique_ptr<glowl::GLSLProgram> drawItemContinuousProgram;
+        std::unique_ptr<glowl::GLSLProgram> drawItemsHistogramProgram;
+        std::unique_ptr<glowl::GLSLProgram> traceItemsDiscreteProgram;
 
-        vislib::graphics::gl::GLSLComputeShader filterProgram;
-        vislib::graphics::gl::GLSLComputeShader minMaxProgram;
+        std::unique_ptr<glowl::GLSLProgram> filterProgram;
+        std::unique_ptr<glowl::GLSLProgram> minMaxProgram;
 
-        vislib::graphics::gl::GLSLComputeShader pickProgram;
-        vislib::graphics::gl::GLSLComputeShader strokeProgram;
+        std::unique_ptr<glowl::GLSLProgram> pickProgram;
+        std::unique_ptr<glowl::GLSLProgram> strokeProgram;
 
         GLuint dataBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
         GLuint counterBuffer;
