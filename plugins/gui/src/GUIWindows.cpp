@@ -80,8 +80,7 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
                 "[GUI] There is no current OpenGL rendering context available from the calling thread.");
             prerequisities_given = false;
         }
-#else  // Linux
-
+#else
         /// XXX The following throws segfault if OpenGL is not loaded yet:
         // Display* gl_current_display = ::glXGetCurrentDisplay();
         // GLXContext ogl_current_context = ::glXGetCurrentContext();
