@@ -413,16 +413,23 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         m_pimpl->config.windowPlacement.y = mon_y;
     }
 
-    // TODO: OpenGL context hints? version? core profile?
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, m_pimpl->config.versionMajor);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, m_pimpl->config.versionMinor);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, m_pimpl->config.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, m_pimpl->config.enableKHRDebug ? GLFW_TRUE : GLFW_FALSE);
+    // context profiles available since 3.2
+    bool has_profiles = m_pimpl->config.versionMajor > 3 || m_pimpl->config.versionMajor == 3 && m_pimpl->config.versionMinor >= 2;
+    if (has_profiles)
+        glfwWindowHint(GLFW_OPENGL_PROFILE, m_pimpl->config.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
+
+    std::string profile_name =
+        has_profiles
+            ? ((m_pimpl->config.glContextCoreProfile ? "Core" : "Compatibility") + std::string(" Profile"))
+            : "";
 
     log("Requesting OpenGL "
         + std::to_string(m_pimpl->config.versionMajor) + "."
         + std::to_string(m_pimpl->config.versionMinor) + " "
-        + (m_pimpl->config.glContextCoreProfile ? "Core" : "Compatibility") + " Profile"
+        + profile_name
         + (m_pimpl->config.enableKHRDebug ? ", Debug Context" : "" )
     );
 
