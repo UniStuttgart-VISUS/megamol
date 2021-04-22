@@ -1,6 +1,8 @@
 #include "MMOptixModule.h"
 
+#include <optional>
 #include <sstream>
+#include <tuple>
 
 #include "optix/Utils.h"
 
@@ -10,196 +12,207 @@
 
 // bounds kernel embedded in optix kernel inspired by OWL
 
+namespace megamol::optix_hpg {
+
+template<int N>
+class simple_log {
+public:
+    char const* read() {
+        log_size_ = N;
+        return log_;
+    }
+
+    size_t get_log_size() {
+        auto tmp_size = log_size_;
+        log_size_ = N;
+        return tmp_size;
+    }
+
+    operator char*() {
+        return log_;
+    }
+
+    operator size_t*() {
+        return &log_size_;
+    }
+
+private:
+    char log_[N];
+
+    size_t log_size_ = N;
+};
+
+
+std::string hide_optix_commands(std::string const& ptx_code) {
+    std::istringstream ptx_in = std::istringstream(ptx_code);
+    std::ostringstream ptx_out;
+    for (std::string line; std::getline(ptx_in, line);) {
+        if (line.find(" _optix_") != std::string::npos) {
+            ptx_out << "// skipped: " << line << '\n';
+        } else {
+            ptx_out << line << '\n';
+        }
+    }
+    return ptx_out.str();
+}
+
+
+std::tuple<CUmodule, CUfunction> get_bounds_function(std::string const& ptx_code, std::string const& name) {
+    simple_log<2048> log;
+
+    CUmodule bounds_module = nullptr;
+    CUfunction bounds_function = nullptr;
+
+    CUjit_option options[] = {
+        CU_JIT_TARGET_FROM_CUCONTEXT,
+        CU_JIT_ERROR_LOG_BUFFER,
+        CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
+    };
+    void* optionValues[] = {(void*) 0, (char*) log, (size_t*) log};
+    CUDA_CHECK_ERROR(cuModuleLoadDataEx(&bounds_module, ptx_code.c_str(), 3, options, optionValues));
+#if DEBUG
+    if (log.get_log_size() > 1) {
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "[MMOptixModule] Bounds Module creation info: %s", log.read());
+    }
+#endif
+    std::string bounds_name = MM_OPTIX_BOUNDS_ANNOTATION_STRING + name;
+    CUDA_CHECK_ERROR(cuModuleGetFunction(&bounds_function, bounds_module, bounds_name.c_str()));
+
+    return std::make_tuple(bounds_module, bounds_function);
+}
+
+
+struct MMOptixProgramGrousDesc {
+    OptixProgramGroupDesc desc_;
+
+    std::vector<std::string> names_;
+};
+
+
+MMOptixProgramGrousDesc fill_optix_programgroupdesc(MMOptixModule::MMOptixProgramGroupKind kind, OptixModule mod,
+    std::vector<std::pair<MMOptixModule::MMOptixNameKind, std::string>> const& names,
+    std::optional<OptixModule> const& built_in_intersector = std::nullopt) {
+    MMOptixProgramGrousDesc desc{};
+
+    desc.desc_.kind = static_cast<OptixProgramGroupKind>(kind);
+
+    switch (kind) {
+    case MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_RAYGEN: {
+        desc.desc_.raygen.module = mod;
+        auto& [name_kind, name] = names[0];
+        desc.names_.push_back(std::string(MM_OPTIX_RAYGEN_ANNOTATION_STRING) + name);
+        desc.desc_.raygen.entryFunctionName = desc.names_.back().c_str();
+    } break;
+    case MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_MISS: {
+        desc.desc_.miss.module = mod;
+        auto& [name_kind, name] = names[0];
+        desc.names_.push_back(std::string(MM_OPTIX_MISS_ANNOTATION_STRING) + name);
+        desc.desc_.miss.entryFunctionName = desc.names_.back().c_str();
+    } break;
+    case MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_EXCEPTION: {
+        desc.desc_.exception.module = mod;
+        auto& [name_kind, name] = names[0];
+        desc.names_.push_back(std::string(MM_OPTIX_EXCEPTION_ANNOTATION_STRING) + name);
+        desc.desc_.exception.entryFunctionName = desc.names_.back().c_str();
+    } break;
+    case MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_CALLABLES: {
+        desc.desc_.callables.moduleDC = mod;
+        auto& [name_kind, name] = names[0];
+        desc.names_.push_back(std::string(MM_OPTIX_DIRECT_CALLABLE_ANNOTATION_STRING) + name);
+        desc.desc_.callables.entryFunctionNameDC = desc.names_.back().c_str();
+    } break;
+    case MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP: {
+        for (auto i = 0; i < names.size(); ++i) {
+            auto& [name_kind, name] = names[i];
+            if (name_kind == MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION) {
+                desc.desc_.hitgroup.moduleIS = mod;
+                desc.names_.push_back(std::string(MM_OPTIX_INTERSECTION_ANNOTATION_STRING) + name);
+                desc.desc_.hitgroup.entryFunctionNameIS = desc.names_.back().c_str();
+            }
+            if (name_kind == MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT) {
+                desc.desc_.hitgroup.moduleCH = mod;
+                desc.names_.push_back(std::string(MM_OPTIX_CLOSESTHIT_ANNOTATION_STRING) + name);
+                desc.desc_.hitgroup.entryFunctionNameCH = desc.names_.back().c_str();
+            }
+            if (name_kind == MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_ANYHIT) {
+                desc.desc_.hitgroup.moduleAH = mod;
+                desc.names_.push_back(std::string(MM_OPTIX_ANYHIT_ANNOTATION_STRING) + name);
+                desc.desc_.hitgroup.entryFunctionNameAH = desc.names_.back().c_str();
+            }
+        }
+        if (built_in_intersector) {
+            desc.desc_.hitgroup.moduleIS = built_in_intersector.value();
+            desc.desc_.hitgroup.entryFunctionNameIS = nullptr;
+        }
+    } break;
+    }
+
+    return desc;
+}
+
+} // namespace megamol::optix_hpg
+
 
 megamol::optix_hpg::MMOptixModule::MMOptixModule() {}
 
 
 megamol::optix_hpg::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDeviceContext ctx,
     OptixModuleCompileOptions const* module_options, OptixPipelineCompileOptions const* pipeline_options,
-    OptixProgramGroupKind kind, std::vector<std::string> const& names) {
-    char log[2048];
-    std::size_t log_size = 2048;
+    MMOptixProgramGroupKind kind, std::vector<std::pair<MMOptixNameKind, std::string>> const& names) {
+    simple_log<2048> log;
 
     OPTIX_CHECK_ERROR(optixModuleCreateFromPTX(
-        ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, &log_size, &module_));
+        ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
 #if DEBUG
-    if (log_size > 1) {
-        core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Optix Module creation info: %s", log);
+    if (log.get_log_size() > 1) {
+        core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Optix Module creation info: %s", log.read());
     }
 #endif
 
-    std::istringstream ptx_in = std::istringstream(std::string(ptx_code));
-    std::ostringstream ptx_out;
-    for (std::string line; std::getline(ptx_in, line);) {
-        if (line.find(" _optix_") != std::string::npos) {
-            ptx_out << "// skipped: " << line << '\n';
-        } else {
-            ptx_out << line << '\n';
-        }
+    auto ptx_out = hide_optix_commands(std::string(ptx_code));
+
+    if (kind == MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP) {
+        auto const fit = std::find_if(names.begin(), names.end(),
+            [](auto const& el) { return el.first == MMOptixNameKind::MMOPTIX_NAME_BOUNDS; });
+        std::string bounds_name = fit != names.end() ? fit->second : "bounds";
+        std::tie(bounds_module_, bounds_function_) = get_bounds_function(ptx_out, bounds_name);
     }
 
-    log_size = 2048;
-
-    if (kind == OPTIX_PROGRAM_GROUP_KIND_HITGROUP) {
-        CUjit_option options[] = {
-            CU_JIT_TARGET_FROM_CUCONTEXT,
-            CU_JIT_ERROR_LOG_BUFFER,
-            CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
-        };
-        void* optionValues[] = {(void*) 0, (void*) log, (void*) log_size};
-        CUDA_CHECK_ERROR(cuModuleLoadDataEx(&bounds_module_, ptx_out.str().c_str(), 3, options, optionValues));
-#if DEBUG
-        if (log_size > 1) {
-            core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Bounds Module creation info: %s", log);
-        }
-#endif
-
-        CUDA_CHECK_ERROR(
-            cuModuleGetFunction(&bounds_function_, bounds_module_, MM_OPTIX_BOUNDS_ANNOTATION_STRING "sphere_bounds"));
-    }
-
-    std::vector<std::string> cb_names;
-
-    OptixProgramGroupDesc pgDesc = {};
-    pgDesc.kind = kind;
-    switch (kind) {
-    case OPTIX_PROGRAM_GROUP_KIND_RAYGEN: {
-        pgDesc.raygen.module = module_;
-        cb_names.push_back(std::string(MM_OPTIX_RAYGEN_ANNOTATION_STRING) + names[0]);
-        pgDesc.raygen.entryFunctionName = cb_names.back().c_str();
-    } break;
-    case OPTIX_PROGRAM_GROUP_KIND_MISS: {
-        pgDesc.miss.module = module_;
-        cb_names.push_back(std::string(MM_OPTIX_MISS_ANNOTATION_STRING) + names[0]);
-        pgDesc.miss.entryFunctionName = cb_names.back().c_str();
-    } break;
-    case OPTIX_PROGRAM_GROUP_KIND_EXCEPTION: {
-        pgDesc.exception.module = module_;
-        cb_names.push_back(std::string(MM_OPTIX_EXCEPTION_ANNOTATION_STRING) + names[0]);
-        pgDesc.exception.entryFunctionName = cb_names.back().c_str();
-    } break;
-    case OPTIX_PROGRAM_GROUP_KIND_CALLABLES: {
-        pgDesc.callables.moduleDC = module_;
-        cb_names.push_back(std::string(MM_OPTIX_DIRECT_CALLABLE_ANNOTATION_STRING) + names[0]);
-        pgDesc.callables.entryFunctionNameDC = cb_names.back().c_str();
-    } break;
-    case OPTIX_PROGRAM_GROUP_KIND_HITGROUP: {
-        pgDesc.hitgroup.moduleIS = module_;
-        cb_names.push_back(std::string(MM_OPTIX_INTERSECTION_ANNOTATION_STRING) + names[0]);
-        pgDesc.hitgroup.entryFunctionNameIS = cb_names.back().c_str();
-        pgDesc.hitgroup.moduleCH = module_;
-        cb_names.push_back(std::string(MM_OPTIX_CLOSESTHIT_ANNOTATION_STRING) + names[1]);
-        pgDesc.hitgroup.entryFunctionNameCH = cb_names.back().c_str();
-        pgDesc.hitgroup.moduleAH = nullptr;
-    } break;
-    }
+    auto const desc = fill_optix_programgroupdesc(kind, module_, names);
 
     OptixProgramGroupOptions pgOptions = {};
 
-    log_size = 2048;
-
-    OPTIX_CHECK_ERROR(optixProgramGroupCreate(ctx, &pgDesc, 1, &pgOptions, log, &log_size, &program_));
+    OPTIX_CHECK_ERROR(optixProgramGroupCreate(ctx, &desc.desc_, 1, &pgOptions, log, log, &program_));
 #if DEBUG
-    if (log_size > 1) {
-        core::utility::log::Log::DefaultLog.WriteError("[MMOptixModule] Program group creation info: %s", log);
+    if (log.get_log_size() > 1) {
+        core::utility::log::Log::DefaultLog.WriteError("[MMOptixModule] Program group creation info: %s", log.read());
     }
 #endif
 }
 
 megamol::optix_hpg::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDeviceContext ctx,
     OptixModuleCompileOptions const* module_options, OptixPipelineCompileOptions const* pipeline_options,
-    OptixProgramGroupKind kind, OptixModule build_in_intersector, std::vector<std::string> const& names) {
-    char log[2048];
-    std::size_t log_size = 2048;
+    MMOptixProgramGroupKind kind, OptixModule built_in_intersector,
+    std::vector<std::pair<MMOptixNameKind, std::string>> const& names) {
+    simple_log<2048> log;
 
     OPTIX_CHECK_ERROR(optixModuleCreateFromPTX(
-        ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, &log_size, &module_));
+        ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
 #if DEBUG
-    if (log_size > 1) {
-        core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Optix Module creation info: %s", log);
+    if (log.get_log_size() > 1) {
+        core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Optix Module creation info: %s", log.read());
     }
 #endif
 
-    std::istringstream ptx_in = std::istringstream(std::string(ptx_code));
-    std::ostringstream ptx_out;
-    for (std::string line; std::getline(ptx_in, line);) {
-        if (line.find(" _optix_") != std::string::npos) {
-            ptx_out << "// skipped: " << line << '\n';
-        } else {
-            ptx_out << line << '\n';
-        }
-    }
-
-    log_size = 2048;
-
-    /*if (kind == OPTIX_PROGRAM_GROUP_KIND_HITGROUP) {
-        CUjit_option options[] = {
-            CU_JIT_TARGET_FROM_CUCONTEXT,
-            CU_JIT_ERROR_LOG_BUFFER,
-            CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
-        };
-        void* optionValues[] = {(void*) 0, (void*) log, (void*) log_size};
-        CUDA_CHECK_ERROR(cuModuleLoadDataEx(&bounds_module_, ptx_out.str().c_str(), 3, options, optionValues));
-#if DEBUG
-        if (log_size > 1) {
-            core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Bounds Module creation info: %s", log);
-        }
-#endif
-
-        CUDA_CHECK_ERROR(
-            cuModuleGetFunction(&bounds_function_, bounds_module_, MM_OPTIX_BOUNDS_ANNOTATION_STRING "sphere_bounds"));
-    }*/
-
-    std::vector<std::string> cb_names;
-
-    OptixProgramGroupDesc pgDesc = {};
-    pgDesc.kind = kind;
-    switch (kind) {
-    case OPTIX_PROGRAM_GROUP_KIND_RAYGEN: {
-        pgDesc.raygen.module = module_;
-        cb_names.push_back(std::string(MM_OPTIX_RAYGEN_ANNOTATION_STRING) + names[0]);
-        pgDesc.raygen.entryFunctionName = cb_names.back().c_str();
-    } break;
-    case OPTIX_PROGRAM_GROUP_KIND_MISS: {
-        pgDesc.miss.module = module_;
-        cb_names.push_back(std::string(MM_OPTIX_MISS_ANNOTATION_STRING) + names[0]);
-        pgDesc.miss.entryFunctionName = cb_names.back().c_str();
-    } break;
-    case OPTIX_PROGRAM_GROUP_KIND_EXCEPTION: {
-        pgDesc.exception.module = module_;
-        cb_names.push_back(std::string(MM_OPTIX_EXCEPTION_ANNOTATION_STRING) + names[0]);
-        pgDesc.exception.entryFunctionName = cb_names.back().c_str();
-    } break;
-    case OPTIX_PROGRAM_GROUP_KIND_CALLABLES: {
-        pgDesc.callables.moduleDC = module_;
-        cb_names.push_back(std::string(MM_OPTIX_DIRECT_CALLABLE_ANNOTATION_STRING) + names[0]);
-        pgDesc.callables.entryFunctionNameDC = cb_names.back().c_str();
-    } break;
-    case OPTIX_PROGRAM_GROUP_KIND_HITGROUP: {
-        if (build_in_intersector != nullptr) {
-            pgDesc.hitgroup.moduleIS = build_in_intersector;
-            cb_names.push_back(std::string(MM_OPTIX_INTERSECTION_ANNOTATION_STRING) + names[0]);
-            pgDesc.hitgroup.entryFunctionNameIS = nullptr;
-        } else {
-            pgDesc.hitgroup.moduleIS = module_;
-            cb_names.push_back(std::string(MM_OPTIX_INTERSECTION_ANNOTATION_STRING) + names[0]);
-            pgDesc.hitgroup.entryFunctionNameIS = cb_names.back().c_str();
-        }
-        pgDesc.hitgroup.moduleCH = module_;
-        cb_names.push_back(std::string(MM_OPTIX_CLOSESTHIT_ANNOTATION_STRING) + names[1]);
-        pgDesc.hitgroup.entryFunctionNameCH = cb_names.back().c_str();
-        pgDesc.hitgroup.moduleAH = nullptr;
-    } break;
-    }
+    auto const desc = fill_optix_programgroupdesc(kind, module_, names, std::make_optional(built_in_intersector));
 
     OptixProgramGroupOptions pgOptions = {};
 
-    log_size = 2048;
-
-    OPTIX_CHECK_ERROR(optixProgramGroupCreate(ctx, &pgDesc, 1, &pgOptions, log, &log_size, &program_));
+    OPTIX_CHECK_ERROR(optixProgramGroupCreate(ctx, &desc.desc_, 1, &pgOptions, log, log, &program_));
 #if DEBUG
-    if (log_size > 1) {
-        core::utility::log::Log::DefaultLog.WriteError("[MMOptixModule] Program group creation info: %s", log);
+    if (log.get_log_size() > 1) {
+        core::utility::log::Log::DefaultLog.WriteError("[MMOptixModule] Program group creation info: %s", log.read());
     }
 #endif
 }

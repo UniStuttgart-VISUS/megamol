@@ -14,6 +14,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include <optional>
 
 #include "vislib/graphics/gl/ExtensionsDependent.h"
 #include "vislib/types.h"
@@ -489,6 +490,18 @@ namespace gl {
          * @throws OpenGLException If the resources could not be deleted.
          */
         void Release(void);
+
+        std::optional<AttachmentState> GetColorAttachmentState(const UINT colorAttachment = 0) const {
+            if (colorAttachment >= this->cntColourAttachments)
+                return std::nullopt;
+            return std::make_optional(this->attachmentColour[colorAttachment].state);
+        }
+
+        std::optional<AttachmentState> GetDepthAttachmentState() const {
+            if (this->attachmentOther[ATTACH_IDX_DEPTH].id == 0)
+                return std::nullopt;
+            return std::make_optional(this->attachmentOther[ATTACH_IDX_DEPTH].state);
+        }
 
     private:
 
