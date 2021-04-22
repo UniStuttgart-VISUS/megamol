@@ -1,3 +1,7 @@
+#version 430
+
+#include "core/bitflags.inc.glsl"
+
 layout(std430, binding = 0) buffer FloatData
 {
     float floatData[];

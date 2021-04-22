@@ -1,3 +1,8 @@
+#version 430
+
+#include "core/tflookup.inc.glsl"
+#include "core/tfconvenience.inc.glsl"
+
 uniform vec4 selectionColor;
 
 in float binColor;
