@@ -125,8 +125,8 @@ bool InfovisAmortizedRenderer::makeShaders() {
         amort_reconstruction_shdr_array[6] = core::utility::make_glowl_shader(
             shader_options, "infovis/amort_reconstruction6.vert.glsl", "infovis/amort_reconstruction6.frag.glsl");
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, ("HistogramRenderer2D: " + std::string(e.what())).c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            ("InfovisAmortizedRenderer: " + std::string(e.what())).c_str());
         return false;
     }
     return true;
