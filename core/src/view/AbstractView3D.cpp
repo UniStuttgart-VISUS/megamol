@@ -574,7 +574,7 @@ bool AbstractView3D::create(void) {
 
     if (!this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
         // new frontend has global key-value resource
-        auto maybe = this->frontend_resources[0].getResource<megamol::frontend_resources::GlobalValueStore>().maybe_get(arcball_key);
+        auto maybe = this->frontend_resources.get<megamol::frontend_resources::GlobalValueStore>().maybe_get(arcball_key);
         if (maybe.has_value()) {
             this->_arcballDefault = vislib::CharTraitsA::ParseBool(maybe.value().c_str());
         }
