@@ -1,19 +1,19 @@
 #include "stdafx.h"
 #include "InfovisAmortizedRenderer.h"
+
+#include <glm/gtc/functions.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "glm/gtc/functions.hpp"
-#include "glm/gtc/matrix_transform.hpp"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/utility/ShaderFactory.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-
 
 using namespace megamol;
 using namespace megamol::infovis;
@@ -60,7 +60,9 @@ InfovisAmortizedRenderer::~InfovisAmortizedRenderer() {
 }
 
 bool megamol::infovis::InfovisAmortizedRenderer::create(void) {
-    makeShaders();
+    if (!makeShaders()) {
+        return false;
+    }
 
     setupBuffers();
     return true;
@@ -104,55 +106,30 @@ std::vector<glm::fvec3> InfovisAmortizedRenderer::calculateHammersley(int until,
     return camOffsets;
 }
 
-void InfovisAmortizedRenderer::makeShaders() {
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::vert0", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::frag0", fragment_shader_src);
-    amort_reconstruction_shdr_array[0] = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    amort_reconstruction_shdr_array[0]->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    amort_reconstruction_shdr_array[0]->Link();
+bool InfovisAmortizedRenderer::makeShaders() {
+    auto const shader_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
 
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::vert1", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::frag1", fragment_shader_src);
-    amort_reconstruction_shdr_array[1] = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    amort_reconstruction_shdr_array[1]->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    amort_reconstruction_shdr_array[1]->Link();
-
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::vert2", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::frag2", fragment_shader_src);
-    amort_reconstruction_shdr_array[2] = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    amort_reconstruction_shdr_array[2]->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    amort_reconstruction_shdr_array[2]->Link();
-
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::vert3", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::frag3", fragment_shader_src);
-    amort_reconstruction_shdr_array[3] = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    amort_reconstruction_shdr_array[3]->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    amort_reconstruction_shdr_array[3]->Link();
-
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::vert4", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::frag4", fragment_shader_src);
-    amort_reconstruction_shdr_array[4] = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    amort_reconstruction_shdr_array[4]->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    amort_reconstruction_shdr_array[4]->Link();
-
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::vert5", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::frag5", fragment_shader_src);
-    amort_reconstruction_shdr_array[5] = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    amort_reconstruction_shdr_array[5]->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    amort_reconstruction_shdr_array[5]->Link();
-
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::vert6", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("amort_reconstruction::frag6", fragment_shader_src);
-    amort_reconstruction_shdr_array[6] = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    amort_reconstruction_shdr_array[6]->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    amort_reconstruction_shdr_array[6]->Link();
+    try {
+        amort_reconstruction_shdr_array[0] = core::utility::make_glowl_shader(
+            shader_options, "infovis/amort_reconstruction0.vert.glsl", "infovis/amort_reconstruction0.frag.glsl");
+        amort_reconstruction_shdr_array[1] = core::utility::make_glowl_shader(
+            shader_options, "infovis/amort_reconstruction1.vert.glsl", "infovis/amort_reconstruction1.frag.glsl");
+        amort_reconstruction_shdr_array[2] = core::utility::make_glowl_shader(
+            shader_options, "infovis/amort_reconstruction2.vert.glsl", "infovis/amort_reconstruction2.frag.glsl");
+        amort_reconstruction_shdr_array[3] = core::utility::make_glowl_shader(
+            shader_options, "infovis/amort_reconstruction3.vert.glsl", "infovis/amort_reconstruction3.frag.glsl");
+        amort_reconstruction_shdr_array[4] = core::utility::make_glowl_shader(
+            shader_options, "infovis/amort_reconstruction4.vert.glsl", "infovis/amort_reconstruction4.frag.glsl");
+        amort_reconstruction_shdr_array[5] = core::utility::make_glowl_shader(
+            shader_options, "infovis/amort_reconstruction5.vert.glsl", "infovis/amort_reconstruction5.frag.glsl");
+        amort_reconstruction_shdr_array[6] = core::utility::make_glowl_shader(
+            shader_options, "infovis/amort_reconstruction6.vert.glsl", "infovis/amort_reconstruction6.frag.glsl");
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, ("HistogramRenderer2D: " + std::string(e.what())).c_str());
+        return false;
+    }
+    return true;
 }
 
 void InfovisAmortizedRenderer::setupBuffers() {
@@ -507,48 +484,47 @@ bool InfovisAmortizedRenderer::OnKey(
 void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int ssLevel) {
     glViewport(0, 0, w, h);
 
-    amort_reconstruction_shdr_array[approach]->Enable();
+    amort_reconstruction_shdr_array[approach]->use();
 
     glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
 
-    glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("h"), h);
-    glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("w"), w);
-    glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("ow"), windowWidth);
-    glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("oh"), windowHeight);
-    glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("approach"), approach);
-    glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("frametype"), frametype);
-    glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("ssLevel"), ssLevel);
-    glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("amortLevel"),
-        this->amortLevel.Param<core::param::IntParam>()->Value());
-    glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("parity"), parity);
+    amort_reconstruction_shdr_array[approach]->setUniform("h", h);
+    amort_reconstruction_shdr_array[approach]->setUniform("w", w);
+    amort_reconstruction_shdr_array[approach]->setUniform("ow", windowWidth);
+    amort_reconstruction_shdr_array[approach]->setUniform("oh", windowHeight);
+    amort_reconstruction_shdr_array[approach]->setUniform("approach", approach);
+    amort_reconstruction_shdr_array[approach]->setUniform("frametype", frametype);
+    amort_reconstruction_shdr_array[approach]->setUniform("ssLevel", ssLevel);
+    amort_reconstruction_shdr_array[approach]->setUniform(
+        "amortLevel", this->amortLevel.Param<core::param::IntParam>()->Value());
+    amort_reconstruction_shdr_array[approach]->setUniform("parity", parity);
 
     if (approach == 0 || approach == 1 || approach == 2 || approach == 3)
-        glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("src_tex2D"), 10);
+        amort_reconstruction_shdr_array[approach]->setUniform("src_tex2D", 10);
     if (approach == 4) {
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
-        glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), a * a,
+        glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->getUniformLocation("moveMatrices"), a * a,
             GL_FALSE, &moveMatrices[0][0][0]);
     } else {
-        glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), 4, GL_FALSE,
+        glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->getUniformLocation("moveMatrices"), 4, GL_FALSE,
             &moveMatrices[0][0][0]);
     }
     if (approach == 6 || approach == 5) {
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, imStoreA);
         glBindImageTexture(5, imStoreA, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
-        glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("StoreA"), 5);
+        amort_reconstruction_shdr_array[approach]->setUniform("StoreA", 5);
 
         glActiveTexture(GL_TEXTURE6);
         glBindTexture(GL_TEXTURE_2D, imStoreB);
         glBindImageTexture(6, imStoreB, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
-        glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("StoreB"), 6);
+        amort_reconstruction_shdr_array[approach]->setUniform("StoreB", 6);
 
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, pushImage);
-        glUniform1i(amort_reconstruction_shdr_array[approach]->ParameterLocation("src_tex2D"), 4);
+        amort_reconstruction_shdr_array[approach]->setUniform("src_tex2D", 4);
     }
-    glUniformMatrix4fv(
-        amort_reconstruction_shdr_array[approach]->ParameterLocation("moveM"), 1, GL_FALSE, &movePush[0][0]);
+    amort_reconstruction_shdr_array[approach]->setUniform("moveM", movePush);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
     // glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0]);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("errorCode: %s", glGetError());
@@ -556,7 +532,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    amort_reconstruction_shdr_array[approach]->Disable();
+    glUseProgram(0);
 
     if (approach == 6) {
         frametype = (frametype + (this->amortLevel.Param<core::param::IntParam>()->Value() - 1) *

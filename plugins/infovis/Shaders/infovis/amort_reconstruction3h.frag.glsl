@@ -1,3 +1,5 @@
+#version 430
+
 uniform sampler2DArray tx2D_array;
 uniform sampler2D history_tx2D;
 uniform sampler2D result_tx2D;

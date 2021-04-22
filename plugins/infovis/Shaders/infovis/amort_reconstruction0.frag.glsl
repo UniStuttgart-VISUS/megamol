@@ -1,3 +1,5 @@
+#version 430
+
 uniform sampler2DMSArray src_tex2D;
 
 uniform int frametype;
