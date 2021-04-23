@@ -810,25 +810,14 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
 /*
  * MoleculeSESRenderer::GetExtents
  */
-bool MoleculeSESRenderer::GetExtents(Call& call) {
-
-    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
-    if( cr3d == NULL ) return false;
+bool MoleculeSESRenderer::GetExtents(view::CallRender3DGL& call) {
 
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL ) return false;
     if (!(*mol)(1)) return false;
 
-    float scale;
-    if( !vislib::math::IsEqual( mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
-    cr3d->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld( scale);
-    cr3d->SetTimeFramesCount( mol->FrameCount());
+    call.AccessBoundingBoxes() = mol->AccessBoundingBoxes();
+    call.SetTimeFramesCount( mol->FrameCount());
 
     return true;
 }
@@ -837,18 +826,18 @@ bool MoleculeSESRenderer::GetExtents(Call& call) {
 /*
  * MoleculeSESRenderer::Render
  */
-bool MoleculeSESRenderer::Render( Call& call ) {
+bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
     // temporary variables
     unsigned int cntRS = 0;
 
-    // cast the call to Render3D
-    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
-    if( cr3d == NULL ) return false;
-
     // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cameraInfo.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    auto resolution = cameraInfo.resolution_gate();
 
-    float callTime = cr3d->Time();
+    float callTime = call.Time();
 
     // get pointer to CallProteinData
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
@@ -932,11 +921,11 @@ bool MoleculeSESRenderer::Render( Call& call ) {
     }
 
 	bool virtualViewportChanged = false;
-	if( static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-        static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetHeight()) != this->height )
+	if( static_cast<unsigned int>(resolution.width()) != this->width ||
+        static_cast<unsigned int>(resolution.height()) != this->height )
     {
-        this->width = static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetWidth());
-        this->height = static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetHeight());
+        this->width = static_cast<unsigned int>(resolution.width());
+        this->height = static_cast<unsigned int>(resolution.height());
 		virtualViewportChanged = true;
     }
 
@@ -1432,12 +1421,14 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
     const MolecularDataCall *mol) {
     // TODO: attribute locations nicht jedes mal neu abfragen!
 
+    auto resolution = cameraInfo.resolution_gate();
+
 	bool virtualViewportChanged = false;
-	if( static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-        static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetHeight()) != this->height )
+	if( static_cast<unsigned int>(resolution.width()) != this->width ||
+        static_cast<unsigned int>(resolution.height()) != this->height )
     {
-        this->width = static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetWidth());
-        this->height = static_cast<unsigned int>(this->cameraInfo->VirtualViewSize().GetHeight());
+        this->width = static_cast<unsigned int>(resolution.width());
+        this->height = static_cast<unsigned int>(resolution.height());
 		virtualViewportChanged = true;
     }
 
@@ -1445,15 +1436,21 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
         puxelsCreateBuffers();
 
     // set viewport
-    float viewportStuff[4] = {
-            this->cameraInfo->TileRect().Left(),
-            this->cameraInfo->TileRect().Bottom(),
-            this->cameraInfo->TileRect().Width(),
-            this->cameraInfo->TileRect().Height() };
+    glm::vec4 viewportStuff;
+    viewportStuff[0] = 0.0f;
+    viewportStuff[1] = 0.0f;
+    viewportStuff[2] = static_cast<float>(resolution.width());
+    viewportStuff[3] = static_cast<float>(resolution.height());
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
+
+    glm::vec4 camdir = cameraInfo.view_vector();
+    glm::vec4 right = cameraInfo.right_vector();
+    glm::vec4 up = cameraInfo.up_vector();
+    float nearplane = cameraInfo.near_clipping_plane();
+    float farplane = cameraInfo.far_clipping_plane();
 
     // get clear color (i.e. background color) for fogging
     float *clearColor = new float[4];
@@ -1478,11 +1475,11 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
             if(offscreenRendering) {
                 this->torusShaderOR.Enable();
                 // set shader variables
-                glUniform4fvARB( this->torusShaderOR.ParameterLocation( "viewAttr"), 1, viewportStuff);
-                glUniform3fvARB( this->torusShaderOR.ParameterLocation( "camIn"), 1, this->cameraInfo->Front().PeekComponents());
-                glUniform3fvARB( this->torusShaderOR.ParameterLocation( "camRight"), 1, this->cameraInfo->Right().PeekComponents());
-                glUniform3fvARB( this->torusShaderOR.ParameterLocation( "camUp"), 1, this->cameraInfo->Up().PeekComponents());
-                glUniform3fARB( this->torusShaderOR.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform4fvARB( this->torusShaderOR.ParameterLocation( "viewAttr"), 1, glm::value_ptr(viewportStuff));
+                glUniform3fvARB( this->torusShaderOR.ParameterLocation( "camIn"), 1, glm::value_ptr(camdir));
+                glUniform3fvARB(this->torusShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(right));
+                glUniform3fvARB(this->torusShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(up));
+                glUniform3fARB( this->torusShaderOR.ParameterLocation( "zValues"), fogStart, nearplane, farplane);
                 glUniform3fARB( this->torusShaderOR.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
                 glUniform1fARB( this->torusShaderOR.ParameterLocation( "alpha"), this->transparency);
                 // get attribute locations
@@ -1505,11 +1502,11 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
 				glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
 #endif
 
-                glUniform4fvARB( this->torusShader.ParameterLocation( "viewAttr"), 1, viewportStuff);
-                glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, this->cameraInfo->Front().PeekComponents());
-                glUniform3fvARB( this->torusShader.ParameterLocation( "camRight"), 1, this->cameraInfo->Right().PeekComponents());
-                glUniform3fvARB( this->torusShader.ParameterLocation( "camUp"), 1, this->cameraInfo->Up().PeekComponents());
-                glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform4fvARB( this->torusShader.ParameterLocation( "viewAttr"), 1, glm::value_ptr(viewportStuff));
+                glUniform3fvARB( this->torusShader.ParameterLocation( "camIn"), 1, glm::value_ptr(camdir));
+                glUniform3fvARB(this->torusShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
+                glUniform3fvARB(this->torusShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
+                glUniform3fARB( this->torusShader.ParameterLocation( "zValues"), fogStart, nearplane, farplane);
                 glUniform3fARB( this->torusShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
                 glUniform1fARB( this->torusShader.ParameterLocation( "alpha"), this->transparency);
                 // get attribute locations
@@ -1576,11 +1573,11 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
             if(offscreenRendering) {
                 this->sphericalTriangleShaderOR.Enable();
                 // set shader variables
-                glUniform4fvARB( this->sphericalTriangleShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-                glUniform3fvARB( this->sphericalTriangleShaderOR.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-                glUniform3fvARB( this->sphericalTriangleShaderOR.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-                glUniform3fvARB( this->sphericalTriangleShaderOR.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-                glUniform3fARB( this->sphericalTriangleShaderOR.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform4fvARB( this->sphericalTriangleShaderOR.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+                glUniform3fvARB( this->sphericalTriangleShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
+                glUniform3fvARB( this->sphericalTriangleShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(right));
+                glUniform3fvARB(this->sphericalTriangleShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(up));
+                glUniform3fARB( this->sphericalTriangleShaderOR.ParameterLocation( "zValues"), fogStart, nearplane, farplane);
                 glUniform3fARB( this->sphericalTriangleShaderOR.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
                 glUniform2fARB( this->sphericalTriangleShaderOR.ParameterLocation( "texOffset"),
                                                          1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
@@ -1607,11 +1604,11 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
                 glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
 #endif
 
-                glUniform4fvARB( this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-                glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-                glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-                glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-                glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform4fvARB( this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+                glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
+                glUniform3fvARB( this->sphericalTriangleShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
+                glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
+                glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "zValues"), fogStart, nearplane, farplane);
                 glUniform3fARB( this->sphericalTriangleShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
                 glUniform2fARB( this->sphericalTriangleShader.ParameterLocation( "texOffset"),
                                                          1.0f/(float)this->singTexWidth[cntRS], 1.0f/(float)this->singTexHeight[cntRS] );
@@ -1682,11 +1679,11 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
             if(offscreenRendering) {
                 this->sphereShaderOR.Enable();
                 // set shader variables
-                glUniform4fvARB( this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-                glUniform3fvARB( this->sphereShaderOR.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-                glUniform3fvARB( this->sphereShaderOR.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-                glUniform3fvARB( this->sphereShaderOR.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-                glUniform3fARB( this->sphereShaderOR.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform4fvARB( this->sphereShaderOR.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+                glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
+                glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(right));
+                glUniform3fvARB(this->sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(up));
+                glUniform3fARB( this->sphereShaderOR.ParameterLocation( "zValues"), fogStart, nearplane, farplane);
                 glUniform3fARB( this->sphereShaderOR.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
                 glUniform1fARB( this->sphereShaderOR.ParameterLocation( "alpha"), this->transparency);
             }
@@ -1704,11 +1701,11 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(
 				glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
 #endif
 
-                glUniform4fvARB( this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-                glUniform3fvARB( this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-                glUniform3fvARB( this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-                glUniform3fvARB( this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-                glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+                glUniform4fvARB( this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+                glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
+                glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
+                glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
+                glUniform3fARB( this->sphereShader.ParameterLocation( "zValues"), fogStart, nearplane, farplane);
                 glUniform3fARB( this->sphereShader.ParameterLocation( "fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ() );
                 glUniform1fARB( this->sphereShader.ParameterLocation( "alpha"), this->transparency);
             }
@@ -1780,24 +1777,27 @@ void MoleculeSESRenderer::RenderDebugStuff(
     vislib::math::Vector<float,3> tmpVec, ortho, dir, position;
     float angle;
     // set viewport
-    float viewportStuff[4] =
-    {
-        this->cameraInfo->TileRect().Left(),
-        this->cameraInfo->TileRect().Bottom(),
-        this->cameraInfo->TileRect().Width(),
-        this->cameraInfo->TileRect().Height()
-    };
+    auto resolution = cameraInfo.resolution_gate();
+    glm::vec4 viewportStuff;
+    viewportStuff[0] = 0.0f;
+    viewportStuff[1] = 0.0f;
+    viewportStuff[2] = static_cast<float>(resolution.width());
+    viewportStuff[3] = static_cast<float>(resolution.height());
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
+
+    glm::vec4 camdir = cameraInfo.view_vector();
+    glm::vec4 right = cameraInfo.right_vector();
+    glm::vec4 up = cameraInfo.up_vector();
     // enable cylinder shader
     this->cylinderShader.Enable();
     // set shader variables
-    glUniform4fvARB(this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+    glUniform4fvARB(this->cylinderShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+    glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
+    glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
+    glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
     // get the attribute locations
     GLint attribLocInParams = glGetAttribLocation( this->cylinderShader, "inParams");
     GLint attribLocQuatC = glGetAttribLocation( this->cylinderShader, "quatC");
@@ -2617,26 +2617,30 @@ void MoleculeSESRenderer::CreateSingularityTexture( unsigned int idxRS) {
 void MoleculeSESRenderer::RenderAtomsGPU( const MolecularDataCall *mol, const float scale) {
     unsigned int cnt, cntRS, max1, max2;
 
+    auto resolution = cameraInfo.resolution_gate();
+
     // set viewport
-    float viewportStuff[4] =
-    {
-        this->cameraInfo->TileRect().Left(),
-        this->cameraInfo->TileRect().Bottom(),
-        this->cameraInfo->TileRect().Width(),
-        this->cameraInfo->TileRect().Height()
-    };
+    glm::vec4 viewportStuff;
+    viewportStuff[0] = 0.0f;
+    viewportStuff[1] = 0.0f;
+    viewportStuff[2] = static_cast<float>(resolution.width());
+    viewportStuff[3] = static_cast<float>(resolution.height());
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
+    glm::vec4 right = this->cameraInfo.right_vector();
+    glm::vec4 camdir = this->cameraInfo.view_vector();
+    glm::vec4 up = this->cameraInfo.up_vector();
+
     // enable sphere shader
     this->sphereShader.Enable();
     // set shader variables
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
 
     glBegin( GL_POINTS);
 
@@ -2695,25 +2699,32 @@ void MoleculeSESRenderer::RenderProbe( const vislib::math::Vector<float, 3> m) {
  */
 void MoleculeSESRenderer::RenderProbeGPU( const vislib::math::Vector<float, 3> m) {
     // set viewport
-    float viewportStuff[4] =
-    {
-        this->cameraInfo->TileRect().Left(),
-        this->cameraInfo->TileRect().Bottom(),
-        this->cameraInfo->TileRect().Width(),
-        this->cameraInfo->TileRect().Height()
-    };
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    auto& resolution = cameraInfo.resolution_gate();
+
+    // set viewport
+    glm::vec4 viewportStuff;
+    viewportStuff[0] = 0.0f;
+    viewportStuff[1] = 0.0f;
+    viewportStuff[2] = static_cast<float>(resolution.width());
+    viewportStuff[3] = static_cast<float>(resolution.height());
+    if (viewportStuff[2] < 1.0f)
+        viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f)
+        viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
+
+    glm::vec4 right = this->cameraInfo.right_vector();
+    glm::vec4 camdir = this->cameraInfo.view_vector();
+    glm::vec4 up = this->cameraInfo.up_vector();
 
     // enable sphere shader
     this->sphereShader.Enable();
     // set shader variables
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
+    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
 
 	this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
 
@@ -2815,13 +2826,15 @@ void MoleculeSESRenderer::puxelsCreateBuffers()
  */
 void MoleculeSESRenderer::puxelsClear()
 {
+    auto& resolution = cameraInfo.resolution_gate();
+
 	puxelClearShader.Enable();
-	glUniform1ui(this->puxelClearShader.ParameterLocation("width"), (GLuint)this->cameraInfo->TileRect().Width());
-	glUniform1ui(this->puxelClearShader.ParameterLocation("height"), (GLuint)this->cameraInfo->TileRect().Height());
+	glUniform1ui(this->puxelClearShader.ParameterLocation("width"), (GLuint)resolution.width());
+	glUniform1ui(this->puxelClearShader.ParameterLocation("height"), (GLuint)resolution.height());
 	
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
 
-	puxelClearShader.Dispatch((unsigned int)this->cameraInfo->TileRect().Width()/16, (unsigned int)this->cameraInfo->TileRect().Height()/16, 1);
+	puxelClearShader.Dispatch((unsigned int)resolution.width()/16, (unsigned int)resolution.height()/16, 1);
 	
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -2840,9 +2853,11 @@ void MoleculeSESRenderer::puxelsClear()
  */
 void MoleculeSESRenderer::puxelsReorder()
 {
+    auto& resolution = cameraInfo.resolution_gate();
+
 	puxelOrderShader.Enable();
-	glUniform1ui(this->puxelOrderShader.ParameterLocation("width"), (GLuint)this->cameraInfo->TileRect().Width());
-	glUniform1ui(this->puxelOrderShader.ParameterLocation("height"), (GLuint)this->cameraInfo->TileRect().Height());
+	glUniform1ui(this->puxelOrderShader.ParameterLocation("width"), (GLuint)resolution.width());
+	glUniform1ui(this->puxelOrderShader.ParameterLocation("height"), (GLuint)resolution.height());
 	
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);

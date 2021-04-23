@@ -250,7 +250,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( megamol::core::Call& call);
+        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
 
         /**
          * Open GL Render call.
@@ -258,7 +258,7 @@ namespace protein {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render( megamol::core::Call& call);
+        virtual bool Render(megamol::core::view::CallRender3DGL& call);
 
         /**
          * Deinitialises this renderer. This is only called if there was a
