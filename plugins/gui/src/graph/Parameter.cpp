@@ -48,8 +48,6 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Stroage_t stor
         , tf_show_editor(false)
         , tf_editor_hash(0) {
 
-
-    this->SetFullName(param_fullname);
     this->InitPresentation(type);
 
     // Initialize variant types which should/can not be changed afterwards.
