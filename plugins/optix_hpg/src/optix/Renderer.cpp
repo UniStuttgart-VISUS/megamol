@@ -238,14 +238,12 @@ bool megamol::optix_hpg::Renderer::GetExtents(CallRender3DCUDA& call) {
 
 
 bool megamol::optix_hpg::Renderer::create() {
-    auto const fit = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
-        [](auto const& el) { return el.getIdentifier() == frontend_resources::CUDA_Context_Req_Name; });
-
-    if (fit == this->frontend_resources.end())
+    auto& cuda_res = frontend_resources.get<frontend_resources::CUDA_Context>();
+    if (cuda_res.ctx_ != nullptr) {
+        optix_ctx_ = std::make_unique<Context>(cuda_res);
+    } else {
         return false;
-
-    optix_ctx_ = std::make_unique<Context>(fit->getResource<frontend_resources::CUDA_Context>());
-
+    }
     return true;
 }
 
