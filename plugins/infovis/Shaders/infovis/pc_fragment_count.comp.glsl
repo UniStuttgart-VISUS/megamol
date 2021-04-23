@@ -2,9 +2,9 @@
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-#include <snippet name="::fragment_count::buffers" />
-#include <snippet name="::fragment_count::uniforms" />
-#include <snippet name="::cs_id::getInvocationID" />
+#include "pc_common/pc_fragment_count_buffers.inc.glsl"
+#include "pc_common/pc_fragment_count_uniforms.inc.glsl"
+#include "pc_common/pc_cs_id_getInvocationID.inc.glsl"
 
 uniform uvec2 resolution = uvec2(0);
 uniform uvec2 fragmentCountStepSize = uvec2(16);

@@ -1,8 +1,8 @@
 #version 440
 
-#include <snippet name="::pc::extensions" />
-#include <snippet name="::pc::uniforms" />
-#include <snippet name="::pc_item_draw::histogram::uniforms" />
+#include "pc_common/pc_extensions.inc.glsl"
+#include "pc_common/pc_uniforms.inc.glsl"
+#include "pc_common/pc_item_draw_histogram_uniforms.inc.glsl"
 
 uniform vec2 bottomLeft = vec2(-1.0);
 uniform vec2 topRight = vec2(1.0);

@@ -1,17 +1,17 @@
 #version 440
 
-#include <snippet name="::pc::extensions" />
-#include <snippet name="::pc::useLineStrip" />
-#include <snippet name="::pc::earlyFragmentTests" />
-#include <snippet name="::pc::buffers" />
-#include <snippet name="::pc::uniforms" />
-#include <snippet name="::pc::common" />
-#include <snippet name="::bitflags::main" />
+#include "pc_common/pc_extensions.inc.glsl"
+#include "pc_common/pc_useLineStrip.inc.glsl"
+#include "pc_common/pc_earlyFragmentTests.inc.glsl"
+#include "pc_common/pc_buffers.inc.glsl"
+#include "pc_common/pc_uniforms.inc.glsl"
+#include "pc_common/pc_common.inc.glsl"
+#include "core/bitflags.inc.glsl"
 
 // Input data
 in Interface
 {
-#include <snippet name="::pc_item_draw::interface" />
+#include "pc_common/pc_item_draw_interface.inc.glsl"
 } in_;
 
 layout(location = 0) out vec4 fragColor;

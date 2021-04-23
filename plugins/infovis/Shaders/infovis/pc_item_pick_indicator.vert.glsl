@@ -1,11 +1,11 @@
 #version 430
 
-#include <snippet name="::pc::extensions" />
-#include <snippet name="::pc::useLineStrip" />
-#include <snippet name="::pc::buffers" />
-#include <snippet name="::pc::uniforms" />
-#include <snippet name="::pc::common" />
-#include <snippet name="::pc_item_pick::uniforms" />
+#include "pc_common/pc_extensions.inc.glsl"
+#include "pc_common/pc_useLineStrip.inc.glsl"
+#include "pc_common/pc_buffers.inc.glsl"
+#include "pc_common/pc_uniforms.inc.glsl"
+#include "pc_common/pc_common.inc.glsl"
+//#include "::pc_item_pick::uniforms"
 
 smooth out vec2 circleCoord;
 

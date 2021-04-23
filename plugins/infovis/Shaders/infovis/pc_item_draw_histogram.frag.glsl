@@ -1,11 +1,11 @@
 #version 440
 
-#include <snippet name="::core_utils::tflookup" />
-#include <snippet name="::core_utils::tfconvenience" />
-#include <snippet name="::pc::extensions" />
-#include <snippet name="::pc::buffers" />
-#include <snippet name="::pc::uniforms" />
-#include <snippet name="::pc_item_draw::histogram::uniforms" />
+#include "core/tflookup.inc.glsl"
+#include "core/tfconvenience.inc.glsl"
+#include "pc_common/pc_extensions.inc.glsl"
+#include "pc_common/pc_buffers.inc.glsl"
+#include "pc_common/pc_uniforms.inc.glsl"
+#include "pc_common/pc_item_draw_histogram_uniforms.inc.glsl"
 
 smooth in vec2 texCoord;
 layout(early_fragment_tests) in;

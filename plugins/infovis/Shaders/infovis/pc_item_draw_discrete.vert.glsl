@@ -1,21 +1,20 @@
 #version 440
 
-#include <snippet name="::core_utils::tflookup" />
-#include <snippet name="::core_utils::tfconvenience" />
-#include <snippet name="::pc::extensions" />
-#include <snippet name="::pc::useLineStrip" />
-#include <snippet name="::pc::buffers" />
-#include <snippet name="::pc::uniforms" />
-#include <snippet name="::pc::instancingOffset" />
-#include <snippet name="::pc::common" />
-#include <snippet name="::bitflags::main" />
+#include "core/tflookup.inc.glsl"
+#include "core/tfconvenience.inc.glsl"
+#include "pc_common/pc_extensions.inc.glsl"
+#include "pc_common/pc_useLineStrip.inc.glsl"
+#include "pc_common/pc_buffers.inc.glsl"
+#include "pc_common/pc_uniforms.inc.glsl"
+#include "pc_common/pc_instancingOffset.inc.glsl"
+#include "pc_common/pc_common.inc.glsl"
+#include "core/bitflags.inc.glsl"
 
 // BEGIN Output data
 out Interface
 {
-#include <snippet name="::pc_item_draw::interface" />
+#include "pc_common/pc_item_draw_interface.inc.glsl"
 } out_;
-
 // END Output data
 
-#include <snippet name="::pc_item_draw::vertexShaderMain" />
+#include "pc_common/pc_item_draw_vertexShaderMain.inc.glsl"

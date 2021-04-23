@@ -1,13 +1,13 @@
 #version 430
 
-#include <snippet name="::pc::extensions" />
-#include <snippet name="::pc::useLineStrip" />
-#include <snippet name="::pc::buffers" />
-#include <snippet name="::pc::uniforms" />
-#include <snippet name="::pc::common" />
-#include <snippet name="::pc_item_pick::uniforms" />
-#include <snippet name="::pc_item_pick::intersectLineCircle" />
-#include <snippet name="::bitflags::main" />
+#include "pc_common/pc_extensions.inc.glsl"
+#include "pc_common/pc_useLineStrip.inc.glsl"
+#include "pc_common/pc_buffers.inc.glsl"
+#include "pc_common/pc_uniforms.inc.glsl"
+#include "pc_common/pc_common.inc.glsl"
+//#include "::pc_item_pick::uniforms"
+#include "pc_common/pc_item_pick_intersectLineCircle.inc.glsl"
+#include "core/bitflags.inc.glsl"
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 

@@ -1,7 +1,7 @@
 #version 430
 
-#include <snippet name="::fragment_count::buffers" />
-#include <snippet name="::fragment_count::uniforms" />
+#include "pc_common/pc_fragment_count_buffers.inc.glsl"
+#include "pc_common/pc_fragment_count_uniforms.inc.glsl"
 
 uniform vec2 bottomLeft = vec2(-1.0);
 uniform vec2 topRight = vec2(1.0);

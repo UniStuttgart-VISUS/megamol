@@ -1,9 +1,9 @@
 #version 430
 
-#include <snippet name="::pc::extensions" />
-#include <snippet name="::pc::earlyFragmentTests" />
-#include <snippet name="::pc::buffers" />
-#include <snippet name="::pc::uniforms" />
+#include "pc_common/pc_extensions.inc.glsl"
+#include "pc_common/pc_earlyFragmentTests.inc.glsl"
+#include "pc_common/pc_buffers.inc.glsl"
+#include "pc_common/pc_uniforms.inc.glsl"
 
 out vec4 fragColor;
 in vec4 actualColor;
