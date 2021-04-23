@@ -234,89 +234,47 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     auto const shader_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
 
     try {
-        // TODO
-        // drawAxesProgram = core::utility::make_glowl_shader(
-        //     shader_options, "infovis/pc_axes_draw.vert.glsl", "infovis/pc_axes_draw.frag.glsl");
+        drawAxesProgram = core::utility::make_glowl_shader(
+            shader_options, "infovis/pc_axes_draw_axes.vert.glsl", "infovis/pc_axes_draw_axes.frag.glsl");
 
-        // TODO remove this shitty workaround again!
-        vislib::graphics::gl::GLSLShader* dummy;
-        vislib::graphics::gl::GLSLTesselationShader* dummyTess;
-        vislib::graphics::gl::GLSLComputeShader* dummyComp;
+        drawScalesProgram = core::utility::make_glowl_shader(
+            shader_options, "infovis/pc_axes_draw_scales.vert.glsl", "infovis/pc_axes_draw_scales.frag.glsl");
 
-        dummy = new vislib::graphics::gl::GLSLShader();
-        if (!makeProgram("::pc_axes_draw::axes", *dummy))
-            return false;
-        drawAxesProgram = std::make_unique<glowl::GLSLProgram>(dummy->ProgramHandle());
+        drawFilterIndicatorsProgram = core::utility::make_glowl_shader(shader_options,
+            "infovis/pc_axes_draw_filterindicators.vert.glsl", "infovis/pc_axes_draw_filterindicators.frag.glsl");
 
-        dummy = new vislib::graphics::gl::GLSLShader();
-        if (!makeProgram("::pc_axes_draw::scales", *dummy))
-            return false;
-        drawScalesProgram = std::make_unique<glowl::GLSLProgram>(dummy->ProgramHandle());
+        drawStrokeIndicatorProgram = core::utility::make_glowl_shader(
+            shader_options, "infovis/pc_item_stroke_indicator.vert.glsl", "infovis/pc_item_stroke_indicator.frag.glsl");
 
-        dummy = new vislib::graphics::gl::GLSLShader();
-        if (!makeProgram("::pc_axes_draw::filterindicators", *dummy))
-            return false;
-        drawFilterIndicatorsProgram = std::make_unique<glowl::GLSLProgram>(dummy->ProgramHandle());
+        drawPickIndicatorProgram = core::utility::make_glowl_shader(
+            shader_options, "infovis/pc_item_pick_indicator.vert.glsl", "infovis/pc_item_pick_indicator.frag.glsl");
 
-        dummy = new vislib::graphics::gl::GLSLShader();
-        if (!makeProgram("::pc_item_stroke::indicator", *dummy))
-            return false;
-        drawStrokeIndicatorProgram = std::make_unique<glowl::GLSLProgram>(dummy->ProgramHandle());
+        drawItemsDiscreteProgram = core::utility::make_glowl_shader(
+            shader_options, "infovis/pc_item_draw_discrete.vert.glsl", "infovis/pc_item_draw_discrete.frag.glsl");
 
-        dummy = new vislib::graphics::gl::GLSLShader();
-        if (!makeProgram("::pc_item_pick::indicator", *dummy))
-            return false;
-        drawPickIndicatorProgram = std::make_unique<glowl::GLSLProgram>(dummy->ProgramHandle());
+        drawItemsTriangleProgram = core::utility::make_glowl_shader(
+            shader_options, "infovis/pc_item_draw_discreteT.vert.glsl", "infovis/pc_item_draw_discreteT.frag.glsl");
 
-        dummy = new vislib::graphics::gl::GLSLShader();
-        if (!makeProgram("::pc_item_draw::discrete", *dummy))
-            return false;
-        drawItemsDiscreteProgram = std::make_unique<glowl::GLSLProgram>(dummy->ProgramHandle());
+        traceItemsDiscreteProgram = core::utility::make_glowl_shader(
+            shader_options, "infovis/pc_item_draw_muhaha.vert.glsl", "infovis/pc_item_draw_muhaha.frag.glsl");
 
-        dummy = new vislib::graphics::gl::GLSLShader();
-        if (!makeProgram("::pc_item_draw::discreteT", *dummy))
-            return false;
-        drawItemsTriangleProgram = std::make_unique<glowl::GLSLProgram>(dummy->ProgramHandle());
+        drawItemsDiscreteTessProgram = core::utility::make_glowl_shader(shader_options,
+            "infovis/pc_item_draw_discTess.vert.glsl", "infovis/pc_item_draw_discTess.tesc.glsl",
+            "infovis/pc_item_draw_discTess.tese.glsl", "infovis/pc_item_draw_discTess.frag.glsl");
 
-        dummy = new vislib::graphics::gl::GLSLShader();
-        if (!makeProgram("::pc_item_draw::muhaha", *dummy))
-            return false;
-        traceItemsDiscreteProgram = std::make_unique<glowl::GLSLProgram>(dummy->ProgramHandle());
+        drawItemContinuousProgram = core::utility::make_glowl_shader(
+            shader_options, "infovis/pc_fragment_count.vert.glsl", "infovis/pc_fragment_count.frag.glsl");
 
-        dummyTess = new vislib::graphics::gl::GLSLTesselationShader;
-        if (!makeProgram("::pc_item_draw::discTess", *dummyTess))
-            return false;
-        drawItemsDiscreteTessProgram = std::make_unique<glowl::GLSLProgram>(dummyTess->ProgramHandle());
+        minMaxProgram = core::utility::make_glowl_shader(shader_options, "infovis/pc_fragment_count.comp.glsl");
 
-        dummy = new vislib::graphics::gl::GLSLShader();
-        if (!makeProgram("::fragment_count", *dummy))
-            return false;
-        drawItemContinuousProgram = std::make_unique<glowl::GLSLProgram>(dummy->ProgramHandle());
+        drawItemsHistogramProgram = core::utility::make_glowl_shader(
+            shader_options, "infovis/pc_item_draw_histogram.vert.glsl", "infovis/pc_item_draw_histogram.frag.glsl");
 
-        dummyComp = new vislib::graphics::gl::GLSLComputeShader;
-        if (!makeProgram("::fragment_count", *dummyComp))
-            return false;
-        minMaxProgram = std::make_unique<glowl::GLSLProgram>(dummyComp->ProgramHandle());
+        filterProgram = core::utility::make_glowl_shader(shader_options, "infovis/pc_item_filter.comp.glsl");
 
-        dummy = new vislib::graphics::gl::GLSLShader();
-        if (!makeProgram("::pc_item_draw::histogram", *dummy))
-            return false;
-        drawItemsHistogramProgram = std::make_unique<glowl::GLSLProgram>(dummy->ProgramHandle());
+        pickProgram = core::utility::make_glowl_shader(shader_options, "infovis/pc_item_pick.comp.glsl");
 
-        dummyComp = new vislib::graphics::gl::GLSLComputeShader;
-        if (!makeProgram("::pc_item_filter", *dummyComp))
-            return false;
-        filterProgram = std::make_unique<glowl::GLSLProgram>(dummyComp->ProgramHandle());
-
-        dummyComp = new vislib::graphics::gl::GLSLComputeShader;
-        if (!makeProgram("::pc_item_pick", *dummyComp))
-            return false;
-        pickProgram = std::make_unique<glowl::GLSLProgram>(dummyComp->ProgramHandle());
-
-        dummyComp = new vislib::graphics::gl::GLSLComputeShader;
-        if (!makeProgram("::pc_item_stroke", *dummyComp))
-            return false;
-        strokeProgram = std::make_unique<glowl::GLSLProgram>(dummyComp->ProgramHandle());
+        strokeProgram = core::utility::make_glowl_shader(shader_options, "infovis/pc_item_stroke.comp.glsl");
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
