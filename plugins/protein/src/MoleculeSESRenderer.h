@@ -10,26 +10,26 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-#include "protein_calls/MolecularDataCall.h"
-#include "protein_calls/BindingSiteCall.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/view/Camera_2.h"
-#include "Color.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "ReducedSurface.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/math/Quaternion.h"
-#include "vislib/Array.h"
-#include "vislib/String.h"
-#include <vector>
-#include <set>
 #include <algorithm>
 #include <list>
+#include <set>
+#include <vector>
+#include "Color.h"
+#include "ReducedSurface.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
+#include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "vislib/Array.h"
+#include "vislib/String.h"
+#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/math/Quaternion.h"
 
 namespace megamol {
 namespace protein {
@@ -40,20 +40,14 @@ namespace protein {
      */
     class MoleculeSESRenderer : public megamol::core::view::Renderer3DModuleGL {
     public:
-
         /** postprocessing modi */
-        enum PostprocessingMode {
-            NONE = 0,
-            AMBIENT_OCCLUSION = 1,
-            SILHOUETTE = 2,
-            TRANSPARENCY = 3
-        };
+        enum PostprocessingMode { NONE = 0, AMBIENT_OCCLUSION = 1, SILHOUETTE = 2, TRANSPARENCY = 3 };
 
         /** render modi */
         enum RenderMode {
             GPU_RAYCASTING = 0,
-            //POLYGONAL = 1,
-            //POLYGONAL_GPU = 2,
+            // POLYGONAL = 1,
+            // POLYGONAL_GPU = 2,
             GPU_RAYCASTING_INTERIOR_CLIPPING = 3,
             GPU_SIMPLIFIED = 4
         };
@@ -63,7 +57,7 @@ namespace protein {
          *
          * @return The name of this module.
          */
-        static const char *ClassName(void) {
+        static const char* ClassName(void) {
             return "MoleculeSESRenderer";
         }
 
@@ -72,7 +66,7 @@ namespace protein {
          *
          * @return A human readable description of this module.
          */
-        static const char *Description(void) {
+        static const char* Description(void) {
             return "Offers protein surface renderings.";
         }
 
@@ -82,7 +76,7 @@ namespace protein {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            //return true;
+            // return true;
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
@@ -92,28 +86,34 @@ namespace protein {
         /** dtor */
         virtual ~MoleculeSESRenderer(void);
 
-       /**********************************************************************
+        /**********************************************************************
          * 'get'-functions
          **********************************************************************/
 
         /** Get probe radius */
-        const float GetProbeRadius() const { return probeRadius; };
+        const float GetProbeRadius() const {
+            return probeRadius;
+        };
 
         /**********************************************************************
          * 'set'-functions
          **********************************************************************/
 
         /** Set probe radius */
-        void SetProbeRadius( const float rad) { probeRadius = rad; };
+        void SetProbeRadius(const float rad) {
+            probeRadius = rad;
+        };
 
         /** set the color of the silhouette */
-        void SetSilhouetteColor( float r, float g, float b) { silhouetteColor.Set( r, g, b);
-            codedSilhouetteColor = int( r * 255.0f)*1000000 + int( g * 255.0f)*1000 + int( b * 255.0f); };
-        void SetSilhouetteColor( vislib::math::Vector<float, 3> color) {
-            SetSilhouetteColor( color.GetX(), color.GetY(), color.GetZ()); };
+        void SetSilhouetteColor(float r, float g, float b) {
+            silhouetteColor.Set(r, g, b);
+            codedSilhouetteColor = int(r * 255.0f) * 1000000 + int(g * 255.0f) * 1000 + int(b * 255.0f);
+        };
+        void SetSilhouetteColor(vislib::math::Vector<float, 3> color) {
+            SetSilhouetteColor(color.GetX(), color.GetY(), color.GetZ());
+        };
 
     protected:
-
         /**
          * Implementation of 'Create'.
          *
@@ -132,16 +132,15 @@ namespace protein {
          * @param protein The protein data interface.
          * @param scale The scale factor for the atom radius.
          */
-		void RenderAtomsGPU(const megamol::protein_calls::MolecularDataCall *mol,
-            const float scale = 1.0f);
+        void RenderAtomsGPU(const megamol::protein_calls::MolecularDataCall* mol, const float scale = 1.0f);
 
         /**
          * Renders the probe atom at position 'm'.
          *
          * @param m The probe position.
          */
-        void RenderProbe( const vislib::math::Vector<float, 3> m);
-        void RenderProbeGPU( const vislib::math::Vector<float, 3> m);
+        void RenderProbe(const vislib::math::Vector<float, 3> m);
+        void RenderProbeGPU(const vislib::math::Vector<float, 3> m);
 
         /**
          * Compute all vertex, attribute and color arrays used for ray casting
@@ -154,7 +153,7 @@ namespace protein {
          * the molecular surface 'ixdRS' (spheres, spherical triangles, tori).
          * @param idxRS The index of the reduced surface.
          */
-        void ComputeRaycastingArrays( unsigned int idxRS);
+        void ComputeRaycastingArrays(unsigned int idxRS);
 
         /**
          * Code a RGB-color into one float.
@@ -167,8 +166,8 @@ namespace protein {
          * @param col Vector containing the color as float [0.0]..[1.0] .
          * @return The coded color value.
          */
-        //float CodeColor( const vislib::math::Vector<float, 3> &col) const;
-        float CodeColor( const float *col) const;
+        // float CodeColor( const vislib::math::Vector<float, 3> &col) const;
+        float CodeColor(const float* col) const;
 
         /**
          * Decode a coded color to the original RGB-color.
@@ -176,7 +175,7 @@ namespace protein {
          * @param codedColor Integer value containing the coded color (rrrgggbbb).
          * @return The RGB-color value vector.
          */
-        vislib::math::Vector<float, 3> DecodeColor( int codedColor) const;
+        vislib::math::Vector<float, 3> DecodeColor(int codedColor) const;
 
         /**
          * Creates the frame buffer object and textures needed for offscreen rendering.
@@ -188,14 +187,14 @@ namespace protein {
          *
          * @param protein Pointer to the protein data interface.
          */
-		void RenderSESGpuRaycasting(const megamol::protein_calls::MolecularDataCall *mol);
+        void RenderSESGpuRaycasting(const megamol::protein_calls::MolecularDataCall* mol);
 
         /**
          * Render debug stuff --- THIS IS ONLY FOR DEBUGGING PURPOSES, REMOVE IN FINAL VERSION!!!
          *
          * @param protein Pointer to the protein data interface.
          */
-		void RenderDebugStuff(const megamol::protein_calls::MolecularDataCall *mol);
+        void RenderDebugStuff(const megamol::protein_calls::MolecularDataCall* mol);
 
         /**
          * Postprocessing: use screen space ambient occlusion
@@ -210,7 +209,7 @@ namespace protein {
         /**
          * Postprocessing: transparency (blend two images)
          */
-        void PostprocessingTransparency( float transparency);
+        void PostprocessingTransparency(float transparency);
 
         /**
          * returns the color of the atom 'idx' for the current coloring mode
@@ -218,7 +217,7 @@ namespace protein {
          * @param idx The index of the atom.
          * @return The color of the atom with the index 'idx'.
          */
-        vislib::math::Vector<float, 3> GetProteinAtomColor( unsigned int idx);
+        vislib::math::Vector<float, 3> GetProteinAtomColor(unsigned int idx);
 
         /**
          * Create the singularity textureS which stores for every RS-edge (of all
@@ -230,16 +229,16 @@ namespace protein {
          * Create the singularity texture for the reduced surface 'idxRS' which
          * stores for every RS-edge the positions of the probes that cut it.
          */
-        void CreateSingularityTexture( unsigned int idxRS);
+        void CreateSingularityTexture(unsigned int idxRS);
 
     private:
-
         /**
          * Update all parameter slots.
          *
          * @param mol   Pointer to the data call.
          */
-		void UpdateParameters(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs = 0);
+        void UpdateParameters(
+            const megamol::protein_calls::MolecularDataCall* mol, const protein_calls::BindingSiteCall* bs = 0);
 
         /**
          * The get extents callback. The module should set the members of
@@ -269,19 +268,19 @@ namespace protein {
         /**********************************************************************
          * variables
          **********************************************************************/
-        
+
         /** MolecularDataCall caller slot */
         megamol::core::CallerSlot molDataCallerSlot;
         /** BindingSiteCall caller slot */
         megamol::core::CallerSlot bsDataCallerSlot;
 
         /** camera information */
-        //vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+        // vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
         core::view::Camera_2 cameraInfo;
 
         // camera information
-        //vislib::SmartPtr<vislib::graphics::CameraParameters> MoleculeSESRenderercameraInfo;
-        core::view::Camera_2 MoleculeSESRenderercameraInfo; 
+        // vislib::SmartPtr<vislib::graphics::CameraParameters> MoleculeSESRenderercameraInfo;
+        core::view::Camera_2 MoleculeSESRenderercameraInfo;
 
         megamol::core::param::ParamSlot postprocessingParam;
         megamol::core::param::ParamSlot rendermodeParam;
@@ -310,7 +309,7 @@ namespace protein {
         megamol::core::param::ParamSlot colorTableFileParam;
         /** Parameter to toggle offscreen rendering */
         megamol::core::param::ParamSlot offscreenRenderingParam;
-		megamol::core::param::ParamSlot probeRadiusSlot;
+        megamol::core::param::ParamSlot probeRadiusSlot;
 
         bool usePuxels;
         bool allowPuxels;
@@ -320,7 +319,7 @@ namespace protein {
         bool offscreenRendering;
 
         /** the reduced surface(s) */
-        std::vector<std::vector<ReducedSurface*> > reducedSurfaceAllFrames;
+        std::vector<std::vector<ReducedSurface*>> reducedSurfaceAllFrames;
         /** the reduced surface(s) */
         std::vector<ReducedSurface*> reducedSurface;
 
@@ -374,7 +373,7 @@ namespace protein {
         void puxelsCreateBuffers();
 
         /**
-         * Calls the puxelClearShader shader and resets all values of 
+         * Calls the puxelClearShader shader and resets all values of
          * puxelsBufferHeaderand puxelsAtomicBufferNextId to zero.
          */
         void puxelsClear();
@@ -397,7 +396,7 @@ namespace protein {
         void puxelsDraw();
 
         ////////////
-        
+
         // the bounding box of the protein
         vislib::math::Cuboid<float> bBox;
 
@@ -422,27 +421,27 @@ namespace protein {
         PostprocessingMode postprocessing;
 
         /** vertex and attribute arrays for raycasting the tori */
-        std::vector<vislib::Array<float> > torusVertexArray;
-        std::vector<vislib::Array<float> > torusInParamArray;
-        std::vector<vislib::Array<float> > torusQuatCArray;
-        std::vector<vislib::Array<float> > torusInSphereArray;
-        std::vector<vislib::Array<float> > torusColors;
-        std::vector<vislib::Array<float> > torusInCuttingPlaneArray;
+        std::vector<vislib::Array<float>> torusVertexArray;
+        std::vector<vislib::Array<float>> torusInParamArray;
+        std::vector<vislib::Array<float>> torusQuatCArray;
+        std::vector<vislib::Array<float>> torusInSphereArray;
+        std::vector<vislib::Array<float>> torusColors;
+        std::vector<vislib::Array<float>> torusInCuttingPlaneArray;
         /** vertex ans attribute arrays for raycasting the spherical triangles */
-        std::vector<vislib::Array<float> > sphericTriaVertexArray;
-        std::vector<vislib::Array<float> > sphericTriaVec1;
-        std::vector<vislib::Array<float> > sphericTriaVec2;
-        std::vector<vislib::Array<float> > sphericTriaVec3;
-        std::vector<vislib::Array<float> > sphericTriaProbe1;
-        std::vector<vislib::Array<float> > sphericTriaProbe2;
-        std::vector<vislib::Array<float> > sphericTriaProbe3;
-        std::vector<vislib::Array<float> > sphericTriaTexCoord1;
-        std::vector<vislib::Array<float> > sphericTriaTexCoord2;
-        std::vector<vislib::Array<float> > sphericTriaTexCoord3;
-        std::vector<vislib::Array<float> > sphericTriaColors;
+        std::vector<vislib::Array<float>> sphericTriaVertexArray;
+        std::vector<vislib::Array<float>> sphericTriaVec1;
+        std::vector<vislib::Array<float>> sphericTriaVec2;
+        std::vector<vislib::Array<float>> sphericTriaVec3;
+        std::vector<vislib::Array<float>> sphericTriaProbe1;
+        std::vector<vislib::Array<float>> sphericTriaProbe2;
+        std::vector<vislib::Array<float>> sphericTriaProbe3;
+        std::vector<vislib::Array<float>> sphericTriaTexCoord1;
+        std::vector<vislib::Array<float>> sphericTriaTexCoord2;
+        std::vector<vislib::Array<float>> sphericTriaTexCoord3;
+        std::vector<vislib::Array<float>> sphericTriaColors;
         /** vertex and color array for raycasting the spheres */
-        std::vector<vislib::Array<float> > sphereVertexArray;
-        std::vector<vislib::Array<float> > sphereColors;
+        std::vector<vislib::Array<float>> sphereVertexArray;
+        std::vector<vislib::Array<float>> sphereColors;
 
         // FBOs and textures for postprocessing
         GLuint colorFBO;
@@ -464,23 +463,23 @@ namespace protein {
         float lambda;
 
         /** The color lookup table (for chains, amino acids,...) */
-        vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
+        vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
         /** The color lookup table which stores the rainbow colors */
-        vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
+        vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
 
         // texture for singularity handling (concave triangles)
         std::vector<GLuint> singularityTexture;
         // sizes of singularity textures
         std::vector<unsigned int> singTexWidth, singTexHeight;
         // data of the singularity texture
-        float *singTexData;
+        float* singTexData;
 
         // texture for interior clipping / cutting planes (convex spherical cutouts)
         std::vector<GLuint> cutPlanesTexture;
         // sizes of the cutting planes textures
         std::vector<unsigned int> cutPlanesTexWidth, cutPlanesTexHeight;
         // data of the cutting planes texture
-        std::vector<vislib::Array<float> > cutPlanesTexData;
+        std::vector<vislib::Array<float>> cutPlanesTexData;
 
         // silhouette color
         vislib::math::Vector<float, 3> silhouetteColor;
