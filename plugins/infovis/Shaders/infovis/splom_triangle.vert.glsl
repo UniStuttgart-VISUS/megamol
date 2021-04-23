@@ -1,3 +1,10 @@
+#version 430
+
+#include "core/tflookup.inc.glsl"
+#include "core/tfconvenience.inc.glsl"
+#include "core/bitflags.inc.glsl"
+#include "splom_common/splom_mapping.inc.glsl"
+
 uniform mat4 modelViewProjection;
 
 in vec2 position;

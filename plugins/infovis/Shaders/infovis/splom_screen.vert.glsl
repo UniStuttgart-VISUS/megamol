@@ -1,3 +1,5 @@
+#version 430
+
 out vec2 vsUV;
 
 void main() {

@@ -1,3 +1,7 @@
+#version 430
+
+#include "splom_common/splom_plots.inc.glsl"
+
 uniform mat4 modelViewProjection;
 uniform vec4 axisColor;
 uniform uint numTicks;
@@ -106,6 +110,6 @@ void main(void) {
     }
 
     vsColor = axisColor;
-    
+
     gl_Position = modelViewProjection * vec4(position, 0.0f, 1.0f);
 }

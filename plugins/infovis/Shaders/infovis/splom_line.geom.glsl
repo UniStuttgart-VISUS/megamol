@@ -1,3 +1,5 @@
+#version 430
+
 uniform mat4 modelViewProjection;
 
 uniform float kernelWidth;

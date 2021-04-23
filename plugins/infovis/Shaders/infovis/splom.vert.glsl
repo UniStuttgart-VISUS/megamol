@@ -1,3 +1,12 @@
+#version 430
+
+#include "core/tflookup.inc.glsl"
+#include "core/tfconvenience.inc.glsl"
+#include "core/bitflags.inc.glsl"
+#include "splom_common/splom_mapping.inc.glsl"
+#include "splom_common/splom_plots.inc.glsl"
+#include "splom_common/splom_data.inc.glsl"
+
 //#define DEBUG_MINMAX 1
 
 uniform vec4 viewport;
@@ -40,7 +49,7 @@ void main() {
     }
     vsValueColor = flagifyColor(tflookup(vsValue), flags[gl_VertexID]);
 
-    vsPosition = valuesToPosition(plot, 
+    vsPosition = valuesToPosition(plot,
         vec2(values[rowOffset + plot.indexX],
         values[rowOffset + plot.indexY]));
     if (bitflag_test(flags[gl_VertexID], FLAG_ENABLED | FLAG_FILTERED, FLAG_ENABLED)) {

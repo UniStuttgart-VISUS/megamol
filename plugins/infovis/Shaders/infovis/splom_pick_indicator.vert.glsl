@@ -1,3 +1,5 @@
+#version 430
+
 uniform mat4 modelViewProjection;
 uniform vec2 mouse = vec2(0, 0);
 uniform float pickRadius = 0.1;

@@ -157,7 +157,7 @@ private:
 
     void drawScientificAxis(glm::mat4 ortho);
 
-    void bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader);
+    void bindMappingUniforms(std::unique_ptr<glowl::GLSLProgram>& shader);
 
     void bindFlagsAttribute();
 
@@ -276,21 +276,21 @@ private:
 
     core::BoundingBoxes_2 bounds;
 
-    vislib::graphics::gl::GLSLShader minimalisticAxisShader;
+    std::unique_ptr<glowl::GLSLProgram> minimalisticAxisShader;
 
-    vislib::graphics::gl::GLSLShader scientificAxisShader;
+    std::unique_ptr<glowl::GLSLProgram> scientificAxisShader;
 
-    vislib::graphics::gl::GLSLShader pointShader;
+    std::unique_ptr<glowl::GLSLProgram> pointShader;
 
-    vislib::graphics::gl::GLSLGeometryShader lineShader;
+    std::unique_ptr<glowl::GLSLProgram> lineShader;
 
-    vislib::graphics::gl::GLSLShader triangleShader;
+    std::unique_ptr<glowl::GLSLProgram> triangleShader;
 
-    vislib::graphics::gl::GLSLShader pickIndicatorShader;
+    std::unique_ptr<glowl::GLSLProgram> pickIndicatorShader;
 
-    vislib::graphics::gl::GLSLShader screenShader;
+    std::unique_ptr<glowl::GLSLProgram> screenShader;
 
-    vislib::graphics::gl::GLSLComputeShader pickProgram;
+    std::unique_ptr<glowl::GLSLProgram> pickProgram;
 
     GLint pickWorkgroupSize[3];
     GLint maxWorkgroupCount[3];

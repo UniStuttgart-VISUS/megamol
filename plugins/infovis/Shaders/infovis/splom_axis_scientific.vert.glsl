@@ -1,3 +1,7 @@
+#version 430
+
+#include "splom_common/splom_plots.inc.glsl"
+
 uniform mat4 modelViewProjection;
 uniform vec4 axisColor;
 

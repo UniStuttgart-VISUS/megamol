@@ -1,3 +1,5 @@
+#version 430
+
 uniform uint depth;
 
 in vec4 vsColor;
@@ -6,7 +8,7 @@ in vec2 vsSmallSteppSize;
 
 out vec4 fsColor;
 
-float roundedBox(vec2 position, vec2 size, float radius) { 
+float roundedBox(vec2 position, vec2 size, float radius) {
     return length(max(abs(position) - size, 0.0)) - radius;
 }
 

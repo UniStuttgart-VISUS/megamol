@@ -1,3 +1,10 @@
+#version 430
+
+#include "core/tflookup.inc.glsl"
+#include "core/tfconvenience.inc.glsl"
+#include "core/bitflags.inc.glsl"
+#include "splom_common/splom_mapping.inc.glsl"
+
 uniform vec4 contourColor;
 uniform float contourSize;
 uniform float contourIsoValues[10];
@@ -36,8 +43,8 @@ float blur3x3(mat3 a) {
         1.0 / 8.0, 1.0 / 4.0, 1.0 / 8.0,
         1.0 / 16.0, 1.0 / 8.0, 1.0 / 16.0);
 
-    return s[0][0] * a[0][0] + s[0][1] * a[0][1] + s[0][2] * a[0][2] 
-        + s[1][0] * a[1][0] + s[1][1] * a[1][1] + s[1][2] * a[1][2] 
+    return s[0][0] * a[0][0] + s[0][1] * a[0][1] + s[0][2] * a[0][2]
+        + s[1][0] * a[1][0] + s[1][1] * a[1][1] + s[1][2] * a[1][2]
         + s[2][0] * a[2][0] + s[2][1] * a[2][1] + s[2][2] * a[2][2];
 }
 
