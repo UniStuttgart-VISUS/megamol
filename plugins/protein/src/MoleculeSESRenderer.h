@@ -139,7 +139,7 @@ namespace protein {
          *
          * @param m The probe position.
          */
-        void RenderProbe(const vislib::math::Vector<float, 3> m);
+        //void RenderProbe(const vislib::math::Vector<float, 3> m);
         void RenderProbeGPU(const vislib::math::Vector<float, 3> m);
 
         /**

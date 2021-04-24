@@ -8,7 +8,6 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include <GL/glu.h>
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -782,6 +781,18 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
     cam_type::matrix_type viewTemp, projTemp;
     cameraInfo.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
     auto resolution = cameraInfo.resolution_gate();
+    glm::mat4 view = viewTemp;
+    glm::mat4 proj = projTemp;
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glLoadMatrixf(glm::value_ptr(proj));
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glLoadMatrixf(glm::value_ptr(view));
 
     float callTime = call.Time();
 
@@ -880,16 +891,6 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
 
     glPushMatrix();
 
-    // compute scale factor and scale world
-    float scale;
-    if (!vislib::math::IsEqual(mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    glScalef(scale, scale, scale);
-
-
     // ==================== Start actual rendering ====================
 
     glDisable(GL_BLEND);
@@ -953,6 +954,14 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
 
     // unlock the current frame
     mol->Unlock();
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
 
     return true;
 }
@@ -2633,6 +2642,7 @@ void MoleculeSESRenderer::RenderAtomsGPU(const MolecularDataCall* mol, const flo
 /*
  * Renders the probe at postion 'm'
  */
+/*
 void MoleculeSESRenderer::RenderProbe(const vislib::math::Vector<float, 3> m) {
     GLUquadricObj* sphere = gluNewQuadric();
     gluQuadricNormals(sphere, GL_SMOOTH);
@@ -2650,6 +2660,7 @@ void MoleculeSESRenderer::RenderProbe(const vislib::math::Vector<float, 3> m) {
 
     glDisable(GL_BLEND);
 }
+*/
 
 
 /*
