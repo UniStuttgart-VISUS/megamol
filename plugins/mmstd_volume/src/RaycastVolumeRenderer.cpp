@@ -313,8 +313,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     // setup
     compute_shdr->use();
 
-    compute_shdr->setUniform("view_mx", viewTemp);
-    compute_shdr->setUniform("proj_mx", projTemp);
+    compute_shdr->setUniform("view_mx", view);
+    compute_shdr->setUniform("proj_mx", proj);
 
     glm::vec2 rt_resolution;
     rt_resolution[0] = static_cast<float>(m_render_target->getWidth());

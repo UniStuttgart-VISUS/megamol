@@ -5,7 +5,6 @@
 #include <array>
 #include <iostream>
 
-#include <glm/gtc/functions.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -639,8 +638,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1,
             this->axesColorSlot.Param<core::param::ColorParam>()->Value().data());
         glUniform1i(this->drawAxesProgram.ParameterLocation("pickedAxis"), pickedAxis);
-        glUniform1i(this->drawAxesProgram.ParameterLocation("width"), windowWidth);
-        glUniform1i(this->drawAxesProgram.ParameterLocation("height"), windowHeight);
+        glUniform1i(this->drawAxesProgram.ParameterLocation("width"), fbo->getWidth());
+        glUniform1i(this->drawAxesProgram.ParameterLocation("height"), fbo->getHeight());
         glUniform1f(this->drawAxesProgram.ParameterLocation("axesThickness"),
             axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount);
@@ -652,8 +651,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         glUniform1ui(this->drawScalesProgram.ParameterLocation("numTicks"), this->numTicks);
         glUniform1f(this->drawScalesProgram.ParameterLocation("axisHalfTick"), 2.0f);
         glUniform1i(this->drawScalesProgram.ParameterLocation("pickedAxis"), pickedAxis);
-        glUniform1i(this->drawScalesProgram.ParameterLocation("width"), windowWidth);
-        glUniform1i(this->drawScalesProgram.ParameterLocation("height"), windowHeight);
+        glUniform1i(this->drawScalesProgram.ParameterLocation("width"), fbo->getWidth());
+        glUniform1i(this->drawScalesProgram.ParameterLocation("height"), fbo->getHeight());
         glUniform1f(this->drawScalesProgram.ParameterLocation("axesThickness"),
             axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount * this->numTicks);
@@ -665,8 +664,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         glUniform1f(this->drawFilterIndicatorsProgram.ParameterLocation("axisHalfTick"), 2.0f);
         glUniform2i(this->drawFilterIndicatorsProgram.ParameterLocation("pickedIndicator"), pickedIndicatorAxis,
             pickedIndicatorIndex);
-        glUniform1i(this->drawFilterIndicatorsProgram.ParameterLocation("width"), windowWidth);
-        glUniform1i(this->drawFilterIndicatorsProgram.ParameterLocation("height"), windowHeight);
+        glUniform1i(this->drawFilterIndicatorsProgram.ParameterLocation("width"), fbo->getWidth());
+        glUniform1i(this->drawFilterIndicatorsProgram.ParameterLocation("height"), fbo->getHeight());
         glUniform1f(this->drawFilterIndicatorsProgram.ParameterLocation("axesThickness"),
             axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 12, this->columnCount * 2);
@@ -745,8 +744,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
-    glUniform1f(prog.ParameterLocation("widthR"), this->windowWidth);
-    glUniform1f(prog.ParameterLocation("heightR"), this->windowHeight);
+    glUniform1f(prog.ParameterLocation("widthR"), fbo->getWidth());
+    glUniform1f(prog.ParameterLocation("heightR"), fbo->getHeight());
     try {
         auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
         glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
@@ -807,8 +806,8 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
     glUniform2f(prog.ParameterLocation("mousePressed"), x0, y0);
     glUniform2f(prog.ParameterLocation("mouseReleased"), x1, y1);
 
-    glUniform1i(prog.ParameterLocation("width"), windowWidth);
-    glUniform1i(prog.ParameterLocation("height"), windowHeight);
+    glUniform1i(prog.ParameterLocation("width"), fbo->getWidth());
+    glUniform1i(prog.ParameterLocation("height"), fbo->getHeight());
     glUniform1f(prog.ParameterLocation("thickness"), axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
 
     glUniform4fv(prog.ParameterLocation("indicatorColor"), 1, color);
@@ -1032,11 +1031,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     backgroundColor[1] = bg[1];
     backgroundColor[2] = bg[2];
     backgroundColor[3] = bg[3];
-
-    // this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
 
     glm::mat4 ortho = proj * view;
 
