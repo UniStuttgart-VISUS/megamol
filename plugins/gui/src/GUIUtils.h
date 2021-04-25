@@ -84,24 +84,22 @@
 #define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
 
-namespace {
-
-/********** Global Operators **********/
-
-bool operator==(const ImVec2& left, const ImVec2& right) {
-    return ((left.x == right.x) && (left.y == right.y));
-}
-
-bool operator!=(const ImVec2& left, const ImVec2& right) {
-    return !(left == right);
-}
-
-} // namespace
-
-
 namespace megamol {
 namespace gui {
 
+    namespace {
+
+        /********** Global Operators **********/
+
+        bool operator==(const ImVec2& left, const ImVec2& right) {
+            return ((left.x == right.x) && (left.y == right.y));
+        }
+
+        bool operator!=(const ImVec2& left, const ImVec2& right) {
+            return !(left == right);
+        }
+
+    } // namespace
 
     /********** Global Unique ID **********/
 
@@ -294,7 +292,7 @@ namespace gui {
         ImGuiID new_running_graph_uid;               // out
     } GraphState_t;
 
-    enum class HeaderType { MODULE_GROUP, MODULE, PARAMETERG_ROUP };
+    enum class HeaderType { MODULE_GROUP, MODULE, PARAMETER_GROUP };
 
     /********** Class **********/
 
@@ -373,6 +371,20 @@ namespace gui {
         }
 
 
+        /**
+         * Returns true if both strings equal each other case insensitively.
+         *
+         * @param source   One string .
+         * @param search   Second string.
+         */
+        static bool CaseInsensitiveStringCompare(std::string const& str1, std::string const& str2) {
+            return ((str1.size() == str2.size()) &&
+                    std::equal(str1.begin(), str1.end(), str2.begin(), [](char const& c1, char const& c2) {
+                        return (c1 == c2 || std::toupper(c1) == std::toupper(c2));
+                    }));
+        }
+
+
         /*
          * Draw collapsing group header.
          */
@@ -392,7 +404,7 @@ namespace gui {
             // case (megamol::gui::HeaderType::MODULE): {
             //    // header_label = "[MODULE] " + header_label;
             //} break;
-            // case (megamol::gui::HeaderType::PARAMETERG_ROUP): {
+            // case (megamol::gui::HeaderType::PARAMETER_GROUP): {
             //    // header_label = "[GROUP] " + header_label;
             //} break;
             // default:
@@ -406,20 +418,20 @@ namespace gui {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
 
-            int pop_style_color = 0;
+            int pop_style_color_number = 0;
             if (type == megamol::gui::HeaderType::MODULE_GROUP) {
                 ImGui::PushStyleColor(ImGuiCol_Header, GUI_COLOR_GROUP_HEADER);
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, GUI_COLOR_GROUP_HEADER_HIGHLIGHT);
                 auto header_active_color = GUI_COLOR_GROUP_HEADER_HIGHLIGHT;
                 header_active_color.w *= 0.75f;
                 ImGui::PushStyleColor(ImGuiCol_HeaderActive, header_active_color);
-                pop_style_color += 3;
+                pop_style_color_number += 3;
             }
 
             bool searched = true;
             if (!inout_search.empty()) {
                 headerState = 1;
-                searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(name, inout_search);
+                searched = GUIUtils::FindCaseInsensitiveSubstring(name, inout_search);
                 if (!searched) {
                     auto header_col = ImGui::GetStyleColorVec4(ImGuiCol_Header);
                     header_col.w *= 0.25;
@@ -430,7 +442,7 @@ namespace gui {
                     auto text_col = ImGui::GetStyleColorVec4(ImGuiCol_Text);
                     text_col.w *= 0.25;
                     ImGui::PushStyleColor(ImGuiCol_Text, text_col);
-                    pop_style_color += 3;
+                    pop_style_color_number += 3;
                 } else {
                     // Show all below when given name is part of the search
                     inout_search.clear();
@@ -438,7 +450,7 @@ namespace gui {
             }
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
             bool header_open = ImGui::CollapsingHeader(header_label.c_str(), nullptr);
-            ImGui::PopStyleColor(pop_style_color);
+            ImGui::PopStyleColor(pop_style_color_number);
 
             // Keep following elements open for one more frame to propagate override changes to headers below.
             if (override_header_state == 0) {

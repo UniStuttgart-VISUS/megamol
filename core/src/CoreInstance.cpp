@@ -566,6 +566,8 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
             vislib::StringA(r.Description()).PeekBuffer(), vislib::StringA(r.Identifier()).PeekBuffer());
     }
 
+    translateShaderPaths(config);
+
     SAFE_DELETE(this->preInit);
 }
 
@@ -3488,4 +3490,20 @@ bool megamol::core::CoreInstance::checkForFlushEvent(size_t const eventIdx, std:
 void megamol::core::CoreInstance::shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list) {
     list.erase(
         std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
+}
+
+
+void megamol::core::CoreInstance::translateShaderPaths(megamol::core::utility::Configuration const& config) {
+    auto const v_paths = config.ShaderDirectories();
+
+    shaderPaths.resize(v_paths.Count());
+
+    for (size_t idx = 0; idx < v_paths.Count(); ++idx) {
+        shaderPaths[idx] = std::filesystem::path(v_paths[idx].PeekBuffer());
+    }
+}
+
+
+std::vector<std::filesystem::path> megamol::core::CoreInstance::GetShaderPaths() const {
+    return shaderPaths;
 }

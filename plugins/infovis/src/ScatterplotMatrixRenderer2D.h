@@ -79,7 +79,6 @@ protected:
 
     bool OnMouseMove(double x, double y) override;
 
-
 private:
     enum ValueMapping {
         VALUE_MAPPING_KERNEL_BLEND = 0,

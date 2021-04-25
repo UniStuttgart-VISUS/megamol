@@ -101,7 +101,8 @@ namespace gui {
             Stroage_t;
 
         struct StockParameter {
-            std::string full_name;
+            std::string param_name;
+            std::string param_fullname;
             std::string description;
             ParamType_t type;
             std::string default_value;
@@ -112,6 +113,8 @@ namespace gui {
             bool gui_read_only;
             Present_t gui_presentation;
         };
+
+        // STATIC ---------------------
 
         static bool ReadNewCoreParameterToStockParameter(
             megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param);
@@ -132,12 +135,14 @@ namespace gui {
         static bool WriteCoreParameterValue(
             megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr);
 
+        // ----------------------------
+
         Parameter(ImGuiID uid, ParamType_t type, Stroage_t store, Min_t minval, Max_t maxval,
-            const std::string& full_name, const std::string& description);
+            const std::string& param_name, const std::string& param_fullname, const std::string& description);
 
         ~Parameter(void);
 
-        bool Draw(WidgetScope scope, const std::string& module_fullname);
+        bool Draw(WidgetScope scope);
 
         bool IsValueDirty(void) {
             return this->value_dirty;
@@ -177,26 +182,28 @@ namespace gui {
         inline const ImGuiID UID(void) const {
             return this->uid;
         }
-        inline std::string FullName(void) const {
-            return this->full_name;
-        }
+        // <param_name>
         inline std::string Name(void) const {
-            std::string name = this->full_name;
-            auto idx = this->full_name.rfind(':');
+            std::string name = this->param_name;
+            auto idx = this->param_name.rfind(':');
             if (idx != std::string::npos) {
                 name = name.substr(idx + 1);
             }
             return name;
         }
-
-        inline std::string GetNameSpace(void) const {
+        // <param_namespace>
+        inline std::string NameSpace(void) const {
             std::string name_space = "";
-            auto idx = this->full_name.rfind(':');
+            auto idx = this->param_name.rfind(':');
             if (idx != std::string::npos) {
-                name_space = this->full_name.substr(0, idx - 1);
+                name_space = this->param_name.substr(0, idx - 1);
                 name_space.erase(std::remove(name_space.begin(), name_space.end(), ':'), name_space.end());
             }
             return name_space;
+        }
+        // <module_name>::<param_namespace>::<param_name>
+        inline std::string FullName(void) const {
+            return this->param_fullname;
         }
 
         std::string GetValueString(void) const;
@@ -245,7 +252,11 @@ namespace gui {
         // SET ----------------------------------------------------------------
 
         inline void SetName(const std::string& name) {
-            this->full_name = name;
+            this->param_name = name;
+        }
+
+        inline void SetFullName(const std::string& full_name) {
+            this->param_fullname = full_name;
         }
 
         inline void SetDescription(const std::string& desc) {
@@ -280,6 +291,15 @@ namespace gui {
                                 this->TransferFunction_LoadTexture(texture_data, texture_width, texture_height);
                             }
                             this->tf_string_hash = std::hash<std::string>()(val);
+                        }
+                    } else if (this->type == ParamType_t::FILEPATH) {
+                        // Push log message to GUI pop-up for not existing files
+                        auto file = std::get<std::string>(this->value);
+                        if (!megamol::core::utility::FileUtils::FileExists(file)) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                                "%sFile Parameter%sFile not found: '%s' > Parameter '%s'\n\n",
+                                LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG, this->FullName().c_str(),
+                                file.c_str());
                         }
                     }
                 }
@@ -339,7 +359,8 @@ namespace gui {
 
         const ImGuiID uid;
         const ParamType_t type;
-        std::string full_name;
+        std::string param_name;
+        std::string param_fullname;
         std::string description;
 
         vislib::SmartPtr<megamol::core::param::AbstractParam> core_param_ptr;

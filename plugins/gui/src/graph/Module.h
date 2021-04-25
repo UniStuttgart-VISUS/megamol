@@ -11,7 +11,7 @@
 
 #include "GUIUtils.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/RenamePopUp.h"
+#include "widgets/PopUps.h"
 
 #include "CallSlot.h"
 #include "ParameterGroups.h"
@@ -178,7 +178,7 @@ namespace gui {
         bool gui_hidden;
 
         HoverToolTip gui_tooltip;
-        RenamePopUp gui_rename_popup;
+        PopUps gui_rename_popup;
 
         // FUNCTIONS --------------------------------------------------------------
 

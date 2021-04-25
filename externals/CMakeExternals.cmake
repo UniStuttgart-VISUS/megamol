@@ -528,6 +528,60 @@ function(require_external NAME)
     add_external_library(lua
       LIBRARY ${LUA_LIB})
 
+  # megamol-shader-factory
+  elseif(NAME STREQUAL "megamol-shader-factory")
+      if(TARGET megamol-shader-factory)
+        return()
+      endif()
+
+      require_external(glad)
+
+      if(WIN32)
+        set(MEGAMOL_SHADER_FACTORY_LIB "lib/megamol-shader-factory.lib")
+        set(GLSLANG_LIB "lib/glslang$<$<CONFIG:Debug>:d>.lib")
+        set(GENERICCODEGEN_LIB "lib/GenericCodeGen$<$<CONFIG:Debug>:d>.lib")
+        set(MACHINEINDEPENDENT_LIB "lib/MachineIndependent$<$<CONFIG:Debug>:d>.lib")
+        set(OSDEPENDENT_LIB "lib/OSDependent$<$<CONFIG:Debug>:d>.lib")
+        set(OGLCOMPILER_LIB "lib/OGLCompiler$<$<CONFIG:Debug>:d>.lib")
+        set(SPIRV_LIB "lib/SPIRV$<$<CONFIG:Debug>:d>.lib")
+      else()
+        include(GNUInstallDirs)
+        set(MEGAMOL_SHADER_FACTORY_LIB "${CMAKE_INSTALL_LIBDIR}/libmegamol-shader-factory.a")
+        set(GLSLANG_LIB "${CMAKE_INSTALL_LIBDIR}/libglslang.a")
+        set(GENERICCODEGEN_LIB "lib/libGenericCodeGen.a")
+        set(MACHINEINDEPENDENT_LIB "lib/libMachineIndependent.a")
+        set(OSDEPENDENT_LIB "lib/libOSDependent.a")
+        set(OGLCOMPILER_LIB "lib/libOGLCompiler.a")
+        set(SPIRV_LIB "lib/libSPIRV.a")
+      endif()
+
+      external_get_property(glad INSTALL_DIR)
+
+      add_external_project(megamol-shader-factory STATIC
+        GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
+        GIT_TAG 16849959c277db2e8821e647310b104b17811fc0
+        BUILD_BYPRODUCTS 
+        "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
+        "<INSTALL_DIR>/${GLSLANG_LIB}"
+        "<INSTALL_DIR>/${GENERICCODEGEN_LIB}"
+        "<INSTALL_DIR>/${MACHINEINDEPENDENT_LIB}"
+        "<INSTALL_DIR>/${OSDEPENDENT_LIB}"
+        "<INSTALL_DIR>/${OGLCOMPILER_LIB}"
+        "<INSTALL_DIR>/${SPIRV_LIB}"
+        DEPENDS glad
+        CMAKE_ARGS
+          -DGLAD_IS_SHARED=OFF
+          -DGLAD_PATH=${INSTALL_DIR})
+
+      external_get_property(megamol-shader-factory INSTALL_DIR)
+
+      add_external_library(megamol-shader-factory
+        LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB}
+        INTERFACE_LIBRARIES glad ${INSTALL_DIR}/$<CONFIG>/${GLSLANG_LIB} ${INSTALL_DIR}/$<CONFIG>/${SPIRV_LIB} ${INSTALL_DIR}/$<CONFIG>/${MACHINEINDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${OGLCOMPILER_LIB} ${INSTALL_DIR}/$<CONFIG>/${OSDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${GENERICCODEGEN_LIB})
+      if(UNIX)
+        target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
+      endif()
+
   # quickhull
   elseif(NAME STREQUAL "quickhull")
     if(TARGET quickhull)

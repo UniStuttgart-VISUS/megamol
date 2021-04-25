@@ -9,8 +9,7 @@ extern "C" const char embedded_mesh_programs[];
 }
 
 
-megamol::optix_hpg::MeshGeometry::MeshGeometry()
-        : _out_geo_slot("outGeo", ""), _in_data_slot("inData", "") {
+megamol::optix_hpg::MeshGeometry::MeshGeometry() : _out_geo_slot("outGeo", ""), _in_data_slot("inData", "") {
     _out_geo_slot.SetCallback(CallGeometry::ClassName(), CallGeometry::FunctionName(0), &MeshGeometry::get_data_cb);
     _out_geo_slot.SetCallback(CallGeometry::ClassName(), CallGeometry::FunctionName(1), &MeshGeometry::get_extents_cb);
     MakeSlotAvailable(&_out_geo_slot);
@@ -41,11 +40,15 @@ void megamol::optix_hpg::MeshGeometry::init(Context const& ctx) {
         &ctx.GetPipelineCompileOptions(), &opts, &triangle_intersector_));
 
     mesh_module_ = MMOptixModule(embedded_mesh_programs, ctx.GetOptiXContext(), &ctx.GetModuleCompileOptions(),
-        &ctx.GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_HITGROUP, triangle_intersector_,
-        {"mesh_intersect", "mesh_closesthit"});
+        &ctx.GetPipelineCompileOptions(), MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP,
+        triangle_intersector_,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "mesh_intersect"},
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "mesh_closesthit"}});
     mesh_occlusion_module_ = MMOptixModule(embedded_mesh_programs, ctx.GetOptiXContext(),
-        &ctx.GetModuleCompileOptions(), &ctx.GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_HITGROUP,
-        triangle_intersector_, {"mesh_intersect", "mesh_closesthit_occlusion"});
+        &ctx.GetModuleCompileOptions(), &ctx.GetPipelineCompileOptions(),
+        MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP, triangle_intersector_,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "mesh_intersect"},
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "mesh_closesthit_occlusion"}});
 }
 
 
@@ -209,7 +212,7 @@ bool megamol::optix_hpg::MeshGeometry::get_data_cb(core::Call& c) {
         return false;
     meta = in_data->getMetaData();
 
-    if (in_data->hasUpdate() /*meta.m_frame_ID != _frame_id || meta.m_data_hash != _data_hash*/) {
+    if (in_data->hasUpdate() || meta.m_frame_ID != _frame_id /*|| meta.m_data_hash != _data_hash*/) {
         if (!assertData(*in_data, *ctx))
             return false;
         _frame_id = meta.m_frame_ID;

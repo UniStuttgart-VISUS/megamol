@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <tuple>
 #include <optional>
 
 namespace megamol {
@@ -45,6 +46,8 @@ struct RuntimeConfig {
     bool lua_host_port_retry = true;
     bool opengl_khr_debug = false;
     bool opengl_vsync = false;
+    std::optional<std::tuple<unsigned int /*major*/, unsigned int /*minor*/, bool /*true=>core, false=>compat*/>>
+        opengl_context_version = {{4, 6, false/*compat*/}};
     std::optional<std::pair<unsigned int /*width*/,unsigned int /*height*/>> window_size = std::nullopt; // if not set, GLFW service will open window with 3/4 of monitor resolution 
     std::optional<std::pair<unsigned int /*x*/,unsigned int /*y*/>>          window_position = std::nullopt;
     enum WindowMode {
@@ -57,6 +60,7 @@ struct RuntimeConfig {
     unsigned int window_monitor = 0;
     bool gui_show = true;
     float gui_scale = 1.0f;
+    bool screenshot_show_privacy_note = true;
 
     std::string as_string() const {
         auto summarize = [](std::vector<std::string> const& vec) -> std::string {
