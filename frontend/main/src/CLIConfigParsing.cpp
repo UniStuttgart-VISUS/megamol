@@ -96,6 +96,7 @@ static std::string interactive_option   = "i,interactive";
 static std::string guishow_option       = "guishow";
 static std::string guiscale_option      = "guiscale";
 static std::string privacynote_option   = "privacynote";
+static std::string param_option         = "param";
 static std::string help_option          = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -208,6 +209,34 @@ static void execute_lua_handler(std::string const& option_name, cxxopts::ParseRe
     for (auto& cmd : commands) {
         config.cli_execute_lua_commands += cmd + ";";
     }
+};
+
+static void param_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    auto strings = parsed_options[option_name].as<std::vector<std::string>>();
+    std::string cmds;
+
+    std::regex param_value("(.+)=(.+)");
+
+    auto handle_param = [&](std::string const& string) {
+        std::smatch match;
+        if (std::regex_match(string, match, param_value)) {
+            auto param = "\"" + match[1].str() + "\"";
+            auto value = "\"" + match[2].str() + "\"";
+
+            std::string cmd = "mmSetParamValue(" + param + "," + value + ")";
+            cmds += cmd + ";";
+        } else {
+            exit("param option needs to be in the following format: param=value");
+        }
+    };
+
+    for (auto& paramstring : strings) {
+        handle_param(paramstring);
+    }
+
+    // prepend param value changes before other CLI Lua commands
+    config.cli_execute_lua_commands = cmds + config.cli_execute_lua_commands;
 };
 
 static void global_value_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -335,6 +364,7 @@ std::vector<OptionsListEntry> cli_options_list =
         , {guishow_option,       "Render GUI overlay, use '=false' to disable",                                     cxxopts::value<bool>(),                     guishow_handler}
         , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
         , {privacynote_option,   "Show privacy note when taking screenshot, use '=false' to disable",               cxxopts::value<bool>(),                     privacynote_handler}
+        , {param_option,         "Set MegaMol Graph parameter to value: --param param=value",                       cxxopts::value<std::vector<std::string>>(), param_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 
