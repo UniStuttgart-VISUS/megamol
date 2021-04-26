@@ -51,6 +51,12 @@ std::pair<RuntimeConfig, GlobalValueStore> megamol::frontend::handle_cli_and_con
         global_value_store.insert(pair.first, pair.second);
     }
 
+    // set delimiter ; in lua commands to newlines, so lua can actually execute
+    for (auto& character : config.cli_execute_lua_commands) {
+        if (character == ';')
+            character = '\n';
+    }
+
     return {config, global_value_store};
 }
 
@@ -71,6 +77,7 @@ static std::string logfile_option     = "logfile";
 static std::string loglevel_option    = "loglevel";
 static std::string echolevel_option   = "echolevel";
 static std::string project_option     = "p,project";
+static std::string execute_lua_option = "e,execute";
 static std::string global_option      = "g,global";
 
 // service-specific options
@@ -194,6 +201,15 @@ static void project_handler(std::string const& option_name, cxxopts::ParseResult
     config.project_files.insert(config.project_files.end(), v.begin(), v.end());
 };
 
+static void execute_lua_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    auto commands = parsed_options[option_name].as<std::vector<std::string>>();
+
+    for (auto& cmd : commands) {
+        config.cli_execute_lua_commands += cmd + ";";
+    }
+};
+
 static void global_value_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     auto v = parsed_options[option_name].as<std::vector<std::string>>();
@@ -302,6 +318,7 @@ std::vector<OptionsListEntry> cli_options_list =
         , {loglevel_option,      "Set logging level, accepted values: "+accepted_log_level_strings,                 cxxopts::value<std::string>(),              loglevel_handler}
         , {echolevel_option,     "Set echo level, accepted values see above",                                       cxxopts::value<std::string>(),              echolevel_handler}
         , {project_option,       "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
+        , {execute_lua_option,   "Execute Lua command(s). Commands separated by ;",                                 cxxopts::value<std::vector<std::string>>(), execute_lua_handler}
         , {global_option,        "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
         , {host_option,          "Address of lua host server",                                                      cxxopts::value<std::string>(),              host_handler         }
