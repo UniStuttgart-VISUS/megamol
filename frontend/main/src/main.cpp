@@ -246,7 +246,7 @@ int main(const int argc, const char** argv) {
     if (graph_resources_ok)
     for (auto& file : config.project_files) {
         if (!projectloader_service.load_file(file)) {
-            log("Project file \"" + file + "\" did not execute correctly");
+            log_error("Project file \"" + file + "\" did not execute correctly");
             run_megamol = false;
 
             // if interactive, continue to run MegaMol
