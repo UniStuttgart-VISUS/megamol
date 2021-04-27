@@ -136,6 +136,7 @@ namespace gui {
         bool flip_legend;
         bool check_once_force_set_overwrite_range;
         bool plot_paint_mode;
+        bool plot_dragging;
 
         // Widgets
         HoverToolTip tooltip;

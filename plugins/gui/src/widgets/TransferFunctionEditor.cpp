@@ -181,6 +181,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
         , flip_legend(false)
         , check_once_force_set_overwrite_range(true)
         , plot_paint_mode(false)
+        , plot_dragging(false)
         , tooltip()
         , image_widget() {
     
@@ -899,15 +900,22 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         } else if (ImGui::IsMouseDragging(0)) { // Left Mouse Drag
             if (!this->plot_paint_mode) {
                 this->moveSelectedNode(this->selected_node_index, mouse_pos, canvas_pos, canvas_size);
-            } else {
-                this->paintModeNode(mouse_pos, canvas_pos, canvas_size);
             }
+            this->plot_dragging = true;
         } else if (ImGui::IsMouseClicked(1)) { // Right Mouse Click
             if (!this->deleteNode(current_selected_node_index)) {
                 this->addNode(mouse_pos, canvas_pos, canvas_size);
             }
         }
     }
+    // Track mouse even outside canvas in paint mode when dragging started within canvas
+    if (this->plot_dragging && this->plot_paint_mode && ImGui::IsMouseDragging(0)) {
+        this->paintModeNode(mouse_pos, canvas_pos, canvas_size);
+    }
+    else {
+        this->plot_dragging = false;
+    }
+
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Function Plot");
