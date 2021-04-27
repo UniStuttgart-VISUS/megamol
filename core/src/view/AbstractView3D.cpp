@@ -774,9 +774,8 @@ glm::vec4 AbstractView3D::get_default_camera_position(glm::quat camera_orientati
     glm::vec4 view_vec  = glm::normalize(camera_orientation * glm::vec4(0.0, 0.0f, 1.0f, 0.0f));
     glm::vec4 up_vec    = glm::normalize(camera_orientation * glm::vec4(0.0, 1.0f, 0.0f, 0.0f));
     glm::vec4 right_vec = glm::normalize(camera_orientation * glm::vec4(1.0, 0.0f, 0.0f, 0.0f));
-
-    auto tmp_corner = glm::vec4(this->_bboxs.BoundingBox().Width()/2.0f, this->_bboxs.BoundingBox().Height()/2.0f, this->_bboxs.BoundingBox().Depth()/2.0f, 0.0f);
     std::vector<glm::vec4> corners;
+    auto tmp_corner = glm::vec4(this->_bboxs.BoundingBox().Width()/2.0f, this->_bboxs.BoundingBox().Height()/2.0f, this->_bboxs.BoundingBox().Depth()/2.0f, 0.0f);
     corners.push_back(glm::vec4(tmp_corner.x, tmp_corner.y, tmp_corner.z, 0.0f));
     corners.push_back(glm::vec4(tmp_corner.x, -tmp_corner.y, tmp_corner.z, 0.0f));
     corners.push_back(glm::vec4(tmp_corner.x, -tmp_corner.y, -tmp_corner.z, 0.0f));
@@ -791,28 +790,83 @@ glm::vec4 AbstractView3D::get_default_camera_position(glm::quat camera_orientati
     float delta_y_max = -FLT_MAX;
     float delta_z_min = FLT_MAX;
     float delta_z_max = -FLT_MAX;
-    for (auto& corner : corners) {
-        float delta_x = glm::dot(corner, right_vec);
-        float delta_y = glm::dot(corner, up_vec);
-        float delta_z = glm::dot(corner, view_vec);
-        delta_x_min = std::min(delta_x_min, delta_x);
-        delta_x_max = std::max(delta_x_max, delta_x);
-        delta_y_min = std::min(delta_y_min, delta_y);
-        delta_y_max = std::max(delta_y_max, delta_y);
+    auto delta_dist = glm::vec2(0.0f, 0.0f);
+    float x_min_z = 0.0f;
+    float x_max_z = 0.0f;
+    float y_min_z = 0.0f;
+    float y_max_z = 0.0f;
+    for (int i = 0; i <  8; i++)  {
+        float delta_x = glm::dot(corners[i], right_vec);
+        float delta_y = glm::dot(corners[i], up_vec);
+        float delta_z = glm::dot(corners[i], view_vec);
+        if (delta_x < delta_x_min) {
+            delta_x_min = delta_x;
+            x_min_z = delta_z;
+        }
+        if (delta_x > delta_x_max) {
+            delta_x_max = delta_x;
+            x_max_z = delta_z;
+        }
+        if (delta_y < delta_y_min) {
+            delta_y_min = delta_y;
+            y_min_z = delta_z;
+        }
+        if (delta_y > delta_y_max) {
+            delta_y_max = delta_y;
+            y_max_z = delta_z;
+        }
         delta_z_min = std::min(delta_z_min, delta_z);
         delta_z_max = std::max(delta_z_max, delta_z);
     }
-    double pseudoWidth  = delta_x_max - delta_x_min;
-    double pseudoHeight = delta_y_max - delta_y_min;
-    double pseudoDepth  = delta_z_max - delta_z_min;
+    auto pseudoWidth  = static_cast<double>(delta_x_max - delta_x_min);
+    auto pseudoHeight = static_cast<double>(delta_y_max - delta_y_min);
+    auto pseudoDepth  = static_cast<double>(delta_z_max - delta_z_min);
+
+    switch (dv) {
+        // CORNERS --------------------------------------------------------------------------------
+        case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
+        case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
+        case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
+        case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
+        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
+        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
+        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
+        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
+            delta_dist.x = delta_z_max - std::max(x_min_z, x_max_z);
+            delta_dist.y = delta_z_max - std::max(y_min_z, y_max_z);
+            break;
+        // EDGES ----------------------------------------------------------------------------------
+        case DEFAULTVIEW_EDGE_TOP_FRONT:
+        case DEFAULTVIEW_EDGE_BOTTOM_FRONT:
+        case DEFAULTVIEW_EDGE_TOP_BACK:
+        case DEFAULTVIEW_EDGE_BOTTOM_BACK:
+        case DEFAULTVIEW_EDGE_TOP_LEFT:
+        case DEFAULTVIEW_EDGE_TOP_RIGHT :
+        case DEFAULTVIEW_EDGE_BOTTOM_LEFT:
+        case DEFAULTVIEW_EDGE_BOTTOM_RIGHT :
+        case DEFAULTVIEW_EDGE_FRONT_LEFT:
+        case DEFAULTVIEW_EDGE_FRONT_RIGHT:
+        case DEFAULTVIEW_EDGE_BACK_RIGHT:
+        case DEFAULTVIEW_EDGE_BACK_LEFT:
+            switch (dor) {
+                case DEFAULTORIENTATION_RIGHT:
+                case DEFAULTORIENTATION_LEFT:
+                    delta_dist.y = pseudoDepth/2.0f;
+                    break;
+                default: break;
+            }
+            break;
+        default: break;
+    }
 
     // New camera Position
     auto dim = this->_camera.resolution_gate();
     auto bbc = this->_bboxs.BoundingBox().CalcCenter();
     auto bbcglm = glm::vec4(bbc.GetX(), bbc.GetY(), bbc.GetZ(), 1.0f);
-    double halfFovX = (static_cast<double>(dim.width()) * static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)) / static_cast<double>(dim.height());
-    double distX = (pseudoWidth / (2.0 * tan(halfFovX)));
-    double distY = (pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f))));
+    double halfFovY = static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f);
+    double halfFovX = (static_cast<double>(dim.width()) * halfFovY) / static_cast<double>(dim.height());
+    double distY = (pseudoHeight / (2.0 * tan(halfFovY))) - delta_dist.y;
+    double distX = (pseudoWidth / (2.0 * tan(halfFovX))) - delta_dist.x;
     auto face_dist = static_cast<float>((distX > distY) ? distX : distY);
     face_dist = face_dist + (pseudoDepth / 2.0f);
     float edge_dist   = face_dist / sqrt(2.0f);
