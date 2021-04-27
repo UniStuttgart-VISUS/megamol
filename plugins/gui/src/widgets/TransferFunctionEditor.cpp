@@ -201,7 +201,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
 
     this->selected_node_index = GUI_INVALID_ID;
     this->selected_channel_index = GUI_INVALID_ID;
-    this->selected_node_drag_delta = glm::vec2(0.0f, 0.0f);
+    this->selected_node_drag_delta = ImVec2(0.0f, 0.0f);
 
     unsigned int new_tex_size = 0;
     std::array<float, 2> new_range;
@@ -803,7 +803,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
     unsigned int current_selected_node_index = GUI_INVALID_ID;
     unsigned int current_selected_channel_index = GUI_INVALID_ID;
-    glm::vec2 current_selected_node_drag_delta = glm::vec2(0.0f, 0.0f);
+    ImVec2 current_selected_node_drag_delta = ImVec2(0.0f, 0.0f);
     float dist_delta = FLT_MAX;
 
     // Draw line for selected node
@@ -851,8 +851,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             }
 
             // Test for intersection of mouse position with node circle
-            glm::vec2 mouse_delta = glm::vec2(point.x - mouse_pos.x, point.y - mouse_pos.y);
-            auto dist = glm::length(mouse_delta);
+            ImVec2 mouse_delta = ImVec2(point.x - mouse_pos.x, point.y - mouse_pos.y);
+            auto dist = glm::length(glm::vec2(mouse_delta.x, mouse_delta.y));
             // Select node with minimized mouse delta
             if ((dist <= point_border_radius) && (dist < dist_delta)) {
                 current_selected_node_index = i;
@@ -868,8 +868,9 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
             if ((((i != current_selected_node_index) || (c != current_selected_channel_index)) &&
                     (i != this->selected_node_index)) &&
-                ((static_cast<float>(node_count) * point_radius * 1.5f) > canvas_size.x)) {
-                // Only draw hovered circle if there are too many nodes
+                    /*1*/((point_radius * 1.25f) > (canvas_size.x / static_cast<float>(this->texture_size)))) {
+                    /*2*/ // ((static_cast<float>(node_count) * point_radius * 1.25f) > canvas_size.x)) {
+                // Only draw hovered circle *1* if nodes are larger than texel size or *2* if there are too many nodes
                 continue;
             }
 
@@ -885,22 +886,15 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
             drawList->AddCircleFilled(point, point_radius, point_color);
         }
     }
-
     drawList->PopClipRect();
 
     // Process plot interaction -----------------------------------------------
     ImGui::InvisibleButton("plot", canvas_size); // Needs to catch mouse input
-    if (ImGui::IsItemHovered() && (mouse_pos.x > (canvas_pos.x - delta_border.x)) &&
-        (mouse_pos.y > (canvas_pos.y - delta_border.y)) &&
-        (mouse_pos.x < (canvas_pos.x + canvas_size.x + delta_border.x)) &&
-        (mouse_pos.y < (canvas_pos.y + canvas_size.y + delta_border.y))) {
-
+    if (ImGui::IsItemHovered()) {
         if (ImGui::IsMouseClicked(0)) { // Left Mouse Click
-            if (!this->plot_paint_mode) {
-                this->changeNodeSelection(current_selected_node_index, current_selected_channel_index, current_selected_node_drag_delta);
-            }
-            else {
-
+            this->changeNodeSelection(current_selected_node_index, current_selected_channel_index, current_selected_node_drag_delta);
+            if (this->plot_paint_mode) {
+                this->selected_node_drag_delta = mouse_pos;
             }
         } else if (ImGui::IsMouseDragging(0)) { // Left Mouse Drag
             if (!this->plot_paint_mode) {
@@ -994,25 +988,37 @@ bool TransferFunctionEditor::paintModeNode(const ImVec2& mouse_pos, const ImVec2
     std::vector<unsigned int> delete_nodes_indices;
     unsigned int node_count = this->nodes.size();
     float tmp_value;
-    // Sort indices of deletable nodes descending in order to keep indices valid while erasing
-    for (unsigned int i = (node_count - 1); i > 0; i--) {
+    float delta_min_x = (new_x - texel_delta);
+    float drag_delta_x = (this->selected_node_drag_delta.x - canvas_pos.x) / canvas_size.x;
+    if (delta_min_x > drag_delta_x) {
+        delta_min_x = drag_delta_x;
+    }
+    delta_min_x += 1e-5f;
+    float delta_max_x = (new_x + texel_delta) - 1e-5f;
+    if (delta_max_x < drag_delta_x) {
+        delta_max_x = drag_delta_x;
+    }
+    delta_max_x -= 1e-5f;
+    for (unsigned int i = 0; i < node_count; i++) {
         tmp_value = this->nodes[i][4];
-        if ((tmp_value > (new_x - texel_delta + 1e-5f)) && (tmp_value < (new_x + texel_delta - 1e-5f))) {
+        if ((tmp_value > delta_min_x) && (tmp_value < delta_max_x)) {
             delete_nodes_indices.push_back(i);
         }
     }
-    for (auto delete_node_index : delete_nodes_indices) {
-        this->nodes.erase(this->nodes.begin() + delete_node_index);
+    // Reverse erase items to keep indices valid while erasing
+    for (std::vector<unsigned int>::reverse_iterator i = delete_nodes_indices.rbegin();  i != delete_nodes_indices.rend(); ++i) {
+        this->nodes.erase(this->nodes.begin() + (*i));
     }
 
     float new_mouse_pos_x = (new_x * canvas_size.x) + canvas_pos.x;
     ImVec2 new_pos = ImVec2(new_mouse_pos_x, mouse_pos.y);
     this->addNode(new_pos, canvas_pos, canvas_size);
+    this->selected_node_drag_delta = new_pos;
 
     return true;
 }
 
-bool TransferFunctionEditor::changeNodeSelection(unsigned int new_selected_node_index, unsigned int new_selected_channel_index, glm::vec2 new_selected_node_drag_delta) {
+bool TransferFunctionEditor::changeNodeSelection(unsigned int new_selected_node_index, unsigned int new_selected_channel_index, ImVec2 new_selected_node_drag_delta) {
 
     this->selected_node_index = new_selected_node_index;
     this->selected_channel_index = new_selected_channel_index;

@@ -130,7 +130,7 @@ namespace gui {
         std::array<bool, 4> active_color_channels;
         unsigned int selected_channel_index;
         unsigned int selected_node_index;
-        glm::vec2 selected_node_drag_delta;
+        ImVec2 selected_node_drag_delta;
         bool show_options;
         WidgetBuffer widget_buffer;
         bool flip_legend;
@@ -149,7 +149,7 @@ namespace gui {
 
         bool addNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
         bool paintModeNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
-        bool changeNodeSelection(unsigned int new_selected_node_index, unsigned int new_selected_channel_index, glm::vec2 new_selected_node_drag_delta);
+        bool changeNodeSelection(unsigned int new_selected_node_index, unsigned int new_selected_channel_index, ImVec2 new_selected_node_drag_delta);
         bool moveSelectedNode(unsigned int selected_node_index, const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
         bool deleteNode(unsigned int node_index);
         void sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const;
