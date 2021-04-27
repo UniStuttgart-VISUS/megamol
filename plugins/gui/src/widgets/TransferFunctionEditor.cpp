@@ -898,9 +898,6 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                 this->selected_node_drag_delta = mouse_pos;
             }
         } else if (ImGui::IsMouseDragging(0)) { // Left Mouse Drag
-            if (!this->plot_paint_mode) {
-                this->moveSelectedNode(this->selected_node_index, mouse_pos, canvas_pos, canvas_size);
-            }
             this->plot_dragging = true;
         } else if (ImGui::IsMouseClicked(1)) { // Right Mouse Click
             if (!this->deleteNode(current_selected_node_index)) {
@@ -909,8 +906,13 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         }
     }
     // Track mouse even outside canvas in paint mode when dragging started within canvas
-    if (this->plot_dragging && this->plot_paint_mode && ImGui::IsMouseDragging(0)) {
-        this->paintModeNode(mouse_pos, canvas_pos, canvas_size);
+    if (this->plot_dragging && ImGui::IsMouseDragging(0)) {
+        if (!this->plot_paint_mode) {
+            this->moveSelectedNode(this->selected_node_index, mouse_pos, canvas_pos, canvas_size);
+        }
+        else {
+            this->paintModeNode(mouse_pos, canvas_pos, canvas_size);
+        }
     }
     else {
         this->plot_dragging = false;
