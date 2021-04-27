@@ -316,8 +316,10 @@ void AbstractView3D::ResetView(void) {
         this->_camera.disparity(0.05f);
         this->_camera.eye(thecam::Eye::mono);
         this->_camera.projection_type(thecam::Projection_type::perspective);
-        this->_camera.orientation(this->get_default_camera_orientation());
-        this->_camera.position(this->get_default_camera_position());
+
+        auto camera_orientation = this->get_default_camera_orientation();
+        this->_camera.orientation(camera_orientation);
+        this->_camera.position(this->get_default_camera_position(camera_orientation));
     }
 
     auto bbc = this->_bboxs.BoundingBox().CalcCenter();
@@ -762,206 +764,59 @@ bool AbstractView3D::cameraOvrCallback(param::ParamSlot& p) {
 /*
  * AbstractView3D::get_default_camera_position
  */
-glm::vec4 AbstractView3D::get_default_camera_position() {
-
-    const float SQRT2 = sqrt(2.0f);
+glm::vec4 AbstractView3D::get_default_camera_position(glm::quat camera_orientation) {
 
     glm::vec4 default_position = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     auto dv = static_cast<DefaultView>(this->_cameraSetViewChooserParam.Param<param::EnumParam>()->Value());
     auto dor = static_cast<DefaultOrientation>(this->_cameraSetOrientationChooserParam.Param<param::EnumParam>()->Value());
 
-    float pseudoWidth  = this->_bboxs.BoundingBox().Width();
-    float pseudoHeight = this->_bboxs.BoundingBox().Height();
-    float pseudoDepth  = this->_bboxs.BoundingBox().Depth();
-    float diagWidthDepth  = glm::length(glm::vec2(pseudoWidth, pseudoDepth));
-    float diagHeightDepth = glm::length(glm::vec2(pseudoHeight, pseudoDepth));
-    float diagHeightWidth = glm::length(glm::vec2( pseudoHeight, pseudoWidth));
-    float diagDepthHeightWidth = glm::length(glm::vec3(pseudoDepth, pseudoHeight, pseudoWidth));
+    // Calculate pseudo width and pseudo height by projecting all eight corners on plane orthogonal to camera position delta and lying in the center.
+    glm::vec4 view_vec  = glm::normalize(camera_orientation * glm::vec4(0.0, 0.0f, 1.0f, 0.0f));
+    glm::vec4 up_vec    = glm::normalize(camera_orientation * glm::vec4(0.0, 1.0f, 0.0f, 0.0f));
+    glm::vec4 right_vec = glm::normalize(camera_orientation * glm::vec4(1.0, 0.0f, 0.0f, 0.0f));
 
-    auto delta_dist = glm::vec2(0.0f, 0.0f);
-
-    switch (dv) {
-        // FACES ----------------------------------------------------------------------------------
-        case DEFAULTVIEW_FACE_FRONT:
-        case DEFAULTVIEW_FACE_BACK:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                case DEFAULTORIENTATION_BOTTOM:
-                break;
-                case DEFAULTORIENTATION_RIGHT:
-                case DEFAULTORIENTATION_LEFT:
-                    pseudoWidth  = this->_bboxs.BoundingBox().Height();
-                    pseudoHeight = this->_bboxs.BoundingBox().Width();
-                    pseudoDepth  = this->_bboxs.BoundingBox().Depth();
-                break;
-                default: break;
-            }
-            break;
-        case DEFAULTVIEW_FACE_RIGHT:
-        case DEFAULTVIEW_FACE_LEFT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                case DEFAULTORIENTATION_BOTTOM:
-                    pseudoWidth = this->_bboxs.BoundingBox().Depth();
-                    pseudoHeight = this->_bboxs.BoundingBox().Height();
-                    pseudoDepth = this->_bboxs.BoundingBox().Width();
-                break;
-                case DEFAULTORIENTATION_RIGHT:
-                case DEFAULTORIENTATION_LEFT:
-                    pseudoWidth = this->_bboxs.BoundingBox().Height();
-                    pseudoHeight = this->_bboxs.BoundingBox().Depth();
-                    pseudoDepth = this->_bboxs.BoundingBox().Width();
-                break;
-                default: break;
-            }
-            break;
-        case DEFAULTVIEW_FACE_TOP:
-        case DEFAULTVIEW_FACE_BOTTOM:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                case DEFAULTORIENTATION_BOTTOM:
-                    pseudoWidth = this->_bboxs.BoundingBox().Width();
-                    pseudoHeight = this->_bboxs.BoundingBox().Depth();
-                    pseudoDepth = this->_bboxs.BoundingBox().Height();
-                break;
-                case DEFAULTORIENTATION_RIGHT:
-                case DEFAULTORIENTATION_LEFT:
-                    pseudoWidth = this->_bboxs.BoundingBox().Depth();
-                    pseudoHeight = this->_bboxs.BoundingBox().Width();
-                    pseudoDepth = this->_bboxs.BoundingBox().Height();
-                break;
-                default: break;
-            }
-            break;
-        // CORNERS --------------------------------------------------------------------------------
-        case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
-        case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
-        case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
-        case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    /// TODO
-                case DEFAULTORIENTATION_BOTTOM:
-                    /// TODO
-                case DEFAULTORIENTATION_RIGHT:
-                    /// TODO
-                case DEFAULTORIENTATION_LEFT: {
-                    /*
-                    const float SQRT2DIV1 = 1.0f / sqrt(2.0f);
-                    const float SQRT2DIV1HALF = SQRT2DIV1 / 2.0f;
-                    glm::vec3 diag_vec = glm::vec3(this->_bboxs.BoundingBox().Width(), this->_bboxs.BoundingBox().Height(), this->_bboxs.BoundingBox().Depth());
-                    glm::vec3 dist_vec = glm::normalize(glm::vec3(SQRT2DIV1, SQRT2DIV1HALF, SQRT2DIV1));
-                    float better_height = abs(glm::dot(dist_vec, diag_vec));
-                    */
-                    pseudoWidth = diagWidthDepth;        /// TODO
-                    pseudoHeight = diagDepthHeightWidth; /// TODO
-                    pseudoDepth = diagDepthHeightWidth;  /// TODO
-                    delta_dist.x = pseudoDepth * 0.5f;   /// TODO
-                    delta_dist.y = pseudoDepth * 0.35f;  /// TODO
-                    break;
-                }
-                default: break;
-            }
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
-        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
-        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
-        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    /// TODO
-                case DEFAULTORIENTATION_BOTTOM:
-                    /// TODO
-                case DEFAULTORIENTATION_RIGHT:
-                    /// TODO
-                case DEFAULTORIENTATION_LEFT: {
-                    pseudoWidth = diagWidthDepth;        /// TODO
-                    pseudoHeight = diagDepthHeightWidth; /// TODO
-                    pseudoDepth = diagDepthHeightWidth;  /// TODO
-                    delta_dist.x = pseudoDepth * 0.5f;   /// TODO
-                    delta_dist.y = pseudoDepth * 0.35f;   /// TODO
-                    break;
-                }
-                default: break;
-            }
-            break;
-        // EDGES ----------------------------------------------------------------------------------
-        case DEFAULTVIEW_EDGE_TOP_FRONT:
-        case DEFAULTVIEW_EDGE_BOTTOM_FRONT:
-        case DEFAULTVIEW_EDGE_TOP_BACK:
-        case DEFAULTVIEW_EDGE_BOTTOM_BACK:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                case DEFAULTORIENTATION_BOTTOM:
-                    pseudoWidth = diagHeightDepth;
-                    pseudoHeight = this->_bboxs.BoundingBox().Width();
-                    pseudoDepth = diagHeightDepth;
-                break;
-                case DEFAULTORIENTATION_RIGHT:
-                case DEFAULTORIENTATION_LEFT:
-                    pseudoWidth = this->_bboxs.BoundingBox().Width();
-                    pseudoHeight = diagHeightDepth;
-                    pseudoDepth = diagHeightDepth;
-                    delta_dist.y = pseudoHeight/2.0f;
-                break;
-                default: break;
-            }
-            break;
-        case DEFAULTVIEW_EDGE_TOP_LEFT:
-        case DEFAULTVIEW_EDGE_TOP_RIGHT :
-        case DEFAULTVIEW_EDGE_BOTTOM_LEFT:
-        case DEFAULTVIEW_EDGE_BOTTOM_RIGHT :
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                case DEFAULTORIENTATION_BOTTOM:
-                    pseudoWidth = diagHeightWidth;
-                    pseudoHeight = this->_bboxs.BoundingBox().Depth();
-                    pseudoDepth = diagHeightWidth;
-                break;
-                case DEFAULTORIENTATION_RIGHT:
-                case DEFAULTORIENTATION_LEFT:
-                    pseudoWidth = this->_bboxs.BoundingBox().Depth();
-                    pseudoHeight = diagHeightWidth;
-                    pseudoDepth = diagHeightWidth;
-                    delta_dist.y = pseudoHeight/2.0f;
-                break;
-                default: break;
-            }
-            break;
-        case DEFAULTVIEW_EDGE_FRONT_LEFT:
-        case DEFAULTVIEW_EDGE_FRONT_RIGHT:
-        case DEFAULTVIEW_EDGE_BACK_RIGHT:
-        case DEFAULTVIEW_EDGE_BACK_LEFT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP: 
-                case DEFAULTORIENTATION_BOTTOM:
-                    pseudoWidth = diagWidthDepth;
-                    pseudoHeight = this->_bboxs.BoundingBox().Height();
-                    pseudoDepth = diagWidthDepth;
-                break;
-                case DEFAULTORIENTATION_RIGHT:
-                case DEFAULTORIENTATION_LEFT:
-                    pseudoWidth = this->_bboxs.BoundingBox().Height();
-                    pseudoHeight = diagWidthDepth;
-                    pseudoDepth = diagWidthDepth;
-                    delta_dist.y = pseudoHeight/2.0f;
-                break;
-                default: break;
-            }
-            break;
-        default: break;
+    auto tmp_corner = glm::vec4(this->_bboxs.BoundingBox().Width()/2.0f, this->_bboxs.BoundingBox().Height()/2.0f, this->_bboxs.BoundingBox().Depth()/2.0f, 0.0f);
+    std::vector<glm::vec4> corners;
+    corners.push_back(glm::vec4(tmp_corner.x, tmp_corner.y, tmp_corner.z, 0.0f));
+    corners.push_back(glm::vec4(tmp_corner.x, -tmp_corner.y, tmp_corner.z, 0.0f));
+    corners.push_back(glm::vec4(tmp_corner.x, -tmp_corner.y, -tmp_corner.z, 0.0f));
+    corners.push_back(glm::vec4(tmp_corner.x, tmp_corner.y, -tmp_corner.z, 0.0f));
+    corners.push_back(glm::vec4(-tmp_corner.x, tmp_corner.y, tmp_corner.z, 0.0f));
+    corners.push_back(glm::vec4(-tmp_corner.x, -tmp_corner.y, tmp_corner.z, 0.0f));
+    corners.push_back(glm::vec4(-tmp_corner.x, -tmp_corner.y, -tmp_corner.z, 0.0f));
+    corners.push_back(glm::vec4(-tmp_corner.x, tmp_corner.y, -tmp_corner.z, 0.0f));
+    float delta_x_min = FLT_MAX;
+    float delta_x_max = -FLT_MAX;
+    float delta_y_min = FLT_MAX;
+    float delta_y_max = -FLT_MAX;
+    float delta_z_min = FLT_MAX;
+    float delta_z_max = -FLT_MAX;
+    for (auto& corner : corners) {
+        float delta_x = glm::dot(corner, right_vec);
+        float delta_y = glm::dot(corner, up_vec);
+        float delta_z = glm::dot(corner, view_vec);
+        delta_x_min = std::min(delta_x_min, delta_x);
+        delta_x_max = std::max(delta_x_max, delta_x);
+        delta_y_min = std::min(delta_y_min, delta_y);
+        delta_y_max = std::max(delta_y_max, delta_y);
+        delta_z_min = std::min(delta_z_min, delta_z);
+        delta_z_max = std::max(delta_z_max, delta_z);
     }
+    double pseudoWidth  = delta_x_max - delta_x_min;
+    double pseudoHeight = delta_y_max - delta_y_min;
+    double pseudoDepth  = delta_z_max - delta_z_min;
 
+    // New camera Position
     auto dim = this->_camera.resolution_gate();
     auto bbc = this->_bboxs.BoundingBox().CalcCenter();
     auto bbcglm = glm::vec4(bbc.GetX(), bbc.GetY(), bbc.GetZ(), 1.0f);
     double halfFovX = (static_cast<double>(dim.width()) * static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)) / static_cast<double>(dim.height());
-    double distX = (pseudoWidth / (2.0 * tan(halfFovX))) - delta_dist.x;
-    double distY = (pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)))) - delta_dist.y;
+    double distX = (pseudoWidth / (2.0 * tan(halfFovX)));
+    double distY = (pseudoHeight / (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f))));
     auto face_dist = static_cast<float>((distX > distY) ? distX : distY);
     face_dist = face_dist + (pseudoDepth / 2.0f);
-    float edge_dist   = face_dist / SQRT2;
-    float corner_dist = edge_dist / SQRT2;
+    float edge_dist   = face_dist / sqrt(2.0f);
+    float corner_dist = edge_dist / sqrt(2.0f);
 
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
@@ -983,7 +838,7 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
         case DEFAULTVIEW_FACE_BOTTOM:
             default_position = bbcglm + glm::vec4(0.0f, -face_dist, 0.0f, 0.0f);
             break;
-        // CORNERS --------------------------------------------------------------------------------
+            // CORNERS --------------------------------------------------------------------------------
         case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
             default_position = bbcglm + glm::vec4(-corner_dist, edge_dist, corner_dist, 0.0f);
             break;
@@ -1008,7 +863,7 @@ glm::vec4 AbstractView3D::get_default_camera_position() {
         case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
             default_position = bbcglm + glm::vec4(corner_dist, -edge_dist, -corner_dist, 0.0f);
             break;
-        // EDGES ----------------------------------------------------------------------------------
+            // EDGES ----------------------------------------------------------------------------------
         case DEFAULTVIEW_EDGE_TOP_FRONT:
             default_position = bbcglm + glm::vec4(0.0f, edge_dist, edge_dist, 0.0f);
             break;
@@ -1059,16 +914,19 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
     auto dv = static_cast<DefaultView>(this->_cameraSetViewChooserParam.Param<param::EnumParam>()->Value());
     auto dor = static_cast<DefaultOrientation>(this->_cameraSetOrientationChooserParam.Param<param::EnumParam>()->Value());
 
-    // quat rot(theta) around axis(x,y,z) -> q = (sin(theta/2)*x, sin(theta/2)*y, sin(theta/2)*z, cos(theta/2))
-    const float cos45 = sqrtf(2.0f) / 2.0f;
+    // New camera orientation
+    /// quat rot(theta) around axis(x,y,z) -> q = (sin(theta/2)*x, sin(theta/2)*y, sin(theta/2)*z, cos(theta/2))
+    const float cos45 = sqrt(2.0f) / 2.0f;
     const float sin45 = cos45;
-    const float cos22_5 = cosf(M_PI/8.0f);
-    const float sin22_5 = sinf(M_PI/8.0f);
+    const float cos22_5 = cos(M_PI/8.0f);
+    const float sin22_5 = sin(M_PI/8.0f);
 
     auto qx_p45 = cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5);
     auto qx_n45 = cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5);
     auto qy_p45 = cam_type::quaternion_type(0.0, sin22_5, 0.0, cos22_5);
     auto qy_n45 = cam_type::quaternion_type(0.0, -sin22_5, 0.0, cos22_5);
+    auto qz_p45 = cam_type::quaternion_type(0.0, 0.0, sin22_5, cos22_5);
+    auto qz_n45 = cam_type::quaternion_type(0.0, 0.0, -sin22_5, cos22_5);
 
     auto qx_p90 = cam_type::quaternion_type(sin45, 0.0, 0.0, cos45);
     auto qx_n90 = cam_type::quaternion_type(-sin45, 0.0, 0.0, cos45);
@@ -1080,7 +938,7 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
     auto qx_p180 = cam_type::quaternion_type(1.0, 0.0, 0.0, 0.0);
     auto qy_p180 = cam_type::quaternion_type(0.0, 1.0, 0.0, 0.0);
     auto qz_p180 = cam_type::quaternion_type(0.0, 0.0, 1.0, 0.0);
-    
+
     switch (dv) {
         // FACES ----------------------------------------------------------------------------------
         case DEFAULTVIEW_FACE_FRONT:
@@ -1192,13 +1050,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_n45 * qx_n45;
                     break;
                 case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_n45 * qx_n45; /// TODO
+                    default_orientation =  qy_n45 * qx_n45 * qz_n90;
                     break;
                 case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_n45 * qx_n45; /// TODO
+                    default_orientation = qy_n45 * qx_n45 * qz_p180;
                     break;
                 case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_n45 * qx_n45; /// TODO
+                    default_orientation = qy_n45 * qx_n45 * qz_p90;
                     break;
                 default: break;
             }
@@ -1209,13 +1067,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p45 * qx_n45;
                     break;
                 case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p45 * qx_n45; /// TODO
+                    default_orientation = qy_p45 * qx_n45 * qz_n90;
                     break;
                 case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p45 * qx_n45; /// TODO
+                    default_orientation = qy_p45 * qx_n45 * qz_p180;
                     break;
                 case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p45 * qx_n45; /// TODO
+                    default_orientation = qy_p45 * qx_n45 * qz_p90;
                     break;
                 default: break;
             }
@@ -1226,13 +1084,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p180 * qy_p45 * qx_n45;
                     break;
                 case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qy_p45 * qx_n45; /// TODO
+                    default_orientation = qy_p180 * qy_p45 * qx_n45 * qz_n90;
                     break;
                 case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qy_p45 * qx_n45; /// TODO
+                    default_orientation = qy_p180 * qy_p45 * qx_n45 * qz_p180;
                     break;
                 case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qy_p45 * qx_n45; /// TODO
+                    default_orientation = qy_p180 * qy_p45 * qx_n45 * qz_p90;
                     break;
                 default: break;
             }
@@ -1243,13 +1101,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p180 * qy_n45 * qx_n45;
                     break;
                 case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qy_n45 * qx_n45; /// TODO
+                    default_orientation = qy_p180 * qy_n45 * qx_n45 * qz_n90;
                     break;
                 case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qy_n45 * qx_n45; /// TODO
+                    default_orientation = qy_p180 * qy_n45 * qx_n45 * qz_p180;
                     break;
                 case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qy_n45 * qx_n45; /// TODO
+                    default_orientation = qy_p180 * qy_n45 * qx_n45 * qz_p90;
                     break;
                 default: break;
             }
@@ -1260,13 +1118,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_n45 * qx_p45;
                     break;
                 case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_n45 * qx_p45; /// TODO
+                    default_orientation = qy_n45 * qx_p45 * qz_n90;
                     break;
                 case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_n45 * qx_p45; /// TODO
+                    default_orientation = qy_n45 * qx_p45 * qz_p180;
                     break;
                 case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_n45 * qx_p45; /// TODO
+                    default_orientation = qy_n45 * qx_p45 * qz_p90;
                     break;
                 default: break;
             }
@@ -1277,13 +1135,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p45 * qx_p45;
                     break;
                 case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p45 * qx_p45; /// TODO
+                    default_orientation = qy_p45 * qx_p45 * qz_n90;
                     break;
                 case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p45 * qx_p45; /// TODO
+                    default_orientation = qy_p45 * qx_p45 * qz_p180;
                     break;
                 case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p45 * qx_p45; /// TODO
+                    default_orientation = qy_p45 * qx_p45 * qz_p90;
                     break;
                 default: break;
             }
@@ -1294,13 +1152,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p180 * qy_p45 * qx_p45;
                     break;
                 case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qy_p45 * qx_p45; /// TODO
+                    default_orientation = qy_p180 * qy_p45 * qx_p45 * qz_n90;
                     break;
                 case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qy_p45 * qx_p45; /// TODO
+                    default_orientation = qy_p180 * qy_p45 * qx_p45 * qz_p180;
                     break;
                 case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qy_p45 * qx_p45; /// TODO
+                    default_orientation = qy_p180 * qy_p45 * qx_p45 * qz_p90;
                     break;
                 default: break;
             }
@@ -1311,13 +1169,13 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                     default_orientation = qy_p180 * qy_n45 * qx_p45;
                     break;
                 case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qy_n45 * qx_p45; /// TODO
+                    default_orientation = qy_p180 * qy_n45 * qx_p45 * qz_n90;
                     break;
                 case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qy_n45 * qx_p45; /// TODO
+                    default_orientation = qy_p180 * qy_n45 * qx_p45 * qz_p180;
                     break;
                 case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qy_n45 * qx_p45; /// TODO
+                    default_orientation = qy_p180 * qy_n45 * qx_p45 * qz_p90;
                     break;
                 default: break;
             }

@@ -277,8 +277,8 @@ protected:
 
     bool _cameraControlOverrideActive;
 
-    glm::vec4 get_default_camera_position();
     glm::quat get_default_camera_orientation();
+    glm::vec4 get_default_camera_position(glm::quat camera_orientation);
 };
 
 } // namespace view

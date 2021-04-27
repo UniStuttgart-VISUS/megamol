@@ -514,11 +514,6 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
 
     // Draw -------------------------------------------------------------------
 
-    /// TODO XXX Hiding Arrows for CORNER views - no change in orientation provided so far
-    if ((selected_face_id >= 6) && (selected_face_id <= 13)) {
-        return selected;
-    }
-
     // Set state
     const auto culling = glIsEnabled(GL_CULL_FACE);
     if (!culling) {
