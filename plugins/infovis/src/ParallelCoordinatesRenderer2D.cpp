@@ -234,47 +234,51 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     auto const shader_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
 
     try {
-        drawAxesProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/pc_axes_draw_axes.vert.glsl", "infovis/pc_axes_draw_axes.frag.glsl");
+        drawAxesProgram = core::utility::make_glowl_shader("pc_axes_draw_axes", shader_options,
+            "infovis/pc_axes_draw_axes.vert.glsl", "infovis/pc_axes_draw_axes.frag.glsl");
 
-        drawScalesProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/pc_axes_draw_scales.vert.glsl", "infovis/pc_axes_draw_scales.frag.glsl");
+        drawScalesProgram = core::utility::make_glowl_shader("pc_axes_draw_scales", shader_options,
+            "infovis/pc_axes_draw_scales.vert.glsl", "infovis/pc_axes_draw_scales.frag.glsl");
 
-        drawFilterIndicatorsProgram = core::utility::make_glowl_shader(shader_options,
+        drawFilterIndicatorsProgram = core::utility::make_glowl_shader("pc_axes_draw_filterindicators", shader_options,
             "infovis/pc_axes_draw_filterindicators.vert.glsl", "infovis/pc_axes_draw_filterindicators.frag.glsl");
 
-        drawStrokeIndicatorProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/pc_item_stroke_indicator.vert.glsl", "infovis/pc_item_stroke_indicator.frag.glsl");
+        drawStrokeIndicatorProgram = core::utility::make_glowl_shader("pc_item_stroke_indicator", shader_options,
+            "infovis/pc_item_stroke_indicator.vert.glsl", "infovis/pc_item_stroke_indicator.frag.glsl");
 
-        drawPickIndicatorProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/pc_item_pick_indicator.vert.glsl", "infovis/pc_item_pick_indicator.frag.glsl");
+        drawPickIndicatorProgram = core::utility::make_glowl_shader("pc_item_pick_indicator", shader_options,
+            "infovis/pc_item_pick_indicator.vert.glsl", "infovis/pc_item_pick_indicator.frag.glsl");
 
-        drawItemsDiscreteProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/pc_item_draw_discrete.vert.glsl", "infovis/pc_item_draw_discrete.frag.glsl");
+        drawItemsDiscreteProgram = core::utility::make_glowl_shader("pc_item_draw_discrete", shader_options,
+            "infovis/pc_item_draw_discrete.vert.glsl", "infovis/pc_item_draw_discrete.frag.glsl");
 
-        drawItemsTriangleProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/pc_item_draw_discreteT.vert.glsl", "infovis/pc_item_draw_discreteT.frag.glsl");
+        drawItemsTriangleProgram = core::utility::make_glowl_shader("pc_item_draw_discreteT", shader_options,
+            "infovis/pc_item_draw_discreteT.vert.glsl", "infovis/pc_item_draw_discreteT.frag.glsl");
 
-        traceItemsDiscreteProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/pc_item_draw_muhaha.vert.glsl", "infovis/pc_item_draw_muhaha.frag.glsl");
+        traceItemsDiscreteProgram = core::utility::make_glowl_shader("pc_item_draw_muhaha", shader_options,
+            "infovis/pc_item_draw_muhaha.vert.glsl", "infovis/pc_item_draw_muhaha.frag.glsl");
 
-        drawItemsDiscreteTessProgram = core::utility::make_glowl_shader(shader_options,
+        drawItemsDiscreteTessProgram = core::utility::make_glowl_shader("pc_item_draw_discTess", shader_options,
             "infovis/pc_item_draw_discTess.vert.glsl", "infovis/pc_item_draw_discTess.tesc.glsl",
             "infovis/pc_item_draw_discTess.tese.glsl", "infovis/pc_item_draw_discTess.frag.glsl");
 
-        drawItemContinuousProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/pc_fragment_count.vert.glsl", "infovis/pc_fragment_count.frag.glsl");
+        drawItemContinuousProgram = core::utility::make_glowl_shader("pc_fragment_count", shader_options,
+            "infovis/pc_fragment_count.vert.glsl", "infovis/pc_fragment_count.frag.glsl");
 
-        minMaxProgram = core::utility::make_glowl_shader(shader_options, "infovis/pc_fragment_count.comp.glsl");
+        minMaxProgram = core::utility::make_glowl_shader(
+            "pc_fragment_count", shader_options, "infovis/pc_fragment_count.comp.glsl");
 
-        drawItemsHistogramProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/pc_item_draw_histogram.vert.glsl", "infovis/pc_item_draw_histogram.frag.glsl");
+        drawItemsHistogramProgram = core::utility::make_glowl_shader("pc_item_draw_histogram", shader_options,
+            "infovis/pc_item_draw_histogram.vert.glsl", "infovis/pc_item_draw_histogram.frag.glsl");
 
-        filterProgram = core::utility::make_glowl_shader(shader_options, "infovis/pc_item_filter.comp.glsl");
+        filterProgram =
+            core::utility::make_glowl_shader("pc_item_filter", shader_options, "infovis/pc_item_filter.comp.glsl");
 
-        pickProgram = core::utility::make_glowl_shader(shader_options, "infovis/pc_item_pick.comp.glsl");
+        pickProgram =
+            core::utility::make_glowl_shader("pc_item_pick", shader_options, "infovis/pc_item_pick.comp.glsl");
 
-        strokeProgram = core::utility::make_glowl_shader(shader_options, "infovis/pc_item_stroke.comp.glsl");
+        strokeProgram =
+            core::utility::make_glowl_shader("pc_item_stroke", shader_options, "infovis/pc_item_stroke.comp.glsl");
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,

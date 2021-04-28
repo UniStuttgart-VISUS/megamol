@@ -110,20 +110,20 @@ bool InfovisAmortizedRenderer::makeShaders() {
     auto const shader_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
 
     try {
-        amort_reconstruction_shdr_array[0] = core::utility::make_glowl_shader(
-            shader_options, "infovis/amort_reconstruction0.vert.glsl", "infovis/amort_reconstruction0.frag.glsl");
-        amort_reconstruction_shdr_array[1] = core::utility::make_glowl_shader(
-            shader_options, "infovis/amort_reconstruction1.vert.glsl", "infovis/amort_reconstruction1.frag.glsl");
-        amort_reconstruction_shdr_array[2] = core::utility::make_glowl_shader(
-            shader_options, "infovis/amort_reconstruction2.vert.glsl", "infovis/amort_reconstruction2.frag.glsl");
-        amort_reconstruction_shdr_array[3] = core::utility::make_glowl_shader(
-            shader_options, "infovis/amort_reconstruction3.vert.glsl", "infovis/amort_reconstruction3.frag.glsl");
-        amort_reconstruction_shdr_array[4] = core::utility::make_glowl_shader(
-            shader_options, "infovis/amort_reconstruction4.vert.glsl", "infovis/amort_reconstruction4.frag.glsl");
-        amort_reconstruction_shdr_array[5] = core::utility::make_glowl_shader(
-            shader_options, "infovis/amort_reconstruction5.vert.glsl", "infovis/amort_reconstruction5.frag.glsl");
-        amort_reconstruction_shdr_array[6] = core::utility::make_glowl_shader(
-            shader_options, "infovis/amort_reconstruction6.vert.glsl", "infovis/amort_reconstruction6.frag.glsl");
+        amort_reconstruction_shdr_array[0] = core::utility::make_glowl_shader("amort_reconstruction0", shader_options,
+            "infovis/amort_reconstruction0.vert.glsl", "infovis/amort_reconstruction0.frag.glsl");
+        amort_reconstruction_shdr_array[1] = core::utility::make_glowl_shader("amort_reconstruction1", shader_options,
+            "infovis/amort_reconstruction1.vert.glsl", "infovis/amort_reconstruction1.frag.glsl");
+        amort_reconstruction_shdr_array[2] = core::utility::make_glowl_shader("amort_reconstruction2", shader_options,
+            "infovis/amort_reconstruction2.vert.glsl", "infovis/amort_reconstruction2.frag.glsl");
+        amort_reconstruction_shdr_array[3] = core::utility::make_glowl_shader("amort_reconstruction3", shader_options,
+            "infovis/amort_reconstruction3.vert.glsl", "infovis/amort_reconstruction3.frag.glsl");
+        amort_reconstruction_shdr_array[4] = core::utility::make_glowl_shader("amort_reconstruction4", shader_options,
+            "infovis/amort_reconstruction4.vert.glsl", "infovis/amort_reconstruction4.frag.glsl");
+        amort_reconstruction_shdr_array[5] = core::utility::make_glowl_shader("amort_reconstruction5", shader_options,
+            "infovis/amort_reconstruction5.vert.glsl", "infovis/amort_reconstruction5.frag.glsl");
+        amort_reconstruction_shdr_array[6] = core::utility::make_glowl_shader("amort_reconstruction6", shader_options,
+            "infovis/amort_reconstruction6.vert.glsl", "infovis/amort_reconstruction6.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             ("InfovisAmortizedRenderer: " + std::string(e.what())).c_str());

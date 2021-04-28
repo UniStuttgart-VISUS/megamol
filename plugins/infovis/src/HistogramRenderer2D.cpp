@@ -68,12 +68,14 @@ bool HistogramRenderer2D::create() {
     auto const shader_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
 
     try {
-        calcHistogramProgram = core::utility::make_glowl_shader(shader_options, "infovis/histo_calc.comp.glsl");
-        selectionProgram = core::utility::make_glowl_shader(shader_options, "infovis/histo_select.comp.glsl");
+        calcHistogramProgram =
+            core::utility::make_glowl_shader("histo_calc", shader_options, "infovis/histo_calc.comp.glsl");
+        selectionProgram =
+            core::utility::make_glowl_shader("histo_select", shader_options, "infovis/histo_select.comp.glsl");
         histogramProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/histo_draw.vert.glsl", "infovis/histo_draw.frag.glsl");
+            "histo_draw", shader_options, "infovis/histo_draw.vert.glsl", "infovis/histo_draw.frag.glsl");
         axesProgram = core::utility::make_glowl_shader(
-            shader_options, "infovis/histo_axes.vert.glsl", "infovis/histo_axes.frag.glsl");
+            "histo_axes", shader_options, "infovis/histo_axes.vert.glsl", "infovis/histo_axes.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, ("HistogramRenderer2D: " + std::string(e.what())).c_str());
