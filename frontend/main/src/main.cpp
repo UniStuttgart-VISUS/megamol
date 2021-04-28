@@ -261,9 +261,9 @@ int main(const int argc, const char** argv) {
     if (graph_resources_ok)
     if (!config.cli_execute_lua_commands.empty()) {
         std::string lua_result;
-        // here we preserve the last script path, because the lua code we execute has no file name
-        run_megamol = lua_api.RunString(config.cli_execute_lua_commands, lua_result, lua_api.GetScriptPath());
-        if (!run_megamol) {
+        bool cli_lua_ok = lua_api.RunString(config.cli_execute_lua_commands, lua_result);
+        if (!cli_lua_ok) {
+            run_megamol = false;
             log_error("Error in CLI Lua command: " + lua_result);
         }
     }
