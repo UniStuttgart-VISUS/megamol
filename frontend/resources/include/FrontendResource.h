@@ -11,6 +11,7 @@
 #include <any>
 #include <functional>
 #include <optional>
+#include <typeinfo>
 
 namespace megamol {
 namespace frontend {
@@ -21,6 +22,7 @@ public:
     FrontendResource()
         : identifier{""}
         , resource{}
+        , type_hash{0}
     {}
 
     template <typename T>
@@ -28,7 +30,7 @@ public:
 
     template <typename T>
     FrontendResource(const std::string& identifier, const T& resource)
-        : identifier{identifier}, resource{std::reference_wrapper<const T>(resource)} {}
+        : identifier{identifier}, resource{std::reference_wrapper<const T>(resource)}, type_hash{typeid(T).hash_code()} {}
 
     const std::string& getIdentifier() const { return identifier; }
 
@@ -44,9 +46,14 @@ public:
         //}
     }
 
+    std::size_t getHash() const {
+        return type_hash;
+    }
+
 private:
     std::string identifier;
     std::any resource;
+    std::size_t type_hash = 0;
 };
 
 

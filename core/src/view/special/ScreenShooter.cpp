@@ -943,15 +943,10 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
             vi = dynamic_cast<ViewInstance*>(ano.get());
             av = dynamic_cast<AbstractView*>(ano.get());
         } else {
-            auto resource_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
-                [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
-            if (resource_it != this->frontend_resources.end()) {
-                if (auto megamolgraph_ptr = &resource_it->getResource<megamol::core::MegaMolGraph>()) {
-                    auto module_ptr = megamolgraph_ptr->FindModule(std::string(mvn.PeekBuffer()));
-                    vi = dynamic_cast<ViewInstance*>(module_ptr.get());
-                    av = dynamic_cast<AbstractView*>(module_ptr.get());
-                }
-            }
+            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+            auto module_ptr = megamolgraph.FindModule(std::string(mvn.PeekBuffer()));
+            vi = dynamic_cast<ViewInstance*>(module_ptr.get());
+            av = dynamic_cast<AbstractView*>(module_ptr.get());
         }
 
         if (vi != nullptr) {
@@ -1018,14 +1013,9 @@ param::ParamSlot* view::special::ScreenShooter::findTimeParam(view::AbstractView
             AbstractNamedObjectContainer* anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule().get());
             timeSlot = dynamic_cast<param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)).get());
         } else {
-            auto resource_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
-                [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
-            if (resource_it != this->frontend_resources.end()) {
-                if (auto megamolgraph_ptr = &resource_it->getResource<megamol::core::MegaMolGraph>()) {
-                    std::string fullname = std::string(view->Name().PeekBuffer()) + "::" + std::string(name.PeekBuffer());
-                    timeSlot = megamolgraph_ptr->FindParameterSlot(fullname);
-                }
-            }
+            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+            std::string fullname = std::string(view->Name().PeekBuffer()) + "::" + std::string(name.PeekBuffer());
+            timeSlot = megamolgraph.FindParameterSlot(fullname);
         }
     }
 
