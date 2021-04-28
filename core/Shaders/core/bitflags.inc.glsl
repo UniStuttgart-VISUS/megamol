@@ -1,3 +1,6 @@
+#ifndef CORE_BITFLAGS_INC_GLSL
+#define CORE_BITFLAGS_INC_GLSL
+
 const uint FLAG_ENABLED = 1u << 0;
 const uint FLAG_FILTERED = 1u << 1;
 const uint FLAG_SELECTED = 1u << 2;
@@ -34,3 +37,5 @@ bool bitflag_isVisibleSelected(uint flags)
 {
     return bitflag_test(flags, FLAG_ENABLED | FLAG_FILTERED | FLAG_SELECTED, FLAG_ENABLED | FLAG_SELECTED);
 }
+
+#endif // CORE_BITFLAGS_INC_GLSL

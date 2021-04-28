@@ -1,3 +1,6 @@
+#ifndef CORE_PHONG_INC_GLSL
+#define CORE_PHONG_INC_GLSL
+
 uniform float ka;
 uniform float kd;
 uniform float ks;
@@ -19,3 +22,5 @@ vec3 phong(vec3 color, vec3 normal, vec3 eye, vec3 light) {
 
     return clamp(ambient + diffuse + specular, vec3(0), vec3(1));
 }
+
+#endif // CORE_PHONG_INC_GLSL
