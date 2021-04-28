@@ -273,9 +273,8 @@ bool megamol::gui::ButtonWidgets::ToggleButton(const std::string& id, bool& inou
 
     float t = inout_bool ? 1.0f : 0.0f;
     ImGuiContext& g = *GImGui;
-    float ANIM_SPEED = 0.08f;
-    if (g.LastActiveId == g.CurrentWindow->GetID(id.c_str())) // && g.LastActiveIdTimer < ANIM_SPEED)
-    {
+    float ANIM_SPEED = 0.1f;
+    if ((g.LastActiveId == g.CurrentWindow->GetID(button_id.c_str())) && (g.LastActiveIdTimer < ANIM_SPEED)) {
         float t_anim = ImSaturate(g.LastActiveIdTimer / ANIM_SPEED);
         t = inout_bool ? (t_anim) : (1.0f - t_anim);
     }
@@ -296,9 +295,11 @@ bool megamol::gui::ButtonWidgets::ToggleButton(const std::string& id, bool& inou
     draw_list->AddCircleFilled(
         ImVec2(p.x + radius + t * (width - radius * 2.0f), p.y + radius), radius - 1.5f, ImGui::GetColorU32(col_knob));
 
-    ImGui::SameLine();
-    ImGui::AlignTextToFramePadding();
-    ImGui::TextUnformatted(id.c_str());
+    if (!id.empty() && (id.find("###") != 0)) {
+        ImGui::SameLine();
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(id.c_str());
+    }
 
     ImGui::EndGroup();
 

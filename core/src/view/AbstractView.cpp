@@ -589,17 +589,9 @@ std::string view::AbstractView::determineCameraFilePath(void) const {
     std::string path;
     if (!this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
         // new frontend
-        const auto fit = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
-            [](auto const& el) { return el.getIdentifier() == "LuaScriptPaths"; });
-
-        if (fit != this->frontend_resources.end()) {
-            core::utility::log::Log::DefaultLog.WriteInfo("[AbstractView] Got script paths");
-            const auto& paths = fit->getResource<megamol::frontend_resources::ScriptPaths>().lua_script_paths;
-            if (!paths.empty()) {
-                path = paths[0];
-            } else {
-                return path;
-            }
+        const auto& paths = frontend_resources.get<megamol::frontend_resources::ScriptPaths>().lua_script_paths;
+        if (!paths.empty()) {
+            path = paths[0];
         } else {
             return path;
         }
