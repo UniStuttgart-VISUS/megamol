@@ -17,6 +17,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   include(configure_optix)
   find_package(CUDAToolkit)
 
+  set(CMAKE_CUDA_ARCHITECTURES 75)
+
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MESH_PLUGIN" CACHE INTERNAL "")
