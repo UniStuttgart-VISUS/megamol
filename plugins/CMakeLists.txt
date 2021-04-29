@@ -47,10 +47,19 @@ function(megamol_plugin PLUGIN_NAME)
       PRIVATE
         $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/src>)
 
-    # Link
+    # Save all required plugins in global list. Required plugin may not be defined, yet.
+    # Therefore, delay check until all plugins are added.
+    foreach (required_plugin ${MMPLUGIN_ARGS_DEPENDS_PLUGINS})
+      list(APPEND required_plugins_list "${PLUGIN_NAME} ${required_plugin}")
+      set(required_plugins_list ${required_plugins_list} CACHE INTERNAL "")
+    endforeach ()
+
+    # Externals
     foreach (external ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
       require_external(${external})
     endforeach ()
+
+    # Link
     target_link_libraries(${PLUGIN_NAME} PRIVATE core ${MMPLUGIN_ARGS_DEPENDS_PLUGINS} ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
 
     # Install Shaders
@@ -81,10 +90,24 @@ endfunction()
 # link 'core' and 'plugins' targets and have not to deal with individual plugins.
 add_library(plugins INTERFACE)
 
+# Global list of required plugins
+set(required_plugins_list "" CACHE INTERNAL "")
+
 # Find and add plugins
 file(GLOB plugins RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/" *)
 foreach (plugin ${plugins})
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${plugin}/CMakeLists.txt" AND NOT ${plugin} STREQUAL "template")
     add_subdirectory(${plugin})
+  endif ()
+endforeach ()
+
+# Validate if all required plugins are added now.
+foreach (plugin_dep ${required_plugins_list})
+  # Split plugin_dep. It is formatted "plugin_name dependency_name".
+  string(REGEX REPLACE " +" ";" plugin_dep "${plugin_dep}")
+  list(GET plugin_dep 0 plugin_name)
+  list(REMOVE_AT plugin_dep 0)
+  if (NOT TARGET ${plugin_dep})
+    message(FATAL_ERROR "Plugin \"${plugin_name}\" requires \"${plugin_dep}\", but it is not enabled!")
   endif ()
 endforeach ()
