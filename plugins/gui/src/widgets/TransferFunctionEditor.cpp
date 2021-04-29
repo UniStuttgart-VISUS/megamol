@@ -184,7 +184,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
         , plot_dragging(false)
         , tooltip()
         , image_widget() {
-    
+
     this->widget_buffer.left_range = this->range[0];
     this->widget_buffer.right_range = this->range[1];
     this->widget_buffer.tex_size = this->texture_size;
@@ -208,7 +208,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
     std::array<float, 2> new_range;
     TransferFunctionParam::NodeVector_t new_nodes;
     TransferFunctionParam::InterpolationMode new_interpolation_mode;
-    if (!TransferFunctionParam::GetParsedTransferFunctionData(tfs, new_nodes, new_interpolation_mode, new_tex_size, new_range)) {
+    if (!TransferFunctionParam::GetParsedTransferFunctionData(
+            tfs, new_nodes, new_interpolation_mode, new_tex_size, new_range)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not parse transfer function");
         return;
     }
@@ -450,7 +451,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         }
 
         // Plot ---------------------------------------------------------------
-        ImVec2 canvas_size = ImVec2(tfw_item_width, tfw_item_width/2.0f);
+        ImVec2 canvas_size = ImVec2(tfw_item_width, tfw_item_width / 2.0f);
         this->drawFunctionPlot(canvas_size);
 
         // Paint mode for plot
@@ -869,8 +870,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
             if ((((i != current_selected_node_index) || (c != current_selected_channel_index)) &&
                     (i != this->selected_node_index)) &&
-                    /*1*/((point_radius * 1.25f) > (canvas_size.x / static_cast<float>(this->texture_size)))) {
-                    /*2*/ // ((static_cast<float>(node_count) * point_radius * 1.25f) > canvas_size.x)) {
+                /*1*/ ((point_radius * 1.25f) > (canvas_size.x / static_cast<float>(this->texture_size)))) {
+                /*2*/ // ((static_cast<float>(node_count) * point_radius * 1.25f) > canvas_size.x)) {
                 // Only draw hovered circle *1* if nodes are larger than texel size or *2* if there are too many nodes
                 continue;
             }
@@ -893,7 +894,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     ImGui::InvisibleButton("plot", canvas_size); // Needs to catch mouse input
     if (ImGui::IsItemHovered()) {
         if (ImGui::IsMouseClicked(0)) { // Left Mouse Click
-            this->changeNodeSelection(current_selected_node_index, current_selected_channel_index, current_selected_node_drag_delta);
+            this->changeNodeSelection(
+                current_selected_node_index, current_selected_channel_index, current_selected_node_drag_delta);
             if (this->plot_paint_mode) {
                 this->selected_node_drag_delta = mouse_pos;
             }
@@ -909,19 +911,18 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     if (this->plot_dragging && ImGui::IsMouseDragging(0)) {
         if (!this->plot_paint_mode) {
             this->moveSelectedNode(this->selected_node_index, mouse_pos, canvas_pos, canvas_size);
-        }
-        else {
+        } else {
             this->paintModeNode(mouse_pos, canvas_pos, canvas_size);
         }
-    }
-    else {
+    } else {
         this->plot_dragging = false;
     }
 
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Function Plot");
-    this->tooltip.Marker("[Left Click] Select Node\n[Left Drag] Move Node\n[Right Click] Add Node/Delete Selected Node");
+    this->tooltip.Marker(
+        "[Left Click] Select Node\n[Left Drag] Move Node\n[Right Click] Add Node/Delete Selected Node");
 }
 
 
@@ -959,7 +960,7 @@ bool TransferFunctionEditor::addNode(const ImVec2& mouse_pos, const ImVec2& canv
                     auto pre_col = (*(it - 1));
                     auto post_col = (*it);
                     new_node = {(pre_col[0] + post_col[0]) / 2.0f, (pre_col[1] + post_col[1]) / 2.0f,
-                               (pre_col[2] + post_col[2]) / 2.0f, (pre_col[3] + post_col[3]) / 2.0f, new_x, 0.05f};
+                        (pre_col[2] + post_col[2]) / 2.0f, (pre_col[3] + post_col[3]) / 2.0f, new_x, 0.05f};
                     for (unsigned int cc = 0; cc < 4; cc++) {
                         if (this->active_color_channels[cc]) {
                             new_node[cc] = new_y;
@@ -982,7 +983,8 @@ bool TransferFunctionEditor::addNode(const ImVec2& mouse_pos, const ImVec2& canv
 }
 
 
-bool TransferFunctionEditor::paintModeNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
+bool TransferFunctionEditor::paintModeNode(
+    const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
 
     this->selected_node_index = GUI_INVALID_ID;
 
@@ -992,7 +994,7 @@ bool TransferFunctionEditor::paintModeNode(const ImVec2& mouse_pos, const ImVec2
     float texel_cnt = floorf(x / texel_delta);
     float pre_texel = texel_delta * texel_cnt;
     float post_texel = texel_delta * (texel_cnt + 1.0f);
-    texel_cnt = ((pre_texel - x) > (x - post_texel))?(texel_cnt):(texel_cnt + 1.0f);
+    texel_cnt = ((pre_texel - x) > (x - post_texel)) ? (texel_cnt) : (texel_cnt + 1.0f);
     float new_x = std::clamp((texel_delta * texel_cnt), 0.0f, 1.0f);
 
     std::vector<unsigned int> delete_nodes_indices;
@@ -1016,7 +1018,8 @@ bool TransferFunctionEditor::paintModeNode(const ImVec2& mouse_pos, const ImVec2
         }
     }
     // Reverse erase items to keep indices valid while erasing
-    for (std::vector<unsigned int>::reverse_iterator i = delete_nodes_indices.rbegin();  i != delete_nodes_indices.rend(); ++i) {
+    for (std::vector<unsigned int>::reverse_iterator i = delete_nodes_indices.rbegin();
+         i != delete_nodes_indices.rend(); ++i) {
         this->nodes.erase(this->nodes.begin() + (*i));
     }
 
@@ -1028,7 +1031,8 @@ bool TransferFunctionEditor::paintModeNode(const ImVec2& mouse_pos, const ImVec2
     return true;
 }
 
-bool TransferFunctionEditor::changeNodeSelection(unsigned int new_selected_node_index, unsigned int new_selected_channel_index, ImVec2 new_selected_node_drag_delta) {
+bool TransferFunctionEditor::changeNodeSelection(unsigned int new_selected_node_index,
+    unsigned int new_selected_channel_index, ImVec2 new_selected_node_drag_delta) {
 
     this->selected_node_index = new_selected_node_index;
     this->selected_channel_index = new_selected_channel_index;
@@ -1036,7 +1040,7 @@ bool TransferFunctionEditor::changeNodeSelection(unsigned int new_selected_node_
 
     if ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size())) {
         this->widget_buffer.range_value =
-                (this->nodes[this->selected_node_index][4] * (this->range[1] - this->range[0])) + this->range[0];
+            (this->nodes[this->selected_node_index][4] * (this->range[1] - this->range[0])) + this->range[0];
         this->widget_buffer.gauss_sigma = this->nodes[this->selected_node_index][5];
     } else {
         this->widget_buffer.range_value = this->widget_buffer.left_range;
@@ -1046,7 +1050,8 @@ bool TransferFunctionEditor::changeNodeSelection(unsigned int new_selected_node_
 }
 
 
-bool TransferFunctionEditor::moveSelectedNode(unsigned int selected_node_index, const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
+bool TransferFunctionEditor::moveSelectedNode(
+    unsigned int selected_node_index, const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
 
     if ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size())) {
 
