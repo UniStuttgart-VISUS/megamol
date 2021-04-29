@@ -63,7 +63,9 @@ function(megamol_plugin PLUGIN_NAME)
     target_link_libraries(${PLUGIN_NAME} PRIVATE core ${MMPLUGIN_ARGS_DEPENDS_PLUGINS} ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
 
     # Install Shaders
-    install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/Shaders/ DESTINATION "share/shaders")
+    if (EXISTS "${MMPLUGIN_ARGS_DIR}/Shaders")
+      install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/Shaders/ DESTINATION "share/shaders")
+    endif ()
 
     # Grouping in Visual Studio
     set_target_properties(${PLUGIN_NAME} PROPERTIES
