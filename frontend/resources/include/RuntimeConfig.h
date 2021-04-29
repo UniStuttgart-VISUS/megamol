@@ -36,6 +36,7 @@ struct RuntimeConfig {
     unsigned int echo_level = 200;                                                // mmSetEchoLevel
     std::vector<Path> project_files = {};                                         // NEW: mmLoadProject - project files are loaded after services are up
     std::vector<StringPair> global_values = {}; // use GlobalValueStore resource for access to global values!
+    std::string cli_execute_lua_commands;
 
     // detailed and service-specific configurations
     // every CLI option can be set via the config file using mmSetConfigValue
