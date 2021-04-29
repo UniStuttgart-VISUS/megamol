@@ -10,6 +10,9 @@
 #include "graph/Parameter.h"
 
 
+#define TF_FLOAT_EPS 1e-5f
+
+
 using namespace megamol;
 using namespace megamol::gui;
 using namespace megamol::core;
@@ -993,12 +996,12 @@ bool TransferFunctionEditor::paintModeNode(const ImVec2& mouse_pos, const ImVec2
     if (delta_min_x > drag_delta_x) {
         delta_min_x = drag_delta_x;
     }
-    delta_min_x += 1e-5f;
-    float delta_max_x = (new_x + texel_delta) - 1e-5f;
+    delta_min_x += TF_FLOAT_EPS;
+    float delta_max_x = (new_x + texel_delta) - TF_FLOAT_EPS;
     if (delta_max_x < drag_delta_x) {
         delta_max_x = drag_delta_x;
     }
-    delta_max_x -= 1e-5f;
+    delta_max_x -= TF_FLOAT_EPS;
     for (unsigned int i = 0; i < node_count; i++) {
         tmp_value = this->nodes[i][4];
         if ((tmp_value > delta_min_x) && (tmp_value < delta_max_x)) {
@@ -1084,6 +1087,12 @@ void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, u
     float value = 0.0f;
     if (this->selected_node_index < n_count) {
         value = n[this->selected_node_index][4];
+    }
+
+    for (size_t i = 0; i < (n_count - 1); i++) {
+        if (n[i][4] == n[i+1][4]) {
+            n[i+1][4] += TF_FLOAT_EPS;
+        }
     }
 
     std::sort(n.begin(), n.end(),
