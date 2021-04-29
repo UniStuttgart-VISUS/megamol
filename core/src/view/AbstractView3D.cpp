@@ -198,7 +198,7 @@ AbstractView3D::AbstractView3D(void)
     defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_FRONT,           "EDGE - Top Front");
     defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_LEFT,            "EDGE - Top Left");
     defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_RIGHT,           "EDGE - Top Right");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_BACK,            "EDGE - Top Nack");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_BACK,            "EDGE - Top Back");
     defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_FRONT,        "EDGE - Bottom Front");
     defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_LEFT,         "EDGE - Bottom Left");
     defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_RIGHT,        "EDGE - Bottom Right");
@@ -1183,21 +1183,21 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
         case DEFAULTVIEW_EDGE_TOP_FRONT:
             switch (dor) {
                 case DEFAULTORIENTATION_TOP:
-                    default_orientation = qx_n45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qz_p180 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
                     default_orientation = qx_n45 * qz_p90;
                     break;
-                case DEFAULTORIENTATION_LEFT:
+                case DEFAULTORIENTATION_RIGHT:
                     default_orientation = qx_n45;
+                    break;
+                case DEFAULTORIENTATION_BOTTOM:
+                    default_orientation = qx_n45 * qz_n90;
+                    break;
+                case DEFAULTORIENTATION_LEFT:
+                    default_orientation = qz_p180 * qx_p45;
                     break;
                 default: break;
             }
             break;
-        case DEFAULTVIEW_EDGE_TOP_LEFT:
+        case DEFAULTVIEW_EDGE_TOP_LEFT: // TODO
             switch (dor) {
                 case DEFAULTORIENTATION_TOP:
                     default_orientation = qx_n90 * qy_n45;
@@ -1214,19 +1214,19 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                 default: break;
             }
             break;
-        case DEFAULTVIEW_EDGE_TOP_RIGHT :
+        case DEFAULTVIEW_EDGE_TOP_RIGHT: // TODO
             switch (dor) {
                 case DEFAULTORIENTATION_TOP:
-                    default_orientation = qx_n90 * qy_p45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qx_p180 * qy_p90 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
                     default_orientation = qy_p180 * qx_n90 * qy_n45;
                     break;
-                case DEFAULTORIENTATION_LEFT:
+                case DEFAULTORIENTATION_RIGHT:
                     default_orientation = qy_p180 * qy_n90 * qx_n45;
+                    break;
+                case DEFAULTORIENTATION_BOTTOM:
+                    default_orientation = qx_n90 * qy_p45;
+                    break;
+                case DEFAULTORIENTATION_LEFT:
+                    default_orientation = qx_p180 * qy_p90 * qx_p45;
                     break;
                 default: break;
             }
@@ -1234,16 +1234,16 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
         case DEFAULTVIEW_EDGE_TOP_BACK:
             switch (dor) {
                 case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qx_n45 * qz_p90;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
                     default_orientation = qy_p180 * qx_n45 * qz_n90;
                     break;
-                case DEFAULTORIENTATION_LEFT:
+                case DEFAULTORIENTATION_RIGHT:
                     default_orientation = qy_p180 * qz_p180 * qx_p45;
+                    break;
+                case DEFAULTORIENTATION_BOTTOM:
+                    default_orientation = qy_p180 * qx_n45 * qz_p90;
+                    break;
+                case DEFAULTORIENTATION_LEFT:
+                    default_orientation = qy_p180 * qx_n45;
                     break;
                 default: break;
             }
@@ -1265,36 +1265,36 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
                 default: break;
             }
             break;
-        case DEFAULTVIEW_EDGE_BOTTOM_LEFT:
+        case DEFAULTVIEW_EDGE_BOTTOM_LEFT: // TODO
             switch (dor) {
                 case DEFAULTORIENTATION_TOP:
-                    default_orientation = qx_p90 * qy_n45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qz_p180 * qy_p90 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
                     default_orientation = qy_p180 * qx_p90 * qy_p45;
                     break;
-                case DEFAULTORIENTATION_LEFT:
+                case DEFAULTORIENTATION_RIGHT:
                     default_orientation = qy_n90 * qx_p45;
+                    break;
+                case DEFAULTORIENTATION_BOTTOM:
+                    default_orientation = qx_p90 * qy_n45;
+                    break;
+                case DEFAULTORIENTATION_LEFT:
+                    default_orientation = qz_p180 * qy_p90 * qx_n45;
                     break;
                 default: break;
             }
             break;
-        case DEFAULTVIEW_EDGE_BOTTOM_RIGHT :
+        case DEFAULTVIEW_EDGE_BOTTOM_RIGHT: // TODO
             switch (dor) {
                 case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qx_p90 * qy_n45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qz_p180 * qy_n90 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
                     default_orientation = qx_p90 * qy_p45;
                     break;
-                case DEFAULTORIENTATION_LEFT:
+                case DEFAULTORIENTATION_RIGHT:
                     default_orientation = qy_p90 * qx_p45;
+                    break;
+                case DEFAULTORIENTATION_BOTTOM:
+                    default_orientation = qy_p180 * qx_p90 * qy_n45;
+                    break;
+                case DEFAULTORIENTATION_LEFT:
+                    default_orientation = qz_p180 * qy_n90 * qx_n45;
                     break;
                 default: break;
             }
