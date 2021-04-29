@@ -40,7 +40,7 @@ function(megamol_plugin PLUGIN_NAME)
     file(GLOB_RECURSE shader_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "Shaders/*")
 
     # Target definition
-    add_library(${PLUGIN_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${shader_files})
+    add_library(${PLUGIN_NAME} OBJECT ${public_header_files} ${header_files} ${source_files} ${shader_files})
     target_include_directories(${PLUGIN_NAME}
       PUBLIC
         $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/include>
@@ -65,10 +65,23 @@ function(megamol_plugin PLUGIN_NAME)
     source_group("Shaders" FILES ${shader_files})
 
     # Register plugin
-    megamol_register_plugin(${PLUGIN_NAME})
+    target_link_libraries(plugins INTERFACE ${PLUGIN_NAME})
+    target_sources(plugins INTERFACE $<TARGET_OBJECTS:${PLUGIN_NAME}>)
   endif ()
 endfunction()
 
+# Create plugin target
+#
+# We need an extra target for all plugins to avoid cyclic dependencies, which are only allowed for static libraries,
+# see https://gitlab.kitware.com/cmake/cmake/-/issues/17905.
+# Each plugin must link the core to have access to the plugin registry and probably common stuff, like calls, ...
+# Therefore, we cannot just link from the core back to all plugins, to have a single target, which can be used by the
+# frontend(s). Maybe if CMake supports this in future we can change to this setup.
+# Instead, for now, define an extra 'plugins' target. This target will contain all plugin objects. Frontends can just
+# link 'core' and 'plugins' targets and have not to deal with individual plugins.
+add_library(plugins INTERFACE)
+
+# Find and add plugins
 file(GLOB plugins RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/" *)
 foreach (plugin ${plugins})
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${plugin}/CMakeLists.txt" AND NOT ${plugin} STREQUAL "template")
