@@ -1106,11 +1106,11 @@ void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, u
 
     // Prevent nodes with same value
     for (size_t i = 0; i < (n_count - 1); i++) {
-        if (n[i][4] == n[i+1][4]) {
+        if (n[i][4] == n[i + 1][4]) {
             if (value == 0.0f) {
                 n[i][4] += TF_FLOAT_EPS;
             } else {
-                n[i+1][4] += TF_FLOAT_EPS;
+                n[i + 1][4] += TF_FLOAT_EPS;
             }
         }
     }

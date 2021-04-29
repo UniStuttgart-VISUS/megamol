@@ -158,7 +158,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
             "#define ORIENTATION_TOP             0 \n"
             "#define ORIENTATION_RIGHT           1 \n"
             "#define ORIENTATION_BOTTOM          2 \n"
-            "#define ORIENTATION_LEFT            3 \n"            
+            "#define ORIENTATION_LEFT            3 \n"
             "\n"
             "in vec2 tex_coord; \n"
             "flat in vec3 vertex_color; \n"
