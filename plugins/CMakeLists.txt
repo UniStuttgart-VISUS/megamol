@@ -1,6 +1,77 @@
+# MegaMol
+# Copyright (c) 2021, MegaMol Dev Team
+# All rights reserved.
+#
+
+# megamol_plugin()
+#
+# Parameters:
+#   PLUGIN_NAME:       name of the plugin, should match the plugin directory name.
+#   DIR:               full path to the plugin directory, defaults to CMAKE_CURRENT_SOURCE_DIR if not set
+#   BUILD_DEFAULT:     ON/OFF if the plugin should be build with the default configuration
+#   DEPENDS_PLUGINS:   list of plugins which are required by this plugin
+#   DEPENDS_EXTERNALS: list of externals which are required by this plugin
+
+function(megamol_plugin PLUGIN_NAME)
+  # Parse arguments
+  set(oneValueArgs DIR BUILD_DEFAULT)
+  set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
+  cmake_parse_arguments(MMPLUGIN_ARGS "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  # Upper case plugin name
+  string(TOUPPER ${PLUGIN_NAME} PLUGIN_NAME_UPPER)
+
+  # Enable plugin build option
+  option(BUILD_${PLUGIN_NAME_UPPER}_PLUGIN "Option to build ${PLUGIN_NAME}" ON)
+
+  if (BUILD_${PLUGIN_NAME_UPPER}_PLUGIN)
+    # Set plugin enabled flag
+    set(${PLUGIN_NAME}_PLUGIN_ENABLED ON PARENT_SCOPE)
+
+    # Default DIR argument to CMAKE_CURRENT_SOURCE_DIR
+    if (NOT DEFINED MMPLUGIN_ARGS_DIR)
+      set(MMPLUGIN_ARGS_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    endif ()
+
+    # Collect files within default plugin structure
+    file(GLOB_RECURSE public_header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "include/*.h")
+    file(GLOB_RECURSE header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "src/*.h")
+    file(GLOB_RECURSE source_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "src/*.cpp")
+    file(GLOB_RECURSE shader_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "Shaders/*")
+
+    # Target definition
+    add_library(${PLUGIN_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${shader_files})
+    target_include_directories(${PLUGIN_NAME}
+      PUBLIC
+        $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/include>
+      PRIVATE
+        $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/src>)
+
+    # Link
+    foreach (external ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+      require_external(${external})
+    endforeach ()
+    target_link_libraries(${PLUGIN_NAME} PRIVATE core ${MMPLUGIN_ARGS_DEPENDS_PLUGINS} ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+
+    # Install Shaders
+    install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/Shaders/ DESTINATION "share/shaders")
+
+    # Grouping in Visual Studio
+    set_target_properties(${PLUGIN_NAME} PROPERTIES
+      FOLDER plugins)
+    source_group("Public Header Files" FILES ${public_header_files})
+    source_group("Header Files" FILES ${header_files})
+    source_group("Source Files" FILES ${source_files})
+    source_group("Shaders" FILES ${shader_files})
+
+    # Register plugin
+    megamol_register_plugin(${PLUGIN_NAME})
+  endif ()
+endfunction()
+
 file(GLOB plugins RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/" *)
-foreach(plugin ${plugins})
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${plugin}/CMakeLists.txt" AND NOT ${plugin} STREQUAL "template")
+foreach (plugin ${plugins})
+  if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${plugin}/CMakeLists.txt" AND NOT ${plugin} STREQUAL "template")
     add_subdirectory(${plugin})
-  endif()
-endforeach()
+  endif ()
+endforeach ()
