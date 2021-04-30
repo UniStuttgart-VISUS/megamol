@@ -37,7 +37,7 @@ function(megamol_plugin PLUGIN_NAME)
     file(GLOB_RECURSE public_header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "include/*.h")
     file(GLOB_RECURSE header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "src/*.h")
     file(GLOB_RECURSE source_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "src/*.cpp")
-    file(GLOB_RECURSE shader_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "Shaders/*")
+    file(GLOB_RECURSE shader_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "shaders/*")
 
     # Target definition
     add_library(${PLUGIN_NAME} OBJECT ${public_header_files} ${header_files} ${source_files} ${shader_files})
@@ -62,9 +62,9 @@ function(megamol_plugin PLUGIN_NAME)
     # Link
     target_link_libraries(${PLUGIN_NAME} PRIVATE core ${MMPLUGIN_ARGS_DEPENDS_PLUGINS} ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
 
-    # Install Shaders
-    if (EXISTS "${MMPLUGIN_ARGS_DIR}/Shaders")
-      install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/Shaders/ DESTINATION "share/shaders")
+    # Install shaders
+    if (EXISTS "${MMPLUGIN_ARGS_DIR}/shaders")
+      install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/shaders/ DESTINATION "share/shaders")
     endif ()
     # Install resources
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/resources")
