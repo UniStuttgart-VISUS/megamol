@@ -1,5 +1,5 @@
 
-// TODO: Implementation is wrong! Does positional Lighting instead of directional lighting!
+// DIRECTIONAL LIGHTING (Blinn Phong)
 
 // ray:      the eye to fragment ray vector
 // normal:   the normal of this fragment
@@ -8,7 +8,7 @@
 
 vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightdir, const in vec3 color) {
 
-    vec3 lightdirn = normalize(lightdir);
+    vec3 lightdirn = normalize(-lightdir); // (negativ light dir for directional lighting)
 
     vec4 lightparams = vec4(0.2, 0.8, 0.4, 10.0);
 #define LIGHT_AMBIENT  lightparams.x
@@ -22,5 +22,5 @@ vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightd
 
     return LIGHT_AMBIENT  * color 
          + LIGHT_DIFFUSE  * color * max(nDOTl, 0.0);
-         //+ LIGHT_SPECULAR * vec3(pow(max(dot(r, -ray), 0.0), LIGHT_EXPONENT));
+         //+ LIGHT_SPECULAR * vec3(pow(max(dot(r, ray), 0.0), LIGHT_EXPONENT));
 }
