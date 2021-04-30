@@ -221,7 +221,7 @@ void main() {
   <shader name="fragment">
     <snippet type="version">110</snippet>
     <snippet name="commondefines"/>
-    <snippet name="::common::lighting::simple"/>
+    <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
     <snippet type="string">
       <!--
 uniform vec4 viewAttr;

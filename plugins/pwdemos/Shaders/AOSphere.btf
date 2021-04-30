@@ -413,7 +413,7 @@ varying vec3 aoNeg;
     <shader name="fragLightAO">
       <snippet type="version">110</snippet>
       <snippet name="common::defines"/>
-      <snippet name="common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="base::fragment::attributes" />
       <snippet type="string">
         <![CDATA[
@@ -442,7 +442,7 @@ FLACH varying vec3 aoNeg;
     <shader name="fragColourAO">
       <snippet type="version">110</snippet>
       <snippet name="common::defines"/>
-      <snippet name="common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="base::fragment::attributes" />
       <snippet type="string">
         <![CDATA[
@@ -460,7 +460,7 @@ FLACH varying vec3 aoNeg;
     <shader name="fragAO">
       <snippet type="version">110</snippet>
       <snippet name="common::defines"/>
-      <snippet name="common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="base::fragment::attributes" />
       <snippet type="string">
         <![CDATA[
@@ -542,7 +542,7 @@ gl_FragData[1] = vec4(gl_NormalMatrix * normal, 1.0);
     <shader name="fragLightAO">
       <snippet type="version">110</snippet>
       <snippet name="common::defines"/>
-      <snippet name="common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="base::fragment::attributes" />
       <snippet type="string">
         <![CDATA[
@@ -566,7 +566,7 @@ uniform sampler3D aoVol;
     <shader name="fragColourAO">
       <snippet type="version">110</snippet>
       <snippet name="common::defines"/>
-      <snippet name="common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="base::fragment::attributes" />
       <snippet type="string">
         <![CDATA[
@@ -583,7 +583,7 @@ uniform sampler3D aoVol;
     <shader name="fragAO">
       <snippet type="version">110</snippet>
       <snippet name="common::defines"/>
-      <snippet name="common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="base::fragment::attributes" />
       <snippet type="string">
         <![CDATA[

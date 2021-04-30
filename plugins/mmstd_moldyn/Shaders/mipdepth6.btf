@@ -360,7 +360,6 @@ void main(void) {
         <snippet name="common::defines" />
 
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
-        <!-- <snippet name="common::lighting::simple" /> -->
         
         <snippet type="string">
 <![CDATA[
@@ -602,7 +601,6 @@ varying vec3 interpolRay;
             </snippet>
             
             <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
-            <!-- <snippet name="common::lighting::simple" /> -->
 
             <snippet type="string">
  <![CDATA[
