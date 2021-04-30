@@ -66,6 +66,10 @@ function(megamol_plugin PLUGIN_NAME)
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/Shaders")
       install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/Shaders/ DESTINATION "share/shaders")
     endif ()
+    # Install resources
+    if (EXISTS "${MMPLUGIN_ARGS_DIR}/resources")
+      install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/resources/ DESTINATION "share/resources")
+    endif ()
 
     # Grouping in Visual Studio
     set_target_properties(${PLUGIN_NAME} PROPERTIES
