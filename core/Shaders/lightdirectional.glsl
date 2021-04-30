@@ -6,7 +6,7 @@
 // lightdir: the direction of the light 
 // color:    the base material color
 
-//#define USE_LIGHT_SPECULAR
+//#define USE_SPECULAR_COMPONENT
 
 vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightdir, const in vec3 color) {
 
@@ -21,10 +21,10 @@ vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightd
     float nDOTl = dot(normal, lightdirn);
 
     vec3 specular_color = vec3(0.0, 0.0, 0.0);
-#ifdef USE_LIGHT_SPECULAR
+#ifdef USE_SPECULAR_COMPONENT
     vec3 r = normalize(2.0 * vec3(nDOTl) * normal - lightdirn);
     specular_color = LIGHT_SPECULAR * vec3(pow(max(dot(r, -ray), 0.0), LIGHT_EXPONENT));
-#endif // USE_LIGHT_SPECULAR
+#endif // USE_SPECULAR_COMPONENT
 
     return LIGHT_AMBIENT  * color 
          + LIGHT_DIFFUSE  * color * max(nDOTl, 0.0)
