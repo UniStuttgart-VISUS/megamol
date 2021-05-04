@@ -123,9 +123,8 @@ namespace gui {
 
         // SET ----------------------------------------------------------------
 
-        inline void SetName(const std::string& module_name) {
-            this->name = module_name;
-        }
+        void SetName(const std::string& module_name);
+
         inline void SetGraphEntryName(const std::string& graph_entry) {
             this->graph_entry_name = graph_entry;
         }

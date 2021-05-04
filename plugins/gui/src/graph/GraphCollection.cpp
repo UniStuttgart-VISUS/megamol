@@ -1132,9 +1132,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 /// DEBUG
                 /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] >>>> '%s'\n", value_str.c_str());
 
-                /// XXX
+                /// XXX Parameter Full Name
                 param_slot_full_name = "::" + param_slot_full_name;
-                /// XXX
                 // Searching for parameter
                 if (graph_ptr != nullptr) {
                     for (auto& module_ptr : graph_ptr->Modules()) {
@@ -1215,12 +1214,11 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                             (parameter.Type() != ParamType_t::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
-                            /// XXX
+                            /// XXX Parameter Full Name
                             auto param_fullname = parameter.FullName();
                             if (param_fullname.find("::::") != std::string::npos) {
                                 param_fullname = param_fullname.substr(2);
                             }
-                            /// XXX
                             vislib::UTF8Encoder::Encode(
                                 valueString, vislib::StringA(parameter.GetValueString().c_str()));
                             confParams << "mmSetParamValue(\"" << param_fullname << "\",[=["
