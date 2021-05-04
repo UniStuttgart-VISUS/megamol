@@ -22,9 +22,9 @@ function(megamol_plugin PLUGIN_NAME)
   string(TOUPPER ${PLUGIN_NAME} PLUGIN_NAME_UPPER)
 
   # Enable plugin build option
-  option(BUILD_${PLUGIN_NAME_UPPER}_PLUGIN "Option to build ${PLUGIN_NAME}" ON)
+  option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" ${MMPLUGIN_ARGS_BUILD_DEFAULT})
 
-  if (BUILD_${PLUGIN_NAME_UPPER}_PLUGIN)
+  if (BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
     # Set plugin enabled flag
     set(${PLUGIN_NAME}_PLUGIN_ENABLED ON PARENT_SCOPE)
 
