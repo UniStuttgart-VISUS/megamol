@@ -355,30 +355,34 @@ function(require_external NAME)
 
   # imgui
   elseif(NAME STREQUAL "imgui")
-    if(NOT TARGET imgui)
-      require_external(glfw)
-      external_get_property(glfw INSTALL_DIR)
-
-      if(WIN32)
-        set(IMGUI_LIB "lib/imgui.lib")
-      else()
-        set(IMGUI_LIB "lib/libimgui.a")
-      endif()
-
-      add_external_project(imgui STATIC
-        GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG 085cff2fe58077a4a0bf1f9e9284814769141801 # docking branch > version "1.82"
-        BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
-        PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-          "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
-          "<SOURCE_DIR>/CMakeLists.txt"
-        CMAKE_ARGS
-          -DGLAD_INCLUDE_DIR:PATH=${CMAKE_SOURCE_DIR}/externals/glad/include
-          -DGLFW_INCLUDE_DIR:PATH=${INSTALL_DIR}/include)
-
-      add_external_library(imgui
-        LIBRARY ${IMGUI_LIB})
+    if(TARGET imgui)
+      return()
     endif()
+
+    require_external(glfw)
+    external_get_property(glfw INSTALL_DIR)
+
+    if(WIN32)
+      set(IMGUI_LIB "lib/imgui.lib")
+    else()
+      set(IMGUI_LIB "lib/libimgui.a")
+    endif()
+
+    add_external_project(imgui STATIC
+      GIT_REPOSITORY https://github.com/ocornut/imgui.git
+      GIT_TAG 085cff2fe58077a4a0bf1f9e9284814769141801 # docking branch > version "1.82"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
+        "<SOURCE_DIR>/CMakeLists.txt"
+      DEPENDS
+        glfw
+      CMAKE_ARGS
+        -DGLAD_INCLUDE_DIR:PATH=${CMAKE_SOURCE_DIR}/externals/glad/include
+        -DGLFW_INCLUDE_DIR:PATH=${INSTALL_DIR}/include)
+
+    add_external_library(imgui
+      LIBRARY ${IMGUI_LIB})
 
   # imguizmoquat
   elseif(NAME STREQUAL "imguizmoquat")
