@@ -25,7 +25,7 @@ uniform sampler2D paramTex;
 uniform sampler2D colourTex;
 ]]>
         </snippet>
-        <snippet name="common::lighting::simple"/>
+        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
         <snippet type="string">
             <![CDATA[
 

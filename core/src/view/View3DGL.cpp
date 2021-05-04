@@ -423,6 +423,8 @@ bool View3DGL::create(void) {
     AbstractView3D::create();
 
     this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    this->_fbo->Create(1, 1, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+        vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
 
     this->_cursor2d.SetButtonCount(3);
 

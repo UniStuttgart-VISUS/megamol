@@ -246,7 +246,7 @@ int main(const int argc, const char** argv) {
     if (graph_resources_ok)
     for (auto& file : config.project_files) {
         if (!projectloader_service.load_file(file)) {
-            log("Project file \"" + file + "\" did not execute correctly");
+            log_error("Project file \"" + file + "\" did not execute correctly");
             run_megamol = false;
 
             // if interactive, continue to run MegaMol
@@ -254,6 +254,17 @@ int main(const int argc, const char** argv) {
                 log_warning("Interactive mode: start MegaMol anyway");
                 run_megamol = true;
             }
+        }
+    }
+
+    // execute Lua commands passed via CLI
+    if (graph_resources_ok)
+    if (!config.cli_execute_lua_commands.empty()) {
+        std::string lua_result;
+        bool cli_lua_ok = lua_api.RunString(config.cli_execute_lua_commands, lua_result);
+        if (!cli_lua_ok) {
+            run_megamol = false;
+            log_error("Error in CLI Lua command: " + lua_result);
         }
     }
 

@@ -23,10 +23,12 @@ glowl::GLSLProgram::ShaderSourceList::value_type make_glowl_shader_source(
 
 
 template<typename... Paths>
-std::enable_if_t<(std::is_convertible_v<std::filesystem::path, Paths> && ...), std::unique_ptr<glowl::GLSLProgram>>
-make_glowl_shader(megamol::shaderfactory::compiler_options const& options, Paths... paths) {
-    return std::make_unique<glowl::GLSLProgram>(
+std::enable_if_t<(std::is_convertible_v<Paths, std::filesystem::path> && ...), std::unique_ptr<glowl::GLSLProgram>>
+make_glowl_shader(std::string const& label, megamol::shaderfactory::compiler_options const& options, Paths... paths) {
+    auto program = std::make_unique<glowl::GLSLProgram>(
         glowl::GLSLProgram::ShaderSourceList{make_glowl_shader_source(paths, options)...});
+    program->setDebugLabel(label);
+    return program;
 }
 
 } // end namespace megamol::core::utility
