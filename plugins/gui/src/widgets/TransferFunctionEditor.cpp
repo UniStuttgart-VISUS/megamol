@@ -10,6 +10,9 @@
 #include "graph/Parameter.h"
 
 
+#define TF_FLOAT_EPS 1e-5f
+
+
 using namespace megamol;
 using namespace megamol::gui;
 using namespace megamol::core;
@@ -115,7 +118,7 @@ PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
 
 void RampAdapter(TransferFunctionParam::NodeVector_t& nodes, size_t n) {
     nodes.clear();
-    nodes.push_back({0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f});
+    nodes.push_back({0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.05f});
     nodes.push_back({1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f});
 }
 
@@ -190,6 +193,9 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->widget_buffer.tex_size = this->texture_size;
     this->widget_buffer.gauss_sigma = 0.05f;
     this->widget_buffer.range_value = 0.0f;
+
+    // Load ramp as initial preset
+    RampAdapter(this->nodes, this->texture_size);
 }
 
 
@@ -455,14 +461,8 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         this->drawFunctionPlot(canvas_size);
 
         // Paint mode for plot
-        if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::GAUSS) {
-            megamol::gui::GUIUtils::ReadOnlyWigetStyle(true);
-        }
         megamol::gui::ButtonWidgets::ToggleButton("Paint Mode", this->plot_paint_mode);
         this->tooltip.Marker("[Left Drag] Create new nodes at mouse position.");
-        if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::GAUSS) {
-            megamol::gui::GUIUtils::ReadOnlyWigetStyle(false);
-        }
 
         // Color channels -----------------------------------------------------
         float available_width = tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX();
@@ -512,11 +512,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             for (size_t i = 0; i < opts_cnt; ++i) {
                 if (ImGui::Selectable(opts[(TransferFunctionParam::InterpolationMode) i].c_str(),
                         (this->interpolation_mode == (TransferFunctionParam::InterpolationMode) i))) {
-
                     this->interpolation_mode = (TransferFunctionParam::InterpolationMode) i;
-                    if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::GAUSS) {
-                        this->plot_paint_mode = false;
-                    }
                     this->reload_texture = true;
                 }
             }
@@ -786,7 +782,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
     const float line_width = (2.0f * megamol::gui::gui_scaling.Get());
     const float point_radius = (6.0f * megamol::gui::gui_scaling.Get());
-    const float point_border_width = (1.5f * megamol::gui::gui_scaling.Get());
+    const float point_border_width = (2.0f * megamol::gui::gui_scaling.Get());
     const float point_border_radius = point_radius + point_border_width;
     ImVec2 delta_border = style.ItemInnerSpacing;
 
@@ -870,8 +866,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
             if ((((i != current_selected_node_index) || (c != current_selected_channel_index)) &&
                     (i != this->selected_node_index)) &&
-                /*1*/ ((point_radius * 1.25f) > (canvas_size.x / static_cast<float>(this->texture_size)))) {
-                /*2*/ // ((static_cast<float>(node_count) * point_radius * 1.25f) > canvas_size.x)) {
+                /*1*/ //((point_radius * 1.25f) > (canvas_size.x / static_cast<float>(this->texture_size)))) {
+                /*2*/ ((static_cast<float>(node_count) * point_radius * 1.25f) > canvas_size.x)) {
                 // Only draw hovered circle *1* if nodes are larger than texel size or *2* if there are too many nodes
                 continue;
             }
@@ -881,7 +877,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                 canvas_pos.y + (1.0f - this->nodes[i][c]) * canvas_size.y);
             if (i == this->selected_node_index) {
                 auto selected_circle_color = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-                drawList->AddCircle(point, point_border_radius, selected_circle_color, 0, point_border_width);
+                drawList->AddCircleFilled(point, point_border_radius, selected_circle_color);
             }
             auto point_color =
                 ImGui::ColorConvertFloat4ToU32(ImVec4(this->nodes[i][0], this->nodes[i][1], this->nodes[i][2], 1.0f));
@@ -1005,12 +1001,12 @@ bool TransferFunctionEditor::paintModeNode(
     if (delta_min_x > drag_delta_x) {
         delta_min_x = drag_delta_x;
     }
-    delta_min_x += 1e-5f;
-    float delta_max_x = (new_x + texel_delta) - 1e-5f;
+    delta_min_x += TF_FLOAT_EPS;
+    float delta_max_x = (new_x + texel_delta) - TF_FLOAT_EPS;
     if (delta_max_x < drag_delta_x) {
         delta_max_x = drag_delta_x;
     }
-    delta_max_x -= 1e-5f;
+    delta_max_x -= TF_FLOAT_EPS;
     for (unsigned int i = 0; i < node_count; i++) {
         tmp_value = this->nodes[i][4];
         if ((tmp_value > delta_min_x) && (tmp_value < delta_max_x)) {
@@ -1095,17 +1091,31 @@ bool TransferFunctionEditor::deleteNode(unsigned int node_index) {
 
 void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const {
 
+    // Save current value of selected node
     const auto n_count = n.size();
     float value = 0.0f;
     if (this->selected_node_index < n_count) {
         value = n[this->selected_node_index][4];
     }
 
+    // Sort nodes by value
     std::sort(n.begin(), n.end(),
         [](const TransferFunctionParam::NodeData_t& nd1, const TransferFunctionParam::NodeData_t& nd2) {
             return (nd1[4] < nd2[4]);
         });
 
+    // Prevent nodes with same value
+    for (size_t i = 0; i < (n_count - 1); i++) {
+        if (n[i][4] == n[i + 1][4]) {
+            if (value == 0.0f) {
+                n[i][4] += TF_FLOAT_EPS;
+            } else {
+                n[i + 1][4] += TF_FLOAT_EPS;
+            }
+        }
+    }
+
+    // Search for value of last selected node
     if (this->selected_node_index < n_count) {
         for (unsigned int i = 0; i < n_count; i++) {
             if (n[i][4] == value) {
