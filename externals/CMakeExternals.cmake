@@ -216,7 +216,7 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(EXPAT_LIB "lib/expat.lib")
+      set(EXPAT_LIB "lib/expat<SUFFIX>.lib")
     else()
       set(EXPAT_LIB "lib/libexpat.a")
     endif()
@@ -228,6 +228,7 @@ function(require_external NAME)
       GIT_TAG "R_2_2_1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${EXPAT_LIB}"
       SOURCE_SUBDIR "expat"
+      DEBUG_SUFFIX "d"
       CMAKE_ARGS
         -DBUILD_doc=OFF
         -DBUILD_examples=OFF
@@ -236,7 +237,8 @@ function(require_external NAME)
         -DBUILD_tools=OFF)
 
     add_external_library(expat
-      LIBRARY ${EXPAT_LIB})
+      LIBRARY ${EXPAT_LIB}
+      DEBUG_SUFFIX "d")
 
   # fmt
   elseif(NAME STREQUAL "fmt")

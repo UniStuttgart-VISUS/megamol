@@ -8,17 +8,6 @@
 #ifndef MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 #define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 
-
-#ifdef _WIN32
-#ifdef GUI_EXPORTS
-#define GUI_API __declspec(dllexport)
-#else
-#define GUI_API __declspec(dllimport)
-#endif
-#else // _WIN32
-#define GUI_API
-#endif // _WIN32
-
 #include "Configurator.h"
 #include "LogConsole.h"
 #include "WindowCollection.h"
@@ -50,7 +39,7 @@
 namespace megamol {
 namespace gui {
 
-    class GUI_API GUIWindows {
+    class GUIWindows {
     public:
         /**
          * CTOR.
