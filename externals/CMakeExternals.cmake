@@ -288,9 +288,9 @@ function(require_external NAME)
       PROJECT glad
       LIBRARY ${GLAD_LIB})
 
-  # glfw3
-  elseif(NAME STREQUAL "glfw3")
-    if(TARGET glfw3)
+  # glfw
+  elseif(NAME STREQUAL "glfw")
+    if(TARGET glfw)
       return()
     endif()
 
@@ -312,7 +312,7 @@ function(require_external NAME)
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF)
 
-    add_external_library(glfw3
+    add_external_library(glfw
       PROJECT glfw
       LIBRARY ${GLFW_LIB})
 
@@ -356,6 +356,9 @@ function(require_external NAME)
   # imgui
   elseif(NAME STREQUAL "imgui")
     if(NOT TARGET imgui)
+      require_external(glfw)
+      external_get_property(glfw INSTALL_DIR)
+
       if(WIN32)
         set(IMGUI_LIB "lib/imgui.lib")
       else()
@@ -368,23 +371,14 @@ function(require_external NAME)
         BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
         PATCH_COMMAND ${CMAKE_COMMAND} -E copy
           "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
-          "<SOURCE_DIR>/CMakeLists.txt")
+          "<SOURCE_DIR>/CMakeLists.txt"
+        CMAKE_ARGS
+          -DGLAD_INCLUDE_DIR:PATH=${CMAKE_SOURCE_DIR}/externals/glad/include
+          -DGLFW_INCLUDE_DIR:PATH=${INSTALL_DIR}/include)
 
       add_external_library(imgui
         LIBRARY ${IMGUI_LIB})
     endif()
-
-    external_get_property(imgui SOURCE_DIR)
-
-    target_include_directories(imgui INTERFACE "${SOURCE_DIR}/backends" "${SOURCE_DIR}/misc/cpp")
-
-    set(imgui_files
-      "${SOURCE_DIR}/imgui_tables.cpp"
-      "${SOURCE_DIR}/backends/imgui_impl_opengl3.cpp"
-      "${SOURCE_DIR}/backends/imgui_impl_opengl3.h"
-      "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
-      "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h"
-      PARENT_SCOPE)
 
   # imguizmoquat
   elseif(NAME STREQUAL "imguizmoquat")
@@ -393,6 +387,7 @@ function(require_external NAME)
     endif()
 
     require_external(imgui)
+    external_get_property(imgui INSTALL_DIR)
 
     if(WIN32)
       set(IMGUIZMOQUAT_LIB "lib/imguizmoquat.lib")
@@ -400,33 +395,19 @@ function(require_external NAME)
       set(IMGUIZMOQUAT_LIB "lib/libimguizmoquat.a")
     endif()
 
-    if(WIN32)
-      set(IMGUI_LIB "lib/imgui.lib")
-    else()
-      set(IMGUI_LIB "lib/libimgui.a")
-    endif()
-
-    external_get_property(imgui INSTALL_DIR)
-
     add_external_project(imguizmoquat STATIC
       GIT_REPOSITORY https://github.com/braunms/imGuIZMO.quat.git
       GIT_TAG "v3.0a"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUIZMOQUAT_LIB}"
       DEPENDS imgui
       CMAKE_ARGS
-        -DIMGUI_LIBRARY:PATH=${INSTALL_DIR}/${IMGUI_LIB}
         -DIMGUI_INCLUDE_DIR:PATH=${INSTALL_DIR}/include
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-          "${CMAKE_SOURCE_DIR}/externals/imguizmoquat/CMakeLists.txt"
-          "<SOURCE_DIR>/CMakeLists.txt")
+        "${CMAKE_SOURCE_DIR}/externals/imguizmoquat/CMakeLists.txt"
+        "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(imguizmoquat
         LIBRARY ${IMGUIZMOQUAT_LIB})
-
-    external_get_property(imguizmoquat SOURCE_DIR)
-    target_include_directories(imguizmoquat INTERFACE "${SOURCE_DIR}/imGuIZMO.quat")
 
   # libpng
   elseif(NAME STREQUAL "libpng")

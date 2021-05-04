@@ -56,11 +56,16 @@ function(megamol_plugin PLUGIN_NAME)
 
     # Externals
     foreach (external ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
-      require_external(${external})
+      if ((NOT ${external} STREQUAL "PUBLIC") AND (NOT ${external} STREQUAL "PRIVATE") AND (NOT ${external} STREQUAL "INTERFACE"))
+        require_external(${external})
+      endif ()
     endforeach ()
 
     # Link
-    target_link_libraries(${PLUGIN_NAME} PRIVATE core ${MMPLUGIN_ARGS_DEPENDS_PLUGINS} ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+    target_link_libraries(${PLUGIN_NAME}
+      PRIVATE core
+      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
+      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
 
     # Install shaders
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/shaders")
