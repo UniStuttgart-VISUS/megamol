@@ -421,6 +421,8 @@ bool view::View2DGL::create(void) {
     this->_firstImg = true;
 
     this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    this->_fbo->Create(1, 1, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+        vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
 
     return true;
 }
