@@ -14,17 +14,17 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
-  include(configure_optix)
-  find_package(CUDAToolkit)
-
   set(OPTIX_HPG_CUDA_ARCH "75" CACHE STRING "CUDA Arch for Optix HPG")
-  set_property(CACHE OPTIX_HPG_CUDA_ARCH PROPERTY STRINGS 75 86)
+  set_property(CACHE OPTIX_HPG_CUDA_ARCH PROPERTY STRINGS 75 80)
 
   if (OPTIX_HPG_CUDA_ARCH STREQUAL "75")
     set(CMAKE_CUDA_ARCHITECTURES 75)
-  elseif (OPTIX_HPG_CUDA_ARCH STREQUAL "86")
-    set(CMAKE_CUDA_ARCHITECTURES 86)
+  elseif (OPTIX_HPG_CUDA_ARCH STREQUAL "80")
+    set(CMAKE_CUDA_ARCHITECTURES 80)
   endif()
+
+  include(configure_optix)
+  find_package(CUDAToolkit)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
