@@ -22,8 +22,18 @@ function(require_external NAME)
 
   # Header-only libraries #####################################################
 
+  # asmjit
+  if(NAME STREQUAL "asmjit")
+    if(TARGET asmjit)
+      return()
+    endif()
+
+    add_external_headeronly_project(asmjit INTERFACE
+      GIT_REPOSITORY https://github.com/asmjit/asmjit.git
+      GIT_TAG "8474400e82c3ea65bd828761539e5d9b25f6bd83" )
+
   # Delaunator
-  if(NAME STREQUAL "Delaunator")
+  elseif(NAME STREQUAL "Delaunator")
     if(TARGET Delaunator)
       return()
     endif()
@@ -185,7 +195,6 @@ function(require_external NAME)
         GIT_TAG "v2.1.0"
         INCLUDE_DIR "include")
 
-
   # bhtsne
   elseif(NAME STREQUAL "bhtsne")
     if(TARGET bhtsne)
@@ -208,6 +217,33 @@ function(require_external NAME)
 
     add_external_library(bhtsne
       LIBRARY ${BHTSNE_LIB})
+
+  # blend2d
+  elseif(NAME STREQUAL "blend2d")
+    if(TARGET blend2d)
+      return()
+    endif()
+
+    if(WIN32)
+      set(BLEND2D_LIB "lib/blend2d.lib")
+    else()
+      set(BLEND2D_LIB "lib/libblend2d.a")
+    endif()
+
+    require_external(asmjit)
+    external_get_property(asmjit SOURCE_DIR)
+
+    add_external_project(blend2d STATIC
+      GIT_REPOSITORY https://github.com/blend2d/blend2d.git
+      GIT_TAG "8aeac6cb34b00898ae725bd76eb3bb2c7cffcf86"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
+      CMAKE_ARGS
+        -DASMJIT_DIR=${SOURCE_DIR})
+
+    add_external_library(blend2d
+      DEPENDS asmjit
+      INCLUDE_DIR "include"
+      LIBRARY ${BLEND2D_LIB})
 
   # expat
   elseif(NAME STREQUAL "expat")
@@ -597,6 +633,30 @@ function(require_external NAME)
       if(UNIX)
         target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
       endif()
+
+  # qhull
+  elseif(NAME STREQUAL "qhull")
+    if(TARGET qhull)
+      return()
+    endif()
+
+    if(WIN32)
+      set(QHULL_LIB "lib/qhull.lib")
+    else()
+      set(QUHULL_LIB "lib/libqhull.a")
+    endif()
+
+    add_external_project(qhull STATIC
+      GIT_REPOSITORY https://github.com/qhull/qhull.git
+      GIT_TAG "v7.3.2"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_LIB}"
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/qhull/CMakeLists.txt"
+        "<SOURCE_DIR>/CMakeLists.txt")
+
+    add_external_library(qhull
+      INCLUDE_DIR "include"
+      LIBRARY ${QHULL_LIB})
 
   # quickhull
   elseif(NAME STREQUAL "quickhull")
