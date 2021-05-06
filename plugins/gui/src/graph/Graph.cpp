@@ -149,8 +149,6 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                 ImGuiID mod_uid = megamol::gui::GenerateUniqueID();
                 auto mod_ptr =
                     std::make_shared<Module>(mod_uid, mod.class_name, mod.description, mod.plugin_name, mod.is_view);
-                mod_ptr->SetName(this->generate_unique_module_name(mod.class_name));
-                mod_ptr->SetGraphEntryName("");
 
                 for (auto& p : mod.parameters) {
                     Parameter param_slot(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
@@ -161,6 +159,10 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                     param_slot.SetGUIPresentation(p.gui_presentation);
                     mod_ptr->Parameters().emplace_back(param_slot);
                 }
+
+                /// Set after parameters are created:
+                mod_ptr->SetName(this->generate_unique_module_name(mod.class_name));
+                mod_ptr->SetGraphEntryName("");
 
                 for (auto& callslots_type : mod.callslots) {
                     for (auto& c : callslots_type.second) {

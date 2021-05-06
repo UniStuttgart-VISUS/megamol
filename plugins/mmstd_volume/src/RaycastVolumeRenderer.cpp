@@ -119,17 +119,17 @@ bool RaycastVolumeRenderer::create() {
         // create shader program
         auto const shdr_cp_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
 
-        rvc_dvr_shdr = core::utility::make_glowl_shader(
-            shdr_cp_options, std::filesystem::path("RaycastVolumeRenderer-Compute.comp.glsl"));
-        rvc_iso_shdr = core::utility::make_glowl_shader(
-            shdr_cp_options, std::filesystem::path("RaycastVolumeRenderer-Compute-Iso.comp.glsl"));
-        rvc_aggr_shdr = core::utility::make_glowl_shader(
-            shdr_cp_options, std::filesystem::path("RaycastVolumeRenderer-Compute-Aggr.comp.glsl"));
+        rvc_dvr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Compute", shdr_cp_options,
+            std::filesystem::path("RaycastVolumeRenderer-Compute.comp.glsl"));
+        rvc_iso_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Compute-Iso", shdr_cp_options,
+            std::filesystem::path("RaycastVolumeRenderer-Compute-Iso.comp.glsl"));
+        rvc_aggr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Compute-Aggr", shdr_cp_options,
+            std::filesystem::path("RaycastVolumeRenderer-Compute-Aggr.comp.glsl"));
 
-        rtf_shdr = core::utility::make_glowl_shader(shdr_cp_options,
+        rtf_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer", shdr_cp_options,
             std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
             std::filesystem::path("RaycastVolumeRenderer-Fragment.frag.glsl"));
-        rtf_aggr_shdr = core::utility::make_glowl_shader(shdr_cp_options,
+        rtf_aggr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Aggr", shdr_cp_options,
             std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
             std::filesystem::path("RaycastVolumeRenderer-Fragment-Aggr.frag.glsl"));
     } catch (...) {

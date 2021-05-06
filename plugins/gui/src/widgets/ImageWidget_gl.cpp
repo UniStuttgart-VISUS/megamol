@@ -13,7 +13,19 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-ImageWidget::ImageWidget(void) : tex_ptr(nullptr), tooltip() {}
+megamol::gui::ImageWidget::ImageWidget(void) : tex_ptr(nullptr), tooltip() {}
+
+
+bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename) {
+    for (auto& resource_directory : megamol::gui::gui_resource_paths) {
+        std::string filename_path =
+            megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, filename);
+        if (!filename_path.empty()) {
+            return megamol::core::view::RenderUtils::LoadTextureFromFile(this->tex_ptr, filename_path);
+        }
+    }
+    return false;
+}
 
 
 void megamol::gui::ImageWidget::Widget(ImVec2 size, ImVec2 uv0, ImVec2 uv1) {

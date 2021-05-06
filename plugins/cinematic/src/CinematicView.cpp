@@ -642,14 +642,8 @@ bool CinematicView::render_to_file_write() {
         if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
             project = this->GetCoreInstance()->SerializeGraph();
         } else {
-            auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
-                [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
-            if (megamolgraph_it != this->frontend_resources.end()) {
-                if (auto megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>()) {
-                    project =
-                        const_cast<megamol::core::MegaMolGraph*>(megamolgraph_ptr)->Convenience().SerializeGraph();
-                }
-            }
+            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+            project = const_cast<megamol::core::MegaMolGraph&>(megamolgraph).Convenience().SerializeGraph();
         }
 
         megamol::core::utility::graphics::ScreenShotComments ssc(project);

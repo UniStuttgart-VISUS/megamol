@@ -37,7 +37,7 @@ namespace gui {
             const std::string& id, const megamol::gui::Parameter& param, const std::string& param_fullname);
 
         /** Toggle Button */
-        // https://github.com/ocornut/imgui/issues/1537#issuecomment-780262461
+        // https://github.com/ocornut/imgui/issues/1537#issuecomment-355569554
         static bool ToggleButton(const std::string& id, bool& inout_bool);
 
     private:

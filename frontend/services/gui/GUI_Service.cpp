@@ -237,6 +237,7 @@ void GUI_Service::digestChangedRequestedResources() {
     gui->SetFrameStatistics(frame_statistics.last_averaged_fps, frame_statistics.last_averaged_mspf, frame_statistics.rendered_frames_count);
 
     /// Get resource directories = resource index 10
+    // XXX Only needed to request once?!
     auto& runtime_config =
         this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
     if (!runtime_config.resource_directories.empty()) {

@@ -53,7 +53,7 @@ Module::~Module(void) {
 bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) {
     using megamol::core::utility::log::Log;
 
-    this->frontend_resources = resources;
+    this->frontend_resources = {resources}; // put resources in hash map using type hashes of present resources
 
     ASSERT(this->instance() != NULL);
     if (!this->created) {
