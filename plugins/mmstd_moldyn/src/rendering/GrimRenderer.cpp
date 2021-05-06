@@ -379,7 +379,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     core::view::Camera cam = call.GetCamera();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
     auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
-    auto fbo = call.GetFramebufferObject();
+    auto fbo = call.GetFramebuffer();
 
     glm::mat4 view_matrix = cam.getViewMatrix();
     glm::mat4 proj_matrix = cam.getProjectionMatrix();
@@ -1319,7 +1319,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         } else {
 
             // REACTIVATE TARGET FBO
-            cr->GetFramebufferObject()->bind();
+            cr->GetFramebuffer()->bind();
         }
 
         glEnable(GL_DEPTH_TEST);
@@ -1760,7 +1760,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     // deferred shading ///////////////////////////////////////////////////////
     if (deferredShading) {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 8, -1, "grim-deferred-shading");
-        cr->GetFramebufferObject()->bind();
+        cr->GetFramebuffer()->bind();
 
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);

@@ -8,17 +8,14 @@
 #ifndef MEGAMOLCORE_BASEVIEW_H_INCLUDED
 #define MEGAMOLCORE_BASEVIEW_H_INCLUDED
 
+#include "AbstractCallRenderView.h"
 #include "AbstractView.h"
 
 namespace megamol {
 namespace core {
     namespace view {
 
-        template<typename FBO_TYPE>
-        using RESIZEFUNC = void(std::shared_ptr<FBO_TYPE>&, int, int);
-
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
         class MEGAMOLCORE_API BaseView : public AbstractView {
         public:
             BaseView();
@@ -37,7 +34,8 @@ namespace core {
                 return true;
             }
 
-            
+            virtual bool GetExtents(Call& call) override;
+
             /**
              * Callback requesting a rendering of this view
              *
@@ -47,14 +45,13 @@ namespace core {
              */
             virtual bool OnRenderView(Call& call) override;
 
-        protected:
             /**
-             * Implementation of 'Create'.
-             *
-             * @return 'true' on success, 'false' otherwise.
+             * Resets the view. This normally sets the camera parameters to
+             * default values.
              */
-            virtual bool create(void);
+            void ResetView();
 
+        protected:
             /**
              * Implementation of 'Release'.
              */
@@ -63,17 +60,7 @@ namespace core {
             }
 
             /**
-             * Answer the camera synchronization number.
-             *
-             * @return The camera synchronization number
-             */
-            virtual unsigned int GetCameraSyncNumber(void) const {
-                // implemented here to to avoid duplicated empty implementations in View3D(GL)
-                return 0;
-            }
-
-            /**
-             * Resizes the framebuffer object and sets camera aspect ratio if applicable.
+             * Sets camera aspect ratio if applicable.
              *
              * @param width The new width.
              * @param height The new height.
@@ -92,17 +79,14 @@ namespace core {
             virtual bool OnMouseScroll(double dx, double dy) override;
 
         protected:
-            std::shared_ptr<typename FBO_TYPE> _fbo;
+            std::shared_ptr<typename VIEWCALL_TYPE::FBO_TYPE> _fbo;
 
             CAM_CONTROLLER_TYPE _camera_controller;
-
-            CAM_PARAMS_TYPE _camera_parameters;
         };
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::BaseView()
-                : _fbo(nullptr), _camera_controller(&this->_camera), _camera_parameters() {
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::BaseView()
+                : _fbo(nullptr), _camera_controller(&this->_camera) {
 
             // none of the saved camera states are valid right now
             for (auto& e : this->_savedCameras) {
@@ -113,55 +97,109 @@ namespace core {
             for (auto& param_slot : cam_ctrl_param_slots) {
                 this->MakeSlotAvailable(param_slot);
             }
-
-            auto cam_param_slots = this->_camera_parameters.getParameterSlots();
-            for (auto& param_slot : cam_param_slots) {
-                this->MakeSlotAvailable(param_slot);
-            }
         }
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline void BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::beforeRender(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline void
+        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::beforeRender(
             double time, double instanceTime) {
             AbstractView::beforeRender(time, instanceTime);
 
             // get camera values from params(?)
-            this->_camera = this->_camera_parameters.getCameraFromParameters(
-                this->_camera, this->_camera_controller.getRotationalCenter());
+            _camera_controller.applyParameterSlotsToCamera();
 
             // handle 3D view specific camera implementation
             float dt = std::chrono::duration<float>(this->_lastFrameDuration).count();
-            this->_camera_controller.handleCameraMovement(dt);
+            _camera_controller.handleCameraMovement(dt);
 
             // set camera values to params
-            this->_camera_parameters.setParametersFromCamera(this->_camera);
+            _camera_controller.setParameterSlotsFromCamera();
         }
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline void BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::afterRender() {
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline void
+        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::afterRender() {
             AbstractView::afterRender();
         }
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline bool BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::OnRenderView(Call& call) {
-            return false;
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::GetExtents(Call& call) {
+            VIEWCALL_TYPE* crv = dynamic_cast<VIEWCALL_TYPE*>(&call);
+            if (crv == nullptr) {
+                return false;
+            }
+
+            AbstractCallRender* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
+            if (cr == nullptr) {
+                return false;
+            }
+            cr->SetCamera(this->_camera);
+
+            if (!(*cr)(AbstractCallRender::FnGetExtents)) {
+                return false;
+            }
+
+            crv->SetTimeFramesCount(cr->TimeFramesCount());
+            crv->SetIsInSituTime(cr->IsInSituTime());
+            return true;
         }
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline bool BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::create(void) {
-            return false;
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline bool
+        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnRenderView(
+            Call& call) {
+            VIEWCALL_TYPE* crv = dynamic_cast<VIEWCALL_TYPE*>(&call);
+            if (crv == NULL) {
+                return false;
+            }
+
+            // get time from incoming call
+            double time = crv->Time();
+            if (time < 0.0f)
+                time = this->DefaultTime(crv->InstanceTime());
+            double instanceTime = crv->InstanceTime();
+
+            auto fbo = _fbo;
+            _fbo = crv->GetFramebuffer();
+
+            auto cam_cpy = _camera;
+            auto cam_pose = _camera.get<Camera::Pose>();
+            auto cam_type = _camera.get<Camera::ProjectionType>();
+            if (cam_type == Camera::ORTHOGRAPHIC) {
+                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
+                _camera = Camera(cam_pose, cam_intrinsics);
+            } else if (cam_type == Camera::ORTHOGRAPHIC) {
+                auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+                cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
+                _camera = Camera(cam_pose, cam_intrinsics);
+            }
+
+            this->Render(time, instanceTime, false);
+
+            _fbo = fbo;
+            _camera = cam_cpy;
+
+            return true;
         }
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline void BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::Resize(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline void
+        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::ResetView() {
+            if (this->_cameraIsMutable) { // check if view is in control of the camera
+                AbstractCallRender* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
+                if ((cr != nullptr) && (_fbo != nullptr) && ((*cr)(AbstractCallRender::FnGetExtents))) {
+                    this->_camera_controller.reset(
+                        this->_bboxs, static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight()));
+                }
+            } else {
+                // TODO print warning
+            }
+        }
+
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline void BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::Resize(
             unsigned int width, unsigned int height) {
-
-            resize_func(_fbo, width, height);
 
             if (_cameraIsMutable) { // view seems to be in control of the camera
                 auto cam_pose = _camera.get<Camera::Pose>();
@@ -177,9 +215,8 @@ namespace core {
             }
         }
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline bool BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::OnKey(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline bool BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnKey(
             view::Key key, view::KeyAction action, view::Modifiers mods) {
             auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
             if (cr != nullptr) {
@@ -219,9 +256,8 @@ namespace core {
             return false;
         }
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline bool BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::OnChar(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline bool BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnChar(
             unsigned int codePoint) {
             auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
             if (cr == NULL)
@@ -241,9 +277,9 @@ namespace core {
             return true;
         }
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline bool BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::OnMouseButton(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline bool
+        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnMouseButton(
             view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
             if (!this->_camera_controller.isOverriding() && !this->_camera_controller.isActive()) {
                 auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
@@ -288,9 +324,9 @@ namespace core {
             return true;
         }
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline bool BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::OnMouseMove(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline bool
+        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnMouseMove(
             double x, double y) {
             if (!this->_camera_controller.isActive()) {
                 auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
@@ -334,9 +370,9 @@ namespace core {
             return true;
         }
 
-        template<typename FBO_TYPE, RESIZEFUNC<typename FBO_TYPE> resize_func, typename CAM_CONTROLLER_TYPE,
-            typename CAM_PARAMS_TYPE>
-        inline bool BaseView<FBO_TYPE, resize_func, CAM_CONTROLLER_TYPE, CAM_PARAMS_TYPE>::OnMouseScroll(
+        template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
+        inline bool
+        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnMouseScroll(
             double dx, double dy) {
             auto* cr = this->_rhsRenderSlot.CallAs<view::AbstractCallRender>();
             if (cr != NULL) {

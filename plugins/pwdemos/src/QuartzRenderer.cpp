@@ -95,7 +95,7 @@ bool QuartzRenderer::Render(core::view::CallRender3DGL& call) {
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
-    auto fbo = call.GetFramebufferObject();
+    auto fbo = call.GetFramebuffer();
 
     // Generate complete snapshot and calculate matrices
     glm::vec4 viewport = glm::vec4(0, 0, fbo->getWidth(), fbo->getHeight());

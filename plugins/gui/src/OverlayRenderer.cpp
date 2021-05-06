@@ -434,7 +434,7 @@ bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 bool OverlayRenderer::Render(view::CallRender3DGL& call) {
 
     // Framebuffer object
-    auto fbo = call.GetFramebufferObject();
+    auto fbo = call.GetFramebuffer();
 
     auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (cr3d_out != nullptr) {

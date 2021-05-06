@@ -71,13 +71,6 @@ public:
     virtual float DefaultTime(double instTime) const;
 
     /**
-     * Answer the camera synchronization number.
-     *
-     * @return The camera synchronization number
-     */
-    virtual unsigned int GetCameraSyncNumber(void) const;
-
-    /**
      * Serialises the camera of the view
      *
      * @param serialiser Serialises the camera of the view
@@ -97,6 +90,8 @@ public:
      * @param context
      */
     virtual ImageWrapper Render(double time, double instanceTime, bool present_fbo) override;
+
+    ImageWrapper GetRenderingResult() const override;
 
     /**
      * Resets the view. This normally sets the camera parameters to

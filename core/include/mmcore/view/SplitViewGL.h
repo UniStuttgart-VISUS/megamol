@@ -77,19 +77,14 @@ public:
     float DefaultTime(double instTime) const override;
 
     /**
-     * Answer the camera synchronization number.
-     *
-     * @return The camera synchronization number
-     */
-    unsigned int GetCameraSyncNumber() const override;
-
-    /**
      * Renders this SplitView.
      *
      * @param time ...
      * @param instanceTime ...
      */
     virtual ImageWrapper Render(double time, double instanceTime, bool present_fbo) override;
+
+    ImageWrapper GetRenderingResult() const override;
 
     /**
      * Resets the view. This normally sets the camera parameters to

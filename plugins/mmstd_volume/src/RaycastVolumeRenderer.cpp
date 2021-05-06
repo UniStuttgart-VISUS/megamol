@@ -191,7 +191,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
-    auto cr_fbo = cr.GetFramebufferObject();
+    auto cr_fbo = cr.GetFramebuffer();
 
     if (ci != nullptr) {
         auto cam = cr.GetCamera();

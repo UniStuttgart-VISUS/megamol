@@ -64,12 +64,6 @@ float GUIView::DefaultTime(double instTime) const {
 }
 
 
-unsigned int GUIView::GetCameraSyncNumber(void) const {
-    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "[GUI] Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    return 0u;
-}
-
 core::view::ImageWrapper GUIView::Render(double time, double instanceTime, bool present_fbo) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (this->doHookCode()) {
@@ -80,7 +74,7 @@ core::view::ImageWrapper GUIView::Render(double time, double instanceTime, bool 
         auto viewport =
             glm::vec2(static_cast<float>(_fbo->getWidth()), static_cast<float>(_fbo->getHeight()));
 
-        crv->SetFramebufferObject(_fbo);
+        crv->SetFramebuffer(_fbo);
         crv->SetInstanceTime(instanceTime);
         // Should be negative to trigger animation! (see View3DGL.cpp line ~612 | View2DGL.cpp line ~661):
         crv->SetTime(-1.0f);
@@ -253,7 +247,7 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
     double instanceTime = crv->InstanceTime();
 
     _camera = crv->GetCamera();
-    this->Resize(crv->GetFramebufferObject()->getWidth(), crv->GetFramebufferObject()->getHeight());
+    this->Resize(crv->GetFramebuffer()->getWidth(), crv->GetFramebuffer()->getHeight());
 
     this->Render(time, instanceTime, false);
 

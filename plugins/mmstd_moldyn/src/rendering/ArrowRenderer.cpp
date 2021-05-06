@@ -177,7 +177,7 @@ bool ArrowRenderer::Render(view::CallRender3DGL& call) {
     glm::vec3 camView = cam_pose.direction;
     glm::vec3 camUp = cam_pose.up;
     glm::vec3 camRight = glm::cross(camView, camUp);
-    auto fbo = call.GetFramebufferObject();
+    auto fbo = call.GetFramebuffer();
 
     // Matrices
     auto view = cam.getViewMatrix();

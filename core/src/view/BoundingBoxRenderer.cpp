@@ -181,7 +181,7 @@ bool BoundingBoxRenderer::GetExtents(CallRender3DGL& call) {
 bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
 
     Camera cam = call.GetCamera();
-    auto fbo = call.GetFramebufferObject();
+    auto fbo = call.GetFramebuffer();
 
     glm::mat4 view = cam.getViewMatrix();
     glm::mat4 proj = cam.getProjectionMatrix();

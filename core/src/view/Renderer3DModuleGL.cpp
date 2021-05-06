@@ -85,7 +85,7 @@ bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
     }
 
     // bind fbo and set viewport before rendering your own stuff
-    auto fbo = call.GetFramebufferObject();
+    auto fbo = call.GetFramebuffer();
     fbo->bind();
     glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
     

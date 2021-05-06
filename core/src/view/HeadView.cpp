@@ -52,15 +52,6 @@ float view::HeadView::DefaultTime(double instTime) const {
 
 
 /*
- * view::HeadView::GetCameraSyncNumber
- */
-unsigned int view::HeadView::GetCameraSyncNumber(void) const {
-    Log::DefaultLog.WriteWarn("HeadView::GetCameraSyncNumber unsupported");
-    return 0u;
-}
-
-
-/*
  * view::HeadView::SerialiseCamera
  */
 void view::HeadView::SerialiseCamera(vislib::Serialiser& serialiser) const {
@@ -98,7 +89,7 @@ view::ImageWrapper view::HeadView::Render(double time, double instanceTime, bool
         }
 
         (*view)(CallRenderViewGL::CALL_RENDER);
-        auto fbo = view->GetFramebufferObject();
+        auto fbo = view->GetFramebuffer();
 
         if (this->doHookCode()) {
             this->doAfterRenderHook();
@@ -124,6 +115,10 @@ view::ImageWrapper view::HeadView::Render(double time, double instanceTime, bool
         (*tick)(0);
     }
 
+    return GetRenderingResult();
+}
+
+view::ImageWrapper megamol::core::view::HeadView::GetRenderingResult() const {
     return frontend_resources::wrap_image<WrappedImageType::ByteArray>(
         {0, 0}, nullptr, ImageWrapper::DataChannels::RGBA8);
 }

@@ -16,7 +16,7 @@ using namespace megamol::core::view;
 /*
  * View3D::View3D
  */
-View3D::View3D(void) : view::AbstractView3D<CPUFramebuffer, cpu_fbo_resize, Camera3DController, Camera3DParameters>() {
+View3D::View3D(void) : view::BaseView<CallRenderView, Camera3DController>() {
     this->_rhsRenderSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->_rhsRenderSlot);
 
@@ -38,17 +38,21 @@ ImageWrapper View3D::Render(double time, double instanceTime, bool present_fbo) 
 
     CallRender3D* cr3d = this->_rhsRenderSlot.CallAs<CallRender3D>();
 
-    if (cr3d == NULL) {
+    if (cr3d != NULL) {
         cr3d->SetFramebuffer(_fbo);
     
-        AbstractView3D::beforeRender(time, instanceTime);
+        BaseView::beforeRender(time, instanceTime);
     
         cr3d->SetCamera(this->_camera);
         (*cr3d)(view::CallRender3D::FnRender);
     
-        AbstractView3D::afterRender();
+        BaseView::afterRender();
     }
 
+    return GetRenderingResult();
+}
+
+ImageWrapper megamol::core::view::View3D::GetRenderingResult() const {
     ImageWrapper::DataChannels channels =
         ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
     void* data_pointer = _fbo->colorBuffer.data();
@@ -58,6 +62,25 @@ ImageWrapper View3D::Render(double time, double instanceTime, bool present_fbo) 
     return frontend_resources::wrap_image<WrappedImageType::ByteArray>({fbo_width, fbo_height}, data_pointer, channels);
 }
 
-void megamol::core::view::View3D::ResetView() {
-    AbstractView3D::ResetView(static_cast<float>(_fbo->width) / static_cast<float>(_fbo->height));
+void megamol::core::view::View3D::Resize(unsigned int width, unsigned int height) {
+    BaseView::Resize(width, height);
+
+    _fbo->colorBuffer = std::vector<uint32_t>(width*height);
+    _fbo->depthBuffer = std::vector<float>(width * height);
+    _fbo->width = width;
+    _fbo->height = height;
+}
+
+bool megamol::core::view::View3D::create(void) {
+    _fbo = std::make_shared<CallRenderView::FBO_TYPE>();
+
+    _fbo->depthBufferActive = false;
+    _fbo->colorBuffer = std::vector<uint32_t>(1);
+    _fbo->depthBuffer = std::vector<float>(1);
+    _fbo->width = 1;
+    _fbo->height = 1;
+    _fbo->x = 0;
+    _fbo->y = 0;
+
+    return true;
 }

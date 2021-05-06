@@ -52,14 +52,6 @@ float view::AbstractOverrideView::DefaultTime(double instTime) const {
 
 
 /*
- * view::AbstractOverrideView::GetCameraSyncNumber
- */
-unsigned int view::AbstractOverrideView::GetCameraSyncNumber(void) const {
-    return 0; // TODO: Implement
-}
-
-
-/*
  * view::AbstractOverrideView::SerialiseCamera
  */
 void view::AbstractOverrideView::SerialiseCamera(vislib::Serialiser& serialiser) const {

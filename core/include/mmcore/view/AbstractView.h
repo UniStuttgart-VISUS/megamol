@@ -116,13 +116,6 @@ public:
     virtual bool IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const;
 
     /**
-     * Answer the camera synchronization number.
-     *
-     * @return The camera synchronization number
-     */
-    virtual unsigned int GetCameraSyncNumber(void) const = 0;
-
-    /**
      * Set the camera for this view externally
      *
      * @param camera A fully intialized camera to use for rendering the view
@@ -145,9 +138,7 @@ public:
     using ImageWrapper = megamol::frontend_resources::ImageWrapper;
     virtual ImageWrapper Render(double time, double instanceTime, bool present_fbo) = 0;
 
-    virtual ImageWrapper GetRenderingResult() const {
-        return {};
-    }
+    virtual ImageWrapper GetRenderingResult() const = 0;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -290,7 +281,7 @@ protected:
      */
     void afterRender();
 
-        /**
+     /**
      * Stores the current camera settings
      *
      * @param p Must be storeCameraSettingsSlot

@@ -213,7 +213,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
     core::view::Camera cam = cr.GetCamera();
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
-    auto cr_fbo = cr.GetFramebufferObject();
+    auto cr_fbo = cr.GetFramebuffer();
 
 	// create render target
     glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr_fbo->getWidth(), cr_fbo->getHeight(),

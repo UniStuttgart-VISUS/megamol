@@ -6,11 +6,11 @@
  */
 
 #pragma once
-#include "mmcore/view/AbstractView3D.h"
+#include "mmcore/view/BaseView.h"
 #include "vislib/graphics/Cursor2D.h"
 
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CameraControllers.h"
-#include "mmcore/view/CameraParameterSlots.h"
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
@@ -19,29 +19,7 @@ namespace megamol {
 namespace core {
 namespace view {
 
-    inline constexpr auto gl3D_fbo_create_or_resize = [](std::shared_ptr<glowl::FramebufferObject>& fbo, int width,
-                                              int height) -> void {
-        bool create_fbo = false;
-        if (fbo == nullptr) {
-            create_fbo = true;
-        } else if ((fbo->getWidth() != width) || (fbo->getHeight() != height)) {
-            create_fbo = true;
-        }
-
-        if (create_fbo) {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
-            try {
-                fbo = std::make_shared<glowl::FramebufferObject>(width, height);
-                fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
-                // TODO: check completness and throw if not?
-            } catch (glowl::FramebufferObjectException const& exc) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[View3DGL] Unable to create framebuffer object: %s\n", exc.what());
-            }
-        }
-    };
-
-class MEGAMOLCORE_API View3DGL : public view::AbstractView3D<glowl::FramebufferObject, gl3D_fbo_create_or_resize, Camera3DController, Camera3DParameters> {
+class MEGAMOLCORE_API View3DGL : public view::BaseView<CallRenderViewGL, Camera3DController> {
 
 public:
 
@@ -70,19 +48,12 @@ public:
     ImageWrapper GetRenderingResult() const override;
 
     /**
-     * Resets the view. This normally sets the camera parameters to
-     * default values.
-     */
-    void ResetView();
-
-    /**
-     * Callback requesting a rendering of this view
+     * Resizes the framebuffer object and calls base class function that sets camera aspect ratio if applicable.
      *
-     * @param call The calling call
-     *
-     * @return The return value
+     * @param width The new width.
+     * @param height The new height.
      */
-    virtual bool OnRenderView(Call& call) override;
+    virtual void Resize(unsigned int width, unsigned int height) override;
 
 protected:
 

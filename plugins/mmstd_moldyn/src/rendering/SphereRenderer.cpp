@@ -1079,7 +1079,7 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     auto proj = cam.getProjectionMatrix();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
     auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
-    auto fbo = call.GetFramebufferObject();
+    auto fbo = call.GetFramebuffer();
 
     this->curCamPos = glm::vec4(cam_pose.position,1.0);
     this->curCamView = glm::vec4(cam_pose.direction,1.0);

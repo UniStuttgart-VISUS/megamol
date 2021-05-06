@@ -17,95 +17,11 @@ namespace megamol {
 namespace core {
 namespace view {
 
-    /**
-     * Call for rendering visual elements (from separate sources) into a single target
-     */
-    class CallRenderView : public AbstractCallRenderView {
-    public:
+    inline constexpr char callrenderview_name[] = "CallRenderView";
 
-        /**
-         * Answer the name of the objects of this description.
-         *
-         * @return The name of the objects of this description.
-         */
-        static const char *ClassName(void) {
-            return "CallRenderView";
-        }
+    inline constexpr char callrenderview_desc[] = "Call for rendering visual elements into a single target";
 
-        /**
-         * Gets a human readable description of the module.
-         *
-         * @return A human readable description of the module.
-         */
-        static const char *Description(void) {
-            return "Call for rendering visual elements into a single target";
-        }
-
-        /**
-         * Answer the number of functions used for this call.
-         *
-         * @return The number of functions used for this call.
-         */
-        static unsigned int FunctionCount(void) {
-            ASSERT(CALL_RESETVIEW == AbstractCallRender::FunctionCount()
-				&& "Enum has bad magic number");
-            return AbstractCallRender::FunctionCount() + 1;
-        }
-
-        /**
-         * Answer the name of the function used for this call.
-         *
-         * @param idx The index of the function to return it's name.
-         *
-         * @return The name of the requested function.
-         */
-        static const char* FunctionName(unsigned int idx) {
-            if (idx == CALL_RESETVIEW) {
-                return "ResetView";
-            } 
-            return AbstractCallRender::FunctionName(idx);
-	}
-
-        /**
-         * Ctor.
-         */
-        CallRenderView(void);
-
-        /**
-         * Copy ctor.
-         *
-         * @param src Object to clone
-         */
-        CallRenderView(const CallRenderView& src);
-
-        /**
-         * ~Dtor.
-         */
-        virtual ~CallRenderView(void);
-
-        /**
-         * Assignment operator
-         *
-         * @param rhs The right hand side operand
-         *
-         * @return A reference to 'this'
-         */
-        CallRenderView& operator=(const CallRenderView& rhs);
-
-        inline void SetFramebuffer(std::shared_ptr<CPUFramebuffer> fbo) {
-            _framebuffer = fbo;
-        }
-
-        inline std::shared_ptr<CPUFramebuffer> GetFramebuffer() {
-            return _framebuffer;
-        }
-
-
-    private:
-
-        std::shared_ptr<CPUFramebuffer> _framebuffer;
-
-    };
+    using CallRenderView = AbstractCallRenderView<CPUFramebuffer, callrenderview_name, callrenderview_desc>;
 
     /** Description class typedef */
     typedef factories::CallAutoDescription<CallRenderView>

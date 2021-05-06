@@ -1016,7 +1016,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
     auto cam_intrinsics = cam.get<core::view::Camera::OrthographicParameters>(); // don't you dare using a perspective cam here...
-    fbo = call.GetFramebufferObject();
+    fbo = call.GetFramebuffer();
     camera_cpy = cam;
 
     // maintainer comment: assuming this wants to know the aspect of the full window, i.e. not onlyof the current image tile

@@ -503,7 +503,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 break;
             }
             
-            crv.SetFramebufferObject(currentFbo);
+            crv.SetFramebuffer(currentFbo);
             crv.SetTime(frameTime);
             //crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
             //    static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
@@ -610,7 +610,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 overlayfbo = nullptr;
             }
             if (overlayfbo != nullptr) {
-                crv.SetFramebufferObject(overlayfbo);
+                crv.SetFramebuffer(overlayfbo);
                 crv.SetTime(frameTime);
                 view->OnRenderView(crv); // glClear by SFX
                 /// view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
@@ -731,7 +731,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                         break;
                     }
 
-                    crv.SetFramebufferObject(currentFbo);
+                    crv.SetFramebuffer(currentFbo);
                     crv.SetTime(frameTime);
                     // TODO how should the screenshot tiling be done in the furture?
                     //crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),

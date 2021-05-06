@@ -96,10 +96,6 @@ view::SplitViewGL::~SplitViewGL(void) { this->Release(); }
 
 float view::SplitViewGL::DefaultTime(double instTime) const { return this->_timeCtrl.Time(instTime); }
 
-unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
-    Log::DefaultLog.WriteWarn("SplitViewGL::GetCameraSyncNumber unsupported");
-    return 0u;
-}
 
 view::ImageWrapper view::SplitViewGL::Render(double time, double instanceTime, bool present_fbo) {
 
@@ -182,7 +178,7 @@ view::ImageWrapper view::SplitViewGL::Render(double time, double instanceTime, b
         if (crv == nullptr) {
             return;
         }
-        crv->SetFramebufferObject(subview_fbo);
+        crv->SetFramebuffer(subview_fbo);
         crv->SetInstanceTime(instanceTime);
         crv->SetTime(-1.0f);
 
@@ -229,6 +225,10 @@ view::ImageWrapper view::SplitViewGL::Render(double time, double instanceTime, b
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     }
 
+    return GetRenderingResult();
+}
+
+view::ImageWrapper megamol::core::view::SplitViewGL::GetRenderingResult() const {
     ImageWrapper::DataChannels channels =
         ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
     unsigned int fbo_color_buffer_gl_handle =
@@ -295,7 +295,7 @@ bool view::SplitViewGL::OnRenderView(Call& call) {
     auto instanceTime = crv->InstanceTime();
 
     auto fbo = _fboFull;
-    _fboFull = crv->GetFramebufferObject();
+    _fboFull = crv->GetFramebuffer();
     this->Render(time, instanceTime, false);
     _fboFull = fbo;
 

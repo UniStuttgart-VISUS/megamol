@@ -8,8 +8,9 @@
 #include "stdafx.h"
 #include "mmcore/view/View3DGL.h"
 
-
+#include "GlobalValueStore.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
@@ -20,7 +21,7 @@ using namespace megamol::core::view;
 /*
  * View3DGL::View3DGL
  */
-View3DGL::View3DGL(void) : view::AbstractView3D<glowl::FramebufferObject, gl3D_fbo_create_or_resize, Camera3DController, Camera3DParameters>() {
+View3DGL::View3DGL() : view::BaseView<CallRenderViewGL, Camera3DController>() {
     this->_rhsRenderSlot.SetCompatibleCall<CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->_rhsRenderSlot);
     // Override renderSlot behavior
@@ -50,7 +51,7 @@ View3DGL::View3DGL(void) : view::AbstractView3D<glowl::FramebufferObject, gl3D_f
 /*
  * View3DGL::~View3DGL
  */
-View3DGL::~View3DGL(void) {
+View3DGL::~View3DGL() {
     this->Release();
 }
 
@@ -59,7 +60,7 @@ ImageWrapper megamol::core::view::View3DGL::Render(double time, double instanceT
 
     if (cr3d != NULL) {
 
-        AbstractView3D::beforeRender(time, instanceTime);
+        BaseView::beforeRender(time, instanceTime);
 
         // clear fbo before sending it down the rendering call
         // the view is the owner of this fbo and therefore responsible
@@ -72,13 +73,13 @@ ImageWrapper megamol::core::view::View3DGL::Render(double time, double instanceT
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // set camera and fbo in rendering call
-        cr3d->SetFramebufferObject(_fbo);
+        cr3d->SetFramebuffer(_fbo);
         cr3d->SetCamera(this->_camera);
 
         // call the rendering call
         (*cr3d)(view::CallRender3DGL::FnRender);
 
-        AbstractView3D::afterRender();
+        BaseView::afterRender();
     }
 
     if (present_fbo) {
@@ -109,55 +110,73 @@ ImageWrapper megamol::core::view::View3DGL::GetRenderingResult() const {
     return frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
 }
 
-void megamol::core::view::View3DGL::ResetView() {
-    AbstractView3D::ResetView(static_cast<float>(_fbo->getWidth())/static_cast<float>(_fbo->getHeight()));
-}
+void megamol::core::view::View3DGL::Resize(unsigned int width, unsigned int height) {
 
-bool megamol::core::view::View3DGL::OnRenderView(Call& call) {
-    view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
-    if (crv == NULL) {
-        return false;
+    BaseView::Resize(width, height);
+
+    bool create_fbo = false;
+    if (_fbo == nullptr) {
+        create_fbo = true;
+    } else if ((_fbo->getWidth() != width) || (_fbo->getHeight() != height)) {
+        create_fbo = true;
     }
 
-    // get time from incoming call
-    double time = crv->Time();
-    if (time < 0.0f)
-        time = this->DefaultTime(crv->InstanceTime());
-    double instanceTime = crv->InstanceTime();
-
-    auto fbo = _fbo;
-    _fbo = crv->GetFramebufferObject();
-
-    auto cam_cpy = _camera;
-    auto cam_pose = _camera.get<Camera::Pose>();
-    auto cam_type = _camera.get<Camera::ProjectionType>();
-    if (cam_type == Camera::ORTHOGRAPHIC) {
-        auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
-        cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
-        _camera = Camera(cam_pose, cam_intrinsics);
-    } else if (cam_type == Camera::ORTHOGRAPHIC) {
-        auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
-        cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
-        _camera = Camera(cam_pose, cam_intrinsics);
+    if (create_fbo) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+        try {
+            _fbo = std::make_shared<glowl::FramebufferObject>(width, height);
+            _fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+            // TODO: check completness and throw if not?
+        } catch (glowl::FramebufferObjectException const& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[View3DGL] Unable to create framebuffer object: %s\n", exc.what());
+        }
     }
-    
-    this->Render(time, instanceTime, false);
-
-    _fbo = fbo;
-    _camera = cam_cpy;
-
-    return true;
 }
 
 /*
  * View3DGL::create
  */
-bool View3DGL::create(void) {
-
-    AbstractView3D::create();
-
+bool View3DGL::create() {
     // intialize fbo with dummy size until the actual size is set during first call to Resize
     this->_fbo = std::make_shared<glowl::FramebufferObject>(1,1);
+
+    const auto arcball_key = "arcball";
+
+    if (!this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+        // new frontend has global key-value resource
+        auto maybe = this->frontend_resources[0].getResource<megamol::frontend_resources::GlobalValueStore>().maybe_get(
+            arcball_key);
+        if (maybe.has_value()) {
+            this->_camera_controller.setArcballDefault(vislib::CharTraitsA::ParseBool(maybe.value().c_str()));
+        }
+
+    } else {
+        mmcValueType wpType;
+        this->_camera_controller.setArcballDefault(false);
+        auto value = this->GetCoreInstance()->Configuration().GetValue(MMC_CFGID_VARIABLE, _T(arcball_key), &wpType);
+        if (value != nullptr) {
+            try {
+                switch (wpType) {
+                case MMC_TYPE_BOOL:
+                    this->_camera_controller.setArcballDefault(*static_cast<const bool*>(value));
+                    break;
+
+                case MMC_TYPE_CSTR:
+                    this->_camera_controller.setArcballDefault(
+                        vislib::CharTraitsA::ParseBool(static_cast<const char*>(value)));
+                    break;
+
+                case MMC_TYPE_WSTR:
+                    this->_camera_controller.setArcballDefault(
+                        vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(value)));
+                    break;
+                }
+            } catch (...) {}
+        }
+    }
+
+    this->_firstImg = true;
 
     return true;
 }

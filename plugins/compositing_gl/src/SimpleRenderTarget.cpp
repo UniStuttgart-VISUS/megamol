@@ -82,7 +82,7 @@ bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3DGL
 
     m_last_used_camera = call.GetCamera();
 
-    auto call_fbo = call.GetFramebufferObject();
+    auto call_fbo = call.GetFramebuffer();
 
     if (m_GBuffer->getWidth() != call_fbo->getWidth() || m_GBuffer->getHeight() != call_fbo->getHeight()) {
         m_GBuffer->resize(call_fbo->getWidth(), call_fbo->getHeight());
@@ -99,7 +99,7 @@ bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3DGL
     if (chained_call != nullptr) {
         *chained_call = call;
 
-        chained_call->SetFramebufferObject(m_GBuffer);
+        chained_call->SetFramebuffer(m_GBuffer);
 
         if (!((*chained_call)(core::view::AbstractCallRender::FnRender))) {
             return false;

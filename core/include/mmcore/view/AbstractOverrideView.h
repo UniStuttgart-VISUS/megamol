@@ -42,13 +42,6 @@ namespace view {
         virtual float DefaultTime(double instTime) const;
 
         /**
-         * Answer the camera synchronization number.
-         *
-         * @return The camera synchronization number
-         */
-        virtual unsigned int GetCameraSyncNumber(void) const;
-
-        /**
          * Serialises the camera of the view
          *
          * @param serialiser Serialises the camera of the view

@@ -328,8 +328,8 @@ bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    int w = call.GetFramebufferObject()->getWidth();
-    int h = call.GetFramebufferObject()->getHeight();
+    int w = call.GetFramebuffer()->getWidth();
+    int h = call.GetFramebuffer()->getHeight();
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;

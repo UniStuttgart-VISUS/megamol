@@ -585,7 +585,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     backgroundColor[2] = bg[2];
     backgroundColor[3] = 1.0;
 
-    fbo = call.GetFramebufferObject();
+    fbo = call.GetFramebuffer();
 
     cr2d->SetBackgroundColor(call.BackgroundColor());
     cr2d->AccessBoundingBoxes() = call.GetBoundingBoxes();
@@ -605,7 +605,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         }
 
         setupAccel(approach, w, h, ssLevel);
-        cr2d->SetFramebufferObject(call.GetFramebufferObject());
+        cr2d->SetFramebuffer(call.GetFramebuffer());
 
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
@@ -619,7 +619,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         oldW = w;
         oldaLevel = a;
     } else {
-        cr2d->SetFramebufferObject(call.GetFramebufferObject());
+        cr2d->SetFramebuffer(call.GetFramebuffer());
 
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);

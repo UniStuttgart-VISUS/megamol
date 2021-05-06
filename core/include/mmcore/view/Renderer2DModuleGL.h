@@ -49,7 +49,7 @@ inline bool Renderer2DModuleGL::RenderChain(CallRender2DGL& call) {
     // INSERT CHAINING HERE (IF EVER NEEDED)
 
     // bind fbo and set viewport before rendering your own stuff
-    auto fbo = call.GetFramebufferObject();
+    auto fbo = call.GetFramebuffer();
     fbo->bind();
     glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
 

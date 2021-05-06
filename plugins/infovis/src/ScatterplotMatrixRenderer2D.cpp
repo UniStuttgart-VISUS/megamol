@@ -365,7 +365,7 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2DGL& call) {
         auto view = currentCamera.getViewMatrix();
         auto proj = currentCamera.getProjectionMatrix();
         glm::mat4 ortho = proj * view;
-        currentFBO = call.GetFramebufferObject();
+        currentFBO = call.GetFramebuffer();
 
         if (!this->validate(call, false))
             return false;

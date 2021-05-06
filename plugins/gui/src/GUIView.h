@@ -67,8 +67,6 @@ namespace gui {
 
         virtual float DefaultTime(double instTime) const override;
 
-        virtual unsigned int GetCameraSyncNumber(void) const override;
-
         virtual bool OnRenderView(megamol::core::Call& call);
 
         virtual ImageWrapper Render(double time, double instanceTime, bool present_fbo) override;

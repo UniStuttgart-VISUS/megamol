@@ -11,14 +11,15 @@
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
+#include "glowl/FramebufferObject.hpp"
+
 namespace megamol::core::view {
 
 template<typename FBO>
-using INITFUNC = void(std::shared_ptr<vislib::graphics::gl::FramebufferObject>&, std::shared_ptr<FBO>&, int, int);
+using INITFUNC = void(std::shared_ptr<glowl::FramebufferObject>&, std::shared_ptr<FBO>&, int, int);
 
 template<typename FBO>
-using RENFUNC = void(
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject>&, std::shared_ptr<FBO>&, RenderUtils&, int, int);
+using RENFUNC = void(std::shared_ptr<glowl::FramebufferObject>&, std::shared_ptr<FBO>&, RenderUtils&, int, int);
 
 template<typename CALL, INITFUNC<typename CALL::FBO_TYPE> init_func, RENFUNC<typename CALL::FBO_TYPE> ren_func,
     char const* CN, char const* DESC>
@@ -146,13 +147,9 @@ bool ContextToGL<CALL, init_func, ren_func, CN, DESC>::Render(CallRender3DGL& ca
     auto cast_out = dynamic_cast<AbstractCallRender*>(cr);
     *cast_out = *cast_in;
 
-    Camera_2 cam;
-    call.GetCamera(cam);
-
-    auto width = cam.resolution_gate().width();
-    auto height = cam.resolution_gate().height();
-
-    auto lhs_fbo = call.GetFramebufferObject();
+    auto lhs_fbo = call.GetFramebuffer();
+    auto width = lhs_fbo->getWidth();
+    auto height = lhs_fbo->getHeight();
 
     if (!_framebuffer || width != viewport.x || height != viewport.y) {
         init_func(lhs_fbo, _framebuffer, width, height);
