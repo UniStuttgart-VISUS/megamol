@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "InfovisAmortizedRenderer.h"
 
-#include <glm/gtc/functions.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "mmcore/CoreInstance.h"

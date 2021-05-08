@@ -106,7 +106,7 @@ namespace core {
             AbstractView::beforeRender(time, instanceTime);
 
             // get camera values from params(?)
-            _camera_controller.applyParameterSlotsToCamera();
+            _camera_controller.applyParameterSlotsToCamera(_bboxs);
 
             // handle 3D view specific camera implementation
             float dt = std::chrono::duration<float>(this->_lastFrameDuration).count();

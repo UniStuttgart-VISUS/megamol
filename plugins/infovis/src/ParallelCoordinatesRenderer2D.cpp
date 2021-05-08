@@ -669,7 +669,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         glUniform1f(this->drawScalesProgram->getUniformLocation("axisHalfTick"), 2.0f);
         glUniform1i(this->drawScalesProgram->getUniformLocation("pickedAxis"), pickedAxis);
         glUniform1i(this->drawScalesProgram->getUniformLocation("width"), fbo->getWidth());
-        glUniform1i(this->drawScalesProgram->getUniformLocation("height"), fbo->getHeight()));
+        glUniform1i(this->drawScalesProgram->getUniformLocation("height"), fbo->getHeight());
         glUniform1f(this->drawScalesProgram->getUniformLocation("axesThickness"),
             axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount * this->numTicks);

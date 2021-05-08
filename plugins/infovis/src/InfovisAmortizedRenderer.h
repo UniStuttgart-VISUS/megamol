@@ -12,7 +12,6 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/Renderer2DModule.h"
 
 #include "Renderer2D.h"
 
