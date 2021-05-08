@@ -87,6 +87,7 @@ bool GUI_Service::init(const Config& config) {
                     this->m_providedResource.provide_gui_scale = [&](float scale) -> void {
                         return this->resource_provide_gui_scale(scale);
                     };
+                    this->m_providedResource.provide_gui_render = [&]() -> void { this->resource_provide_gui_render(); };
 
                     resource_provide_gui_visibility(config.gui_show);
                     resource_provide_gui_scale(config.gui_scale);
@@ -343,6 +344,14 @@ void GUI_Service::resource_provide_gui_scale(float scale) {
     if (is_gui_nullptr) return;
     auto gui = this->m_gui->Get();
     gui->SetScale(scale);
+}
+
+
+void GUI_Service::resource_provide_gui_render() {
+
+    if (is_gui_nullptr) return;
+    auto gui = this->m_gui->Get();
+    gui->DrawUiToScreen();
 }
 
 } // namespace frontend
