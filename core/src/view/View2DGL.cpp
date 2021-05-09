@@ -67,7 +67,7 @@ view::View2DGL::~View2DGL(void) {
 /*
  * view::View2DGL::Render
  */
-view::ImageWrapper view::View2DGL::Render(double time, double instanceTime, bool present_fbo) {
+view::ImageWrapper view::View2DGL::Render(double time, double instanceTime) {
 
     AbstractView::beforeRender(time,instanceTime);
 
@@ -94,20 +94,6 @@ view::ImageWrapper view::View2DGL::Render(double time, double instanceTime, bool
         AbstractView::afterRender();
     }
 
-    if (present_fbo) {
-        // Blit the final image to the default framebuffer of the window.
-        // Technically, the view's fbo should always match the size of the window so a blit is fine.
-        // Eventually, presenting the fbo will become the frontends job.
-        // Bind and blit framebuffer.
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        _fbo->bindToRead(0);
-        glBlitFramebuffer(0, 0, _fbo->getWidth(), _fbo->getHeight(), 0, 0, _fbo->getWidth(), _fbo->getHeight(),
-            GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    }
-
     return GetRenderingResult();
 }
 
@@ -115,7 +101,7 @@ view::ImageWrapper megamol::core::view::View2DGL::GetRenderingResult() const {
     ImageWrapper::DataChannels channels =
         ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
     unsigned int fbo_color_buffer_gl_handle =
-        _fbo->getColorAttachment(0)->getTextureHandle(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+        _fbo->getColorAttachment(0)->getName(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
     size_t fbo_width = _fbo->getWidth();
     size_t fbo_height = _fbo->getHeight();
 

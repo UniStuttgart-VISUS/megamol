@@ -97,7 +97,7 @@ view::SplitViewGL::~SplitViewGL(void) { this->Release(); }
 float view::SplitViewGL::DefaultTime(double instTime) const { return this->_timeCtrl.Time(instTime); }
 
 
-view::ImageWrapper view::SplitViewGL::Render(double time, double instanceTime, bool present_fbo) {
+view::ImageWrapper view::SplitViewGL::Render(double time, double instanceTime) {
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
@@ -211,20 +211,6 @@ view::ImageWrapper view::SplitViewGL::Render(double time, double instanceTime, b
     renderAndBlit(_fboFull, this->_fbo1, this->render1(), this->_clientArea1);
     renderAndBlit(_fboFull, this->_fbo2, this->render2(), this->_clientArea2);
 
-    if (present_fbo) {
-        // Blit the final image to the default framebuffer of the window.
-        // Technically, the view's fbo should always match the size of the window so a blit is fine.
-        // Eventually, presenting the fbo will become the frontends job.
-        // Bind and blit framebuffer.
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        _fboFull->bindToRead(0);
-        glBlitFramebuffer(0, 0, _fboFull->getWidth(), _fboFull->getHeight(), 0, 0, _fboFull->getWidth(), _fboFull->getHeight(),
-            GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    }
-
     return GetRenderingResult();
 }
 
@@ -232,7 +218,7 @@ view::ImageWrapper megamol::core::view::SplitViewGL::GetRenderingResult() const 
     ImageWrapper::DataChannels channels =
         ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
     unsigned int fbo_color_buffer_gl_handle =
-        _fboFull->getColorAttachment(0)->getTextureHandle(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+        _fboFull->getColorAttachment(0)->getName(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
     size_t fbo_width = _fboFull->getWidth();
     size_t fbo_height = _fboFull->getHeight();
 
@@ -296,7 +282,7 @@ bool view::SplitViewGL::OnRenderView(Call& call) {
 
     auto fbo = _fboFull;
     _fboFull = crv->GetFramebuffer();
-    this->Render(time, instanceTime, false);
+    this->Render(time, instanceTime);
     _fboFull = fbo;
 
     return true;

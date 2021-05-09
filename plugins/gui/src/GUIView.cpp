@@ -64,7 +64,7 @@ float GUIView::DefaultTime(double instTime) const {
 }
 
 
-core::view::ImageWrapper GUIView::Render(double time, double instanceTime, bool present_fbo) {
+core::view::ImageWrapper GUIView::Render(double time, double instanceTime) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
@@ -102,7 +102,7 @@ core::view::ImageWrapper megamol::gui::GUIView::GetRenderingResult() const {
     ImageWrapper::DataChannels channels =
         ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
     unsigned int fbo_color_buffer_gl_handle =
-        _fbo->getColorAttachment(0)->getTextureHandle(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+        _fbo->getColorAttachment(0)->getName(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
     size_t fbo_width = _fbo->getWidth();
     size_t fbo_height = _fbo->getHeight();
 
@@ -249,7 +249,7 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
     _camera = crv->GetCamera();
     this->Resize(crv->GetFramebuffer()->getWidth(), crv->GetFramebuffer()->getHeight());
 
-    this->Render(time, instanceTime, false);
+    this->Render(time, instanceTime);
 
     return true;
 }

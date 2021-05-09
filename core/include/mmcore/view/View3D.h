@@ -51,7 +51,7 @@ public:
      *
      * @param context
      */
-    virtual ImageWrapper Render(double time, double instanceTime, bool present_fbo) override;
+    virtual ImageWrapper Render(double time, double instanceTime) override;
 
     ImageWrapper GetRenderingResult() const override;
 

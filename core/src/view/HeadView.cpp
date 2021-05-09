@@ -70,7 +70,7 @@ void view::HeadView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 /*
  * view::HeadView::Render
  */
-view::ImageWrapper view::HeadView::Render(double time, double instanceTime, bool present_fbo) {
+view::ImageWrapper view::HeadView::Render(double time, double instanceTime) {
     CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
@@ -164,7 +164,7 @@ bool view::HeadView::OnRenderView(Call& call) {
     double time = view->Time();
     double instanceTime = view->InstanceTime();
 
-    this->Render(time, instanceTime, false);
+    this->Render(time, instanceTime);
 
     this->override_view_call = nullptr;
 

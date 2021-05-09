@@ -175,7 +175,7 @@ namespace core {
                 _camera = Camera(cam_pose, cam_intrinsics);
             }
 
-            this->Render(time, instanceTime, false);
+            this->Render(time, instanceTime);
 
             _fbo = fbo;
             _camera = cam_cpy;

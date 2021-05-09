@@ -34,7 +34,7 @@ View3D::~View3D(void) {
 /*
  * View3D::Render
  */
-ImageWrapper View3D::Render(double time, double instanceTime, bool present_fbo) {
+ImageWrapper View3D::Render(double time, double instanceTime) {
 
     CallRender3D* cr3d = this->_rhsRenderSlot.CallAs<CallRender3D>();
 

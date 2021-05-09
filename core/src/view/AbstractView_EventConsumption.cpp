@@ -83,7 +83,7 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::ImageW
 
         const double time = view.DefaultTime(time);
 
-        result_image = view.Render(time, instanceTime, true);
+        result_image = view.Render(time, instanceTime);
     };
     
     render();

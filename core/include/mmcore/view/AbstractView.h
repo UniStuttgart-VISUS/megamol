@@ -136,7 +136,7 @@ public:
      * @param instanceTime ...
      */
     using ImageWrapper = megamol::frontend_resources::ImageWrapper;
-    virtual ImageWrapper Render(double time, double instanceTime, bool present_fbo) = 0;
+    virtual ImageWrapper Render(double time, double instanceTime) = 0;
 
     virtual ImageWrapper GetRenderingResult() const = 0;
 
