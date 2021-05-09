@@ -132,7 +132,7 @@ void gl_texture::from_image(ImageWrapper const& image)
 
     switch (image.type) {
     case WrappedImageType::ByteArray:
-        gl_set_and_resize_texture(this->texture, image.size, image.channels, to_vector(image.referenced_image_handle)->data());
+        gl_set_and_resize_texture(this->texture, image.size, image.channels, image.referenced_image_handle);
         this->texture_reference = this->texture;
         break;
     case WrappedImageType::GLTexureHandle:

@@ -256,7 +256,8 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
     glfw_sink.set_framebuffer_size(framebuffer_width, framebuffer_height);
 
     for (auto& image: images) {
-        frontend_resources::gl_texture gl_image = image;
+        static frontend_resources::gl_texture gl_image = image;
+        gl_image = image;
         glfw_sink.blit_texture(gl_image.as_gl_handle(), image.size.width, image.size.height);
     }
 
