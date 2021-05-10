@@ -5,6 +5,10 @@
 #include "CallRender3DCUDA.h"
 
 #include "cuda.h"
+// thank you Nvidia for breaking the typedef of HGPUNV if I do not have a Quadro board!
+#ifdef _WIN32
+#define WGL_NV_gpu_affinity 1
+#endif
 #include "cudaGL.h"
 
 #include "optix/Utils.h"
@@ -15,7 +19,7 @@ inline constexpr char cudatogl_name[] = "CUDAToGL";
 
 inline constexpr char cudatogl_desc[] = "Merges content to the input GL buffer";
 
-inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics::gl::FramebufferObject>& lhs_fbo,
+inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<glowl::FramebufferObject>& lhs_fbo,
                                                  std::shared_ptr<CUDAFramebuffer>& fbo, int width, int height) -> void {
     if (fbo != nullptr) {
         CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
@@ -108,7 +112,7 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics
     fbo->height = height;
 };
 
-inline constexpr auto cuda_to_gl_ren_func = [](std::shared_ptr<vislib::graphics::gl::FramebufferObject>& lhs_fbo,
+inline constexpr auto cuda_to_gl_ren_func = [](std::shared_ptr<glowl::FramebufferObject>& lhs_fbo,
                                                 std::shared_ptr<CUDAFramebuffer>& fbo, core::view::RenderUtils& utils,
                                                 int width, int height) -> void {
     CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
