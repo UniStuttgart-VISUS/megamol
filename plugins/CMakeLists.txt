@@ -57,16 +57,22 @@ function(megamol_plugin PLUGIN_NAME)
       PRIVATE
         $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/src>)
 
+    # List of reserved words in plugins or externals dependencies lists.
+    # This keywords are passed to target_link_libraries, but are ignored on other processing.
+    set(reserved_link_keywords "PUBLIC" "PRIVATE" "INTERFACE")
+
     # Save all required plugins in global list. Required plugin may not be defined, yet.
     # Therefore, delay check until all plugins are added.
     foreach (required_plugin ${MMPLUGIN_ARGS_DEPENDS_PLUGINS})
-      list(APPEND required_plugins_list "${PLUGIN_NAME} ${required_plugin}")
-      set(required_plugins_list ${required_plugins_list} CACHE INTERNAL "")
+      if (NOT "${required_plugin}" IN_LIST reserved_link_keywords)
+        list(APPEND required_plugins_list "${PLUGIN_NAME} ${required_plugin}")
+        set(required_plugins_list ${required_plugins_list} CACHE INTERNAL "")
+      endif ()
     endforeach ()
 
     # Externals
     foreach (external ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
-      if ((NOT ${external} STREQUAL "PUBLIC") AND (NOT ${external} STREQUAL "PRIVATE") AND (NOT ${external} STREQUAL "INTERFACE"))
+      if (NOT "${external}" IN_LIST reserved_link_keywords)
         require_external(${external})
       endif ()
     endforeach ()
