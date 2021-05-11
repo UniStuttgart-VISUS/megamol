@@ -105,6 +105,8 @@ private:
     /** */
     core::CallerSlot m_input_texture_call;
 
+    core::CallerSlot m_input_depth_texture_call;
+
     GLint m_screenRestoreFBO;
 };
 

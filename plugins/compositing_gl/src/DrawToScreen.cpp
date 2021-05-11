@@ -7,16 +7,21 @@
 
 #include "compositing/CompositingCalls.h"
 
-megamol::compositing::DrawToScreen::DrawToScreen() 
-    : Renderer3DModuleGL()
-    , m_drawToScreen_prgm(nullptr)
-    , m_input_texture_call("InputTexture","Access texture that is drawn to output screen")
-{
+megamol::compositing::DrawToScreen::DrawToScreen()
+        : Renderer3DModule_2()
+        , m_drawToScreen_prgm(nullptr)
+        , m_input_texture_call("InputTexture", "Access texture that is drawn to output screen")
+        , m_input_depth_texture_call("DepthTexture", "Access optional depth texture to write depth values to screen") {
     this->m_input_texture_call.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_texture_call);
+
+    this->m_input_depth_texture_call.SetCompatibleCall<CallTexture2DDescription>();
+    this->MakeSlotAvailable(&this->m_input_depth_texture_call);
 }
 
-megamol::compositing::DrawToScreen::~DrawToScreen() { this->Release(); }
+megamol::compositing::DrawToScreen::~DrawToScreen() {
+    this->Release();
+}
 
 bool megamol::compositing::DrawToScreen::create() {
 
@@ -36,45 +41,47 @@ bool megamol::compositing::DrawToScreen::create() {
         m_drawToScreen_prgm->Create(
             vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
-            shader_base_name.PeekBuffer(),
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s (@%s):\n%s\n", shader_base_name.PeekBuffer(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         // return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
         // return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
         // return false;
     }
 
-    //m_drawToScreen_prgm
+    // m_drawToScreen_prgm
 
-    return true; 
+    return true;
 }
 
 void megamol::compositing::DrawToScreen::release() {
-    m_drawToScreen_prgm.reset(); 
+    m_drawToScreen_prgm.reset();
 }
 
-bool megamol::compositing::DrawToScreen::GetExtents(core::view::CallRender3DGL& call) { 
-    return true; 
+bool megamol::compositing::DrawToScreen::GetExtents(core::view::CallRender3D_2& call) {
+    return true;
 }
 
-bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call) { 
+bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call) {
     // get lhs render call
-    megamol::core::view::CallRender3DGL* cr = &call;
-    if (cr == NULL) return false;
+    megamol::core::view::CallRender3D_2* cr = &call;
+    if (cr == NULL)
+        return false;
 
     // Restore framebuffer that was bound on the way in
     glBindFramebuffer(GL_FRAMEBUFFER, m_screenRestoreFBO);
 
     // get rhs texture call
     CallTexture2D* ct = this->m_input_texture_call.CallAs<CallTexture2D>();
-    if (ct == NULL) return false;
+    if (ct == NULL)
+        return false;
     (*ct)(0);
 
     // obtain camera information
@@ -87,7 +94,8 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
 
     // get input texture from call
     auto input_texture = ct->getData();
-    if (input_texture == nullptr) return false;
+    if (input_texture == nullptr)
+        return false;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -106,11 +114,10 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
 
     glDisable(GL_BLEND);
 
-    return true; 
+    return true;
 }
 
 void megamol::compositing::DrawToScreen::PreRender(core::view::CallRender3DGL& call) {
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_screenRestoreFBO);
-
 }
