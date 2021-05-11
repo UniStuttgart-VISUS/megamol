@@ -1,13 +1,13 @@
-/*
- * SphereColoringModule.cpp
- *
- * Copyright (C) 2016 by Karsten Schatz
- * Copyright (C) 2016 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2016, MegaMol Dev Team
+ * All rights reserved.
  */
-#include "stdafx.h"
+
 #include "SphereColoringModule.h"
+
 #include <cfloat>
+
 #include "CallSpheres.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -19,14 +19,14 @@ using namespace megamol::megamol101;
 /*
  * SphereColoringModule::SphereColoringModule
  */
-SphereColoringModule::SphereColoringModule(void)
-    : core::Module()
-    , inSlot("inData", "Input slot for sphere data.")
-    , outSlot("outData", "Output slot for colored sphere data.")
-    , minColorSlot("minColor", "The min color for the interpolation")
-    , maxColorSlot("maxColor", "The max color for the interpolation")
-    , singleColorSlot("useSingleColor", "Just use minColor")
-    , isActiveSlot("isActive", "Is this module active?") {
+SphereColoringModule::SphereColoringModule()
+        : core::Module()
+        , inSlot("inData", "Input slot for sphere data.")
+        , outSlot("outData", "Output slot for colored sphere data.")
+        , minColorSlot("minColor", "The min color for the interpolation")
+        , maxColorSlot("maxColor", "The max color for the interpolation")
+        , singleColorSlot("useSingleColor", "Just use minColor")
+        , isActiveSlot("isActive", "Is this module active?") {
     // TUTORIAL: A name and a description for each slot (CallerSlot, CalleeSlot, ParamSlot) has to be given in the
     // constructor initializer list
 
@@ -65,17 +65,23 @@ SphereColoringModule::SphereColoringModule(void)
 /*
  * SphereColoringModule::SphereColoringModule
  */
-SphereColoringModule::~SphereColoringModule(void) { this->Release(); }
+SphereColoringModule::~SphereColoringModule() {
+    this->Release();
+}
 
 /*
  * SphereColoringModule::areSlotsDirty
  */
-bool SphereColoringModule::areSlotsDirty(void) {
+bool SphereColoringModule::areSlotsDirty() {
 
-    if (this->singleColorSlot.IsDirty()) return true;
-    if (this->minColorSlot.IsDirty()) return true;
-    if (this->maxColorSlot.IsDirty()) return true;
-    if (this->isActiveSlot.IsDirty()) return true;
+    if (this->singleColorSlot.IsDirty())
+        return true;
+    if (this->minColorSlot.IsDirty())
+        return true;
+    if (this->maxColorSlot.IsDirty())
+        return true;
+    if (this->isActiveSlot.IsDirty())
+        return true;
 
     return false;
 }
@@ -83,19 +89,24 @@ bool SphereColoringModule::areSlotsDirty(void) {
 /*
  * SphereColoringModule::create
  */
-bool SphereColoringModule::create(void) { return true; }
+bool SphereColoringModule::create() {
+    return true;
+}
 
 /*
  * SphereColoringModule::getDataCallback
  */
 bool SphereColoringModule::getDataCallback(core::Call& call) {
     CallSpheres* csOut = dynamic_cast<CallSpheres*>(&call);
-    if (csOut == nullptr) return false;
+    if (csOut == nullptr)
+        return false;
 
     CallSpheres* csIn = this->inSlot.CallAs<CallSpheres>();
-    if (csIn == nullptr) return false;
+    if (csIn == nullptr)
+        return false;
 
-    if (!(*csIn)(CallSpheres::CallForGetData)) return false;
+    if (!(*csIn)(CallSpheres::CallForGetData))
+        return false;
 
     csOut->operator=(*csIn); // deep copy
 
@@ -113,17 +124,21 @@ bool SphereColoringModule::getDataCallback(core::Call& call) {
  */
 bool SphereColoringModule::getExtentCallback(core::Call& call) {
     CallSpheres* csOut = dynamic_cast<CallSpheres*>(&call);
-    if (csOut == nullptr) return false;
+    if (csOut == nullptr)
+        return false;
 
     CallSpheres* csIn = this->inSlot.CallAs<CallSpheres>();
-    if (csIn == nullptr) return false;
+    if (csIn == nullptr)
+        return false;
 
-    if (!(*csIn)(CallSpheres::CallForGetExtent)) return false;
+    if (!(*csIn)(CallSpheres::CallForGetExtent))
+        return false;
 
     bool slotsDirty = this->areSlotsDirty();
     if (lastHash != csIn->DataHash() || slotsDirty) {
         lastHash = csIn->DataHash();
-        if (slotsDirty) hashOffset++;
+        if (slotsDirty)
+            hashOffset++;
         resetDirtySlots();
         isDirty = true;
     }
@@ -183,8 +198,10 @@ void SphereColoringModule::modifyColors(CallSpheres* cs) {
         auto spherePtr = cs->GetSpheres();
         for (SIZE_T i = 0; i < numColor; i++) {
             auto r = spherePtr[i * 4 + 3];
-            if (r < minRad) minRad = r;
-            if (r > maxRad) maxRad = r;
+            if (r < minRad)
+                minRad = r;
+            if (r > maxRad)
+                maxRad = r;
         }
 
         // interpolate between the two colors using the radius as alpha
@@ -199,7 +216,7 @@ void SphereColoringModule::modifyColors(CallSpheres* cs) {
 /*
  * SphereColoringModule::release
  */
-void SphereColoringModule::release(void) {
+void SphereColoringModule::release() {
     if (this->colors != nullptr) {
         delete[] this->colors;
         this->colors = nullptr;
@@ -209,7 +226,7 @@ void SphereColoringModule::release(void) {
 /*
  * SphereColoringModule::resetDirtySlots
  */
-void SphereColoringModule::resetDirtySlots(void) {
+void SphereColoringModule::resetDirtySlots() {
     this->singleColorSlot.ResetDirty();
     this->minColorSlot.ResetDirty();
     this->maxColorSlot.ResetDirty();

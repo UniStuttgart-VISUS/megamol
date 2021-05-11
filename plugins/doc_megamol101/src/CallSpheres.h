@@ -1,22 +1,16 @@
-/*
- * CallSpheres.h
- *
- * Copyright (C) 2016 by Karsten Schatz
- * Copyright (C) 2016 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2016, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MM101PLG_CALLSPHERES_H_INCLUDED
-#define MM101PLG_CALLSPHERES_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#ifndef MEGAMOL_MEGAMOL101_CALLSPHERES_H
+#define MEGAMOL_MEGAMOL101_CALLSPHERES_H
 
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace megamol101 {
+namespace megamol::megamol101 {
 
 /**
  * Call for sphere data.
@@ -40,7 +34,9 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallSpheres"; }
+    static const char* ClassName() {
+        return "CallSpheres";
+    }
 
     /**
      * Gets a human readable description of the module.
@@ -49,7 +45,9 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "Call to get sphere data"; }
+    static const char* Description() {
+        return "Call to get sphere data";
+    }
 
     /**
      * Answer the number of functions used for this call.
@@ -58,7 +56,9 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return core::AbstractGetData3DCall::FunctionCount(); }
+    static unsigned int FunctionCount() {
+        return core::AbstractGetData3DCall::FunctionCount();
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -69,20 +69,22 @@ public:
      * @param idx The index of the function to return it's name.
      * @return The name of the requested function.
      */
-    static const char* FunctionName(unsigned int idx) { return core::AbstractGetData3DCall::FunctionName(idx); }
+    static const char* FunctionName(unsigned int idx) {
+        return core::AbstractGetData3DCall::FunctionName(idx);
+    }
 
     /** Constructor */
-    CallSpheres(void);
+    CallSpheres();
 
     /** Destructor */
-    virtual ~CallSpheres(void);
+    ~CallSpheres() override;
 
     /**
      * Answer the number of contained spheres
      *
      * @return The size of contained spheres
      */
-    SIZE_T Count(void) const;
+    SIZE_T Count() const;
 
     /**
      * Answer the color list.
@@ -91,7 +93,7 @@ public:
      *
      * @return The color list. May be NULL if
      */
-    float* GetColors(void) const;
+    float* GetColors() const;
 
     /**
      * Answer the sphere list.
@@ -101,19 +103,19 @@ public:
      *
      * @return The sphere list.
      */
-    const float* GetSpheres(void) const;
+    const float* GetSpheres() const;
 
     /**
      * Answers whether this call has colors per sphere available.
      *
      * @return 'true' if colors are available, 'false' otherwise.
      */
-    bool HasColors(void) const;
+    bool HasColors() const;
 
     /**
      * Resets the colors contained in the call to none.
      */
-    void ResetColors(void);
+    void ResetColors();
 
     /**
      * Sets the color data. The object will not take ownership of the memory 'colors' points to.
@@ -171,7 +173,6 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<CallSpheres> CallSpheresDescription;
 
-} /* end namespace megamol101 */
-} /* end namespace megamol */
+} // namespace megamol::megamol101
 
-#endif /* MM101PLG_CALLSPHERES_H_INCLUDED */
+#endif // MEGAMOL_MEGAMOL101_CALLSPHERES_H

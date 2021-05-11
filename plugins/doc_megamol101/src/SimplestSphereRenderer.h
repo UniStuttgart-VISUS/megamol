@@ -1,16 +1,11 @@
-/*
- * SimplestSphereRenderer.h
- *
- * Copyright (C) 2018 by Karsten Schatz
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MM101PLG_SIMPLESTSPHERERENDERER_H_INCLUDED
-#define MM101PLG_SIMPLESTSPHERERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#ifndef MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H
+#define MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -20,8 +15,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-namespace megamol {
-namespace megamol101 {
+namespace megamol::megamol101 {
 
 /**
  * Renders incoming spheres to the screen, either using GL_POINTS or more
@@ -37,7 +31,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "SimplestSphereRenderer"; }
+    static const char* ClassName() {
+        return "SimplestSphereRenderer";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -46,7 +42,9 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Renders a set of incoming spheres"; }
+    static const char* Description() {
+        return "Renders a set of incoming spheres";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -55,13 +53,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     /** Constructor. */
-    SimplestSphereRenderer(void);
+    SimplestSphereRenderer();
 
     /** Destructor. */
-    virtual ~SimplestSphereRenderer(void);
+    ~SimplestSphereRenderer() override;
 
 protected:
     /**
@@ -72,7 +72,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
@@ -80,7 +80,7 @@ protected:
      * TUTORIAL: The overwritten version of this method gets called on destruction of this object.
      * Necessary cleanup should be done inside this method.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -94,7 +94,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3DGL& call);
+    bool GetExtents(core::view::CallRender3DGL& call) override;
 
     /**
      * The Open GL Render callback.
@@ -104,7 +104,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3DGL& call);
+    bool Render(core::view::CallRender3DGL& call) override;
 
     /** The input data slot. */
     core::CallerSlot sphereDataSlot;
@@ -131,7 +131,6 @@ private:
     core::param::ParamSlot sphereModeSlot;
 };
 
-} /* end namespace megamol101 */
-} /* end namespace megamol */
+} // namespace megamol::megamol101
 
-#endif /* MM101PLG_SIMPLESTSPHERERENDERER_H_INCLUDED */
+#endif // MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H

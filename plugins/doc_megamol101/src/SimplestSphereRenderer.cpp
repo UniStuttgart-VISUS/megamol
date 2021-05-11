@@ -1,19 +1,18 @@
-/*
- * SimplestSphereRenderer.cpp
- *
- * Copyright (C) 2018 by Karsten Schatz
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
-#include "stdafx.h"
+
 #include "SimplestSphereRenderer.h"
+
 #include "CallSpheres.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Camera_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/Camera_2.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"
 
@@ -23,11 +22,11 @@ using namespace megamol::megamol101;
 /*
  * SimplestSphereRenderer::SimplestSphereRenderer
  */
-SimplestSphereRenderer::SimplestSphereRenderer(void)
-    : core::view::Renderer3DModuleGL()
-    , sphereDataSlot("inData", "The input data slot for sphere data.")
-    , sphereModeSlot("sphere rendering", "Switch for the pretty sphere rendering mode")
-    , sizeScalingSlot("scaling factor", "Scaling factor for the size of the rendered GL_POINTS") {
+SimplestSphereRenderer::SimplestSphereRenderer()
+        : core::view::Renderer3DModuleGL()
+        , sphereDataSlot("inData", "The input data slot for sphere data.")
+        , sphereModeSlot("sphere rendering", "Switch for the pretty sphere rendering mode")
+        , sizeScalingSlot("scaling factor", "Scaling factor for the size of the rendered GL_POINTS") {
     // TUTORIAL: A name and a description for each slot (CallerSlot, CalleeSlot, ParamSlot) has to be given in the
     // constructor initializer list
 
@@ -52,7 +51,7 @@ SimplestSphereRenderer::SimplestSphereRenderer(void)
 /*
  * SimplestSphereRenderer::~SimplestSphereRenderer
  */
-SimplestSphereRenderer::~SimplestSphereRenderer(void) {
+SimplestSphereRenderer::~SimplestSphereRenderer() {
     this->Release();
     // TUTORIAL: this->Release() should be called in each modules' destructor.
 }
@@ -60,7 +59,7 @@ SimplestSphereRenderer::~SimplestSphereRenderer(void) {
 /*
  * SimplestSphereRenderer::create
  */
-bool SimplestSphereRenderer::create(void) {
+bool SimplestSphereRenderer::create() {
 
     // TUTORIAL Shader creation should always happen in the create method of a renderer.
 
@@ -128,11 +127,14 @@ bool SimplestSphereRenderer::create(void) {
  */
 bool SimplestSphereRenderer::GetExtents(core::view::CallRender3DGL& call) {
     core::view::CallRender3DGL* cr3d = dynamic_cast<core::view::CallRender3DGL*>(&call);
-    if (cr3d == nullptr) return false;
+    if (cr3d == nullptr)
+        return false;
 
     CallSpheres* cs = this->sphereDataSlot.CallAs<CallSpheres>();
-    if (cs == nullptr) return false;
-    if (!(*cs)(CallSpheres::CallForGetExtent)) return false;
+    if (cs == nullptr)
+        return false;
+    if (!(*cs)(CallSpheres::CallForGetExtent))
+        return false;
 
     cr3d->AccessBoundingBoxes() = cs->AccessBoundingBoxes();
     cr3d->SetTimeFramesCount(cs->FrameCount());
@@ -143,7 +145,7 @@ bool SimplestSphereRenderer::GetExtents(core::view::CallRender3DGL& call) {
 /*
  * SimplestSphereRenderer::release
  */
-void SimplestSphereRenderer::release(void) {
+void SimplestSphereRenderer::release() {
     if (va != 0) {
         glDeleteVertexArrays(1, &va);
     }
@@ -157,13 +159,17 @@ void SimplestSphereRenderer::release(void) {
  */
 bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
     core::view::CallRender3DGL* cr3d = dynamic_cast<core::view::CallRender3DGL*>(&call);
-    if (cr3d == nullptr) return false;
+    if (cr3d == nullptr)
+        return false;
 
     // before rendering, call all necessary data
     CallSpheres* cs = this->sphereDataSlot.CallAs<CallSpheres>();
-    if (cs == nullptr) return false;
-    if (!(*cs)(CallSpheres::CallForGetExtent)) return false;
-    if (!(*cs)(CallSpheres::CallForGetData)) return false;
+    if (cs == nullptr)
+        return false;
+    if (!(*cs)(CallSpheres::CallForGetExtent))
+        return false;
+    if (!(*cs)(CallSpheres::CallForGetData))
+        return false;
     auto sphereCount = cs->Count();
     bool renderMultipleColors = cs->HasColors();
 
@@ -180,7 +186,8 @@ bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
         const float* spherePtr = cs->GetSpheres();
         const float* colorPtr = cs->GetColors();
 
-        if (spherePtr == nullptr) return false;
+        if (spherePtr == nullptr)
+            return false;
 
         // load the data into the vertex buffer
         glBindVertexArray(va);
@@ -202,7 +209,7 @@ bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
                 colVec.data()); // write colors to the gpu
         }
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)(sizeof(float) * 4 * sphereCount));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*) (sizeof(float) * 4 * sphereCount));
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
@@ -245,10 +252,14 @@ bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
         glUniformMatrix4fv(this->sphereShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
         glUniformMatrix4fv(this->sphereShader.ParameterLocation("view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(this->sphereShader.ParameterLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj));
-        glUniform3f(this->sphereShader.ParameterLocation("camRight"), camsnap.right_vector.x(), camsnap.right_vector.y(), camsnap.right_vector.z());
-        glUniform3f(this->sphereShader.ParameterLocation("camUp"), camsnap.up_vector.x(), camsnap.up_vector.y(), camsnap.up_vector.z());
-        glUniform3f(this->sphereShader.ParameterLocation("camPos"), camsnap.position.x(), camsnap.position.y(), camsnap.position.z());
-        glUniform3f(this->sphereShader.ParameterLocation("camDir"), camsnap.view_vector.x(), camsnap.view_vector.y(), camsnap.view_vector.z());
+        glUniform3f(this->sphereShader.ParameterLocation("camRight"), camsnap.right_vector.x(),
+            camsnap.right_vector.y(), camsnap.right_vector.z());
+        glUniform3f(this->sphereShader.ParameterLocation("camUp"), camsnap.up_vector.x(), camsnap.up_vector.y(),
+            camsnap.up_vector.z());
+        glUniform3f(this->sphereShader.ParameterLocation("camPos"), camsnap.position.x(), camsnap.position.y(),
+            camsnap.position.z());
+        glUniform3f(this->sphereShader.ParameterLocation("camDir"), camsnap.view_vector.x(), camsnap.view_vector.y(),
+            camsnap.view_vector.z());
         glUniform1f(this->sphereShader.ParameterLocation("scalingFactor"),
             this->sizeScalingSlot.Param<core::param::FloatParam>()->Value());
 

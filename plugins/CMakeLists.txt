@@ -117,7 +117,7 @@ set(required_plugins_list "" CACHE INTERNAL "")
 # Find and add plugins
 file(GLOB plugins RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/" *)
 foreach (plugin ${plugins})
-  if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${plugin}/CMakeLists.txt" AND NOT ${plugin} STREQUAL "template")
+  if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${plugin}/CMakeLists.txt" AND NOT ${plugin} STREQUAL "doc_template")
     add_subdirectory(${plugin})
   endif ()
 endforeach ()

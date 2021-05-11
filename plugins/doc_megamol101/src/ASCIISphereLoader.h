@@ -1,26 +1,21 @@
-/*
- * ASCIISphereLoader.h
- *
- * Copyright (C) 2016 by Karsten Schatz
- * Copyright (C) 2016 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2016, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MM101PLG_ASCIISPHERELOADER_H_INCLUDED
-#define MM101PLG_ASCIISPHERELOADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#ifndef MEGAMOL_MEGAMOL101_ASCIISPHERELOADER_H
+#define MEGAMOL_MEGAMOL101_ASCIISPHERELOADER_H
 
 #include <vector>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/String.h"
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace megamol101 {
+namespace megamol::megamol101 {
 
 /**
  * Loader module for simple ASCII comma seperated files
@@ -36,7 +31,9 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "ASCIISphereLoader"; }
+    static const char* ClassName() {
+        return "ASCIISphereLoader";
+    }
 
     /**
      * Gets a human readable description of the module.
@@ -45,7 +42,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Loads sphere data from a csv file that contains one sphere per line.";
     }
 
@@ -56,19 +53,21 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     /** Constructor */
-    ASCIISphereLoader(void);
+    ASCIISphereLoader();
 
     /** Destructor */
-    virtual ~ASCIISphereLoader(void);
+    ~ASCIISphereLoader() override;
 
 private:
     /**
      * Ensures that the data is loaded
      */
-    void assertData(void);
+    void assertData();
 
     /**
      * Implementation of 'Create'.
@@ -78,7 +77,7 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Gets the data from the source.
@@ -113,7 +112,7 @@ private:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /** The file name. */
     core::param::ParamSlot filenameSlot;
@@ -134,7 +133,6 @@ private:
     SIZE_T numSpheres;
 };
 
-} /* end namespace megamol101 */
-} /* end namespace megamol */
+} // namespace megamol::megamol101
 
-#endif /* MM101PLG_ASCIISPHERELOADER_H_INCLUDED */
+#endif // MEGAMOL_MEGAMOL101_ASCIISPHERELOADER_H

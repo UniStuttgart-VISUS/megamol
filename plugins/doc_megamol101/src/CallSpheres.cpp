@@ -1,11 +1,9 @@
-/*
- * CallSpheres.cpp
- *
- * Copyright (C) 2016 by Karsten Schatz
- * Copyright (C) 2016 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2016, MegaMol Dev Team
+ * All rights reserved.
  */
-#include "stdafx.h"
+
 #include "CallSpheres.h"
 
 using namespace megamol;
@@ -24,12 +22,12 @@ const unsigned int CallSpheres::CallForGetExtent = 1;
 /*
  * CallSpheres::CallSpheres
  */
-CallSpheres::CallSpheres(void) : spheres(nullptr), colors(nullptr), count(0), colorsAvailable(false) {}
+CallSpheres::CallSpheres() : count(0), colorsAvailable(false), spheres(nullptr), colors(nullptr) {}
 
 /*
  * CallSpheres::~CallSpheres
  */
-CallSpheres::~CallSpheres(void) {
+CallSpheres::~CallSpheres() {
     spheres = nullptr;
     colors = nullptr;
     // The actual deletion of the data does not happen here.
@@ -39,27 +37,35 @@ CallSpheres::~CallSpheres(void) {
 /*
  * CallSpheres::Count
  */
-SIZE_T CallSpheres::Count(void) const { return this->count; }
+SIZE_T CallSpheres::Count() const {
+    return this->count;
+}
 
 /*
  * CallSpheres::GetColors
  */
-float* CallSpheres::GetColors(void) const { return this->colors; }
+float* CallSpheres::GetColors() const {
+    return this->colors;
+}
 
 /*
  * CallSpheres::GetSpheres
  */
-const float* CallSpheres::GetSpheres(void) const { return this->spheres; }
+const float* CallSpheres::GetSpheres() const {
+    return this->spheres;
+}
 
 /*
  * CallSpheres::HasColors
  */
-bool CallSpheres::HasColors(void) const { return this->colorsAvailable; }
+bool CallSpheres::HasColors() const {
+    return this->colorsAvailable;
+}
 
 /*
  * CallSpheres::ResetColors
  */
-void CallSpheres::ResetColors(void) {
+void CallSpheres::ResetColors() {
     this->colors = nullptr;
     this->colorsAvailable = false;
 }

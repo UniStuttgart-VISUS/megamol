@@ -1,16 +1,11 @@
-/*
- * SphereColoringModule.h
- *
- * Copyright (C) 2016 by Karsten Schatz
- * Copyright (C) 2016 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2016, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MM101PLG_SPHERECOLORINGMODULE_H_INCLUDED
-#define MM101PLG_SPHERECOLORINGMODULE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#ifndef MEGAMOL_MEGAMOL101_SPHERECOLORINGMODULE_H
+#define MEGAMOL_MEGAMOL101_SPHERECOLORINGMODULE_H
 
 #include "CallSpheres.h"
 #include "mmcore/CalleeSlot.h"
@@ -18,8 +13,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace megamol101 {
+namespace megamol::megamol101 {
 
 /**
  * Module that assigns colors to incoming spheres.
@@ -31,27 +25,33 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "SphereColoringModule"; }
+    static const char* ClassName() {
+        return "SphereColoringModule";
+    }
 
     /**
      * Gets a human readable description of the module.
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "Assigns colors to spheres contained in a CallSpheres."; }
+    static const char* Description() {
+        return "Assigns colors to spheres contained in a CallSpheres.";
+    }
 
     /**
      * Answer whether this module is available or not.
      *
      * @return 'true' if this module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     /** Constructor. */
-    SphereColoringModule(void);
+    SphereColoringModule();
 
     /** Destructor. */
-    virtual ~SphereColoringModule(void);
+    ~SphereColoringModule() override;
 
 private:
     /**
@@ -59,14 +59,14 @@ private:
      *
      * @return 'true' if at least one slot is dirty, 'false' otherwise.
      */
-    bool areSlotsDirty(void);
+    bool areSlotsDirty();
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Gets the data from the source.
@@ -97,12 +97,12 @@ private:
      * @param filename The file to load
      * @return 'true' on success, 'false' on failure.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Resets the dirty state of all slots.
      */
-    void resetDirtySlots(void);
+    void resetDirtySlots();
 
     /** The slot for requesting data. */
     core::CalleeSlot outSlot;
@@ -138,7 +138,6 @@ private:
     core::param::ParamSlot isActiveSlot;
 };
 
-} /* end namespace megamol101 */
-} /* end namespace megamol */
+} // namespace megamol::megamol101
 
-#endif /* MM101PLG_SPHERECOLORINGMODULE_H_INCLUDED */
+#endif // MEGAMOL_MEGAMOL101_SPHERECOLORINGMODULE_H

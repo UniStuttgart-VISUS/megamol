@@ -1,19 +1,19 @@
-/*
- * ASCIISphereLoader.cpp
- *
- * Copyright (C) 2016 by Karsten Schatz
- * Copyright (C) 2016 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2016, MegaMol Dev Team
+ * All rights reserved.
  */
-#include "stdafx.h"
+
 #include "ASCIISphereLoader.h"
+
 #include <fstream>
 #include <string>
+
 #include "CallSpheres.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/StringTokeniser.h"
-#include "vislib/StringConverter.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/StringConverter.h"
+#include "vislib/StringTokeniser.h"
 
 using namespace megamol;
 using namespace megamol::megamol101;
@@ -21,10 +21,10 @@ using namespace megamol::megamol101;
 /*
  * ASCIISphereLoader::ASCIISphereLoader
  */
-ASCIISphereLoader::ASCIISphereLoader(void)
-    : core::Module()
-    , filenameSlot("filename", "The path to the file that contains the data to be loaded")
-    , getDataSlot("getdata", "The slot publishing the loaded data") {
+ASCIISphereLoader::ASCIISphereLoader()
+        : core::Module()
+        , filenameSlot("filename", "The path to the file that contains the data to be loaded")
+        , getDataSlot("getdata", "The slot publishing the loaded data") {
     // TUTORIAL: A name and a description for each slot (CallerSlot, CalleeSlot, ParamSlot) has to be given in the
     // constructor initializer list
 
@@ -48,12 +48,14 @@ ASCIISphereLoader::ASCIISphereLoader(void)
 /*
  * ASCIISphereLoader::ASCIISphereLoader
  */
-ASCIISphereLoader::~ASCIISphereLoader(void) { this->Release(); }
+ASCIISphereLoader::~ASCIISphereLoader() {
+    this->Release();
+}
 
 /*
  * ASCIISphereLoader::assertData
  */
-void ASCIISphereLoader::assertData(void) {
+void ASCIISphereLoader::assertData() {
     // we only want to reload the data if the filename has changed
     if (this->filenameSlot.IsDirty()) {
         this->filenameSlot.ResetDirty();
@@ -78,11 +80,12 @@ void ASCIISphereLoader::assertData(void) {
 
         if (retval) {
             // standard case. The file has been successfully loaded.
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Loaded %I64u spheres from file \"%s\"",
-                numSpheres,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+                "Loaded %I64u spheres from file \"%s\"", numSpheres,
                 vislib::StringA(this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Failed to load file \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Failed to load file \"%s\"",
                 vislib::StringA(this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
             // we are in an erronous state, clean up everything
             this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
@@ -97,7 +100,7 @@ void ASCIISphereLoader::assertData(void) {
 /*
  * ASCIISphereLoader::~ASCIISphereLoader
  */
-bool ASCIISphereLoader::create(void) {
+bool ASCIISphereLoader::create() {
     // intentionally empty
     return true;
 }
@@ -107,7 +110,8 @@ bool ASCIISphereLoader::create(void) {
  */
 bool ASCIISphereLoader::getDataCallback(core::Call& caller) {
     CallSpheres* cs = dynamic_cast<CallSpheres*>(&caller);
-    if (cs == nullptr) return false;
+    if (cs == nullptr)
+        return false;
 
     this->assertData();
 
@@ -121,7 +125,8 @@ bool ASCIISphereLoader::getDataCallback(core::Call& caller) {
  */
 bool ASCIISphereLoader::getExtentCallback(core::Call& caller) {
     CallSpheres* cs = dynamic_cast<CallSpheres*>(&caller);
-    if (cs == nullptr) return false;
+    if (cs == nullptr)
+        return false;
 
     this->assertData();
 
@@ -137,7 +142,8 @@ bool ASCIISphereLoader::getExtentCallback(core::Call& caller) {
 bool ASCIISphereLoader::load(const vislib::TString& filename) {
 
     if (filename.IsEmpty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "No file to load (filename empty)");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_INFO, "No file to load (filename empty)");
         return true;
     }
 
@@ -154,13 +160,15 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
         while (std::getline(file, line)) {
             lineNum++;
             vislib::StringA lineA(line.c_str());
-            if (lineA.IsEmpty()) continue;
+            if (lineA.IsEmpty())
+                continue;
             lineA.TrimSpaces();
-            if (lineA.StartsWith("#")) continue;                             // this is a comment, move on
+            if (lineA.StartsWith("#"))
+                continue;                                                    // this is a comment, move on
             auto result = vislib::StringTokeniserA::Split(lineA, ",", true); // split the line string by commas
             if (result.Count() < 4) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Line %u of '%s' is malformed",
-                    static_cast<unsigned int>(lineNum), T2A(filename).PeekBuffer());
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+                    "Line %u of '%s' is malformed", static_cast<unsigned int>(lineNum), T2A(filename).PeekBuffer());
                 continue;
             }
             float values[4];
@@ -170,9 +178,9 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
 
                 if (resString.Contains("#")) { // check if the line contains a comment after the values
                     if (i != 3) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-                            "Line %u of '%s' is malformed", static_cast<unsigned int>(lineNum),
-                            T2A(filename).PeekBuffer());
+                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                            megamol::core::utility::log::Log::LEVEL_WARN, "Line %u of '%s' is malformed",
+                            static_cast<unsigned int>(lineNum), T2A(filename).PeekBuffer());
                         error = true;
                     }
                     resString = resString.Substring(0, resString.Find("#") - 1);
@@ -207,7 +215,8 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
             }
         }
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open file");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open file");
         return false;
     }
 
@@ -217,4 +226,6 @@ bool ASCIISphereLoader::load(const vislib::TString& filename) {
 /*
  * ASCIISphereLoader::release
  */
-void ASCIISphereLoader::release(void) { this->spheres.clear(); }
+void ASCIISphereLoader::release() {
+    this->spheres.clear();
+}
