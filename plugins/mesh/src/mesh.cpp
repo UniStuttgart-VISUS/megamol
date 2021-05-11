@@ -26,6 +26,10 @@
 #include "SimpleGPUMtlDataSource.h"
 #include "MeshViewerRenderTasks.h"
 #include "MeshBakery.h"
+#include "MeshDataCall.h"
+#include "TriangleMeshCall.h"
+#include "TriangleMeshRenderer2D.h"
+#include "TriangleMeshRenderer3D.h"
 
 namespace megamol::mesh {
 /** Implementing the instance class of this plugin */
@@ -60,6 +64,8 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::WavefrontObjLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshViewerRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshBakery>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::TriangleMeshRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::TriangleMeshRenderer3D>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::Render3DUI>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::ThreeDimensionalUIRenderTaskDataSource>();
@@ -81,6 +87,8 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPURenderTaskData>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallMesh>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallImage>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh::MeshDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh::TriangleMeshCall>();
 
         //
         // TODO: Register your plugin's calls here
