@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_COMPOSITING_GL_PLUGIN" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_COMPOSITING_GL_PLUGIN BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
   # Add externals.
   require_external(quickhull)
@@ -31,7 +31,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
                                                     "src")
   target_link_libraries(${PROJECT_NAME} 
     PRIVATE core 
-    PUBLIC quickhull tinyobjloader tinygltf compositing_gl)
+    PUBLIC mmstd_datatools quickhull tinyobjloader tinygltf compositing_gl)
 
   if(MSVC)
       target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)
