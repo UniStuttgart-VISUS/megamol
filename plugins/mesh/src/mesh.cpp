@@ -26,10 +26,11 @@
 #include "SimpleGPUMtlDataSource.h"
 #include "MeshViewerRenderTasks.h"
 #include "MeshBakery.h"
-#include "MeshDataCall.h"
-#include "TriangleMeshCall.h"
+#include "mesh/MeshDataCall.h"
+#include "mesh/TriangleMeshCall.h"
 #include "TriangleMeshRenderer2D.h"
 #include "TriangleMeshRenderer3D.h"
+#include "STLDataSource.h"
 
 namespace megamol::mesh {
 /** Implementing the instance class of this plugin */
@@ -66,6 +67,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshBakery>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::TriangleMeshRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::TriangleMeshRenderer3D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::STLDataSource>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::Render3DUI>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::ThreeDimensionalUIRenderTaskDataSource>();

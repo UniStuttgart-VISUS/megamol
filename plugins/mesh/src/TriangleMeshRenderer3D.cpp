@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "TriangleMeshRenderer3D.h"
 
-#include "MeshDataCall.h"
-#include "TriangleMeshCall.h"
+#include "mesh/MeshDataCall.h"
+#include "mesh/TriangleMeshCall.h"
 
 #include "mesh/GPUMeshCollection.h"
 #include "mesh/MeshCalls.h"
@@ -231,6 +231,8 @@ namespace mesh {
 
         rt_collections.push_back(this->m_rendertask_collection.first);
 
+        const std::string identifier("triangle_mesh");
+
         if (this->triangle_mesh_changed || this->mesh_data_changed || this->btf_file_changed) {
             clearRenderTaskCollection();
 
@@ -240,15 +242,14 @@ namespace mesh {
             using vbi_t = typename std::vector<GLfloat>::iterator;
             using ibi_t = typename std::vector<GLuint>::iterator;
 
-            std::vector<glowl::VertexLayout::Attribute> attributes{
-                glowl::VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0),
-                glowl::VertexLayout::Attribute(1, GL_FLOAT, GL_FALSE, 0)};
+            std::vector<glowl::VertexLayout> vertex_descriptors{
+                glowl::VertexLayout(3 * sizeof(float), {glowl::VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0)}),
+                glowl::VertexLayout(1 * sizeof(float), {glowl::VertexLayout::Attribute(1, GL_FLOAT, GL_FALSE, 0)})};
 
             if (this->render_data.normals != nullptr) {
-                attributes.emplace_back(3, GL_FLOAT, GL_TRUE, 0);
+                vertex_descriptors.push_back(
+                    glowl::VertexLayout(3 * sizeof(float), {glowl::VertexLayout::Attribute(3, GL_FLOAT, GL_TRUE, 0)}));
             }
-
-            glowl::VertexLayout vertex_descriptor(0, attributes);
 
             std::vector<std::pair<vbi_t, vbi_t>> vertex_buffer{
                 {this->render_data.vertices->begin(), this->render_data.vertices->end()},
@@ -260,11 +261,11 @@ namespace mesh {
 
             std::pair<ibi_t, ibi_t> index_buffer{this->render_data.indices->begin(), this->render_data.indices->end()};
 
-            this->render_data.mesh->template addMesh<vbi_t, ibi_t>("triangle_mesh", {vertex_descriptor}, vertex_buffer,
+            this->render_data.mesh->template addMesh<vbi_t, ibi_t>(identifier, vertex_descriptors, vertex_buffer,
                 index_buffer, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
 
             // Create render task
-            const auto& mesh_data = this->render_data.mesh->getSubMeshData().at("triangle_mesh");
+            const auto& mesh_data = this->render_data.mesh->getSubMeshData().at(identifier);
 
             std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_min_value],
                 &this->render_data.values->min_value, per_draw_data_t::size_min_value);
@@ -272,13 +273,13 @@ namespace mesh {
                 &this->render_data.values->max_value, per_draw_data_t::size_max_value);
 
             this->m_rendertask_collection.first->clear();
-            this->m_rendertask_collection.first->addRenderTask(std::string("triangle_mesh"),
+            this->m_rendertask_collection.first->addRenderTask(identifier,
                 this->material_collection->getMaterials().begin()->second.shader_program, mesh_data.mesh->mesh,
                 mesh_data.sub_mesh_draw_command, this->render_data.per_draw_data);
         }
 
         if (this->render_data.values->transfer_function_dirty || this->triangle_mesh_changed ||
-            this->mesh_data_changed) {
+            this->mesh_data_changed || this->btf_file_changed) {
             // Create texture for transfer function
             std::vector<GLfloat> texture_data;
             int transfer_function_size, _unused__height;
@@ -315,7 +316,7 @@ namespace mesh {
             std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_tf], &transfer_function_handle,
                 per_draw_data_t::size_tf);
 
-            this->m_rendertask_collection.first->updatePerDrawData(0, this->render_data.per_draw_data);
+            this->m_rendertask_collection.first->updatePerDrawData(identifier, this->render_data.per_draw_data);
         }
 
         {
@@ -342,7 +343,7 @@ namespace mesh {
                     per_draw_data_t::size_plane_bool);
             }
 
-            this->m_rendertask_collection.first->updatePerDrawData(0, this->render_data.per_draw_data);
+            this->m_rendertask_collection.first->updatePerDrawData(identifier, this->render_data.per_draw_data);
         }
 
         this->triangle_mesh_changed = false;

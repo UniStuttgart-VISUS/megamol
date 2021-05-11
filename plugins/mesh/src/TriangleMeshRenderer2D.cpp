@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "TriangleMeshRenderer2D.h"
 
-#include "MeshDataCall.h"
-#include "TriangleMeshCall.h"
+#include "mesh/MeshDataCall.h"
+#include "mesh/TriangleMeshCall.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"

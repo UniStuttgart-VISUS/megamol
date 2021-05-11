@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "TriangleMeshCall.h"
+#include "mesh/TriangleMeshCall.h"
 
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Rectangle.h"

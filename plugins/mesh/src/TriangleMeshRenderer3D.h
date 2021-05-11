@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include "MeshDataCall.h"
+#include "mesh/MeshDataCall.h"
 
 #include "mesh/AbstractGPURenderTaskDataSource.h"
 #include "mesh/GPUMaterialCollection.h"
