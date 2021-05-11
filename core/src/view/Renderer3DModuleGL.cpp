@@ -15,8 +15,7 @@ using namespace megamol::core::view;
 /*
  * Renderer3DModuleGL::Renderer3DModuleGL
  */
-Renderer3DModuleGL::Renderer3DModuleGL(void)
-    : RendererModule<CallRender3DGL>() {
+Renderer3DModuleGL::Renderer3DModuleGL(void) : RendererModule<CallRender3DGL>() {
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
 
@@ -40,6 +39,11 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
         // copy the incoming call to the output
         *chainedCall = call;
 
+        // set bounding boxes to invalid before calling to the right, in case the chained renderer
+        // does not provide them at all. this would result in the possibly outdated bounding box
+        // from the left hand side being used
+        chainedCall->AccessBoundingBoxes().Clear();
+
         // chain through the get extents call
         (*chainedCall)(view::AbstractCallRender::FnGetExtents);
     }
@@ -48,15 +52,32 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
 
 
     // get our own extents
+    // set bounding boxes to invalid before getting own extent, in case the function
+    // does not provide them at all. this would result in the possibly outdated bounding box
+    // from the left hand side being used
+    call.AccessBoundingBoxes().Clear();
     this->GetExtents(call);
 
     if (chainedCall != nullptr) {
-        auto mybb = call.AccessBoundingBoxes().BoundingBox();
-        mybb.Union(chainedCall->AccessBoundingBoxes().BoundingBox());
-        auto mycb = call.AccessBoundingBoxes().ClipBox();
-        mycb.Union(chainedCall->AccessBoundingBoxes().ClipBox());
-        call.AccessBoundingBoxes().SetBoundingBox(mybb);
-        call.AccessBoundingBoxes().SetClipBox(mycb);
+        // calculate union of bounding and clip boxes, respectively
+        // if only the chained bounding (or clip) box is valid, use it directly instead of the union
+        if (call.GetBoundingBoxes().IsBoundingBoxValid() && chainedCall->GetBoundingBoxes().IsBoundingBoxValid()) {
+            auto mybb = call.GetBoundingBoxes().BoundingBox();
+            mybb.Union(chainedCall->GetBoundingBoxes().BoundingBox());
+            call.AccessBoundingBoxes().SetBoundingBox(mybb);
+        } else if (chainedCall->GetBoundingBoxes().IsBoundingBoxValid()) {
+            auto mybb = chainedCall->GetBoundingBoxes().BoundingBox();
+            call.AccessBoundingBoxes().SetBoundingBox(mybb);
+        }
+
+        if (call.GetBoundingBoxes().IsClipBoxValid() && chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
+            auto mycb = call.GetBoundingBoxes().ClipBox();
+            mycb.Union(chainedCall->GetBoundingBoxes().ClipBox());
+            call.AccessBoundingBoxes().SetClipBox(mycb);
+        } else if (chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
+            auto mycb = chainedCall->GetBoundingBoxes().ClipBox();
+            call.AccessBoundingBoxes().SetClipBox(mycb);
+        }
 
         // TODO machs richtig
         call.SetTimeFramesCount(chainedCall->TimeFramesCount());
