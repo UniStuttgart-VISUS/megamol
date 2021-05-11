@@ -114,7 +114,10 @@ bool megamol::core::param::TransferFunctionParam::IgnoreProjectRange(const std::
 bool TransferFunctionParam::GetParsedTransferFunctionData(const std::string& in_tfs, NodeVector_t& out_nodes,
     InterpolationMode& out_interpolmode, unsigned int& out_texsize, std::array<float, 2>& out_range) {
 
+    // DEFAULT for empty transfer function value string:
     NodeVector_t tmp_nodes;
+    tmp_nodes.push_back({1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.05f});
+    tmp_nodes.push_back({1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f});
     std::string tmp_interpolmode_str;
     InterpolationMode tmp_interpolmode = InterpolationMode::LINEAR;
     unsigned int tmp_texsize = 256;

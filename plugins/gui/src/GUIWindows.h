@@ -108,14 +108,14 @@ namespace gui {
          * @param as_lua   If true, GUI state, scale and visibility are returned wrapped into respective LUA commands.
          *                 If false, only GUI state JSON string is returned.
          */
-        std::string GetState(bool as_lua) {
+        inline std::string GetState(bool as_lua) {
             return this->project_to_lua_string(as_lua);
         }
 
         /**
          * Pass current GUI visibility.
          */
-        bool GetVisibility(void) const {
+        inline bool GetVisibility(void) const {
             return this->state.gui_visible;
         }
 
@@ -141,7 +141,7 @@ namespace gui {
         bool GetTriggeredScreenshot(void);
 
         // Valid filename is only ensured after screenshot was triggered.
-        inline const std::string GetScreenshotFileName(void) const {
+        inline std::string GetScreenshotFileName(void) const {
             return this->state.screenshot_filepath;
         }
 
@@ -205,7 +205,7 @@ namespace gui {
          * Set resource directories.
          */
         void SetResourceDirectories(const std::vector<std::string>& resource_directories) {
-            this->state.resource_directories = resource_directories;
+            megamol::gui::gui_resource_paths = resource_directories;
         }
 
         /**
@@ -277,9 +277,8 @@ namespace gui {
             double stat_averaged_fps;             // current average fps value
             double stat_averaged_ms;              // current average fps value
             size_t stat_frame_count;              // current fame count
-            std::vector<std::string> resource_directories; // the global resource directories
-            bool load_docking_preset;                      // Flag indicating docking preset loading
-            bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
+            bool load_docking_preset;             // Flag indicating docking preset loading
+            bool hotkeys_check_once;              // WORKAROUND: Check multiple hotkey assignments once
         };
 
         /** The GUI hotkey array index mapping. */

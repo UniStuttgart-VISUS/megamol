@@ -603,3 +603,19 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
         }
     }
 }
+
+
+void megamol::gui::Module::SetName(const std::string& module_name) {
+
+    this->name = module_name;
+    for (auto& p : this->parameters) {
+        /// XXX Parameter Full Name
+        std::string param_fullname = "::" + this->FullName();
+        if (!p.NameSpace().empty()) {
+            param_fullname += "::" + p.NameSpace();
+        }
+        param_fullname += "::" + p.Name();
+        /// Required format: "::::<module_name>::<parameter_namespace>::<parameter_name>"
+        p.SetFullName(param_fullname);
+    }
+}

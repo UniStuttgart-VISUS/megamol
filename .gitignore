@@ -34,3 +34,5 @@ deploy/**/*
 CMakeSettings.json
 
 .vs/
+
+CMakeUserPresets.json

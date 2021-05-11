@@ -841,6 +841,7 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                 }
 
                 /// PARAMETER VALUE WIDGET ---------------------------------
+                /// DEBUG ImGui::TextUnformatted(this->FullName().c_str());
                 if (this->draw_parameter(scope)) {
                     retval = true;
                 }

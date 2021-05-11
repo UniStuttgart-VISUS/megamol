@@ -83,13 +83,23 @@
 #define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.5f, 0.25f, 1.0f))
 #define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
+// Texture File Names
+#define GUI_DEFAULT_FONT_ROBOTOSANS ("Roboto-Regular.ttf")
+#define GUI_DEFAULT_FONT_SOURCECODEPRO ("SourceCodePro-Regular.ttf")
+#define GUI_TRANSPORT_ICON_PLAY ("transport_ctrl_play.png")
+#define GUI_TRANSPORT_ICON_PAUSE ("transport_ctrl_pause.png")
+#define GUI_TRANSPORT_ICON_FAST_FORWARD ("transport_ctrl_fast-forward.png")
+#define GUI_TRANSPORT_ICON_FAST_REWIND ("transport_ctrl_fast-rewind.png")
+#define GUI_VIEWCUBE_ROTATION_ARROW ("viewcube_rotation_arrow.png")
+#define GUI_VIEWCUBE_UP_ARROW ("viewcube_up_arrow.png")
+
 
 namespace megamol {
 namespace gui {
 
-    namespace {
+    /********** Additional Global ImGui Operators ********************************/
 
-        /********** Global Operators **********/
+    namespace {
 
         bool operator==(const ImVec2& left, const ImVec2& right) {
             return ((left.x == right.x) && (left.y == right.y));
@@ -101,7 +111,8 @@ namespace gui {
 
     } // namespace
 
-    /********** Global Unique ID **********/
+
+    /********** Global Unique ID *********************************************/
 
     extern ImGuiID gui_generated_uid;
 
@@ -110,13 +121,19 @@ namespace gui {
     }
 
 
-    /********** Global ImGui Context Pointer Counter **********/
+    /********** Global ImGui Context Pointer Counter *************************/
 
     // Only accessed by possible multiple instances of GUIWindows
     extern unsigned int gui_context_count;
 
 
-    /********** Global GUI Scaling Factor **********/
+    /********** Global Resource Paths ****************************************/
+
+    // Resource paths set by GUIWindows
+    extern std::vector<std::string> gui_resource_paths;
+
+
+    /********** Global GUI Scaling Factor ************************************/
 
     // Forward declaration
     class GUIWindows;
@@ -163,7 +180,7 @@ namespace gui {
     extern GUIScaling gui_scaling;
 
 
-    /********** Types **********/
+    /********** Types ********************************************************/
 
     // Forward declaration
     class CallSlot;
@@ -294,7 +311,8 @@ namespace gui {
 
     enum class HeaderType { MODULE_GROUP, MODULE, PARAMETER_GROUP };
 
-    /********** Class **********/
+
+    /********** GUIUtils *****************************************************/
 
     /**
      * Static GUI utility functions.
@@ -316,7 +334,6 @@ namespace gui {
             return return_str;
         }
 
-
         /** Decode string from UTF-8. */
         static bool Utf8Decode(std::string& str) {
 
@@ -328,7 +345,6 @@ namespace gui {
             return false;
         }
 
-
         /** Encode string into UTF-8. */
         static bool Utf8Encode(std::string& str) {
 
@@ -339,7 +355,6 @@ namespace gui {
             }
             return false;
         }
-
 
         /**
          * Enable/Disable read only widget style.
@@ -355,7 +370,6 @@ namespace gui {
             }
         }
 
-
         /**
          * Returns true if search string is found in source as a case insensitive substring.
          *
@@ -370,11 +384,10 @@ namespace gui {
             return (it != source.end());
         }
 
-
         /**
          * Returns true if both strings equal each other case insensitively.
          *
-         * @param source   One string .
+         * @param source   One string.
          * @param search   Second string.
          */
         static bool CaseInsensitiveStringCompare(std::string const& str1, std::string const& str2) {
@@ -383,7 +396,6 @@ namespace gui {
                         return (c1 == c2 || std::toupper(c1) == std::toupper(c2));
                     }));
         }
-
 
         /*
          * Draw collapsing group header.
@@ -396,23 +408,8 @@ namespace gui {
                 return false;
             }
 
-            std::string header_label = name;
-            // switch (type) {
-            // case (megamol::gui::HeaderType::MODULE_GROUP): {
-            //    header_label = "[GROUP] " + header_label;
-            //} break;
-            // case (megamol::gui::HeaderType::MODULE): {
-            //    // header_label = "[MODULE] " + header_label;
-            //} break;
-            // case (megamol::gui::HeaderType::PARAMETER_GROUP): {
-            //    // header_label = "[GROUP] " + header_label;
-            //} break;
-            // default:
-            //    break;
-            //}
-
             // Determine header state and change color depending on active parameter search
-            auto headerId = ImGui::GetID(header_label.c_str());
+            auto headerId = ImGui::GetID(name.c_str());
             auto headerState = override_header_state;
             if (headerState == GUI_INVALID_ID) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
@@ -449,7 +446,7 @@ namespace gui {
                 }
             }
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
-            bool header_open = ImGui::CollapsingHeader(header_label.c_str(), nullptr);
+            bool header_open = ImGui::CollapsingHeader(name.c_str(), nullptr);
             ImGui::PopStyleColor(pop_style_color_number);
 
             // Keep following elements open for one more frame to propagate override changes to headers below.
@@ -461,7 +458,6 @@ namespace gui {
 
     private:
         GUIUtils(void) = default;
-
         ~GUIUtils(void) = default;
     };
 
