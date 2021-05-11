@@ -40,12 +40,7 @@ namespace stdplugin {
         namespace io {
             STLDataSource::STLDataSource()
                     : filename_slot("STL file", "The name of to the STL file to load")
-                    , mesh_output_slot("mesh_data", "Slot to request mesh data")
-#ifdef MEGAMOL_NG_MESH
-                    , ngmesh_output_slot("ngmesh_data", "Slot to request mesh data for the NGMeshRenderer")
-                    , batch_data(std::make_unique<ngmesh::CallNGMeshRenderBatches::RenderBatchesData>())
-#endif
-            {
+                    , mesh_output_slot("mesh_data", "Slot to request mesh data") {
                 // Create file name textbox
                 this->filename_slot << new core::param::FilePathParam("");
                 Module::MakeSlotAvailable(&this->filename_slot);
@@ -57,19 +52,6 @@ namespace stdplugin {
                     geocalls::CallTriMeshData::ClassName(), "GetData", &STLDataSource::get_mesh_data_callback);
 
                 Module::MakeSlotAvailable(&this->mesh_output_slot);
-
-                // Create output slot for ng mesh data
-#ifdef MEGAMOL_NG_MESH
-                this->shader_filename_slot << new core::param::FilePathParam("stl_triangles");
-                Module::MakeSlotAvailable(&this->shader_filename_slot);
-
-                this->ngmesh_output_slot.SetCallback<STLDataSource>(
-                    "CallNGMeshRenderBatches", "GetExtent", &STLDataSource::get_extent_callback);
-                this->ngmesh_output_slot.SetCallback<STLDataSource>(
-                    "CallNGMeshRenderBatches", "GetData", &STLDataSource::get_ngmesh_data_callback);
-
-                Module::MakeSlotAvailable(&this->ngmesh_output_slot);
-#endif
             }
 
             STLDataSource::~STLDataSource() {
@@ -162,101 +144,6 @@ namespace stdplugin {
 
                 return true;
             }
-
-#ifdef MEGAMOL_NG_MESH
-            bool STLDataSource::get_ngmesh_data_callback(core::Call& caller) {
-                // Get ng mesh call
-                auto& call = dynamic_cast<ngmesh::CallNGMeshRenderBatches&>(caller);
-
-                if (this->filename_slot.IsDirty()) {
-                    // Read data if necessary
-                    if (call.DataHash() != static_cast<SIZE_T>(hash())) {
-                        if (!get_extent_callback(caller)) {
-                            return false;
-                        }
-                    }
-
-                    // Create new batch data
-                    this->batch_data = std::make_unique<ngmesh::CallNGMeshRenderBatches::RenderBatchesData>();
-                    call.setRenderBatches(this->batch_data.get());
-
-                    // Create shader program
-                    ngmesh::ShaderPrgmDataAccessor shader_program;
-
-                    const auto& shader_filename_vislib =
-                        this->shader_filename_slot.Param<core::param::FilePathParam>()->Value();
-                    const std::string shader_filename(shader_filename_vislib.PeekBuffer());
-                    std::vector<char> shader_filename_vec(shader_filename.begin(), shader_filename.end());
-                    shader_filename_vec.push_back('\0');
-
-                    shader_program.char_cnt = shader_filename_vec.size();
-                    shader_program.raw_string = shader_filename_vec.data();
-
-                    // Store mesh data
-                    ngmesh::MeshDataAccessor mesh_data;
-
-                    mesh_data.vertex_data.byte_size = this->vertex_normal_buffer.size();
-                    mesh_data.vertex_data.raw_data = this->vertex_normal_buffer.data();
-                    mesh_data.vertex_data.buffer_cnt = 2;
-
-                    mesh_data.index_data.byte_size = this->index_buffer.size() * sizeof(unsigned int);
-                    mesh_data.index_data.raw_data = reinterpret_cast<uint8_t*>(this->index_buffer.data());
-                    mesh_data.index_data.index_type = GL_UNSIGNED_INT;
-
-                    std::array<ngmesh::MeshDataAccessor::VertexLayoutData::Attribute, 2> attributes;
-
-                    attributes[0].size = 3;
-                    attributes[0].type = GL_FLOAT;
-                    attributes[0].normalized = GL_FALSE;
-                    attributes[0].offset = 0;
-
-                    attributes[1].size = 3;
-                    attributes[1].type = GL_FLOAT;
-                    attributes[1].normalized = GL_TRUE;
-                    attributes[1].offset = 0;
-
-                    mesh_data.vertex_descriptor.attribute_cnt = 2;
-                    mesh_data.vertex_descriptor.attributes = attributes.data();
-                    mesh_data.vertex_descriptor.stride = 0;
-
-                    mesh_data.usage = GL_STATIC_DRAW;
-                    mesh_data.primitive_type = GL_TRIANGLES;
-
-                    // Set draw commands
-                    ngmesh::DrawCommandDataAccessor draw_commands;
-                    ngmesh::DrawCommandDataAccessor::DrawElementsCommand draw_commands_data;
-
-                    draw_commands.draw_cnt = 1;
-                    draw_commands.data = &draw_commands_data;
-
-                    draw_commands_data.cnt = static_cast<GLuint>(this->vertex_buffer.size() / 3);
-                    draw_commands_data.instance_cnt = 1;
-                    draw_commands_data.first_idx = 0;
-                    draw_commands_data.base_vertex = 0;
-                    draw_commands_data.base_instance = 0;
-
-                    // Set object shader parameters
-                    ngmesh::ObjectShaderParamsDataAccessor obj_shader_params;
-
-                    obj_shader_params.byte_size = 0;
-                    obj_shader_params.raw_data = nullptr;
-
-                    // Set material shader parameters
-                    ngmesh::MaterialShaderParamsDataAccessor mtl_shader_params;
-
-                    mtl_shader_params.elements_cnt = 0;
-                    mtl_shader_params.data = nullptr;
-
-                    // Store information and data in batch
-                    this->batch_data->addBatch(
-                        shader_program, mesh_data, draw_commands, obj_shader_params, mtl_shader_params);
-                }
-
-                this->filename_slot.ResetDirty();
-
-                return true;
-            }
-#endif
 
             void STLDataSource::release() {}
 

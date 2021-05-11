@@ -16,10 +16,6 @@
 
 #include "geometry_calls/CallTriMeshData.h"
 
-#ifdef MEGAMOL_NG_MESH
-#include "ng_mesh/CallNGMeshRenderBatches.h"
-#endif
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -84,15 +80,6 @@ namespace stdplugin {
                 /// <param name="caller">Call for this request</param>
                 /// <returns>True on success; false otherwise</returns>
                 virtual bool get_mesh_data_callback(core::Call& caller);
-
-#ifdef MEGAMOL_NG_MESH
-                /// <summary>
-                /// Callback function for requesting data
-                /// </summary>
-                /// <param name="caller">Call for this request</param>
-                /// <returns>True on success; false otherwise</returns>
-                virtual bool get_ngmesh_data_callback(core::Call& caller);
-#endif
 
                 /// <summary>
                 /// Release the module
@@ -163,17 +150,6 @@ namespace stdplugin {
 
                 /// Mesh data
                 geocalls::CallTriMeshData::Mesh mesh;
-
-#ifdef MEGAMOL_NG_MESH
-                /// Shader file name
-                core::param::ParamSlot shader_filename_slot;
-
-                /// Output
-                core::CalleeSlot ngmesh_output_slot;
-
-                /// Batch data for rendering
-                std::unique_ptr<ngmesh::CallNGMeshRenderBatches::RenderBatchesData> batch_data;
-#endif
 
                 /// Buffers to store vertices and normals, and indices
                 uint32_t num_triangles;
