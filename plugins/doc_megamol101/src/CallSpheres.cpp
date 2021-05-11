@@ -37,7 +37,7 @@ CallSpheres::~CallSpheres() {
 /*
  * CallSpheres::Count
  */
-SIZE_T CallSpheres::Count() const {
+std::size_t CallSpheres::Count() const {
     return this->count;
 }
 
@@ -81,7 +81,7 @@ void CallSpheres::SetColors(float* colors) {
 /*
  * CallSpheres::SetData
  */
-void CallSpheres::SetData(SIZE_T count, const float* spheres, float* colors) {
+void CallSpheres::SetData(std::size_t count, const float* spheres, float* colors) {
     this->count = count;
     this->spheres = spheres;
     this->colors = colors;

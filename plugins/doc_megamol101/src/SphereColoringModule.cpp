@@ -187,7 +187,7 @@ void SphereColoringModule::modifyColors(CallSpheres* cs) {
 
     if (this->singleColorSlot.Param<core::param::BoolParam>()->Value()) {
         // just use minColor for every node
-        for (SIZE_T i = 0; i < numColor; i++) {
+        for (std::size_t i = 0; i < numColor; i++) {
             auto cP = vislib::math::ShallowVector<float, 4>(&colPtr[i * 4]);
             cP = minColor;
         }
@@ -196,7 +196,7 @@ void SphereColoringModule::modifyColors(CallSpheres* cs) {
         float minRad = FLT_MAX;
         float maxRad = FLT_MIN;
         auto spherePtr = cs->GetSpheres();
-        for (SIZE_T i = 0; i < numColor; i++) {
+        for (std::size_t i = 0; i < numColor; i++) {
             auto r = spherePtr[i * 4 + 3];
             if (r < minRad)
                 minRad = r;
@@ -205,7 +205,7 @@ void SphereColoringModule::modifyColors(CallSpheres* cs) {
         }
 
         // interpolate between the two colors using the radius as alpha
-        for (SIZE_T i = 0; i < numColor; i++) {
+        for (std::size_t i = 0; i < numColor; i++) {
             auto cP = vislib::math::ShallowVector<float, 4>(&colPtr[i * 4]);
             float alpha = (spherePtr[i * 4 + 3] - minRad) / (maxRad - minRad);
             cP = (1.0f - alpha) * minColor + alpha * maxColor;

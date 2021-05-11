@@ -84,7 +84,7 @@ public:
      *
      * @return The size of contained spheres
      */
-    SIZE_T Count() const;
+    std::size_t Count() const;
 
     /**
      * Answer the color list.
@@ -142,7 +142,7 @@ public:
      * @param spheres Pointer to a float array containing the sphere data.
      * @param colors Pointer to a float array containing the color data. Default = nullptr.
      */
-    void SetData(SIZE_T count, const float* spheres, float* colors = nullptr);
+    void SetData(std::size_t count, const float* spheres, float* colors = nullptr);
 
     /**
      * Assignment operator
@@ -158,7 +158,7 @@ public:
 
 private:
     /** The number of spheres */
-    SIZE_T count;
+    std::size_t count;
 
     /** Flag whether colors are available in this call or not */
     bool colorsAvailable;

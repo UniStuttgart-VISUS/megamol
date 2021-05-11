@@ -7,13 +7,14 @@
 #ifndef MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H
 #define MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H
 
+#include <memory>
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include <glowl/glowl.h>
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 
 namespace megamol::megamol101 {
 
@@ -116,13 +117,13 @@ private:
     GLuint va;
 
     /** The data hash of the most recent rendered data */
-    SIZE_T lastDataHash;
+    std::size_t lastDataHash;
 
     /** The simple shader for the drawing of GL_POINTS */
-    vislib::graphics::gl::GLSLShader simpleShader;
+    std::unique_ptr<glowl::GLSLProgram> simpleShader;
 
     /** The pretty shader that draws spheres*/
-    vislib::graphics::gl::GLSLGeometryShader sphereShader;
+    std::unique_ptr<glowl::GLSLProgram> sphereShader;
 
     /** Slot for the scaling factor of the pointsize*/
     core::param::ParamSlot sizeScalingSlot;

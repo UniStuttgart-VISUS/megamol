@@ -114,13 +114,13 @@ private:
     float* colors;
 
     /** The number of stored colors */
-    SIZE_T numColor;
+    std::size_t numColor;
 
     /** The offset from the input hash */
-    SIZE_T hashOffset;
+    std::size_t hashOffset;
 
     /** The last hash from the source data */
-    SIZE_T lastHash;
+    std::size_t lastHash;
 
     /** Internal dirtyness flag */
     bool isDirty;

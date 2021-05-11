@@ -121,7 +121,7 @@ private:
     core::CalleeSlot getDataSlot;
 
     /** The data update hash */
-    SIZE_T datahash;
+    std::size_t datahash;
 
     /** The bounding box */
     vislib::math::Cuboid<float> bbox;
@@ -130,7 +130,7 @@ private:
     std::vector<float> spheres;
 
     /** The total number of loaded spheres */
-    SIZE_T numSpheres;
+    std::size_t numSpheres;
 };
 
 } // namespace megamol::megamol101

@@ -11,6 +11,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/utility/ShaderFactory.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Camera_2.h"
 #include "vislib/math/Matrix.h"
@@ -64,58 +65,18 @@ bool SimplestSphereRenderer::create() {
     // TUTORIAL Shader creation should always happen in the create method of a renderer.
 
     using namespace megamol::core::utility::log;
-    using namespace vislib::graphics::gl;
 
-    ShaderSource vertSrc;
-    ShaderSource fragSrc;
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("simplePoints::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple point shader");
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("simplePoints::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple point shader");
-        return false;
-    }
-    try {
-        if (!this->simpleShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create sphere shader: %s\n", e.GetMsgA());
-        return false;
-    }
+    auto const shader_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
 
-    ShaderSource prettyVertSrc;
-    ShaderSource prettyGeomSrc;
-    ShaderSource prettyFragSrc;
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("prettyPoints::vertex", prettyVertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple point shader");
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("prettyPoints::geometry", prettyGeomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for simple point shader");
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("prettyPoints::fragment", prettyFragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple point shader");
-        return false;
-    }
     try {
-        if (!this->sphereShader.Compile(prettyVertSrc.Code(), prettyVertSrc.Count(), prettyGeomSrc.Code(),
-                prettyGeomSrc.Count(), prettyFragSrc.Code(), prettyFragSrc.Count())) {
+        simpleShader = core::utility::make_glowl_shader(
+            "simplePoints", shader_options, "megamol101/simple_points.vert.glsl", "megamol101/simple_points.frag.glsl");
+        sphereShader =
+            core::utility::make_glowl_shader("prettyPoints", shader_options, "megamol101/pretty_points.vert.glsl",
+                "megamol101/pretty_points.geom.glsl", "megamol101/pretty_points.frag.glsl");
 
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create sphere shader: %s\n", e.GetMsgA());
-        return false;
-    }
-    try {
-        if (!this->sphereShader.Link()) {
-            throw vislib::Exception("Generic Linkage failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to link sphere shader: %s\n", e.GetMsgA());
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("SimplestSphereRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -235,9 +196,9 @@ bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
 
     // Switch between shaders for rendering simple flat points or shaded spheres
     if (this->sphereModeSlot.Param<core::param::BoolParam>()->Value()) {
-        this->sphereShader.Enable();
+        this->sphereShader->use();
     } else {
-        this->simpleShader.Enable();
+        this->simpleShader->use();
     }
 
     glBindVertexArray(va);
@@ -249,22 +210,20 @@ bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
         auto invView = glm::inverse(view);
 
         // set all uniforms for the shaders
-        glUniformMatrix4fv(this->sphereShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
-        glUniformMatrix4fv(this->sphereShader.ParameterLocation("view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(this->sphereShader.ParameterLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj));
-        glUniform3f(this->sphereShader.ParameterLocation("camRight"), camsnap.right_vector.x(),
-            camsnap.right_vector.y(), camsnap.right_vector.z());
-        glUniform3f(this->sphereShader.ParameterLocation("camUp"), camsnap.up_vector.x(), camsnap.up_vector.y(),
-            camsnap.up_vector.z());
-        glUniform3f(this->sphereShader.ParameterLocation("camPos"), camsnap.position.x(), camsnap.position.y(),
-            camsnap.position.z());
-        glUniform3f(this->sphereShader.ParameterLocation("camDir"), camsnap.view_vector.x(), camsnap.view_vector.y(),
-            camsnap.view_vector.z());
-        glUniform1f(this->sphereShader.ParameterLocation("scalingFactor"),
-            this->sizeScalingSlot.Param<core::param::FloatParam>()->Value());
+        this->sphereShader->setUniform("mvp", mvp);
+        this->sphereShader->setUniform("view", view);
+        this->sphereShader->setUniform("proj", proj);
+        this->sphereShader->setUniform(
+            "camRight", camsnap.right_vector.x(), camsnap.right_vector.y(), camsnap.right_vector.z());
+        this->sphereShader->setUniform("camUp", camsnap.up_vector.x(), camsnap.up_vector.y(), camsnap.up_vector.z());
+        this->sphereShader->setUniform("camPos", camsnap.position.x(), camsnap.position.y(), camsnap.position.z());
+        this->sphereShader->setUniform(
+            "camDir", camsnap.view_vector.x(), camsnap.view_vector.y(), camsnap.view_vector.z());
+        this->sphereShader->setUniform(
+            "scalingFactor", this->sizeScalingSlot.Param<core::param::FloatParam>()->Value());
 
     } else {
-        glUniformMatrix4fv(this->simpleShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+        this->simpleShader->setUniform("mvp", mvp);
     }
 
     glEnable(GL_DEPTH_TEST);
@@ -275,11 +234,7 @@ bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
 
     glDisable(GL_DEPTH_TEST);
 
-    if (this->sphereModeSlot.Param<core::param::BoolParam>()->Value()) {
-        this->sphereShader.Disable();
-    } else {
-        this->simpleShader.Disable();
-    }
+    glUseProgram(0);
 
     return true;
 }
