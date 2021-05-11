@@ -71,7 +71,7 @@
 #include "io/MMGDDWriter.h"
 #include "io/PLYDataSource.h"
 #include "io/PlyWriter.h"
-#include "io/STLDataSource.h"
+#include "mmstd_datatools/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
 #include "io/CPERAWDataSource.h"
 #include "mmstd_datatools/GraphDataCall.h"
