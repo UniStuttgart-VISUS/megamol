@@ -14,9 +14,10 @@
 
 function(megamol_plugin PLUGIN_NAME)
   # Parse arguments
+  set(optionArgs DEPENDS_CUDA)
   set(oneValueArgs DIR BUILD_DEFAULT)
   set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
-  cmake_parse_arguments(MMPLUGIN_ARGS "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Upper case plugin name
   string(TOUPPER ${PLUGIN_NAME} PLUGIN_NAME_UPPER)
@@ -25,6 +26,15 @@ function(megamol_plugin PLUGIN_NAME)
   option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" ${MMPLUGIN_ARGS_BUILD_DEFAULT})
 
   if (BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
+
+    # Check Cuda
+    if (MMPLUGIN_ARGS_DEPENDS_CUDA)
+      if (NOT ENABLE_CUDA)
+        message(FATAL_ERROR "The ${PLUGIN_NAME} plugin requires CUDA. Please enable it setting the option ENABLE_CUDA.")
+      endif ()
+      enable_language(CUDA)
+    endif ()
+
     # Set plugin enabled flag
     set(${PLUGIN_NAME}_PLUGIN_ENABLED ON PARENT_SCOPE)
 

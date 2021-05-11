@@ -29,7 +29,7 @@ if (probe_PLUGIN_ENABLED)
     target_sources(probe PRIVATE ${ospray_sources} ${ospray_headers} ${ospray_public_headers})
     target_compile_definitions(probe PRIVATE ${EXPORT_NAME}_HAS_OSPRAY)
     target_include_directories(probe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/probe_ospray/include> "probe_ospray/src")
-    target_link_libraries(${PROJECT_NAME} PUBLIC OSPRay_plugin)
+    target_link_libraries(probe PUBLIC OSPRay_plugin)
   endif ()
 
   source_group("3rd Files" FILES ${third})
