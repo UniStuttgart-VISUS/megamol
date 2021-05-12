@@ -32,7 +32,7 @@ if (molecularmaps_PLUGIN_ENABLED)
 
   # Target definition
   target_sources(molecularmaps PRIVATE ${cuda_header_files} ${cuda_source_files})
-  set_target_properties(molecularmaps PROPERTIES CUDA_STANDARD 14)
+  set_target_properties(molecularmaps PROPERTIES CUDA_STANDARD 17)
 
   target_include_directories(molecularmaps PUBLIC "src/helper_includes")
   target_link_libraries(molecularmaps PRIVATE vislib glad)
