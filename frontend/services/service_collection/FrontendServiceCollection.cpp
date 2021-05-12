@@ -11,11 +11,21 @@
 #include <iostream>
 
 #include "mmcore/utility/log/Log.h"
-static void log(const char* text) {
-    const std::string msg = "FrontendServiceCollection: " + std::string(text) + "\n";
+
+static void log(std::string const& text) {
+    const std::string msg = "FrontendServiceCollection: " + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
-static void log(std::string text) { log(text.c_str()); }
+
+static void log_error(std::string const& text) {
+    const std::string msg = "FrontendServiceCollection: " + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
+}
+
+static void log_warning(std::string const& text) {
+    const std::string msg = "FrontendServiceCollection: " + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
+}
 
 namespace megamol {
 namespace frontend {
@@ -36,7 +46,7 @@ namespace frontend {
     bool FrontendServiceCollection::init() {
         for_each_service {
             if (!service.service->init(service.service_config)) {
-                log(service.service->serviceName() + " failed init");
+                log_error(service.service->serviceName() + " failed init");
                 return false;
             }
         }
@@ -82,7 +92,7 @@ namespace frontend {
                     resources.push_back(*modulePtr);
                 } else {
                     // if a requested resource can not be found we fail and should stop program execution
-                    std::cout << "could not find resource: " << name << " for service: " << service.get().serviceName() << std::endl;
+                    log_error("could not find resource: \"" + name + "\" for service: " + service.get().serviceName());
                     return false;
                 }
             }

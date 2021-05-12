@@ -10,6 +10,7 @@
 
 
 #include "AbstractParameterGroupWidget.h"
+#include "ImageWidget_gl.h"
 
 
 namespace megamol {
@@ -27,8 +28,8 @@ namespace gui {
 
         bool Check(bool only_check, ParamPtrVector_t& params);
 
-        bool Draw(ParamPtrVector_t params, const std::string& in_module_fullname, const std::string& in_search,
-            megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer);
+        bool Draw(ParamPtrVector_t params, const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
+            PickingBuffer* inout_picking_buffer);
 
     private:
         // VARIABLES --------------------------------------------------------------

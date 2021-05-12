@@ -49,10 +49,14 @@ bool RenderUtils::LoadTextureFromData(
     if (data == nullptr)
         return false;
     try {
-        glowl::TextureLayout tex_layout(GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1);
+        std::vector<std::pair<GLenum, GLint>> int_parameters;
+        int_parameters.push_back({GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE});
+        int_parameters.push_back({GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE});
+        std::vector<std::pair<GLenum, GLfloat>> float_parameters;
+        glowl::TextureLayout tex_layout(GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1, int_parameters, float_parameters);
         if (out_texture_ptr == nullptr) {
             out_texture_ptr =
-                std::make_unique<glowl::Texture2D>("image_widget", tex_layout, static_cast<GLvoid*>(data), false);
+                std::make_unique<glowl::Texture2D>("image", tex_layout, static_cast<GLvoid*>(data), false);
         } else {
             // Reload data
             out_texture_ptr->reload(tex_layout, static_cast<GLvoid*>(data), false);
@@ -191,12 +195,6 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
     glDisableVertexAttribArray(Buffers::COLOR);
     glDisableVertexAttribArray(Buffers::TEXTURE_COORD);
     glDisableVertexAttribArray(Buffers::ATTRIBUTES);
-
-    auto err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
 
     this->init_once = true;
 
@@ -370,7 +368,7 @@ unsigned int RenderUtils::GetTextureHeight(GLuint texture_id) const {
 }
 
 
-void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -383,12 +381,6 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
         return;
 
     this->sortPrimitiveQueue(primitive);
-
-    auto err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenGL Error: %i [%s, %s, line %d]\n ",  err, __FILE__, __FUNCTION__, __LINE__);
-        return;
-    }
 
     auto texture_id = this->queues[primitive].texture_id;
     this->buffers[Buffers::POSITION]->rebuffer(this->queues[primitive].position);

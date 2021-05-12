@@ -211,7 +211,7 @@ void main(void) {
         <snippet type="version">110</snippet>
 		<snippet type="string">#extension GL_ARB_gpu_shader_fp64 : enable</snippet>
         <snippet name="common::defines"/>
-        <snippet name="common::lighting::simple"/>
+        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
         <snippet name="body1" type="string">
             <![CDATA[
 #ifdef BACKSIDE_ENABLED

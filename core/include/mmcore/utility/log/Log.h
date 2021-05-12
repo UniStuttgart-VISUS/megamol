@@ -16,6 +16,10 @@
 #include <iostream>
 #include <thread>
 
+// Enclose title of log message between start and and tag to get it pushed in GUI popup
+#define LOGMESSAGE_GUI_POPUP_START_TAG "<<<<<"
+#define LOGMESSAGE_GUI_POPUP_END_TAG   ">>>>>"
+
 
 namespace megamol {
 namespace core {
@@ -72,6 +76,11 @@ namespace log {
          * is 100. 
          */
         static const UINT LEVEL_WARN;
+
+        /**
+         * Parse accepted log level attributes from string to UINT
+         */
+        static UINT ParseLevelAttribute(const std::string value);
 
         /** The default log object. */
         static Log& DefaultLog;

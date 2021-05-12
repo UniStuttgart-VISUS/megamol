@@ -28,7 +28,7 @@ namespace gui {
 
         virtual bool Check(bool only_check, ParamPtrVector_t& params) = 0;
 
-        virtual bool Draw(ParamPtrVector_t params, const std::string& in_module_fullname, const std::string& in_search,
+        virtual bool Draw(ParamPtrVector_t params, const std::string& in_search,
             megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) = 0;
 
         bool IsActive(void) const {

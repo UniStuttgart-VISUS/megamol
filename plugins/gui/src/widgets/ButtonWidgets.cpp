@@ -50,7 +50,7 @@ bool megamol::gui::ButtonWidgets::OptionButton(const std::string& id, const std:
     if (dirty) {
         color_front = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_BUTTON_MODIFIED);
     }
-    draw_list->AddCircleFilled(center, thickness, color_front, 12);
+    draw_list->AddCircleFilled(center, thickness, color_front);
     draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
 
     ImVec2 rect = ImVec2(button_size, button_size);
@@ -149,7 +149,7 @@ bool megamol::gui::ButtonWidgets::KnobButton(
         retval = true;
     }
     draw_list->AddLine(widget_center, widget_center + knob_pos, knob_line_color, thickness);
-    draw_list->AddCircleFilled(widget_center + knob_pos, knob_radius, knob_color, 12);
+    draw_list->AddCircleFilled(widget_center + knob_pos, knob_radius, knob_color);
 
     ImGui::EndChild();
     ImGui::PopStyleColor();
@@ -192,8 +192,8 @@ bool megamol::gui::ButtonWidgets::ExtendedModeButton(const std::string& id, bool
 }
 
 
-bool megamol::gui::ButtonWidgets::LuaButton(const std::string& id, const megamol::gui::Parameter& param,
-    const std::string& param_fullname, const std::string& module_fullname) {
+bool megamol::gui::ButtonWidgets::LuaButton(
+    const std::string& id, const megamol::gui::Parameter& param, const std::string& param_fullname) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -229,14 +229,12 @@ bool megamol::gui::ButtonWidgets::LuaButton(const std::string& id, const megamol
     if (ImGui::BeginPopupContextItem("param_lua_button_context", 0)) {
         bool copy_to_clipboard = false;
         std::string lua_param_cmd;
-        std::string mod_name(module_fullname.c_str()); /// local copy required
         if (ImGui::MenuItem("Copy mmSetParamValue")) {
-            lua_param_cmd =
-                "mmSetParamValue(\"" + mod_name + "::" + param_fullname + "\",[=[" + param.GetValueString() + "]=])";
+            lua_param_cmd = "mmSetParamValue(\"" + param_fullname + "\",[=[" + param.GetValueString() + "]=])";
             copy_to_clipboard = true;
         }
         if (ImGui::MenuItem("Copy mmGetParamValue")) {
-            lua_param_cmd = "mmGetParamValue(\"" + mod_name + "::" + param_fullname + "\")";
+            lua_param_cmd = "mmGetParamValue(\"" + param_fullname + "\")";
             copy_to_clipboard = true;
         }
 
@@ -247,6 +245,63 @@ bool megamol::gui::ButtonWidgets::LuaButton(const std::string& id, const megamol
     }
 
     ImGui::PopID();
+
+    return retval;
+}
+
+
+bool megamol::gui::ButtonWidgets::ToggleButton(const std::string& id, bool& inout_bool) {
+
+    bool retval = false;
+
+    ImVec4* colors = ImGui::GetStyle().Colors;
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    float height = ImGui::GetFrameHeight();
+    float width = height * 1.55f;
+    float radius = height * 0.50f;
+
+    ImGui::BeginGroup();
+
+    std::string button_id = "toggle_button_" + id;
+    ImGui::InvisibleButton(button_id.c_str(), ImVec2(width, height));
+    if (ImGui::IsItemClicked()) {
+        inout_bool = !inout_bool;
+        retval = true;
+    }
+
+    float t = inout_bool ? 1.0f : 0.0f;
+    ImGuiContext& g = *GImGui;
+    float ANIM_SPEED = 0.1f;
+    if ((g.LastActiveId == g.CurrentWindow->GetID(button_id.c_str())) && (g.LastActiveIdTimer < ANIM_SPEED)) {
+        float t_anim = ImSaturate(g.LastActiveIdTimer / ANIM_SPEED);
+        t = inout_bool ? (t_anim) : (1.0f - t_anim);
+    }
+
+    ImVec4 col_knob = colors[ImGuiCol_Text];
+    ImVec4 col_btn_hover_false = colors[ImGuiCol_Button];       // ImVec4(0.78f, 0.78f, 0.78f, 1.0f);
+    ImVec4 col_btn_hover_true = colors[ImGuiCol_ButtonHovered]; // ImVec4(0.64f, 0.83f, 0.34f, 1.0f);
+    ImVec4 col_btn_false = colors[ImGuiCol_TextDisabled];       // ImVec4(0.85f, 0.85f, 0.85f, 1.0f);
+    ImVec4 col_btn_true = colors[ImGuiCol_ButtonActive];        // ImVec4(0.56f, 0.83f, 0.26f, 1.0f);
+    ImU32 col_bg;
+    if (ImGui::IsItemHovered()) {
+        col_bg = ImGui::GetColorU32(ImLerp(col_btn_hover_false, col_btn_hover_true, t));
+    } else {
+        col_bg = ImGui::GetColorU32(ImLerp(col_btn_false, col_btn_true, t));
+    }
+
+    draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), col_bg, height * 0.5f);
+    draw_list->AddCircleFilled(
+        ImVec2(p.x + radius + t * (width - radius * 2.0f), p.y + radius), radius - 1.5f, ImGui::GetColorU32(col_knob));
+
+    if (!id.empty() && (id.find("###") != 0)) {
+        ImGui::SameLine();
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(id.c_str());
+    }
+
+    ImGui::EndGroup();
 
     return retval;
 }

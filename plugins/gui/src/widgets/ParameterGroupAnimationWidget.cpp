@@ -22,7 +22,7 @@ megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget(void)
         , image_buttons()
         , tooltip() {
 
-    this->InitPresentation(Param_t::GROUP_ANIMATION);
+    this->InitPresentation(ParamType_t::GROUP_ANIMATION);
     this->name = "anim";
 }
 
@@ -33,11 +33,11 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
     bool param_time = false;
     bool param_speed = false;
     for (auto& param_ptr : params) {
-        if ((param_ptr->Name() == "play") && (param_ptr->Type() == Param_t::BOOL)) {
+        if ((param_ptr->Name() == "play") && (param_ptr->Type() == ParamType_t::BOOL)) {
             param_play = true;
-        } else if ((param_ptr->Name() == "time") && (param_ptr->Type() == Param_t::FLOAT)) {
+        } else if ((param_ptr->Name() == "time") && (param_ptr->Type() == ParamType_t::FLOAT)) {
             param_time = true;
-        } else if ((param_ptr->Name() == "speed") && (param_ptr->Type() == Param_t::FLOAT)) {
+        } else if ((param_ptr->Name() == "speed") && (param_ptr->Type() == ParamType_t::FLOAT)) {
             param_speed = true;
         }
     }
@@ -45,8 +45,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
 }
 
 
-bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_module_fullname,
-    const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
+bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_search,
+    megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -60,11 +60,11 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
     Parameter* param_speed = nullptr;
     /// Find specific parameters of group by name because parameter type can occure multiple times.
     for (auto& param_ptr : params) {
-        if ((param_ptr->Name() == "play") && (param_ptr->Type() == Param_t::BOOL)) {
+        if ((param_ptr->Name() == "play") && (param_ptr->Type() == ParamType_t::BOOL)) {
             param_play = param_ptr;
-        } else if ((param_ptr->Name() == "time") && (param_ptr->Type() == Param_t::FLOAT)) {
+        } else if ((param_ptr->Name() == "time") && (param_ptr->Type() == ParamType_t::FLOAT)) {
             param_time = param_ptr;
-        } else if ((param_ptr->Name() == "speed") && (param_ptr->Type() == Param_t::FLOAT)) {
+        } else if ((param_ptr->Name() == "speed") && (param_ptr->Type() == ParamType_t::FLOAT)) {
             param_speed = param_ptr;
         }
     }
@@ -82,7 +82,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         if (in_scope == Parameter::WidgetScope::LOCAL) {
 
             ParameterGroups::DrawGroupedParameters(
-                this->name, params, in_module_fullname, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
+                this->name, params, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
             return true;
 
@@ -108,16 +108,16 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
 
         // Load button textures (once) --------------------------------------------
         if (!this->image_buttons.play.IsLoaded()) {
-            this->image_buttons.play.LoadTextureFromFile("../share/resources/transport_ctrl_play.png");
+            this->image_buttons.play.LoadTextureFromFile(GUI_TRANSPORT_ICON_PLAY);
         }
         if (!this->image_buttons.pause.IsLoaded()) {
-            this->image_buttons.pause.LoadTextureFromFile("../share/resources/transport_ctrl_pause.png");
+            this->image_buttons.pause.LoadTextureFromFile(GUI_TRANSPORT_ICON_PAUSE);
         }
         if (!this->image_buttons.fastforward.IsLoaded()) {
-            this->image_buttons.fastforward.LoadTextureFromFile("../share/resources/transport_ctrl_fast-forward.png");
+            this->image_buttons.fastforward.LoadTextureFromFile(GUI_TRANSPORT_ICON_FAST_FORWARD);
         }
         if (!this->image_buttons.fastrewind.IsLoaded()) {
-            this->image_buttons.fastrewind.LoadTextureFromFile("../share/resources/transport_ctrl_fast-rewind.png");
+            this->image_buttons.fastrewind.LoadTextureFromFile(GUI_TRANSPORT_ICON_FAST_REWIND);
         }
         if ((!this->image_buttons.play.IsLoaded()) || (!this->image_buttons.pause.IsLoaded()) ||
             (!this->image_buttons.fastforward.IsLoaded()) || (!this->image_buttons.fastrewind.IsLoaded())) {

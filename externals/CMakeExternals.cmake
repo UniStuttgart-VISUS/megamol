@@ -14,7 +14,7 @@ include("${CMAKE_BINARY_DIR}/script-externals/cmake/External.cmake")
 # Centralized function to require externals to add them once by invoking
 # require_external(<EXTERNAL_TARGET>).
 #
-# Think of this function as a big switch, testing for the name and presence 
+# Think of this function as a big switch, testing for the name and presence
 # of the external target to guard against duplicated targets.
 #
 function(require_external NAME)
@@ -147,7 +147,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
       GIT_TAG "v2.4.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
-      CMAKE_ARGS 
+      CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_TESTING=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON
@@ -237,7 +237,7 @@ function(require_external NAME)
       LIBRARY ${FMT_LIB}
       DEBUG_SUFFIX "d")
 
-  #glad 
+  #glad
   elseif(NAME STREQUAL "glad")
     if(TARGET glad)
       return()
@@ -303,7 +303,7 @@ function(require_external NAME)
       set(ICET_GL_LIB "lib/libIceTGL.a")
       set(ICET_MPI_LIB "lib/libIceTMPI.a")
     endif()
-    
+
     add_external_project(IceT STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
@@ -335,7 +335,7 @@ function(require_external NAME)
 
       add_external_project(imgui STATIC
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG 455c21df7100a4727dd6e4c8e69249b7de21d24c # docking branch > version "1.79"
+        GIT_TAG 085cff2fe58077a4a0bf1f9e9284814769141801 # docking branch > version "1.82"
         BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
         PATCH_COMMAND ${CMAKE_COMMAND} -E copy
           "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
@@ -350,6 +350,7 @@ function(require_external NAME)
     target_include_directories(imgui INTERFACE "${SOURCE_DIR}/backends" "${SOURCE_DIR}/misc/cpp")
 
     set(imgui_files
+      "${SOURCE_DIR}/imgui_tables.cpp"
       "${SOURCE_DIR}/backends/imgui_impl_opengl3.cpp"
       "${SOURCE_DIR}/backends/imgui_impl_opengl3.h"
       "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
@@ -526,6 +527,60 @@ function(require_external NAME)
 
     add_external_library(lua
       LIBRARY ${LUA_LIB})
+
+  # megamol-shader-factory
+  elseif(NAME STREQUAL "megamol-shader-factory")
+      if(TARGET megamol-shader-factory)
+        return()
+      endif()
+
+      require_external(glad)
+
+      if(WIN32)
+        set(MEGAMOL_SHADER_FACTORY_LIB "lib/megamol-shader-factory.lib")
+        set(GLSLANG_LIB "lib/glslang$<$<CONFIG:Debug>:d>.lib")
+        set(GENERICCODEGEN_LIB "lib/GenericCodeGen$<$<CONFIG:Debug>:d>.lib")
+        set(MACHINEINDEPENDENT_LIB "lib/MachineIndependent$<$<CONFIG:Debug>:d>.lib")
+        set(OSDEPENDENT_LIB "lib/OSDependent$<$<CONFIG:Debug>:d>.lib")
+        set(OGLCOMPILER_LIB "lib/OGLCompiler$<$<CONFIG:Debug>:d>.lib")
+        set(SPIRV_LIB "lib/SPIRV$<$<CONFIG:Debug>:d>.lib")
+      else()
+        include(GNUInstallDirs)
+        set(MEGAMOL_SHADER_FACTORY_LIB "${CMAKE_INSTALL_LIBDIR}/libmegamol-shader-factory.a")
+        set(GLSLANG_LIB "${CMAKE_INSTALL_LIBDIR}/libglslang.a")
+        set(GENERICCODEGEN_LIB "lib/libGenericCodeGen.a")
+        set(MACHINEINDEPENDENT_LIB "lib/libMachineIndependent.a")
+        set(OSDEPENDENT_LIB "lib/libOSDependent.a")
+        set(OGLCOMPILER_LIB "lib/libOGLCompiler.a")
+        set(SPIRV_LIB "lib/libSPIRV.a")
+      endif()
+
+      external_get_property(glad INSTALL_DIR)
+
+      add_external_project(megamol-shader-factory STATIC
+        GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
+        GIT_TAG "v0.3"
+        BUILD_BYPRODUCTS
+        "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
+        "<INSTALL_DIR>/${GLSLANG_LIB}"
+        "<INSTALL_DIR>/${GENERICCODEGEN_LIB}"
+        "<INSTALL_DIR>/${MACHINEINDEPENDENT_LIB}"
+        "<INSTALL_DIR>/${OSDEPENDENT_LIB}"
+        "<INSTALL_DIR>/${OGLCOMPILER_LIB}"
+        "<INSTALL_DIR>/${SPIRV_LIB}"
+        DEPENDS glad
+        CMAKE_ARGS
+          -DGLAD_IS_SHARED=OFF
+          -DGLAD_PATH=${INSTALL_DIR})
+
+      external_get_property(megamol-shader-factory INSTALL_DIR)
+
+      add_external_library(megamol-shader-factory
+        LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB}
+        INTERFACE_LIBRARIES glad ${INSTALL_DIR}/$<CONFIG>/${GLSLANG_LIB} ${INSTALL_DIR}/$<CONFIG>/${SPIRV_LIB} ${INSTALL_DIR}/$<CONFIG>/${MACHINEINDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${OGLCOMPILER_LIB} ${INSTALL_DIR}/$<CONFIG>/${OSDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${GENERICCODEGEN_LIB})
+      if(UNIX)
+        target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
+      endif()
 
   # quickhull
   elseif(NAME STREQUAL "quickhull")
@@ -790,7 +845,7 @@ function(require_external NAME)
     endif()
 
     option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
-    
+
     add_external_project(vtkm
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
       GIT_TAG "v1.4.0"

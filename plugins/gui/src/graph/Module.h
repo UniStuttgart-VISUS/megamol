@@ -11,7 +11,7 @@
 
 #include "GUIUtils.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/RenamePopUp.h"
+#include "widgets/PopUps.h"
 
 #include "CallSlot.h"
 #include "ParameterGroups.h"
@@ -123,9 +123,8 @@ namespace gui {
 
         // SET ----------------------------------------------------------------
 
-        inline void SetName(const std::string& module_name) {
-            this->name = module_name;
-        }
+        void SetName(const std::string& module_name);
+
         inline void SetGraphEntryName(const std::string& graph_entry) {
             this->graph_entry_name = graph_entry;
         }
@@ -161,7 +160,7 @@ namespace gui {
         CallSlotPtrMap_t callslots;
 
         std::string name;
-        std::string graph_entry_name;
+        std::string graph_entry_name; // Do not change in Module class, only via Graph class
 
         ImGuiID group_uid;
         std::string group_name;
@@ -178,7 +177,7 @@ namespace gui {
         bool gui_hidden;
 
         HoverToolTip gui_tooltip;
-        RenamePopUp gui_rename_popup;
+        PopUps gui_rename_popup;
 
         // FUNCTIONS --------------------------------------------------------------
 
