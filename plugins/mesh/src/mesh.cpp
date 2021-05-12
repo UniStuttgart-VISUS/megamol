@@ -28,6 +28,7 @@
 #include "MeshBakery.h"
 #include "io/MeshSTLWriter.h"
 #include "io/MeshSTLDataSource.h"
+#include "io/MeshAugmentInfo.h"
 
 namespace megamol::mesh {
 /** Implementing the instance class of this plugin */
@@ -64,6 +65,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshBakery>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::io::MeshSTLWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::io::MeshSTLDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::io::MeshAugmentInfo>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::Render3DUI>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::ThreeDimensionalUIRenderTaskDataSource>();

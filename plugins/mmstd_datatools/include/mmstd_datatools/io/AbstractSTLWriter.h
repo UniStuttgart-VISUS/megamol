@@ -23,6 +23,8 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/FilenameHelper.h"
+
 #include "vislib/sys/DirectoryEntry.h"
 #include "vislib/sys/DirectoryIterator.h"
 
@@ -140,12 +142,22 @@ namespace megamol
                         Module::MakeSlotAvailable(&this->write_automatically);
 
                         // Use file name suffix increment?
-                        this->filename_increment << new core::param::EnumParam(1);
-                        this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(0, "None (overwrite)");
-                        this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(1, "Increment number (safe)");
-                        this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(2, "Increment number (overwrite)");
-                        this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(3, "Time stamp");
-                        this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(4, "Current time step");
+                        using increment_type_ut = std::underlying_type_t<core::utility::increment_type>;
+                        this->filename_increment << new core::param::EnumParam(
+                            static_cast<increment_type_ut>(core::utility::increment_type::INCREMENT_SAFE));
+                        this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(
+                            static_cast<increment_type_ut>(core::utility::increment_type::NONE), "None (overwrite)");
+                        this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(
+                            static_cast<increment_type_ut>(core::utility::increment_type::INCREMENT_SAFE),
+                            "Increment number (safe)");
+                        this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(
+                            static_cast<increment_type_ut>(core::utility::increment_type::INCREMENT_OVERWRITE),
+                            "Increment number (overwrite)");
+                        this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(
+                            static_cast<increment_type_ut>(core::utility::increment_type::TIMESTAMP), "Time stamp");
+                        this->filename_increment.template Param<core::param::EnumParam>()->SetTypePair(
+                            static_cast<increment_type_ut>(core::utility::increment_type::TIMESTEP),
+                            "Current time step");
                         Module::MakeSlotAvailable(&this->filename_increment);
 
                         // Button to write file manually
@@ -568,7 +580,10 @@ namespace megamol
                         //    filename = filename.substr(0, dot_pos) + suffix + filename.substr(dot_pos);
                         //}
 
-                        current_filename = get_filename(frame_id);
+                        // current_filename = get_filename(frame_id);
+                        current_filename = core::utility::get_extended_filename(filename_slot, frame_id, increment,
+                            static_cast<core::utility::increment_type>(
+                                filename_increment.Param<core::param::EnumParam>()->Value()));
 
                         // Sanity checks
                         if (num_triangles == 0)
