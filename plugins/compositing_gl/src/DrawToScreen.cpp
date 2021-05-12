@@ -8,7 +8,7 @@
 #include "compositing/CompositingCalls.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen()
-        : Renderer3DModule_2()
+        : Renderer3DModuleGL()
         , m_drawToScreen_prgm(nullptr)
         , m_input_texture_call("InputTexture", "Access texture that is drawn to output screen")
         , m_input_depth_texture_call("DepthTexture", "Access optional depth texture to write depth values to screen") {
@@ -56,7 +56,11 @@ bool megamol::compositing::DrawToScreen::create() {
         // return false;
     }
 
-    // m_drawToScreen_prgm
+    auto err = glGetError();
+
+    glowl::TextureLayout depth_tx_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1);
+    std::array<float,1> dummy_depth_data = {-1.0f};
+    m_dummy_depth_tx = std::make_shared<glowl::Texture2D>("DrawToScreen_dummyDepth", depth_tx_layout, dummy_depth_data.data());
 
     return true;
 }
@@ -65,13 +69,13 @@ void megamol::compositing::DrawToScreen::release() {
     m_drawToScreen_prgm.reset();
 }
 
-bool megamol::compositing::DrawToScreen::GetExtents(core::view::CallRender3D_2& call) {
+bool megamol::compositing::DrawToScreen::GetExtents(core::view::CallRender3DGL& call) {
     return true;
 }
 
-bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call) {
+bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call) {
     // get lhs render call
-    megamol::core::view::CallRender3D_2* cr = &call;
+    megamol::core::view::CallRender3DGL* cr = &call;
     if (cr == NULL)
         return false;
 
@@ -83,6 +87,14 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     if (ct == NULL)
         return false;
     (*ct)(0);
+
+    // get rhs depth texture call
+    std::shared_ptr<glowl::Texture2D> depth_texture = m_dummy_depth_tx;
+    CallTexture2D* cdt = this->m_input_depth_texture_call.CallAs<CallTexture2D>();
+    if (cdt != NULL) {
+        (*cdt)(0);
+        depth_texture = cdt->getData();
+    }
 
     // obtain camera information
     //  core::view::Camera_2 cam(cr->GetCamera());
@@ -97,6 +109,7 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     if (input_texture == nullptr)
         return false;
 
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -106,6 +119,10 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
         glActiveTexture(GL_TEXTURE0);
         input_texture->bindTexture();
         glUniform1i(m_drawToScreen_prgm->ParameterLocation("input_tx2D"), 0);
+
+        glActiveTexture(GL_TEXTURE1);
+        depth_texture->bindTexture();
+        glUniform1i(m_drawToScreen_prgm->ParameterLocation("depth_tx2D"), 1);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
