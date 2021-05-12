@@ -183,6 +183,4 @@ namespace plugins {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#include "mmcore/utility/plugins/Plugin200Utilities.h"
-
 #endif /* MEGAMOLCORE_UTILITY_PLUGINS_PLUGIN200INSTANCE_H_INCLUDED */
