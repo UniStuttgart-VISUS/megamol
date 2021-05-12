@@ -36,6 +36,7 @@ namespace io {
 STLDataSource::STLDataSource()
     : filename_slot("STL file", "The name of to the STL file to load")
     , mesh_output_slot("mesh_data", "Slot to request mesh data") {
+
     // Create file name textbox
     this->filename_slot << new core::param::FilePathParam("");
     Module::MakeSlotAvailable(&this->filename_slot);
@@ -69,6 +70,10 @@ bool STLDataSource::get_extent_callback(core::Call& caller) {
 bool STLDataSource::get_mesh_data_callback(core::Call& caller) {
     // Get mesh call
     auto& call = dynamic_cast<geocalls::CallTriMeshData&>(caller);
+
+    if (!get_extent_callback(caller)) {
+        return false;
+    }
 
     if (call.DataHash() != static_cast<SIZE_T>(hash())) {
         call.SetDataHash(static_cast<SIZE_T>(hash()));
@@ -129,6 +134,10 @@ bool STLDataSource::get_input() {
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("Extent: [%.2f, %.2f, %.2f] x [%.2f, %.2f, %.2f].\n",
             this->min_x, this->min_y, this->min_z, this->max_x, this->max_y, this->max_z);
+    }
+
+    if (this->vertex_buffer == nullptr || this->vertex_buffer->empty()) {
+        return false;
     }
 
     return true;
@@ -447,7 +456,7 @@ void STLDataSource::read_ascii(const std::string& filename) {
 }
 
 uint32_t STLDataSource::hash() const {
-    if (this->vertex_buffer->empty()) {
+    if (this->vertex_buffer == nullptr || this->vertex_buffer->empty()) {
         return 0;
     }
 
