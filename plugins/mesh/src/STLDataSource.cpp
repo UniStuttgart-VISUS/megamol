@@ -56,6 +56,10 @@ namespace mesh {
         // Get mesh call
         auto& call = dynamic_cast<TriangleMeshCall&>(caller);
 
+        if (!get_extent_callback(caller)) {
+            return false;
+        }
+
         if (call.DataHash() != static_cast<SIZE_T>(stdplugin::datatools::io::STLDataSource::hash())) {
             call.SetDataHash(static_cast<SIZE_T>(stdplugin::datatools::io::STLDataSource::hash()));
 

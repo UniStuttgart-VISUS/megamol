@@ -36,9 +36,9 @@ namespace mesh {
             , data_set("data_set", "Data set used for coloring the triangles")
             , default_color("default_color", "Default color if no dataset is specified")
             , btf_filename_slot("BTF filename", "Shader path")
-            , triangle_mesh_hash(-1)
+            , triangle_mesh_hash(-681861)
             , triangle_mesh_changed(false)
-            , mesh_data_hash(-1)
+            , mesh_data_hash(-3618424)
             , mesh_data_changed(false)
             , rhs_gpu_tasks_version(0)
             , material_collection(nullptr)
@@ -97,8 +97,12 @@ namespace mesh {
         auto& tmc = *tmc_ptr;
 
         if (!tmc(0)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Error getting triangle mesh. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            if (tmc.DataHash() != this->triangle_mesh_hash) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Error getting triangle mesh. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+
+                this->triangle_mesh_hash = tmc.DataHash();
+            }
 
             return false;
         }
@@ -187,8 +191,13 @@ namespace mesh {
         auto& tmc = *tmc_ptr;
 
         if (!tmc(1)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Error getting extents for the triangle mesh. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            if (tmc.DataHash() != this->triangle_mesh_hash) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Error getting extents for the triangle mesh. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                    __LINE__);
+
+                this->triangle_mesh_hash = tmc.DataHash();
+            }
 
             return false;
         }
