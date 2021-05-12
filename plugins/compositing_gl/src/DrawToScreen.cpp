@@ -109,7 +109,7 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
     if (input_texture == nullptr)
         return false;
 
-
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
