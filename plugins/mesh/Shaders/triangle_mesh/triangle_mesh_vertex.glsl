@@ -24,10 +24,6 @@ void main() {
             : ((value - mesh_shader_params[gl_DrawIDARB].min_value) /
                   (mesh_shader_params[gl_DrawIDARB].max_value - mesh_shader_params[gl_DrawIDARB].min_value)));
 
-    if (mesh_shader_params[gl_DrawIDARB].use_clip_plane != 0) {
-        colors.r = 0.0f;
-    }
-
     if (mesh_shader_params[gl_DrawIDARB].use_clip_plane != 0 && clip_halfspace(position,
         mesh_shader_params[gl_DrawIDARB].clip_plane)) {
 
