@@ -6,8 +6,8 @@ struct MeshShaderParams
     sampler1D transfer_function;
     float min_value;
     float max_value;
-    int use_clip_plane;
     vec4 clip_plane;
+    int use_clip_plane;
 };
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams mesh_shader_params[]; };
@@ -23,6 +23,10 @@ void main() {
             ? 0.5f
             : ((value - mesh_shader_params[gl_DrawIDARB].min_value) /
                   (mesh_shader_params[gl_DrawIDARB].max_value - mesh_shader_params[gl_DrawIDARB].min_value)));
+
+    if (mesh_shader_params[gl_DrawIDARB].use_clip_plane != 0) {
+        colors.r = 0.0f;
+    }
 
     if (mesh_shader_params[gl_DrawIDARB].use_clip_plane != 0 && clip_halfspace(position,
         mesh_shader_params[gl_DrawIDARB].clip_plane)) {
