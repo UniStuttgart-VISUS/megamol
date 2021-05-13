@@ -123,6 +123,7 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
                 probe.m_begin = arg.m_begin;
                 probe.m_end = arg.m_end;
                 probe.m_cluster_id = arg.m_cluster_id;
+                probe.m_geo_ids = arg.m_geo_ids;
 
                 probe.m_sample_radius = 0;
 
