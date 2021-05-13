@@ -270,7 +270,27 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
-    if (approach == 6 || approach == 5) {
+    if (approach == 5) {
+        glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
+        glActiveTexture(GL_TEXTURE10);
+        glEnable(GL_MULTISAMPLE);
+
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
+        glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGBA8, w, h, 1, GL_TRUE);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, msImageArray, 0, 0);
+
+        glm::mat4 pmvm = pm * mvm;
+        int a = this->amortLevel.Param<core::param::IntParam>()->Value();
+
+        movePush = lastPmvm * inverse(pmvm);
+        lastPmvm = pmvm;
+
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
+        const float tbl[2] = {(1.0 + (frametype % a) * 2.0) / (2.0 * a), (1.0 + int(frametype / a) * 2.0) / (2.0 * a)};
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("%f , %f", tbl[0], tbl[1]);
+        glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 1, tbl);
+    }
+    if (approach == 6) {
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
@@ -379,7 +399,20 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
-    if (approach == 6 || approach == 5) {
+    if (approach == 5) {
+        int a = this->amortLevel.Param<core::param::IntParam>()->Value();
+        framesNeeded = a * a;
+        frametype = 0;
+        movePush = glm::mat4(1.0);
+        lastPmvm = glm::mat4(1.0);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, imStoreA);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, imStoreB);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
+    }
+    if (approach == 6) {
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
         framesNeeded = a * a;
         frametype = 0;
@@ -509,7 +542,19 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->getUniformLocation("moveMatrices"), 4, GL_FALSE,
             &moveMatrices[0][0][0]);
     }
-    if (approach == 6 || approach == 5) {
+    if (approach == 5) {
+        amort_reconstruction_shdr_array[approach]->setUniform("src_tex2D", 10);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, imStoreA);
+        glBindImageTexture(5, imStoreA, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
+        amort_reconstruction_shdr_array[approach]->setUniform("StoreA", 5);
+
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, imStoreB);
+        glBindImageTexture(6, imStoreB, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
+        amort_reconstruction_shdr_array[approach]->setUniform("StoreB", 6);
+    }
+    if (approach == 6) {
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, imStoreA);
         glBindImageTexture(5, imStoreA, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
@@ -541,6 +586,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         parity = (parity + 1) % 2;
     } else {
         frametype = (frametype + 1) % framesNeeded;
+        parity = (parity + 1) % 2;
     }
 }
 
