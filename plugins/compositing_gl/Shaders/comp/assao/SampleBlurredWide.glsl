@@ -1,10 +1,10 @@
 vec2 SampleBlurredWide( vec4 inPos, vec2 coord )
 {
-    vec2 vC           = g_BlurInput.SampleLevel( g_PointMirrorSampler, coord, 0.0, ivec2( 0,  0 ) ).xy;
-    vec2 vL           = g_BlurInput.SampleLevel( g_PointMirrorSampler, coord, 0.0, ivec2( -2, 0 ) ).xy;
-    vec2 vT           = g_BlurInput.SampleLevel( g_PointMirrorSampler, coord, 0.0, ivec2( 0, -2 ) ).xy;
-    vec2 vR           = g_BlurInput.SampleLevel( g_PointMirrorSampler, coord, 0.0, ivec2(  2, 0 ) ).xy;
-    vec2 vB           = g_BlurInput.SampleLevel( g_PointMirrorSampler, coord, 0.0, ivec2( 0,  2 ) ).xy;
+    vec2 vC           = textureLodOffset(g_BlurInput, coord, 0.0, ivec2( 0,  0 ) ).xy;
+    vec2 vL           = textureLodOffset(g_BlurInput, coord, 0.0, ivec2( -2, 0 ) ).xy;
+    vec2 vT           = textureLodOffset(g_BlurInput, coord, 0.0, ivec2( 0,  2 ) ).xy;
+    vec2 vR           = textureLodOffset(g_BlurInput, coord, 0.0, ivec2( 2,  0 ) ).xy;
+    vec2 vB           = textureLodOffset(g_BlurInput, coord, 0.0, ivec2( 0, -2 ) ).xy;
 
     float packedEdges   = vC.y;
     vec4 edgesLRTB    = UnpackEdges( packedEdges );

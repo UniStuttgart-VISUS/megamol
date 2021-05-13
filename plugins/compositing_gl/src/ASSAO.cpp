@@ -108,6 +108,7 @@ megamol::compositing::ASSAO::ASSAO()
     , m_finalResults(nullptr)
     , m_finalResultsArrayViews{nullptr, nullptr, nullptr, nullptr}
     , m_normals(nullptr)
+    , m_finalOutput(nullptr)
     , m_tx_layout_samplerStatePointClamp()
     , m_tx_layout_samplerStatePointMirror()
     , m_tx_layout_samplerStateLinearClamp()
@@ -162,6 +163,8 @@ bool megamol::compositing::ASSAO::create() {
             m_generate_q0_prgm = std::make_unique<GLSLComputeShader>();
             m_generate_q1_prgm = std::make_unique<GLSLComputeShader>();
             m_generate_q2_prgm = std::make_unique<GLSLComputeShader>();
+            m_generate_q3_prgm = std::make_unique<GLSLComputeShader>();
+            m_generate_q3_base_prgm = std::make_unique<GLSLComputeShader>();
             m_smart_blur_prgm = std::make_unique<GLSLComputeShader>();
             m_smart_blur_wide_prgm = std::make_unique<GLSLComputeShader>();
             m_apply_prgm = std::make_unique<GLSLComputeShader>();
@@ -175,9 +178,14 @@ bool megamol::compositing::ASSAO::create() {
             vislib::graphics::gl::ShaderSource cs_prepare_depths_and_normals_half;
             std::vector<vislib::graphics::gl::ShaderSource> cs_prepare_depth_mip(SSAO_DEPTH_MIP_LEVELS - 1);
             std::vector<vislib::graphics::gl::ShaderSource> cs_generate(5);
+            // be// -----------------------low shaders probably irrelevant due to vector cs_generate(5)
+            // ----------------------------
             vislib::graphics::gl::ShaderSource cs_generate_q0;
             vislib::graphics::gl::ShaderSource cs_generate_q1;
             vislib::graphics::gl::ShaderSource cs_generate_q2;
+            vislib::graphics::gl::ShaderSource cs_generate_q3;
+            vislib::graphics::gl::ShaderSource cs_generate_q3_base;
+            // ----------------------------
             vislib::graphics::gl::ShaderSource cs_smart_blur;
             vislib::graphics::gl::ShaderSource cs_smart_blur_wide;
             vislib::graphics::gl::ShaderSource cs_apply;
@@ -267,6 +275,21 @@ bool megamol::compositing::ASSAO::create() {
             if (!m_generate_q2_prgm->Link())
                 return false;
 
+            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSGenerateQ3", cs_generate_q3))
+                return false;
+            if (!m_generate_q3_prgm->Compile(cs_generate_q3.Code(), cs_generate_q3.Count()))
+                return false;
+            if (!m_generate_q3_prgm->Link())
+                return false;
+
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(
+                    "Compositing::assao::CSGenerateQ3Base", cs_generate_q3_base))
+                return false;
+            if (!m_generate_q3_base_prgm->Compile(cs_generate_q3_base.Code(), cs_generate_q3_base.Count()))
+                return false;
+            if (!m_generate_q3_base_prgm->Link())
+                return false;
+
             if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSSmartBlur", cs_smart_blur))
                 return false;
             if (!m_smart_blur_prgm->Compile(cs_smart_blur.Code(), cs_smart_blur.Count()))
@@ -341,13 +364,13 @@ bool megamol::compositing::ASSAO::create() {
     }
     m_pingPongHalfResultA = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultA", tx_layout, nullptr);
     m_pingPongHalfResultB = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultB", tx_layout, nullptr);
-    m_finalResults = std::make_shared<glowl::Texture2D>("m_finalResults", tx_layout, nullptr);
+    m_finalResults = std::make_shared<glowl::Texture2DArray>("m_finalResults", tx_layout, nullptr);
     m_finalResultsArrayViews[0] = std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews0", tx_layout, nullptr);
     m_finalResultsArrayViews[1] = std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews1", tx_layout, nullptr);
     m_finalResultsArrayViews[2] = std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews2", tx_layout, nullptr);
     m_finalResultsArrayViews[3] = std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews3", tx_layout, nullptr);
     m_normals = std::make_shared<glowl::Texture2D>("m_normals", tx_layout, nullptr);
-    m_restored_texture = std::make_shared<glowl::Texture2D>("m_restored_texture", tx_layout, nullptr);
+    m_finalOutput = std::make_shared<glowl::Texture2D>("m_finalOutput", tx_layout, nullptr);
 
     m_inputs = std::make_shared<ASSAO_Inputs>();
 
@@ -451,13 +474,13 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
 
             // TODO: Set effect samplers
 
-            // TODO: Set constant buffer
+            // TODO: Set ASSAOconstant buffer, but i think this is already set somewhere
 
             prepareDepths(m_settings, m_inputs);
 
             generateSSAO(m_settings, m_inputs, false);
 
-            // TODO: presumably unnecessary but we want it to keep in mind
+            // TODO: presumably unnecessary but we want to keep it in mind
             /*if( inputs->OverrideOutputRTV != nullptr )
             {
                 // drawing into OverrideOutputRTV
@@ -470,22 +493,22 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             }*/
 
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                {m_restored_texture, 0}
+                {m_finalOutput, 0}
             };
 
             // Apply
             {
-                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures = {
-                    {m_finalResults, "g_FinalSSAO"}};
+                std::pair<std::shared_ptr<glowl::Texture2DArray>, std::string> inputFinals =
+                    {m_finalResults, "g_FinalSSAO"};
 
-                // TODO: blending states????????????????????
+                // TODO: blending states
 
                 if (m_settings.QualityLevel < 0)
-                    fullscreenPassDraw(m_non_smart_half_apply_prgm, inputTextures, outputTextures);
+                    fullscreenPassDraw(m_non_smart_half_apply_prgm, {}, outputTextures, true, inputFinals);
                 else if (m_settings.QualityLevel == 0)
-                    fullscreenPassDraw(m_non_smart_apply_prgm, inputTextures, outputTextures);
+                    fullscreenPassDraw(m_non_smart_apply_prgm, {}, outputTextures, true, inputFinals);
                 else
-                    fullscreenPassDraw(m_apply_prgm, inputTextures, outputTextures);
+                    fullscreenPassDraw(m_apply_prgm, {}, outputTextures, true, inputFinals);
             }
 
             // TODO: presumably also unnecessary, see also a few lines above
@@ -523,15 +546,15 @@ void megamol::compositing::ASSAO::prepareDepths(
             fullscreenPassDraw(m_prepare_depths_prgm, inputTextures, outputFourDepths);
         }
     } else {
-        // TODO: is there a equivalent of UAV from hlsl in opengl?
+        // TODO: is there an equivalent of UAV from hlsl in opengl?
         // intel originally uses a UAV for the normals
         std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTexturesNormals = inputTextures;
         inputTexturesNormals.push_back({inputs->normalTexture, (std::string) "g_NormalsOutputUAV"});
 
         if (settings.QualityLevel < 0) {
-            fullscreenPassDraw(m_prepare_depths_half_prgm, inputTexturesNormals, outputTwoDepths);
+            fullscreenPassDraw(m_prepare_depths_and_normals_half_prgm, inputTexturesNormals, outputTwoDepths);
         } else {
-            fullscreenPassDraw(m_prepare_depths_prgm, inputTexturesNormals, outputFourDepths);
+            fullscreenPassDraw(m_prepare_depths_and_normals_prgm, inputTexturesNormals, outputFourDepths);
         }
     }
 
@@ -586,7 +609,7 @@ void megamol::compositing::ASSAO::generateSSAO(
                 blurPasses = Max(1, blurPasses);
         } else
 #endif
-            if (settings.QualityLevel <= 0) {
+        if (settings.QualityLevel <= 0) {
             // just one blur pass allowed for minimum quality
             // MM simply uses one blur pass
             blurPasses = std::min(1, settings.BlurPassCount);
@@ -597,15 +620,17 @@ void megamol::compositing::ASSAO::generateSSAO(
         // Generate
         {
             std::shared_ptr<glowl::Texture2D> rts = m_pingPongHalfResultA;
-
+            GLuint binding = 4;
             // no blur?
             if (blurPasses == 0) {
                 rts = m_finalResultsArrayViews[pass];
-                m_restored_texture = rts;
+                // we always bind to pingPongHalfResultA since the layout is the same as finalResultsArrayViews
+                // --> no distinction required in shader code
+                //binding = pass; 
             }
 
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                {rts, 0}}; // TODO: binding correct?
+                {rts, binding}}; // TODO: binding correct?
 
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures(5);
             inputTextures[0] = {m_halfDepths[pass], "g_ViewSpaceDepthSource"};
@@ -633,16 +658,19 @@ void megamol::compositing::ASSAO::generateSSAO(
 
             for (int i = 0; i < blurPasses; ++i) {
                 std::shared_ptr<glowl::Texture2D> rts = m_pingPongHalfResultB;
-
+                GLuint binding = 5;
                 if (i == blurPasses - 1) {
                     rts = m_finalResultsArrayViews[pass];
-                    m_restored_texture = rts;
+                    // we always bind to pingPongHalfResultB since the layout is the same as finalResultsArrayViews
+                    // --> no distinction required in shader code
+                    // binding = pass; 
                 }
 
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                    {rts, 0}}; // TODO: binding correct?
+                    {rts, binding}}; // TODO: binding correct?
 
-                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures = {{m_pingPongHalfResultA, "g_ViewspaceDepthSource2"}};
+                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures = {
+                    {m_pingPongHalfResultA, "g_BlurInput"}};
 
                 if (settings.QualityLevel > 0) {
                     if (wideBlursRemaining > 0) {
@@ -662,23 +690,31 @@ void megamol::compositing::ASSAO::generateSSAO(
 }
 
 
-
-// intel originally uses some blending state parameter, but it isnt used here, so we omit this
+// TODO: intel originally uses some blending state parameter, but it isnt used here, so we omit this
 // but could easily be extended with glEnable(GL_BLEND) and a blendfunc
 void megamol::compositing::ASSAO::fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm,
     const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>>& input_textures,
-    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>>& output_textures,
-    bool add_constants) {
+    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>>& output_textures, bool add_constants,
+    std::pair<std::shared_ptr<glowl::Texture2DArray>, std::string> finals) {
     
     prgm->Enable();
 
     if (add_constants)
         m_ssbo_constants->bind(0);
 
-    for (int i = 0; i < input_textures.size(); ++i) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        input_textures[i].first->bindTexture();
-        glUniform1i(prgm->ParameterLocation(input_textures[i].second.c_str()), i);
+    if (finals.first != nullptr) {
+        for (int i = 0; i < input_textures.size(); ++i) {
+            if (input_textures[i].first != NULL) {
+                glActiveTexture(GL_TEXTURE0 + i);
+                // TODO: adjust this for images
+                input_textures[i].first->bindTexture();
+                glUniform1i(prgm->ParameterLocation(input_textures[i].second.c_str()), i);
+            }
+        }
+    } else {
+        glActiveTexture(GL_TEXTURE0);
+        finals.first->bindTexture();
+        glUniform1i(prgm->ParameterLocation(finals.second.c_str()), 0);
     }
 
     for (int i = 0; i < output_textures.size(); ++i)
@@ -686,8 +722,8 @@ void megamol::compositing::ASSAO::fullscreenPassDraw(const std::unique_ptr<GLSLC
 
     // all textures in output_textures should have the same size, so we just use the first
     // TODO: is size for dispatch correct?
-    prgm->Dispatch(static_cast<int>(std::ceil(output_textures[0].first->getWidth() / 8.0f)),
-        static_cast<int>(std::ceil(output_textures[0].first->getHeight() / 8.0f)), 1);
+    prgm->Dispatch(static_cast<int>(std::ceil(output_textures[0].first->getWidth() / 8)),
+        static_cast<int>(std::ceil(output_textures[0].first->getHeight() / 8)), 1);
 
     prgm->Disable();
 
@@ -706,7 +742,7 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
     glowl::TextureLayout depth_layout = inputs->depthTexture->getTextureLayout();
     glowl::TextureLayout normal_layout = inputs->normalTexture->getTextureLayout();
 
-    // TODO: next
+    // TODO: check for correctness
     std::vector<std::pair<GLenum, GLint>> int_param = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST},
         {GL_TEXTURE_MAG_FILTER, GL_NEAREST}, {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
         {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
@@ -792,14 +828,12 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
     // need to investigate this more thoroughly
     reCreateIfNeeded(m_pingPongHalfResultA, m_halfSize, normal_layout);
     reCreateIfNeeded(m_pingPongHalfResultB, m_halfSize, normal_layout);
-    // TODO: is this correct? intels technically uses texture2darray but i think they dont make use of the
-    // texture2darray and it can thus remain a normal texture
     reCreateIfNeeded(m_finalResults, m_halfSize, normal_layout);
 
     for (int i = 0; i < 4; ++i) {
         // TODO: is this correct? intels technically uses ReCreateArrayViewIfNeeded but i think we wont need it
         // since our handling is different
-        reCreateIfNeeded(m_finalResultsArrayViews[i], m_halfSize, normal_layout);
+        reCreateArrayIfNeeded(m_finalResultsArrayViews[i], m_finalResults, m_halfSize, normal_layout, i);
     }
 
     reCreateIfNeeded(m_normals, m_size, normal_layout); // is this needed?
@@ -950,6 +984,51 @@ void megamol::compositing::ASSAO::updateConstants(
 // only resets textures if needed
 bool megamol::compositing::ASSAO::reCreateIfNeeded(
     std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly) {
+    if ((size.x == 0) || (size.y == 0)) {
+        tex.reset();
+    } else {
+        if (tex != nullptr) {
+            glowl::TextureLayout desc;
+            desc = tex->getTextureLayout();
+            if (equalLayoutsWithoutSize(desc, ly) && (desc.width == size.x) && (desc.height == size.y))
+                return false;
+        }
+
+        glowl::TextureLayout desc = ly;
+        desc.width = size.x;
+        desc.height = size.y;
+        tex->reload(desc, nullptr);
+    }
+
+    return true;
+}
+
+bool megamol::compositing::ASSAO::reCreateIfNeeded(
+    std::shared_ptr<glowl::Texture2DArray> tex, glm::ivec2 size, const glowl::TextureLayout& ly) {
+    if ((size.x == 0) || (size.y == 0)) {
+        tex.reset();
+    } else {
+        if (tex != nullptr) {
+            glowl::TextureLayout desc;
+            desc = tex->getTextureLayout();
+            if (equalLayoutsWithoutSize(desc, ly) && (desc.width == size.x) && (desc.height == size.y))
+                return false;
+        }
+
+        glowl::TextureLayout desc = ly;
+        desc.width = size.x;
+        desc.height = size.y;
+        //tex->reload(desc, nullptr);
+        // TODO: is this okay? Oo
+        tex->~Texture2DArray();
+        tex = std::make_shared<glowl::Texture2DArray>("m_finalResults", desc, nullptr);
+    }
+
+    return true;
+}
+
+bool megamol::compositing::ASSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2D> tex,
+    std::shared_ptr<glowl::Texture2DArray> original, glm::ivec2 size, const glowl::TextureLayout& ly, int arraySlice) {
     if ((size.x == 0) || (size.y == 0)) {
         tex.reset();
     } else {

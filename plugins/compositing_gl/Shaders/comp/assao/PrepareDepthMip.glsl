@@ -6,22 +6,40 @@ void PrepareDepthMip( const vec4 inPos/*, const vec2 inUV*/, int mipLevel, out f
     float depthsOutArr[4];
 
     // how to Gather a specific mip level?
-    depthsArr[0].x = g_ViewspaceDepthSource[baseCoords + ivec2( 0, 0 )].x ;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[0].y = g_ViewspaceDepthSource[baseCoords + ivec2( 1, 0 )].x ;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[0].z = g_ViewspaceDepthSource[baseCoords + ivec2( 0, 1 )].x ;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[0].w = g_ViewspaceDepthSource[baseCoords + ivec2( 1, 1 )].x ;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[1].x = g_ViewspaceDepthSource1[baseCoords + ivec2( 0, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[1].y = g_ViewspaceDepthSource1[baseCoords + ivec2( 1, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[1].z = g_ViewspaceDepthSource1[baseCoords + ivec2( 0, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[1].w = g_ViewspaceDepthSource1[baseCoords + ivec2( 1, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[2].x = g_ViewspaceDepthSource2[baseCoords + ivec2( 0, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[2].y = g_ViewspaceDepthSource2[baseCoords + ivec2( 1, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[2].z = g_ViewspaceDepthSource2[baseCoords + ivec2( 0, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[2].w = g_ViewspaceDepthSource2[baseCoords + ivec2( 1, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[3].x = g_ViewspaceDepthSource3[baseCoords + ivec2( 0, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[3].y = g_ViewspaceDepthSource3[baseCoords + ivec2( 1, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[3].z = g_ViewspaceDepthSource3[baseCoords + ivec2( 0, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
-    depthsArr[3].w = g_ViewspaceDepthSource3[baseCoords + ivec2( 1, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[0].x = g_ViewspaceDepthSource[baseCoords + ivec2( 0, 0 )].x ;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[0].y = g_ViewspaceDepthSource[baseCoords + ivec2( 1, 0 )].x ;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[0].z = g_ViewspaceDepthSource[baseCoords + ivec2( 0, 1 )].x ;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[0].w = g_ViewspaceDepthSource[baseCoords + ivec2( 1, 1 )].x ;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[1].x = g_ViewspaceDepthSource1[baseCoords + ivec2( 0, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[1].y = g_ViewspaceDepthSource1[baseCoords + ivec2( 1, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[1].z = g_ViewspaceDepthSource1[baseCoords + ivec2( 0, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[1].w = g_ViewspaceDepthSource1[baseCoords + ivec2( 1, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[2].x = g_ViewspaceDepthSource2[baseCoords + ivec2( 0, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[2].y = g_ViewspaceDepthSource2[baseCoords + ivec2( 1, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[2].z = g_ViewspaceDepthSource2[baseCoords + ivec2( 0, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[2].w = g_ViewspaceDepthSource2[baseCoords + ivec2( 1, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[3].x = g_ViewspaceDepthSource3[baseCoords + ivec2( 0, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[3].y = g_ViewspaceDepthSource3[baseCoords + ivec2( 1, 0 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[3].z = g_ViewspaceDepthSource3[baseCoords + ivec2( 0, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    //depthsArr[3].w = g_ViewspaceDepthSource3[baseCoords + ivec2( 1, 1 )].x;// * g_ASSAOConsts.MaxViewspaceDepth;
+
+    // texelFetch seems equivalent to Texture2D::Operator function[]
+    depthsArr[0].x = texelFetch(g_ViewspaceDepthSource, baseCoords + ivec2( 0, 0 )).x ;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[0].y = texelFetch(g_ViewspaceDepthSource, baseCoords + ivec2( 1, 0 )).x ;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[0].z = texelFetch(g_ViewspaceDepthSource, baseCoords + ivec2( 0, 1 )).x ;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[0].w = texelFetch(g_ViewspaceDepthSource, baseCoords + ivec2( 1, 1 )).x ;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[1].x = texelFetch(g_ViewspaceDepthSource1, baseCoords + ivec2( 0, 0 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[1].y = texelFetch(g_ViewspaceDepthSource1, baseCoords + ivec2( 1, 0 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[1].z = texelFetch(g_ViewspaceDepthSource1, baseCoords + ivec2( 0, 1 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[1].w = texelFetch(g_ViewspaceDepthSource1, baseCoords + ivec2( 1, 1 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[2].x = texelFetch(g_ViewspaceDepthSource2, baseCoords + ivec2( 0, 0 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[2].y = texelFetch(g_ViewspaceDepthSource2, baseCoords + ivec2( 1, 0 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[2].z = texelFetch(g_ViewspaceDepthSource2, baseCoords + ivec2( 0, 1 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[2].w = texelFetch(g_ViewspaceDepthSource2, baseCoords + ivec2( 1, 1 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[3].x = texelFetch(g_ViewspaceDepthSource3, baseCoords + ivec2( 0, 0 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[3].y = texelFetch(g_ViewspaceDepthSource3, baseCoords + ivec2( 1, 0 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[3].z = texelFetch(g_ViewspaceDepthSource3, baseCoords + ivec2( 0, 1 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
+    depthsArr[3].w = texelFetch(g_ViewspaceDepthSource3, baseCoords + ivec2( 1, 1 )).x;// * g_ASSAOConsts.MaxViewspaceDepth;
 
     const uvec2 SVPosui         = uvec2( inPos.xy );
     const uint pseudoRandomA    = (SVPosui.x ) + 2 * (SVPosui.y );
@@ -30,7 +48,8 @@ void PrepareDepthMip( const vec4 inPos/*, const vec2 inUV*/, int mipLevel, out f
     float dummyUnused2;
     float falloffCalcMulSq, falloffCalcAdd;
 
-    [unroll]
+    //[unroll]
+    // should unroll automatically in glsl
     for( int i = 0; i < 4; i++ )
     {
         vec4 depths = depthsArr[i];

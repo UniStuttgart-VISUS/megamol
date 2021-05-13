@@ -8,6 +8,8 @@
 #ifndef ASSAO_H_INCLUDED
 #define ASSAO_H_INCLUDED
 
+#include <variant>
+
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -17,6 +19,7 @@
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
+#include "glowl/Texture2DArray.hpp"
 
 #include <glm/glm.hpp>
 
@@ -228,14 +231,17 @@ private:
     void generateSSAO(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass);
     void fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm,
         const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>>& input_textures,
-        std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>>& output_textures,
-        bool add_constants = true);
+        std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>>& output_textures, bool add_constants = true,
+        std::pair<std::shared_ptr<glowl::Texture2DArray>, std::string> finals = {nullptr, ""});
 
     bool equalLayouts(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
     bool equalLayoutsWithoutSize(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
     void updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs);
     void updateConstants(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, int pass);
     bool reCreateIfNeeded(std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly);
+    bool reCreateIfNeeded(std::shared_ptr<glowl::Texture2DArray> tex, glm::ivec2 size, const glowl::TextureLayout& ly);
+    bool reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2D> tex, std::shared_ptr<glowl::Texture2DArray> original,
+        glm::ivec2 size, const glowl::TextureLayout& ly, int arraySlice);
     bool reCreateMIPViewIfNeeded(
         std::shared_ptr<glowl::Texture2D> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice);
 
@@ -251,9 +257,14 @@ private:
     std::unique_ptr<GLSLComputeShader> m_prepare_depths_and_normals_half_prgm;
     std::vector<std::unique_ptr<GLSLComputeShader>> m_prepare_depth_mip_prgms;
     std::array<std::unique_ptr<GLSLComputeShader>, 5> m_generate_prgms;
+    // TODO: redundant, take them out
+    // -------------------
     std::unique_ptr<GLSLComputeShader> m_generate_q0_prgm;
     std::unique_ptr<GLSLComputeShader> m_generate_q1_prgm;
     std::unique_ptr<GLSLComputeShader> m_generate_q2_prgm;
+    std::unique_ptr<GLSLComputeShader> m_generate_q3_prgm;
+    std::unique_ptr<GLSLComputeShader> m_generate_q3_base_prgm;
+    // -------------------
     std::unique_ptr<GLSLComputeShader> m_smart_blur_prgm;
     std::unique_ptr<GLSLComputeShader> m_smart_blur_wide_prgm;
     std::unique_ptr<GLSLComputeShader> m_apply_prgm;
@@ -269,10 +280,10 @@ private:
     std::vector<std::vector<std::shared_ptr<glowl::Texture2D>>> m_halfDepthsMipViews;
     std::shared_ptr<glowl::Texture2D> m_pingPongHalfResultA;
     std::shared_ptr<glowl::Texture2D> m_pingPongHalfResultB;
-    std::shared_ptr<glowl::Texture2D> m_finalResults;
+    std::shared_ptr<glowl::Texture2DArray> m_finalResults;
     std::array<std::shared_ptr<glowl::Texture2D>, 4> m_finalResultsArrayViews;
     std::shared_ptr<glowl::Texture2D> m_normals;
-    std::shared_ptr<glowl::Texture2D> m_restored_texture;
+    std::shared_ptr<glowl::Texture2D> m_finalOutput;
 
     glowl::TextureLayout m_tx_layout_samplerStatePointClamp;
     glowl::TextureLayout m_tx_layout_samplerStatePointMirror;

@@ -1,18 +1,18 @@
 vec2 SampleBlurred( vec4 inPos, vec2 coord )
 {
-    float packedEdges   = g_BlurInput.Load( ivec3( inPos.xy, 0 ) ).y;
+    float packedEdges = texelFetch(g_BlurInput, ivec3( inPos.xy, 0 ) ).y;
     vec4 edgesLRTB    = UnpackEdges( packedEdges );
 
-                                                                                // automatically done in our shader
-    vec4 valuesUL     = g_BlurInput.GatherRed( g_PointMirrorSampler, coord - g_ASSAOConsts.HalfViewportPixelSize * 0.5 );
-    vec4 valuesBR     = g_BlurInput.GatherRed( g_PointMirrorSampler, coord + g_ASSAOConsts.HalfViewportPixelSize * 0.5 );
+    // automatically done in our shader
+    vec4 valuesBL = textureGather( g_BlurInput, coord - g_ASSAOConsts.HalfViewportPixelSize * 0.5 );
+    vec4 valuesUR = textureGather( g_BlurInput, coord + g_ASSAOConsts.HalfViewportPixelSize * 0.5 );
 
     // fetch all ssaoValues around current pixel
-    float ssaoValue     = valuesUL.y;   // center   e.g. (5,5)                                          vUL.z
-    float ssaoValueL    = valuesUL.x;   // left     --> (4,5)                                   vUL.x   vUL.y   vBR.z
-    float ssaoValueT    = valuesUL.z;   // top      --> (5,4)                                           vBR.x   vBR.y
-    float ssaoValueR    = valuesBR.z;   // right    valuesBR.z == (6,6) --> .z = (6,5)
-    float ssaoValueB    = valuesBR.x;   // bottom   --> (5,6)
+    float ssaoValue     = valuesBL.y;   // center   e.g. (5,5)                                          vUR.x
+    float ssaoValueL    = valuesBL.x;   // left     --> (4,5)                                   vBL.x   vBL.y   vUR.z
+    float ssaoValueT    = valuesUR.x;   // top      --> (5,4)                                           vBL.z
+    float ssaoValueR    = valuesUR.z;   // right    valuesBR.z == (6,6) --> .z = (6,5)
+    float ssaoValueB    = valuesBL.z;   // bottom   --> (5,6)
 
     float sumWeight = 0.5f;
     float sum = ssaoValue * sumWeight;

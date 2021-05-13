@@ -1,23 +1,23 @@
 // this function is designed to only work with half/half depth at the moment - there's a couple of hardcoded paths that expect pixel/texel size, so it will not work for full res
-void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, out float outWeight, const vec2 SVPos/*, const vec2 normalizedScreenPos*/, uniform int qualityLevel, bool adaptiveBase )
+void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, out float outWeight, const vec2 SVPos/*, const vec2 normalizedScreenPos*/, /*uniform*/ int qualityLevel, bool adaptiveBase )
 {
     vec2 SVPosRounded = trunc( SVPos );
     uvec2 SVPosui = uvec2( SVPosRounded ); //same as uvec2( SVPos )
 
-    const int numberOfTaps = (adaptiveBase)?(SSAO_ADAPTIVE_TAP_BASE_COUNT) : ( g_numTaps[qualityLevel] );
+    const int numberOfTaps = (adaptiveBase) ? (SSAO_ADAPTIVE_TAP_BASE_COUNT) : ( g_numTaps[qualityLevel] );
     float pixZ, pixLZ, pixTZ, pixRZ, pixBZ;
 
-    vec4 valuesUL     = g_ViewspaceDepthSource.GatherRed( g_PointMirrorSampler, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize );
-    vec4 valuesBR     = g_ViewspaceDepthSource.GatherRed( g_PointMirrorSampler, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize, ivec2( 1, 1 ) );
+    vec4 valuesBL = textureGather(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize );
+    vec4 valuesUR = textureGatherOffset(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize, ivec2( 1, 1 ) );
 
     // get this pixel's viewspace depth
-    pixZ = valuesUL.y; //float pixZ = g_ViewspaceDepthSource.SampleLevel( g_PointMirrorSampler, normalizedScreenPos, 0.0 ).x; // * g_ASSAOConsts.MaxViewspaceDepth;
+    pixZ = valuesBL.y; //float pixZ = g_ViewspaceDepthSource.SampleLevel( g_PointMirrorSampler, normalizedScreenPos, 0.0 ).x; // * g_ASSAOConsts.MaxViewspaceDepth;
 
     // get left right top bottom neighbouring pixels for edge detection (gets compiled out on qualityLevel == 0)
-    pixLZ   = valuesUL.x;
-    pixTZ   = valuesUL.z;
-    pixRZ   = valuesBR.z;
-    pixBZ   = valuesBR.x;
+    pixLZ   = valuesBL.x;
+    pixTZ   = valuesUR.x;
+    pixRZ   = valuesUR.z;
+    pixBZ   = valuesBL.z;
 
     vec2 normalizedScreenPos = SVPosRounded * g_ASSAOConsts.Viewport2xPixelSize + g_ASSAOConsts.Viewport2xPixelSize_x_025;
     vec3 pixCenterPos = NDCToViewspace( normalizedScreenPos, pixZ ); // g

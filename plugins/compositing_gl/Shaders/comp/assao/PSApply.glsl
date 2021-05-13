@@ -1,5 +1,10 @@
-vec4 PSApply( in vec4 inPos : SV_POSITION/*, in vec2 inUV : TEXCOORD0*/ ) : SV_Target
+layout(local_size_x = 8, local_size_y = 8) in;
+
+//vec4 PSApply( in vec4 inPos : SV_POSITION/*, in vec2 inUV : TEXCOORD0*/ ) : SV_Target
+void main()
 {
+    vec3 inPos = gl_GlobalInvocationID;
+
     float ao;
     uvec2 pixPos     = (uvec2)inPos.xy;
     uvec2 pixPosHalf = pixPos / uvec2(2, 2);
@@ -8,11 +13,12 @@ vec4 PSApply( in vec4 inPos : SV_POSITION/*, in vec2 inUV : TEXCOORD0*/ ) : SV_T
     int mx = (pixPos.x % 2);
     int my = (pixPos.y % 2);
     int ic = mx + my * 2;       // center index
-    int ih = (1-mx) + my * 2;   // neighbouring, horizontal
-    int iv = mx + (1-my) * 2;   // neighbouring, vertical
-    int id = (1-mx) + (1-my)*2; // diagonal
+    int ih = (1 - mx) + my * 2;   // neighbouring, horizontal
+    int iv = mx + (1 - my) * 2;   // neighbouring, vertical
+    int id = (1 - mx) + (1 - my) * 2; // diagonal
 
-    vec2 centerVal = g_FinalSSAO.Load( ivec4( pixPosHalf, ic, 0 ) ).xy;
+    vec2 centerVal = imageLoad(g_FinalSSAO, ivec4( pixPosHalf, ic, 0 )).xy;
+    //vec2 centerVal = g_FinalSSAO.Load( ivec4( pixPosHalf, ic, 0 ) ).xy;
 
     ao = centerVal.x;
 
@@ -31,11 +37,14 @@ vec4 PSApply( in vec4 inPos : SV_POSITION/*, in vec2 inUV : TEXCOORD0*/ ) : SV_T
 
     // calculate final sampling offsets and sample using bilinear filter
     vec2  uvH = (inPos.xy + vec2( fmx + fmxe - 0.5, 0.5 - fmy ) ) * 0.5 * g_ASSAOConsts.HalfViewportPixelSize;
-    float   aoH = g_FinalSSAO.SampleLevel( g_LinearClampSampler, vec3( uvH, ih ), 0 ).x;
+    float   aoH = textureLod(g_FinalSSAO, vec3( uvH, ih ), 0 ).x;
+    //float   aoH = g_FinalSSAO.SampleLevel( g_LinearClampSampler, vec3( uvH, ih ), 0 ).x;
     vec2  uvV = (inPos.xy + vec2( 0.5 - fmx, fmy - 0.5 + fmye ) ) * 0.5 * g_ASSAOConsts.HalfViewportPixelSize;
-    float   aoV = g_FinalSSAO.SampleLevel( g_LinearClampSampler, vec3( uvV, iv ), 0 ).x;
+    float   aoV = textureLod( g_FinalSSAO, vec3( uvV, iv ), 0 ).x;
+    //float   aoV = g_FinalSSAO.SampleLevel( g_LinearClampSampler, vec3( uvV, iv ), 0 ).x;
     vec2  uvD = (inPos.xy + vec2( fmx - 0.5 + fmxe, fmy - 0.5 + fmye ) ) * 0.5 * g_ASSAOConsts.HalfViewportPixelSize;
-    float   aoD = g_FinalSSAO.SampleLevel( g_LinearClampSampler, vec3( uvD, id ), 0 ).x;
+    float   aoD = textureLod( g_FinalSSAO, vec3( uvD, id ), 0 ).x;
+    //float   aoD = g_FinalSSAO.SampleLevel( g_LinearClampSampler, vec3( uvD, id ), 0 ).x;
 
     // reduce weight for samples near edge - if the edge is on both sides, weight goes to 0
     vec4 blendWeights;
@@ -49,5 +58,7 @@ vec4 PSApply( in vec4 inPos : SV_POSITION/*, in vec2 inUV : TEXCOORD0*/ ) : SV_T
     ao = dot( vec4( ao, aoH, aoV, aoD ), blendWeights ) / blendWeightsSum;
 #endif
 
-    return vec4( ao.xxx, 1.0 );
+    //return vec4( ao.xxx, 1.0 );
+    // TODO: look into the host code: is this the correct sampler?
+    imageStore(g_FinalOutput, pixPos, vec4(ao.xxx, 1.f));
 }

@@ -15,5 +15,5 @@ void CalculateRadiusParameters( const float pixCenterLength, const vec2 pixelDir
     pixLookupRadiusMod = (0.85 * effectRadius) / pixelDirRBViewspaceSizeAtCenterZ.x;
 
     // used to calculate falloff (both for AO samples and per-sample weights)
-    falloffCalcMulSq= -1.0f / (effectRadius*effectRadius);
+    falloffCalcMulSq = -1.0f / (effectRadius*effectRadius);
 }
