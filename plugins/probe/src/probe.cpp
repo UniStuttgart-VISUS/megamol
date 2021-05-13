@@ -34,6 +34,7 @@
 #include "TessellateBoundingBox.h"
 #include "InjectClusterID.h"
 #include "ElementSampling.h"
+#include "ExtractSkeleton.h"
 
 namespace megamol::probe {
     /** Implementing the instance class of this plugin */
@@ -82,6 +83,7 @@ namespace megamol::probe {
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractSkeleton>();
 
             // register calls here:
 
