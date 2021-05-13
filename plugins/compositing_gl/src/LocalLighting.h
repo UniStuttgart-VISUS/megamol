@@ -12,6 +12,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 
@@ -80,11 +81,16 @@ private:
 
     uint32_t m_version;
 
-    /** Shader program for texture add */
-    std::unique_ptr<GLSLComputeShader> m_lighting_prgm;
+    /** Shader program for texture add (Lambert Illumination) */
+    std::unique_ptr<GLSLComputeShader> m_lambert_prgm;
+
+    /** Shader program for texture add (Blinn-Phong Illumination) */
+    std::unique_ptr<GLSLComputeShader> m_phong_prgm;
 
     /** Texture that the lighting result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
+
+    //TODO add same thing for Ambient Light as for point & distant light
 
     /** GPU buffer object for making active (point)lights available in during shading pass */
     std::unique_ptr<glowl::BufferObject> m_point_lights_buffer;
@@ -96,7 +102,18 @@ private:
     std::vector<LightParams> m_point_lights, m_distant_lights;
 
 
-    // TODO mode slot for LAMBERT, PHONG, etc.
+    /**Parameter for different illuminations e.g. Lambertian, Phong */ 
+    megamol::core::param::ParamSlot m_illuminationmode;
+
+    /**Parameters for Blinn-Phong Illumination*/
+    megamol::core::param::ParamSlot m_phong_ambientColor;
+    megamol::core::param::ParamSlot m_phong_diffuseColor;
+    megamol::core::param::ParamSlot m_phong_specularColor;
+
+    megamol::core::param::ParamSlot m_phong_k_ambient;
+    megamol::core::param::ParamSlot m_phong_k_diffuse;
+    megamol::core::param::ParamSlot m_phong_k_specular;
+    megamol::core::param::ParamSlot m_phong_k_exp;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;

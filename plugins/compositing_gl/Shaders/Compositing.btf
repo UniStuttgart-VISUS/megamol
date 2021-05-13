@@ -46,5 +46,10 @@
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/normalFromDepth_c.glsl</snippet>
     </shader>
+    
+    <shader name="phong">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/phong_c.glsl</snippet>
+    </shader>
 
 </btf>
