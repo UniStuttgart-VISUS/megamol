@@ -139,7 +139,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         } else if (metadata->ScalarLength == 2) {
             voxelType = voxelDataType::USHORT;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] Unsigned integers with a length greater than 2 are invalid.");
             return false;
         }
         break;
@@ -147,12 +147,12 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         if (metadata->ScalarLength == 2) {
             voxelType = voxelDataType::SHORT;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] Integers with a length != 2 are invalid.");
             return false;
         }
         break;
     case core::misc::BITS:
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid datatype.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] Invalid datatype.");
         return false;
         break;
     }
@@ -160,38 +160,37 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     // get color transfer function
     std::vector<float> rgb;
     std::vector<float> a;
-
     if ((*cgtf)(0)) {
         if (cgtf->OpenGLTextureFormat() ==
             megamol::core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
-            auto const numColors = cgtf->TextureSize();
-            rgb.resize(3 * numColors);
-            a.resize(numColors);
+            auto const texSize = cgtf->TextureSize();
+            rgb.resize(3 * texSize);
+            a.resize(texSize);
             auto const texture = cgtf->GetTextureData();
 
-            for (unsigned int i = 0; i < numColors; ++i) {
+            for (unsigned int i = 0; i < texSize; ++i) {
                 rgb[i * 3 + 0] = texture[i * 4 + 0];
                 rgb[i * 3 + 1] = texture[i * 4 + 1];
                 rgb[i * 3 + 2] = texture[i * 4 + 2];
                 a[i] = texture[i * 4 + 3];
             }
         } else {
-            auto const numColors = cgtf->TextureSize();
-            rgb.resize(3 * numColors);
-            a.resize(numColors);
+            auto const texSize = cgtf->TextureSize();
+            rgb.resize(3 * texSize);
+            a.resize(texSize);
             auto const texture = cgtf->GetTextureData();
 
-            for (unsigned int i = 0; i < numColors; ++i) {
+            for (unsigned int i = 0; i < texSize; ++i) {
                 rgb[i * 3 + 0] = texture[i * 4 + 0];
                 rgb[i * 3 + 1] = texture[i * 4 + 1];
                 rgb[i * 3 + 2] = texture[i * 4 + 2];
-                a[i] = i / (numColors - 1.0f);
+                a[i] = i / (texSize - 1.0f);
             }
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("OSPRayStructuredVolume: No alpha channel in transfer function "
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[OSPRayStructuredVolume] No alpha channel in transfer function "
                                                    "connected to module. Adding alpha ramp to RGB colors.\n");
         }
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] No transfer function connected to module");
         return false;
     }
     cgtf->ResetDirty();
@@ -274,14 +273,15 @@ bool OSPRayStructuredVolume::getExtends(megamol::core::Call& call) {
 
     this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>();
     this->extendContainer.boundingBox->SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
-    std::string bbox_string =
-                              "LEFT: " + std::to_string(extendContainer.boundingBox->BoundingBox().Left()) +
-                              ";\nBOTTOM: " + std::to_string(extendContainer.boundingBox->BoundingBox().Bottom()) +
-                              ";\nBACK: " + std::to_string(extendContainer.boundingBox->BoundingBox().Back()) +
-                              ";\nRIGHT: " + std::to_string(extendContainer.boundingBox->BoundingBox().Right()) +
-                              ";\nTOP: " + std::to_string(extendContainer.boundingBox->BoundingBox().Top()) +
-                              ";\nFRONT: " + std::to_string(extendContainer.boundingBox->BoundingBox().Bottom());
-    this->showBoundingBox.Param<core::param::StringParam>()->SetValue(bbox_string.c_str());
+
+    std::stringstream bbox_string;
+    bbox_string << "LEFT: " << extendContainer.boundingBox->BoundingBox().Left() << ";" << std::endl;
+    bbox_string << "BOTTOM: " << extendContainer.boundingBox->BoundingBox().Bottom() << ";" << std::endl;
+    bbox_string << "BACK: " << extendContainer.boundingBox->BoundingBox().Back() << ";" << std::endl;
+    bbox_string << "RIGHT: " << extendContainer.boundingBox->BoundingBox().Right() << ";" << std::endl;
+    bbox_string << "TOP: " << extendContainer.boundingBox->BoundingBox().Top() << ";" << std::endl;
+    bbox_string << "FRONT: " << extendContainer.boundingBox->BoundingBox().Bottom();
+    this->showBoundingBox.Param<core::param::StringParam>()->SetValue(bbox_string.str().c_str());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;
 

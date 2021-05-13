@@ -363,18 +363,32 @@ bool SurfaceNets::getData(core::Call& call) {
         mesh_meta_data.m_frame_cnt = cd->GetAvailableFrames();
         cm->setMetaData(mesh_meta_data);
 
-        _dims[0] = cd->GetResolution(0);
-        _dims[1] = cd->GetResolution(1);
-        _dims[2] = cd->GetResolution(2);
+
         auto meta_data = cd->GetMetadata();
+        _dims[0] = meta_data->Resolution[0];
+        _dims[1] = meta_data->Resolution[1];
+        _dims[2] = meta_data->Resolution[2];
         _volume_origin[0] = meta_data->Origin[0];
         _volume_origin[1] = meta_data->Origin[1];
         _volume_origin[2] = meta_data->Origin[2];
         _spacing[0] = meta_data->SliceDists[0][0];
         _spacing[1] = meta_data->SliceDists[1][0];
         _spacing[2] = meta_data->SliceDists[2][0];
-        if (cd->GetScalarType() != core::misc::FLOATING_POINT) return false;
-        _data = reinterpret_cast<float*>(cd->GetData());
+        if (cd->GetScalarType() == core::misc::FLOATING_POINT) {
+            _data = static_cast<float*>(cd->GetData());
+        } else if (cd->GetScalarType() == core::misc::UNSIGNED_INTEGER) {
+            _converted_data.reserve(_dims[0] * _dims[1] * _dims[2]);
+            auto c_data = static_cast<unsigned char*>(cd->GetData());
+            for (uint32_t z = 0; z < _dims[2]; ++z) {
+                for (uint32_t y = 0; y < _dims[1]; ++y) {
+                    for (uint32_t x = 0; x < _dims[0]; ++x) {
+                        uint64_t idx = z * _dims[0] * _dims[1] + y * _dims[0] + x;
+                        _converted_data.emplace_back(c_data[idx]);
+                    }
+                }
+            }
+            _data = _converted_data.data();
+        }
     }
 
     if (something_changed && _data) {

@@ -86,6 +86,7 @@ private:
     std::array<uint32_t, 3> _dims;
     std::array<float, 3> _spacing;
     std::array<float, 3> _volume_origin;
+    std::vector<float> _converted_data;
     float* _data;
 
     // store surface
