@@ -9,6 +9,9 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 cmake_policy(SET CMP0054 NEW)
 cmake_policy(SET CMP0079 NEW) # Needed for static build, requires CMake 3.13!
+if (POLICY CMP0104)
+  cmake_policy(SET CMP0104 NEW)
+endif()
 
 project(megamol)
 

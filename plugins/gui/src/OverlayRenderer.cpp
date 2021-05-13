@@ -132,11 +132,11 @@ OverlayRenderer::OverlayRenderer(void)
     this->MakeSlotAvailable(&this->paramText);
 
     // Font Settings
-    param::EnumParam* fep = new param::EnumParam(utility::SDFFont::FontName::ROBOTO_SANS);
-    fep->SetTypePair(utility::SDFFont::FontName::ROBOTO_SANS, "Roboto Sans");
-    fep->SetTypePair(utility::SDFFont::FontName::EVOLVENTA_SANS, "Evolventa");
-    fep->SetTypePair(utility::SDFFont::FontName::UBUNTU_MONO, "Ubuntu Mono");
-    fep->SetTypePair(utility::SDFFont::FontName::VOLLKORN_SERIF, "Vollkorn Serif");
+    param::EnumParam* fep = new param::EnumParam(utility::SDFFont::PRESET_ROBOTO_SANS);
+    fep->SetTypePair(utility::SDFFont::PRESET_ROBOTO_SANS, "Roboto Sans");
+    fep->SetTypePair(utility::SDFFont::PRESET_EVOLVENTA_SANS, "Evolventa");
+    fep->SetTypePair(utility::SDFFont::PRESET_UBUNTU_MONO, "Ubuntu Mono");
+    fep->SetTypePair(utility::SDFFont::PRESET_VOLLKORN_SERIF, "Vollkorn Serif");
     this->paramFontName << fep;
     this->paramFontName.SetUpdateCallback(this, &OverlayRenderer::onFontName);
     this->MakeSlotAvailable(&this->paramFontName);
@@ -261,7 +261,8 @@ bool OverlayRenderer::onFontName(param::ParamSlot& slot) {
 
     slot.ResetDirty();
     this->m_font_ptr.reset();
-    auto font_name = static_cast<utility::SDFFont::FontName>(this->paramFontName.Param<param::EnumParam>()->Value());
+    auto font_name =
+        static_cast<utility::SDFFont::PresetFontName>(this->paramFontName.Param<param::EnumParam>()->Value());
     this->m_font_ptr = std::make_unique<utility::SDFFont>(font_name);
     if (!this->m_font_ptr->Initialise(this->GetCoreInstance())) {
         return false;
@@ -281,15 +282,8 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
 
     // Check megamol graph for available parameter:
     megamol::core::param::AbstractParam* param_ptr = nullptr;
-    const megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
-    auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
-        [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
-    if (megamolgraph_it != this->frontend_resources.end()) {
-        megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>();
-    }
-    if (megamolgraph_ptr != nullptr) {
-        param_ptr = megamolgraph_ptr->FindParameter(std::string(parameter_name.PeekBuffer()));
-    }
+    auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+    param_ptr = megamolgraph.FindParameter(std::string(parameter_name.PeekBuffer()));
     // Alternatively, check core instance graph for available parameter:
     if (param_ptr == nullptr) {
         auto core_parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
@@ -439,11 +433,10 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
-    // First call chained renderer
-    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
-    if (chainedCall != nullptr) {
-        *chainedCall = call;
-        if (!(*chainedCall)(view::AbstractCallRender::FnRender)) {
+    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
+    if (cr3d_out != nullptr) {
+        *cr3d_out = call;
+        if (!(*cr3d_out)(view::AbstractCallRender::FnRender)) {
             return false;
         }
     }
@@ -648,21 +641,7 @@ void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utilit
     } break;
     }
 
-    // Font rendering takes matrices from OpenGL stack
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(ortho));
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    font.DrawString(glm::value_ptr(color), x, y, z, size, false, text.c_str(), anchor);
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+    font.DrawString(ortho, glm::value_ptr(color), x, y, z, size, false, text.c_str(), anchor);
 }
 
 

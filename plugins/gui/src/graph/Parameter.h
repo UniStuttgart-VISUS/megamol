@@ -101,9 +101,10 @@ namespace gui {
             Stroage_t;
 
         struct StockParameter {
-            std::string full_name;
+            std::string param_name;
+            std::string param_fullname;
             std::string description;
-            Param_t type;
+            ParamType_t type;
             std::string default_value;
             Min_t minval;
             Max_t maxval;
@@ -112,6 +113,8 @@ namespace gui {
             bool gui_read_only;
             Present_t gui_presentation;
         };
+
+        // STATIC ---------------------
 
         static bool ReadNewCoreParameterToStockParameter(
             megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param);
@@ -132,12 +135,14 @@ namespace gui {
         static bool WriteCoreParameterValue(
             megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr);
 
-        Parameter(ImGuiID uid, Param_t type, Stroage_t store, Min_t minval, Max_t maxval, const std::string& full_name,
-            const std::string& description);
+        // ----------------------------
+
+        Parameter(ImGuiID uid, ParamType_t type, Stroage_t store, Min_t minval, Max_t maxval,
+            const std::string& param_name, const std::string& param_fullname, const std::string& description);
 
         ~Parameter(void);
 
-        bool Draw(WidgetScope scope, const std::string& module_fullname);
+        bool Draw(WidgetScope scope);
 
         bool IsValueDirty(void) {
             return this->value_dirty;
@@ -163,8 +168,11 @@ namespace gui {
             this->tf_editor_hash = hash;
         }
         inline void TransferFunctionEditor_ConnectExternal(
-            std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
+            std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr, bool use_external_editor) {
             this->tf_editor_external_ptr = tfe_ptr;
+            if (use_external_editor && (this->tf_editor_external_ptr != nullptr)) {
+                this->tf_use_external_editor = true;
+            }
         }
         void TransferFunction_LoadTexture(
             std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height);
@@ -174,26 +182,28 @@ namespace gui {
         inline const ImGuiID UID(void) const {
             return this->uid;
         }
-        inline std::string FullName(void) const {
-            return this->full_name;
-        }
+        // <param_name>
         inline std::string Name(void) const {
-            std::string name = this->full_name;
-            auto idx = this->full_name.rfind(':');
+            std::string name = this->param_name;
+            auto idx = this->param_name.rfind(':');
             if (idx != std::string::npos) {
                 name = name.substr(idx + 1);
             }
             return name;
         }
-
-        inline std::string GetNameSpace(void) const {
+        // <param_namespace>
+        inline std::string NameSpace(void) const {
             std::string name_space = "";
-            auto idx = this->full_name.rfind(':');
+            auto idx = this->param_name.rfind(':');
             if (idx != std::string::npos) {
-                name_space = this->full_name.substr(0, idx - 1);
+                name_space = this->param_name.substr(0, idx - 1);
                 name_space.erase(std::remove(name_space.begin(), name_space.end(), ':'), name_space.end());
             }
             return name_space;
+        }
+        // <module_name>::<param_namespace>::<param_name>
+        inline std::string FullName(void) const {
+            return this->param_fullname;
         }
 
         std::string GetValueString(void) const;
@@ -223,7 +233,7 @@ namespace gui {
         inline size_t GetTransferFunctionHash(void) const {
             return this->tf_string_hash;
         }
-        inline const Param_t Type(void) const {
+        inline const ParamType_t Type(void) const {
             return this->type;
         }
         inline const std::string FloatFormat(void) const {
@@ -235,11 +245,18 @@ namespace gui {
         inline vislib::SmartPtr<megamol::core::param::AbstractParam> CoreParamPtr(void) const {
             return this->core_param_ptr;
         }
+        inline void ResetCoreParamPtr(void) {
+            this->core_param_ptr = nullptr;
+        }
 
         // SET ----------------------------------------------------------------
 
         inline void SetName(const std::string& name) {
-            this->full_name = name;
+            this->param_name = name;
+        }
+
+        inline void SetFullName(const std::string& full_name) {
+            this->param_fullname = full_name;
         }
 
         inline void SetDescription(const std::string& desc) {
@@ -259,12 +276,13 @@ namespace gui {
                         this->value_dirty = true;
                     }
 
-                    // Check for new flex enum entry
-                    if (this->type == Param_t::FLEXENUM) {
+                    if (this->type == ParamType_t::FLEXENUM) {
+                        // Flex Enum
                         auto storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
                         storage.insert(std::get<std::string>(this->value));
                         this->SetStorage(storage);
-                    } else if (this->type == Param_t::TRANSFERFUNCTION) {
+                    } else if (this->type == ParamType_t::TRANSFERFUNCTION) {
+                        // Transfer Function
                         if constexpr (std::is_same_v<T, std::string>) {
                             int texture_width, texture_height;
                             std::vector<float> texture_data;
@@ -273,6 +291,15 @@ namespace gui {
                                 this->TransferFunction_LoadTexture(texture_data, texture_width, texture_height);
                             }
                             this->tf_string_hash = std::hash<std::string>()(val);
+                        }
+                    } else if (this->type == ParamType_t::FILEPATH) {
+                        // Push log message to GUI pop-up for not existing files
+                        auto file = std::get<std::string>(this->value);
+                        if (!megamol::core::utility::FileUtils::FileExists(file)) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                                "%sFile Parameter%sFile not found: '%s' > Parameter '%s'\n\n",
+                                LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG, this->FullName().c_str(),
+                                file.c_str());
                         }
                     }
                 }
@@ -331,8 +358,9 @@ namespace gui {
         // VARIABLES --------------------------------------------------------------
 
         const ImGuiID uid;
-        const Param_t type;
-        std::string full_name;
+        const ParamType_t type;
+        std::string param_name;
+        std::string param_fullname;
         std::string description;
 
         vislib::SmartPtr<megamol::core::param::AbstractParam> core_param_ptr;

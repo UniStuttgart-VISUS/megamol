@@ -113,6 +113,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<DeferredShading>();
     instance.RegisterAutoDescription<EventStorage>();
     instance.RegisterAutoDescription<view::View3D>();
-    instance.RegisterAutoDescription<view::ContextToGL>();
     instance.RegisterAutoDescription<ResourceTestModule>();
 }

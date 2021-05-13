@@ -11,6 +11,9 @@
 
 #include "mmcore/view/RenderUtils.h"
 
+#include "imgui.h"
+#include "imgui_internal.h"
+
 
 // #### Utility minimal camera state ################################### //
 
@@ -71,14 +74,13 @@ public:
 
     void SetBackgroundColor(glm::vec4 bc) { this->background_color = bc; };
 
-    void PushMenu(const std::string& left_label, const std::string& middle_label, const std::string& right_label,
-        float viewport_width, float viewport_height);
+    void PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp);
 
-    void PushHotkeyList(float viewport_width, float viewport_height);
+    void HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm::vec2 dim_vp);
 
-    void PushText(const std::string& text, float x, float y, float z);
+    void Push2DText(const glm::mat4& ortho, const std::string& text, float x, float y);
 
-    void DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp);
+    void DrawAll(const glm::mat4& mvp, glm::vec2 dim_vp);
 
     float GetTextLineHeight(void);
 
@@ -92,13 +94,21 @@ private:
     // VARIABLES ------------------------------------------------------- //
 
     megamol::core::utility::SDFFont font;
-    const float font_size;
+
     bool init_once;
+
+    float menu_font_size;
+    float menu_height;
     glm::vec4 background_color;
+    bool hotkey_window_setup_once;
 
     // FUNCTIONS ------------------------------------------------------- //
 
     const float lightness(glm::vec4 background) const;
+
+    void gui_update(void);
+
+    void gui_table_row(const char* left, const char* right);
 };
 
 } /* end namespace cinematic */

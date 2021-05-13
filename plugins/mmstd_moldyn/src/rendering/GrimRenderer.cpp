@@ -415,7 +415,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         for (auto const& light : distant_lights) {
             auto use_eyedir = light.eye_direction;
             if (use_eyedir) {
-                curlightDir = -camView;
+                curlightDir = camView;
             } else {
                 auto lightDir = light.direction;
                 if (lightDir.size() == 3) {

@@ -11,8 +11,7 @@
 
 #include "GUIUtils.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/MinimalPopUp.h"
-#include "widgets/RenamePopUp.h"
+#include "widgets/PopUps.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
 
@@ -62,7 +61,7 @@ namespace gui {
             std::string callee = "";     // Requierd for ADD_CALL, DELETE_CALL
         };
 
-        Graph(const std::string& graph_name, GraphCoreInterface core_interface);
+        Graph(const std::string& graph_name);
         ~Graph(void);
 
         ModulePtr_t AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name);
@@ -80,7 +79,7 @@ namespace gui {
         bool AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
 
         bool DeleteCall(ImGuiID call_uid);
-        inline const CallPtrVector_t& GetCalls(void) {
+        inline const CallPtrVector_t& Calls(void) {
             return this->calls;
         }
 
@@ -106,12 +105,8 @@ namespace gui {
 
         bool UniqueModuleRename(const std::string& module_full_name);
 
-        const std::string GetFilename(void) const {
-            return this->filename;
-        }
-        void SetFilename(const std::string& filename) {
-            this->filename = filename;
-        }
+        const std::string GetFilename(void) const;
+        void SetFilename(const std::string& filename, bool saved_filename);
 
         bool PushSyncQueue(QueueAction in_action, const QueueData& in_data);
         bool PopSyncQueue(QueueAction& out_action, QueueData& out_data);
@@ -121,11 +116,21 @@ namespace gui {
             }
         }
 
-        inline GraphCoreInterface GetCoreInterface(void) {
-            return this->graph_core_interface;
+        inline GraphCoreInterface GetCoreInterface(void) const {
+            return this->core_interface;
         }
-        inline bool HasCoreInterface(void) {
-            return (this->graph_core_interface != GraphCoreInterface::NO_INTERFACE);
+        inline void SetCoreInterface(GraphCoreInterface graph_core_interface) {
+            this->core_interface = graph_core_interface;
+        }
+
+        inline bool IsRunning(void) const {
+            return this->running;
+        }
+        inline void SetRunning(bool run) {
+            this->running = run;
+            if (!this->running) {
+                this->core_interface = GraphCoreInterface::NO_INTERFACE;
+            }
         }
 
         const std::string GenerateUniqueGraphEntryName(void);
@@ -186,9 +191,11 @@ namespace gui {
         CallPtrVector_t calls;
         GroupPtrVector_t groups;
         bool dirty_flag;
-        std::string filename;
+        std::pair<std::pair<bool, std::string>, std::pair<bool, std::string>>
+            filenames; // (1) script path from core | (2) saved file name
         SyncQueue_t sync_queue;
-        GraphCoreInterface graph_core_interface;
+        GraphCoreInterface core_interface;
+        bool running; // Do not change in Graph class, only via GraphCollection
 
         megamol::gui::GraphItemsState_t gui_graph_state; /// State propagated and shared by all graph items
         bool gui_update;
@@ -211,12 +218,12 @@ namespace gui {
         float gui_current_font_scaling;
         StringSearchWidget gui_search_widget;
         SplitterWidget gui_splitter_widget;
-        RenamePopUp gui_rename_popup;
+        PopUps gui_rename_popup;
         HoverToolTip gui_tooltip;
 
         // FUNCTIONS --------------------------------------------------------------
 
-        void draw_menu(void);
+        void draw_menu(GraphState_t& state);
         void draw_canvas(float child_width, GraphState_t& state);
         void draw_parameters(float child_width);
 

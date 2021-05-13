@@ -131,19 +131,30 @@ CinematicView::CinematicView(void)
 
 CinematicView::~CinematicView(void) {
 
+    if (this->_fbo != nullptr) {
+        if (this->_fbo->IsEnabled()) {
+            this->_fbo->Disable();
+        }
+        this->_fbo->Release();
+        this->_fbo.reset();
+    }
     this->render_to_file_cleanup();
+    this->Release();
 }
+
 
 
 void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call) {
 
     // Get update data from keyframe keeper -----------------------------------
     auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
-    if (cr3d == nullptr)
+    if (cr3d == nullptr) {
         return;
+    }
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
-    if (ccc == nullptr)
+    if (ccc == nullptr) {
         return;
+    }
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData))
         return;
     ccc->SetBboxCenter(vislib_point_to_glm(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
@@ -279,6 +290,8 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     const float vp_fh = static_cast<float>(vp_ih);
     const float vp_fh_reduced = static_cast<float>(vp_ih_reduced);
     const float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
+    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
+
     // FBO viewport
     int fboWidth = vp_iw;
     int fboHeight = vp_ih_reduced;
@@ -316,7 +329,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     // Set camera settings ----------------------------------------------------
     auto res = cam_type::screen_size_type(glm::ivec2(fboWidth, fboHeight));
     this->_camera.resolution_gate(res);
-    auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, 0, fboWidth, fboHeight});
+    auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, fboHeight, fboWidth, 0}); // left, top, right, bottom!
     this->_camera.image_tile(tile);
 
     // Set camera parameters of selected keyframe for this view.
@@ -422,9 +435,9 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
         }
     }
 
-    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     if (auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call)) {
         gpu_call->SetFramebufferObject(this->_fbo);
+        gpu_call->SetBackgroundColor(this->BkgndColour());
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "CallRenderViewGL required to set framebuffer object. [%s, %s, line %d]\n ", __FILE__, __FUNCTION__,
@@ -432,15 +445,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
         return;
     }
 
-    // Call Render-Function of parent View3DGL
     Base::Render(context, call);
-
-    auto err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
-        return;
-    }
 
     // Write frame to file
     if (this->rendering) {
@@ -481,7 +486,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     glm::vec3 pos_upper_right = {right, up, 0.0f};
     glm::vec3 pos_bottom_right = {right, bottom, 0.0f};
     this->utils.Push2DColorTexture(this->_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left,
-        pos_upper_right, pos_bottom_right, false, glm::vec4(0.0f), true);
+        pos_upper_right, pos_bottom_right, true, glm::vec4(0.0f), true);
     
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " CINEMATIC ";
@@ -492,17 +497,11 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
         midLabel = " Playing Animation ";
     }
     std::string rightLabel = "";
-    this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, glm::vec2(vp_fw, vp_fh));
 
     // Draw 2D ----------------------------------------------------------------
-    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
     this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
 
-    err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
-    }
 }
 
 
@@ -643,14 +642,8 @@ bool CinematicView::render_to_file_write() {
         if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
             project = this->GetCoreInstance()->SerializeGraph();
         } else {
-            auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
-                [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
-            if (megamolgraph_it != this->frontend_resources.end()) {
-                if (auto megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>()) {
-                    project =
-                        const_cast<megamol::core::MegaMolGraph*>(megamolgraph_ptr)->Convenience().SerializeGraph();
-                }
-            }
+            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+            project = const_cast<megamol::core::MegaMolGraph&>(megamolgraph).Convenience().SerializeGraph();
         }
 
         megamol::core::utility::graphics::ScreenShotComments ssc(project);

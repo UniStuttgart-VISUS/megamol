@@ -6,10 +6,6 @@ FLACH in float squarRad;
 FLACH in float rad;
 FLACH in vec4 vertColor;
 
-#ifdef RETICLE
-FLACH in vec2 centerFragment;
-#endif // RETICLE
-
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
 #endif // BACKSIDE_ENABLED
@@ -26,15 +22,17 @@ uniform vec4 viewAttr;
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
 
-// Only used by SPLAT render mode:
+// SPLAT
 uniform float alphaScaling;
 FLACH in float effectiveDiameter;
 
-// Only used by AMBIENT OCLUSION render mode:
+// AMBIENT OCLUSION
 uniform bool inUseHighPrecision;
 out vec4 outNormal;
 
-// Only used by OUTLINE render mode:
-uniform float outlineSize;
+// OUTLINE / ifdef RETICLE
+uniform float outlineWidth;
+FLACH in float fragmentRadius;
+FLACH in vec2 centerFragment;
 
 layout(location = 0) out vec4 outColor;

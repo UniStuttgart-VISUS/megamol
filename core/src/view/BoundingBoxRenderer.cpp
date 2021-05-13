@@ -194,11 +194,6 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
             "The BoundingBoxRenderer does not work without a renderer attached to its right");
         return false;
     }
-    *chainedCall = call;
-    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
-    call = *chainedCall;
-
-
 
     auto boundingBoxes = chainedCall->AccessBoundingBoxes();
     auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
@@ -207,7 +202,10 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes, smoothLines);
     }
+
+    *chainedCall = call;
     renderRes &= (*chainedCall)(view::AbstractCallRender::FnRender);
+
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes, smoothLines);
     }

@@ -76,7 +76,6 @@ namespace gui {
         std::string file_warning;
         // Keeps child path and flag whether child is director or not
         std::vector<ChildData_t> child_paths;
-        size_t additional_lines;
         vislib::math::Ternary save_gui_state;
 
         HoverToolTip tooltip;
