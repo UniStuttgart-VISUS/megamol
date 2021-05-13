@@ -57,10 +57,17 @@ namespace probe_gl {
 
         bool m_show_hull;
 
-        std::vector<std::string> m_identifiers;
-        std::vector<std::vector<glowl::DrawElementsCommand>> m_draw_commands;
-        std::vector<std::vector<std::array<float, 16>>> m_object_transforms;
+        std::vector<std::vector<std::string>> m_identifiers;
         std::vector<std::shared_ptr<glowl::Mesh>> m_batch_meshes;
+        std::vector<std::vector<glowl::DrawElementsCommand>> m_draw_commands;
+
+        struct PerObjectData {
+            std::array<float,16> transform;
+            std::array<float,4>  color;
+        };
+        std::vector<std::vector<PerObjectData>> m_per_object_data;
+
+        glm::vec4 m_hull_color;
 
         //core::CallerSlot m_probes_slot;
 
@@ -71,6 +78,9 @@ namespace probe_gl {
 
         /** Slot for setting different rendering mode in hull shader */
         core::param::ParamSlot m_shading_mode_slot;
+
+        /** Slot for setting the color of the hull mesh */
+        core::param::ParamSlot m_hull_color_slot;
     };
 
 } // namespace probe_gl

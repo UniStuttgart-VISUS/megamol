@@ -8,6 +8,7 @@
 #include "stdafx.h"
 
 #include "mmcore/EventCall.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 
 #include "ProbeCalls.h"
@@ -44,7 +45,9 @@ megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
         , m_show_hull(true)
         //, m_probes_slot("probes","")
         , m_event_slot("GetEvents", "")
-        , m_shading_mode_slot("ShadingMode","") {
+        , m_shading_mode_slot("ShadingMode","")
+        , m_hull_color_slot("HullColor", "")
+{
     //this->m_probes_slot.SetCompatibleCall<megamol::probe::CallProbesDescription>();
     //this->MakeSlotAvailable(&this->m_probes_slot);
 
@@ -55,6 +58,10 @@ megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
     this->m_shading_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Grey");
     this->m_shading_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "ClusterID");
     this->MakeSlotAvailable(&this->m_shading_mode_slot);
+
+    this->m_hull_color_slot << new megamol::core::param::ColorParam(
+        this->m_hull_color[0], this->m_hull_color[1], this->m_hull_color[2], 1.0f);
+    this->MakeSlotAvailable(&this->m_hull_color_slot);
 }
 
 megamol::probe_gl::ProbeHullRenderTasks::~ProbeHullRenderTasks() {}
@@ -98,6 +105,24 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
             m_rendertask_collection.first->updatePerFrameDataBuffer("", per_frame_data, 1);
         }
 
+        if (m_hull_color_slot.IsDirty()) {
+            m_hull_color_slot.ResetDirty();
+
+            std::array<float, 4> obj_color = this->m_hull_color_slot.Param<core::param::ColorParam>()->Value();
+
+            for (auto& batch : m_per_object_data) {
+                for (auto& data : batch) {
+                    data.color = obj_color;
+                }
+            }
+
+            for (int i = 0; i < m_batch_meshes.size(); ++i) {
+                for (int j = 0; j < m_identifiers[i].size(); ++j) {
+                    m_rendertask_collection.first->updatePerDrawData(m_identifiers[i][j], std::vector<PerObjectData>{m_per_object_data[i][j]});
+                }
+            }
+        }
+
         bool something_has_changed = mc->hasUpdate();
 
         if (something_has_changed) {
@@ -110,7 +135,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
 
             m_identifiers.clear();
             m_draw_commands.clear();
-            m_object_transforms.clear();
+            m_per_object_data.clear();
             m_batch_meshes.clear();
 
             auto gpu_mesh_storage = mc->getData();
@@ -119,12 +144,19 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
 
                 std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
 
+                int counter = 0;
                 for (auto& sub_mesh : mesh_collection->getSubMeshData()) {
                     auto const& gpu_batch_mesh = sub_mesh.second.mesh->mesh;
 
+                    //counter++;
+                    //if (counter == 4) {
+                    //    continue;
+                    //}
+
                     if (gpu_batch_mesh != prev_mesh) {
+                        m_identifiers.emplace_back(std::vector<std::string>());
                         m_draw_commands.emplace_back(std::vector<glowl::DrawElementsCommand>());
-                        m_object_transforms.emplace_back(std::vector<std::array<float, 16>>());
+                        m_per_object_data.emplace_back(std::vector<PerObjectData>());
                         m_batch_meshes.push_back(gpu_batch_mesh);
 
                         prev_mesh = gpu_batch_mesh;
@@ -133,10 +165,11 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
                     float scale = 1.0f;
                     std::array<float, 16> obj_xform = {scale, 0.0f, 0.0f, 0.0f, 0.0f, scale, 0.0f, 0.0f, 0.0f, 0.0f,
                         scale, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+                    std::array<float, 4> obj_color = this->m_hull_color_slot.Param<core::param::ColorParam>()->Value();
 
-                    m_identifiers.emplace_back(std::string(FullName()) + "_" + sub_mesh.first);
+                    m_identifiers.back().emplace_back(std::string(FullName()) + "_" + sub_mesh.first);
                     m_draw_commands.back().push_back(sub_mesh.second.sub_mesh_draw_command);
-                    m_object_transforms.back().push_back(obj_xform);
+                    m_per_object_data.back().push_back(PerObjectData{obj_xform, obj_color});
                 }
             }
 
@@ -148,14 +181,14 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
 
                     if (m_batch_meshes[i]->getPrimitiveType() == GL_TRIANGLES) {
                         m_rendertask_collection.first->addRenderTasks(
-                            m_identifiers, tri_shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
+                            m_identifiers[i], tri_shader, m_batch_meshes[i], m_draw_commands[i], m_per_object_data[i]);
                         m_rendertask_collection.second.insert(
-                            m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
+                            m_rendertask_collection.second.end(), m_identifiers[i].begin(), m_identifiers[i].end());
                     } else if (m_batch_meshes[i]->getPrimitiveType() == GL_PATCHES) {
-                        m_rendertask_collection.first->addRenderTasks(
-                            m_identifiers, patch_shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
+                        m_rendertask_collection.first->addRenderTasks(m_identifiers[i], patch_shader, m_batch_meshes[i],
+                            m_draw_commands[i], m_per_object_data[i]);
                         m_rendertask_collection.second.insert(
-                            m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
+                            m_rendertask_collection.second.end(), m_identifiers[i].begin(), m_identifiers[i].end());
                     } else {
                         //TODO print warning
                     }
@@ -185,15 +218,15 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
                         for (int i = 0; i < m_batch_meshes.size(); ++i) {
 
                             if (m_batch_meshes[i]->getPrimitiveType() == GL_TRIANGLES) {
-                                m_rendertask_collection.first->addRenderTasks(m_identifiers, tri_shader,
-                                    m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
-                                m_rendertask_collection.second.insert(
-                                    m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
+                                m_rendertask_collection.first->addRenderTasks(m_identifiers[i], tri_shader,
+                                    m_batch_meshes[i], m_draw_commands[i], m_per_object_data[i]);
+                                m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
+                                    m_identifiers[i].begin(), m_identifiers[i].end());
                             } else if (m_batch_meshes[i]->getPrimitiveType() == GL_PATCHES) {
-                                m_rendertask_collection.first->addRenderTasks(m_identifiers, patch_shader,
-                                    m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
-                                m_rendertask_collection.second.insert(
-                                    m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
+                                m_rendertask_collection.first->addRenderTasks(m_identifiers[i], patch_shader,
+                                    m_batch_meshes[i], m_draw_commands[i], m_per_object_data[i]);
+                                m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
+                                    m_identifiers[i].begin(), m_identifiers[i].end());
                             } else {
                                 // TODO print warning
                             }

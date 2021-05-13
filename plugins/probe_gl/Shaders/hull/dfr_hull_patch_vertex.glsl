@@ -3,6 +3,7 @@
 struct MeshShaderParams
 {
     mat4 transform;
+    vec4 color;
 };
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
@@ -19,11 +20,13 @@ layout(location = 2) in int v_cluster_id;
 
 layout(location = 0) out vec3 world_pos;
 layout(location = 1) out vec3 normal;
-layout(location = 2) flat out int cluster_id;
+layout(location = 2) out vec4 color;
+layout(location = 3) flat out int cluster_id;
 
 void main()
 {
     cluster_id = v_cluster_id;
+    color = mesh_shader_params[gl_DrawIDARB].color;
     normal = inverse(transpose(mat3(mesh_shader_params[gl_DrawIDARB].transform))) * v_normal;
     world_pos = v_position;
     
