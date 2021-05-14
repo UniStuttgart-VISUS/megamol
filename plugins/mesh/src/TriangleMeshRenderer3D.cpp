@@ -149,13 +149,14 @@ namespace mesh {
             }
         }
 
-        if (this->render_data.values == nullptr) {
+        if (this->render_data.values == nullptr || this->default_color.IsDirty()) {
             this->render_data.values = std::make_shared<MeshDataCall::data_set>();
 
             this->render_data.values->min_value = 0.0f;
             this->render_data.values->max_value = 1.0f;
 
             const auto color = this->default_color.Param<core::param::ColorParam>()->Value();
+            this->default_color.ResetDirty();
 
             std::stringstream ss;
             ss << "{\"Interpolation\":\"LINEAR\",\"Nodes\":["
