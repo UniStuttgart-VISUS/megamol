@@ -49,6 +49,7 @@ namespace core {
 
             // Get clip plane
             this->plane = cp->GetPlane();
+            this->plane.Normalise();
 
             this->color[0] = cp->GetColour()[0] / 255.0f;
             this->color[1] = cp->GetColour()[1] / 255.0f;
@@ -124,12 +125,9 @@ namespace core {
             // ... construct plane with up point at the center of the bounding box and given normal
             const auto bb_center = call.GetBoundingBoxes().BoundingBox().CalcCenter();
 
-            const vislib::math::Vector<float, 3> bb_vec = bb_center;
+            const auto normal = this->plane.Normal();
 
-            auto normal = this->plane.Normal();
-            normal.Normalise();
-
-            const vislib::math::Plane<float> centered_plane(bb_center, normal);
+            const vislib::math::Plane<float> centered_plane(bb_center, this->plane.Normal());
 
             // ... extract translation
             const auto lambda = (this->plane.D() - centered_plane.D());
