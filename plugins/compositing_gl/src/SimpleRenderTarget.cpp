@@ -120,7 +120,7 @@ bool megamol::compositing::SimpleRenderTarget::getDepthRenderTarget(core::Call& 
 
     if (ct == NULL) return false;
 
-    ct->setData(m_GBuffer->getColorAttachment(2), m_version);
+    ct->setData(m_GBuffer->getDepthStencil(), m_version);
 
     return true;
 }
