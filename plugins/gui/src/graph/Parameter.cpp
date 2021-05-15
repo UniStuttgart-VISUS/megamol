@@ -1283,6 +1283,18 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 }
             }
         } break;
+            // CHECKBOX //////////////////////////////////////////////////
+        case (Present_t::Checkbox): {
+            // BOOL ------------------------------------------------
+            if constexpr (std::is_same_v<T, bool>) {
+                auto value = arg;
+                if (this->widget_bool(scope, param_label, value)) {
+                    this->SetValue(value);
+                    retval = true;
+                }
+                error = false;
+            }
+        } break;
         default:
             break;
         }
@@ -1350,8 +1362,13 @@ bool megamol::gui::Parameter::widget_bool(
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-        retval = megamol::gui::ButtonWidgets::ToggleButton(label, value);
-        /// retval = ImGui::Checkbox(label.c_str(), &value);
+        auto p = this->GetGUIPresentation();
+
+        if (p == Present_t::Checkbox) {
+            retval = ImGui::Checkbox(label.c_str(), &value);
+        } else { // Present_t::Basic
+            retval = megamol::gui::ButtonWidgets::ToggleButton(label, value);
+        }
     }
     return retval;
 }
