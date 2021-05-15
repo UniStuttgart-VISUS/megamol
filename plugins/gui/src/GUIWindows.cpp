@@ -416,7 +416,7 @@ bool GUIWindows::PostDraw(void) {
                     for (auto& module_ptr : graph_ptr->Modules()) {
                         std::string module_full_name = module_ptr->FullName();
                         for (auto& param : module_ptr->Parameters()) {
-                            std::string param_full_name = param.FullName();
+                            std::string param_full_name = param.FullNameProject();
                             if (GUIUtils::CaseInsensitiveStringCompare(wc.tfe_active_param, param_full_name) &&
                                 (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
                                 this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
@@ -1064,7 +1064,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                             if (param_slot != nullptr) {
                                 std::string param_full_name(param_slot->FullName().PeekBuffer());
                                 for (auto& parameter : module_ptr->Parameters()) {
-                                    if (GUIUtils::CaseInsensitiveStringCompare(parameter.FullName(), param_full_name)) {
+                                    if (GUIUtils::CaseInsensitiveStringCompare(parameter.FullNameCore(), param_full_name)) {
                                         megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                             (*param_slot), parameter, true, false, true);
                                     }
@@ -2303,7 +2303,7 @@ void GUIWindows::checkMultipleHotkeyAssignment(void) {
                             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                                 "[GUI] The hotkey [%s] of the parameter \"%s\" has already been assigned. "
                                 ">>> If this hotkey is pressed, there will be no effect on this parameter!",
-                                keyCode.ToString().c_str(), param.FullName().c_str());
+                                keyCode.ToString().c_str(), param.FullNameProject().c_str());
                         }
                     }
                 }
@@ -2488,7 +2488,7 @@ bool megamol::gui::GUIWindows::state_from_string(const std::string& state) {
                 module_ptr->GUIParameterGroups().StateFromJSON(state_json, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->Parameters()) {
-                    param.StateFromJSON(state_json, param.FullName());
+                    param.StateFromJSON(state_json, param.FullNameProject());
                     param.ForceSetGUIStateDirty();
                 }
             }
@@ -2536,7 +2536,7 @@ bool megamol::gui::GUIWindows::state_to_string(std::string& out_state) {
                 module_ptr->GUIParameterGroups().StateToJSON(json_state, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->Parameters()) {
-                    param.StateToJSON(json_state, param.FullName());
+                    param.StateToJSON(json_state, param.FullNameProject());
                 }
             }
         }

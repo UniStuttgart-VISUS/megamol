@@ -14,12 +14,12 @@ using namespace megamol::gui;
 
 
 megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Stroage_t store, Min_t minval, Max_t maxval,
-    const std::string& param_name, const std::string& param_fullname, const std::string& description)
+    const std::string& param_name, const std::string& description)
         : megamol::core::param::AbstractParamPresentation()
         , uid(uid)
         , type(type)
         , param_name(param_name)
-        , param_fullname(param_fullname)
+        , parent_module_name("")
         , description(description)
         , core_param_ptr(nullptr)
         , minval(minval)
@@ -284,7 +284,6 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
     }
 
     out_param.param_name = std::string(in_param_slot.Name().PeekBuffer());
-    out_param.param_fullname = std::string(in_param_slot.FullName().PeekBuffer());
     out_param.description = std::string(in_param_slot.Description().PeekBuffer());
     out_param.gui_visibility = parameter_ptr->IsGUIVisible();
     out_param.gui_read_only = parameter_ptr->IsGUIReadOnly();
@@ -372,7 +371,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
 
 bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::param::ParamSlot& in_param_slot,
     std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool set_dirty,
-    bool save_core_param_pointer) {
+    bool save_core_param_pointer, const std::string& parent_module_name) {
 
     auto parameter_ptr = in_param_slot.Parameter();
     if (parameter_ptr.IsNull()) {
@@ -386,19 +385,19 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
 
     if (auto* p_ptr = in_param_slot.template Param<core::param::BoolParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::BOOL, std::monostate(),
-            std::monostate(), std::monostate(), param_name, param_fullname, description);
+            std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::ButtonParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::BUTTON,
-            p_ptr->GetKeyCode(), std::monostate(), std::monostate(), param_name, param_fullname, description);
+            p_ptr->GetKeyCode(), std::monostate(), std::monostate(), param_name, description);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::ColorParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::COLOR, std::monostate(),
-            std::monostate(), std::monostate(), param_name, param_fullname, description);
+            std::monostate(), std::monostate(), param_name, description);
         auto value = p_ptr->Value();
         out_param->SetValue(glm::vec4(value[0], value[1], value[2], value[3]), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::TransferFunctionParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::TRANSFERFUNCTION,
-            std::monostate(), std::monostate(), std::monostate(), param_name, param_fullname, description);
+            std::monostate(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::EnumParam>()) {
         EnumStorage_t map;
@@ -409,19 +408,19 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
             map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
         }
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::ENUM, map,
-            std::monostate(), std::monostate(), param_name, param_fullname, description);
+            std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::FlexEnumParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FLEXENUM,
-            p_ptr->getStorage(), std::monostate(), std::monostate(), param_name, param_fullname, description);
+            p_ptr->getStorage(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::FloatParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FLOAT, std::monostate(),
-            p_ptr->MinValue(), p_ptr->MaxValue(), param_name, param_fullname, description);
+            p_ptr->MinValue(), p_ptr->MaxValue(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::IntParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::INT, std::monostate(),
-            p_ptr->MinValue(), p_ptr->MaxValue(), param_name, param_fullname, description);
+            p_ptr->MinValue(), p_ptr->MaxValue(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector2fParam>()) {
         auto minval = p_ptr->MinValue();
@@ -429,7 +428,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR2F,
             std::monostate(), glm::vec2(minval.X(), minval.Y()), glm::vec2(maxval.X(), maxval.Y()), param_name,
-            param_fullname, description);
+                                                description);
         out_param->SetValue(glm::vec2(val.X(), val.Y()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector3fParam>()) {
         auto minval = p_ptr->MinValue();
@@ -437,7 +436,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR3F,
             std::monostate(), glm::vec3(minval.X(), minval.Y(), minval.Z()),
-            glm::vec3(maxval.X(), maxval.Y(), maxval.Z()), param_name, param_fullname, description);
+            glm::vec3(maxval.X(), maxval.Y(), maxval.Z()), param_name, description);
         out_param->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector4fParam>()) {
         auto minval = p_ptr->MinValue();
@@ -445,19 +444,19 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR4F,
             std::monostate(), glm::vec4(minval.X(), minval.Y(), minval.Z(), minval.W()),
-            glm::vec4(maxval.X(), maxval.Y(), maxval.Z(), maxval.W()), param_name, param_fullname, description);
+            glm::vec4(maxval.X(), maxval.Y(), maxval.Z(), maxval.W()), param_name, description);
         out_param->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::TernaryParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::TERNARY,
-            std::monostate(), std::monostate(), std::monostate(), param_name, param_fullname, description);
+            std::monostate(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::STRING, std::monostate(),
-            std::monostate(), std::monostate(), param_name, param_fullname, description);
+            std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FILEPATH,
-            std::monostate(), std::monostate(), std::monostate(), param_name, param_fullname, description);
+            std::monostate(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -466,6 +465,8 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+
+    out_param->SetParentModuleName(parent_module_name);
 
     out_param->SetGUIVisible(parameter_ptr->IsGUIVisible());
     out_param->SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());
@@ -630,14 +631,10 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(megamol::c
     if (parameter_ptr.IsNull()) {
         return false;
     }
-
-    out_param.SetName(std::string(in_param_slot.Name().PeekBuffer()));
-    out_param.SetFullName(std::string(in_param_slot.FullName().PeekBuffer()));
     out_param.SetDescription(std::string(in_param_slot.Description().PeekBuffer()));
     if (save_core_param_pointer) {
         out_param.core_param_ptr = parameter_ptr;
     }
-
     return megamol::gui::Parameter::ReadCoreParameterToParameter(parameter_ptr, out_param, set_default_val, set_dirty);
 }
 
@@ -834,7 +831,7 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                     ImGui::SameLine();
 
                     // Lua
-                    ButtonWidgets::LuaButton("param_lua_button", (*this), this->FullName());
+                    ButtonWidgets::LuaButton("param_lua_button", (*this), this->FullNameProject());
                     this->gui_tooltip.ToolTip("Copy lua command to clipboard.", ImGui::GetItemID(), 1.0f, 3.0f);
 
                     ImGui::SameLine();
