@@ -295,8 +295,8 @@ namespace gui {
                         if (!megamol::core::utility::FileUtils::FileExists(file)) {
                             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                                 "%sFile Parameter%sFile not found: '%s' > Parameter '%s'\n\n",
-                                LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG, this->FullNameProject().c_str(),
-                                file.c_str());
+                                LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG,
+                                this->FullNameProject().c_str(), file.c_str());
                         }
                     }
                 }

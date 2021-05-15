@@ -1064,7 +1064,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                             if (param_slot != nullptr) {
                                 std::string param_full_name(param_slot->FullName().PeekBuffer());
                                 for (auto& parameter : module_ptr->Parameters()) {
-                                    if (GUIUtils::CaseInsensitiveStringCompare(parameter.FullNameCore(), param_full_name)) {
+                                    if (GUIUtils::CaseInsensitiveStringCompare(
+                                            parameter.FullNameCore(), param_full_name)) {
                                         megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                             (*param_slot), parameter, true, false, true);
                                     }

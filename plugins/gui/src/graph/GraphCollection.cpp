@@ -1136,7 +1136,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 if (graph_ptr != nullptr) {
                     for (auto& module_ptr : graph_ptr->Modules()) {
                         for (auto& parameter : module_ptr->Parameters()) {
-                            if (GUIUtils::CaseInsensitiveStringCompare(parameter.FullNameProject(), param_slot_full_name)) {
+                            if (GUIUtils::CaseInsensitiveStringCompare(
+                                    parameter.FullNameProject(), param_slot_full_name)) {
                                 parameter.SetValueString(value_str);
                             }
                         }

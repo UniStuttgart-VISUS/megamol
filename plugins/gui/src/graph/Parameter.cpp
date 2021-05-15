@@ -426,9 +426,9 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         auto minval = p_ptr->MinValue();
         auto maxval = p_ptr->MaxValue();
         auto val = p_ptr->Value();
-        out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR2F,
-            std::monostate(), glm::vec2(minval.X(), minval.Y()), glm::vec2(maxval.X(), maxval.Y()), param_name,
-                                                description);
+        out_param =
+            std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR2F, std::monostate(),
+                glm::vec2(minval.X(), minval.Y()), glm::vec2(maxval.X(), maxval.Y()), param_name, description);
         out_param->SetValue(glm::vec2(val.X(), val.Y()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector3fParam>()) {
         auto minval = p_ptr->MinValue();
