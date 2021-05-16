@@ -141,9 +141,11 @@ namespace mesh {
         }
 
         if (mdc_ptr != nullptr) {
-            this->render_data.values = mdc_ptr->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
+            auto data = mdc_ptr->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
 
-            if (this->render_data.values != nullptr && this->data_set.IsDirty()) {
+            if (data != nullptr && this->data_set.IsDirty()) {
+                this->render_data.values = data;
+
                 this->data_set.ResetDirty();
                 this->mesh_data_changed = true;
             }

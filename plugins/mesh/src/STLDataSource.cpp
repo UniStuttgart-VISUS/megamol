@@ -33,7 +33,9 @@ namespace mesh {
         Module::MakeSlotAvailable(&this->ngmesh_output_slot);
     }
 
-    STLDataSource::~STLDataSource() {}
+    STLDataSource::~STLDataSource() {
+        this->Release();
+    }
 
     bool STLDataSource::get_extent_callback(core::Call& caller) {
         // Get mesh call
