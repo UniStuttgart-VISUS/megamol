@@ -5,16 +5,11 @@
 #include "mesh/TriangleMeshCall.h"
 
 #include <CGAL/Delaunay_triangulation_3.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Point_3.h>
-#include <CGAL/Polyhedron_3.h>
+#include <CGAL/Side_of_triangle_mesh.h>
 #include <CGAL/Surface_mesh.h>
-
-//#include <CGAL/Mesh_complex_3_in_triangulation_3.h>
-//#include <CGAL/Mesh_criteria_3.h>
-//#include <CGAL/Mesh_triangulation_3.h>
-//#include <CGAL/Polyhedral_complex_mesh_domain_3.h>
-//#include <CGAL/make_mesh_3.h>
+#include <CGAL/Tetrahedron_3.h>
 
 #include <CGAL/Polygon_mesh_processing/orient_polygon_soup.h>
 #include <CGAL/Polygon_mesh_processing/orient_polygon_soup_extension.h>
@@ -28,17 +23,13 @@
 #include <utility>
 #include <vector>
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Exact_predicates_exact_constructions_kernel K;
 
 typedef K::Point_3 Point;
+typedef CGAL::Tetrahedron_3<K> Tetrahedron;
 
 typedef CGAL::Surface_mesh<Point> Mesh;
 typedef CGAL::Delaunay_triangulation_3<K> Delaunay;
-
-//typedef CGAL::Polyhedral_complex_mesh_domain_3<K, Mesh> Mesh_domain;
-//typedef CGAL::Mesh_triangulation_3<Mesh_domain, K, CGAL::Sequential_tag>::type Tr;
-//typedef CGAL::Mesh_complex_3_in_triangulation_3<Tr, Mesh_domain::Corner_index, Mesh_domain::Curve_index> C3t3;
-//typedef CGAL::Mesh_criteria_3<Tr> Mesh_criteria;
 
 typedef std::vector<std::size_t> CGAL_Polygon;
 
@@ -207,57 +198,30 @@ bool megamol::flowvis::ExtractPores::compute() {
 
     // Perform computation
     if (input_changed) {
+        this->output.vertices = std::make_shared<std::vector<float>>();
+        this->output.normals = std::make_shared<std::vector<float>>();
+        this->output.indices = std::make_shared<std::vector<unsigned int>>();
 
         // Create surface mesh from input triangles and bounding box
         std::vector<Point> points;
         Mesh mesh;
 
         {
-            std::vector<Point> points;
             std::vector<CGAL_Polygon> polygon_vec;
 
-            // Create initial CGAL polygon soup from bounding box
-            {
-                const auto& bbox = tmc.get_bounding_box();
-                const auto x_min = bbox.GetLeft();
-                const auto x_max = bbox.GetRight();
-                const auto y_min = bbox.GetBottom();
-                const auto y_max = bbox.GetTop();
-                const auto z_min = bbox.GetBack();
-                const auto z_max = bbox.GetFront();
+            // Add input mesh to polygon soup
+            points.resize(this->input.vertices->size() / 3);
+            polygon_vec.resize(this->input.indices->size() / 3);
 
-                const Point lbb(x_min, y_min, z_min); // 0
-                const Point rbb(x_max, y_min, z_min); // 1
-                const Point ltb(x_min, y_max, z_min); // 2
-                const Point rtb(x_max, y_max, z_min); // 3
-                const Point lbf(x_min, y_min, z_max); // 4
-                const Point rbf(x_max, y_min, z_max); // 5
-                const Point ltf(x_min, y_max, z_max); // 6
-                const Point rtf(x_max, y_max, z_max); // 7
-
-                points.insert(points.end(), {lbb, rbb, ltb, rtb, lbf, rbf, ltf, rtf});
-
-                polygon_vec.push_back({1, 0, 2});
-                polygon_vec.push_back({1, 2, 3}); // back
-
-                polygon_vec.push_back({4, 5, 7});
-                polygon_vec.push_back({4, 7, 6}); // front
-
-                polygon_vec.push_back({0, 1, 5});
-                polygon_vec.push_back({0, 5, 4}); // bottom
-
-                polygon_vec.push_back({6, 7, 3});
-                polygon_vec.push_back({6, 3, 2}); // top
-
-                polygon_vec.push_back({0, 4, 6});
-                polygon_vec.push_back({0, 6, 2}); // left
-
-                polygon_vec.push_back({5, 1, 3});
-                polygon_vec.push_back({5, 3, 7}); // right
+            for (std::size_t i = 0; i < points.size(); ++i) {
+                points[i] = Point((*this->input.vertices)[i * 3 + 0], (*this->input.vertices)[i * 3 + 1],
+                    (*this->input.vertices)[i * 3 + 2]);
             }
 
-            // Add input mesh with inverted normals to polygon soup
-
+            for (std::size_t i = 0; i < polygon_vec.size(); ++i) {
+                polygon_vec[i] = {(*this->input.indices)[i * 3 + 0], (*this->input.indices)[i * 3 + 1],
+                    (*this->input.indices)[i * 3 + 2]};
+            }
 
             // Create CGAL surface mesh from polygon soup
             {
@@ -284,58 +248,108 @@ bool megamol::flowvis::ExtractPores::compute() {
             }
         }
 
-        // Tetrahedralize volume enclosed by surface mesh
-        //        const std::array<std::reference_wrapper<Mesh>, 1> mesh_list{mesh};
-        //        const std::array<std::pair<int, int>, 1> incidence{std::make_pair(0, 1)};
-        //
-        //        Mesh_domain domain(mesh_list.begin(), mesh_list.end(), incidence.begin(), incidence.end());
-        //        domain.detect_features();
-        //
-        //        Mesh_criteria criteria /*(CGAL::parameters::edge_size = 8, CGAL::parameters::facet_angle = 25,
-        //             CGAL::parameters::facet_size = 8, CGAL::parameters::facet_distance = 0.2,
-        //             CGAL::parameters::cell_radius_edge_ratio = 3, CGAL::parameters::cell_size = 10)*/
-        //            ;
-        //
-        //        C3t3 triangulation =
-        //            CGAL::make_mesh_3<C3t3>(domain, criteria, CGAL::parameters::manifold(),
-        //            CGAL::parameters::no_perturb());
-        //
-        //        if (!triangulation.is_valid()) {
-        //            megamol::core::utility::log::Log::DefaultLog.WriteError(
-        //                "Triangulation not successfull. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        //
-        //            return false;
-        //        }
-
         // Tetrahedralize domain
         Delaunay dt;
         dt.insert(points.begin(), points.end());
 
-        // Classify pores by number of faces shared with the surface mesh
-        
+        // Iterate over all cells and check which side its center is on
+        CGAL::Side_of_triangle_mesh<Mesh, K> inside(mesh);
 
-        //        for (auto cell = triangulation.triangulation().finite_cells_begin();
-        //             cell != triangulation.triangulation().finite_cells_end(); ++cell) {
-        //
-        //            bool has_surface_facet = false;
-        //
-        //            for (int i = 0; i < 4; ++i) {
-        //                has_surface_facet |= cell->is_facet_on_surface(i);
-        //            }
-        //
-        //            std::cout << (has_surface_facet ? "surface" : "nope") << std::endl;
-        //        }
+        std::size_t num_pores = 0;
+        std::size_t num_in_pore = 0;
+        std::size_t num_outside_pore = 0;
 
-        // Separate face-connected tetrahedra using the classification
+        for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
+            const auto center = cell->circumcenter();
 
-        // Calculate properties, such as volume, surface, and surface-to-volume ratio
+            if (inside(center) != CGAL::ON_BOUNDED_SIDE) {
+                ++num_in_pore;
 
-        // Create mesh for each pore and throat
+                // Count number of facets shared with the surface mesh
+                typedef decltype(*dt.incident_facets(cell, 0, 1)->first) face_t;
 
+                const std::array<std::reference_wrapper<typename std::remove_reference<face_t>::type>, 4> facets{
+                    *dt.incident_facets(cell, 0, 1)->first,
+                    *dt.incident_facets(cell, 1, 0)->first,
+                    *dt.incident_facets(cell, 2, 3)->first,
+                    *dt.incident_facets(cell, 3, 2)->first
+                };
 
-        this->output.vertices = this->input.vertices;
-        this->output.normals = this->input.normals;
-        this->output.indices = this->input.indices;
+                bool boundary_facet = false;
+
+                for (auto& facet : facets) {
+                    auto center = facet.get().circumcenter();
+
+                    if (inside(center) == CGAL::ON_BOUNDARY) {
+                        boundary_facet = true;
+                    }
+                }
+
+                // If a boundary facet is shared, then this is a pore
+                if (boundary_facet) {
+                    ++num_pores;
+
+                    const auto index = this->output.vertices->size() / 3;
+
+                    // Add tetrahedron vertices
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(0)->point().x())));
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(0)->point().y())));
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(0)->point().z())));
+
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(1)->point().x())));
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(1)->point().y())));
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(1)->point().z())));
+
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(2)->point().x())));
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(2)->point().y())));
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(2)->point().z())));
+
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().x())));
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().y())));
+                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().z())));
+
+                    // Calculate normals
+                    this->output.normals->push_back(0.0);
+                    this->output.normals->push_back(0.0);
+                    this->output.normals->push_back(0.0);
+
+                    this->output.normals->push_back(0.0);
+                    this->output.normals->push_back(0.0);
+                    this->output.normals->push_back(0.0);
+
+                    this->output.normals->push_back(0.0);
+                    this->output.normals->push_back(0.0);
+                    this->output.normals->push_back(0.0);
+
+                    this->output.normals->push_back(0.0);
+                    this->output.normals->push_back(0.0);
+                    this->output.normals->push_back(0.0);
+
+                    // Set face indices
+                    this->output.indices->push_back(index + 0);
+                    this->output.indices->push_back(index + 1);
+                    this->output.indices->push_back(index + 2);
+
+                    this->output.indices->push_back(index + 0);
+                    this->output.indices->push_back(index + 2);
+                    this->output.indices->push_back(index + 3);
+
+                    this->output.indices->push_back(index + 0);
+                    this->output.indices->push_back(index + 1);
+                    this->output.indices->push_back(index + 3);
+
+                    this->output.indices->push_back(index + 1);
+                    this->output.indices->push_back(index + 2);
+                    this->output.indices->push_back(index + 3);
+                }
+            } else {
+                ++num_outside_pore;
+            }
+        }
+
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Number of pores found: %d\n", num_pores);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Number of valid tetrahedra: %d\n", num_in_pore);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Number of invalid tetrahedra: %d\n", num_outside_pore);
     }
 
     return true;
