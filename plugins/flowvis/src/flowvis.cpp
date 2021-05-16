@@ -12,7 +12,7 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-// INCLUDES GO HERE
+#include "ExtractPores.h"
 
 namespace megamol::flowvis {
 /** Implementing the instance class of this plugin */
@@ -39,7 +39,7 @@ public:
     virtual void registerClasses(void) {
 
         // register modules here:
-        
+        this->module_descriptions.RegisterAutoDescription<megamol::flowvis::ExtractPores>();
 
         // register calls here:
         
