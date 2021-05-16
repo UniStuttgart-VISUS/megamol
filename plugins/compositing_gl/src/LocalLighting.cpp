@@ -375,42 +375,6 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                 }
             }
         }
-
-        m_point_lights_buffer->rebuffer(m_point_lights);
-        m_distant_lights_buffer->rebuffer(m_distant_lights);
-
-        if (m_lighting_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
-            m_lighting_prgm->Enable();
-
-            m_point_lights_buffer->bind(1);
-            glUniform1i(m_lighting_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
-            m_distant_lights_buffer->bind(2);
-            glUniform1i(
-                m_lighting_prgm->ParameterLocation("distant_light_cnt"), static_cast<GLint>(m_distant_lights.size()));
-            glActiveTexture(GL_TEXTURE0);
-            albedo_tx2D->bindTexture();
-            glUniform1i(m_lighting_prgm->ParameterLocation("albedo_tx2D"), 0);
-
-            glActiveTexture(GL_TEXTURE1);
-            normal_tx2D->bindTexture();
-            glUniform1i(m_lighting_prgm->ParameterLocation("normal_tx2D"), 1);
-
-            glActiveTexture(GL_TEXTURE2);
-            depth_tx2D->bindTexture();
-            glUniform1i(m_lighting_prgm->ParameterLocation("depth_tx2D"), 2);
-
-            auto inv_view_mx = glm::inverse(view_mx);
-            auto inv_proj_mx = glm::inverse(proj_mx);
-            glUniformMatrix4fv(m_lighting_prgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
-            glUniformMatrix4fv(m_lighting_prgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
-
-            m_output_texture->bindImage(0, GL_WRITE_ONLY);
-
-            m_lighting_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
-                static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
-
-            m_lighting_prgm->Disable();
-        }
     }
 
     lhs_tc->setData(m_output_texture, m_version);
