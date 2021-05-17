@@ -19,16 +19,9 @@
 #include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
 #include <CGAL/Polygon_mesh_processing/repair_polygon_soup.h>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #include <algorithm>
 #include <array>
-#include <iterator>
 #include <memory>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -273,8 +266,9 @@ bool megamol::flowvis::ExtractPores::compute() {
         Tree tree(CGAL::faces(mesh).first, CGAL::faces(mesh).second, mesh);
         tree.build();
 
-        const auto err_threshold =
-            1e-6 * (tmc.get_bounding_box().Width() + tmc.get_bounding_box().Height() + tmc.get_bounding_box().Depth());
+        const auto err_threshold = 1e-6 * (static_cast<double>(tmc.get_bounding_box().Width()) +
+                                              static_cast<double>(tmc.get_bounding_box().Height()) +
+                                              static_cast<double>(tmc.get_bounding_box().Depth()));
 
         for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
             const auto cell_center = cell->circumcenter();

@@ -125,6 +125,13 @@ namespace mesh {
             this->material_collection->clear();
             this->material_collection->addMaterial(this->instance(), filename, filename);
 
+            if (this->material_collection->getMaterials().begin()->second.shader_program == nullptr) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "No shader available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+
+                return false;
+            }
+
             this->btf_file_changed = true;
         }
 
