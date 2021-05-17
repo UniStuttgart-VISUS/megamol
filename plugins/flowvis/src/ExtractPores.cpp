@@ -10,9 +10,9 @@
 #include <CGAL/Delaunay_triangulation_3.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Point_3.h>
+#include <CGAL/Segment_3.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 #include <CGAL/Surface_mesh.h>
-#include <CGAL/Triangle_3.h>
 
 #include <CGAL/Polygon_mesh_processing/orient_polygon_soup.h>
 #include <CGAL/Polygon_mesh_processing/orient_polygon_soup_extension.h>
@@ -34,7 +34,7 @@
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 
 typedef K::Point_3 Point;
-typedef K::Triangle_3 Triangle;
+typedef K::Segment_3 Segment;
 
 typedef CGAL::Surface_mesh<Point> Mesh;
 typedef CGAL::Delaunay_triangulation_3<K> Delaunay;
@@ -286,21 +286,21 @@ bool megamol::flowvis::ExtractPores::compute() {
                 const auto& p3 = cell->vertex(2)->point();
                 const auto& p4 = cell->vertex(3)->point();
 
-                std::array<Triangle, 4> facets{
-                    Triangle(p1, p3, p2), Triangle(p1, p2, p4), Triangle(p2, p3, p4), Triangle(p1, p4, p3)};
+                std::array<Segment, 6> edges{Segment(p1, p2), Segment(p1, p3), Segment(p1, p4), Segment(p2, p3),
+                    Segment(p2, p4), Segment(p3, p4)};
 
-                bool has_boundary_facet = false;
+                int num_shared_segments = 0;
 
-                for (auto& facet : facets) {
-                    auto face_center = CGAL::centroid(facet);
+                for (auto& edge : edges) {
+                    auto edge_center = CGAL::midpoint(edge.start(), edge.target());
 
-                    if (CGAL::to_double(tree.squared_distance(face_center)) < err_threshold) {
-                        has_boundary_facet = true;
+                    if (CGAL::to_double(tree.squared_distance(edge_center)) < err_threshold) {
+                        ++num_shared_segments;
                     }
                 }
 
                 // If no facet is shared with the surface mesh, then this is a pore
-                if (!has_boundary_facet) {
+                if (num_shared_segments < 1) {
                     ++num_pores;
 
                     const auto index = this->output.vertices->size() / 3;
