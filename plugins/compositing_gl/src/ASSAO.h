@@ -20,11 +20,17 @@
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture2DArray.hpp"
+#include "compositing/Sampler.hpp"
 
 #include <glm/glm.hpp>
 
 namespace megamol {
 namespace compositing {
+
+    typedef std::tuple<std::shared_ptr<glowl::Texture2D>, std::string, std::shared_ptr<glowl::Sampler>>
+        TextureSamplerTuple;
+    typedef std::tuple<std::shared_ptr<glowl::Texture2DArray>, std::string, std::shared_ptr<glowl::Sampler>>
+        TextureArraySamplerTuple;
 
 struct ASSAO_Inputs {
     // Output scissor rect - used to draw AO effect to a sub-rectangle, for example, for performance reasons when
@@ -48,6 +54,7 @@ struct ASSAO_Inputs {
     // Incoming textures from callerslots
     std::shared_ptr<glowl::Texture2D> normalTexture;
     std::shared_ptr<glowl::Texture2D> depthTexture;
+    glowl::TextureLayout resultLayout;
 
     // Transformation Matrices
     glm::mat4 ProjectionMatrix;
@@ -67,6 +74,7 @@ struct ASSAO_Inputs {
         NormalsUnpackAdd = -1.0f;   // stays constant
         normalTexture = nullptr;
         depthTexture = nullptr;
+        resultLayout = glowl::TextureLayout();
         ProjectionMatrix = glm::mat4(1.0f);
         ViewMatrix = glm::mat4(1.0f);
     }
@@ -230,9 +238,11 @@ private:
     void prepareDepths(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs);
     void generateSSAO(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass);
     void fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm,
-        const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>>& input_textures,
+        const std::vector<TextureSamplerTuple>&
+            input_textures,
         std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>>& output_textures, bool add_constants = true,
-        std::pair<std::shared_ptr<glowl::Texture2DArray>, std::string> finals = {nullptr, ""});
+        const TextureArraySamplerTuple& = {
+            nullptr, "", nullptr});
 
     bool equalLayouts(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
     bool equalLayoutsWithoutSize(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
@@ -285,10 +295,10 @@ private:
     std::shared_ptr<glowl::Texture2D> m_normals;
     std::shared_ptr<glowl::Texture2D> m_finalOutput;
 
-    glowl::TextureLayout m_tx_layout_samplerStatePointClamp;
-    glowl::TextureLayout m_tx_layout_samplerStatePointMirror;
-    glowl::TextureLayout m_tx_layout_samplerStateLinearClamp;
-    glowl::TextureLayout m_tx_layout_samplerStateViewspaceDepthTap;
+    std::shared_ptr<glowl::Sampler> m_samplerStatePointClamp;
+    std::shared_ptr<glowl::Sampler> m_samplerStatePointMirror;
+    std::shared_ptr<glowl::Sampler> m_samplerStateLinearClamp;
+    std::shared_ptr<glowl::Sampler> m_samplerStateViewspaceDepthTap;
     /////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////

@@ -17,7 +17,7 @@ void main()
     int iv = mx + (1 - my) * 2;   // neighbouring, vertical
     int id = (1 - mx) + (1 - my) * 2; // diagonal
 
-    vec2 centerVal = imageLoad(g_FinalSSAO, ivec4( pixPosHalf, ic, 0 )).xy;
+    vec2 centerVal = texelFetch(g_FinalSSAO, ivec4( pixPosHalf, ic, 0 )).xy;
     //vec2 centerVal = g_FinalSSAO.Load( ivec4( pixPosHalf, ic, 0 ) ).xy;
 
     ao = centerVal.x;

@@ -1,5 +1,6 @@
 uniform sampler2D g_DepthSource;
 uniform sampler2D g_NormalmapSource;
+uniform sampler2D g_ViewSpaceDepthSourceDepthTapSampler;
 uniform sampler2D g_ViewspaceDepthSource;
 uniform sampler2D g_ViewspaceDepthSource1;
 uniform sampler2D g_ViewspaceDepthSource2;
@@ -7,6 +8,7 @@ uniform sampler2D g_ViewspaceDepthSource3;
 uniform sampler2D g_ImportanceMap;
 uniform sampler2D g_LoadCounter;
 uniform sampler2D g_BlurInput;
+uniform sampler2DArray g_FinalSSAO;
 // TODO: set correct layouts
 // halfDepthsMipViews
 // -----------------------
@@ -28,10 +30,9 @@ layout(rg32f, binding = 4) uniform image2D      g_PingPongHalfResultA;
 layout(rg32f, binding = 5) uniform image2D      g_PingPongHalfResultB;
 
 layout(rg32f, binding = 6) uniform image2D      g_FinalOutput;
-layout(rg32f, binding = 7) uniform image2DArray g_FinalSSAO;
 
 // only needed for adaptive SSAO
 // -----------------------
-layout(rg32f, binding = 8) uniform image2D      g_NormalsOutputUAV;             // unsigned normalized --> [0, 1]
-layout(r32ui, binding = 9) uniform image1D      g_LoadCounterOutputUAV;
+layout(rg32f, binding = 7) uniform image2D      g_NormalsOutputUAV;             // unsigned normalized --> [0, 1]
+layout(r32ui, binding = 8) uniform image1D      g_LoadCounterOutputUAV;
 // -----------------------

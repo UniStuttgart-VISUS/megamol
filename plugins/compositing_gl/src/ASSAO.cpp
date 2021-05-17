@@ -109,10 +109,10 @@ megamol::compositing::ASSAO::ASSAO()
     , m_finalResultsArrayViews{nullptr, nullptr, nullptr, nullptr}
     , m_normals(nullptr)
     , m_finalOutput(nullptr)
-    , m_tx_layout_samplerStatePointClamp()
-    , m_tx_layout_samplerStatePointMirror()
-    , m_tx_layout_samplerStateLinearClamp()
-    , m_tx_layout_samplerStateViewspaceDepthTap()
+    , m_samplerStatePointClamp()
+    , m_samplerStatePointMirror()
+    , m_samplerStateLinearClamp()
+    , m_samplerStateViewspaceDepthTap()
     , m_size(0, 0)
     , m_halfSize(0, 0)
     , m_quarterSize(0, 0)
@@ -376,6 +376,32 @@ bool megamol::compositing::ASSAO::create() {
 
     m_ssbo_constants = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
+    // TODO: check for correctness
+    std::vector<std::pair<GLenum, GLint>> int_params = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST},
+        {GL_TEXTURE_MAG_FILTER, GL_NEAREST}, {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
+        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
+
+    m_samplerStatePointClamp = std::make_shared<glowl::Sampler>("samplerStatePointClamp", int_params);
+
+    int_params.clear();
+    int_params = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
+        {GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT}, {GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT}};
+
+    m_samplerStatePointMirror = std::make_shared<glowl::Sampler>("samplerStatePointMirror", int_params);
+
+    int_params.clear();
+    int_params = {{GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
+        {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
+
+    m_samplerStateLinearClamp = std::make_shared<glowl::Sampler>("samplerStateLinearClamp", int_params);
+
+    int_params.clear();
+    int_params = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
+        {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
+
+    m_samplerStateViewspaceDepthTap =
+        std::make_shared<glowl::Sampler>("samplerStateViewspaceDepthTap", int_params);
+
     return true;
 }
 
@@ -437,6 +463,7 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             m_inputs->ViewportHeight = tx_res_normal[1];
             m_inputs->normalTexture = normal_tx2D;
             m_inputs->depthTexture = depth_tx2D;
+            m_inputs->resultLayout = normal_tx2D->getTextureLayout();
             // TODO: for now we won't use scissortests
             // but the implementation still stays for a more easy migration
             // can be removed or used if (not) needed
@@ -474,13 +501,10 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
 
             // TODO: Set effect samplers
 
-            // TODO: Set ASSAOconstant buffer, but i think this is already set somewhere
-
             prepareDepths(m_settings, m_inputs);
 
             generateSSAO(m_settings, m_inputs, false);
 
-            // TODO: presumably unnecessary but we want to keep it in mind
             /*if( inputs->OverrideOutputRTV != nullptr )
             {
                 // drawing into OverrideOutputRTV
@@ -498,8 +522,8 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
 
             // Apply
             {
-                std::pair<std::shared_ptr<glowl::Texture2DArray>, std::string> inputFinals =
-                    {m_finalResults, "g_FinalSSAO"};
+                TextureArraySamplerTuple inputFinals =
+                    {m_finalResults, "g_finalSSAO", m_samplerStateLinearClamp};
 
                 // TODO: blending states
 
@@ -529,10 +553,9 @@ void megamol::compositing::ASSAO::prepareDepths(
     const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs) {
     bool generateNormals = inputs->normalTexture == nullptr;
 
-    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures;
-    inputTextures.push_back({inputs->depthTexture, (std::string)"g_DepthSource"});
+    std::vector<TextureSamplerTuple> inputTextures = {
+        {inputs->depthTexture, (std::string) "g_DepthSource", m_samplerStatePointClamp}};
 
-    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> outputTextures;
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputFourDepths = {
         {m_halfDepths[0], 0}, {m_halfDepths[1], 1}, {m_halfDepths[2], 2}, {m_halfDepths[3], 3}};
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTwoDepths = {
@@ -546,15 +569,12 @@ void megamol::compositing::ASSAO::prepareDepths(
             fullscreenPassDraw(m_prepare_depths_prgm, inputTextures, outputFourDepths);
         }
     } else {
-        // TODO: is there an equivalent of UAV from hlsl in opengl?
-        // intel originally uses a UAV for the normals
-        std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTexturesNormals = inputTextures;
-        inputTexturesNormals.push_back({inputs->normalTexture, (std::string) "g_NormalsOutputUAV"});
-
         if (settings.QualityLevel < 0) {
-            fullscreenPassDraw(m_prepare_depths_and_normals_half_prgm, inputTexturesNormals, outputTwoDepths);
+            outputTwoDepths.push_back({inputs->normalTexture, 7});
+            fullscreenPassDraw(m_prepare_depths_and_normals_half_prgm, inputTextures, outputTwoDepths);
         } else {
-            fullscreenPassDraw(m_prepare_depths_and_normals_prgm, inputTexturesNormals, outputFourDepths);
+            outputFourDepths.push_back({inputs->normalTexture, 7});
+            fullscreenPassDraw(m_prepare_depths_and_normals_prgm, inputTextures, outputFourDepths);
         }
     }
 
@@ -562,11 +582,11 @@ void megamol::compositing::ASSAO::prepareDepths(
     if (settings.QualityLevel > 1) {
 
         for (int i = 1; i < m_depthMipLevels; ++i) {
-            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputFourDepthMipsM1 = {
-                {m_halfDepthsMipViews[0][i - 1LL], (std::string) "g_ViewspaceDepthSource"},
-                {m_halfDepthsMipViews[1][i - 1LL], (std::string) "g_ViewspaceDepthSource1"},
-                {m_halfDepthsMipViews[2][i - 1LL], (std::string) "g_ViewspaceDepthSource2"},
-                {m_halfDepthsMipViews[3][i - 1LL], (std::string) "g_ViewspaceDepthSource3"}};
+            std::vector<TextureSamplerTuple> inputFourDepthMipsM1 = {
+                {m_halfDepthsMipViews[0][i - 1LL], (std::string) "g_ViewspaceDepthSource" , nullptr},
+                {m_halfDepthsMipViews[1][i - 1LL], (std::string) "g_ViewspaceDepthSource1", nullptr},
+                {m_halfDepthsMipViews[2][i - 1LL], (std::string) "g_ViewspaceDepthSource2", nullptr},
+                {m_halfDepthsMipViews[3][i - 1LL], (std::string) "g_ViewspaceDepthSource3", nullptr}};
 
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputFourDepthMips = {
                 {m_halfDepthsMipViews[0][i], 0}, {m_halfDepthsMipViews[1][i], 1}, {m_halfDepthsMipViews[2][i], 2},
@@ -632,12 +652,13 @@ void megamol::compositing::ASSAO::generateSSAO(
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
                 {rts, binding}}; // TODO: binding correct?
 
-            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures(5);
-            inputTextures[0] = {m_halfDepths[pass], "g_ViewSpaceDepthSource"};
-            inputTextures[1] = {m_normals, "g_NormalmapSource"};
-            inputTextures[2] = {NULL, ""};
-            inputTextures[3] = {NULL, ""};
-            inputTextures[4] = {NULL, ""};
+            std::vector<TextureSamplerTuple> inputTextures(6);
+            inputTextures[0] = {m_halfDepths[pass], "g_ViewSpaceDepthSource", m_samplerStatePointMirror};
+            inputTextures[1] = {m_normals, "g_NormalmapSource", nullptr};
+            inputTextures[2] = {nullptr, "", nullptr};
+            inputTextures[3] = {nullptr, "", nullptr};
+            inputTextures[4] = {nullptr, "", nullptr};
+            inputTextures[5] = {m_halfDepths[pass], "g_ViewSpaceDepthSourceDepthTapSampler", m_samplerStateViewspaceDepthTap};
 
             // CHECK FOR ADAPTIVE SSAO
 #ifdef INTEL_SSAO_ENABLE_ADAPTIVE_QUALITY
@@ -649,7 +670,7 @@ void megamol::compositing::ASSAO::generateSSAO(
 #endif
 
             int shaderIndex = std::max(0, !adaptiveBasePass ? settings.QualityLevel : 4);
-            fullscreenPassDraw(m_generate_prgms[shaderIndex], {}, outputTextures);
+            fullscreenPassDraw(m_generate_prgms[shaderIndex], inputTextures, outputTextures);
         }
 
         // Blur
@@ -669,8 +690,8 @@ void megamol::compositing::ASSAO::generateSSAO(
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
                     {rts, binding}}; // TODO: binding correct?
 
-                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>> inputTextures = {
-                    {m_pingPongHalfResultA, "g_BlurInput"}};
+                std::vector<TextureSamplerTuple> inputTextures = {
+                    {m_pingPongHalfResultA, "g_BlurInput", m_samplerStatePointMirror}};
 
                 if (settings.QualityLevel > 0) {
                     if (wideBlursRemaining > 0) {
@@ -680,6 +701,7 @@ void megamol::compositing::ASSAO::generateSSAO(
                         fullscreenPassDraw(m_smart_blur_prgm, inputTextures, outputTextures);
                     }
                 } else {
+                    std::get<2>(inputTextures[0]) = m_samplerStateLinearClamp;
                     fullscreenPassDraw(m_non_smart_blur_prgm, inputTextures, outputTextures); // just for quality level 0 (and -1)
                 }
 
@@ -693,32 +715,40 @@ void megamol::compositing::ASSAO::generateSSAO(
 // TODO: intel originally uses some blending state parameter, but it isnt used here, so we omit this
 // but could easily be extended with glEnable(GL_BLEND) and a blendfunc
 void megamol::compositing::ASSAO::fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm,
-    const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, std::string>>& input_textures,
+    const std::vector<TextureSamplerTuple>& input_textures,
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>>& output_textures, bool add_constants,
-    std::pair<std::shared_ptr<glowl::Texture2DArray>, std::string> finals) {
+    const TextureArraySamplerTuple& finals) {
     
     prgm->Enable();
 
     if (add_constants)
         m_ssbo_constants->bind(0);
 
-    if (finals.first != nullptr) {
-        for (int i = 0; i < input_textures.size(); ++i) {
-            if (input_textures[i].first != NULL) {
-                glActiveTexture(GL_TEXTURE0 + i);
-                // TODO: adjust this for images
-                input_textures[i].first->bindTexture();
-                glUniform1i(prgm->ParameterLocation(input_textures[i].second.c_str()), i);
-            }
+    for (int i = 0; i < input_textures.size(); ++i) {
+        if (std::get<0>(input_textures[i]) != nullptr) {
+            glActiveTexture(GL_TEXTURE0 + i);
+
+            std::get<0>(input_textures[i])->bindTexture();
+
+            if (std::get<2>(input_textures[i]) != nullptr)
+                std::get<2>(input_textures[i])->bindSampler(i);
+
+            glUniform1i(prgm->ParameterLocation(std::get<1>(input_textures[i]).c_str()), i);
         }
-    } else {
-        glActiveTexture(GL_TEXTURE0);
-        finals.first->bindTexture();
-        glUniform1i(prgm->ParameterLocation(finals.second.c_str()), 0);
     }
 
-    for (int i = 0; i < output_textures.size(); ++i)
-        output_textures[i].first->bindImage(output_textures[i].second, GL_WRITE_ONLY);
+    if (std::get<0>(finals) != nullptr) {
+        glActiveTexture(GL_TEXTURE0);
+        std::get<0>(finals)->bindTexture();
+        std::get<2>(finals)->bindSampler(0);
+        glUniform1i(prgm->ParameterLocation(std::get<1>(finals).c_str()), 0);
+    }
+
+    for (int i = 0; i < output_textures.size(); ++i) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        output_textures[i].first->bindTexture();
+        output_textures[i].first->bindImage(output_textures[i].second, GL_READ_WRITE);
+    }
 
     // all textures in output_textures should have the same size, so we just use the first
     // TODO: is size for dispatch correct?
@@ -727,7 +757,7 @@ void megamol::compositing::ASSAO::fullscreenPassDraw(const std::unique_ptr<GLSLC
 
     prgm->Disable();
 
-    glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -735,41 +765,16 @@ void megamol::compositing::ASSAO::fullscreenPassDraw(const std::unique_ptr<GLSLC
 
 bool megamol::compositing::ASSAO::getMetaDataCallback(core::Call& caller) { return true; }
 
+// TODO: the whole functions seems redundant.
+// i think it is possible to call it only once at the beginning
+// no need for further calls afterwards
 void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs) {
     int width = inputs->ViewportWidth;
     int height = inputs->ViewportHeight;
 
     glowl::TextureLayout depth_layout = inputs->depthTexture->getTextureLayout();
     glowl::TextureLayout normal_layout = inputs->normalTexture->getTextureLayout();
-
-    // TODO: check for correctness
-    std::vector<std::pair<GLenum, GLint>> int_param = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST},
-        {GL_TEXTURE_MAG_FILTER, GL_NEAREST}, {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
-        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
-
-    m_tx_layout_samplerStatePointClamp =
-        glowl::TextureLayout(GL_RGBA16F, width, height, 1, GL_RGBA, GL_HALF_FLOAT, 1, int_param, {});
-
-    int_param.clear();
-    int_param = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
-        {GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT}, {GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT}};
-
-    m_tx_layout_samplerStatePointMirror =
-        glowl::TextureLayout(GL_RGBA16F, width, height, 1, GL_RGBA, GL_HALF_FLOAT, 1, int_param, {});
-
-    int_param.clear();
-    int_param = {{GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
-        {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
-
-    m_tx_layout_samplerStateLinearClamp =
-        glowl::TextureLayout(GL_RGBA16F, width, height, 1, GL_RGBA, GL_HALF_FLOAT, 1, int_param, {});
-
-    int_param.clear();
-    int_param = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
-        {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
-
-    m_tx_layout_samplerStateViewspaceDepthTap =
-        glowl::TextureLayout(GL_RGBA16F, width, height, 1, GL_RGBA, GL_HALF_FLOAT, 1, int_param, {});
+    glowl::TextureLayout result_layout = inputs->normalTexture->getTextureLayout();
 
 
     bool needsUpdate = (m_size.x != width) || (m_size.y != height);
@@ -1087,8 +1092,8 @@ bool megamol::compositing::ASSAO::equalLayoutsWithoutSize(const glowl::TextureLa
     bool type = lhs.type == rhs.type;
     //bool width = lhs.width == rhs.width;
 
-    return depth || float_parameters || format /*|| height*/ || internal_format || int_parameters || levels || type /*||
-           width*/;
+    return depth && float_parameters && format /*&& height*/ && internal_format && int_parameters && levels &&
+           type /*&& width*/;
 }
 
 bool megamol::compositing::ASSAO::equalLayouts(
@@ -1103,6 +1108,6 @@ bool megamol::compositing::ASSAO::equalLayouts(
     bool type = lhs.type == rhs.type;
     bool width = lhs.width == rhs.width;
 
-    return depth || float_parameters || format || height || internal_format || int_parameters || levels ||
-           type || width;
+    return depth && float_parameters && format && height && internal_format && int_parameters && levels &&
+           type && width;
 }

@@ -1,7 +1,7 @@
 void SSAOTapInner( const int qualityLevel, inout float obscuranceSum, inout float weightSum, const vec2 samplingUV, const float mipLevel, const vec3 pixCenterPos, const vec3 negViewspaceDir, vec3 pixelNormal, const float falloffCalcMulSq, const float weightMod, const int dbgTapIndex )
 {
     // get depth at sample
-    float viewspaceSampleZ = textureLod( g_ViewspaceDepthSource, samplingUV.xy, mipLevel ).x; // * g_ASSAOConsts.MaxViewspaceDepth;
+    float viewspaceSampleZ = textureLod( g_ViewSpaceDepthSourceDepthTapSampler, samplingUV.xy, mipLevel ).x; // * g_ASSAOConsts.MaxViewspaceDepth;
 
     // convert to viewspace
     vec3 hitPos = NDCToViewspace( samplingUV.xy, viewspaceSampleZ ).xyz;

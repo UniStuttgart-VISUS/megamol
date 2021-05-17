@@ -8,8 +8,8 @@ void main()
     vec3 viewport = imageSize(g_FinalSSAO);
     vec2 inUV = (2.f * inPos.xy + vec2(1.f)) / (2.f * vec2(viewport.xy));
 
-    float a = (g_FinalSSAO, vec3( inUV, 0 ), 0.0 ).x;
-    float d = (g_FinalSSAO, vec3( inUV, 3 ), 0.0 ).x;
+    float a = textureLod(g_FinalSSAO, vec3( inUV, 0 ), 0.0 ).x;
+    float d = textureLod(g_FinalSSAO, vec3( inUV, 3 ), 0.0 ).x;
     float avg = (a+d) * 0.5;
 
     //return vec4( avg.xxx, 1.0 );
