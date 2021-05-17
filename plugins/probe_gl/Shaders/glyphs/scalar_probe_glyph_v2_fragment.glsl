@@ -119,12 +119,13 @@ void main() {
 
         out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
-        if( sample_value_normalized >= zero_value_radius && radius < border_circle_width){
+        if( sample_value_normalized >= zero_value_radius && radius < (1.0 - border_circle_width)){
             if( radius < (zero_value_radius) || radius > sample_value_normalized ) discard;
         }
-        else if(sample_value_normalized < zero_value_radius && radius < border_circle_width){
+        else if(sample_value_normalized < zero_value_radius && radius < (1.0 - border_circle_width)){
             if( radius > (zero_value_radius) || radius < sample_value_normalized ) discard;
         }
+
     }
 
     if(abs(radius - zero_value_radius) < 0.005) out_colour = vec3(1.0);
