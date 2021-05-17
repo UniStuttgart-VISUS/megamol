@@ -4,32 +4,44 @@
 #include "mesh/MeshDataCall.h"
 #include "mesh/TriangleMeshCall.h"
 
+#include <CGAL/AABB_face_graph_triangle_primitive.h>
+#include <CGAL/AABB_traits.h>
+#include <CGAL/AABB_tree.h>
 #include <CGAL/Delaunay_triangulation_3.h>
-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Point_3.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 #include <CGAL/Surface_mesh.h>
-#include <CGAL/Tetrahedron_3.h>
+#include <CGAL/Triangle_3.h>
 
 #include <CGAL/Polygon_mesh_processing/orient_polygon_soup.h>
 #include <CGAL/Polygon_mesh_processing/orient_polygon_soup_extension.h>
 #include <CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h>
 #include <CGAL/Polygon_mesh_processing/repair_polygon_soup.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <algorithm>
 #include <array>
+#include <iterator>
 #include <memory>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
-typedef CGAL::Exact_predicates_exact_constructions_kernel K;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 
 typedef K::Point_3 Point;
-typedef CGAL::Tetrahedron_3<K> Tetrahedron;
+typedef K::Triangle_3 Triangle;
 
 typedef CGAL::Surface_mesh<Point> Mesh;
 typedef CGAL::Delaunay_triangulation_3<K> Delaunay;
+
+typedef CGAL::AABB_face_graph_triangle_primitive<Mesh, CGAL::Default, CGAL::Tag_false> Primitive;
+typedef CGAL::AABB_traits<K, Primitive> Traits;
+typedef CGAL::AABB_tree<Traits> Tree;
 
 typedef std::vector<std::size_t> CGAL_Polygon;
 
@@ -203,10 +215,10 @@ bool megamol::flowvis::ExtractPores::compute() {
         this->output.indices = std::make_shared<std::vector<unsigned int>>();
 
         // Create surface mesh from input triangles and bounding box
-        std::vector<Point> points;
         Mesh mesh;
 
         {
+            std::vector<Point> points;
             std::vector<CGAL_Polygon> polygon_vec;
 
             // Add input mesh to polygon soup
@@ -227,6 +239,7 @@ bool megamol::flowvis::ExtractPores::compute() {
             {
                 PMP::remove_isolated_points_in_polygon_soup(points, polygon_vec);
                 PMP::merge_duplicate_points_in_polygon_soup(points, polygon_vec);
+                PMP::duplicate_non_manifold_edges_in_polygon_soup(points, polygon_vec);
 
                 if (!PMP::orient_polygon_soup(points, polygon_vec)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -250,43 +263,44 @@ bool megamol::flowvis::ExtractPores::compute() {
 
         // Tetrahedralize domain
         Delaunay dt;
-        dt.insert(points.begin(), points.end());
+        dt.insert(mesh.points().begin(), mesh.points().end());
 
         // Iterate over all cells and check which side its center is on
-        CGAL::Side_of_triangle_mesh<Mesh, K> inside(mesh);
-
         std::size_t num_pores = 0;
-        std::size_t num_in_pore = 0;
-        std::size_t num_outside_pore = 0;
+
+        CGAL::Side_of_triangle_mesh<Mesh, K> orientation_test(mesh);
+
+        Tree tree(CGAL::faces(mesh).first, CGAL::faces(mesh).second, mesh);
+        tree.build();
+
+        const auto err_threshold =
+            1e-6 * (tmc.get_bounding_box().Width() + tmc.get_bounding_box().Height() + tmc.get_bounding_box().Depth());
 
         for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
-            const auto center = cell->circumcenter();
+            const auto cell_center = cell->circumcenter();
 
-            if (inside(center) != CGAL::ON_BOUNDED_SIDE) {
-                ++num_in_pore;
-
+            if (orientation_test(cell_center) != CGAL::ON_BOUNDED_SIDE) {
                 // Count number of facets shared with the surface mesh
-                typedef decltype(*dt.incident_facets(cell, 0, 1)->first) face_t;
+                const auto& p1 = cell->vertex(0)->point();
+                const auto& p2 = cell->vertex(1)->point();
+                const auto& p3 = cell->vertex(2)->point();
+                const auto& p4 = cell->vertex(3)->point();
 
-                const std::array<std::reference_wrapper<typename std::remove_reference<face_t>::type>, 4> facets{
-                    *dt.incident_facets(cell, 0, 1)->first,
-                    *dt.incident_facets(cell, 1, 0)->first,
-                    *dt.incident_facets(cell, 2, 3)->first,
-                    *dt.incident_facets(cell, 3, 2)->first
-                };
+                std::array<Triangle, 4> facets{
+                    Triangle(p1, p3, p2), Triangle(p1, p2, p4), Triangle(p2, p3, p4), Triangle(p1, p4, p3)};
 
-                bool boundary_facet = false;
+                bool has_boundary_facet = false;
 
                 for (auto& facet : facets) {
-                    auto center = facet.get().circumcenter();
+                    auto face_center = CGAL::centroid(facet);
 
-                    if (inside(center) == CGAL::ON_BOUNDARY) {
-                        boundary_facet = true;
+                    if (CGAL::to_double(tree.squared_distance(face_center)) < err_threshold) {
+                        has_boundary_facet = true;
                     }
                 }
 
-                // If a boundary facet is shared, then this is a pore
-                if (boundary_facet) {
+                // If no facet is shared with the surface mesh, then this is a pore
+                if (!has_boundary_facet) {
                     ++num_pores;
 
                     const auto index = this->output.vertices->size() / 3;
@@ -342,14 +356,10 @@ bool megamol::flowvis::ExtractPores::compute() {
                     this->output.indices->push_back(index + 2);
                     this->output.indices->push_back(index + 3);
                 }
-            } else {
-                ++num_outside_pore;
             }
         }
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("Number of pores found: %d\n", num_pores);
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Number of valid tetrahedra: %d\n", num_in_pore);
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Number of invalid tetrahedra: %d\n", num_outside_pore);
     }
 
     return true;
