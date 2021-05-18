@@ -1733,7 +1733,20 @@ namespace probe {
         }
 
         if (something_changed && !_raw_positions.empty()) {
-            this->compute();
+            auto mfdc = this->_meshFromDiscCall.CallAs<adios::CallADIOSData>();
+            if (!mfdc) {
+                if (!_shellToShowChanged || _shells.empty()) {
+                    this->compute();
+                }
+            } else {
+                if (!_shellToShowChanged || _shells.empty()) {
+                    if (!this->readMeshElementsFromFile()) {
+                        core::utility::log::Log::DefaultLog.WriteError(
+                            "[ReconstructSurface] Could not load mesh from File. Starting computation ...");
+                        this->compute();
+                    }
+                }
+            }
         }
 
         assert(!_shellElements.empty());

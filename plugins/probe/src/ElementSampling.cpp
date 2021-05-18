@@ -279,6 +279,7 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
     for (int j = 0; j < elements[0].size(); ++j) {
 
         geom_ids.clear();
+        geom_ids.resize(elements.size());
         // generate flat geomety indices
         for (int k = 0; k < elements.size(); ++k) {
             geom_ids[k] = elements[0].size() * k + j;

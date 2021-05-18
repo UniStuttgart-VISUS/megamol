@@ -67,7 +67,7 @@ private:
     std::vector<std::vector<mesh::MeshDataAccessCollection::VertexAttribute>> _line_attribs;
     mesh::MeshDataAccessCollection::IndexData _line_indices;
 
-    std::vector<std::array<float, 4>> _vertex_data;
+    std::vector<std::array<float, 3>> _vertex_data;
     std::array<uint32_t, 1> _index_data;
 };
 
