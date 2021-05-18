@@ -68,6 +68,7 @@ private:
     std::vector<FrontendResource> m_requestedResourceReferences;
 
     /// XXX TEMP
+    bool m_guiWindowSetup = true;
     bool guiRenderCallback(WinConfig_t& wc);
     megamol::frontend_resources::GUIRenderRequest m_guiRenderRequest_resource;
 };

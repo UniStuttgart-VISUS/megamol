@@ -2686,7 +2686,7 @@ void GUIWindows::RegisterGUIWindow(const std::string &window_name, std::function
     if (!this->window_collection.WindowConfigurationExists(hash_id)) {
         WindowCollection::WindowConfiguration wc_tmp(window_name);
         wc_tmp.win_show = true;
-        wc_tmp.win_flags = ImGuiWindowFlags_None; // ImGuiWindowFlags_AlwaysAutoResize;
+        wc_tmp.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
         wc_tmp.win_callback_id = WindowCollection::DRAWCALLBACK_UNKNOWN;
         this->window_collection.AddWindowConfiguration(wc_tmp);
     }

@@ -280,11 +280,15 @@ bool Screenshot_Service::guiRenderCallback(WinConfig_t& wc) {
     bool valid_imgui_scope =
             ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
     if (valid_imgui_scope) {
-        /// TODO
+        if (m_guiWindowSetup) {
+            wc.win_flags = ImGuiWindowFlags_None;
+            wc.win_size = ImVec2(300.0f, 300.0f);
+            wc.buf_set_pos_size = true;
 
-        wc.win_size = ImVec2(300.0f, 300.0f);
-        //wc.buf_set_pos_size = true; // Call only once ...
-        ImGui::TextUnformatted("Hallo Welt ...");
+            m_guiWindowSetup = false;
+        }
+
+        ImGui::TextUnformatted("Hello World ...");
 
     }
 }
