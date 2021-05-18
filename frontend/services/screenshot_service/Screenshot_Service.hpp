@@ -12,6 +12,9 @@
 // ImageData struct and interfaces for screenshot sources/writers
 #include "Screenshots.h"
 
+/// XXX TEMP
+#include "GUIRenderRequest.h"
+
 namespace megamol {
 namespace frontend {
 
@@ -63,6 +66,10 @@ private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
+
+    /// XXX TEMP
+    bool guiRenderCallback(WinConfig_t& wc);
+    megamol::frontend_resources::GUIRenderRequest m_guiRenderRequest_resource;
 };
 
 } // namespace frontend

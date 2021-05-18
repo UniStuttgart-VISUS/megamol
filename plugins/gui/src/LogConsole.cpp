@@ -84,7 +84,7 @@ LogConsole::~LogConsole() {
 
 void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc) {
 
-    this->window_title = wc.win_name;
+    this->window_title = wc.Name();
 
     auto new_log_msg_count = this->echo_log_buffer.log().size();
     if (new_log_msg_count > this->log_msg_count) {

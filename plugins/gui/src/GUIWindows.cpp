@@ -185,13 +185,13 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             // Restore window 'open' state (Always restore at least menu)
             this->state.menu_visible = true;
             const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-                if (std::find(this->state.gui_visible_buffer.begin(), this->state.gui_visible_buffer.end(),
-                        wc.win_callback) != this->state.gui_visible_buffer.end()) {
+                if (std::find(this->state.gui_restore_hidden_windows.begin(), this->state.gui_restore_hidden_windows.end(),
+                        wc.Name()) != this->state.gui_restore_hidden_windows.end()) {
                     wc.win_show = true;
                 }
             };
             this->window_collection.EnumWindows(func);
-            this->state.gui_visible_buffer.clear();
+            this->state.gui_restore_hidden_windows.clear();
             this->state.gui_visible = true;
         }
         this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
@@ -273,7 +273,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     // Update windows
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-        switch (wc.win_callback) {
+        switch (wc.win_callback_id) {
         case (WindowCollection::DRAWCALLBACK_LOGCONSOLE):
             this->console.Update(wc);
             break;
@@ -344,9 +344,9 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Delete windows
-    if (!this->state.win_delete.empty()) {
-        this->window_collection.DeleteWindowConfiguration(this->state.win_delete);
-        this->state.win_delete.clear();
+    if (this->state.win_delete_hash_id != 0) {
+        this->window_collection.DeleteWindowConfiguration(this->state.win_delete_hash_id);
+        this->state.win_delete_hash_id = 0;
     }
 
     // Start new ImGui frame --------------------------------------------------
@@ -406,7 +406,7 @@ bool GUIWindows::PostDraw(void) {
     // Draw Windows ------------------------------------------------------------
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
         // Update transfer function
-        if ((wc.win_callback == WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
+        if ((wc.win_callback_id == WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
 
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
@@ -429,11 +429,11 @@ bool GUIWindows::PostDraw(void) {
             wc.buf_tfe_reset = false;
         }
         // Update log console
-        if (wc.win_callback == WindowCollection::DRAWCALLBACK_LOGCONSOLE) {
+        if (wc.win_callback_id == WindowCollection::DRAWCALLBACK_LOGCONSOLE) {
             this->console.Update(wc);
         }
         // Update frame statistics
-        if (wc.win_callback == WindowCollection::DRAWCALLBACK_PERFORMANCE) {
+        if (wc.win_callback_id == WindowCollection::DRAWCALLBACK_PERFORMANCE) {
             this->update_frame_statistics(wc);
         }
 
@@ -441,7 +441,7 @@ bool GUIWindows::PostDraw(void) {
         if (wc.win_show) {
 
             // Change window flags depending on current view of transfer function editor
-            if (wc.win_callback == WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION) {
+            if (wc.win_callback_id == WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION) {
                 if (this->tf_editor_ptr->IsMinimized()) {
                     wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
                                    ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
@@ -469,13 +469,15 @@ bool GUIWindows::PostDraw(void) {
             this->window_sizing_and_positioning(wc, collapsing_changed);
 
             // Calling callback drawing window content
-            auto cb = this->window_collection.WindowCallback(wc.win_callback);
+            auto cb = this->window_collection.WindowCallback(wc.win_callback_id);
             if (cb) {
                 cb(wc);
+            } else if (wc.buf_volatile_callback != nullptr) {
+                (*wc.buf_volatile_callback)(wc);
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Missing valid callback for WindowDrawCallback: '%d'. [%s, %s, line %d]\n",
-                    (int) wc.win_callback, __FILE__, __FUNCTION__, __LINE__);
+                    (int) wc.win_callback_id, __FILE__, __FUNCTION__, __LINE__);
             }
 
             // Saving some of the current window state.
@@ -532,10 +534,10 @@ bool GUIWindows::PostDraw(void) {
             this->state.gui_hide_next_frame--;
             // Save 'open' state of windows for later restore. Closing all windows before omitting GUI rendering is
             // required to set right ImGui state for mouse handling
-            this->state.gui_visible_buffer.clear();
+            this->state.gui_restore_hidden_windows.clear();
             const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
                 if (wc.win_show) {
-                    this->state.gui_visible_buffer.push_back(wc.win_callback);
+                    this->state.gui_restore_hidden_windows.push_back(wc.Name());
                     wc.win_show = false;
                 }
             };
@@ -1156,80 +1158,74 @@ bool GUIWindows::createContext(void) {
     this->window_collection.RegisterDrawWindowCallback(WindowCollection::DRAWCALLBACK_LOGCONSOLE,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->console.Draw(wc); });
 
-    // Create window configurations
-    WindowCollection::WindowConfiguration buf_win;
-    buf_win.buf_set_pos_size = true;
-    buf_win.win_collapsed = false;
-    buf_win.win_store_config = true;
-
     /// XXX
     float vp[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     ::glGetFloatv(GL_VIEWPORT, vp);
 
     // DRAWCALLBACK_CONFIGURATOR Window ----------------------------------------------------
-    buf_win.win_name = "Configurator";
-    buf_win.win_show = false;
-    buf_win.win_size = ImVec2(vp[2], vp[3]);
-    buf_win.win_reset_size = buf_win.win_size;
-    buf_win.win_position = ImVec2(0.0f, 0.0f);
-    buf_win.win_reset_position = buf_win.win_position;
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
-    buf_win.win_callback = WindowCollection::DRAWCALLBACK_CONFIGURATOR;
-    this->window_collection.AddWindowConfiguration(buf_win);
+    WindowCollection::WindowConfiguration wc_conf("Configurator");
+    wc_conf.win_show = false;
+    wc_conf.win_size = ImVec2(vp[2], vp[3]);
+    wc_conf.win_reset_size = wc_conf.win_size;
+    wc_conf.win_position = ImVec2(0.0f, 0.0f);
+    wc_conf.win_reset_position = wc_conf.win_position;
+    wc_conf.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
+    wc_conf.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
+    wc_conf.win_callback_id = WindowCollection::DRAWCALLBACK_CONFIGURATOR;
+    this->window_collection.AddWindowConfiguration(wc_conf);
 
     // Parameters -------------------------------------------------------------
-    buf_win.win_name = "Parameters";
-    buf_win.win_show = true;
-    buf_win.win_size = ImVec2(400.0f, 500.0f);
-    buf_win.win_reset_size = buf_win.win_size;
-    buf_win.win_position = ImVec2(0.0f, 0.0f);
-    buf_win.win_reset_position = buf_win.win_position;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
-    buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
-    buf_win.win_callback = WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS;
-    buf_win.win_reset_size = buf_win.win_size;
-    this->window_collection.AddWindowConfiguration(buf_win);
-    float param_win_width = buf_win.win_size.x;
-    float param_win_height = buf_win.win_size.y;
+    WindowCollection::WindowConfiguration wc_param("Parameters");
+    wc_param.win_show = true;
+    wc_param.win_size = ImVec2(400.0f, 500.0f);
+    wc_param.win_reset_size = wc_param.win_size;
+    wc_param.win_position = ImVec2(0.0f, 0.0f);
+    wc_param.win_reset_position = wc_param.win_position;
+    wc_param.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
+    wc_param.win_flags = ImGuiWindowFlags_NoScrollbar;
+    wc_param.win_callback_id = WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS;
+    wc_param.win_reset_size = wc_param.win_size;
+    this->window_collection.AddWindowConfiguration(wc_param);
+    float param_win_width = wc_param.win_size.x;
+    float param_win_height = wc_param.win_size.y;
 
     // LOG CONSOLE Window -----------------------------------------------------
+    WindowCollection::WindowConfiguration wc_log("Log Console");
     const float default_font_size = (12.0f * megamol::gui::gui_scaling.Get() + ImGui::GetFrameHeightWithSpacing());
-    buf_win.win_name = "Log Console";
-    buf_win.win_show = false;
-    buf_win.win_size =
+    wc_log.win_show = false;
+    wc_log.win_size =
         ImVec2(vp[2], std::min((vp[3] - param_win_height - default_font_size), (8.0f * default_font_size)));
-    buf_win.win_reset_size = buf_win.win_size;
-    buf_win.win_position = ImVec2(0.0f, vp[3] - buf_win.win_size.y);
-    buf_win.win_reset_position = buf_win.win_position;
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
-    buf_win.win_callback = WindowCollection::DRAWCALLBACK_LOGCONSOLE;
-    this->window_collection.AddWindowConfiguration(buf_win);
+    wc_log.win_reset_size = wc_log.win_size;
+    wc_log.win_position = ImVec2(0.0f, vp[3] - wc_log.win_size.y);
+    wc_log.win_reset_position = wc_log.win_position;
+    wc_log.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
+    wc_log.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
+    wc_log.win_callback_id = WindowCollection::DRAWCALLBACK_LOGCONSOLE;
+    this->window_collection.AddWindowConfiguration(wc_log);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
-    buf_win.win_name = "Transfer Function Editor";
-    buf_win.win_show = false;
-    buf_win.win_size = ImVec2(0.0f, 0.0f); /// see ImGuiWindowFlags_AlwaysAutoResize
-    buf_win.win_reset_size = buf_win.win_size;
-    buf_win.win_position = ImVec2(param_win_width, 0.0f);
-    buf_win.win_reset_position = buf_win.win_position;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    buf_win.win_callback = WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION;
-    this->window_collection.AddWindowConfiguration(buf_win);
+    WindowCollection::WindowConfiguration wc_trans( "Transfer Function Editor");
+    wc_trans.win_show = false;
+    wc_trans.win_size = ImVec2(0.0f, 0.0f); /// see ImGuiWindowFlags_AlwaysAutoResize
+    wc_trans.win_reset_size = wc_trans.win_size;
+    wc_trans.win_position = ImVec2(param_win_width, 0.0f);
+    wc_trans.win_reset_position = wc_trans.win_position;
+    wc_trans.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
+    wc_trans.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
+    wc_trans.win_callback_id = WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION;
+    this->window_collection.AddWindowConfiguration(wc_trans);
 
     // FPS/MS Window ----------------------------------------------------------
-    buf_win.win_name = "Performance Metrics";
-    buf_win.win_show = false;
-    buf_win.win_size = ImVec2(0.0f, 0.0f); /// see ImGuiWindowFlags_AlwaysAutoResize
-    buf_win.win_reset_size = buf_win.win_size;
-    buf_win.win_position = ImVec2(vp[2] / 2.0f, 0.0f);
-    buf_win.win_reset_position = buf_win.win_position;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking;
-    buf_win.win_callback = WindowCollection::DRAWCALLBACK_PERFORMANCE;
-    this->window_collection.AddWindowConfiguration(buf_win);
+    WindowCollection::WindowConfiguration wc_fps("Performance Metrics");
+    wc_fps.win_show = false;
+    wc_fps.win_size = ImVec2(0.0f, 0.0f); /// see ImGuiWindowFlags_AlwaysAutoResize
+    wc_fps.win_reset_size = wc_fps.win_size;
+    wc_fps.win_position = ImVec2(vp[2] / 2.0f, 0.0f);
+    wc_fps.win_reset_position = wc_fps.win_position;
+    wc_fps.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
+    wc_fps.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking;
+    wc_fps.win_callback_id = WindowCollection::DRAWCALLBACK_PERFORMANCE;
+    this->window_collection.AddWindowConfiguration(wc_fps);
 
     // Style settings ---------------------------------------------------------
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB |
@@ -1501,7 +1497,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     this->tooltip.ToolTip(param_help);
 
     // Paramter substring name filtering (only for main parameter view)
-    if (wc.win_callback == WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS) {
+    if (wc.win_callback_id == WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS) {
         if (this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed) {
             this->search_widget.SetSearchFocus(true);
             this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
@@ -1563,22 +1559,21 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                         if (ImGui::MenuItem("Copy to new Window")) {
                             std::srand(std::time(nullptr));
                             std::string window_name = "Parameters###parameters_" + std::to_string(std::rand());
-                            WindowCollection::WindowConfiguration buf_win;
-                            buf_win.win_name = window_name;
-                            buf_win.win_show = true;
-                            buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
-                            buf_win.win_callback = WindowCollection::DRAWCALLBACK_PARAMETERS;
-                            buf_win.param_show_hotkeys = false;
-                            buf_win.win_position =
+                            WindowCollection::WindowConfiguration wc_param(window_name);
+                            wc_param.win_show = true;
+                            wc_param.win_flags = ImGuiWindowFlags_NoScrollbar;
+                            wc_param.win_callback_id = WindowCollection::DRAWCALLBACK_PARAMETERS;
+                            wc_param.param_show_hotkeys = false;
+                            wc_param.win_position =
                                 ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing());
-                            buf_win.win_size = ImVec2(
+                            wc_param.win_size = ImVec2(
                                 (400.0f * megamol::gui::gui_scaling.Get()), (600.0f * megamol::gui::gui_scaling.Get()));
-                            buf_win.param_modules_list.emplace_back(module_label);
-                            this->window_collection.AddWindowConfiguration(buf_win);
+                            wc_param.param_modules_list.emplace_back(module_label);
+                            this->window_collection.AddWindowConfiguration(wc_param);
                         }
 
                         // Deleting module's parameters is not available in main parameter window.
-                        if (wc.win_callback != WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS) {
+                        if (wc.win_callback_id != WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS) {
                             if (ImGui::MenuItem("Delete from List")) {
                                 std::vector<std::string>::iterator find_iter =
                                     std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), module_label);
@@ -1587,7 +1582,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                                     wc.param_modules_list.erase(find_iter);
                                 }
                                 if (wc.param_modules_list.empty()) {
-                                    this->state.win_delete = wc.win_name;
+                                    this->state.win_delete_hash_id = wc.Hash();
                                 }
                             }
                         }
@@ -1611,7 +1606,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                             this->tf_editor_ptr, &out_open_external_tf_editor, override_header_state, nullptr);
                         if (out_open_external_tf_editor) {
                             const auto func = [](WindowCollection::WindowConfiguration& wc) {
-                                if (wc.win_callback == WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION) {
+                                if (wc.win_callback_id == WindowCollection::DRAWCALLBACK_TRANSFER_FUNCTION) {
                                     wc.win_show = true;
                                 }
                             };
@@ -1652,13 +1647,13 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
 
     ImGuiStyle& style = ImGui::GetStyle();
 
-    if (ImGui::RadioButton("fps", (wc.fpsms_mode == WindowCollection::TimingModes::FPS))) {
-        wc.fpsms_mode = WindowCollection::TimingModes::FPS;
+    if (ImGui::RadioButton("fps", (wc.fpsms_mode == WindowCollection::TIMINGMODE_FPS))) {
+        wc.fpsms_mode = WindowCollection::TIMINGMODE_FPS;
     }
     ImGui::SameLine();
 
-    if (ImGui::RadioButton("ms", (wc.fpsms_mode == WindowCollection::TimingModes::MS))) {
-        wc.fpsms_mode = WindowCollection::TimingModes::MS;
+    if (ImGui::RadioButton("ms", (wc.fpsms_mode == WindowCollection::TIMINGMODE_MS))) {
+        wc.fpsms_mode = WindowCollection::TIMINGMODE_MS;
     }
 
     ImGui::TextDisabled("Frame ID:");
@@ -1678,7 +1673,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
     }
 
     auto* value_buffer =
-        ((wc.fpsms_mode == WindowCollection::TimingModes::FPS) ? (&wc.buf_fps_values) : (&wc.buf_ms_values));
+        ((wc.fpsms_mode == WindowCollection::TIMINGMODE_FPS) ? (&wc.buf_fps_values) : (&wc.buf_ms_values));
     int buffer_size = static_cast<int>(value_buffer->size());
 
     std::string value_string;
@@ -1689,7 +1684,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
     }
 
     float* value_ptr = value_buffer->data();
-    float max_value = ((wc.fpsms_mode == WindowCollection::TimingModes::FPS) ? (wc.buf_fps_max) : (wc.buf_ms_max));
+    float max_value = ((wc.fpsms_mode == WindowCollection::TIMINGMODE_FPS) ? (wc.buf_fps_max) : (wc.buf_ms_max));
     ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, value_string.c_str(), 0.0f, (1.5f * max_value),
         ImVec2(0.0f, (50.0f * megamol::gui::gui_scaling.Get())));
 
@@ -1768,19 +1763,21 @@ void GUIWindows::drawMenu(void) {
         const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
             bool registered_window = !(wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN);
             if (registered_window) {
-                ImGui::MenuItem(wc.win_name.c_str(), wc.win_hotkey.ToString().c_str(), &wc.win_show);
+                ImGui::MenuItem(wc.Name().c_str(), wc.win_hotkey.ToString().c_str(), &wc.win_show);
             } else {
                 // Custom unregistered parameter window
-                if (ImGui::BeginMenu(wc.win_name.c_str())) {
+                if (ImGui::BeginMenu(wc.Name().c_str())) {
                     std::string menu_label = "Show";
                     if (wc.win_show)
                         menu_label = "Hide";
                     if (ImGui::MenuItem(menu_label.c_str(), wc.win_hotkey.ToString().c_str(), nullptr)) {
                         wc.win_show = !wc.win_show;
                     }
-                    // Enable option to delete window if it is a newly created custom parameter window
-                    if (ImGui::MenuItem("Delete Window")) {
-                        this->state.win_delete = wc.win_name;
+                    // Enable option to delete custom newly created parameter windows
+                    if (wc.win_callback_id == WindowCollection::DRAWCALLBACK_PARAMETERS) {
+                        if (ImGui::MenuItem("Delete Window")) {
+                            this->state.win_delete_hash_id = wc.Hash();
+                        }
                     }
                     ImGui::EndMenu();
                 }
@@ -2365,7 +2362,7 @@ void megamol::gui::GUIWindows::load_preset_window_docking(ImGuiID global_docking
     ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, NULL, &dock_id_main);
 
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-        switch (wc.win_callback) {
+        switch (wc.win_callback_id) {
         case (WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS): {
             ImGui::DockBuilderDockWindow(this->full_window_title(wc).c_str(), dock_id_prop);
         } break;
@@ -2561,7 +2558,7 @@ void megamol::gui::GUIWindows::init_state(void) {
 
     this->state.gui_visible = true;
     this->state.gui_visible_post = true;
-    this->state.gui_visible_buffer.clear();
+    this->state.gui_restore_hidden_windows.clear();
     this->state.gui_hide_next_frame = 0;
     this->state.style = GUIWindows::Styles::DarkColors;
     this->state.rescale_windows = false;
@@ -2570,7 +2567,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.project_script_paths.clear();
     this->state.font_utf8_ranges.clear();
     this->state.load_fonts = false;
-    this->state.win_delete = "";
+    this->state.win_delete_hash_id = 0;
     this->state.last_instance_time = 0.0;
     this->state.open_popup_about = false;
     this->state.open_popup_save = false;
@@ -2674,6 +2671,33 @@ bool megamol::gui::GUIWindows::create_not_existing_png_filepath(std::string& ino
     return created_filepath;
 }
 
+
 std::string megamol::gui::GUIWindows::full_window_title(WindowCollection::WindowConfiguration& wc) const {
-    return (wc.win_name + "     " + wc.win_hotkey.ToString());
+    return (wc.Name() + "     " + wc.win_hotkey.ToString());
+}
+
+
+void GUIWindows::RegisterGUIWindow(const std::string &window_name, std::function<void(gui::WindowCollection::WindowConfiguration&)> const& callback) {
+
+    // Create new window configuration (might be already created via GUI state)
+    if (window_name.empty()) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] Invalid window name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+    auto hash_id = std::hash<std::string>()(window_name);
+    if (!this->window_collection.WindowConfigurationExists(hash_id)) {
+        WindowCollection::WindowConfiguration wc_tmp(window_name);
+        wc_tmp.win_show = true;
+        wc_tmp.win_flags = ImGuiWindowFlags_None; // ImGuiWindowFlags_AlwaysAutoResize;
+        wc_tmp.win_callback_id = WindowCollection::DRAWCALLBACK_UNKNOWN;
+        this->window_collection.AddWindowConfiguration(wc_tmp);
+    }
+    // Set volatile window callback function
+    const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+        if (wc.Hash() == hash_id) {
+            wc.buf_volatile_callback = &const_cast<std::function<void(gui::WindowCollection::WindowConfiguration&)>&>(callback);
+        }
+    };
+    this->window_collection.EnumWindows(func);
 }

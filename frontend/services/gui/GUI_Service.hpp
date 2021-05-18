@@ -9,17 +9,20 @@
 #define MEGAMOL_GUI_SERVICE_HPP_INCLUDED
 #pragma once
 
+
 #include "AbstractFrontendService.hpp"
 
 #include "gui-wrapper.h"
 
 #include "IOpenGL_Context.h"
+#include "GUIRenderRequest.h"
 #include "GUIState.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
 #include <glm/glm.hpp>
+
 
 namespace megamol {
 namespace frontend {
@@ -89,6 +92,8 @@ private:
     void resource_provide_gui_state(const std::string& json_state);
     void resource_provide_gui_visibility(bool show);
     void resource_provide_gui_scale(float scale);
+
+    bool register_gui_callbacks_once = true;
 };
 
 } // namespace frontend

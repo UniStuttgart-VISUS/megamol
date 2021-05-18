@@ -226,6 +226,15 @@ namespace gui {
             void (*set_clipboard_func)(void* user_data, const char* string), void* user_data);
 
         /**
+         * Register GUI window for external window callback function containing ImGui content.
+         * ! Call only once to prevent performance overhead !
+         *
+         * @param window_name   The unique window name
+         * @param callback      The window callback function containing the GUI content of the window
+         */
+        void RegisterGUIWindow(const std::string& window_name, std::function<void(WindowCollection::WindowConfiguration&)> const& callback);
+
+        /**
          * Synchronise changes between core graph <-> gui graph.
          *
          * - 'Old' core instance graph:  Call this function after(!) rendering of current frame.
@@ -257,8 +266,8 @@ namespace gui {
         struct StateBuffer {
             bool gui_visible;      // Flag indicating whether GUI is completely disabled
             bool gui_visible_post; // Required to prevent changes to 'gui_enabled' between pre and post drawing
-            std::vector<WindowCollection::DrawCallbacks>
-                gui_visible_buffer; // List of all visible window IDs for restore when GUI is visible again
+            std::vector<std::string>
+                gui_restore_hidden_windows; // List of all visible window IDs for restore when GUI is visible again
             unsigned int
                 gui_hide_next_frame; // Hiding all GUI windows properly needs two frames for ImGui to apply right state
             bool rescale_windows;    // Indicates resizing of windows for new gui zoom
@@ -268,7 +277,7 @@ namespace gui {
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
             bool load_fonts;                               // Flag indicating font loading
-            std::string win_delete;                        // Name of the window to delete.
+            size_t win_delete_hash_id;                     // Hash id of the window to delete.
             double last_instance_time;                     // Last instance time.
             bool open_popup_about;                         // Flag for opening about pop-up
             bool open_popup_save;                          // Flag for opening save pop-up

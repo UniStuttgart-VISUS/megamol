@@ -22,8 +22,9 @@ namespace gui {
 
     public:
         /** Identifiers for the window draw callbacks. */
-        enum DrawCallbacks {
-            DRAWCALLBACK_NONE = 0,
+        /// XXX Keep explicit numbers for backward compatibility
+        enum WindowCallbackID {
+            DRAWCALLBACK_UNKNOWN = 0,
             DRAWCALLBACK_MAIN_PARAMETERS = 1,
             DRAWCALLBACK_PARAMETERS = 2,
             DRAWCALLBACK_PERFORMANCE = 3,
@@ -33,35 +34,44 @@ namespace gui {
         };
 
         /** Performance mode for fps/ms windows. */
-        enum TimingModes { FPS = 0, MS = 1 };
+        enum TimingMode { TIMINGMODE_FPS , TIMINGMODE_MS };
 
         /** Module filter mode for parameter windows. */
-        enum FilterModes { ALL = 0, INSTANCE = 1, VIEW = 2 };
+        enum ModuleFilter { MODULEFILTER_ALL, MODULEFILTER_INSTANCE , MODULEFILTER_VIEW };
+
+
+        /** Type for known window callback function. */
+        struct WindowConfiguration;
+        typedef std::function<void(WindowConfiguration&)> WindowCallbackFunc_t;
 
         /** Struct holding a window configuration. */
         struct WindowConfiguration {
-            std::string win_name;           // name of the window
-            bool win_show;                  // show/hide window
-            bool win_store_config;          // flag indicates whether consiguration of window should be stored or not
-            ImGuiWindowFlags win_flags;     // imgui window flags
-            DrawCallbacks win_callback;     // ID of the callback drawing the window content
-            core::view::KeyCode win_hotkey; // hotkey for opening/closing window
-            ImVec2 win_position;            // position for reset on state loading (current position)
-            ImVec2 win_size;                // size for reset on state loading (current size)
-            ImVec2 win_reset_size;          // minimum window size for soft reset
-            ImVec2 win_reset_position;      // window position for minimize reset
-            bool win_collapsed;             // flag indicating whether window is collapsed or not.
-            bool buf_set_pos_size;          // [NOT SAVED] set window position and size to fit current viewport
+        private:
+            size_t hash_id;             // unique hash generated from win_name to omit string comparison
+            std::string win_name;       // unique name of the window
+        public:
+            bool win_show;                    // show/hide window
+            bool win_store_config;            // flag indicates whether configuration of window should be stored or not
+            ImGuiWindowFlags win_flags;       // imgui window flags
+            WindowCallbackID win_callback_id; // ID of the callback drawing the window content
+            core::view::KeyCode win_hotkey;   // hotkey for opening/closing window
+            ImVec2 win_position;              // position for reset on state loading (current position)
+            ImVec2 win_size;                  // size for reset on state loading (current size)
+            ImVec2 win_reset_size;            // minimum window size for soft reset
+            ImVec2 win_reset_position;        // window position for minimize reset
+            bool win_collapsed;               // flag indicating whether window is collapsed or not.
+            WindowCallbackFunc_t* buf_volatile_callback; // [NOT SAVED] Alternative unknown window callback.
+            bool buf_set_pos_size;                       // [NOT SAVED] set window position and size to fit current viewport
             // ---------- Parameter specific configuration ----------
             bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
             std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
-            FilterModes param_module_filter;             // module filter
+            ModuleFilter param_module_filter;            // module filter
             bool param_extended_mode;                    // Flag toggling between Expert and Basic parameter mode.
             // ---------- FPS/MS specific configuration ----------
             bool fpsms_show_options;           // show/hide fps/ms options.
             int fpsms_buffer_size;             // maximum count of values in value array
             float fpsms_refresh_rate;          // maximum delay when fps/ms value should be renewed.
-            TimingModes fpsms_mode;            // mode for displaying either FPS or MS
+            TimingMode fpsms_mode;             // mode for displaying either FPS or MS
             float buf_current_delay;           // [NOT SAVED] current delay between frames
             std::vector<float> buf_ms_values;  // [NOT SAVED] current ms values
             std::vector<float> buf_fps_values; // [NOT SAVED] current fps values
@@ -76,28 +86,33 @@ namespace gui {
             unsigned int log_level; // Log level used in log window
             bool log_force_open;    // Flag indicating if log window should be forced open on warnings and errors
 
-            // Ctor for default values
-            WindowConfiguration(void)
-                    : win_show(false)
+            std::string Name(void) const { return this->win_name; }
+            size_t Hash(void) const { return this->hash_id; }
+
+            WindowConfiguration(const std::string& name)
+                    : hash_id(std::hash<std::string>()(name))
+                    , win_name(name)
+                    , win_show(false)
                     , win_store_config(true)
                     , win_flags(0)
-                    , win_callback(DrawCallbacks::DRAWCALLBACK_NONE)
+                    , win_callback_id(DRAWCALLBACK_UNKNOWN)
                     , win_hotkey(megamol::core::view::KeyCode())
                     , win_position(ImVec2(0.0f, 0.0f))
                     , win_size(ImVec2(0.0f, 0.0f))
                     , win_reset_size(ImVec2(0.0f, 0.0f))
                     , win_reset_position(ImVec2(0.0f, 0.0f))
                     , win_collapsed(false)
+                    , buf_volatile_callback(nullptr)
                     , buf_set_pos_size(true)
                     // Window specific configurations
                     , param_show_hotkeys(false)
                     , param_modules_list()
-                    , param_module_filter(FilterModes::ALL)
+                    , param_module_filter(MODULEFILTER_ALL)
                     , param_extended_mode(false)
                     , fpsms_show_options(false)
                     , fpsms_buffer_size(20)
                     , fpsms_refresh_rate(2.0f)
-                    , fpsms_mode(TimingModes::FPS)
+                    , fpsms_mode(TIMINGMODE_FPS)
                     , buf_current_delay(0.0f)
                     , buf_ms_values()
                     , buf_fps_values()
@@ -108,11 +123,10 @@ namespace gui {
                     , tfe_active_param("")
                     , buf_tfe_reset(false)
                     , log_level(static_cast<int>(megamol::core::utility::log::Log::LEVEL_ALL))
-                    , log_force_open(true) {}
+                    , log_force_open(true) {
+            }
         };
 
-        /** Type for callback function. */
-        typedef std::function<void(WindowConfiguration& window_config)> GuiCallbackFunc;
 
         // --------------------------------------------------------------------
         // WINDOWs
@@ -124,10 +138,10 @@ namespace gui {
         /**
          * Register callback function for given callback id.
          *
-         * @param cbid  The callback id.
+         * @param cbid  The window callback id.
          * @param id    The callback function that should be matched to callback id.
          */
-        inline bool RegisterDrawWindowCallback(DrawCallbacks cbid, GuiCallbackFunc cb) {
+        inline bool RegisterDrawWindowCallback(WindowCallbackID cbid, WindowCallbackFunc_t cb) {
             // Overwrites existing entry with same WindowDrawCallback id.
             this->callbacks[cbid] = cb;
             return true;
@@ -136,9 +150,9 @@ namespace gui {
         /**
          * Draw window content by calling registered callback function in window configuration.
          *
-         * @param window_name  The name of the calling window.
+         * @param cbid  The window callback ID.
          */
-        inline GuiCallbackFunc WindowCallback(DrawCallbacks cbid) {
+        inline WindowCallbackFunc_t WindowCallback(WindowCallbackID cbid) {
             // Creates new entry if no callback for cbid is registered (default ctor)
             return this->callbacks[cbid];
         }
@@ -177,14 +191,29 @@ namespace gui {
         /**
          * Delete window.
          *
-         * @param window_name  The window name.
+         * @param win_hash_id  The window hash id.
          */
-        bool DeleteWindowConfiguration(const std::string& window_name);
+        bool DeleteWindowConfiguration(size_t win_hash_id);
 
         bool DeleteWindowConfigurations(void) {
             this->windows.clear();
             return true;
         };
+
+        /**
+         * Check if a window configuration for the given window name exists.
+         *
+         * @param window_name  The window name.
+         *
+         * @return True if there is a window configuration for the given name, false otherwise.
+         */
+        inline bool WindowConfigurationExists(size_t win_hash_id) const {
+            for (auto& wc : this->windows) {
+                if (wc.Hash() == win_hash_id)
+                    return true;
+            }
+            return false;
+        }
 
         // --------------------------------------------------------------------
         // STATE
@@ -199,7 +228,6 @@ namespace gui {
          */
         bool StateFromJSON(const nlohmann::json& in_json);
 
-
         /**
          * Serializes the current window configurations.
          *
@@ -210,25 +238,11 @@ namespace gui {
         bool StateToJSON(nlohmann::json& inout_json);
 
     private:
-        /**
-         * Check if a window configuration for the given window name exists.
-         *
-         * @param window_name  The window name.
-         *
-         * @return True if there is a window configuration for the given name, false otherwise.
-         */
-        inline bool windowConfigurationExists(const std::string& window_name) const {
-            for (auto& wc : this->windows) {
-                if (wc.win_name == window_name)
-                    return true;
-            }
-            return false;
-        }
 
         // VARIABLES ------------------------------------------------------
 
         /** The list of the window names and their configurations. */
-        std::map<DrawCallbacks, GuiCallbackFunc> callbacks;
+        std::map<WindowCallbackID, WindowCallbackFunc_t> callbacks;
 
         /** The list of the window names and their configurations. */
         std::vector<WindowConfiguration> windows;

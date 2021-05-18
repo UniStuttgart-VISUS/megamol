@@ -66,15 +66,15 @@ void WindowCollection::SetWindowSizePosition(WindowConfiguration& window_config,
 
 
 bool WindowCollection::AddWindowConfiguration(WindowConfiguration& window_config) {
-    if (window_config.win_name.empty()) {
+    if (window_config.Name().empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] No valid window name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Invalid window name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (this->windowConfigurationExists(window_config.win_name)) {
+    if (this->WindowConfigurationExists(window_config.Hash())) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] Found already existing window with name '%s'. Window names must be unique. [%s, %s, line %d]\n",
-            window_config.win_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            window_config.Name().c_str(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     this->windows.emplace_back(window_config);
@@ -82,15 +82,9 @@ bool WindowCollection::AddWindowConfiguration(WindowConfiguration& window_config
 }
 
 
-bool WindowCollection::DeleteWindowConfiguration(const std::string& window_name) {
-    if (!this->windowConfigurationExists(window_name)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] Could not find window with name '%s'. [%s, %s, line %d]\n", window_name.c_str(), __FILE__,
-            __FUNCTION__, __LINE__);
-        return false;
-    }
+bool WindowCollection::DeleteWindowConfiguration(size_t win_hash_id) {
     for (auto iter = this->windows.begin(); iter != this->windows.end(); iter++) {
-        if (iter->win_name == window_name) {
+        if (iter->Hash() == win_hash_id) {
             this->windows.erase(iter);
             return true;
         }
@@ -115,8 +109,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
             if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
                 found = true;
                 for (auto& config_item : header_item.value().items()) {
-                    WindowConfiguration tmp_config;
-                    tmp_config.win_name = config_item.key();
+                    WindowConfiguration tmp_config(config_item.key());
                     tmp_config.buf_set_pos_size = true;
                     tmp_config.buf_tfe_reset = true;
                     auto config_values = config_item.value();
@@ -128,9 +121,9 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                     megamol::core::utility::get_json_value<int>(config_values, {"win_flags"}, &win_flags);
                     tmp_config.win_flags = static_cast<ImGuiWindowFlags>(win_flags);
 
-                    int win_callback = 0;
-                    megamol::core::utility::get_json_value<int>(config_values, {"win_callback"}, &win_callback);
-                    tmp_config.win_callback = static_cast<DrawCallbacks>(win_callback);
+                    int win_callback_id = 0;
+                    megamol::core::utility::get_json_value<int>(config_values, {"win_callback"}, &win_callback_id);
+                    tmp_config.win_callback_id = static_cast<WindowCallbackID>(win_callback_id);
 
                     std::array<int, 2> hotkey = {0, 0};
                     megamol::core::utility::get_json_value<int>(
@@ -183,7 +176,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
 
                     int module_filter = 0;
                     megamol::core::utility::get_json_value<int>(config_values, {"param_module_filter"}, &module_filter);
-                    tmp_config.param_module_filter = static_cast<FilterModes>(module_filter);
+                    tmp_config.param_module_filter = static_cast<ModuleFilter>(module_filter);
 
                     megamol::core::utility::get_json_value<bool>(
                         config_values, {"param_extended_mode"}, &tmp_config.param_extended_mode);
@@ -200,7 +193,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
 
                     int mode = 0;
                     megamol::core::utility::get_json_value<int>(config_values, {"fpsms_mode"}, &mode);
-                    tmp_config.fpsms_mode = static_cast<TimingModes>(mode);
+                    tmp_config.fpsms_mode = static_cast<TimingMode>(mode);
 
                     // TFE Config ---------------------------------------------
                     megamol::core::utility::get_json_value<bool>(
@@ -248,8 +241,11 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
             bool found_existing = false;
             for (auto& win : this->windows) {
                 // Check for same name
-                if (win.win_name == new_win.win_name) {
-                    win = new_win;
+                if (win.Hash() == new_win.Hash()) {
+                    /// XXX Do not existing volatile window callback which is set only once
+                    new_win.buf_volatile_callback = win.buf_volatile_callback;
+                    this->DeleteWindowConfiguration(win.Hash());
+                    this->AddWindowConfiguration(new_win);
                     found_existing = true;
                 }
             }
@@ -273,14 +269,14 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
         // Append to given json
         for (auto& window : this->windows) {
             if (window.win_store_config) {
-                std::string window_name = window.win_name;
+                std::string window_name = window.Name();
                 WindowConfiguration window_config = window;
 
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_show"] = window_config.win_show;
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_flags"] =
                     static_cast<int>(window_config.win_flags);
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_callback"] =
-                    static_cast<int>(window_config.win_callback);
+                    static_cast<int>(window_config.win_callback_id);
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_hotkey"] = {
                     static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_position"] = {

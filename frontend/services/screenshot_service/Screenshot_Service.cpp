@@ -19,6 +19,11 @@
 
 #include "mmcore/utility/log/Log.h"
 
+/// XXX TEMP
+#include "imgui.h"
+#include "imgui_internal.h"
+
+
 static const std::string service_name = "Screenshot_Service: ";
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
@@ -197,6 +202,12 @@ bool Screenshot_Service::init(const Config& config) {
         return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
     };
 
+    /// XXX TEMP
+    this->m_guiRenderRequest_resource.window_name = "Screenshot Message";
+    this->m_guiRenderRequest_resource.callback = [&](gui::WindowCollection::WindowConfiguration& wc) -> void {
+        this->guiRenderCallback(wc);
+    };
+
     screenshot_show_privacy_note = config.show_privacy_note;
 
     log("initialized successfully");
@@ -214,7 +225,9 @@ std::vector<FrontendResource>& Screenshot_Service::getProvidedResources() {
     {
         {"GLScreenshotSource", m_frontbufferSource_resource},
         {"ImageDataToPNGWriter", m_toFileWriter_resource},
-        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger}
+        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger},
+        /// XXX TEMP
+        {"ScreenshotGUIRenderRequest", m_guiRenderRequest_resource}
     };
 
     return m_providedResourceReferences;
@@ -260,6 +273,20 @@ void Screenshot_Service::postGraphRender() {
     // e.g. end frame timer
     // update window name
     // swap buffers, glClear
+}
+
+/// XXX TEMP
+bool Screenshot_Service::guiRenderCallback(WinConfig_t& wc) {
+    bool valid_imgui_scope =
+            ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
+    if (valid_imgui_scope) {
+        /// TODO
+        
+        wc.win_size = ImVec2(300.0f, 300.0f);
+        wc.buf_set_pos_size = true; // Call only once ...
+        ImGui::TextUnformatted("Hallo Welt ...")
+
+    }
 }
 
 

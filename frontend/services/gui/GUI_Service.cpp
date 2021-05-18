@@ -10,7 +10,6 @@
 #include "Window_Events.h"
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
-#include "Screenshot_Service.hpp"
 #include "ScriptPaths.h"
 #include "ProjectLoader.h"
 #include "FrameStatistics.h"
@@ -61,7 +60,8 @@ bool GUI_Service::init(const Config& config) {
         "ProjectLoader",                         // 8 - trigger loading of new running project
         "FrameStatistics",                       // 9 - current fps and ms value
         "RuntimeConfig",                         // 10 - resource paths
-        "WindowManipulation"                     // 11 - GLFW window pointer
+        "WindowManipulation",                    // 11 - GLFW window pointer
+        "ScreenshotGUIRenderRequest"             // 12 - gui render request from screenshot service
     };
 
     // init gui
@@ -201,10 +201,6 @@ void GUI_Service::digestChangedRequestedResources() {
     /// WARNING: Changing a constant type will lead to an undefined behavior!
     const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->buttons_events = pass_mouse_btn_events;
 
-    /// IOpenGL_Context = resource index 4
-    // IOpenGL_Context resource is not actively used, requesting IOpenGL_Context makes sure there is a GL context present and active.
-    //    this->m_requestedResourceReferences[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
-
     /// FramebufferEvents = resource index 5
     auto framebuffer_events =
         &this->m_requestedResourceReferences[5].getResource<megamol::frontend_resources::FramebufferEvents>();
@@ -237,7 +233,7 @@ void GUI_Service::digestChangedRequestedResources() {
     gui->SetFrameStatistics(frame_statistics.last_averaged_fps, frame_statistics.last_averaged_mspf, frame_statistics.rendered_frames_count);
 
     /// Get resource directories = resource index 10
-    // XXX Only needed to request once?!
+    // XXX Only request once?!
     auto& runtime_config =
         this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
     if (!runtime_config.resource_directories.empty()) {
@@ -247,6 +243,17 @@ void GUI_Service::digestChangedRequestedResources() {
     /// Get window manipulation resource = resource index 11
     auto& window_manulation = this->m_requestedResourceReferences[11].getResource<megamol::frontend_resources::WindowManipulation>();
     window_manulation.set_mouse_cursor(gui->GetMouseCursor());
+
+    // Register GUI windows only once
+    if (this->register_gui_callbacks_once) {
+
+        auto &screenshot_gui_render_request = this->m_requestedResourceReferences[12].getResource<megamol::frontend_resources::GUIRenderRequest>();
+        gui->RegisterGUIWindow(screenshot_gui_render_request.window_name, screenshot_gui_render_request.callback);
+
+        /// Add more ...
+
+        this->register_gui_callbacks_once = false;
+    }
 }
 
 
