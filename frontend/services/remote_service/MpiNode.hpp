@@ -32,7 +32,7 @@ struct megamol::frontend::Remote_Service::MpiNode {
 
     void sync_barrier();
 
-private:
+// Remote Service may acess these fields read only
     MPI_Comm comm_ = MPI_COMM_NULL;
     int rank_ = -1;
     int comm_size_ = 0;

@@ -10,6 +10,7 @@
 #include "HeadNode.hpp"
 #include "RenderNode.hpp"
 #include "MpiNode.hpp"
+#include "MPI_Context.h"
 
 #include "mmcore/MegaMolGraph.h"
 
@@ -34,6 +35,8 @@ static void log_warning(std::string const& text) {
 
 namespace megamol {
 namespace frontend {
+
+using frontend_resources::MPI_Context;
 
 std::string handle_remote_session_config(
     megamol::frontend_resources::RuntimeConfig const& config,
@@ -77,11 +80,13 @@ struct Remote_Service::PimplData {
     HeadNode head;
     RenderNode render;
     MpiNode mpi;
+    MPI_Context mpi_context;
     megamol::remote::Message_t message;
 };
 #define m_head (m_pimpl->head)
 #define m_render (m_pimpl->render)
 #define m_mpi (m_pimpl->mpi)
+#define m_mpi_context (m_pimpl->mpi_context)
 #define m_message (m_pimpl->message)
 
 Remote_Service::Remote_Service() {
@@ -154,6 +159,15 @@ bool Remote_Service::init(const Config& config) {
                 return false;
             }
         }
+
+        m_mpi_context.mpi_comm       = m_mpi.comm_;
+        m_mpi_context.mpi_comm_size  = m_mpi.comm_size_;
+        m_mpi_context.rank           = m_mpi.rank_;
+        m_mpi_context.broadcast_rank = m_mpi.broadcast_rank_;
+
+        this->m_providedResourceReferences.push_back(
+            {"MPI_Context", m_mpi_context}
+        );
     }
 
     log("initialized successfully");
