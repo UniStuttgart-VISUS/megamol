@@ -207,8 +207,8 @@ namespace gui {
          * Set current frame statistics.
          */
         void SetFrameStatistics(double last_averaged_fps, double last_averaged_ms, size_t frame_count) {
-            this->state.stat_averaged_fps = last_averaged_fps;
-            this->state.stat_averaged_ms = last_averaged_ms;
+            this->state.stat_averaged_fps = static_cast<float>(last_averaged_fps);
+            this->state.stat_averaged_ms = static_cast<float>(last_averaged_ms);
             this->state.stat_frame_count = frame_count;
         }
 
@@ -294,8 +294,8 @@ namespace gui {
             std::string font_file_name;                    // Font imgui name or font file name.
             int font_size;                                 // Font size (only used whe font file name is given)
             std::string request_load_projet_file; // Project file name which should be loaded by fronted service
-            double stat_averaged_fps;             // current average fps value
-            double stat_averaged_ms;              // current average fps value
+            float stat_averaged_fps;             // current average fps value
+            float stat_averaged_ms;              // current average fps value
             size_t stat_frame_count;              // current fame count
             bool load_docking_preset;             // Flag indicating docking preset loading
             bool hotkeys_check_once;              // WORKAROUND: Check multiple hotkey assignments once
@@ -373,7 +373,7 @@ namespace gui {
         void load_preset_window_docking(ImGuiID global_docking_id);
 
         // Required to save/load docking
-        void load_imgui_settings_from_string(std::string imgui_settings);
+        void load_imgui_settings_from_string(const std::string& imgui_settings);
         std::string save_imgui_settings_to_string(void);
 
         std::string project_to_lua_string(bool as_lua);

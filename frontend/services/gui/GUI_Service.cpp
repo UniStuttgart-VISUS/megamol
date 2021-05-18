@@ -24,12 +24,6 @@ namespace frontend {
 
 #define is_gui_nullptr (static_cast<bool>((this->m_gui == nullptr) || (this->m_gui->Get() == nullptr)))
 
-GUI_Service::~GUI_Service() {
-
-    // nothing to do here so far ...
-}
-
-
 bool GUI_Service::init(void* configPtr) {
 
     if (configPtr == nullptr) return false;
@@ -76,7 +70,7 @@ bool GUI_Service::init(const Config& config) {
 
                     // Set function pointer in resource once
                     this->m_providedResource.request_gui_state = [&](bool as_lua) -> std::string {return this->resource_request_gui_state(as_lua);};
-                    this->m_providedResource.provide_gui_state = [&](std::string json_state) -> void {
+                    this->m_providedResource.provide_gui_state = [&](const std::string& json_state) -> void {
                         return this->resource_provide_gui_state(json_state);
                     };
                     this->m_providedResource.request_gui_visibility = [&]() -> bool {return this->resource_request_gui_visibility();};
@@ -146,20 +140,21 @@ void GUI_Service::digestChangedRequestedResources() {
     std::vector<std::tuple<megamol::frontend_resources::Key, megamol::frontend_resources::KeyAction,
         megamol::frontend_resources::Modifiers>>
         pass_key_events;
-    for (auto it = keyboard_events->key_events.begin(); it != keyboard_events->key_events.end(); it++) {
-        auto key = std::get<0>((*it));
-        auto action = std::get<1>((*it));
-        auto modifiers = std::get<2>((*it));
+    for (auto& key_event : keyboard_events->key_events) {
+        auto key = std::get<0>(key_event);
+        auto action = std::get<1>(key_event);
+        auto modifiers = std::get<2>(key_event);
         if (!gui->OnKey(key, action, modifiers)) {
-            pass_key_events.emplace_back((*it));
+            pass_key_events.emplace_back(key_event);
         }
     }
     /// WARNING: Changing a constant type will lead to an undefined behavior!
     const_cast<megamol::frontend_resources::KeyboardEvents*>(keyboard_events)->key_events = pass_key_events;
+
     std::vector<unsigned int> pass_codepoint_events;
-    for (auto it = keyboard_events->codepoint_events.begin(); it != keyboard_events->codepoint_events.end(); it++) {
-        if (!gui->OnChar((*it))) {
-            pass_codepoint_events.emplace_back((*it));
+    for (auto& codepoint_event : keyboard_events->codepoint_events) {
+        if (!gui->OnChar(codepoint_event)) {
+            pass_codepoint_events.emplace_back(codepoint_event);
         }
     }
     /// WARNING: Changing a constant type will lead to an undefined behavior!
@@ -168,34 +163,36 @@ void GUI_Service::digestChangedRequestedResources() {
     /// MouseEvents = resource index 3
     auto mouse_events = &this->m_requestedResourceReferences[3].getResource<megamol::frontend_resources::MouseEvents>();
     std::vector<std::tuple<double, double>> pass_mouse_pos_events;
-    for (auto it = mouse_events->position_events.begin(); it != mouse_events->position_events.end(); it++) {
-        auto x_pos = std::get<0>((*it));
-        auto y_pos = std::get<1>((*it));
+    for (auto& position_event : mouse_events->position_events) {
+        auto x_pos = std::get<0>(position_event);
+        auto y_pos = std::get<1>(position_event);
         if (!gui->OnMouseMove(x_pos, y_pos)) {
-            pass_mouse_pos_events.emplace_back((*it));
+            pass_mouse_pos_events.emplace_back(position_event);
         }
     }
     /// WARNING: Changing a constant type will lead to an undefined behavior!
     const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->position_events = pass_mouse_pos_events;
+
     std::vector<std::tuple<double, double>> pass_mouse_scroll_events;
-    for (auto it = mouse_events->scroll_events.begin(); it != mouse_events->scroll_events.end(); it++) {
-        auto x_scroll = std::get<0>((*it));
-        auto y_scroll = std::get<1>((*it));
+    for (auto& scroll_event : mouse_events->scroll_events) {
+        auto x_scroll = std::get<0>(scroll_event);
+        auto y_scroll = std::get<1>(scroll_event);
         if (!gui->OnMouseScroll(x_scroll, y_scroll)) {
-            pass_mouse_scroll_events.emplace_back((*it));
+            pass_mouse_scroll_events.emplace_back(scroll_event);
         }
     }
     /// WARNING: Changing a constant type will lead to an undefined behavior!
     const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->scroll_events = pass_mouse_scroll_events;
+
     std::vector<std::tuple<megamol::frontend_resources::MouseButton, megamol::frontend_resources::MouseButtonAction,
         megamol::frontend_resources::Modifiers>>
         pass_mouse_btn_events;
-    for (auto it = mouse_events->buttons_events.begin(); it != mouse_events->buttons_events.end(); it++) {
-        auto button = std::get<0>((*it));
-        auto action = std::get<1>((*it));
-        auto modifiers = std::get<2>((*it));
+    for (auto& button_event : mouse_events->buttons_events) {
+        auto button = std::get<0>(button_event);
+        auto action = std::get<1>(button_event);
+        auto modifiers = std::get<2>(button_event);
         if (!gui->OnMouseButton(button, action, modifiers)) {
-            pass_mouse_btn_events.emplace_back((*it));
+            pass_mouse_btn_events.emplace_back(button_event);
         }
     }
     /// WARNING: Changing a constant type will lead to an undefined behavior!
@@ -241,8 +238,8 @@ void GUI_Service::digestChangedRequestedResources() {
     }
 
     /// Get window manipulation resource = resource index 11
-    auto& window_manulation = this->m_requestedResourceReferences[11].getResource<megamol::frontend_resources::WindowManipulation>();
-    window_manulation.set_mouse_cursor(gui->GetMouseCursor());
+    auto& window_manipulation = this->m_requestedResourceReferences[11].getResource<megamol::frontend_resources::WindowManipulation>();
+    window_manipulation.set_mouse_cursor(gui->GetMouseCursor());
 
     // Register GUI windows only once
     if (this->register_gui_callbacks_once) {

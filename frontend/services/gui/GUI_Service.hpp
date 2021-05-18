@@ -46,7 +46,7 @@ public:
     std::string serviceName() const override { return "GUI_Service"; }
 
     GUI_Service() = default;
-    ~GUI_Service() override;
+    ~GUI_Service() override = default;
     // TODO: delete copy/move/assign?
 
     // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints

@@ -211,7 +211,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
     if (this->state.toggle_graph_entry || this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].is_pressed) {
         if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
-            megamol::gui::ModulePtrVector_t::const_iterator module_graph_entry_iter = graph_ptr->Modules().begin();
+            auto module_graph_entry_iter = graph_ptr->Modules().begin();
             // Search for first graph entry and set next view to graph entry (= graph entry point)
             for (auto module_iter = graph_ptr->Modules().begin(); module_iter != graph_ptr->Modules().end();
                  module_iter++) {
@@ -280,6 +280,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         case (WindowCollection::DRAWCALLBACK_PERFORMANCE):
             this->update_frame_statistics(wc);
             break;
+        default: break;
         }
     };
     this->window_collection.EnumWindows(func);
@@ -1057,11 +1058,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     }
                     // Connect pointer of new parameters of core module to parameters in gui module
                     if (core_module_ptr != nullptr) {
-                        megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se =
-                            core_module_ptr->ChildList_End();
-                        for (megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator si =
-                                 core_module_ptr->ChildList_Begin();
-                             si != se; ++si) {
+                        auto se = core_module_ptr->ChildList_End();
+                        for (auto si = core_module_ptr->ChildList_Begin(); si != se; ++si) {
                             auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
                             if (param_slot != nullptr) {
                                 std::string param_full_name(param_slot->FullName().PeekBuffer());
@@ -1389,7 +1387,7 @@ void megamol::gui::GUIWindows::load_default_fonts(void) {
     std::string configurator_font_path;
     std::string default_font_path;
 
-    auto get_preset_font_path = [&](std::string directory) {
+    auto get_preset_font_path = [&](const std::string& directory) {
         std::string font_path =
             megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_ROBOTOSANS);
         if (!font_path.empty()) {
@@ -1575,8 +1573,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                         // Deleting module's parameters is not available in main parameter window.
                         if (wc.win_callback_id != WindowCollection::DRAWCALLBACK_MAIN_PARAMETERS) {
                             if (ImGui::MenuItem("Delete from List")) {
-                                std::vector<std::string>::iterator find_iter =
-                                    std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), module_label);
+                                auto find_iter = std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), module_label);
                                 // Break if module name is not contained in list
                                 if (find_iter != wc.param_modules_list.end()) {
                                     wc.param_modules_list.erase(find_iter);
@@ -1664,7 +1661,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
             frameid = static_cast<size_t>(this->core_instance->GetFrameID());
         }
     }
-    ImGui::Text("%u", frameid);
+    ImGui::Text("%lu", frameid);
 
     ImGui::SameLine(
         ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
@@ -1707,7 +1704,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
             std::stringstream stream;
             stream << std::fixed << std::setprecision(3);
             auto reverse_end = value_buffer->rend();
-            for (std::vector<float>::reverse_iterator i = value_buffer->rbegin(); i != reverse_end; ++i) {
+            for (auto i = value_buffer->rbegin(); i != reverse_end; ++i) {
                 stream << (*i) << "\n";
             }
             ImGui::SetClipboardText(stream.str().c_str());
@@ -1761,7 +1758,7 @@ void GUIWindows::drawMenu(void) {
         ImGui::MenuItem("Menu", this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].keycode.ToString().c_str(),
             &this->state.menu_visible);
         const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-            bool registered_window = !(wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN);
+            bool registered_window = (wc.win_hotkey.key != core::view::Key::KEY_UNKNOWN);
             if (registered_window) {
                 ImGui::MenuItem(wc.Name().c_str(), wc.win_hotkey.ToString().c_str(), &wc.win_show);
             } else {
@@ -1824,7 +1821,7 @@ void GUIWindows::drawMenu(void) {
             for (auto& graph_ptr : this->configurator.GetGraphCollection().GetGraphs()) {
                 bool running = graph_ptr->IsRunning();
                 std::string button_label = "graph_running_button" + std::to_string(graph_ptr->UID());
-                if (megamol::gui::ButtonWidgets::OptionButton(button_label.c_str(), "", running)) {
+                if (megamol::gui::ButtonWidgets::OptionButton(button_label, "", running)) {
                     if (!running) {
                         this->configurator.GetGraphCollection().RequestNewRunningGraph(graph_ptr->UID());
                     }
@@ -1833,7 +1830,7 @@ void GUIWindows::drawMenu(void) {
                 if (running) {
                     tooltip_str = "Project is running";
                 }
-                this->tooltip.ToolTip(tooltip_str.c_str());
+                this->tooltip.ToolTip(tooltip_str);
                 ImGui::SameLine();
                 ImGui::AlignTextToFramePadding();
 
@@ -1845,11 +1842,11 @@ void GUIWindows::drawMenu(void) {
                             if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
                                 if (!module_ptr->IsGraphEntry()) {
                                     // Remove all graph entries
-                                    for (auto module_ptr : graph_ptr->Modules()) {
-                                        if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
-                                            module_ptr->SetGraphEntryName("");
+                                    for (auto& rem_module_ptr : graph_ptr->Modules()) {
+                                        if (rem_module_ptr->IsView() && rem_module_ptr->IsGraphEntry()) {
+                                            rem_module_ptr->SetGraphEntryName("");
                                             Graph::QueueData queue_data;
-                                            queue_data.name_id = module_ptr->FullName();
+                                            queue_data.name_id = rem_module_ptr->FullName();
                                             graph_ptr->PushSyncQueue(
                                                 Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                                         }
@@ -1919,7 +1916,7 @@ void GUIWindows::drawMenu(void) {
                         io.FontDefault = io.Fonts->Fonts[n];
                         // Saving font to window configuration (Remove font size from font name)
                         this->state.font_file_name = std::string(io.FontDefault->GetDebugName());
-                        auto sep_index = this->state.font_file_name.find(",");
+                        auto sep_index = this->state.font_file_name.find(',');
                         this->state.font_file_name = this->state.font_file_name.substr(0, sep_index);
                         this->state.font_size = static_cast<int>(io.FontDefault->FontSize);
                     }
@@ -2206,7 +2203,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
             wc.buf_set_pos_size = true;
         } else {
             // Window is minimized
-            ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
+            window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
             wc.win_reset_size = wc.win_size;
             wc.win_reset_position = wc.win_position;
             wc.win_size = window_viewport;
@@ -2358,8 +2355,8 @@ void megamol::gui::GUIWindows::load_preset_window_docking(ImGuiID global_docking
     // Define new dock spaces
     ImGuiID dock_id_main = global_docking_id; // This variable will track the document node, however we are not using it
                                               // here as we aren't docking anything into it.
-    ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Down, 0.25f, NULL, &dock_id_main);
-    ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, NULL, &dock_id_main);
+    ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Down, 0.25f, nullptr, &dock_id_main);
+    ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, nullptr, &dock_id_main);
 
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
         switch (wc.win_callback_id) {
@@ -2386,7 +2383,7 @@ void megamol::gui::GUIWindows::load_preset_window_docking(ImGuiID global_docking
 }
 
 
-void megamol::gui::GUIWindows::load_imgui_settings_from_string(std::string imgui_settings) {
+void megamol::gui::GUIWindows::load_imgui_settings_from_string(const std::string& imgui_settings) {
 
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
@@ -2420,7 +2417,7 @@ std::string megamol::gui::GUIWindows::project_to_lua_string(bool as_lua) {
 
     std::string gui_state;
     if (this->state_to_string(gui_state)) {
-        std::string return_state_str = "";
+        std::string return_state_str;
 
         if (as_lua) {
             return_state_str += std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
@@ -2584,8 +2581,8 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.font_apply = false;
     this->state.font_file_name = "";
     this->state.request_load_projet_file = "";
-    this->state.stat_averaged_fps = 0.0;
-    this->state.stat_averaged_ms = 0.0;
+    this->state.stat_averaged_fps = 0.0f;
+    this->state.stat_averaged_ms = 0.0f;
     this->state.stat_frame_count = 0;
     this->state.font_size = 13;
     this->state.load_docking_preset = false;
@@ -2625,11 +2622,11 @@ void megamol::gui::GUIWindows::update_frame_statistics(WindowCollection::WindowC
             };
 
             update_values(
-                ((this->state.stat_averaged_fps == 0.0) ? (1.0f / io.DeltaTime) : (this->state.stat_averaged_fps)),
+                ((this->state.stat_averaged_fps == 0.0f) ? (1.0f / io.DeltaTime) : (this->state.stat_averaged_fps)),
                 wc.buf_fps_max, wc.buf_fps_values, wc.fpsms_buffer_size);
 
             update_values(
-                ((this->state.stat_averaged_ms == 0.0) ? (io.DeltaTime * 1000.0f) : (this->state.stat_averaged_ms)),
+                ((this->state.stat_averaged_ms == 0.0f) ? (io.DeltaTime * 1000.0f) : (this->state.stat_averaged_ms)),
                 wc.buf_ms_max, wc.buf_ms_values, wc.fpsms_buffer_size);
 
             wc.buf_current_delay = 0.0f;
