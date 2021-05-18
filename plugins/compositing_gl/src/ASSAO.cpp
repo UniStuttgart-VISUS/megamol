@@ -107,12 +107,14 @@ megamol::compositing::ASSAO::ASSAO()
     , m_pingPongHalfResultB(nullptr)
     , m_finalResults(nullptr)
     , m_finalResultsArrayViews{nullptr, nullptr, nullptr, nullptr}
-    , m_normals(nullptr)
+    //, m_normals(nullptr)
     , m_finalOutput(nullptr)
     , m_samplerStatePointClamp()
     , m_samplerStatePointMirror()
     , m_samplerStateLinearClamp()
     , m_samplerStateViewspaceDepthTap()
+    , m_depthBufferViewspaceLinearLayout()
+    , m_AOResultLayout()
     , m_size(0, 0)
     , m_halfSize(0, 0)
     , m_quarterSize(0, 0)
@@ -352,25 +354,31 @@ bool megamol::compositing::ASSAO::create() {
         return false;
     }
 
-    glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
-    m_halfDepths[0] = std::make_shared<glowl::Texture2D>("m_halfDepths0", tx_layout, nullptr);
-    m_halfDepths[1] = std::make_shared<glowl::Texture2D>("m_halfDepths1", tx_layout, nullptr);
-    m_halfDepths[2] = std::make_shared<glowl::Texture2D>("m_halfDepths2", tx_layout, nullptr);
-    m_halfDepths[3] = std::make_shared<glowl::Texture2D>("m_halfDepths3", tx_layout, nullptr);
+    m_depthBufferViewspaceLinearLayout = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
+    m_AOResultLayout = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_HALF_FLOAT, 1);
+    m_halfDepths[0] = std::make_shared<glowl::Texture2D>("m_halfDepths0", m_depthBufferViewspaceLinearLayout, nullptr);
+    m_halfDepths[1] = std::make_shared<glowl::Texture2D>("m_halfDepths1", m_depthBufferViewspaceLinearLayout, nullptr);
+    m_halfDepths[2] = std::make_shared<glowl::Texture2D>("m_halfDepths2", m_depthBufferViewspaceLinearLayout, nullptr);
+    m_halfDepths[3] = std::make_shared<glowl::Texture2D>("m_halfDepths3", m_depthBufferViewspaceLinearLayout, nullptr);
     for (auto& tx : m_halfDepthsMipViews) {
         for (int i = 0; i < tx.size(); ++i) {
-            tx[i] = std::make_shared<glowl::Texture2D>("m_halfDepthsMipViews" + i, tx_layout, nullptr);
+            tx[i] = std::make_shared<glowl::Texture2D>(
+                "m_halfDepthsMipViews" + i, m_depthBufferViewspaceLinearLayout, nullptr);
         }
     }
-    m_pingPongHalfResultA = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultA", tx_layout, nullptr);
-    m_pingPongHalfResultB = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultB", tx_layout, nullptr);
-    m_finalResults = std::make_shared<glowl::Texture2DArray>("m_finalResults", tx_layout, nullptr);
-    m_finalResultsArrayViews[0] = std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews0", tx_layout, nullptr);
-    m_finalResultsArrayViews[1] = std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews1", tx_layout, nullptr);
-    m_finalResultsArrayViews[2] = std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews2", tx_layout, nullptr);
-    m_finalResultsArrayViews[3] = std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews3", tx_layout, nullptr);
-    m_normals = std::make_shared<glowl::Texture2D>("m_normals", tx_layout, nullptr);
-    m_finalOutput = std::make_shared<glowl::Texture2D>("m_finalOutput", tx_layout, nullptr);
+    m_finalOutput = std::make_shared<glowl::Texture2D>("m_finalOutput", m_depthBufferViewspaceLinearLayout, nullptr);
+    m_pingPongHalfResultA = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultA", m_AOResultLayout, nullptr);
+    m_pingPongHalfResultB = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultB", m_AOResultLayout, nullptr);
+    m_finalResults = std::make_shared<glowl::Texture2DArray>("m_finalResults", m_AOResultLayout, nullptr);
+    m_finalResultsArrayViews[0] =
+        std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews0", m_AOResultLayout, nullptr);
+    m_finalResultsArrayViews[1] =
+        std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews1", m_AOResultLayout, nullptr);
+    m_finalResultsArrayViews[2] =
+        std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews2", m_AOResultLayout, nullptr);
+    m_finalResultsArrayViews[3] =
+        std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews3", m_AOResultLayout, nullptr);
+    //m_normals = std::make_shared<glowl::Texture2D>("m_normals", tx_layout, nullptr);
 
     m_inputs = std::make_shared<ASSAO_Inputs>();
 
@@ -463,7 +471,6 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             m_inputs->ViewportHeight = tx_res_normal[1];
             m_inputs->normalTexture = normal_tx2D;
             m_inputs->depthTexture = depth_tx2D;
-            m_inputs->resultLayout = normal_tx2D->getTextureLayout();
             // TODO: for now we won't use scissortests
             // but the implementation still stays for a more easy migration
             // can be removed or used if (not) needed
@@ -652,20 +659,17 @@ void megamol::compositing::ASSAO::generateSSAO(
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
                 {rts, binding}}; // TODO: binding correct?
 
-            std::vector<TextureSamplerTuple> inputTextures(6);
+            std::vector<TextureSamplerTuple> inputTextures(3);
             inputTextures[0] = {m_halfDepths[pass], "g_ViewSpaceDepthSource", m_samplerStatePointMirror};
-            inputTextures[1] = {m_normals, "g_NormalmapSource", nullptr};
-            inputTextures[2] = {nullptr, "", nullptr};
-            inputTextures[3] = {nullptr, "", nullptr};
-            inputTextures[4] = {nullptr, "", nullptr};
-            inputTextures[5] = {m_halfDepths[pass], "g_ViewSpaceDepthSourceDepthTapSampler", m_samplerStateViewspaceDepthTap};
+            inputTextures[1] = {inputs->normalTexture, "g_NormalmapSource", nullptr};
+            inputTextures[2] = {m_halfDepths[pass], "g_ViewSpaceDepthSourceDepthTapSampler", m_samplerStateViewspaceDepthTap};
 
             // CHECK FOR ADAPTIVE SSAO
 #ifdef INTEL_SSAO_ENABLE_ADAPTIVE_QUALITY
             if (!adaptiveBasePass && (settings.QualityLevel == 3)) {
-                inputTextures[2] = {m_loadCounterSRV, "g_LoadCounter"};
-                inputTextures[3] = {m_importanceMap.SRV, "g_ImportanceMap"};
-                inputTextures[4] = {m_finalResults.SRV, "g_FinalSSAO"};
+                inputTextures[3] = {m_loadCounterSRV, "g_LoadCounter"};
+                inputTextures[4] = {m_importanceMap.SRV, "g_ImportanceMap"};
+                inputTextures[5] = {m_finalResults.SRV, "g_FinalSSAO"};
             }
 #endif
 
@@ -774,7 +778,6 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
 
     glowl::TextureLayout depth_layout = inputs->depthTexture->getTextureLayout();
     glowl::TextureLayout normal_layout = inputs->normalTexture->getTextureLayout();
-    glowl::TextureLayout result_layout = inputs->normalTexture->getTextureLayout();
 
 
     bool needsUpdate = (m_size.x != width) || (m_size.y != height);
@@ -819,7 +822,7 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
     m_depthMipLevels = SSAO_DEPTH_MIP_LEVELS;
 
     for (int i = 0; i < 4; i++) {
-        if (reCreateIfNeeded(m_halfDepths[i], m_halfSize, depth_layout)) {
+        if (reCreateIfNeeded(m_halfDepths[i], m_halfSize, m_depthBufferViewspaceLinearLayout)) {
             for (int j = 0; j < m_depthMipLevels; j++)
                 m_halfDepthsMipViews[i][j].reset();
 
@@ -831,17 +834,17 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
     // TODO: is the normal_layout correct?
     // i think i need to use one of the sampler layouts at the beginning of the updateTextures
     // need to investigate this more thoroughly
-    reCreateIfNeeded(m_pingPongHalfResultA, m_halfSize, normal_layout);
-    reCreateIfNeeded(m_pingPongHalfResultB, m_halfSize, normal_layout);
-    reCreateIfNeeded(m_finalResults, m_halfSize, normal_layout);
+    reCreateIfNeeded(m_pingPongHalfResultA, m_halfSize, m_AOResultLayout);
+    reCreateIfNeeded(m_pingPongHalfResultB, m_halfSize, m_AOResultLayout);
+    reCreateIfNeeded(m_finalResults, m_halfSize, m_AOResultLayout);
 
     for (int i = 0; i < 4; ++i) {
         // TODO: is this correct? intels technically uses ReCreateArrayViewIfNeeded but i think we wont need it
         // since our handling is different
-        reCreateArrayIfNeeded(m_finalResultsArrayViews[i], m_finalResults, m_halfSize, normal_layout, i);
+        reCreateArrayIfNeeded(m_finalResultsArrayViews[i], m_finalResults, m_halfSize, m_AOResultLayout, i);
     }
 
-    reCreateIfNeeded(m_normals, m_size, normal_layout); // is this needed?
+    //reCreateIfNeeded(m_normals, m_size, normal_layout); // is this needed?
 
     // trigger a full buffers clear first time; only really required when using scissor rects
     //m_requiresClear = true;
@@ -993,8 +996,7 @@ bool megamol::compositing::ASSAO::reCreateIfNeeded(
         tex.reset();
     } else {
         if (tex != nullptr) {
-            glowl::TextureLayout desc;
-            desc = tex->getTextureLayout();
+            glowl::TextureLayout desc = tex->getTextureLayout();
             if (equalLayoutsWithoutSize(desc, ly) && (desc.width == size.x) && (desc.height == size.y))
                 return false;
         }
@@ -1014,8 +1016,7 @@ bool megamol::compositing::ASSAO::reCreateIfNeeded(
         tex.reset();
     } else {
         if (tex != nullptr) {
-            glowl::TextureLayout desc;
-            desc = tex->getTextureLayout();
+            glowl::TextureLayout desc = tex->getTextureLayout();
             if (equalLayoutsWithoutSize(desc, ly) && (desc.width == size.x) && (desc.height == size.y))
                 return false;
         }
@@ -1038,8 +1039,7 @@ bool megamol::compositing::ASSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::T
         tex.reset();
     } else {
         if (tex != nullptr) {
-            glowl::TextureLayout desc;
-            desc = tex->getTextureLayout();
+            glowl::TextureLayout desc = tex->getTextureLayout();
             if (equalLayoutsWithoutSize(desc, ly) && (desc.width == size.x) && (desc.height == size.y))
                 return false;
         }

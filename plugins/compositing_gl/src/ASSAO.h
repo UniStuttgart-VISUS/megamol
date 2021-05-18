@@ -74,7 +74,6 @@ struct ASSAO_Inputs {
         NormalsUnpackAdd = -1.0f;   // stays constant
         normalTexture = nullptr;
         depthTexture = nullptr;
-        resultLayout = glowl::TextureLayout();
         ProjectionMatrix = glm::mat4(1.0f);
         ViewMatrix = glm::mat4(1.0f);
     }
@@ -292,7 +291,7 @@ private:
     std::shared_ptr<glowl::Texture2D> m_pingPongHalfResultB;
     std::shared_ptr<glowl::Texture2DArray> m_finalResults;
     std::array<std::shared_ptr<glowl::Texture2D>, 4> m_finalResultsArrayViews;
-    std::shared_ptr<glowl::Texture2D> m_normals;
+    //std::shared_ptr<glowl::Texture2D> m_normals;
     std::shared_ptr<glowl::Texture2D> m_finalOutput;
 
     std::shared_ptr<glowl::Sampler> m_samplerStatePointClamp;
@@ -304,6 +303,9 @@ private:
     /////////////////////////////////////////////////////////////////////////
     // TEXTURE VARIABLES
     /////////////////////////////////////////////////////////////////////////
+    glowl::TextureLayout m_depthBufferViewspaceLinearLayout;
+    glowl::TextureLayout m_AOResultLayout;
+
     glm::ivec2 m_size;
     glm::ivec2 m_halfSize;
     glm::ivec2 m_quarterSize;
