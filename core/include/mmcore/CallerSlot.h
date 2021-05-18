@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 #include "vislib/macro_utils.h"
+#include "mmcore/AbstractCallSlotPresentation.h"
 
 
 namespace megamol {
@@ -32,7 +33,7 @@ namespace core {
      * The caller slot connect one calling module with one called module
      * using a Call object.
      */
-    class MEGAMOLCORE_API CallerSlot : public AbstractSlot {
+    class MEGAMOLCORE_API CallerSlot : public AbstractSlot, public AbstractCallSlotPresentation {
     public:
 
         /**

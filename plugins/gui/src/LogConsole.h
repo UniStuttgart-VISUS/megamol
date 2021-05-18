@@ -12,6 +12,7 @@
 #include "GUIUtils.h"
 #include "WindowCollection.h"
 #include "widgets/HoverToolTip.h"
+#include "widgets/PopUps.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/log/OfflineTarget.h"
@@ -21,87 +22,64 @@
 namespace megamol {
 namespace gui {
 
-
-    class LogConsole {
+    /*
+     * The log buffer collecting all the messages
+     */
+    class LogBuffer : public std::stringbuf {
     public:
-        /**
-         * CTOR.
-         */
-        LogConsole();
-
-        /**
-         * DTOR.
-         */
-        virtual ~LogConsole();
-
-        /**
-         * Draw log console window.
-         */
-        bool Draw(WindowCollection::WindowConfiguration& wc);
-
-        /**
-         * Update log.
-         */
-        bool Update(WindowCollection::WindowConfiguration& wc);
-
-    private:
-        // DATA TYPES ---------------------------------------------------------
-
-        class LogBuffer : public std::stringbuf {
-        public:
-            virtual int sync() {
-                try {
-                    auto message_str = this->str();
-                    // Split message string
-                    auto split_index = message_str.find("\n");
-                    while (split_index != std::string::npos) {
-                        auto new_message = message_str.substr(0, split_index + 1);
-                        this->messages.push_back(new_message);
-                        message_str = message_str.substr(split_index + 1);
-                        split_index = message_str.find("\n");
-                    }
-                    this->updated = true;
-                    this->str("");
-                } catch (...) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Log Console Buffer Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                    return 1;
-                };
-                return 0;
-            }
-
-            bool ConsumeMessage(std::vector<std::string>& msg) {
-                if (this->updated) {
-                    msg = this->messages;
-                    this->messages.clear();
-                    this->updated = false;
-                    return true;
-                }
-                return false;
-            }
-
-        private:
-            bool updated = false;
-            std::vector<std::string> messages;
-        };
+        LogBuffer() = default;
+        ~LogBuffer() = default;
 
         struct LogEntry {
             unsigned int level;
             std::string message;
         };
 
+        int sync(void);
+
+        inline const std::vector<LogEntry>& log(void) const {
+            return this->messages;
+        }
+
+    private:
+        std::vector<LogEntry> messages;
+    };
+
+
+    /*
+     * The content of the log cnsole GUI window
+     */
+    class LogConsole {
+    public:
+        LogConsole();
+        ~LogConsole();
+
+        void Update(WindowCollection::WindowConfiguration& wc);
+
+        bool Draw(WindowCollection::WindowConfiguration& wc);
+
+        void PopUps(void);
+
+    private:
         // VARIABLES --------------------------------------------------------------
 
         LogBuffer echo_log_buffer;
         std::ostream echo_log_stream;
         std::shared_ptr<megamol::core::utility::log::StreamTarget> echo_log_target;
 
-        std::vector<LogEntry> log;
-        unsigned int log_level;
-
-        unsigned int scroll_log_down;
-        unsigned int scroll_log_up;
+        size_t log_msg_count;
+        unsigned int scroll_down;
+        unsigned int scroll_up;
         float last_window_height;
+        std::string window_title;
+
+        struct LogPopUpData {
+            std::string title;
+            bool disable;
+            bool show;
+            std::vector<LogBuffer::LogEntry> entries;
+        };
+        std::vector<LogPopUpData> log_popups;
 
         // Widgets
         HoverToolTip tooltip;
@@ -109,6 +87,10 @@ namespace gui {
         // FUNCTIONS --------------------------------------------------------------
 
         bool connect_log(void);
+
+        void print_message(LogBuffer::LogEntry entry, unsigned int global_log_level) const;
+
+        void draw_popup(LogPopUpData& log_popup);
     };
 
 

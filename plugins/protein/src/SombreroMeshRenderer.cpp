@@ -59,7 +59,7 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
     , fontColorSlot("colors::fontColor", "The color of the font")
     , showRadiiSlot("showRadii", "Enable the textual annotation of the radii")
     , showSweatBandSlot("showSweatband", "Activates the display of the sweatband line")
-    , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS) {
+    , theFont(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS) {
 
     this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -940,6 +940,24 @@ bool SombreroMeshRenderer::Render(core::view::CallRender3DGL& call) {
 
     auto bbCenter = bb.CalcCenter();
 
+    // query the current state of the camera (needed for picking)
+    GLfloat m[16];
+    GLfloat m_proj[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, m);
+    glGetFloatv(GL_PROJECTION_MATRIX, m_proj);
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelMatrix(&m[0]);
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> projectionMatrix(&m_proj[0]);
+    auto modelMatrixInv = modelMatrix;
+    modelMatrixInv.Invert();
+
+    // Camera
+    view::Camera_2 cam;
+    cr->GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    auto viewport = cam.resolution_gate();
+
     if (this->showRadiiSlot.Param<param::BoolParam>()->Value()) {
         // find closest line vertex location
         vislib::math::Point<float, 3> closest;
@@ -1004,44 +1022,30 @@ bool SombreroMeshRenderer::Render(core::view::CallRender3DGL& call) {
             float remainleft = distleft - leftwidth;
             float remainright = distright - rightwidth;
 
+            glm::mat4 glmProjMat = glm::make_mat4(projectionMatrix.PeekComponents());
+            glm::mat4 glmModelViewMat = glm::make_mat4(modelMatrix.PeekComponents());
             float fontCol[4] = {fontColor.GetX(), fontColor.GetY(), fontColor.GetZ(), 1.0f};
-            this->theFont.DrawString(fontCol, bbCenter.GetX() + (remainleft / 2.0f), bbCenter.GetY() + 1.0 * leftheight,
+            this->theFont.DrawString(glmProjMat, glmModelViewMat, fontCol, bbCenter.GetX() + (remainleft / 2.0f),
+                bbCenter.GetY() + 1.0 * leftheight,
                 bbCenter.GetZ(), leftwidth, leftheight, sizeleft, false, textleft,
-                megamol::core::utility::AbstractFont::ALIGN_LEFT_BOTTOM);
-            this->theFont.DrawString(fontCol, closest.GetX() + (remainright / 2.0f), closest.GetY() + 1.0 * rightheight,
+                megamol::core::utility::SDFFont::ALIGN_LEFT_BOTTOM);
+            this->theFont.DrawString(glmProjMat, glmModelViewMat, fontCol, closest.GetX() + (remainright / 2.0f),
+                closest.GetY() + 1.0 * rightheight,
                 closest.GetZ(), rightwidth, rightheight, sizeright, false, textright,
-                megamol::core::utility::AbstractFont::ALIGN_LEFT_BOTTOM);
+                megamol::core::utility::SDFFont::ALIGN_LEFT_BOTTOM);
         }
 
         ::glEnable(GL_DEPTH_TEST);
     }
 
-    // query the current state of the camera (needed for picking)
-    GLfloat m[16];
-    GLfloat m_proj[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m);
-    glGetFloatv(GL_PROJECTION_MATRIX, m_proj);
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelMatrix(&m[0]);
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> projectionMatrix(&m_proj[0]);
-    modelMatrix.Invert();
-    projectionMatrix.Invert();
-
-    // Camera
-    view::Camera_2 cam;
-    cr->GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    auto viewport = cam.resolution_gate();
-    
     // the camera position from the matrix seems to be wrong
     this->lastCamState.camPos = vislib::math::Vector<float,3>(cam.position().x(), cam.position().y(), cam.position().x());
-    this->lastCamState.camDir =
-        vislib::math::Vector<float, 3>(-modelMatrix.GetAt(0, 2), -modelMatrix.GetAt(1, 2), -modelMatrix.GetAt(2, 2));
-    this->lastCamState.camUp =
-        vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 1), modelMatrix.GetAt(1, 1), modelMatrix.GetAt(2, 1));
-    this->lastCamState.camRight =
-        vislib::math::Vector<float, 3>(modelMatrix.GetAt(0, 0), modelMatrix.GetAt(1, 0), modelMatrix.GetAt(2, 0));
+    this->lastCamState.camDir = vislib::math::Vector<float, 3>(
+        -modelMatrixInv.GetAt(0, 2), -modelMatrixInv.GetAt(1, 2), -modelMatrixInv.GetAt(2, 2));
+    this->lastCamState.camUp = vislib::math::Vector<float, 3>(
+        modelMatrixInv.GetAt(0, 1), modelMatrixInv.GetAt(1, 1), modelMatrixInv.GetAt(2, 1));
+    this->lastCamState.camRight = vislib::math::Vector<float, 3>(
+        modelMatrixInv.GetAt(0, 0), modelMatrixInv.GetAt(1, 0), modelMatrixInv.GetAt(2, 0));
     this->lastCamState.camDir.Normalise();
     this->lastCamState.camUp.Normalise();
     this->lastCamState.camRight.Normalise();

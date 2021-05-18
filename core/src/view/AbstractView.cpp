@@ -117,6 +117,7 @@ view::AbstractView::AbstractView(void)
     this->_bkgndCol[0] = 0.0f;
     this->_bkgndCol[1] = 0.0f;
     this->_bkgndCol[2] = 0.125f;
+    this->_bkgndCol[3] = 0.0f;
 
     this->_bkgndColSlot << new param::ColorParam(this->_bkgndCol[0], this->_bkgndCol[1], this->_bkgndCol[2], 1.0f);
     this->MakeSlotAvailable(&this->_bkgndColSlot);
@@ -585,22 +586,33 @@ bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
  * AbstractView::determineCameraFilePath
  */
 std::string view::AbstractView::determineCameraFilePath(void) const {
-    auto path = this->GetCoreInstance()->GetLuaState()->GetScriptPath();
-    if (path.empty())
-        return path; // early exit for mmprj projects
-    auto dotpos = path.find_last_of('.');
+    std::string path;
+    if (!this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+        // new frontend
+        const auto& paths = frontend_resources.get<megamol::frontend_resources::ScriptPaths>().lua_script_paths;
+        if (!paths.empty()) {
+            path = paths[0];
+        } else {
+            return path;
+        }
+    } else {
+        path = this->GetCoreInstance()->GetLuaState()->GetScriptPath();
+        if (path.empty())
+            return path; // early exit for mmprj projects
+    }
+    const auto dotpos = path.find_last_of('.');
     path = path.substr(0, dotpos);
     path.append("_cam.json");
     return path;
 }
 
 /*
- * view::AbstractView::bkgndColour
+ * view::AbstractView::BkgndColour
  */
 glm::vec4 view::AbstractView::BkgndColour(void) const {
     if (this->_bkgndColSlot.IsDirty()) {
         this->_bkgndColSlot.ResetDirty();
-        this->_bkgndColSlot.Param<param::ColorParam>()->Value(this->_bkgndCol[0], this->_bkgndCol[1], this->_bkgndCol[2]);
+        this->_bkgndColSlot.Param<param::ColorParam>()->Value(this->_bkgndCol.r, this->_bkgndCol.g, this->_bkgndCol.b);
     }
     return this->_bkgndCol;
 }

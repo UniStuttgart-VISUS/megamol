@@ -7,6 +7,7 @@
 
 #include "AbstractOSPRayRenderer.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {
@@ -84,8 +85,15 @@ private:
     */
     virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
+    bool OnMouseButton(
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+    bool OnMouseMove(double x, double y) override;
+
     /** The call for data */
     core::CallerSlot _getStructureSlot;
+
+    core::param::ParamSlot _enablePickingSlot;
 
 
     // Interface dirty flag
@@ -98,6 +106,7 @@ private:
     bool _light_has_changed;
     bool _cam_has_changed;
     bool _transformation_has_changed;
+    bool _clipping_geo_changed;
 
     core::view::Camera_2 _cam;
     float _time;
@@ -116,6 +125,9 @@ private:
         unsigned long long int count;
         unsigned long long int amount;
     } _accum_time;
+
+    float _mouse_x;
+    float _mouse_y;
 };
 
 } /*end namespace ospray*/

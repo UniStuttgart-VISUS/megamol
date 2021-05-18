@@ -9,9 +9,15 @@
 #define MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
 
 
-#include "GraphPresentation.h"
+#include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/PopUps.h"
+#include "widgets/SplitterWidget.h"
+#include "widgets/StringSearchWidget.h"
 
+#include "Call.h"
 #include "Group.h"
+#include "Module.h"
 
 #include "vislib/math/Ternary.h"
 
@@ -37,8 +43,6 @@ namespace gui {
 
     class Graph {
     public:
-        // friend class GraphPresentation;
-
         enum QueueAction {
             ADD_MODULE,
             DELETE_MODULE,
@@ -57,24 +61,17 @@ namespace gui {
             std::string callee = "";     // Requierd for ADD_CALL, DELETE_CALL
         };
 
-        // VARIABLES --------------------------------------------------------------
-
-        const ImGuiID uid;
-        std::string name;
-        GraphPresentation present;
-
-        // FUNCTIONS --------------------------------------------------------------
-
-        Graph(const std::string& graph_name, GraphCoreInterface core_interface);
+        Graph(const std::string& graph_name);
         ~Graph(void);
 
-        ImGuiID AddModule(const ModuleStockVector_t& stock_modules, const std::string& module_class_name);
-        ImGuiID AddEmptyModule(void);
+        ModulePtr_t AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name);
+        ModulePtr_t AddModule(const std::string& class_name, const std::string& description,
+            const std::string& plugin_name, bool is_view);
         bool DeleteModule(ImGuiID module_uid, bool force = false);
-        inline const ModulePtrVector_t& GetModules(void) {
+        inline const ModulePtrVector_t& Modules(void) {
             return this->modules;
         }
-        bool GetModule(ImGuiID module_uid, ModulePtr_t& out_module_ptr);
+        ModulePtr_t GetModule(ImGuiID module_uid);
         bool ModuleExists(const std::string& module_fullname);
 
         bool AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
@@ -82,7 +79,7 @@ namespace gui {
         bool AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
 
         bool DeleteCall(ImGuiID call_uid);
-        inline const CallPtrVector_t& GetCalls(void) {
+        inline const CallPtrVector_t& Calls(void) {
             return this->calls;
         }
 
@@ -91,7 +88,7 @@ namespace gui {
         inline const GroupPtrVector_t& GetGroups(void) {
             return this->groups;
         }
-        bool GetGroup(ImGuiID group_uid, GroupPtr_t& out_group_ptr);
+        GroupPtr_t GetGroup(ImGuiID group_uid);
         ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr);
 
         void Clear(void);
@@ -108,12 +105,8 @@ namespace gui {
 
         bool UniqueModuleRename(const std::string& module_full_name);
 
-        const std::string GetFilename(void) const {
-            return this->filename;
-        }
-        void SetFilename(const std::string& filename) {
-            this->filename = filename;
-        }
+        const std::string GetFilename(void) const;
+        void SetFilename(const std::string& filename, bool saved_filename);
 
         bool PushSyncQueue(QueueAction in_action, const QueueData& in_data);
         bool PopSyncQueue(QueueAction& out_action, QueueData& out_data);
@@ -123,11 +116,21 @@ namespace gui {
             }
         }
 
-        inline GraphCoreInterface GetCoreInterface(void) {
-            return this->graph_core_interface;
+        inline GraphCoreInterface GetCoreInterface(void) const {
+            return this->core_interface;
         }
-        inline bool HasCoreInterface(void) {
-            return (this->graph_core_interface != GraphCoreInterface::NO_INTERFACE);
+        inline void SetCoreInterface(GraphCoreInterface graph_core_interface) {
+            this->core_interface = graph_core_interface;
+        }
+
+        inline bool IsRunning(void) const {
+            return this->running;
+        }
+        inline void SetRunning(bool run) {
+            this->running = run;
+            if (!this->running) {
+                this->core_interface = GraphCoreInterface::NO_INTERFACE;
+            }
         }
 
         const std::string GenerateUniqueGraphEntryName(void);
@@ -135,10 +138,44 @@ namespace gui {
         bool StateFromJSON(const nlohmann::json& in_json);
         bool StateToJSON(nlohmann::json& inout_json);
 
-        // Presentation ----------------------------------------------------
+        void Draw(GraphState_t& state);
 
-        inline void PresentGUI(GraphState_t& state) {
-            this->present.Present(*this, state);
+        inline const ImGuiID UID(void) const {
+            return this->uid;
+        }
+        inline const std::string Name(void) const {
+            return this->name;
+        }
+
+        void ForceUpdate(void) {
+            this->gui_update = true;
+        }
+        void ResetStatePointers(void) {
+            this->gui_graph_state.interact.callslot_compat_ptr.reset();
+            this->gui_graph_state.interact.interfaceslot_compat_ptr.reset();
+        }
+
+        ImGuiID GetHoveredGroup(void) const {
+            return this->gui_graph_state.interact.group_hovered_uid;
+        }
+        ImGuiID GetSelectedGroup(void) const {
+            return this->gui_graph_state.interact.group_selected_uid;
+        }
+        ImGuiID GetSelectedCallSlot(void) const {
+            return this->gui_graph_state.interact.callslot_selected_uid;
+        }
+        ImGuiID GetSelectedInterfaceSlot(void) const {
+            return this->gui_graph_state.interact.interfaceslot_selected_uid;
+        }
+        ImGuiID GetDropSlot(void) const {
+            return this->gui_graph_state.interact.slot_dropped_uid;
+        }
+        bool IsCanvasHoverd(void) const {
+            return this->gui_canvas_hovered;
+        }
+
+        void SetLayoutGraph(bool layout = true) {
+            this->gui_graph_layout = ((layout) ? (1) : (0));
         }
 
     private:
@@ -147,15 +184,64 @@ namespace gui {
 
         // VARIABLES --------------------------------------------------------------
 
+        const ImGuiID uid;
+        std::string name;
+
         ModulePtrVector_t modules;
         CallPtrVector_t calls;
         GroupPtrVector_t groups;
         bool dirty_flag;
-        std::string filename;
+        std::pair<std::pair<bool, std::string>, std::pair<bool, std::string>>
+            filenames; // (1) script path from core | (2) saved file name
         SyncQueue_t sync_queue;
-        GraphCoreInterface graph_core_interface;
+        GraphCoreInterface core_interface;
+        bool running; // Do not change in Graph class, only via GraphCollection
+
+        megamol::gui::GraphItemsState_t gui_graph_state; /// State propagated and shared by all graph items
+        bool gui_update;
+        bool gui_show_grid;
+        bool gui_show_parameter_sidebar;
+        bool gui_params_visible;
+        bool gui_params_readonly;
+        bool gui_change_show_parameter_sidebar;
+        unsigned int gui_graph_layout;
+        float gui_parameter_sidebar_width;
+        bool gui_reset_zooming;
+        bool gui_increment_zooming;
+        bool gui_decrement_zooming;
+        std::string gui_param_name_space;
+        std::string gui_current_graph_entry_name;
+        ImVec2 gui_multiselect_start_pos;
+        ImVec2 gui_multiselect_end_pos;
+        bool gui_multiselect_done;
+        bool gui_canvas_hovered;
+        float gui_current_font_scaling;
+        StringSearchWidget gui_search_widget;
+        SplitterWidget gui_splitter_widget;
+        PopUps gui_rename_popup;
+        HoverToolTip gui_tooltip;
 
         // FUNCTIONS --------------------------------------------------------------
+
+        void draw_menu(GraphState_t& state);
+        void draw_canvas(float child_width, GraphState_t& state);
+        void draw_parameters(float child_width);
+
+        void draw_canvas_grid(void);
+        void draw_canvas_dragged_call(void);
+        void draw_canvas_multiselection(void);
+
+        void layout_graph(void);
+        void layout(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, ImVec2 init_position);
+
+        bool connected_callslot(
+            const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, const CallSlotPtr_t& callslot_ptr);
+        bool connected_interfaceslot(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups,
+            const InterfaceSlotPtr_t& interfaceslot_ptr);
+        bool contains_callslot(const ModulePtrVector_t& modules, ImGuiID callslot_uid);
+        bool contains_interfaceslot(const GroupPtrVector_t& groups, ImGuiID interfaceslot_uid);
+        bool contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid);
+        bool contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid);
 
         const std::string generate_unique_group_name(void);
         const std::string generate_unique_module_name(const std::string& name);

@@ -42,6 +42,7 @@ mark_as_advanced(MEGAMOL_INSTALL_DEPENDENCIES)
 option(ENABLE_CUDA "Enable CUDA, which is needed for certain plugins" OFF)
 if(ENABLE_CUDA)
   enable_language(CUDA)
+  set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif()
 
 # GLFW

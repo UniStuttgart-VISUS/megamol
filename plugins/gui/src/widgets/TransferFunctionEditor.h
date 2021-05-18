@@ -21,6 +21,8 @@
 #include <iomanip>
 #include <sstream>
 
+using namespace megamol::core::param;
+
 
 namespace megamol {
 namespace gui {
@@ -77,14 +79,14 @@ namespace gui {
          * Returns true if editor is in minimized view.
          */
         inline bool IsMinimized(void) const {
-            return !this->showOptions;
+            return !this->show_options;
         }
 
         /**
          * Set minimized view.
          */
         inline void SetMinimized(bool minimized) {
-            this->showOptions = !minimized;
+            this->show_options = !minimized;
         }
 
         /**
@@ -104,8 +106,8 @@ namespace gui {
     private:
         /** The global input widget state buffer. */
         struct WidgetBuffer {
-            float min_range;
-            float max_range;
+            float left_range;
+            float right_range;
             float gauss_sigma;
             float range_value;
             int tex_size;
@@ -115,55 +117,26 @@ namespace gui {
 
         /** The currently active parameter whose transfer function is currently loaded into this editor. */
         Parameter* connected_parameter_ptr;
-
-        /** Name of the connected parameter. */
         std::string connected_parameter_name;
-
-        /** Array holding current colors and function values. */
-        megamol::core::param::TransferFunctionParam::TFNodeType nodes;
-
-        /** Min/Max intervall the data should be mapped. */
+        TransferFunctionParam::NodeVector_t nodes;
         std::array<float, 2> range;
         std::array<float, 2> last_range;
-
-        /** Flag indicating if propagated range should be overwriten by editor */
         bool range_overwrite;
-
-        /** Current interpolation option. */
-        megamol::core::param::TransferFunctionParam::InterpolationMode mode;
-
-        /** Indicating modified transfer function. Recalculate texture data. */
-        bool textureInvalid;
-
-        /** Current texture size. */
-        int textureSize;
-
-        /** Indicates whether changes are already applied or not. */
-        bool pendingChanges;
-
-        /** Currently active color channels in plot. */
-        std::array<bool, 4> activeChannels;
-
-        /** Currently selected node. */
-        unsigned int currentNode;
-
-        /** Currently selected color channel of selected node. */
-        unsigned int currentChannel;
-
-        /** Offset from center of point to initial drag position. */
-        glm::vec2 currentDragChange;
-
-        /** Flag for applying all changes immediately. */
-        bool immediateMode;
-
-        /** Flag indicating if all options should be shown*/
-        bool showOptions;
-
-        /** The global input widget state buffer. */
+        TransferFunctionParam::InterpolationMode interpolation_mode;
+        bool reload_texture;
+        int texture_size;
+        bool pending_changes;
+        bool immediate_mode;
+        std::array<bool, 4> active_color_channels;
+        unsigned int selected_channel_index;
+        unsigned int selected_node_index;
+        ImVec2 selected_node_drag_delta;
+        bool show_options;
         WidgetBuffer widget_buffer;
-
-        /** Legend alignment flag. */
         bool flip_legend;
+        bool check_once_force_set_overwrite_range;
+        bool plot_paint_mode;
+        bool plot_dragging;
 
         // Widgets
         HoverToolTip tooltip;
@@ -172,10 +145,17 @@ namespace gui {
         // FUNCTIONS -----------------------------------------------------------
 
         void drawTextureBox(const ImVec2& size, bool flip_xy);
-
         void drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy);
-
         void drawFunctionPlot(const ImVec2& size);
+
+        bool addNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
+        bool paintModeNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
+        bool changeNodeSelection(unsigned int new_selected_node_index, unsigned int new_selected_channel_index,
+            ImVec2 new_selected_node_drag_delta);
+        bool moveSelectedNode(unsigned int selected_node_index, const ImVec2& mouse_pos, const ImVec2& canvas_pos,
+            const ImVec2& canvas_size);
+        bool deleteNode(unsigned int node_index);
+        void sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const;
     };
 
 } // namespace gui

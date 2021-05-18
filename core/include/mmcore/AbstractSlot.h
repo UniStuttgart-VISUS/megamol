@@ -30,7 +30,7 @@ namespace core {
      * owner in the ctor would require the use of 'this' in the initialisation
      * list, which is not allowed.
      */
-    class MEGAMOLCORE_API AbstractSlot: public AbstractNamedObject {
+    class MEGAMOLCORE_API AbstractSlot : public AbstractNamedObject {
     public:
 
         /**
@@ -200,6 +200,7 @@ namespace core {
 
         /** List of listeners */
         vislib::SingleLinkedList<Listener*> listeners;
+
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */

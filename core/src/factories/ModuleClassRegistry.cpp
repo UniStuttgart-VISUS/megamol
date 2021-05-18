@@ -50,7 +50,7 @@
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
 #include "mmcore/FlagStorage.h"
-#include "mmcore/FlagStorage_GL.h"
+#include "mmcore/UniFlagStorage.h"
 #include "mmcore/DeferredShading.h"
 #include "mmcore/view/View3D.h"
 #include "mmcore/view/ContextToGL.h"
@@ -106,9 +106,8 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::light::QuadLight>();
     instance.RegisterAutoDescription<view::light::SpotLight>();
     instance.RegisterAutoDescription<FlagStorage>();
-    instance.RegisterAutoDescription<FlagStorage_GL>();
+    instance.RegisterAutoDescription<UniFlagStorage>();
     instance.RegisterAutoDescription<DeferredShading>();
     instance.RegisterAutoDescription<view::View3D>();
-    instance.RegisterAutoDescription<view::ContextToGL>();
     instance.RegisterAutoDescription<ResourceTestModule>();
 }

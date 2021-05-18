@@ -49,13 +49,13 @@ namespace gui {
         /**
          * Draw configurator window.
          */
-        bool Draw(WindowCollection::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
+        bool Draw(WindowCollection::WindowConfiguration& wc);
 
         /**
          * Returns required font scalings for graph canvas
          */
         inline const FontScalingArray_t& GetGraphFontScalings(void) const {
-            return this->graph_state.font_scalings;
+            return this->graph_state.graph_zoom_font_scalings;
         }
 
         /**
@@ -90,7 +90,7 @@ namespace gui {
         // VARIABLES --------------------------------------------------------------
 
         GraphCollection graph_collection;
-        int init_state;
+
         float module_list_sidebar_width;
         ImGuiID selected_list_module_uid;
         ImGuiID add_project_graph_uid;
@@ -111,10 +111,10 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        void draw_window_menu(megamol::core::CoreInstance* core_instance);
+        void draw_window_menu(void);
         void draw_window_module_list(float width, float height, bool apply_focus);
 
-        void drawPopUps(megamol::core::CoreInstance* core_instance);
+        void drawPopUps(void);
 
         bool load_graph_state_from_file(const std::string& filename);
     };

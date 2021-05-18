@@ -244,6 +244,9 @@
         <snippet type="version">430</snippet>
         <snipper name="assao::Uniforms" />
         <snippet name="assao::PSNonSmartHalfApply" />
+    <shader name="phong">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/phong_c.glsl</snippet>
     </shader>
 
 </btf>

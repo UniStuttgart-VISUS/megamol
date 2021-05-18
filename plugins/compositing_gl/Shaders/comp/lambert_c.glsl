@@ -10,13 +10,22 @@ uniform sampler2D albedo_tx2D;
 uniform sampler2D normal_tx2D;
 uniform sampler2D depth_tx2D;
 
-layout(RGBA16) writeonly uniform image2D tgt_tx2D;
+layout(rgba16) writeonly uniform image2D tgt_tx2D;
 
 uniform int point_light_cnt;
 uniform int distant_light_cnt;
 
 uniform mat4 inv_view_mx;
 uniform mat4 inv_proj_mx;
+
+uniform vec3 ambientColor; 
+uniform vec3 diffuseColor;
+uniform vec3 specularColor;
+
+uniform float k_amb;
+uniform float k_diff;
+uniform float k_spec;
+uniform float k_exp;
 
 
 vec3 depthToWorldPos(float depth, vec2 uv) {
@@ -33,11 +42,11 @@ vec3 depthToWorldPos(float depth, vec2 uv) {
     return ws_pos.xyz;
 }
 
+//Lambert Illumination 
 float lambert(vec3 normal, vec3 light_dir)
 {
     return clamp(dot(normal,light_dir),0.0,1.0);
 }
-
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -56,6 +65,7 @@ void main() {
     vec3 normal = texture(normal_tx2D,pixel_coords_norm).rgb;
     float depth = texture(depth_tx2D,pixel_coords_norm).r;
 
+    //var for saving alpha channel 
     vec4 retval = albedo;
 
     if (depth > 0.0f && depth < 1.0f)
@@ -76,7 +86,7 @@ void main() {
             vec3 light_dir = -vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
             reflected_light += lambert(light_dir,normal) * distant_light_params[i].intensity;
         }
-
+        //Sets pixelcolor to illumination + color (alpha channels remains the same)
         retval.rgb = vec3(reflected_light) * albedo.rgb;
     }
 

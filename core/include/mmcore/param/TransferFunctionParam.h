@@ -10,11 +10,12 @@
 #include <string>
 #include <cmath>
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/JSONHelper.h"
 
 #include "vislib/String.h"
-#include "mmcore/utility/log/Log.h"
 
 #include "json.hpp"
 
@@ -32,14 +33,13 @@ namespace param {
 class MEGAMOLCORE_API TransferFunctionParam : public AbstractParam {
 public:
 
-    /** Interpolstion modes. */
     enum InterpolationMode { 
         LINEAR = 0, 
         GAUSS = 1 
     };
 
-    /** Data type for transfer function nodes. */
-    typedef std::vector<std::array<float, TFP_VAL_CNT>> TFNodeType;
+    typedef std::array<float, TFP_VAL_CNT>  NodeData_t;
+    typedef std::vector<NodeData_t>         NodeVector_t;
 
     // ------------------------------------------------------------------------
 
@@ -64,47 +64,41 @@ public:
     //            0.05 
     //        ]
     //    ],
-    //    "TextureSize": 128
+    //    "TextureSize": 128,
     //    "ValueRange": [
     //        0.0,        // = minimum value of node range
     //        1.0         // = maxiumum value of node range
     //   ],
+    //   "IgnoreRangeOnProjectLoad" : true  // Only read once and stored in parameter
     //}
-
-    /**
-    * Create transfer function texture from JSON string.
-    *
-    * @param in_tfs            The transfer function input encoded as string in JSON format.
-    * @param out_nodes         The transfer function node output.
-    * @param out_texsize       The transfer function texture size output.
-    *
-    * @return True if JSON string was successfully converted into transfer function texture, false otherwise.
-    */
-    static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_nodes, unsigned int &out_texsize, std::array<float, 2> &out_range);
 
     /**
     * Set transfer function data from JSON string.
     *
-    * @param in_tfs            The transfer function input encoded as string in JSON format.
-    * @param out_nodes         The transfer function node output.
-    * @param out_interpolmode  The transfer function interpolation mode output.
-    * @param out_texsize       The transfer function texture size output.
+    * @param in_tfs                                 The transfer function input encoded as string in JSON format.
+    * @param out_nodes                              The transfer function node output.
+    * @param out_interpolmode                       The transfer function interpolation mode output.
+    * @param out_texsize                            The transfer function texture size output.
     *
     * @return True if JSON string was successfully converted into transfer function data, false otherwise.
     */
-    static bool ParseTransferFunction(const std::string &in_tfs, TFNodeType &out_nodes, InterpolationMode &out_interpolmode, unsigned int &out_texsize, std::array<float, 2> &out_range);
+    static bool GetParsedTransferFunctionData(const std::string& in_tfs, NodeVector_t& out_nodes,
+        InterpolationMode& out_interpolmode, unsigned int& out_texsize, std::array<float, 2>& out_range);
 
     /**
      * Get transfer function JSON string from data.
      *
-     * @param out_tfs          The transfer function output encoded as string in JSON format.
-     * @param in_nodes         The transfer function node input.
-     * @param in_interpolmode  The transfer function interpolation mode input.
-     * @param in_texsize       The transfer function texture size input.
+     * @param out_tfs                       The transfer function output encoded as string in JSON format.
+     * @param in_nodes                      The transfer function node input.
+     * @param in_interpolmode               The transfer function interpolation mode input.
+     * @param in_texsize                    The transfer function texture size input.
+     * @param in_ignore_project_range_once  Flag to ignore range of tf parameter given in project file.
      *
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
-    static bool DumpTransferFunction(std::string &out_tfs, const TFNodeType &in_nodes, const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range);
+    static bool GetDumpedTransferFunction(std::string& out_tfs, const NodeVector_t& in_nodes,
+        const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range,
+        bool in_ignore_project_range = true);
 
     /**
      * Check given transfer function data.
@@ -115,7 +109,7 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionData(const TFNodeType &nodes, const InterpolationMode interpolmode, const unsigned int texsize, const std::array<float, 2> range);
+    static bool CheckTransferFunctionData(const NodeVector_t &nodes, const InterpolationMode interpolmode, const unsigned int texsize, const std::array<float, 2> range);
 
     /**
      * Check given transfer function JSON string.
@@ -133,7 +127,7 @@ public:
     * @param in_texsize   The transfer function texture size input.
     * @param in_nodes    The transfer function node data input.
     */
-    static void LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFNodeType &in_nodes);
+    static std::vector<float> LinearInterpolation(unsigned int in_texsize, const NodeVector_t& in_nodes);
 
     /**
     * Gauss interpolation of transfer function data in range [0..texsize]
@@ -142,7 +136,7 @@ public:
     * @param in_texsize   The transfer function texture size input.
     * @param in_nodes    The transfer function node data input.
     */
-    static void GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFNodeType &in_nodes);
+    static std::vector<float> GaussInterpolation(unsigned int in_texsize, const NodeVector_t& in_nodes);
 
     /**
      * Return texture data for given transfer function JSON string.
@@ -155,6 +149,11 @@ public:
      * @return True on success, false otherwise.
      */
     static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data, int& out_width, int& out_height);
+
+    /**
+     * Return flag 'IgnoreProjectRange'
+     */
+    static bool IgnoreProjectRange(const std::string& in_tfs);
 
     /** Calculates gauss function value. 
     *
@@ -270,7 +269,7 @@ private:
     /** The value of the parameter */
     std::string val;
 
-    /** Has of current parameter value. */
+    /** Hash of current parameter value. */
     size_t hash;
 
 #ifdef _WIN32

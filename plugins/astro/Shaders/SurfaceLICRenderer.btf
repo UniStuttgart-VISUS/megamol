@@ -8,7 +8,7 @@
 
     <shader name="compute">
         <snippet type="version">430</snippet>
-        <snippet type="file">phong.glsl</snippet>
+        <snippet type="file">core/phong.inc.glsl</snippet>
         <snippet type="file">SurfaceLIC-Functions.glsl</snippet>
         <snippet type="file">SurfaceLIC-Compute.glsl</snippet>
     </shader>

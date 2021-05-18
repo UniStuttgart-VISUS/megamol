@@ -46,6 +46,9 @@ protected:
 
 private:
     uint32_t m_version;
+
+    /** The slot for querying material data, i.e. a rhs connection */
+    megamol::core::CallerSlot m_material_slot;
 };
 
 } // namespace mesh

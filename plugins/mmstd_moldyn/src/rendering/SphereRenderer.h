@@ -14,8 +14,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagStorage_GL.h"
-#include "mmcore/FlagCall_GL.h"
+#include "mmcore/UniFlagStorage.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/param/EnumParam.h"
@@ -380,7 +380,7 @@ namespace rendering {
 
 		// Affects only Outline rendering: --------------------------
 
-		megamol::core::param::ParamSlot outlineSizeSlot;
+		megamol::core::param::ParamSlot outlineWidthSlot;
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */

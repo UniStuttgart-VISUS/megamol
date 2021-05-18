@@ -137,7 +137,6 @@ namespace ospray {
     void AbstractOSPRayRenderer::setupOSPRay(const char* renderer_name) {
         // create and setup renderer
         _renderer = std::make_shared<::ospray::cpp::Renderer>(renderer_name);
-        _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
         _world = std::make_shared<::ospray::cpp::World>();
     }
 
@@ -245,11 +244,6 @@ namespace ospray {
 
     void AbstractOSPRayRenderer::fillLightArray(std::array<float,4> eyeDir) {
         // clear current lights
-        if (!_lightArray.empty()) {
-            for (auto& l : _lightArray) {
-                ospRelease(l.handle());
-            }
-        }
         _lightArray.clear();
 
         // create custom ospray light
@@ -381,6 +375,20 @@ namespace ospray {
                     static_cast<float>(mmcam.resolution_gate().width());
         imgEnd[1] = (mmcam.image_tile().bottom() + mmcam.image_tile().height()) /
                     static_cast<float>(mmcam.resolution_gate().height());
+
+        if (_currentProjectionType != mmcam.projection_type() || !_camera){
+            if (mmcam.projection_type() == core::thecam::Projection_type::perspective) {
+                _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
+                _currentProjectionType = core::thecam::Projection_type::perspective;
+            } else if (mmcam.projection_type() == core::thecam::Projection_type::orthographic) {
+                _camera = std::make_shared<::ospray::cpp::Camera>("orthographic");
+                _currentProjectionType = core::thecam::Projection_type::orthographic;
+            } else {
+                core::utility::log::Log::DefaultLog.WriteWarn("[AbstractOSPRayRenderer] Projection type not supported. Falling back to perspective.");
+                _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
+                _currentProjectionType = core::thecam::Projection_type::perspective;
+            } //TODO: Implement panoramic camera
+        }
 
         // setup ospcam
         _camera->setParam("imageStart", convertToVec2f(imgStart));
@@ -949,11 +957,14 @@ namespace ospray {
 
                                 size_t stride = 3 * sizeof(unsigned int);
                                 auto osp_type = OSP_VEC3UI;
+                                auto divider = 3ull;
 
                                 if (mesh_type == mesh::MeshDataAccessCollection::QUADS) {
                                     stride = 4 * sizeof(unsigned int);
                                     osp_type = OSP_VEC4UI;
+                                    divider = 4ull;
                                 }
+                                count /= divider;
                                 
                                 auto indexData =
                                     ::ospray::cpp::SharedData(mesh.second.indices.data, osp_type, count, stride);
@@ -1136,6 +1147,25 @@ namespace ospray {
                     }
                     _groups[entry.first] = ::ospray::cpp::Group();
                     _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
+                    if (entry.second.clippingPlane.isValid) {
+                        _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("plane"), GEOMETRY);
+
+                        ::rkcommon::math::vec4f plane;
+                        plane[0] = entry.second.clippingPlane.coeff[0];
+                        plane[1] = entry.second.clippingPlane.coeff[1];
+                        plane[2] = entry.second.clippingPlane.coeff[2];
+                        plane[3] = entry.second.clippingPlane.coeff[3];
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                            .setParam("plane.coefficients", ::ospray::cpp::CopiedData(plane));
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+
+                        _clippingModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                        _clippingModels[entry.first].back().commit();
+
+                        _groups[entry.first].setParam(
+                            "clippingGeometry", ::ospray::cpp::CopiedData(_clippingModels[entry.first]));
+                    }
                     _groups[entry.first].commit();
                 }
                 break;
@@ -1289,9 +1319,9 @@ namespace ospray {
 
         for (auto& entry : this->_structureMap) {
 
-            if (_instances[entry.first]) {
+            /*if (_instances[entry.first]) {
                 ospRelease(_instances[entry.first].handle());
-            }
+            }*/
             _instances.erase(entry.first);
 
             auto const& element = entry.second;
