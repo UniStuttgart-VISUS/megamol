@@ -847,15 +847,7 @@ function(require_external NAME)
       set(VTKM_WORKLET_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_worklet-${VTKM_VER}.a")
     endif()
 
-<<<<<<< HEAD
-    #option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
-
     add_external_project(vtkm STATIC
-=======
-    option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
-
-    add_external_project(vtkm
->>>>>>> upstream/master
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
       GIT_TAG "v${VTKM_VER}.0"
       BUILD_BYPRODUCTS
