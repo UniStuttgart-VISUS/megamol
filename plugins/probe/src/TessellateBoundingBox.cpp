@@ -196,6 +196,8 @@ bool megamol::probe::TessellateBoundingBox::getMeshDataCallback(core::Call& call
             bbox[4] += _padding_slot.Param<megamol::core::param::FloatParam>()->Value();
             bbox[5] += _padding_slot.Param<megamol::core::param::FloatParam>()->Value();
 
+            _bboxs.SetBoundingBox(bbox[0],bbox[1],bbox[2],bbox[3],bbox[4],bbox[5]);
+
             // get bounding box corners
             glm::vec3 lbb = glm::vec3(bbox[0], bbox[1], bbox[2]);
             glm::vec3 rbb = glm::vec3(bbox[3], bbox[1], bbox[2]);

@@ -178,187 +178,201 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
     bool all_calls_valid = (call_albedo != nullptr) && (call_normal != nullptr) &&
                            (call_depth != nullptr) && (call_camera != nullptr) && (call_light != nullptr);
 
-    // something has changed in the neath...
-    bool something_has_changed = call_albedo->hasUpdate() || call_normal->hasUpdate() || call_depth->hasUpdate() ||
-                                 call_camera->hasUpdate() || call_light->hasUpdate();
+    if (all_calls_valid) {
+        // something has changed in the neath...
+        bool something_has_changed =
+            call_albedo->hasUpdate() || call_normal->hasUpdate() || call_depth->hasUpdate() || call_camera->hasUpdate();
 
-    if (something_has_changed && all_calls_valid) {
-        ++m_version;
+        if (something_has_changed) {
+            ++m_version;
 
-        // set output texture size to primary input texture
-        auto albedo_tx2D = call_albedo->getData();
-        auto normal_tx2D = call_normal->getData();
-        auto depth_tx2D = call_depth->getData();
-        std::array<float, 2> texture_res = {
-            static_cast<float>(albedo_tx2D->getWidth()), static_cast<float>(albedo_tx2D->getHeight())};
+            // set output texture size to primary input texture
+            auto albedo_tx2D = call_albedo->getData();
+            auto normal_tx2D = call_normal->getData();
+            auto depth_tx2D = call_depth->getData();
+            std::array<float, 2> texture_res = {
+                static_cast<float>(albedo_tx2D->getWidth()), static_cast<float>(albedo_tx2D->getHeight())};
 
-        if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
-            m_output_texture->getHeight() != std::get<1>(texture_res)) {
-            glowl::TextureLayout tx_layout(
-                GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
-            m_output_texture->reload(tx_layout, nullptr);
-        }
-
-        // obtain camera information
-        core::view::Camera_2 cam = call_camera->getData();
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type view_tmp, proj_tmp;
-        cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-        glm::mat4 view_mx = view_tmp;
-        glm::mat4 proj_mx = proj_tmp;
-
-        if (call_light->hasUpdate()) {
-            auto lights = call_light->getData();
-
-            this->m_point_lights.clear();
-            this->m_distant_lights.clear();
-
-            auto point_lights = lights.get<core::view::light::PointLightType>();
-            auto distant_lights = lights.get<core::view::light::DistantLightType>();
-            auto tridirection_lights = lights.get<core::view::light::TriDirectionalLightType>();
-
-            for(auto pl : point_lights) {
-                m_point_lights.push_back(
-                    {pl.position[0], pl.position[1], pl.position[2], pl.intensity});
+            if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
+                m_output_texture->getHeight() != std::get<1>(texture_res)) {
+                glowl::TextureLayout tx_layout(
+                    GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
+                m_output_texture->reload(tx_layout, nullptr);
             }
 
-            for (auto dl : distant_lights) {
-                if (dl.eye_direction) {
-                    glm::vec3 cam_dir(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
-                    cam_dir = glm::normalize(cam_dir);
-                    m_distant_lights.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
-                } else {
-                    m_distant_lights.push_back(
-                        {dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
+            // obtain camera information
+            core::view::Camera_2 cam = call_camera->getData();
+            cam_type::snapshot_type snapshot;
+            cam_type::matrix_type view_tmp, proj_tmp;
+            cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
+            glm::mat4 view_mx = view_tmp;
+            glm::mat4 proj_mx = proj_tmp;
+
+            if (call_light->hasUpdate()) {
+                auto lights = call_light->getData();
+
+                this->m_point_lights.clear();
+                this->m_distant_lights.clear();
+
+                auto point_lights = lights.get<core::view::light::PointLightType>();
+                auto distant_lights = lights.get<core::view::light::DistantLightType>();
+                auto tridirection_lights = lights.get<core::view::light::TriDirectionalLightType>();
+
+                for (auto pl : point_lights) {
+                    m_point_lights.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
+                }
+
+                for (auto dl : distant_lights) {
+                    if (dl.eye_direction) {
+                        glm::vec3 cam_dir(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
+                        cam_dir = glm::normalize(cam_dir);
+                        m_distant_lights.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
+                    } else {
+                        m_distant_lights.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
+                    }
+                }
+
+                for (auto tdl : tridirection_lights) {
+                    if (tdl.in_view_space) {
+                        auto inverse_view = glm::transpose(glm::mat3(view_mx));
+                        auto key_dir = inverse_view * glm::vec3(tdl.key_direction[0], tdl.key_direction[1],
+                                                          tdl.key_direction[2]);
+                        auto fill_dir = inverse_view * glm::vec3(tdl.fill_direction[0], tdl.fill_direction[1],
+                                                           tdl.fill_direction[2]);
+                        auto back_dir = inverse_view * glm::vec3(tdl.back_direction[0], tdl.back_direction[1],
+                                                           tdl.back_direction[2]);
+                        m_distant_lights.push_back({key_dir[0], key_dir[1], key_dir[2], tdl.intensity});
+                        m_distant_lights.push_back({fill_dir[0], fill_dir[1], fill_dir[2], tdl.intensity});
+                        m_distant_lights.push_back({back_dir[0], back_dir[1], back_dir[2], tdl.intensity});
+                    } else {
+                        m_distant_lights.push_back({tdl.key_direction[0], tdl.key_direction[1],
+                            tdl.key_direction[2], tdl.intensity});
+                        m_distant_lights.push_back({tdl.fill_direction[0], tdl.fill_direction[1],
+                            tdl.fill_direction[2], tdl.intensity});
+                        m_distant_lights.push_back({tdl.back_direction[0], tdl.back_direction[1],
+                            tdl.back_direction[2], tdl.intensity});
+                    }
                 }
             }
+            m_point_lights_buffer->rebuffer(m_point_lights);
+            m_distant_lights_buffer->rebuffer(m_distant_lights);
 
-            for (auto tdl : tridirection_lights) {
-                if (tdl.in_view_space) {
-                    auto inverse_view = glm::transpose(glm::mat3(view_mx));
-                    auto key_dir = inverse_view * glm::vec3(tdl.key_direction[0], tdl.key_direction[1],
-                                                      tdl.key_direction[2]);
-                    auto fill_dir = inverse_view * glm::vec3(tdl.fill_direction[0], tdl.fill_direction[1],
-                                                       tdl.fill_direction[2]);
-                    auto back_dir = inverse_view * glm::vec3(tdl.back_direction[0], tdl.back_direction[1],
-                                                       tdl.back_direction[2]);
-                    m_distant_lights.push_back({key_dir[0], key_dir[1], key_dir[2], tdl.intensity});
-                    m_distant_lights.push_back({fill_dir[0], fill_dir[1], fill_dir[2], tdl.intensity});
-                    m_distant_lights.push_back({back_dir[0], back_dir[1], back_dir[2], tdl.intensity});
-                } else {
-                    m_distant_lights.push_back({tdl.key_direction[0], tdl.key_direction[1],
-                        tdl.key_direction[2], tdl.intensity});
-                    m_distant_lights.push_back({tdl.fill_direction[0], tdl.fill_direction[1],
-                        tdl.fill_direction[2], tdl.intensity});
-                    m_distant_lights.push_back({tdl.back_direction[0], tdl.back_direction[1],
-                        tdl.back_direction[2], tdl.intensity});
+            // m_illumination mode: Change between Lambert & Blinn Phong
+            if (this->m_illuminationmode.Param<core::param::EnumParam>()->Value() == 0) {
+                // Lambert: std::cout << "Lambert" << std::endl;
+                m_phong_ambientColor.Param<core::param::ColorParam>()->SetGUIVisible(false);
+                m_phong_diffuseColor.Param<core::param::ColorParam>()->SetGUIVisible(false);
+                m_phong_specularColor.Param<core::param::ColorParam>()->SetGUIVisible(false);
+
+                m_phong_k_ambient.Param<core::param::FloatParam>()->SetGUIVisible(false);
+                m_phong_k_diffuse.Param<core::param::FloatParam>()->SetGUIVisible(false);
+                m_phong_k_specular.Param<core::param::FloatParam>()->SetGUIVisible(false);
+                m_phong_k_exp.Param<core::param::FloatParam>()->SetGUIVisible(false);
+
+                if (m_lambert_prgm != nullptr && m_point_lights_buffer != nullptr &&
+                    m_distant_lights_buffer != nullptr) {
+                    m_lambert_prgm->Enable();
+
+                    m_point_lights_buffer->bind(1);
+                    glUniform1i(m_lambert_prgm->ParameterLocation("point_light_cnt"),
+                        static_cast<GLint>(m_point_lights.size()));
+                    m_distant_lights_buffer->bind(2);
+                    glUniform1i(m_lambert_prgm->ParameterLocation("distant_light_cnt"),
+                        static_cast<GLint>(m_distant_lights.size()));
+                    glActiveTexture(GL_TEXTURE0);
+                    albedo_tx2D->bindTexture();
+                    glUniform1i(m_lambert_prgm->ParameterLocation("albedo_tx2D"), 0);
+
+                    glActiveTexture(GL_TEXTURE1);
+                    normal_tx2D->bindTexture();
+                    glUniform1i(m_lambert_prgm->ParameterLocation("normal_tx2D"), 1);
+
+                    glActiveTexture(GL_TEXTURE2);
+                    depth_tx2D->bindTexture();
+                    glUniform1i(m_lambert_prgm->ParameterLocation("depth_tx2D"), 2);
+
+                    auto inv_view_mx = glm::inverse(view_mx);
+                    auto inv_proj_mx = glm::inverse(proj_mx);
+                    glUniformMatrix4fv(
+                        m_lambert_prgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
+                    glUniformMatrix4fv(
+                        m_lambert_prgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
+
+                    m_output_texture->bindImage(0, GL_WRITE_ONLY);
+
+                    m_lambert_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+                        static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
+
+                    m_lambert_prgm->Disable();
                 }
-            }
-        }
-        m_point_lights_buffer->rebuffer(m_point_lights);
-        m_distant_lights_buffer->rebuffer(m_distant_lights);
+            } else if (this->m_illuminationmode.Param<core::param::EnumParam>()->Value() == 1) {
+                // Blinn-Phong: std::cout << "Blinn Phong" << std::endl;
+                // ambient/diffus/specular anhand von Lichtern & keine auswahl mehr todo
+                m_phong_ambientColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
+                m_phong_diffuseColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
+                m_phong_specularColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
 
-        //m_illumination mode: Change between Lambert & Blinn Phong
-        if (this->m_illuminationmode.Param<core::param::EnumParam>()->Value() == 0) {
-            //Lambert: std::cout << "Lambert" << std::endl;
-            m_phong_ambientColor.Param<core::param::ColorParam>()->SetGUIVisible(false);
-            m_phong_diffuseColor.Param<core::param::ColorParam>()->SetGUIVisible(false);
-            m_phong_specularColor.Param<core::param::ColorParam>()->SetGUIVisible(false);
+                m_phong_k_ambient.Param<core::param::FloatParam>()->SetGUIVisible(true);
+                m_phong_k_diffuse.Param<core::param::FloatParam>()->SetGUIVisible(true);
+                m_phong_k_specular.Param<core::param::FloatParam>()->SetGUIVisible(true);
+                m_phong_k_exp.Param<core::param::FloatParam>()->SetGUIVisible(true);
 
-            m_phong_k_ambient.Param<core::param::FloatParam>()->SetGUIVisible(false);
-            m_phong_k_diffuse.Param<core::param::FloatParam>()->SetGUIVisible(false);
-            m_phong_k_specular.Param<core::param::FloatParam>()->SetGUIVisible(false);
-            m_phong_k_exp.Param<core::param::FloatParam>()->SetGUIVisible(false);
+                if (m_phong_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
+                    m_phong_prgm->Enable();
 
-            if (m_lambert_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
-                m_lambert_prgm->Enable();
+                    // Phong Parameter to Shader
+                    glUniform4fv(m_phong_prgm->ParameterLocation("ambientColor"), 1,
+                        m_phong_ambientColor.Param<core::param::ColorParam>()->Value().data());
+                    glUniform4fv(m_phong_prgm->ParameterLocation("diffuseColor"), 1,
+                        m_phong_diffuseColor.Param<core::param::ColorParam>()->Value().data());
+                    glUniform4fv(m_phong_prgm->ParameterLocation("specularColor"), 1,
+                        m_phong_specularColor.Param<core::param::ColorParam>()->Value().data());
 
-                m_point_lights_buffer->bind(1);
-                glUniform1i(m_lambert_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
-                m_distant_lights_buffer->bind(2);
-                glUniform1i(m_lambert_prgm->ParameterLocation("distant_light_cnt"), static_cast<GLint>(m_distant_lights.size()));
-                glActiveTexture(GL_TEXTURE0);
-                albedo_tx2D->bindTexture();
-                glUniform1i(m_lambert_prgm->ParameterLocation("albedo_tx2D"), 0);
+                    glUniform1f(m_phong_prgm->ParameterLocation("k_amb"),
+                        m_phong_k_ambient.Param<core::param::FloatParam>()->Value());
+                    glUniform1f(m_phong_prgm->ParameterLocation("k_diff"),
+                        m_phong_k_diffuse.Param<core::param::FloatParam>()->Value());
+                    glUniform1f(m_phong_prgm->ParameterLocation("k_spec"),
+                        m_phong_k_specular.Param<core::param::FloatParam>()->Value());
+                    glUniform1f(m_phong_prgm->ParameterLocation("k_exp"),
+                        m_phong_k_exp.Param<core::param::FloatParam>()->Value());
 
-                glActiveTexture(GL_TEXTURE1);
-                normal_tx2D->bindTexture();
-                glUniform1i(m_lambert_prgm->ParameterLocation("normal_tx2D"), 1);
+                    // Cameraposition
+                    glm::vec3 camPos(snapshot.position.x(), snapshot.position.y(), snapshot.position.z());
+                    glUniform3fv(m_phong_prgm->ParameterLocation("camPos"), 1, glm::value_ptr(camPos));
 
-                glActiveTexture(GL_TEXTURE2);
-                depth_tx2D->bindTexture();
-                glUniform1i(m_lambert_prgm->ParameterLocation("depth_tx2D"), 2);
+                    m_point_lights_buffer->bind(1);
+                    glUniform1i(
+                        m_phong_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
+                    m_distant_lights_buffer->bind(2);
+                    glUniform1i(m_phong_prgm->ParameterLocation("distant_light_cnt"),
+                        static_cast<GLint>(m_distant_lights.size()));
+                    glActiveTexture(GL_TEXTURE0);
+                    albedo_tx2D->bindTexture();
+                    glUniform1i(m_phong_prgm->ParameterLocation("albedo_tx2D"), 0);
 
-                auto inv_view_mx = glm::inverse(view_mx);
-                auto inv_proj_mx = glm::inverse(proj_mx);
-                glUniformMatrix4fv(m_lambert_prgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
-                glUniformMatrix4fv(m_lambert_prgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
+                    glActiveTexture(GL_TEXTURE1);
+                    normal_tx2D->bindTexture();
+                    glUniform1i(m_phong_prgm->ParameterLocation("normal_tx2D"), 1);
 
-                m_output_texture->bindImage(0, GL_WRITE_ONLY);
+                    glActiveTexture(GL_TEXTURE2);
+                    depth_tx2D->bindTexture();
+                    glUniform1i(m_phong_prgm->ParameterLocation("depth_tx2D"), 2);
 
-                m_lambert_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
-                    static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
+                    auto inv_view_mx = glm::inverse(view_mx);
+                    auto inv_proj_mx = glm::inverse(proj_mx);
+                    glUniformMatrix4fv(
+                        m_phong_prgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
+                    glUniformMatrix4fv(
+                        m_phong_prgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
 
-                m_lambert_prgm->Disable();
-            }
-        }
-        else if (this->m_illuminationmode.Param<core::param::EnumParam>()->Value() == 1) {
-            //Blinn-Phong: std::cout << "Blinn Phong" << std::endl;
-            //ambient/diffus/specular anhand von Lichtern & keine auswahl mehr todo 
-            m_phong_ambientColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
-            m_phong_diffuseColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
-            m_phong_specularColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
-     
-            m_phong_k_ambient.Param<core::param::FloatParam>()->SetGUIVisible(true);
-            m_phong_k_diffuse.Param<core::param::FloatParam>()->SetGUIVisible(true);
-            m_phong_k_specular.Param<core::param::FloatParam>()->SetGUIVisible(true);
-            m_phong_k_exp.Param<core::param::FloatParam>()->SetGUIVisible(true);
+                    m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
-            if (m_phong_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
-                m_phong_prgm->Enable();
+                    m_phong_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+                        static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
 
-                //Phong Parameter to Shader  
-                glUniform4fv(m_phong_prgm->ParameterLocation("ambientColor"),1, m_phong_ambientColor.Param<core::param::ColorParam>()->Value().data());
-                glUniform4fv(m_phong_prgm->ParameterLocation("diffuseColor"), 1, m_phong_diffuseColor.Param<core::param::ColorParam>()->Value().data());
-                glUniform4fv(m_phong_prgm->ParameterLocation("specularColor"), 1, m_phong_specularColor.Param<core::param::ColorParam>()->Value().data());
-
-                glUniform1f(m_phong_prgm->ParameterLocation("k_amb"), m_phong_k_ambient.Param<core::param::FloatParam>()->Value());
-                glUniform1f(m_phong_prgm->ParameterLocation("k_diff"), m_phong_k_diffuse.Param<core::param::FloatParam>()->Value());
-                glUniform1f(m_phong_prgm->ParameterLocation("k_spec"), m_phong_k_specular.Param<core::param::FloatParam>()->Value());
-                glUniform1f(m_phong_prgm->ParameterLocation("k_exp"), m_phong_k_exp.Param<core::param::FloatParam>()->Value());
-                
-                //Cameraposition
-                glm::vec3 camPos(snapshot.position.x(), snapshot.position.y(), snapshot.position.z());
-                glUniform3fv(m_phong_prgm->ParameterLocation("camPos"), 1, glm::value_ptr(camPos));
-
-                m_point_lights_buffer->bind(1);
-                glUniform1i(m_phong_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
-                m_distant_lights_buffer->bind(2);
-                glUniform1i(
-                    m_phong_prgm->ParameterLocation("distant_light_cnt"), static_cast<GLint>(m_distant_lights.size()));
-                glActiveTexture(GL_TEXTURE0);
-                albedo_tx2D->bindTexture();
-                glUniform1i(m_phong_prgm->ParameterLocation("albedo_tx2D"), 0);
-
-                glActiveTexture(GL_TEXTURE1);
-                normal_tx2D->bindTexture();
-                glUniform1i(m_phong_prgm->ParameterLocation("normal_tx2D"), 1);
-
-                glActiveTexture(GL_TEXTURE2);
-                depth_tx2D->bindTexture();
-                glUniform1i(m_phong_prgm->ParameterLocation("depth_tx2D"), 2);
-
-                auto inv_view_mx = glm::inverse(view_mx);
-                auto inv_proj_mx = glm::inverse(proj_mx);
-                glUniformMatrix4fv(m_phong_prgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
-                glUniformMatrix4fv(m_phong_prgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
-
-                m_output_texture->bindImage(0, GL_WRITE_ONLY);
-
-                m_phong_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
-                    static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
-
-                m_phong_prgm->Disable();
+                    m_phong_prgm->Disable();
+                }
             }
         }
     }
