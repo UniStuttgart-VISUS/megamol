@@ -49,11 +49,12 @@ macro(cuda_compile_and_embed output_var cuda_file)
   if(${CMAKE_BUILD_TYPE} MATCHES "Release")
     cuda_compile_ptx(ptx_files
       ${cuda_file}
-      OPTIONS -O3 -DNDEBUG=1 --use_fast_math
+      OPTIONS -O3 -DNDEBUG=1 --use_fast_math -arch=compute_${CMAKE_CUDA_ARCHITECTURES}
       )
   else()
     cuda_compile_ptx(ptx_files
       ${cuda_file}
+      OPTIONS -arch=compute_${CMAKE_CUDA_ARCHITECTURES}
       )
   endif()
   list(GET ptx_files 0 ptx_file)

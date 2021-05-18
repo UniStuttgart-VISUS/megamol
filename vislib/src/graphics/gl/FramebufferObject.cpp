@@ -651,6 +651,7 @@ GLenum vislib::graphics::gl::FramebufferObject::drawTexture(
         const double depth) const {
     USES_GL_VERIFY;
 
+    ::glActiveTexture(GL_TEXTURE0);
     ::glPushAttrib(GL_TEXTURE_BIT | GL_TRANSFORM_BIT);
 
     GL_VERIFY_RETURN(::glEnable(GL_TEXTURE_2D));

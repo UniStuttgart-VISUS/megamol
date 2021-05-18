@@ -282,15 +282,8 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
 
     // Check megamol graph for available parameter:
     megamol::core::param::AbstractParam* param_ptr = nullptr;
-    const megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
-    auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
-        [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
-    if (megamolgraph_it != this->frontend_resources.end()) {
-        megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>();
-    }
-    if (megamolgraph_ptr != nullptr) {
-        param_ptr = megamolgraph_ptr->FindParameter(std::string(parameter_name.PeekBuffer()));
-    }
+    auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+    param_ptr = megamolgraph.FindParameter(std::string(parameter_name.PeekBuffer()));
     // Alternatively, check core instance graph for available parameter:
     if (param_ptr == nullptr) {
         auto core_parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
@@ -440,11 +433,10 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
-    // First call chained renderer
-    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
-    if (chainedCall != nullptr) {
-        *chainedCall = call;
-        if (!(*chainedCall)(view::AbstractCallRender::FnRender)) {
+    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
+    if (cr3d_out != nullptr) {
+        *cr3d_out = call;
+        if (!(*cr3d_out)(view::AbstractCallRender::FnRender)) {
             return false;
         }
     }

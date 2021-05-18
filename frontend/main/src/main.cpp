@@ -18,6 +18,7 @@
 #include "OpenGL_GLFW_Service.hpp"
 #include "Screenshot_Service.hpp"
 #include "ProjectLoader_Service.hpp"
+#include "ImagePresentation_Service.hpp"
 
 
 static void log(std::string const& text) {
@@ -63,8 +64,11 @@ int main(const int argc, const char** argv) {
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
     openglConfig.windowTitlePrefix = "MegaMol";
-    openglConfig.versionMajor = 4;
-    openglConfig.versionMinor = 5;
+    if (config.opengl_context_version.has_value()) {
+        openglConfig.versionMajor         = std::get<0>(config.opengl_context_version.value());
+        openglConfig.versionMinor         = std::get<1>(config.opengl_context_version.value());
+        openglConfig.glContextCoreProfile = std::get<2>(config.opengl_context_version.value());
+    }
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
     openglConfig.enableVsync = config.opengl_vsync;
     // pass window size and position
@@ -99,6 +103,7 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::Screenshot_Service screenshot_service;
     megamol::frontend::Screenshot_Service::Config screenshotConfig;
+    screenshotConfig.show_privacy_note = config.screenshot_show_privacy_note;
     screenshot_service.setPriority(30);
 
     megamol::frontend::FrameStatistics_Service framestatistics_service;
@@ -117,6 +122,9 @@ int main(const int argc, const char** argv) {
     megamol::frontend::ProjectLoader_Service::Config projectloaderConfig;
     projectloader_service.setPriority(1);
 
+    megamol::frontend::ImagePresentation_Service imagepresentation_service;
+    megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
+    imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -143,6 +151,7 @@ int main(const int argc, const char** argv) {
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);
     services.add(projectloader_service, &projectloaderConfig);
+    services.add(imagepresentation_service, &imagepresentationConfig);
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
 #endif
@@ -198,7 +207,7 @@ int main(const int argc, const char** argv) {
         {
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
 
-            graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
+            imagepresentation_service.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
         }
@@ -212,6 +221,10 @@ int main(const int argc, const char** argv) {
     const std::function<bool()> render_next_frame_func = [&]() -> bool { return render_next_frame(); };
     services.getProvidedResources().push_back({"RenderNextFrame", render_next_frame_func});
 
+    // image presentation service needs to assign frontend resources to entry points
+    auto& frontend_resources = services.getProvidedResources();
+    services.getProvidedResources().push_back({"FrontendResources",frontend_resources});
+
     // distribute registered resources among registered services.
     const bool resources_ok = services.assignRequestedResources();
     // for each service we call their resource callbacks here:
@@ -223,13 +236,17 @@ int main(const int argc, const char** argv) {
         run_megamol = false;
     }
 
-    auto frontend_resources = services.getProvidedResources();
-    graph.AddModuleDependencies(frontend_resources);
+    bool graph_resources_ok = graph.AddFrontendResources(frontend_resources);
+    if (!graph_resources_ok) {
+        log_error("Graph did not get resources he needs from frontend. Abort.");
+        run_megamol = false;
+    }
 
     // load project files via lua
+    if (graph_resources_ok)
     for (auto& file : config.project_files) {
         if (!projectloader_service.load_file(file)) {
-            log("Project file \"" + file + "\" did not execute correctly");
+            log_error("Project file \"" + file + "\" did not execute correctly");
             run_megamol = false;
 
             // if interactive, continue to run MegaMol
@@ -237,6 +254,17 @@ int main(const int argc, const char** argv) {
                 log_warning("Interactive mode: start MegaMol anyway");
                 run_megamol = true;
             }
+        }
+    }
+
+    // execute Lua commands passed via CLI
+    if (graph_resources_ok)
+    if (!config.cli_execute_lua_commands.empty()) {
+        std::string lua_result;
+        bool cli_lua_ok = lua_api.RunString(config.cli_execute_lua_commands, lua_result);
+        if (!cli_lua_ok) {
+            run_megamol = false;
+            log_error("Error in CLI Lua command: " + lua_result);
         }
     }
 

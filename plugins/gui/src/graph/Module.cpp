@@ -244,8 +244,9 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         state.interact.button_hovered_uid = this->uid;
                     }
 
-                    // Context menu
                     ImGui::PushFont(state.canvas.gui_font_ptr);
+
+                    // Context menu
                     bool popup_rename = false;
                     if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                         state.interact.button_active_uid = this->uid;
@@ -318,7 +319,6 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         }
                         ImGui::EndPopup();
                     }
-                    ImGui::PopFont();
 
                     // Hover Tooltip
                     if ((state.interact.module_hovered_uid == this->uid) && !state.interact.module_show_label) {
@@ -338,13 +338,16 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         }
                     } else {
                         std::string last_module_name = this->FullName();
-                        if (this->gui_rename_popup.PopUp("Rename Project", popup_rename, this->name)) {
+                        if (this->gui_rename_popup.Rename("Rename Project", popup_rename, this->name)) {
                             this->Update(state);
                             if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
                                 state.interact.module_rename.push_back(StrPair_t(last_module_name, this->FullName()));
                             }
                         }
                     }
+
+                    ImGui::PopFont();
+
                 } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
                     bool active = (state.interact.button_active_uid == this->uid);
@@ -413,7 +416,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     ImU32 module_bg_color =
                         (this->gui_selected) ? (COLOR_MODULE_HIGHTLIGHT) : (COLOR_MODULE_BACKGROUND);
                     draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, GUI_RECT_CORNER_RADIUS,
-                        ImDrawCornerFlags_All);
+                        ImDrawFlags_RoundCornersAll);
 
                     // Draw Text and Option Buttons
                     float text_width;
@@ -430,7 +433,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         ImVec2 header_rect_max =
                             module_rect_min + ImVec2(module_size.x, ImGui::GetTextLineHeightWithSpacing());
                         draw_list->AddRectFilled(module_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
-                            (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
+                            (ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight));
 
                         text_width = ImGui::CalcTextSize(this->class_name.c_str()).x;
                         text_pos_left_upper = ImVec2(
@@ -488,7 +491,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
 
                         // Param Button
                         if (parameter_button) {
-                            ImVec2 param_button_pos = ImGui::GetCursorScreenPos();
+                            ImVec2 param_popup_pos = ImGui::GetCursorScreenPos();
                             if (this->gui_selected) {
                                 this->gui_param_child_show = ((state.interact.module_param_child_position.x > 0.0f) &&
                                                               (state.interact.module_param_child_position.y > 0.0f));
@@ -500,7 +503,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                                 hovered) {
                                 this->gui_param_child_show = !this->gui_param_child_show;
                                 if (this->gui_param_child_show) {
-                                    state.interact.module_param_child_position = param_button_pos;
+                                    state.interact.module_param_child_position = param_popup_pos;
+                                    state.interact.module_param_child_position.x += ImGui::GetFrameHeight();
                                 } else {
                                     state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
                                 }
@@ -516,7 +520,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     float border = ((!this->graph_entry_name.empty()) ? (4.0f) : (1.0f)) *
                                    megamol::gui::gui_scaling.Get() * state.canvas.zooming;
                     draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
-                        ImDrawCornerFlags_All, border);
+                        ImDrawFlags_RoundCornersAll, border);
                 }
             }
 
@@ -598,5 +602,23 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
         for (auto& slot : slot_pair.second) {
             slot->Update(state);
         }
+    }
+}
+
+
+void megamol::gui::Module::SetName(const std::string& mod_name) {
+
+    this->name = mod_name;
+    for (auto& p : this->parameters) {
+        p.SetParentModuleName(this->FullName());
+    }
+}
+
+
+void megamol::gui::Module::SetGroupName(const std::string& gr_name) {
+
+    this->group_name = gr_name;
+    for (auto& p : this->parameters) {
+        p.SetParentModuleName(this->FullName());
     }
 }

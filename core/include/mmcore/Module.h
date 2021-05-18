@@ -17,6 +17,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 
 #include "FrontendResource.h"
+#include "FrontendResourcesMap.h"
 
 
 namespace megamol {
@@ -219,8 +220,8 @@ private:
     friend class ::megamol::core::AbstractNamedObjectContainer;
 
 protected:
-    /* requested frontend resources are provided in order of the initial request */
-    std::vector<megamol::frontend::FrontendResource> frontend_resources;
+    // usage: auto const& resource = frontend_resources.get<ResourceType>()
+    megamol::frontend_resources::FrontendResourcesMap frontend_resources;
 };
 
 

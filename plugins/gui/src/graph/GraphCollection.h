@@ -14,7 +14,7 @@
 #include "Graph.h"
 
 #include "widgets/FileBrowserWidget.h"
-#include "widgets/MinimalPopUp.h"
+#include "widgets/PopUps.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -53,12 +53,13 @@ namespace gui {
 
         bool AddEmptyProject(void);
 
-        ImGuiID AddGraph(GraphCoreInterface graph_core_interface);
+        ImGuiID AddGraph(void);
         bool DeleteGraph(ImGuiID in_graph_uid);
         GraphPtr_t GetGraph(ImGuiID in_graph_uid);
         const GraphPtrVector_t& GetGraphs(void) {
             return this->graphs;
         }
+        GraphPtr_t GetRunningGraph(void);
 
         bool LoadModuleStock(const megamol::core::CoreInstance* core_instance);
         bool LoadCallStock(const megamol::core::CoreInstance* core_instance);
@@ -88,7 +89,7 @@ namespace gui {
          * @return                 True on success, false otherwise.
          */
         bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
-            megamol::core::MegaMolGraph* megamol_graph, bool sync);
+            megamol::core::MegaMolGraph* megamol_graph);
 
         ImGuiID LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 
@@ -96,6 +97,10 @@ namespace gui {
             ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json);
 
         void Draw(GraphState_t& state);
+
+        void RequestNewRunningGraph(ImGuiID graph_uid) {
+            this->change_running_graph(graph_uid);
+        }
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -135,14 +140,11 @@ namespace gui {
         std::vector<size_t> get_compatible_callee_idxs(const megamol::core::CalleeSlot* callee_slot);
         std::vector<size_t> get_compatible_caller_idxs(const megamol::core::CallerSlot* caller_slot);
 
-        bool case_insensitive_str_comp(std::string const& str1, std::string const& str2) {
-            return ((str1.size() == str2.size()) &&
-                    std::equal(str1.begin(), str1.end(), str2.begin(), [](char const& c1, char const& c2) {
-                        return (c1 == c2 || std::toupper(c1) == std::toupper(c2));
-                    }));
-        }
-
         bool load_state_from_file(const std::string& filename, ImGuiID graph_id);
+
+        bool save_graph_dialog(ImGuiID graph_uid, bool open_dialog);
+
+        bool change_running_graph(ImGuiID graph_uid);
     };
 
 
