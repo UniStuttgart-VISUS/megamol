@@ -265,7 +265,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE imgui)
 ```
 **3)** Before calling any ImGui function check for active ImGui context and valid scope:
 ```c++
-VALID_IMGUI_SCOPE
+bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
+if (!valid_imgui_scope) return;
 ```
 **4)** Then call your own ImGui stuff... See [https://github.com/ocornut/imgui](https://github.com/ocornut/imgui)
 
