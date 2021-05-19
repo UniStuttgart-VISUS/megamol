@@ -232,7 +232,7 @@ namespace gui {
          * @param window_name   The unique window name
          * @param callback      The window callback function containing the GUI content of the window
          */
-        void RegisterGUIWindow(const std::string& window_name, std::function<void(WindowCollection::WindowConfiguration&)> const& callback);
+        void RegisterWindow(const std::string& window_name, std::function<void(WindowConfiguration::Basic&)> const& callback);
 
         /**
          * Synchronise changes between core graph <-> gui graph.
@@ -354,16 +354,16 @@ namespace gui {
 
         void load_default_fonts(void);
 
-        void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);
-        void drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc);
-        void drawTransferFunctionWindowCallback(WindowCollection::WindowConfiguration& wc);
-        void drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc);
+        void drawParamWindowCallback(WindowConfiguration& wc);
+        void drawFpsWindowCallback(WindowConfiguration& wc);
+        void drawTransferFunctionWindowCallback(WindowConfiguration& wc);
+        void drawConfiguratorWindowCallback(WindowConfiguration& wc);
 
         void drawMenu(void);
         void drawPopUps(void);
 
         // Only call after ImGui::Begin() and before next ImGui::End()
-        void window_sizing_and_positioning(WindowCollection::WindowConfiguration& wc, bool& out_collapsing_changed);
+        void window_sizing_and_positioning(WindowConfiguration& wc, bool& out_collapsing_changed);
 
         bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
         void checkMultipleHotkeyAssignment(void);
@@ -382,11 +382,11 @@ namespace gui {
 
         void init_state(void);
 
-        void update_frame_statistics(WindowCollection::WindowConfiguration& wc);
+        void update_frame_statistics(WindowConfiguration& wc);
 
         bool create_not_existing_png_filepath(std::string& inout_filepath);
 
-        std::string full_window_title(WindowCollection::WindowConfiguration& wc) const;
+        std::string full_window_title(WindowConfiguration& wc) const;
     };
 
 } // namespace gui

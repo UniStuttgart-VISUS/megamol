@@ -49,7 +49,7 @@ namespace gui {
         /**
          * Draw configurator window.
          */
-        bool Draw(WindowCollection::WindowConfiguration& wc);
+        bool Draw(WindowConfiguration& wc);
 
         /**
          * Returns required font scalings for graph canvas

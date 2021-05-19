@@ -22,7 +22,7 @@
 namespace megamol {
 namespace frontend {
 
-#define is_gui_nullptr (static_cast<bool>((this->m_gui == nullptr) || (this->m_gui->Get() == nullptr)))
+#define VALIDATE_GUI_PTR(RETVAL)  if (static_cast<bool>((this->m_gui == nullptr) || (this->m_gui->Get() == nullptr))) return RETVAL; auto gui = this->m_gui->Get();
 
 bool GUI_Service::init(void* configPtr) {
 
@@ -54,36 +54,41 @@ bool GUI_Service::init(const Config& config) {
         "ProjectLoader",                         // 8 - trigger loading of new running project
         "FrameStatistics",                       // 9 - current fps and ms value
         "RuntimeConfig",                         // 10 - resource paths
-        "WindowManipulation",                    // 11 - GLFW window pointer
-        "ScreenshotGUIRenderRequest"             // 12 - gui render request from screenshot service
+        "WindowManipulation"                     // 11 - GLFW window pointer
     };
 
     // init gui
     if (config.imgui_api == GUI_Service::ImGuiAPI::OPEN_GL) { 
         if (this->m_gui == nullptr) {
             this->m_gui = std::make_shared<megamol::gui::GUIWrapper>();
-            if (!is_gui_nullptr) {
+            if (this->m_gui != nullptr) {
                 auto gui = this->m_gui->Get();
 
                 // Create context
                 if (gui->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL, config.core_instance)) {
 
-                    // Set function pointer in resource once
-                    this->m_providedResource.request_gui_state = [&](bool as_lua) -> std::string {return this->resource_request_gui_state(as_lua);};
-                    this->m_providedResource.provide_gui_state = [&](const std::string& json_state) -> void {
+                    // Set function pointer in state resource once
+                    this->m_providedStateResource.request_gui_state = [&](bool as_lua) -> std::string {return this->resource_request_gui_state(as_lua);};
+                    this->m_providedStateResource.provide_gui_state = [&](const std::string& json_state) -> void {
                         return this->resource_provide_gui_state(json_state);
                     };
-                    this->m_providedResource.request_gui_visibility = [&]() -> bool {return this->resource_request_gui_visibility();};
-                    this->m_providedResource.provide_gui_visibility = [&](bool show) -> void {
+                    this->m_providedStateResource.request_gui_visibility = [&]() -> bool {return this->resource_request_gui_visibility();};
+                    this->m_providedStateResource.provide_gui_visibility = [&](bool show) -> void {
                         return this->resource_provide_gui_visibility(show);
                     };
-                    this->m_providedResource.request_gui_scale = [&]() -> float {return this->resource_request_gui_scale();};
-                    this->m_providedResource.provide_gui_scale = [&](float scale) -> void {
+                    this->m_providedStateResource.request_gui_scale = [&]() -> float {return this->resource_request_gui_scale();};
+                    this->m_providedStateResource.provide_gui_scale = [&](float scale) -> void {
                         return this->resource_provide_gui_scale(scale);
                     };
+                    this->resource_provide_gui_visibility(config.gui_show);
+                    this->resource_provide_gui_scale(config.gui_scale);
 
-                    resource_provide_gui_visibility(config.gui_show);
-                    resource_provide_gui_scale(config.gui_scale);
+                    this->m_providedWindowRequestResource.register_window = [&](const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func) -> void {
+                        this->resource_register_window(name, func);
+                    };
+
+                    gui->SetVisibility(config.gui_show);
+                    gui->SetScale(config.gui_scale);
 
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
@@ -109,8 +114,7 @@ void GUI_Service::updateProvidedResources() {
 
 void GUI_Service::digestChangedRequestedResources() {
 
-    if (is_gui_nullptr) return;
-    auto gui = this->m_gui->Get();
+    VALIDATE_GUI_PTR()
 
     // Trigger shutdown
     this->setShutdown(gui->GetTriggeredShutdown());
@@ -240,17 +244,6 @@ void GUI_Service::digestChangedRequestedResources() {
     /// Get window manipulation resource = resource index 11
     auto& window_manipulation = this->m_requestedResourceReferences[11].getResource<megamol::frontend_resources::WindowManipulation>();
     window_manipulation.set_mouse_cursor(gui->GetMouseCursor());
-
-    // Register GUI windows only once
-    if (this->register_gui_callbacks_once) {
-
-        auto &screenshot_gui_render_request = this->m_requestedResourceReferences[12].getResource<megamol::frontend_resources::GUIRenderRequest>();
-        gui->RegisterGUIWindow(screenshot_gui_render_request.window_name, screenshot_gui_render_request.callback);
-
-        /// Add more ...
-
-        this->register_gui_callbacks_once = false;
-    }
 }
 
 
@@ -261,31 +254,28 @@ void GUI_Service::resetProvidedResources() {
 
 void GUI_Service::preGraphRender() {
 
-    if (is_gui_nullptr) return;
-    auto gui = this->m_gui->Get();
-
+    VALIDATE_GUI_PTR()
     if (this->m_megamol_graph != nullptr) {
         // Requires enabled OpenGL context, e.g. for textures used in parameters
         gui->SynchronizeGraphs(this->m_megamol_graph);
     }
-
     gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
 }
 
 
 void GUI_Service::postGraphRender() {
 
-    if (is_gui_nullptr) return;
-
-    auto gui = this->m_gui->Get();
-
+    VALIDATE_GUI_PTR()
     gui->PostDraw();
 }
 
 
 std::vector<FrontendResource>& GUI_Service::getProvidedResources() {
 
-    this->m_providedResourceReferences = {{"GUIResource", this->m_providedResource}};
+    this->m_providedResourceReferences = {
+        {"GUIState", this->m_providedStateResource},
+        {"GUIWindowRequest", this->m_providedWindowRequestResource},
+    };
     return this->m_providedResourceReferences;
 }
 
@@ -302,52 +292,56 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 }
 
 
+
+
 std::string GUI_Service::resource_request_gui_state(bool as_lua) {
 
-    if (is_gui_nullptr) return std::string();
-    auto gui = this->m_gui->Get();
+    VALIDATE_GUI_PTR("")
     return gui->GetState(as_lua);
 }
 
 
 bool GUI_Service::resource_request_gui_visibility() {
 
-    if (is_gui_nullptr) return false;
-    auto gui = this->m_gui->Get();
+    VALIDATE_GUI_PTR(false)
     return gui->GetVisibility();
 }
 
 
 float GUI_Service::resource_request_gui_scale() {
 
-    if (is_gui_nullptr) return 1.0f;
-    auto gui = this->m_gui->Get();
+    VALIDATE_GUI_PTR(1.0f)
     return gui->GetScale();
 }
 
 
 void GUI_Service::resource_provide_gui_state(const std::string& json_state) {
 
-    if (is_gui_nullptr) return;
-    auto gui = this->m_gui->Get();
+    VALIDATE_GUI_PTR()
     gui->SetState(json_state);
 }
 
 
 void GUI_Service::resource_provide_gui_visibility(bool show) {
 
-    if (is_gui_nullptr) return;
-    auto gui = this->m_gui->Get();
+    VALIDATE_GUI_PTR()
     gui->SetVisibility(show);
 }
 
 
 void GUI_Service::resource_provide_gui_scale(float scale) {
 
-    if (is_gui_nullptr) return;
-    auto gui = this->m_gui->Get();
+    VALIDATE_GUI_PTR()
     gui->SetScale(scale);
 }
+
+
+void GUI_Service::resource_register_window(const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func) {
+
+    VALIDATE_GUI_PTR()
+    gui->RegisterWindow(name, func);
+}
+
 
 } // namespace frontend
 } // namespace megamol

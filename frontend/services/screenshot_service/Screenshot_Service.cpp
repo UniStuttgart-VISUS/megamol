@@ -19,10 +19,6 @@
 
 #include "mmcore/utility/log/Log.h"
 
-/// XXX TEMP
-#include "imgui.h"
-#include "imgui_internal.h"
-
 
 static const std::string service_name = "Screenshot_Service: ";
 static void log(std::string const& text) {
@@ -192,23 +188,33 @@ bool Screenshot_Service::init(const Config& config) {
     {
         "IOpenGL_Context",
         "MegaMolGraph",
-        "GUIResource",
-        "RuntimeConfig"
+        "GUIState",
+        "RuntimeConfig",
+        "GUIWindowRequest"
     };
 
-    this->m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
+    m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
     {
         log("write screenshot to " + filename);
         return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
     };
 
-    /// XXX TEMP
-    this->m_guiRenderRequest_resource.window_name = "Screenshot Message";
-    this->m_guiRenderRequest_resource.callback = [&](gui::WindowCollection::WindowConfiguration& wc) -> void {
-        this->guiRenderCallback(wc);
-    };
-
     screenshot_show_privacy_note = config.show_privacy_note;
+
+    /// XXX TEMP
+    m_render_gui_window_func = [&](megamol::gui::WindowConfiguration::Basic& win_config) {
+        VALID_IMGUI_SCOPE
+
+        if (m_setup_window_once) {
+            win_config.flags = ImGuiWindowFlags_None;
+            win_config.size = ImVec2(300.0f, 300.0f);
+            win_config.reset_pos_size = true;
+
+            m_setup_window_once = false;
+        }
+
+        ImGui::TextUnformatted("Hello World ...");
+    };
 
     log("initialized successfully");
     return true;
@@ -225,9 +231,7 @@ std::vector<FrontendResource>& Screenshot_Service::getProvidedResources() {
     {
         {"GLScreenshotSource", m_frontbufferSource_resource},
         {"ImageDataToPNGWriter", m_toFileWriter_resource},
-        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger},
-        /// XXX TEMP
-        {"ScreenshotGUIRenderRequest", m_guiRenderRequest_resource}
+        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger}
     };
 
     return m_providedResourceReferences;
@@ -240,6 +244,13 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
     guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(&resources[2].getResource<megamol::frontend_resources::GUIState>());
+
+    /// XXX TEMP
+    if (m_register_window_once) {
+        auto& gui_window_request_resource = resources[4].getResource<megamol::frontend_resources::GUIWindowRequest>();
+        gui_window_request_resource.register_window("Screenshot Test", m_render_gui_window_func);
+        m_register_window_once = false;
+    }
 }
 
 void Screenshot_Service::updateProvidedResources() {
@@ -274,25 +285,6 @@ void Screenshot_Service::postGraphRender() {
     // update window name
     // swap buffers, glClear
 }
-
-/// XXX TEMP
-bool Screenshot_Service::guiRenderCallback(WinConfig_t& wc) {
-    bool valid_imgui_scope =
-            ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
-    if (valid_imgui_scope) {
-        if (m_guiWindowSetup) {
-            wc.win_flags = ImGuiWindowFlags_None;
-            wc.win_size = ImVec2(300.0f, 300.0f);
-            wc.buf_set_pos_size = true;
-
-            m_guiWindowSetup = false;
-        }
-
-        ImGui::TextUnformatted("Hello World ...");
-
-    }
-}
-
 
 } // namespace frontend
 } // namespace megamol

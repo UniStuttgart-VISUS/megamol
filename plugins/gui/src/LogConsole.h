@@ -54,9 +54,9 @@ namespace gui {
         LogConsole();
         ~LogConsole();
 
-        void Update(WindowCollection::WindowConfiguration& wc);
+        void Update(WindowConfiguration& wc);
 
-        bool Draw(WindowCollection::WindowConfiguration& wc);
+        bool Draw(WindowConfiguration& wc);
 
         void PopUps(void);
 

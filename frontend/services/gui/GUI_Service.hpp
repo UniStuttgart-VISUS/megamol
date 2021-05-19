@@ -15,7 +15,7 @@
 #include "gui-wrapper.h"
 
 #include "IOpenGL_Context.h"
-#include "GUIRenderRequest.h"
+#include "GUIWindowRequest.h"
 #include "GUIState.h"
 
 #include "mmcore/CoreInstance.h"
@@ -84,7 +84,9 @@ private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<FrontendResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
-    megamol::frontend_resources::GUIState m_providedResource;
+
+    megamol::frontend_resources::GUIState m_providedStateResource;
+    megamol::frontend_resources::GUIWindowRequest m_providedWindowRequestResource;
 
     std::string resource_request_gui_state(bool as_lua);
     bool resource_request_gui_visibility(void);
@@ -93,7 +95,7 @@ private:
     void resource_provide_gui_visibility(bool show);
     void resource_provide_gui_scale(float scale);
 
-    bool register_gui_callbacks_once = true;
+    void resource_register_window(const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func);
 };
 
 } // namespace frontend

@@ -82,25 +82,25 @@ LogConsole::~LogConsole() {
 }
 
 
-void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc) {
+void megamol::gui::LogConsole::Update(WindowConfiguration& wc) {
 
     this->window_title = wc.Name();
 
     auto new_log_msg_count = this->echo_log_buffer.log().size();
     if (new_log_msg_count > this->log_msg_count) {
         // Scroll down if new message came in
-        this->scroll_down = 2;
+        this->scroll_down = 3;
 
         for (size_t i = this->log_msg_count; i < new_log_msg_count; i++) {
             auto entry = this->echo_log_buffer.log()[i];
 
             // Bring log console to front on new warnings and errors
-            if (wc.log_force_open) {
+            if (wc.config.specific.log_force_open) {
                 if (entry.level < megamol::core::utility::log::Log::LEVEL_INFO) {
-                    if (wc.log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
-                        wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                    if (wc.config.specific.log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
+                        wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
                     }
-                    wc.win_show = true;
+                    wc.config.basic.show = true;
                 }
             }
 
@@ -137,50 +137,50 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
 }
 
 
-bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
+bool megamol::gui::LogConsole::Draw(WindowConfiguration& wc) {
 
     // Scroll down if window height changes
     if (this->last_window_height != ImGui::GetWindowHeight()) {
         this->last_window_height = ImGui::GetWindowHeight();
-        this->scroll_down = 2;
+        this->scroll_down = 3;
     }
 
     // Menu -------------------------------------------------------------------
     if (ImGui::BeginMenuBar()) {
 
         // Force Open on Warnings and Errors
-        ImGui::Checkbox("Force Open", &wc.log_force_open);
+        ImGui::Checkbox("Force Open", &wc.config.specific.log_force_open);
         this->tooltip.Marker("Force open log console window on warnings and errors.");
         ImGui::Separator();
 
         // Log Level
         ImGui::TextUnformatted("Show");
         ImGui::SameLine();
-        if (ImGui::RadioButton("Errors", (wc.log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
-            if (wc.log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
-                wc.log_level = megamol::core::utility::log::Log::LEVEL_NONE;
+        if (ImGui::RadioButton("Errors", (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
+            if (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
+                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_NONE;
             } else {
-                wc.log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
+                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
             }
-            this->scroll_down = 2;
+            this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Warnings", (wc.log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
-            if (wc.log_level >= megamol::core::utility::log::Log::LEVEL_WARN) {
-                wc.log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
+        if (ImGui::RadioButton("Warnings", (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
+            if (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_WARN) {
+                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
             } else {
-                wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             }
-            this->scroll_down = 2;
+            this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Infos", (wc.log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
-            if (wc.log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
-                wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+        if (ImGui::RadioButton("Infos", (wc.config.specific.log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
+            if (wc.config.specific.log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
+                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             } else {
-                wc.log_level = megamol::core::utility::log::Log::LEVEL_ALL;
+                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_ALL;
             }
-            this->scroll_down = 2;
+            this->scroll_down = 3;
         }
 
         // Scrolling
@@ -195,25 +195,26 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
         this->tooltip.ToolTip("Scroll to first log entry.");
         ImGui::SameLine();
         if (ImGui::ArrowButton("scroll_down", ImGuiDir_Down)) {
-            this->scroll_down = 2;
+            this->scroll_down = 3;
         }
         this->tooltip.ToolTip("Scroll to last log entry.");
 
         ImGui::EndMenuBar();
     }
-    // Scroll - Requires 2 frames for being applied!
+
+    // Print messages ---------------------------------------------------------
+    for (auto& entry : this->echo_log_buffer.log()) {
+        this->print_message(entry, wc.config.specific.log_level);
+    }
+
+    // Scroll - Requires 3 frames for being applied!
     if (this->scroll_down > 0) {
         ImGui::SetScrollY(ImGui::GetScrollMaxY());
         this->scroll_down--;
     }
     if (this->scroll_up > 0) {
-        ImGui::SetScrollY(0);
+        ImGui::SetScrollY(0.0f);
         this->scroll_up--;
-    }
-
-    // Print messages ---------------------------------------------------------
-    for (auto& entry : this->echo_log_buffer.log()) {
-        this->print_message(entry, wc.log_level);
     }
 
     return true;
