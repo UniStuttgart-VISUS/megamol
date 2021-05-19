@@ -3,5 +3,5 @@
 # All rights reserved.
 #
 
-megamol_plugin(mmstd_moldyn
-  BUILD_DEFAULT ON)
+megamol_plugin(megamol101
+  BUILD_DEFAULT OFF)
