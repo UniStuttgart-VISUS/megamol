@@ -286,7 +286,6 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
         }
 
         BaseProbe new_probe;
-        new_probe.m_begin = 0;
         glm::vec3 start = glm::vec3(0);
         for (auto spoint : elements[0][j].points()) {
             start.x += spoint.x();
@@ -309,6 +308,7 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
         new_probe.m_direction = {dir.x, dir.y, dir.z};
         new_probe.m_end = glm::length(end - start);
         new_probe.m_geo_ids = geom_ids;
+        new_probe.m_begin = -0.2 * new_probe.m_end;
 
         _probes->addProbe(new_probe);
     }
