@@ -139,6 +139,22 @@ namespace probe_gl {
             GLuint64 tf_texture_handle;
         };
 
+        struct GlyphScalarDistributionProbeData {
+            glm::vec4 position;
+            glm::vec4 probe_direction;
+            float scale;
+
+            int probe_id;
+            int state;
+
+            float sample_cnt;
+            std::array<float,4> samples[32];
+
+            GLuint64 tf_texture_handle;
+            float tf_min;
+            float tf_max;
+        };
+
         struct GlyphClusterIDData {
             glm::vec4 position;
             glm::vec4 probe_direction;
@@ -162,16 +178,19 @@ namespace probe_gl {
         std::vector<std::string> m_textured_glyph_identifiers;
         std::vector<std::string> m_vector_probe_glyph_identifiers;
         std::vector<std::string> m_scalar_probe_glyph_identifiers;
+        std::vector<std::string> m_scalar_distribution_probe_glyph_identifiers;
         std::vector<std::string> m_clusterID_glyph_identifiers;
 
         std::vector<TexturedGlyphData> m_textured_glyph_data;
         std::vector<GlyphVectorProbeData> m_vector_probe_glyph_data;
         std::vector<GlyphScalarProbeData> m_scalar_probe_glyph_data;
+        std::vector<GlyphScalarDistributionProbeData> m_scalar_distribution_probe_glyph_data;
         std::vector<GlyphClusterIDData> m_clusterID_glyph_data;
 
         std::vector<glowl::DrawElementsCommand> m_textured_gylph_draw_commands;
         std::vector<glowl::DrawElementsCommand> m_vector_probe_gylph_draw_commands;
         std::vector<glowl::DrawElementsCommand> m_scalar_probe_gylph_draw_commands;
+        std::vector<glowl::DrawElementsCommand> m_scalar_distribution_probe_gylph_draw_commands;
         std::vector<glowl::DrawElementsCommand> m_clusterID_gylph_draw_commands;
 
         bool addAllRenderTasks();
@@ -186,9 +205,14 @@ namespace probe_gl {
 
         GlyphScalarProbeData createScalarProbeGlyphData(probe::FloatProbe const& probe, int probe_id, float scale);
 
+        GlyphScalarDistributionProbeData createScalarDistributionProbeGlyphData(
+            probe::FloatDistributionProbe const& probe, int probe_id, float scale);
+
         GlyphVectorProbeData createVectorProbeGlyphData(probe::Vec4Probe const& probe, int probe_id, float scale);
 
         GlyphClusterIDData createClusterIDGlyphData(probe::BaseProbe const& probe, int probe_id, float scale);
+
+        
     };
 
     template<typename ProbeType>
