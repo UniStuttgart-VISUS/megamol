@@ -97,35 +97,43 @@ void main() {
 
         bool interpolate = bool(per_frame_data[0].use_interpolation);
         
-        float sample_value_normalized = 0.0;
+        float sample_mean_value_normalized = 0.0;
+        float sample_lower_value_normalized = 0.0;
+        float sample_upper_value_normalized = 0.0;
 
-        if(interpolate)
-        {
-            float sample_value = mix(sample_0,sample_1,lerp);
-            sample_value_normalized = (sample_value - min_value) / (value_range);
-            //out_colour = fakeViridis(sample_value_normalized);
-            //out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
-			//if( radius > sample_value_normalized && radius < border_circle_width ) discard;
-        }
-        else
+        //if(interpolate)
+        //{
+        //    float sample_value = mix(sample_0,sample_1,lerp);
+        //    sample_value_normalized = (sample_value - min_value) / (value_range);
+        //    //out_colour = fakeViridis(sample_value_normalized);
+        //    //out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
+		//	//if( radius > sample_value_normalized && radius < border_circle_width ) discard;
+        //}
+        //else
         {
 			int sample_idx = int(round(angle_shifted * sample_cnt));
-			float sample_value = mesh_shader_params[draw_id].samples[sample_idx].x;
-            sample_value_normalized = (sample_value - min_value) / (value_range);
+			float sample_mean_value = mesh_shader_params[draw_id].samples[sample_idx].x;
+            float sample_lower_value = mesh_shader_params[draw_id].samples[sample_idx].y;
+            float sample_upper_value = mesh_shader_params[draw_id].samples[sample_idx].z;
+            sample_mean_value_normalized = (sample_mean_value - min_value) / (value_range);
+            sample_lower_value_normalized = (sample_lower_value - min_value) / (value_range);
+            sample_upper_value_normalized = (sample_upper_value - min_value) / (value_range);
             //out_colour = fakeViridis(sample_value_normalized);
             //out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 			//if( radius > sample_value_normalized && radius < border_circle_width ) discard;
         }
 
-        out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
+        out_colour = texture(tf_tx, vec2(sample_mean_value_normalized, 1.0) ).rgb;
 
-        if( sample_value_normalized >= zero_value_radius && radius < (1.0 - border_circle_width)){
-            if( radius < (zero_value_radius) || radius > sample_value_normalized ) discard;
+        if( (radius > sample_upper_value_normalized || radius < sample_lower_value_normalized) && radius < (1.0 - border_circle_width) ){
+            if( abs(radius - zero_value_radius) > 0.005 && abs(radius - sample_mean_value_normalized) > 0.02 ){
+                discard;
+            } 
         }
-        else if(sample_value_normalized < zero_value_radius && radius < (1.0 - border_circle_width)){
-            if( radius > (zero_value_radius) || radius < sample_value_normalized ) discard;
+        
+        if( (radius < sample_upper_value_normalized) && (radius > sample_lower_value_normalized) && radius < (1.0 - border_circle_width) ){
+            if(abs(radius - sample_mean_value_normalized) > 0.02) out_colour = vec3(0.3);
         }
-
     }
 
     if(abs(radius - zero_value_radius) < 0.005) out_colour = vec3(1.0);

@@ -109,7 +109,7 @@ private:
     std::shared_ptr<SamplingResult> m_result;
 };
 
-using GenericProbe = std::variant<FloatProbe, IntProbe, Vec4Probe, BaseProbe>;
+using GenericProbe = std::variant<FloatProbe, IntProbe, Vec4Probe, BaseProbe, FloatDistributionProbe>;
 using GenericMinMax = std::variant<float , int, std::vector<std::array<float,4>>>;
 
 class ProbeCollection {
