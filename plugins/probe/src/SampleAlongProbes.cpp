@@ -74,6 +74,7 @@ SampleAlongPobes::SampleAlongPobes()
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "Tetrahedral");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "Nearest");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(5, "TetrahedralVector");
+    this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(6, "ScalarDistribution");
     this->_sampling_mode.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_sampling_mode);
 
@@ -279,7 +280,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
         toInq.clear();
         if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0 ||
             _sampling_mode.Param<core::param::EnumParam>()->Value() == 3 ||
-            _sampling_mode.Param<core::param::EnumParam>()->Value() == 4) {
+            _sampling_mode.Param<core::param::EnumParam>()->Value() == 4 ||
+            _sampling_mode.Param<core::param::EnumParam>()->Value() == 6) {
             toInq.emplace_back(
                 std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString()));
         } else {
@@ -344,7 +346,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
 
         if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0 ||
             _sampling_mode.Param<core::param::EnumParam>()->Value() == 3 ||
-            _sampling_mode.Param<core::param::EnumParam>()->Value() == 4) {
+            _sampling_mode.Param<core::param::EnumParam>()->Value() == 4 ||
+            _sampling_mode.Param<core::param::EnumParam>()->Value() == 6) {
             if (cd == nullptr || ct == nullptr) {
                 core::utility::log::Log::DefaultLog.WriteError(
                     "[SampleAlongProbes] Scalar mode selected but no particle data connected.");
@@ -358,6 +361,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
                     doScalarSampling(tree, data);
                 } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 3) {
                     doTetrahedralSampling(tree, data);
+                } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 6) {
+                    doScalarDistributionSampling(tree, data);
                 } else {
                     doNearestNeighborSampling(tree, data);
                 }
@@ -368,6 +373,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
                     doScalarSampling(tree, data);
                 } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 3) {
                     doTetrahedralSampling(tree, data);
+                } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 6) {
+                    doScalarDistributionSampling(tree, data);
                 } else {
                     doNearestNeighborSampling(tree, data);
                 }

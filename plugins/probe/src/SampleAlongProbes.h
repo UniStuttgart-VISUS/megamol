@@ -90,6 +90,9 @@ private:
     template <typename T>
     void doScalarSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
 
+    template<typename T>
+    void doScalarDistributionSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
+
     void doVolumeSampling();
 
     template <typename T>
@@ -192,7 +195,6 @@ void SampleAlongPobes::doScalarSampling(
                 num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
             }
 
-
             // accumulate values
             float value = 0;
             for (int n = 0; n < num_neighbors; n++) {
@@ -225,6 +227,102 @@ void SampleAlongPobes::doScalarSampling(
         global_max = std::max(global_max, samples->max_value);
     } // end for probes
     _probes->setGlobalMinMax(global_min, global_max);
+}
+
+template<typename T>
+inline void SampleAlongPobes::doScalarDistributionSampling(
+    const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
+
+    const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
+    const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
+
+    float global_min = std::numeric_limits<float>::max();
+    float global_max = -std::numeric_limits<float>::max();
+    //#pragma omp parallel for
+    for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
+
+        FloatDistributionProbe probe;
+
+        auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::FloatProbe> ||
+                          std::is_same_v<T, probe::Vec4Probe>) {
+
+                probe.m_timestamp = arg.m_timestamp;
+                probe.m_value_name = arg.m_value_name;
+                probe.m_position = arg.m_position;
+                probe.m_direction = arg.m_direction;
+                probe.m_begin = arg.m_begin;
+                probe.m_end = arg.m_end;
+                probe.m_cluster_id = arg.m_cluster_id;
+
+                auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+                auto radius = 0.5 * sample_step * sample_radius_factor;
+                probe.m_sample_radius = radius;
+
+                _probes->setProbe(i, probe);
+
+            } else if constexpr (std::is_same_v<T, probe::FloatDistributionProbe>) {
+                probe = arg;
+
+            } else {
+                // unknown/incompatible probe type, throw error? do nothing?
+            }
+        };
+
+        auto generic_probe = _probes->getGenericProbe(i);
+        std::visit(visitor, generic_probe);
+
+        auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+        auto radius = 0.5 * sample_step * sample_radius_factor;
+
+        std::shared_ptr<FloatDistributionProbe::SamplingResult> samples = probe.getSamplingResult();
+
+        float min_value = std::numeric_limits<float>::max();
+        float max_value = std::numeric_limits<float>::min();
+        float avg_value = 0.0f;
+        samples->samples.resize(samples_per_probe);
+
+        for (int j = 0; j < samples_per_probe; j++) {
+
+            pcl::PointXYZ sample_point;
+            sample_point.x = probe.m_position[0] + j * sample_step * probe.m_direction[0];
+            sample_point.y = probe.m_position[1] + j * sample_step * probe.m_direction[1];
+            sample_point.z = probe.m_position[2] + j * sample_step * probe.m_direction[2];
+
+            std::vector<uint32_t> k_indices;
+            std::vector<float> k_distances;
+
+            auto num_neighbors = tree->radiusSearch(sample_point, radius, k_indices, k_distances);
+            if (num_neighbors == 0) {
+                num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
+            }
+
+            // accumulate values
+            float value = 0.0f;
+            float min_data = std::numeric_limits<float>::max();
+            float max_data = std::numeric_limits<float>::min();
+            for (int n = 0; n < num_neighbors; n++) {
+                value += data[k_indices[n]];
+                min_data = std::min(min_data, static_cast<float>(data[k_indices[n]]));
+                max_data = std::max(max_data, static_cast<float>(data[k_indices[n]]));
+            } // end num_neighbors
+            value /= num_neighbors;
+
+            samples->samples[j].mean = value;
+            samples->samples[j].lower_bound = min_data;
+            samples->samples[j].upper_bound = max_data;
+
+            min_value = std::min(min_value, value);
+            max_value = std::max(max_value, value);
+            avg_value += value;
+        } // end num samples per probe
+
+        global_min = std::min(global_min, samples->min_value);
+        global_max = std::max(global_max, samples->max_value);
+    } // end for probes
+    _probes->setGlobalMinMax(global_min, global_max);
+
 }
 
 template <typename T>
