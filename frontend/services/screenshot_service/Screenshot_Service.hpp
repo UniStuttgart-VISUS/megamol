@@ -12,6 +12,7 @@
 // ImageData struct and interfaces for screenshot sources/writers
 #include "Screenshots.h"
 
+/// XXX TEMP
 #include "GUIWindowRequest.h"
 
 namespace megamol {
