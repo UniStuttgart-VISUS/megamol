@@ -28,7 +28,6 @@ namespace gui {
     class WindowConfiguration {
 
     public:
-
         /** Identifiers for the predefined window draw callbacks. */
         /// XXX Keep explicit numbers for backward compatibility
         enum PredefinedCallbackID {
@@ -42,18 +41,18 @@ namespace gui {
         };
 
         /** Timing mode for performance windows. */
-        enum TimingMode { TIMINGMODE_FPS , TIMINGMODE_MS };
+        enum TimingMode { TIMINGMODE_FPS, TIMINGMODE_MS };
 
         struct Basic {
-            bool show = false;            // show/hide window
-            ImGuiWindowFlags flags = 0;   // imgui window flags
-            core::view::KeyCode hotkey;   // hotkey for opening/closing window
-            ImVec2 position;              // position for reset on state loading (current position)
-            ImVec2 size;                  // size for reset on state loading (current size)
-            ImVec2 reset_size;            // minimum window size for soft reset
-            ImVec2 reset_position;        // window position for minimize reset
-            bool collapsed = false;       // flag indicating whether window is collapsed or not.
-            bool reset_pos_size = true;   // [NOT SAVED] set window position and size to fit current viewport
+            bool show = false;          // show/hide window
+            ImGuiWindowFlags flags = 0; // imgui window flags
+            core::view::KeyCode hotkey; // hotkey for opening/closing window
+            ImVec2 position;            // position for reset on state loading (current position)
+            ImVec2 size;                // size for reset on state loading (current size)
+            ImVec2 reset_size;          // minimum window size for soft reset
+            ImVec2 reset_position;      // window position for minimize reset
+            bool collapsed = false;     // flag indicating whether window is collapsed or not.
+            bool reset_pos_size = true; // [NOT SAVED] set window position and size to fit current viewport
         };
 
         struct Specific {
@@ -72,13 +71,14 @@ namespace gui {
             float tmp_ms_max = 1.0f;                // [NOT SAVED] current ms plot scaling factor
             float tmp_fps_max = 1.0f;               // [NOT SAVED] current fps plot scaling factor
             // ---------- Transfer Function Editor specific configuration ---------
-            bool tfe_view_minimized = false;        // flag indicating minimized window state
-            bool tfe_view_vertical = false;         // flag indicating vertical window state
-            std::string tfe_active_param; // last active parameter connected to editor
-            bool tmp_tfe_reset = false;             // [NOT SAVED] flag for reset of tfe window on state loading
+            bool tfe_view_minimized = false; // flag indicating minimized window state
+            bool tfe_view_vertical = false;  // flag indicating vertical window state
+            std::string tfe_active_param;    // last active parameter connected to editor
+            bool tmp_tfe_reset = false;      // [NOT SAVED] flag for reset of tfe window on state loading
             // ---------- LOG specific configuration ----------
-            unsigned int log_level = static_cast<int>(megamol::core::utility::log::Log::LEVEL_ALL); // Log level used in log window
-            bool log_force_open = true;             // flag indicating if log window should be forced open on warnings and errors
+            unsigned int log_level =
+                static_cast<int>(megamol::core::utility::log::Log::LEVEL_ALL); // Log level used in log window
+            bool log_force_open = true; // flag indicating if log window should be forced open on warnings and errors
         };
 
         struct Complete {
@@ -92,13 +92,19 @@ namespace gui {
         /** Type for unknown window callback function. */
         typedef std::function<void(Basic&)> CallbackFunc_t;
 
-        WindowConfiguration(const std::string& name, PredefinedCallbackID cb_id) : hash_id(std::hash<std::string>()(name))
-                , name(name), callback_id(cb_id), volatile_callback(nullptr), config() {
-        }
+        WindowConfiguration(const std::string& name, PredefinedCallbackID cb_id)
+                : hash_id(std::hash<std::string>()(name))
+                , name(name)
+                , callback_id(cb_id)
+                , volatile_callback(nullptr)
+                , config() {}
 
-        WindowConfiguration(const std::string& name, CallbackFunc_t* cbf) : hash_id(std::hash<std::string>()(name))
-                , name(name), callback_id(DRAWCALLBACK_UNKNOWN), volatile_callback(cbf), config() {
-        }
+        WindowConfiguration(const std::string& name, CallbackFunc_t* cbf)
+                : hash_id(std::hash<std::string>()(name))
+                , name(name)
+                , callback_id(DRAWCALLBACK_UNKNOWN)
+                , volatile_callback(cbf)
+                , config() {}
 
         ~WindowConfiguration(void) = default;
 
@@ -107,17 +113,24 @@ namespace gui {
             this->callback_id = DRAWCALLBACK_UNKNOWN;
         }
 
-        std::string Name(void) const { return this->name; }
-        size_t Hash(void) const { return this->hash_id; }
-        PredefinedCallbackID CallbackID(void) const { return this->callback_id; }
-        CallbackFunc_t* Callback(void) const { return this->volatile_callback; }
-        
+        std::string Name(void) const {
+            return this->name;
+        }
+        size_t Hash(void) const {
+            return this->hash_id;
+        }
+        PredefinedCallbackID CallbackID(void) const {
+            return this->callback_id;
+        }
+        CallbackFunc_t* Callback(void) const {
+            return this->volatile_callback;
+        }
+
         void ApplyWindowSizePosition(bool consider_menu);
-        
+
         Complete config;
 
     private:
-
         size_t hash_id;                    // unique hash generated from name to omit string comparison
         std::string name;                  // unique name of the window
         PredefinedCallbackID callback_id;  // ID of the predefined callback drawing the window content
@@ -132,7 +145,6 @@ namespace gui {
     class WindowCollection {
 
     public:
-
         WindowCollection() = default;
         ~WindowCollection(void) = default;
 
@@ -142,7 +154,8 @@ namespace gui {
          * @param cbid  The window callback id.
          * @param id    The callback function that should be matched to callback id.
          */
-        inline bool RegisterDrawWindowCallback(WindowConfiguration::PredefinedCallbackID cb_id, WindowConfiguration::PredefinedCallbackFunc_t cb) {
+        inline bool RegisterDrawWindowCallback(
+            WindowConfiguration::PredefinedCallbackID cb_id, WindowConfiguration::PredefinedCallbackFunc_t cb) {
             // Overwrites existing entry with same WindowDrawCallback id.
             this->callbacks[cb_id] = cb;
             return true;
@@ -153,11 +166,12 @@ namespace gui {
          *
          * @param cbid  The window callback ID.
          */
-        inline WindowConfiguration::PredefinedCallbackFunc_t WindowCallback(WindowConfiguration::PredefinedCallbackID cb_id) {
+        inline WindowConfiguration::PredefinedCallbackFunc_t WindowCallback(
+            WindowConfiguration::PredefinedCallbackID cb_id) {
             // Creates new entry if no callback for cb_id is registered (default ctor)
             return this->callbacks[cb_id];
         }
-        
+
         // --------------------------------------------------------------------
         // CONFIGURATIONs
 
@@ -232,7 +246,6 @@ namespace gui {
         bool StateToJSON(nlohmann::json& inout_json);
 
     private:
-
         // VARIABLES ------------------------------------------------------
 
         /** The list of the window names and their configurations. */

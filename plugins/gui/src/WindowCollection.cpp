@@ -115,16 +115,18 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                 found = true;
                 for (auto& config_item : header_item.value().items()) {
                     auto config_values = config_item.value();
-                    
+
                     int win_callback_id = 0;
                     megamol::core::utility::get_json_value<int>(config_values, {"win_callback"}, &win_callback_id);
-    
-                    WindowConfiguration tmp_config(config_item.key(), static_cast<WindowConfiguration::PredefinedCallbackID>(win_callback_id));
-                    
+
+                    WindowConfiguration tmp_config(
+                        config_item.key(), static_cast<WindowConfiguration::PredefinedCallbackID>(win_callback_id));
+
                     tmp_config.config.basic.reset_pos_size = true;
                     tmp_config.config.specific.tmp_tfe_reset = true;
-                    
-                    megamol::core::utility::get_json_value<bool>(config_values, {"win_show"}, &tmp_config.config.basic.show);
+
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"win_show"}, &tmp_config.config.basic.show);
 
                     int win_flags = 0;
                     megamol::core::utility::get_json_value<int>(config_values, {"win_flags"}, &win_flags);
@@ -270,10 +272,8 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
             WindowConfiguration wc = window;
 
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_show"] = wc.config.basic.show;
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_flags"] =
-                static_cast<int>(wc.config.basic.flags);
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_callback"] =
-                static_cast<int>(wc.CallbackID());
+            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_flags"] = static_cast<int>(wc.config.basic.flags);
+            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_callback"] = static_cast<int>(wc.CallbackID());
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_hotkey"] = {
                 static_cast<int>(wc.config.basic.hotkey.key), wc.config.basic.hotkey.mods.toInt()};
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_position"] = {
@@ -281,8 +281,7 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
 
             auto rescale_win_size = wc.config.basic.size;
             rescale_win_size /= megamol::gui::gui_scaling.Get();
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_size"] = {
-                rescale_win_size.x, rescale_win_size.y};
+            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_size"] = {rescale_win_size.x, rescale_win_size.y};
 
             auto rescale_win_reset_size = wc.config.basic.reset_size;
             rescale_win_reset_size /= megamol::gui::gui_scaling.Get();

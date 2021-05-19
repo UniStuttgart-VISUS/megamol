@@ -221,7 +221,8 @@ namespace gui {
          * @param window_name   The unique window name
          * @param callback      The window callback function containing the GUI content of the window
          */
-        void RegisterWindow(const std::string& window_name, std::function<void(WindowConfiguration::Basic&)> const& callback);
+        void RegisterWindow(
+            const std::string& window_name, std::function<void(WindowConfiguration::Basic&)> const& callback);
 
         /**
          * Synchronise changes between core graph <-> gui graph.
@@ -283,8 +284,8 @@ namespace gui {
             std::string font_file_name;                    // Font imgui name or font file name.
             int font_size;                                 // Font size (only used whe font file name is given)
             std::string request_load_projet_file; // Project file name which should be loaded by fronted service
-            float stat_averaged_fps;             // current average fps value
-            float stat_averaged_ms;              // current average fps value
+            float stat_averaged_fps;              // current average fps value
+            float stat_averaged_ms;               // current average fps value
             size_t stat_frame_count;              // current fame count
             bool load_docking_preset;             // Flag indicating docking preset loading
             bool hotkeys_check_once;              // WORKAROUND: Check multiple hotkey assignments once

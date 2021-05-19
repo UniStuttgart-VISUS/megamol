@@ -156,7 +156,8 @@ bool megamol::gui::LogConsole::Draw(WindowConfiguration& wc) {
         // Log Level
         ImGui::TextUnformatted("Show");
         ImGui::SameLine();
-        if (ImGui::RadioButton("Errors", (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
+        if (ImGui::RadioButton(
+                "Errors", (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
             if (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
                 wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_NONE;
             } else {
@@ -165,7 +166,8 @@ bool megamol::gui::LogConsole::Draw(WindowConfiguration& wc) {
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Warnings", (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
+        if (ImGui::RadioButton(
+                "Warnings", (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
             if (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_WARN) {
                 wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
             } else {
@@ -174,7 +176,8 @@ bool megamol::gui::LogConsole::Draw(WindowConfiguration& wc) {
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Infos", (wc.config.specific.log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
+        if (ImGui::RadioButton(
+                "Infos", (wc.config.specific.log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
             if (wc.config.specific.log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
                 wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             } else {
