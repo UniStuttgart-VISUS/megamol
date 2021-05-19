@@ -62,6 +62,32 @@ private:
     std::shared_ptr<SamplingResult> m_result;
 };
 
+struct FloatDistributionProbe : public BaseProbe {
+public:
+    struct SampleValue {
+        float mean;
+        float lower_bound;
+        float upper_bound;
+    };
+
+    struct SamplingResult {
+        std::vector<SampleValue> samples;
+    };
+
+    FloatDistributionProbe() : m_result(std::make_shared<SamplingResult>()) {}
+
+    template<typename DatafieldType>
+    void probe(DatafieldType const& datafield) { /* ToDo*/
+    }
+
+    std::shared_ptr<SamplingResult> getSamplingResult() const {
+        return m_result;
+    }
+
+private:
+    std::shared_ptr<SamplingResult> m_result;
+};
+
 struct IntProbe : public BaseProbe {
     void probe() { /*ToDo*/
     }
