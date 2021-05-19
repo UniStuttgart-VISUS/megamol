@@ -201,6 +201,8 @@ private:
     bool _shellToShowChanged = false;;
     std::vector<std::vector<Mesh>> _elementMesh;
 
+    std::shared_ptr<mesh::MeshDataAccessCollection> _mesh_for_call;
+
     // store surface
     std::vector<std::array<float, 3>> _vertices;
     std::vector<std::array<float, 3>> _normals;

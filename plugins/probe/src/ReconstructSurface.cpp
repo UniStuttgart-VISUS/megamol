@@ -1659,26 +1659,27 @@ namespace probe {
                 _mesh.first.data = reinterpret_cast<uint8_t*>(_triangles.data());
                 }
             ++_version;
+
+            // put data in mesh#
+            _mesh_for_call = std::make_shared<mesh::MeshDataAccessCollection>();
+            if (this->_meshOutputSlot.Param<core::param::EnumParam>()->Value() == 0) {
+                for (int i = 0; i < _shellElements.size(); ++i) {
+                    for (int j = 0; j < _shellElements[i].size(); ++j) {
+                        std::string identifier =
+                            std::string(FullName()) + "_mesh_" + std::to_string(i) + "," + std::to_string(j);
+                        _mesh_for_call->addMesh(identifier, _elementMesh[i][j].second, _elementMesh[i][j].first,
+                            mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
+                    }
+                }
+            } else {
+                std::string identifier = std::string(FullName()) + "_mesh";
+                _mesh_for_call->addMesh(
+                    identifier, _mesh.second, _mesh.first, mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
+            }
         } // something changed
 
-        // put data in mesh
-        if (this->_meshOutputSlot.Param<core::param::EnumParam>()->Value() == 0) {
-            mesh::MeshDataAccessCollection mesh;
-            for (int i = 0; i < _shellElements.size(); ++i) {
-                 for (int j = 0; j < _shellElements[i].size(); ++j) {
-                    std::string identifier = std::string(FullName()) + "_mesh_" + std::to_string(i) + "," + std::to_string(j);
-                    mesh.addMesh(identifier, _elementMesh[i][j].second, _elementMesh[i][j].first,
-                    mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
-                 }
-            }
-            cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), _version);
-        } else {
-            mesh::MeshDataAccessCollection mesh;
-            std::string identifier = std::string(FullName()) + "_mesh";
-            mesh.addMesh(
-                identifier, _mesh.second, _mesh.first, mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
-            cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), _version);
-        }
+        cm->setData(_mesh_for_call, _version);
+
         _old_datahash = cd->getDataHash();
         _recalc = false;
         _shellToShowChanged = false;

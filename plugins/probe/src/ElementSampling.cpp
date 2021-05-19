@@ -286,28 +286,29 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
         }
 
         BaseProbe new_probe;
-        new_probe.m_begin = -(longest_edge / 10.0f);
         glm::vec3 start = glm::vec3(0);
-        for (auto point : elements[0][j].points()) {
-            start.x += point.x();
-            start.y += point.y();
-            start.z += point.z();
+        for (auto spoint : elements[0][j].points()) {
+            start.x += spoint.x();
+            start.y += spoint.y();
+            start.z += spoint.z();
         }
-        const auto num_points = elements[0][j].num_vertices();
-        start /= num_points;
+        const auto num_spoints = elements[0][j].num_vertices();
+        start /= num_spoints;
         new_probe.m_position = {start.x, start.y, start.z};
 
         glm::vec3 end = glm::vec3(0);
-        for (auto point : elements[elements.size() - 1][j].points()) {
-            end.x += point.x();
-            end.y += point.y();
-            end.z += point.z();
+        for (auto epoint : elements[elements.size() - 1][j].points()) {
+            end.x += epoint.x();
+            end.y += epoint.y();
+            end.z += epoint.z();
         }
-        end /= num_points;
+        const auto num_epoints = elements[elements.size() - 1][j].num_vertices();
+        end /= num_epoints;
         auto dir = glm::normalize(end - start);
         new_probe.m_direction = {dir.x, dir.y, dir.z};
         new_probe.m_end = glm::length(end - start);
         new_probe.m_geo_ids = geom_ids;
+        new_probe.m_begin = -0.2 * new_probe.m_end;
 
         _probes->addProbe(new_probe);
     }
