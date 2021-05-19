@@ -21,6 +21,7 @@
 #include "FilterByProbe.h"
 #include "ProbeHullRenderTasks.h"
 #include "PrecomputeGlyphTextures.h"
+#include "ProbeShellElementsRenderTasks.h"
 
 namespace megamol::probe_gl {
 /** Implementing the instance class of this plugin */
@@ -63,6 +64,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::FilterByProbe>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeHullRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::PrecomputeGlyphTextures>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeShellElementsRenderTasks>();
 
         // register calls here:
 
