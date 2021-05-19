@@ -318,8 +318,8 @@ inline void SampleAlongPobes::doScalarDistributionSampling(
             avg_value += value;
         } // end num samples per probe
 
-        global_min = std::min(global_min, samples->min_value);
-        global_max = std::max(global_max, samples->max_value);
+        global_min = std::min(global_min, min_value);
+        global_max = std::max(global_max, max_value);
     } // end for probes
     _probes->setGlobalMinMax(global_min, global_max);
 
