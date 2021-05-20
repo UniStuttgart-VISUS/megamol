@@ -19,6 +19,8 @@
 
 #include "mmcore/utility/log/Log.h"
 
+/// XXX TEMP
+#include "GUIRegisterWindow.h"
 
 static const std::string service_name = "Screenshot_Service: ";
 static void log(std::string const& text) {
@@ -191,7 +193,7 @@ bool Screenshot_Service::init(const Config& config) {
         "GUIState",
         "RuntimeConfig",
         /// TEMP XXX
-        "GUIWindowRequest"
+        "GUIRegisterWindow"
     };
 
     m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
@@ -201,21 +203,6 @@ bool Screenshot_Service::init(const Config& config) {
     };
 
     screenshot_show_privacy_note = config.show_privacy_note;
-
-    /// XXX TEMP
-    m_render_gui_window_func = [&](megamol::gui::WindowConfiguration::Basic& win_config) {
-        VALID_IMGUI_SCOPE
-
-        if (m_setup_window_once) {
-            win_config.flags = ImGuiWindowFlags_None;
-            win_config.size = ImVec2(300.0f, 300.0f);
-            win_config.reset_pos_size = true;
-
-            m_setup_window_once = false;
-        }
-
-        ImGui::TextUnformatted("Hello World ...");
-    };
 
     log("initialized successfully");
     return true;
@@ -248,8 +235,21 @@ void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> res
 
     /// XXX TEMP
     if (m_register_window_once) {
-        auto& gui_window_request_resource = resources[4].getResource<megamol::frontend_resources::GUIWindowRequest>();
-        gui_window_request_resource.register_window("Screenshot Test", m_render_gui_window_func);
+        auto &gui_window_request_resource = resources[4].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+        gui_window_request_resource.register_window("Screenshot Test",
+            [&](megamol::gui::WindowConfiguration::Basic &win_config) {
+                VALIDATE_IMGUI_SCOPE
+
+                if (m_setup_window_once) {
+                    win_config.flags = ImGuiWindowFlags_None;
+                    win_config.size = ImVec2(300.0f, 300.0f);
+                    win_config.reset_pos_size = true;
+
+                    m_setup_window_once = false;
+                }
+
+                ImGui::TextUnformatted("Hello World ...");
+            });
         m_register_window_once = false;
     }
 }

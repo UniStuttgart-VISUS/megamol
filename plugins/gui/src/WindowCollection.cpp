@@ -6,8 +6,6 @@
  */
 
 #include "stdafx.h"
-
-#include "GUIUtils.h"
 #include "WindowCollection.h"
 
 
@@ -245,7 +243,12 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
             for (auto& win : this->windows) {
                 // Check for same name
                 if (win.Hash() == new_win.Hash()) {
+                    auto tmp_volatile_callback = win.VolatileCallback();
                     win = new_win;
+                    if (tmp_volatile_callback) {
+                        // Restore previously set volatile callback
+                        win.SetVolatileCallback(tmp_volatile_callback);
+                    }
                     found_existing = true;
                 }
             }

@@ -216,7 +216,6 @@ namespace gui {
 
         /**
          * Register GUI window for external window callback function containing ImGui content.
-         * ! Call only once to prevent performance overhead !
          *
          * @param window_name   The unique window name
          * @param callback      The window callback function containing the GUI content of the window

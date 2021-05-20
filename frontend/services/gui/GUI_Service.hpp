@@ -15,7 +15,7 @@
 #include "gui-wrapper.h"
 
 #include "IOpenGL_Context.h"
-#include "GUIWindowRequest.h"
+#include "GUIRegisterWindow.h"
 #include "GUIState.h"
 
 #include "mmcore/CoreInstance.h"
@@ -86,7 +86,7 @@ private:
     std::vector<std::string> m_requestedResourcesNames;
 
     megamol::frontend_resources::GUIState m_providedStateResource;
-    megamol::frontend_resources::GUIWindowRequest m_providedWindowRequestResource;
+    megamol::frontend_resources::GUIRegisterWindow m_providedRegisterWindowResource;
 
     std::string resource_request_gui_state(bool as_lua);
     bool resource_request_gui_visibility(void);

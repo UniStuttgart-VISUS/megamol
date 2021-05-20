@@ -474,15 +474,14 @@ bool GUIWindows::PostDraw(void) {
             this->window_sizing_and_positioning(wc, collapsing_changed);
 
             // Calling callback drawing window content
-            auto cb = this->window_collection.WindowCallback(wc.CallbackID());
+            auto cb = this->window_collection.PredefinedWindowCallback(wc.CallbackID());
             if (cb) {
                 cb(wc);
-            } else if (wc.Callback() != nullptr) {
-                (*wc.Callback())(wc.config.basic);
+            } else if (wc.VolatileCallback()) {
+                wc.VolatileCallback()(wc.config.basic);
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Missing valid callback for WindowDrawCallback: '%d'. [%s, %s, line %d]\n",
-                    (int) wc.CallbackID(), __FILE__, __FUNCTION__, __LINE__);
+                    "[GUI] Missing valid draw callback for GUI window '%s'. [%s, %s, line %d]\n", wc.Name().c_str(), __FILE__, __FUNCTION__, __LINE__);
             }
 
             // Saving some of the current window state.
@@ -2692,7 +2691,7 @@ void GUIWindows::RegisterWindow(
     auto hash_id = std::hash<std::string>()(window_name);
     if (!this->window_collection.WindowConfigurationExists(hash_id)) {
         WindowConfiguration wc_tmp(
-            window_name, &const_cast<std::function<void(WindowConfiguration::Basic&)>&>(callback));
+            window_name, const_cast<std::function<void(WindowConfiguration::Basic&)>&>(callback));
         wc_tmp.config.basic.show = true;
         wc_tmp.config.basic.flags = ImGuiWindowFlags_AlwaysAutoResize;
         this->window_collection.AddWindowConfiguration(wc_tmp);
@@ -2700,7 +2699,7 @@ void GUIWindows::RegisterWindow(
     // Set volatile window callback function for existing window configuration
     const auto func = [&, this](WindowConfiguration& wc) {
         if (wc.Hash() == hash_id) {
-            wc.SetVolatileCallback(&const_cast<std::function<void(WindowConfiguration::Basic&)>&>(callback));
+            wc.SetVolatileCallback(const_cast<std::function<void(WindowConfiguration::Basic&)>&>(callback));
         }
     };
     this->window_collection.EnumWindows(func);

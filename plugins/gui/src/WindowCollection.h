@@ -9,14 +9,7 @@
 #define MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
 
 
-#define IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-#include "imgui.h"
-#include "imgui_internal.h"
-
-#include "mmcore/utility/JSONHelper.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/Input.h"
+#include "GUIUtils.h"
 
 
 namespace megamol {
@@ -31,7 +24,7 @@ namespace gui {
         /** Identifiers for the predefined window draw callbacks. */
         /// XXX Keep explicit numbers for backward compatibility
         enum PredefinedCallbackID {
-            DRAWCALLBACK_UNKNOWN = 0,
+            DRAWCALLBACK_VOLATILE = 0,
             DRAWCALLBACK_MAIN_PARAMETERS = 1,
             DRAWCALLBACK_PARAMETERS = 2,
             DRAWCALLBACK_PERFORMANCE = 3,
@@ -96,21 +89,21 @@ namespace gui {
                 : hash_id(std::hash<std::string>()(name))
                 , name(name)
                 , callback_id(cb_id)
-                , volatile_callback(nullptr)
+                , volatile_callback()
                 , config() {}
 
-        WindowConfiguration(const std::string& name, CallbackFunc_t* cbf)
+        WindowConfiguration(const std::string& name, CallbackFunc_t& cbf)
                 : hash_id(std::hash<std::string>()(name))
                 , name(name)
-                , callback_id(DRAWCALLBACK_UNKNOWN)
+                , callback_id(DRAWCALLBACK_VOLATILE)
                 , volatile_callback(cbf)
                 , config() {}
 
         ~WindowConfiguration(void) = default;
 
-        void SetVolatileCallback(CallbackFunc_t* callback) {
+        void SetVolatileCallback(CallbackFunc_t& callback) {
             this->volatile_callback = callback;
-            this->callback_id = DRAWCALLBACK_UNKNOWN;
+            this->callback_id = DRAWCALLBACK_VOLATILE;
         }
 
         std::string Name(void) const {
@@ -122,7 +115,7 @@ namespace gui {
         PredefinedCallbackID CallbackID(void) const {
             return this->callback_id;
         }
-        CallbackFunc_t* Callback(void) const {
+        CallbackFunc_t VolatileCallback(void) const {
             return this->volatile_callback;
         }
 
@@ -134,7 +127,7 @@ namespace gui {
         size_t hash_id;                    // unique hash generated from name to omit string comparison
         std::string name;                  // unique name of the window
         PredefinedCallbackID callback_id;  // ID of the predefined callback drawing the window content
-        CallbackFunc_t* volatile_callback; // [NOT SAVED] Alternative unknown window callback.
+        CallbackFunc_t volatile_callback;  // [NOT SAVED] Alternative unknown window callback.
     };
 
     // --------------------------------------------------------------------
@@ -145,7 +138,11 @@ namespace gui {
     class WindowCollection {
 
     public:
-        WindowCollection() = default;
+
+        WindowCollection(void) {
+            this->callbacks[WindowConfiguration::PredefinedCallbackID::DRAWCALLBACK_VOLATILE] = nullptr;
+        }
+
         ~WindowCollection(void) = default;
 
         /**
@@ -156,7 +153,11 @@ namespace gui {
          */
         inline bool RegisterDrawWindowCallback(
             WindowConfiguration::PredefinedCallbackID cb_id, WindowConfiguration::PredefinedCallbackFunc_t cb) {
-            // Overwrites existing entry with same WindowDrawCallback id.
+            if (cb_id == WindowConfiguration::PredefinedCallbackID::DRAWCALLBACK_VOLATILE) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] DRAWCALLBACK_VOLATILE can not be used for predefined callback. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return false;
+            }
             this->callbacks[cb_id] = cb;
             return true;
         }
@@ -164,12 +165,10 @@ namespace gui {
         /**
          * Draw window content by calling registered callback function in window configuration.
          *
-         * @param cbid  The window callback ID.
+         * @param cbid  The predefined window callback ID.
          */
-        inline WindowConfiguration::PredefinedCallbackFunc_t WindowCallback(
-            WindowConfiguration::PredefinedCallbackID cb_id) {
-            // Creates new entry if no callback for cb_id is registered (default ctor)
-            return this->callbacks[cb_id];
+        inline WindowConfiguration::PredefinedCallbackFunc_t PredefinedWindowCallback(WindowConfiguration::PredefinedCallbackID cb_id) {
+            return this->callbacks[cb_id]; //
         }
 
         // --------------------------------------------------------------------

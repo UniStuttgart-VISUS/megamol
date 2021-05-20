@@ -83,7 +83,7 @@ bool GUI_Service::init(const Config& config) {
                     this->resource_provide_gui_visibility(config.gui_show);
                     this->resource_provide_gui_scale(config.gui_scale);
 
-                    this->m_providedWindowRequestResource.register_window = [&](const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func) -> void {
+                    this->m_providedRegisterWindowResource.register_window = [&](const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)> func) -> void {
                         this->resource_register_window(name, func);
                     };
 
@@ -274,7 +274,7 @@ std::vector<FrontendResource>& GUI_Service::getProvidedResources() {
 
     this->m_providedResourceReferences = {
         {"GUIState", this->m_providedStateResource},
-        {"GUIWindowRequest", this->m_providedWindowRequestResource},
+        {"GUIRegisterWindow", this->m_providedRegisterWindowResource},
     };
     return this->m_providedResourceReferences;
 }
