@@ -10,12 +10,12 @@ megamol_plugin(probe
     mesh
     mmstd_datatools
   DEPENDS_EXTERNALS
-    Eigen
-    nanoflann
     libigl
     asmjit
     blend2d
-    qhull)
+    qhull
+    PUBLIC Eigen
+    nanoflann)
 
 if (probe_PLUGIN_ENABLED)
   file(GLOB_RECURSE third RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*")

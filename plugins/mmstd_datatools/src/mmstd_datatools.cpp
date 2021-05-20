@@ -99,7 +99,7 @@
 #include "table/TableItemSelector.h"
 #include "table/TableSplit.h"
 #include "CSVWriter.h"
-#include "clustering/ParticleIColClustering.h"
+#include "mmstd_datatools/clustering/ParticleIColClustering.h"
 #include "AddParticleColors.h"
 #include "ColorToDir.h"
 
