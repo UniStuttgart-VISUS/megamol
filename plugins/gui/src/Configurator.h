@@ -16,10 +16,6 @@
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
 
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/StringParam.h"
-
 
 namespace megamol {
 namespace gui {

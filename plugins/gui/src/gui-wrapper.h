@@ -8,7 +8,9 @@
 #ifndef MEGAMOL_GUI_GUIWINDOWS_WRAPPER_H_INCLUDED
 #define MEGAMOL_GUI_GUIWINDOWS_WRAPPER_H_INCLUDED
 
+
 #include "GUIWindows.h"
+
 
 namespace megamol {
 namespace gui {

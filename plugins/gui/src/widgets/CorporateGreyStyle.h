@@ -8,7 +8,7 @@
 #ifndef MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED
 #define MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED
 
-#include <imgui.h>
+
 #include "DefaultStyle.h"
 
 

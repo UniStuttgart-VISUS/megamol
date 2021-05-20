@@ -9,7 +9,14 @@
 #define MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
 
 
-#include "GUIUtils.h"
+#include "imgui.h"
+#include "mmcore/utility/JSONHelper.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/Input.h"
+#include <string>
+#include <vector>
+#include <functional>
+#include <map>
 
 
 namespace megamol {

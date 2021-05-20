@@ -9,10 +9,8 @@
 #define MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
 
 
-#include "GUIUtils.h"
 #include "HoverToolTip.h"
 #include "StringSearchWidget.h"
-
 #include "mmcore/utility/FileUtils.h"
 
 

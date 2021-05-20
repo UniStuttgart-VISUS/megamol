@@ -6,8 +6,8 @@
  */
 
 
-#include "stdafx.h"
 #include "LogConsole.h"
+#include "mmcore/utility/log/OfflineTarget.h"
 
 
 using namespace megamol;

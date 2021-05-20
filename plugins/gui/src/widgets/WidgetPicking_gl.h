@@ -9,17 +9,7 @@
 #define MEGAMOL_GUI_WIDGETPICKING_GL_INCLUDED
 
 
-#include "GUIUtils.h"
-
-#include "mmcore/thecam/math/functions.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/Input.h"
 #include "mmcore/view/RenderUtils.h"
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <queue>
-
-#include <tuple>
 
 
 namespace megamol {

@@ -9,9 +9,7 @@
 #define MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
 
 
-#include "GUIUtils.h"
 #include "widgets/PopUps.h"
-
 #include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"

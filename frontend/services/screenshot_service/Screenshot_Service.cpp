@@ -23,6 +23,15 @@
 #include "GUIRegisterWindow.h"
 
 static const std::string service_name = "Screenshot_Service: ";
+
+/// XXX TEMP
+static const std::string service_privacy_note = "--- PRIVACY NOTE ---\n"
+    "Please note that the complete MegaMol project is stored in the header of the screenshot image file. \n"
+    "Before giving away the screenshot, clear privacy relevant information in project file before taking screenshot (e.g. user name in file paths). \n"
+    ">>> In [megamol_config.lua] set mmSetCliOption(\"privacynote\", \"off\") to permanently turn off privacy notification for screenshots.";
+static bool service_open_popup = false;
+static bool service_disable_popup = false;
+
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
@@ -108,12 +117,8 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
     png_destroy_write_struct(&pngPtr, &pngInfoPtr);
 
     if (screenshot_show_privacy_note) {
-        // Push log message to GUI pop-up
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("%sScreenshot%s--- PRIVACY NOTE ---\n"
-            "Please note that the complete MegaMol project is stored in the header of the screenshot image file. \n"
-            "Before giving away the screenshot, clear privacy relevant information in project file before taking screenshot (e.g. user name in file paths). \n"
-            ">>> In [megamol_config.lua] set mmSetCliOption(\"privacynote\", \"off\") to permanently turn off privacy notification for screenshots. \n"
-            , LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG);
+        service_open_popup = !service_disable_popup;
+        log_warning(service_privacy_note);
     }
     return true;
 }
@@ -232,26 +237,37 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
     guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(&resources[2].getResource<megamol::frontend_resources::GUIState>());
+    m_requestedResourceReferences = resources;
 
-    /// XXX TEMP
-    if (m_register_window_once) {
-        auto &gui_window_request_resource = resources[4].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-        gui_window_request_resource.register_window("Screenshot Test",
-            [&](megamol::gui::WindowConfiguration::Basic &win_config) {
-                VALIDATE_IMGUI_SCOPE
+    /// XXX TEMP --- ONCE
+    auto &gui_window_request_resource = resources[4].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+    gui_window_request_resource.register_window("Screenshot TEST Window", [&](megamol::gui::WindowConfiguration::Basic &win_config) {
+        if (m_setup_window_once) {
+            win_config.flags = ImGuiWindowFlags_None;
+            win_config.size = ImVec2(300.0f, 300.0f);
+            win_config.reset_pos_size = true;
 
-                if (m_setup_window_once) {
-                    win_config.flags = ImGuiWindowFlags_None;
-                    win_config.size = ImVec2(300.0f, 300.0f);
-                    win_config.reset_pos_size = true;
+            m_setup_window_once = false;
+        }
 
-                    m_setup_window_once = false;
-                }
+        ImGui::TextUnformatted("Hello World ...");
+    });
+    gui_window_request_resource.register_popup("Screenshot", service_open_popup, [&](void) {
+        ImGui::TextUnformatted(service_privacy_note.c_str());
 
-                ImGui::TextUnformatted("Hello World ...");
-            });
-        m_register_window_once = false;
-    }
+        bool close = false;
+        if (ImGui::Button("Ok")) {
+            close = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Ok - Disable further notifications.")) {
+            close = true;
+            service_disable_popup = true;
+        }
+        if (close) {
+            ImGui::CloseCurrentPopup();
+        }
+    });
 }
 
 void Screenshot_Service::updateProvidedResources() {

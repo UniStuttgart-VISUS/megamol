@@ -9,7 +9,6 @@
 #define MEGAMOL_GUI_MINIMALPOPUP_INCLUDED
 
 
-#include "GUIUtils.h"
 #include "HoverToolTip.h"
 
 

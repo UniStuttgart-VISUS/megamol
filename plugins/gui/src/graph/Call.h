@@ -9,7 +9,6 @@
 #define MEGAMOL_GUI_GRAPH_CALL_H_INCLUDED
 
 
-#include "GUIUtils.h"
 #include "widgets/HoverToolTip.h"
 
 

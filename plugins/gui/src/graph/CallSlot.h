@@ -9,7 +9,6 @@
 #define MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
 
 
-#include "GUIUtils.h"
 #include "mmcore/AbstractCallSlotPresentation.h"
 #include "widgets/HoverToolTip.h"
 

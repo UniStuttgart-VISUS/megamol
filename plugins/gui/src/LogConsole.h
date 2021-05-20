@@ -9,13 +9,9 @@
 #define MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
 
 
-#include "GUIUtils.h"
 #include "WindowCollection.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
-
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/log/OfflineTarget.h"
 #include "mmcore/utility/log/StreamTarget.h"
 
 

@@ -5,7 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
+#include "GUIUtils.h"
+#include "widgets/ColorPalettes.h"
+#include "widgets/ButtonWidgets.h"
 #include "TransferFunctionEditor.h"
 #include "graph/Parameter.h"
 

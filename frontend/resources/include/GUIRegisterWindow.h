@@ -10,8 +10,6 @@
 
 #include "WindowCollection.h"
 
-#define VALIDATE_IMGUI_SCOPE { if (!((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false))) return; }
-
 
 namespace megamol {
 namespace frontend_resources {
@@ -19,8 +17,12 @@ namespace frontend_resources {
     struct GUIRegisterWindow {
 
         // Register GUI window rendering callback
-        /// ! Make sure to call only once to prevent performance overhead !
+        /// ! Make sure to call only once to prevent performance overhead, e.g. call in setRequestedResources() of frontend service.
         std::function<void(const std::string&, std::function<void(megamol::gui::WindowConfiguration::Basic&)> )> register_window;
+
+        // Register GUI popup rendering callback
+        /// ! Make sure to call only once to prevent performance overhead, e.g. call in setRequestedResources() of frontend service.
+        std::function<void(const std::string&, bool&, std::function<void(void)> )> register_popup;
     };
 
 } /* end namespace frontend_resources */

@@ -5,7 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
+#include "GUIUtils.h"
+#include "imgui_internal.h"
 #include "WindowCollection.h"
 
 

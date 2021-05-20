@@ -9,9 +9,6 @@
 #define MEGAMOL_GUI_SPLITTERWIDGET_INCLUDED
 
 
-#include "GUIUtils.h"
-
-
 namespace megamol {
 namespace gui {
 

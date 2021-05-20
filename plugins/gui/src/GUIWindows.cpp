@@ -5,8 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "GUIWindows.h"
+#include "widgets/CorporateGreyStyle.h"
+#include "widgets/CorporateWhiteStyle.h"
+#include "widgets/DefaultStyle.h"
+#include "widgets/ButtonWidgets.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_stdlib.h"
+#include "mmcore/versioninfo.h"
+
 
 using namespace megamol;
 using namespace megamol::gui;
@@ -2014,6 +2022,28 @@ void GUIWindows::drawMenu(void) {
 
 void megamol::gui::GUIWindows::drawPopUps(void) {
 
+    // Externally registered Pop-Ups
+    auto external_popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
+    for (auto& popup_map : this->external_popup_registry) {
+        bool open = false;
+        for (auto& popup : popup_map.second) {
+            open |= (*popup.first);
+            (*popup.first) = false;
+        }
+        if (open) {
+            ImGui::OpenPopup(popup_map.first.c_str());
+        }
+        if (ImGui::BeginPopupModal(popup_map.first.c_str(), nullptr, external_popup_flags)) {
+            for (auto& popup : popup_map.second) {
+                popup.second();
+            }
+            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
+
     // ABOUT
     if (this->state.open_popup_about) {
         this->state.open_popup_about = false;
@@ -2703,4 +2733,10 @@ void GUIWindows::RegisterWindow(
         }
     };
     this->window_collection.EnumWindows(func);
+}
+
+
+void GUIWindows::RegisterPopUp(const std::string& name, bool& open, const std::function<void(void)> &callback) {
+
+    this->external_popup_registry[name].emplace_back(&open, const_cast<std::function<void(void)>&>(callback));
 }

@@ -66,7 +66,6 @@ private:
     std::vector<FrontendResource> m_requestedResourceReferences;
 
     /// XXX TEMP
-    bool m_register_window_once = true;
     bool m_setup_window_once = true;
 };
 

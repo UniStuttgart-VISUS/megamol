@@ -9,21 +9,12 @@
 #define MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
 
 
-#include "GUIUtils.h"
-
 #include "Graph.h"
-
 #include "widgets/FileBrowserWidget.h"
-#include "widgets/PopUps.h"
-
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-
-#include "utility/plugins/PluginManager.h"
 
 
 namespace megamol {

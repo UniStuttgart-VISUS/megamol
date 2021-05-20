@@ -9,7 +9,7 @@
 #define MEGAMOL_GUI_BUTTONWIDGETS_INCLUDED
 
 
-#include "GUIUtils.h"
+#include <string>
 
 
 namespace megamol {

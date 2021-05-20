@@ -8,32 +8,18 @@
 #ifndef MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 #define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 
+
 #include "Configurator.h"
 #include "LogConsole.h"
 #include "WindowCollection.h"
-#include "widgets/CorporateGreyStyle.h"
-#include "widgets/CorporateWhiteStyle.h"
-#include "widgets/DefaultStyle.h"
+#include "TransferFunctionEditor.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "widgets/StringSearchWidget.h"
-#include "widgets/TransferFunctionEditor.h"
 #include "widgets/WidgetPicking_gl.h"
-
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/ViewDescription.h"
-#include "mmcore/utility/FileUtils.h"
-#include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/utility/graphics/ScreenShotComments.h"
-#include "mmcore/versioninfo.h"
-
-#include "vislib/math/Rectangle.h"
-
-#include <ctime>
-#include <iomanip>
-#include <sstream>
 
 
 namespace megamol {
@@ -215,13 +201,15 @@ namespace gui {
             void (*set_clipboard_func)(void* user_data, const char* string), void* user_data);
 
         /**
-         * Register GUI window for external window callback function containing ImGui content.
+         * Register GUI window/pop-up for external window callback function containing ImGui content.
          *
          * @param window_name   The unique window name
          * @param callback      The window callback function containing the GUI content of the window
          */
         void RegisterWindow(
             const std::string& window_name, std::function<void(WindowConfiguration::Basic&)> const& callback);
+
+        void RegisterPopUp(const std::string& name, bool& open, std::function<void(void)> const& callback);
 
         /**
          * Synchronise changes between core graph <-> gui graph.
@@ -328,6 +316,9 @@ namespace gui {
 
         /** The current local state of the gui. */
         StateBuffer state;
+
+        /** List of externally registered pop-up callbacks. */
+        std::map<std::string, std::vector<std::pair<bool*, std::function<void(void)>>>> external_popup_registry;
 
         // Widgets
         FileBrowserWidget file_browser;

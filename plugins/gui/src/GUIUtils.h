@@ -5,6 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
+/// #define GUI_VERBOSE
+
 #ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
@@ -12,36 +14,15 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui.h"
-#include "imgui_impl_opengl3.h"
 #include "imgui_internal.h"
-#include "imgui_stdlib.h"
-
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include <algorithm> // search
-#include <array>
-#include <cctype> // toupper
-#include <cmath>  // fmodf
-#include <list>
-#include <map>
-#include <memory>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
 
 #include "mmcore/param/AbstractParamPresentation.h"
 #include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
-
 #include "vislib/UTF8Encoder.h"
 #include "vislib/math/Ternary.h"
 
-
-/// #define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f * megamol::gui::gui_scaling.Get())

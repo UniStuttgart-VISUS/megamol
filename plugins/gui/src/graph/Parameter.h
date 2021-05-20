@@ -8,14 +8,11 @@
 #ifndef MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 
-#include "GUIUtils.h"
-#include "widgets/ButtonWidgets.h"
+
+#include "TransferFunctionEditor.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/ImageWidget_gl.h"
 #include "widgets/ParameterOrbitalWidget.h"
-#include "widgets/TransferFunctionEditor.h"
-
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -30,7 +27,6 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
-
 #include <variant>
 
 
@@ -192,7 +188,7 @@ namespace gui {
         }
         // <param_namespace>
         inline std::string NameSpace(void) const {
-            std::string name_space = "";
+            std::string name_space;
             auto idx = this->param_name.find_first_of(':');
             if (idx != std::string::npos) {
                 name_space = this->param_name.substr(0, idx);

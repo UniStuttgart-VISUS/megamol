@@ -8,7 +8,8 @@
 #ifndef MEGAMOL_GUI_DEFAULTSTYLE_INCLUDED
 #define MEGAMOL_GUI_DEFAULTSTYLE_INCLUDED
 
-#include <imgui.h>
+
+#include "imgui.h"
 
 
 /**

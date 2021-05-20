@@ -9,10 +9,9 @@
 #define MEGAMOL_GUI_PARAMETERORBITALWIDGET_INCLUDED
 
 
-#include "GUIUtils.h"
-
 #define IMGUIZMO_IMGUI_FOLDER
 #include "imGuIZMOquat.h"
+#include "glm/glm.hpp"
 
 
 namespace megamol {

@@ -10,6 +10,7 @@
 
 
 #include "GUIUtils.h"
+#include <string>
 
 
 namespace megamol {
@@ -47,10 +48,7 @@ namespace gui {
         /**
          * Reset toopltip time and widget id.
          */
-        inline void Reset(void) {
-            this->tooltip_time = 0.0f;
-            this->tooltip_id = GUI_INVALID_ID;
-        }
+        void Reset(void);
 
     private:
         // VARIABLES --------------------------------------------------------------

@@ -5,8 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "Parameter.h"
+#include "widgets/ButtonWidgets.h"
+#include "widgets/ImageWidget_gl.h"
+#include "imgui_stdlib.h"
 
 
 using namespace megamol;
