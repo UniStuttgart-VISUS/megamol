@@ -68,7 +68,7 @@ private:
     bool getTexture(core::Call& call);
     bool getTextureMetaData(core::Call& call);
 
-    bool doScalarGlyphGeneration(FloatProbe& probe, float global_min, float global_max);
+    bool doScalarGlyphGeneration(FloatProbe& probe, std::array<float, 2> global_min_max);
 
     bool doVectorRibbonGlyphGeneration(Vec4Probe& probe);
  

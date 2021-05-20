@@ -58,7 +58,7 @@ GenerateGlyphs::GenerateGlyphs()
         this->Release();
     }
 
-    bool GenerateGlyphs::doScalarGlyphGeneration(FloatProbe& probe, float global_min, float global_max) {
+    bool GenerateGlyphs::doScalarGlyphGeneration(FloatProbe& probe, std::array<float,2> global_min_max) {
 
         // get probe
         // auto probe = this->_probe_data->getProbe<FloatProbe>(i);
@@ -171,7 +171,7 @@ GenerateGlyphs::GenerateGlyphs()
         _dtu.back().setResolution(resolution[0], resolution[1]);
         _dtu.back().setGraphType(DrawTextureUtility::GLYPH); // should be changeable
 
-        auto tex_ptr = _dtu.back().draw(samples->samples, global_min, global_max);
+        auto tex_ptr = _dtu.back().draw(samples->samples, std::get<0>(global_min_max), std::get<1>(global_min_max));
         this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu.back().getPixelWidth(),
             _dtu.back().getPixelHeight(), tex_ptr, 4 * _dtu.back().getPixelWidth() * _dtu.back().getPixelHeight());
 
@@ -518,7 +518,7 @@ GenerateGlyphs::GenerateGlyphs()
                     using T = std::decay_t<decltype(arg)>;
                     if constexpr (std::is_same_v<T, FloatProbe>) {
                         doScalarGlyphGeneration(
-                            arg, _probe_data->getGlobalMin<float>(), _probe_data->getGlobalMax<float>());
+                            arg, _probe_data->getGlobalMinMax<float>());
                     } else if constexpr (std::is_same_v<T, IntProbe>) {
                         // TODO
                     } else if constexpr (std::is_same_v<T, Vec4Probe>) {
@@ -610,7 +610,7 @@ GenerateGlyphs::GenerateGlyphs()
                     using T = std::decay_t<decltype(arg)>;
                     if constexpr (std::is_same_v<T, FloatProbe>) {
                         doScalarGlyphGeneration(
-                            arg, _probe_data->getGlobalMin<float>(), _probe_data->getGlobalMax<float>());
+                            arg, _probe_data->getGlobalMinMax<float>());
                     } else if constexpr (std::is_same_v<T, IntProbe>) {
                         // TODO
                     } else if constexpr (std::is_same_v<T, Vec4Probe>) {

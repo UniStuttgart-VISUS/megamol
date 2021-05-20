@@ -81,9 +81,7 @@ namespace probe_gl {
 
         std::shared_ptr<glowl::Texture2D> m_transfer_function;
 
-        float m_tf_min;
-
-        float m_tf_max;
+        std::array<float, 2> m_tf_range;
 
         ImGuiContext* m_imgui_context;
 
