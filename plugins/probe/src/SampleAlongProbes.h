@@ -11,7 +11,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "ProbeCollection.h"
+#include "probe/ProbeCollection.h"
 #include "mmcore/param/ParamSlot.h"
 #include "kdtree.h"
 #include "mmcore/param/IntParam.h"

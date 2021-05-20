@@ -6,7 +6,7 @@
 
 #include "PlaceProbes.h"
 #include <random>
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "probe/MeshUtilities.h"

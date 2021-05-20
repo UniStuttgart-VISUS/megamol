@@ -9,7 +9,7 @@
 
 #include "mmstd_datatools/clustering/DBSCAN.h"
 
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 
 #include "glm/glm.hpp"
 

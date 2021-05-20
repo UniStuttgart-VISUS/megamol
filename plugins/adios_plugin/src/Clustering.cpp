@@ -6,7 +6,7 @@
 #include "mmcore/param/IntParam.h"
 
 #include "mmstd_datatools/table/TableDataCall.h"
-#include "clustering/DBSCAN2.h"
+#include "mmstd_datatools/clustering/DBSCAN2.h"
 
 
 megamol::adios::Clustering::Clustering()

@@ -6,9 +6,9 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "clustering/ann_interface.h"
+#include "mmstd_datatools/clustering/ann_interface.h"
 
-#include "clustering/DBSCAN2.h"
+#include "mmstd_datatools/clustering/DBSCAN2.h"
 
 #include "mmstd_datatools/table/TableDataCall.h"
 

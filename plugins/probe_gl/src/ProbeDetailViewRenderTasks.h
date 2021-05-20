@@ -10,7 +10,7 @@
 
 #include "mesh/AbstractGPURenderTaskDataSource.h"
 
-#include "ProbeCollection.h"
+#include "probe/ProbeCollection.h"
 
 namespace megamol {
 namespace probe_gl {

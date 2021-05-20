@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ParticleIColClustering.h"
+#include "mmstd_datatools/clustering/ParticleIColClustering.h"
 
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"

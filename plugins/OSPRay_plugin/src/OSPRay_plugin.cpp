@@ -15,7 +15,7 @@
 #include "OSPRayRenderer.h"
 #include "OSPRayToGL.h"
 
-#include "CallOSPRayTransformation.h"
+#include "OSPRay_plugin/CallOSPRayTransformation.h"
 #include "OSPRayAPIStructure.h"
 #include "OSPRayLineGeometry.h"
 #include "OSPRayNHSphereGeometry.h"

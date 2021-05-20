@@ -1,6 +1,6 @@
 #include "ProbeBillboardGlyphMaterial.h"
 
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 #include "mesh/MeshCalls.h"
 
 megamol::probe_gl::ProbeBillboardGlyphMaterial::ProbeBillboardGlyphMaterial()

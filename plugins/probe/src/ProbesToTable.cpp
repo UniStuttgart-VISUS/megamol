@@ -5,7 +5,7 @@
  */
 
 #include "ProbesToTable.h"
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 
 namespace megamol {
 namespace probe {

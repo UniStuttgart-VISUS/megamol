@@ -9,7 +9,7 @@
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 
 #include "mmstd_datatools/table/TableDataCall.h"
 

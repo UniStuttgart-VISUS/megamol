@@ -1,14 +1,14 @@
 #include "FilterByProbe.h"
 
-#include "CallKDTree.h"
-#include "ProbeCalls.h"
+#include "probe/CallKDTree.h"
+#include "probe/ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/EventCall.h"
 #include "mmcore/UniFlagCalls.h"
 
-#include "ProbeCollection.h"
+#include "probe/ProbeCollection.h"
 
 namespace megamol {
 namespace probe_gl {

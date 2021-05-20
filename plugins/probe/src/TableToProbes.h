@@ -11,7 +11,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mesh/MeshCalls.h"
-#include "ProbeCollection.h"
+#include "probe/ProbeCollection.h"
 #include "probe/MeshUtilities.h"
 #include "adios_plugin/CallADIOSData.h"
 #include "mmstd_datatools/table/TableDataCall.h"

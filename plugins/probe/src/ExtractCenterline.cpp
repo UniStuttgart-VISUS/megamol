@@ -7,7 +7,7 @@
 #include "ExtractCenterline.h"
 #include <atomic>
 #include <limits>
-#include "CallKDTree.h"
+#include "probe/CallKDTree.h"
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"

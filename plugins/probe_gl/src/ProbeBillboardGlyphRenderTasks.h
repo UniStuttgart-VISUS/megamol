@@ -12,7 +12,7 @@
 
 #include "mesh/AbstractGPURenderTaskDataSource.h"
 
-#include "ProbeCollection.h"
+#include "probe/ProbeCollection.h"
 
 #include <imgui.h>
 

@@ -11,7 +11,7 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "ProbeShellElementsRenderTasks.h"

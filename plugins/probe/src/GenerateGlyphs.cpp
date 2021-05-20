@@ -8,7 +8,7 @@
 
 #include "DrawTextureUtility.h"
 #include "GenerateGlyphs.h"
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/FloatParam.h"

@@ -1,6 +1,6 @@
 #include "InjectClusterID.h"
 
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 
 megamol::probe::InjectClusterID::InjectClusterID(void) : _version(0), _probes_rhs_slot("probes", ""), _mesh_rhs_slot("mesh",""), _mesh_lhs_slot("output_mesh","") {
     this->_probes_rhs_slot.SetCompatibleCall<megamol::probe::CallProbesDescription>();

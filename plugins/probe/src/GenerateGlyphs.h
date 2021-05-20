@@ -7,7 +7,7 @@
 #pragma once
 
 #include "DrawTextureUtility.h"
-#include "ProbeCollection.h"
+#include "probe/ProbeCollection.h"
 #include "mesh/ImageDataAccessCollection.h"
 #include "mesh/MeshDataAccessCollection.h"
 #include "mmcore/Call.h"

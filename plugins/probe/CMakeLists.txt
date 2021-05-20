@@ -8,6 +8,7 @@ megamol_plugin(probe
   DEPENDS_PLUGINS
     adios_plugin
     mesh
+    mmstd_datatools
   DEPENDS_EXTERNALS
     Eigen
     nanoflann
@@ -24,9 +25,10 @@ if (probe_PLUGIN_ENABLED)
 
   target_sources(probe PRIVATE ${third})
   target_include_directories(probe PUBLIC "3rd")
-
-  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Eigen nanoflann mesh blend2d qhull libigl mmstd_datatools CGAL::CGAL)# Qhull::libqhull )
-  if (BUILD_OSPRAY_PLUGIN_PLUGIN)
+  
+  find_package(CGAL CONFIG REQUIRED)
+  target_link_libraries(probe PUBLIC CGAL::CGAL)
+  if (BUILD_PLUGIN_OSPRAY_PLUGIN)
     target_sources(probe PRIVATE ${ospray_sources} ${ospray_headers} ${ospray_public_headers})
     target_compile_definitions(probe PRIVATE ${EXPORT_NAME}_HAS_OSPRAY)
     target_include_directories(probe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/probe_ospray/include> "probe_ospray/src")

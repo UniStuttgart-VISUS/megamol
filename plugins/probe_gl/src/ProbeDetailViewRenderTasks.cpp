@@ -2,7 +2,7 @@
 
 #include "mmcore/EventCall.h"
 
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mesh/MeshCalls.h"

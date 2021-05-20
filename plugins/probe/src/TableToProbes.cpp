@@ -5,7 +5,7 @@
  */
 
 #include "TableToProbes.h"
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 #include "mmcore/param/BoolParam.h"
 #include "probe/MeshUtilities.h"
 

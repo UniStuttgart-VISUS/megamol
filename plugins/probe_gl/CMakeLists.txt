@@ -8,5 +8,6 @@ megamol_plugin(probe_gl
   DEPENDS_PLUGINS
     probe
     mesh
+    compositing_gl
   DEPENDS_EXTERNALS PUBLIC
     imgui)

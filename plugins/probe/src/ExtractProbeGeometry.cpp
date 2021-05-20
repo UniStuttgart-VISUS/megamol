@@ -6,7 +6,7 @@
 
 #include "ExtractProbeGeometry.h"
 
-#include "ProbeCalls.h"
+#include "probe/ProbeCalls.h"
 #include "mesh/MeshCalls.h"
 
 megamol::probe::ExtractProbeGeometry::ExtractProbeGeometry()

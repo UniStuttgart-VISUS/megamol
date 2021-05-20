@@ -6,7 +6,7 @@
 
 #include "mmcore/utility/sys/ConsoleProgressBar.h"
 
-#include "PointcloudHelpers.h"
+#include "mmstd_datatools/PointcloudHelpers.h"
 
 #include <nanoflann.hpp>
 

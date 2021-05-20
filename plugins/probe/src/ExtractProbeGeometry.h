@@ -11,7 +11,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "ProbeCollection.h"
+#include "probe/ProbeCollection.h"
 #include "mesh/MeshDataAccessCollection.h"
 
 namespace megamol {
