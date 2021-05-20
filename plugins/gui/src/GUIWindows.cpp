@@ -2589,7 +2589,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.stat_averaged_ms = 0.0f;
     this->state.stat_frame_count = 0;
     this->state.font_size = 13;
-    this->state.load_docking_preset = false;
+    this->state.load_docking_preset = true;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);
 }
