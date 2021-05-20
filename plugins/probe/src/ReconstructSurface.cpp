@@ -157,6 +157,7 @@ namespace probe {
 
         this->_getDataCall.SetCompatibleCall<adios::CallADIOSDataDescription>();
         this->MakeSlotAvailable(&this->_getDataCall);
+        this->_getDataCall.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 
         this->_meshToDiscCall.SetCallback(adios::CallADIOSData::ClassName(), adios::CallADIOSData::FunctionName(0),
             &ReconstructSurface::getADIOSData);
@@ -1568,7 +1569,7 @@ namespace probe {
         }
 
         if (something_changed && !_raw_positions.empty() || _shellToShowChanged) {
-
+            ++_version;
             auto mfdc = this->_meshFromDiscCall.CallAs<adios::CallADIOSData>();
             if (!mfdc) {
                 if (!_shellToShowChanged || _shells.empty()) {
@@ -1597,15 +1598,21 @@ namespace probe {
                 }
             }
 
+            _elementMesh.clear();
+            _mesh_for_call = nullptr;
+        } // something changed
+
+        if (_elementMesh.empty()) {
             if (this->_meshOutputSlot.Param<core::param::EnumParam>()->Value() == 0) {
-                _elementMesh.clear();
+
                 _elementMesh.resize(_shellElements.size());
                 for (int i = 0; i < _shellElements.size(); ++i) {
                     _elementMesh[i].resize(_shellElements[i].size());
                     for (int j = 0; j < _shellElements[i].size(); ++j) {
                         _elementMesh[i][j].second.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute());
                         _elementMesh[i][j].second.back().component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-                        _elementMesh[i][j].second.back().byte_size = _shellElementsVertices[i][j].size() * sizeof(std::array<float, 3>);
+                        _elementMesh[i][j].second.back().byte_size =
+                            _shellElementsVertices[i][j].size() * sizeof(std::array<float, 3>);
                         _elementMesh[i][j].second.back().component_cnt = 3;
                         _elementMesh[i][j].second.back().stride = sizeof(std::array<float, 3>);
                         _elementMesh[i][j].second.back().offset = 0;
@@ -1615,7 +1622,8 @@ namespace probe {
 
                         if (!_normals.empty()) {
                             _elementMesh[i][j].second.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute());
-                            _elementMesh[i][j].second.back().component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+                            _elementMesh[i][j].second.back().component_type =
+                                mesh::MeshDataAccessCollection::ValueType::FLOAT;
                             _elementMesh[i][j].second.back().byte_size =
                                 _shellElementsNormals[i][j].size() * sizeof(std::array<float, 3>);
                             _elementMesh[i][j].second.back().component_cnt = 3;
@@ -1627,9 +1635,9 @@ namespace probe {
                         }
 
                         _elementMesh[i][j].first.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
-                        _elementMesh[i][j].first.byte_size = _shellElementsTriangles[i][j].size() * sizeof(std::array<uint32_t, 3>);
-                        _elementMesh[i][j].first.data =
-                            reinterpret_cast<uint8_t*>(_shellElementsTriangles[i][j].data());
+                        _elementMesh[i][j].first.byte_size =
+                            _shellElementsTriangles[i][j].size() * sizeof(std::array<uint32_t, 3>);
+                        _elementMesh[i][j].first.data = reinterpret_cast<uint8_t*>(_shellElementsTriangles[i][j].data());
                     }
                 }
             } else {
@@ -1657,16 +1665,16 @@ namespace probe {
                 _mesh.first.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
                 _mesh.first.byte_size = _triangles.size() * sizeof(std::array<uint32_t, 3>);
                 _mesh.first.data = reinterpret_cast<uint8_t*>(_triangles.data());
-                }
-            ++_version;
-
+            }
+        }
+        if (!_mesh_for_call) {
             // put data in mesh#
             _mesh_for_call = std::make_shared<mesh::MeshDataAccessCollection>();
             if (this->_meshOutputSlot.Param<core::param::EnumParam>()->Value() == 0) {
                 for (int i = 0; i < _shellElements.size(); ++i) {
                     for (int j = 0; j < _shellElements[i].size(); ++j) {
                         std::string identifier =
-                            std::string(FullName()) + "_mesh_" + std::to_string(i) + "," + std::to_string(j);
+                            std::string("element_mesh_" + std::to_string(i) + "," + std::to_string(j));
                         _mesh_for_call->addMesh(identifier, _elementMesh[i][j].second, _elementMesh[i][j].first,
                             mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
                     }
@@ -1676,7 +1684,7 @@ namespace probe {
                 _mesh_for_call->addMesh(
                     identifier, _mesh.second, _mesh.first, mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
             }
-        } // something changed
+        }
 
         cm->setData(_mesh_for_call, _version);
 

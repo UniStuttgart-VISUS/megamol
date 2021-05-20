@@ -27,9 +27,11 @@ OSPRayMeshGeometry::OSPRayMeshGeometry(void)
 
     this->_getTrimeshDataSlot.SetCompatibleCall<geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->_getTrimeshDataSlot);
+    this->_getTrimeshDataSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 
     this->_getMeshDataSlot.SetCompatibleCall<mesh::CallMeshDescription>();
     this->MakeSlotAvailable(&this->_getMeshDataSlot);
+    this->_getMeshDataSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 }
 
 

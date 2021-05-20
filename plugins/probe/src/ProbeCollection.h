@@ -38,7 +38,7 @@ struct BaseProbe {
     /** true, if clustering considers this probe to be a representant */
     bool m_representant;
     /** ids connected to the geometry like mesh or primitives of vertices */
-    std::vector<uint32_t> m_geo_ids;
+    std::vector<std::string> m_geo_ids;
 
     // virtual void probe() = 0;
 };
@@ -124,6 +124,28 @@ public:
     template <typename ProbeType> ProbeType getProbe(size_t idx) const { return std::get<ProbeType>(m_probes[idx]); }
 
     GenericProbe getGenericProbe(size_t idx) const { return m_probes[idx]; }
+
+    BaseProbe getBaseProbe(size_t idx) const {
+        using T = std::decay_t<decltype(m_probes[idx])>;
+        if constexpr (std::is_same_v<T, probe::FloatProbe>) {
+            FloatProbe fp = std::get<FloatProbe>(m_probes[idx]);
+            FloatProbe* fpp = &fp;
+            BaseProbe* bpp = dynamic_cast<BaseProbe*>(fpp);
+            return *bpp;
+        } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
+            IntProbe ip = std::get<IntProbe>(m_probes[idx]);
+            IntProbe* ipp = &ip;
+            BaseProbe* bpp = dynamic_cast<BaseProbe*>(ipp);
+            return *bpp;
+        } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
+            Vec4Probe vecp = std::get<Vec4Probe>(m_probes[idx]);
+            Vec4Probe* vecpp = &vecp;
+            BaseProbe* bpp = dynamic_cast<BaseProbe*>(vecpp);
+            return *bpp;
+        } else {
+            return std::get<BaseProbe>(m_probes[idx]);
+        }
+    }
 
     uint32_t getProbeCount() const { return m_probes.size(); }
 

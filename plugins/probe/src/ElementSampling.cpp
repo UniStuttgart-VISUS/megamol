@@ -61,9 +61,12 @@ ElementSampling::ElementSampling()
 
     this->_elements_rhs_slot.SetCompatibleCall<adios::CallADIOSDataDescription>();
     this->MakeSlotAvailable(&this->_elements_rhs_slot);
+    this->_elements_rhs_slot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
+
 
     this->_adios_rhs_slot.SetCompatibleCall<adios::CallADIOSDataDescription>();
     this->MakeSlotAvailable(&this->_adios_rhs_slot);
+    this->_adios_rhs_slot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 
     core::param::FlexEnumParam* paramEnum = new core::param::FlexEnumParam("undef");
     this->_parameter_to_sample_slot << paramEnum;
@@ -273,7 +276,7 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
     }
 
     auto longest_edge = _bbox.BoundingBox().LongestEdge();
-    std::vector<uint32_t> geom_ids(elements.size());
+    std::vector<std::string> geom_ids(elements.size());
 
     //select Element
     for (int j = 0; j < elements[0].size(); ++j) {
@@ -282,7 +285,7 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
         geom_ids.resize(elements.size());
         // generate flat geomety indices
         for (int k = 0; k < elements.size(); ++k) {
-            geom_ids[k] = elements[0].size() * k + j;
+            geom_ids[k] = "element_mesh_"  + std::to_string(k) + "," + std::to_string(j);
         }
 
         BaseProbe new_probe;

@@ -35,6 +35,7 @@
 #include "InjectClusterID.h"
 #include "ElementSampling.h"
 #include "ExtractSkeleton.h"
+#include "ElementColoring.h"
 
 namespace megamol::probe {
     /** Implementing the instance class of this plugin */
@@ -84,6 +85,7 @@ namespace megamol::probe {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractSkeleton>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ElementColoring>();
 
             // register calls here:
 
