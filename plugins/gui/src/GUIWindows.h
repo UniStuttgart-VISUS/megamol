@@ -12,15 +12,15 @@
 
 #include "Configurator.h"
 #include "LogConsole.h"
-#include "WindowCollection.h"
 #include "TransferFunctionEditor.h"
+#include "WindowCollection.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "widgets/StringSearchWidget.h"
 #include "widgets/WidgetPicking_gl.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/MegaMolGraph.h"
 
 
 namespace megamol {

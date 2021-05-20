@@ -10,14 +10,14 @@
 #pragma once
 
 
+#include <functional>
+#include <map>
+#include <string>
+#include <vector>
 #include "imgui.h"
 #include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
-#include <string>
-#include <vector>
-#include <functional>
-#include <map>
 
 
 namespace megamol {
@@ -132,10 +132,10 @@ namespace gui {
         Complete config;
 
     private:
-        size_t hash_id;                    // unique hash generated from name to omit string comparison
-        std::string name;                  // unique name of the window
-        PredefinedCallbackID callback_id;  // ID of the predefined callback drawing the window content
-        CallbackFunc_t volatile_callback;  // [NOT SAVED] Alternative unknown window callback.
+        size_t hash_id;                   // unique hash generated from name to omit string comparison
+        std::string name;                 // unique name of the window
+        PredefinedCallbackID callback_id; // ID of the predefined callback drawing the window content
+        CallbackFunc_t volatile_callback; // [NOT SAVED] Alternative unknown window callback.
     };
 
     // --------------------------------------------------------------------
@@ -146,7 +146,6 @@ namespace gui {
     class WindowCollection {
 
     public:
-
         WindowCollection(void) {
             this->callbacks[WindowConfiguration::PredefinedCallbackID::DRAWCALLBACK_VOLATILE] = nullptr;
         }
@@ -163,7 +162,8 @@ namespace gui {
             WindowConfiguration::PredefinedCallbackID cb_id, WindowConfiguration::PredefinedCallbackFunc_t cb) {
             if (cb_id == WindowConfiguration::PredefinedCallbackID::DRAWCALLBACK_VOLATILE) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] DRAWCALLBACK_VOLATILE can not be used for predefined callback. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    "[GUI] DRAWCALLBACK_VOLATILE can not be used for predefined callback. [%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
             this->callbacks[cb_id] = cb;
@@ -175,7 +175,8 @@ namespace gui {
          *
          * @param cbid  The predefined window callback ID.
          */
-        inline WindowConfiguration::PredefinedCallbackFunc_t PredefinedWindowCallback(WindowConfiguration::PredefinedCallbackID cb_id) {
+        inline WindowConfiguration::PredefinedCallbackFunc_t PredefinedWindowCallback(
+            WindowConfiguration::PredefinedCallbackID cb_id) {
             return this->callbacks[cb_id]; //
         }
 

@@ -10,14 +10,14 @@
 #pragma once
 
 
+#include <queue>
+#include "Call.h"
+#include "Group.h"
+#include "Module.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
-#include "Call.h"
-#include "Group.h"
-#include "Module.h"
-#include <queue>
 
 
 namespace megamol {

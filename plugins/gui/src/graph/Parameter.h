@@ -10,12 +10,12 @@
 #pragma once
 
 
+#include <variant>
 #include "TransferFunctionEditor.h"
+#include "mmcore/param/FlexEnumParam.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterOrbitalWidget.h"
-#include "mmcore/param/FlexEnumParam.h"
-#include <variant>
 
 
 namespace megamol {

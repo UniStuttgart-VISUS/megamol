@@ -7,9 +7,9 @@
 
 
 #include "Graph.h"
+#include "imgui_stdlib.h"
 #include "vislib/math/Ternary.h"
 #include "widgets/ButtonWidgets.h"
-#include "imgui_stdlib.h"
 
 
 using namespace megamol;

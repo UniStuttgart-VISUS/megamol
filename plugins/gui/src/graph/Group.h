@@ -10,10 +10,10 @@
 #pragma once
 
 
-#include "widgets/PopUps.h"
 #include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"
+#include "widgets/PopUps.h"
 
 
 namespace megamol {

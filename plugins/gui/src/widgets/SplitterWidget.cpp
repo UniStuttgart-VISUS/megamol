@@ -6,9 +6,8 @@
  */
 
 
-#include "GUIUtils.h"
 #include "SplitterWidget.h"
-
+#include "GUIUtils.h"
 
 
 using namespace megamol;

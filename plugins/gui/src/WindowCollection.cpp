@@ -6,9 +6,9 @@
  */
 
 
+#include "WindowCollection.h"
 #include "GUIUtils.h"
 #include "imgui_internal.h"
-#include "WindowCollection.h"
 
 
 using namespace megamol;

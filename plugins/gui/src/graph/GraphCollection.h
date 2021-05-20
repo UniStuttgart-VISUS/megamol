@@ -11,11 +11,11 @@
 
 
 #include "Graph.h"
-#include "widgets/FileBrowserWidget.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
+#include "widgets/FileBrowserWidget.h"
 
 
 namespace megamol {

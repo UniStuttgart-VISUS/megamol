@@ -7,13 +7,13 @@
 
 
 #include "GUIWindows.h"
-#include "widgets/CorporateGreyStyle.h"
-#include "widgets/CorporateWhiteStyle.h"
-#include "widgets/DefaultStyle.h"
-#include "widgets/ButtonWidgets.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 #include "mmcore/versioninfo.h"
+#include "widgets/ButtonWidgets.h"
+#include "widgets/CorporateGreyStyle.h"
+#include "widgets/CorporateWhiteStyle.h"
+#include "widgets/DefaultStyle.h"
 
 
 using namespace megamol;
@@ -489,7 +489,8 @@ bool GUIWindows::PostDraw(void) {
                 wc.VolatileCallback()(wc.config.basic);
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Missing valid draw callback for GUI window '%s'. [%s, %s, line %d]\n", wc.Name().c_str(), __FILE__, __FUNCTION__, __LINE__);
+                    "[GUI] Missing valid draw callback for GUI window '%s'. [%s, %s, line %d]\n", wc.Name().c_str(),
+                    __FILE__, __FUNCTION__, __LINE__);
             }
 
             // Saving some of the current window state.
@@ -2023,7 +2024,8 @@ void GUIWindows::drawMenu(void) {
 void megamol::gui::GUIWindows::drawPopUps(void) {
 
     // Externally registered Pop-Ups
-    auto external_popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
+    auto external_popup_flags =
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
     for (auto& popup_map : this->external_popup_registry) {
         bool open = false;
         for (auto& popup : popup_map.second) {

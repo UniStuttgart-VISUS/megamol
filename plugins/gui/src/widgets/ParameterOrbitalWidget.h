@@ -11,8 +11,8 @@
 
 
 #define IMGUIZMO_IMGUI_FOLDER
-#include "imGuIZMOquat.h"
 #include "glm/glm.hpp"
+#include "imGuIZMOquat.h"
 
 
 namespace megamol {

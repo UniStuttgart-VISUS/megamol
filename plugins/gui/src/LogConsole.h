@@ -11,9 +11,9 @@
 
 
 #include "WindowCollection.h"
+#include "mmcore/utility/log/StreamTarget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
-#include "mmcore/utility/log/StreamTarget.h"
 
 
 namespace megamol {

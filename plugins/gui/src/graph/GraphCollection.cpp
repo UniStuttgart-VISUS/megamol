@@ -7,8 +7,8 @@
 
 
 #include "GraphCollection.h"
-#include "mmcore/view/AbstractView.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
+#include "mmcore/view/AbstractView.h"
 #include "utility/plugins/PluginManager.h"
 
 

@@ -10,10 +10,10 @@
 #pragma once
 
 
-#include "widgets/HoverToolTip.h"
-#include "widgets/PopUps.h"
 #include "CallSlot.h"
 #include "ParameterGroups.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/PopUps.h"
 
 
 namespace megamol {

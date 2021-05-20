@@ -11,10 +11,10 @@
 
 
 #include "graph/Parameter.h"
+#include "vislib/math/Ternary.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterGroupAnimationWidget.h"
 #include "widgets/ParameterGroupViewCubeWidget.h"
-#include "vislib/math/Ternary.h"
 
 
 namespace megamol {

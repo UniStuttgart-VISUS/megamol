@@ -10,8 +10,8 @@
 #pragma once
 
 
-#include "GUIUtils.h"
 #include <string>
+#include "GUIUtils.h"
 
 
 namespace megamol {
