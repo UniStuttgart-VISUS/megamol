@@ -10,7 +10,7 @@
 #include <memory>
 #include <string>
 
-#include "msf/compiler_options.h"
+#include "msf/ShaderFactoryOptionsOpenGL.h"
 
 #include "glad/glad.h"
 
@@ -18,17 +18,13 @@
 
 namespace megamol::core::utility {
 
-glowl::GLSLProgram::ShaderSourceList::value_type make_glowl_shader_source(
-    std::filesystem::path const& shader_source_path, megamol::shaderfactory::compiler_options const& options);
-
+std::unique_ptr<glowl::GLSLProgram> make_glowl_shader(std::string const& label,
+    msf::ShaderFactoryOptionsOpenGL const& options, const std::vector<std::filesystem::path>& paths);
 
 template<typename... Paths>
 std::enable_if_t<(std::is_convertible_v<Paths, std::filesystem::path> && ...), std::unique_ptr<glowl::GLSLProgram>>
-make_glowl_shader(std::string const& label, megamol::shaderfactory::compiler_options const& options, Paths... paths) {
-    auto program = std::make_unique<glowl::GLSLProgram>(
-        glowl::GLSLProgram::ShaderSourceList{make_glowl_shader_source(paths, options)...});
-    program->setDebugLabel(label);
-    return program;
+make_glowl_shader(std::string const& label, msf::ShaderFactoryOptionsOpenGL const& options, Paths... paths) {
+    return make_glowl_shader(label, options, std::vector<std::filesystem::path>{paths...});
 }
 
 } // end namespace megamol::core::utility
