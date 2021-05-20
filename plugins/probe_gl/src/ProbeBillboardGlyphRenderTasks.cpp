@@ -173,16 +173,19 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         m_textured_glyph_identifiers.clear();
         m_vector_probe_glyph_identifiers.clear();
         m_scalar_probe_glyph_identifiers.clear();
+        m_scalar_distribution_probe_glyph_identifiers.clear();
         m_clusterID_glyph_identifiers.clear();
 
         m_textured_glyph_data.clear();
         m_vector_probe_glyph_data.clear();
         m_scalar_probe_glyph_data.clear();
+        m_scalar_distribution_probe_glyph_data.clear();
         m_clusterID_glyph_data.clear();
 
         m_textured_gylph_draw_commands.clear();
         m_vector_probe_gylph_draw_commands.clear();
         m_scalar_probe_gylph_draw_commands.clear();
+        m_scalar_distribution_probe_gylph_draw_commands.clear();
         m_clusterID_gylph_draw_commands.clear();
 
         m_textured_gylph_draw_commands.reserve(probe_cnt);
@@ -193,6 +196,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
         m_scalar_probe_gylph_draw_commands.reserve(probe_cnt);
         m_scalar_probe_glyph_data.reserve(probe_cnt);
+
+        m_scalar_distribution_probe_gylph_draw_commands.reserve(probe_cnt);
+        m_scalar_distribution_probe_glyph_data.reserve(probe_cnt);
 
         m_clusterID_gylph_draw_commands.reserve(probe_cnt);
         m_clusterID_glyph_data.reserve(probe_cnt);
@@ -327,6 +333,20 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                         this->m_type_index_map.push_back({std::type_index(typeid(GlyphScalarProbeData)), sp_idx});
 
+                    } else if constexpr (std::is_same_v<T, probe::FloatDistributionProbe>) {
+                        auto sp_idx = m_scalar_distribution_probe_glyph_data.size();
+
+                        auto glyph_data = createScalarDistributionProbeGlyphData(arg, probe_idx, scale);
+                        glyph_data.tf_texture_handle = texture_handle;
+                        glyph_data.tf_min = m_tf_min;
+                        glyph_data.tf_max = m_tf_max;
+                        m_scalar_distribution_probe_gylph_draw_commands.push_back(draw_command);
+                        this->m_scalar_distribution_probe_glyph_data.push_back(glyph_data);
+
+                        m_scalar_distribution_probe_glyph_identifiers.emplace_back(
+                            std::string(FullName()) + "_sdg_" + std::to_string(probe_idx));
+
+                        this->m_type_index_map.push_back({std::type_index(typeid(GlyphScalarDistributionProbeData)), sp_idx});
                     } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
                         // TODO
                     } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
@@ -706,6 +726,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
 
     std::shared_ptr<glowl::GLSLProgram> textured_shader(nullptr);
     std::shared_ptr<glowl::GLSLProgram> scalar_shader(nullptr);
+    std::shared_ptr<glowl::GLSLProgram> scalar_distribution_shader(nullptr);
     std::shared_ptr<glowl::GLSLProgram> vector_shader(nullptr);
     std::shared_ptr<glowl::GLSLProgram> clusterID_shader(nullptr);
 
@@ -714,6 +735,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     {
         auto textured_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Textured");
         auto scalar_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Scalar");
+        auto scalar_distribution_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_ScalarDistribution");
         auto vector_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Vector");
         auto clusterID_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_ClusterID");
 
@@ -722,6 +744,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
         }
         if (scalar_query != gpu_mtl_storage[i]->getMaterials().end()) {
             scalar_shader = scalar_query->second.shader_program;
+        }
+        if (scalar_distribution_query != gpu_mtl_storage[i]->getMaterials().end()) {
+            scalar_distribution_shader = scalar_distribution_query->second.shader_program;
         }
         if (vector_query != gpu_mtl_storage[i]->getMaterials().end()) {
             vector_shader = vector_query->second.shader_program;
@@ -738,6 +763,11 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     if (scalar_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Could not get ProbeBillboard_Scalar material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+    }
+    if (scalar_distribution_shader == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Could not get ProbeBillboard_Scalar_Distribution material, identifier not found. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
     }
     if (vector_shader == nullptr) {
@@ -763,6 +793,13 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
             m_billboard_dummy_mesh, m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
             m_scalar_probe_glyph_identifiers.begin(), m_scalar_probe_glyph_identifiers.end());
+    }
+
+    if (!m_scalar_distribution_probe_glyph_data.empty()) {
+        m_rendertask_collection.first->addRenderTasks(m_scalar_distribution_probe_glyph_identifiers, scalar_distribution_shader,
+            m_billboard_dummy_mesh, m_scalar_distribution_probe_gylph_draw_commands, m_scalar_distribution_probe_glyph_data);
+        m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
+            m_scalar_distribution_probe_glyph_identifiers.begin(), m_scalar_distribution_probe_glyph_identifiers.end());
     }
 
     if (!m_vector_probe_glyph_data.empty()) {
@@ -831,6 +868,36 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::createScalarProbeGlyphData(
 
     for (int i = 0; i < glyph_data.sample_cnt; ++i) {
         glyph_data.samples[i] = probe.getSamplingResult()->samples[i];
+    }
+
+    glyph_data.probe_id = probe_id;
+
+    return glyph_data;
+}
+
+megamol::probe_gl::ProbeBillboardGlyphRenderTasks::GlyphScalarDistributionProbeData
+megamol::probe_gl::ProbeBillboardGlyphRenderTasks::createScalarDistributionProbeGlyphData(
+    probe::FloatDistributionProbe const& probe, int probe_id, float scale) {
+
+    GlyphScalarDistributionProbeData glyph_data;
+    glyph_data.position = glm::vec4(probe.m_position[0] + probe.m_direction[0] * (probe.m_begin * 1.25f),
+        probe.m_position[1] + probe.m_direction[1] * (probe.m_begin * 1.25f),
+        probe.m_position[2] + probe.m_direction[2] * (probe.m_begin * 1.25f), 1.0f);
+
+    glyph_data.probe_direction = glm::vec4(probe.m_direction[0], probe.m_direction[1], probe.m_direction[2], 1.0f);
+
+    glyph_data.scale = scale;
+
+    if (probe.getSamplingResult()->samples.size() > 32) {
+        // TODO print warning/error message
+    }
+
+    glyph_data.sample_cnt = std::min(static_cast<size_t>(32), probe.getSamplingResult()->samples.size());
+
+    for (int i = 0; i < glyph_data.sample_cnt; ++i) {
+        glyph_data.samples[i][0] = probe.getSamplingResult()->samples[i].mean;
+        glyph_data.samples[i][1] = probe.getSamplingResult()->samples[i].lower_bound;
+        glyph_data.samples[i][2] = probe.getSamplingResult()->samples[i].upper_bound;
     }
 
     glyph_data.probe_id = probe_id;

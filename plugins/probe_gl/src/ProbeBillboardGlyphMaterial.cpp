@@ -77,6 +77,23 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
     }
 
     try {
+        this->m_scalar_distribution_probe_glyph_prgm = create_progam("ScalarDistributionProbeGlyph");
+    } catch (glowl::GLSLProgramException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", "ScalarDistributionProbeGlyph", exc.what(),
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (vislib::Exception e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        return false;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        return false;
+    }
+
+    try {
         this->m_vector_probe_glyph_prgm = create_progam("VectorProbeGlyph");
     } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -117,6 +134,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
     m_material_collection.second.push_back("ProbeBillboard_Textured");
     m_material_collection.first->addMaterial("ProbeBillboard_Scalar", m_scalar_probe_glyph_prgm);
     m_material_collection.second.push_back("ProbeBillboard_Scalar");
+    m_material_collection.first->addMaterial("ProbeBillboard_ScalarDistribution", m_scalar_distribution_probe_glyph_prgm);
+    m_material_collection.second.push_back("ProbeBillboard_ScalarDistribution");
     m_material_collection.first->addMaterial("ProbeBillboard_Vector", m_vector_probe_glyph_prgm);
     m_material_collection.second.push_back("ProbeBillboard_Vector");
     m_material_collection.first->addMaterial("ProbeBillboard_ClusterID", m_clusterID_glyph_prgm);

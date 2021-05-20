@@ -66,6 +66,9 @@ namespace probe_gl {
         /** Shader program for realtime GPU rendered glyph for scalar probes */
         std::shared_ptr<ShaderProgram> m_scalar_probe_glyph_prgm;
 
+        /** Shader program for realtime GPU rendered glyph for scalar distribution probes */
+        std::shared_ptr<ShaderProgram> m_scalar_distribution_probe_glyph_prgm;
+
         /** Shader program for displaying cluster IDs of probes */
         std::shared_ptr<ShaderProgram> m_clusterID_glyph_prgm;
 
