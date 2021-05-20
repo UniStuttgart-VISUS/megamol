@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_MINIMALPOPUP_INCLUDED
 #define MEGAMOL_GUI_MINIMALPOPUP_INCLUDED
+#pragma once
 
 
 #include "HoverToolTip.h"

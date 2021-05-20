@@ -7,6 +7,8 @@
 
 #ifndef MEGAMOL_GUI_COLORMAPS_INCLUDED
 #define MEGAMOL_GUI_COLORMAPS_INCLUDED
+#pragma once
+
 
 /**
  * Colormaps by Nathaniel J.Smith, Stefan van der Walt, Eric Firing, and Kenneth Moreland.

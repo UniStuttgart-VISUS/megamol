@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-/// #define GUI_VERBOSE
 
 #ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
+#pragma once
 
 
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -17,11 +17,13 @@
 #include "imgui_internal.h"
 
 #include "mmcore/param/AbstractParamPresentation.h"
-#include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/math/Ternary.h"
+
+
+/// #define GUI_VERBOSE
 
 
 #define GUI_INVALID_ID (UINT_MAX)

@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_BUTTONWIDGETS_INCLUDED
 #define MEGAMOL_GUI_BUTTONWIDGETS_INCLUDED
+#pragma once
 
 
 #include <string>

@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 #define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
+#pragma once
 
 
 #include "widgets/HoverToolTip.h"

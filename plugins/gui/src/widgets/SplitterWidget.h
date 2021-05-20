@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_SPLITTERWIDGET_INCLUDED
 #define MEGAMOL_GUI_SPLITTERWIDGET_INCLUDED
+#pragma once
 
 
 namespace megamol {

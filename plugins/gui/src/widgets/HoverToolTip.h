@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_HOVERTOOLTIP_INCLUDED
 #define MEGAMOL_GUI_HOVERTOOLTIP_INCLUDED
+#pragma once
 
 
 #include "GUIUtils.h"

@@ -96,7 +96,6 @@ private:
     void resource_provide_gui_scale(float scale);
 
     void resource_register_window(const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func);
-    void resource_register_popup(const std::string& name, bool& open, std::function<void(void)>& func);
 };
 
 } // namespace frontend

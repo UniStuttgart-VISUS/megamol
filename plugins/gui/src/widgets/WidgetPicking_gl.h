@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_WIDGETPICKING_GL_INCLUDED
 #define MEGAMOL_GUI_WIDGETPICKING_GL_INCLUDED
+#pragma once
 
 
 #include "mmcore/view/RenderUtils.h"

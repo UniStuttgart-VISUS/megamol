@@ -7,26 +7,14 @@
 
 #ifndef MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
+#pragma once
 
 
 #include "TransferFunctionEditor.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterOrbitalWidget.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/ColorParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FlexEnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/TernaryParam.h"
-#include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore/param/Vector2fParam.h"
-#include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/Vector4fParam.h"
 #include <variant>
 
 

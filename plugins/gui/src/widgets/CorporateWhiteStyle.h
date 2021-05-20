@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED
 #define MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED
+#pragma once
 
 
 #include "DefaultStyle.h"

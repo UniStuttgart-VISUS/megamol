@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_GRAPH_INTERFACESLOT_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_INTERFACESLOT_H_INCLUDED
+#pragma once
 
 
 #include "widgets/HoverToolTip.h"
