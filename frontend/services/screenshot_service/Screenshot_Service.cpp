@@ -196,7 +196,7 @@ bool Screenshot_Service::init(const Config& config) {
         "GUIRegisterWindow"
     };
 
-    m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
+    this->m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
     {
         log("write screenshot to " + filename);
         return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
@@ -280,6 +280,7 @@ void Screenshot_Service::postGraphRender() {
     // update window name
     // swap buffers, glClear
 }
+
 
 } // namespace frontend
 } // namespace megamol
