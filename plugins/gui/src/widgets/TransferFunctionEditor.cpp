@@ -569,7 +569,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
             this->pending_changes ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
-        if (ImGui::Button("Apply")) {
+        if (ImGui::Button("Apply Pending Changes")) {
             apply_changes = true;
         }
         ImGui::PopStyleColor(3);
