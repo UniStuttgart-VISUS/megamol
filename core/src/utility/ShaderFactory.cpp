@@ -12,28 +12,11 @@
 
 static msf::ShaderFactory msf_factory;
 
-std::unique_ptr<glowl::GLSLProgram> megamol::core::utility::make_glowl_shader(std::string const& label,
-    msf::ShaderFactoryOptionsOpenGL const& options, const std::vector<std::filesystem::path>& paths) {
+glowl::GLSLProgram::ShaderSourceList::value_type megamol::core::utility::make_glowl_shader_source(
+    std::filesystem::path const& shader_source_path, msf::ShaderFactoryOptionsOpenGL const& options,
+    msf::LineTranslator& translator) {
+    auto const shader_string = translator.cleanupShader(msf_factory.preprocess(shader_source_path, options));
+    auto const type = msf::getShaderTypeInt(shader_source_path);
 
-    glowl::GLSLProgram::ShaderSourceList source_list;
-    std::vector<msf::LineTranslator> translators;
-
-    // TODO: BUG!!! All translators will use the same ids for different files!!!
-    for (const auto& path : paths) {
-        auto const shader_string = translators.emplace_back(msf_factory.preprocess(path, options)).getCleanShader();
-        auto const type = msf::getShaderTypeInt(path);
-        source_list.emplace_back(std::make_pair(static_cast<glowl::GLSLProgram::ShaderType>(type), shader_string));
-    }
-
-    try {
-        auto program = std::make_unique<glowl::GLSLProgram>(source_list);
-        program->setDebugLabel(label);
-        return program;
-    } catch (const glowl::GLSLProgramException& e) {
-        std::string error = e.what();
-        for (const auto& t : translators) {
-            error = t.translateErrorLog(error);
-        }
-        throw glowl::GLSLProgramException(error);
-    }
+    return std::make_pair(static_cast<glowl::GLSLProgram::ShaderType>(type), shader_string);
 }
