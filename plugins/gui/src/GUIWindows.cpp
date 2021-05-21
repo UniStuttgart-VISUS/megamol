@@ -136,8 +136,7 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
             switch (imgui_api) {
             case (GUIImGuiAPI::OPEN_GL): {
                 // Init OpenGL for ImGui
-                const char* glsl_version = "#version 150"; /// or "#version 130" or nullptr
-                if (ImGui_ImplOpenGL3_Init(glsl_version)) {
+                if (ImGui_ImplOpenGL3_Init(nullptr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui context for Open GL.");
                 } else {
                     this->destroyContext();
