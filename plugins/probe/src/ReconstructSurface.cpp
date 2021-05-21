@@ -36,6 +36,8 @@
 #include <CGAL/Polygon_mesh_processing/smooth_mesh.h>
 #include <CGAL/Polygon_mesh_processing/detect_features.h>
 #include <CGAL/Polygon_mesh_processing/smooth_shape.h>
+#include <CGAL/Polygon_mesh_processing/shape_predicates.h>
+#include <CGAL/Polygon_mesh_processing/repair.h>
 
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Plane_3.h>
@@ -1189,6 +1191,66 @@ namespace probe {
                                         .c_str());
                             }
                             assert(shell_copy_copy.num_vertices() > 0);
+                            //typedef boost::graph_traits<Surface_mesh>::vertex_descriptor vertex_descriptor;
+                            //std::vector<std::vector<vertex_descriptor>> duplicated_vertices;
+                            //std::size_t new_vertices_nb = CGAL::Polygon_mesh_processing::duplicate_non_manifold_vertices(shell_copy_copy,
+                            //        CGAL::parameters::output_iterator(std::back_inserter(duplicated_vertices)));
+                            if (!CGAL::is_closed(shell_copy_copy)) {
+                                core::utility::log::Log::DefaultLog.WriteError("[ReconstructSurface] Mesh element is not closed!");
+                            }
+                            //degenerate detection
+                            typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
+                            typedef boost::graph_traits<Surface_mesh>::face_descriptor face_descriptor;
+                            typedef boost::graph_traits<Surface_mesh>::vertex_descriptor vertex_descriptor;
+                            typedef boost::graph_traits<Surface_mesh>::edge_descriptor edge_descriptor;
+                            std::vector<edge_descriptor> edges;
+
+                            CGAL::Polygon_mesh_processing::degenerate_edges(shell_copy_copy, std::back_inserter(edges));
+                            std::sort(edges.begin(), edges.end());
+                            edges.erase(std::unique(edges.begin(), edges.end()), edges.end());
+
+                            if (!edges.empty()) {
+                                core::utility::log::Log::DefaultLog.WriteWarn(
+                                    "[ReconstructSurface] Mesh element has degenerated edges, trying to remove");
+                                //CGAL::Polygon_mesh_processing::remove_connected_components_of_negligible_size(shell_copy_copy);
+                                do_remeshing(shell_copy_copy);
+                                 for (auto h : halfedges(shell_copy_copy)) {
+                                    if (CGAL::is_border(h, shell_copy_copy)) {
+                                        std::vector<face_descriptor> patch_facets;
+                                        std::vector<vertex_descriptor> patch_vertices;
+                                        bool success = std::get<0>(
+                                            CGAL::Polygon_mesh_processing::triangulate_refine_and_fair_hole(shell_copy_copy,
+                                                h,
+                                            std::back_inserter(patch_facets), std::back_inserter(patch_vertices),
+                                            CGAL::parameters::vertex_point_map(get(CGAL::vertex_point,
+                                            shell_copy_copy))
+                                                .geom_traits(Kernel())));
+                                        if (!success) {
+                                            core::utility::log::Log::DefaultLog.WriteWarn(
+                                                "[ReconstructSurface] Could not close hole");
+                                        }
+                                    }
+                                }
+                            }
+                            //for (auto edge : edges) {
+                            //    CGAL::Euler::remove_face(edge.halfedge(), shell_copy_copy);
+                            //}
+
+                            //for (auto h : halfedges(shell_copy_copy)) {
+                            //    if (CGAL::is_border(h, shell_copy_copy)) {
+                            //        std::vector<face_descriptor> patch_facets;
+                            //        std::vector<vertex_descriptor> patch_vertices;
+                            //        bool success = std::get<0>(
+                            //            CGAL::Polygon_mesh_processing::triangulate_refine_and_fair_hole(shell_copy_copy,
+                            //                h,
+                            //            std::back_inserter(patch_facets), std::back_inserter(patch_vertices),
+                            //            CGAL::parameters::vertex_point_map(get(CGAL::vertex_point, shell_copy_copy))
+                            //                .geom_traits(Kernel())));
+                            //        if (!success)
+                            //            break;
+                            //    }
+                            //}
+                            shell_copy_copy.collect_garbage();
                             _shellElements[i].emplace_back(shell_copy_copy);
                         }
                         off_axis_normal[min_axis] = -1;
@@ -1772,7 +1834,7 @@ namespace probe {
         for (int i = 0; i < _shellElements.size(); ++i) {
             for (int j = 0; j < _shellElements[0].size(); ++j) {
                 std::stringstream sstream;
-                sstream << _shellElements[i][j];
+                sstream << std::setprecision(17) << _shellElements[i][j];
                 auto current_string = sstream.str();
                 std::copy(current_string.begin(), current_string.end(), std::back_inserter(elements_vec));
                 elementOffsets_vec.emplace_back(current_element_offset);
@@ -1788,7 +1850,7 @@ namespace probe {
         uint64_t current_shell_offset = 0;
         for (int i = 0; i < _shells.size(); ++i) {
             std::stringstream sstream;
-            sstream << _shells[i];
+            sstream << std::setprecision(17) << _shells[i];
             auto current_string = sstream.str();
             std::copy(current_string.begin(), current_string.end(), std::back_inserter(shells_vec));
             shells_offsets_vec.emplace_back(current_shell_offset);
@@ -1799,7 +1861,7 @@ namespace probe {
         std::vector<char>& hull_vec = hullCont->getVec();
 
         std::stringstream hull_sstream;
-        hull_sstream << _sm;
+        hull_sstream << std::setprecision(17) << _sm;
         auto hull_str = hull_sstream.str();
 
         hull_vec.reserve(hull_str.size());

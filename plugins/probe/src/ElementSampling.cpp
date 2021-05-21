@@ -248,6 +248,7 @@ bool ElementSampling::readElements() {
     _elements.resize(elements_shape[0]);
     for (int i = 0; i < elements_shape[0]; ++i) {
         _elements[i].resize(elements_shape[1]);
+#pragma omp parallel for
         for (int j = 0; j < elements_shape[1]; ++j) {
             std::string current_element;
             if ((i == (elements_shape[0] - 1)) && (j == (elements_shape[1] - 1))) {

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <CGAL/convex_hull_3_to_face_graph.h>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -18,6 +20,7 @@
 #include "mmcore/param/EnumParam.h"
 #include <CGAL/Surface_mesh/Surface_mesh.h>
 #include <CGAL/Surface_mesh_default_triangulation_3.h>
+#include <CGAL/Polygon_mesh_processing/shape_predicates.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 #include "mmcore/BoundingBoxes_2.h"
 
@@ -88,6 +91,7 @@ private:
     template <typename T>
     void doScalarSampling(const std::vector<std::vector<Surface_mesh>>& elements, const std::vector<T>& data,
         const std::vector<T>& data_positions);
+    void do_triangulation(Surface_mesh& mesh_);
     void placeProbes(const std::vector<std::vector<Surface_mesh>>& elements);
 
     std::shared_ptr<ProbeCollection> _probes;
@@ -98,7 +102,7 @@ private:
 
     megamol::core::BoundingBoxes_2 _bbox;
 
-     std::vector<std::vector<Surface_mesh>> _elements;
+    std::vector<std::vector<Surface_mesh>> _elements;
 };
 
 
@@ -150,33 +154,59 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
         // go through shells
         for (int i = 0; i < elements.size(); ++i) {
 
-            glm::vec3 max_coord = glm::vec3(-std::numeric_limits<float>::infinity());
-            glm::vec3 min_coord = glm::vec3(std::numeric_limits<float>::infinity());
+            glm::vec3 element_max_coord = glm::vec3(-std::numeric_limits<float>::infinity());
+            glm::vec3 element_min_coord = glm::vec3(std::numeric_limits<float>::infinity());
             for (auto p : elements[i][j].points()) {
-                max_coord.x = std::max<float>(max_coord.x, p.x());
-                max_coord.y = std::max<float>(max_coord.y, p.y());
-                max_coord.z = std::max<float>(max_coord.z, p.z());
-                min_coord.x = std::min<float>(min_coord.x, p.x());
-                min_coord.y = std::min<float>(min_coord.y, p.y());
-                min_coord.z = std::min<float>(min_coord.z, p.z());
+                element_max_coord.x = std::max<float>(element_max_coord.x, p.x());
+                element_max_coord.y = std::max<float>(element_max_coord.y, p.y());
+                element_max_coord.z = std::max<float>(element_max_coord.z, p.z());
+                element_min_coord.x = std::min<float>(element_min_coord.x, p.x());
+                element_min_coord.y = std::min<float>(element_min_coord.y, p.y());
+                element_min_coord.z = std::min<float>(element_min_coord.z, p.z());
             }
 
-            CGAL::Side_of_triangle_mesh<Surface_mesh, K> inside(elements[i][j]);
+            typedef boost::graph_traits<Surface_mesh>::edge_descriptor edge_descriptor;
+            std::vector<edge_descriptor> edges;
+            Surface_mesh current_mesh = elements[i][j]; 
+
+            CGAL::Polygon_mesh_processing::degenerate_edges(current_mesh, std::back_inserter(edges));
+            if (!edges.empty()) {
+                core::utility::log::Log::DefaultLog.WriteWarn("[ElementSampling] degenerated mesh detected.");
+                //this->do_triangulation(current_mesh);
+            }
+            std::shared_ptr<CGAL::Side_of_triangle_mesh<Surface_mesh, K>> inside;
+            try {
+                inside = std::make_shared<CGAL::Side_of_triangle_mesh<Surface_mesh, K>>(current_mesh);
+            } catch (std::exception& e) {
+                std::string message = "[ElementSampling] Could not create inside check: " + std::string(e.what());
+                core::utility::log::Log::DefaultLog.WriteError(message.c_str());
+                return;
+            }
             float value = 0;
             int nb_inside = 0;
             float min_data = std::numeric_limits<T>::max();
             float max_data = -std::numeric_limits<T>::max();
+#pragma parallel for
             for (int n = 0; n < (data_positions.size()/3); ++n) {
 
                 const glm::vec3 pos =
                     glm::vec3(data_positions[3 * n + 0], data_positions[3 * n + 1], data_positions[3 * n + 2]);
 
-                if (pos.x <= max_coord.x && pos.y <= max_coord.y && pos.z <= max_coord.z && pos.x >= min_coord.x &&
-                    pos.y >= min_coord.y && pos.z >= min_coord.z) {
-
+                if (pos.x <= element_max_coord.x && pos.y <= element_max_coord.y && pos.z <= element_max_coord.z &&
+                    pos.x >= element_min_coord.x && pos.y >= element_min_coord.y && pos.z >= element_min_coord.z) {
+                    
                     const Point p = Point(data_positions[3 * n + 0], data_positions[3 * n + 1], data_positions[3 * n + 2]);
 
-                    CGAL::Bounded_side res = inside(p);
+                    CGAL::Bounded_side res;
+                    try {
+                        res = inside->operator()(p);
+                    } catch (std::exception& e) {
+                        std::string message =
+                            "[ElementSampling] Inside check threw error:" +
+                            std::string(e.what());
+                        core::utility::log::Log::DefaultLog.WriteError(message.c_str());
+                        return;
+                    }
                     if (res == CGAL::ON_BOUNDED_SIDE) {
                         value += data[n];
                         min_data = std::min(min_data, value);
@@ -208,6 +238,27 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
         global_max = std::max(global_max, samples->max_value);
     } // end for elements
     _probes->setGlobalMinMax(global_min, global_max);
+}
+
+inline void ElementSampling::do_triangulation(Surface_mesh& mesh_) {
+
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+    typedef K::Point_3 Point_3;
+    std::list<Point_3> points_for_triangulation;
+
+    for (auto point : mesh_.points()) {
+        points_for_triangulation.push_back(Point(point.x(), point.y(), point.z()));
+    }
+
+    typedef CGAL::Delaunay_triangulation_3<K> Delaunay;
+    typedef Delaunay::Vertex_handle Vertex_handle;
+    typedef CGAL::Surface_mesh<Point_3> Surface_mesh;
+    // void CGAL::facets_in_complex_2_to_triangle_mesh(c2t3, TriangleMesh & graph)
+
+    Delaunay T(points_for_triangulation.begin(), points_for_triangulation.end());
+    mesh_.clear();
+    CGAL::convex_hull_3_to_face_graph(T, mesh_);
+
 }
 
 } // namespace probe
