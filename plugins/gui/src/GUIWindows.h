@@ -210,6 +210,8 @@ namespace gui {
         void RegisterWindow(
             const std::string& window_name, std::function<void(WindowConfiguration::Basic&)> const& callback);
 
+        void RegisterPopUp(const std::string& name, bool& open, std::function<void(void)> const& callback);
+
         /**
          * Synchronise changes between core graph <-> gui graph.
          *

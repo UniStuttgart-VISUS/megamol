@@ -2739,3 +2739,9 @@ void GUIWindows::RegisterWindow(
     };
     this->window_collection.EnumWindows(func);
 }
+
+
+void GUIWindows::RegisterPopUp(const std::string& name, bool& open, const std::function<void(void)> &callback) {
+
+    this->external_popup_registry[name].emplace_back(&open, const_cast<std::function<void(void)>&>(callback));
+}
