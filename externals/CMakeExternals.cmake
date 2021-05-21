@@ -596,7 +596,7 @@ function(require_external NAME)
 
       add_external_project(megamol-shader-factory STATIC
         GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        GIT_TAG "04c3d154fa17a6fa885bf57d4f1e194cae3e9422"
+        GIT_TAG "bc3aa63cd4c22a11adfd2caa6f51ef5cab65df7e"
         BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
         DEPENDS glad)
