@@ -589,14 +589,14 @@ function(require_external NAME)
       require_external(glad)
 
       if(WIN32)
-        set(MEGAMOL_SHADER_FACTORY_LIB "lib/libmsf_bundle.lib")
+        set(MEGAMOL_SHADER_FACTORY_LIB "lib/msf_combined.lib")
       else()
-        set(MEGAMOL_SHADER_FACTORY_LIB "lib/libmsf_bundle.a")
+        set(MEGAMOL_SHADER_FACTORY_LIB "lib/libmsf_combined.a")
       endif()
 
       add_external_project(megamol-shader-factory STATIC
         GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        GIT_TAG "c9f572c09fbacc847d8d8dfb4ef7c78315645011"
+        GIT_TAG "04c3d154fa17a6fa885bf57d4f1e194cae3e9422"
         BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
         DEPENDS glad)
