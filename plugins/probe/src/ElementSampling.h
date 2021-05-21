@@ -210,8 +210,8 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
                     }
                     if (res == CGAL::ON_BOUNDED_SIDE) {
                         value += data[n];
-                        min_data = std::min(min_data, value);
-                        max_data = std::max(max_data, value);
+                        min_data = std::min(min_data, data[n]);
+                        max_data = std::max(max_data, data[n]);
                         ++nb_inside;
                     }
                     //if (res == CGAL::ON_BOUNDARY) {
@@ -221,6 +221,8 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
             }
 
             value = nb_inside > 0 ? value / nb_inside : value;
+            min_data = nb_inside > 0 ? min_data : value;
+            max_data = nb_inside > 0 ? max_data : value;
             FloatDistributionProbe::SampleValue s_result;
             s_result.mean = value;
             s_result.lower_bound = min_data;

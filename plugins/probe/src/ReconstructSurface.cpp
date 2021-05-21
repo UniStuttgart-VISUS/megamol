@@ -1043,6 +1043,7 @@ namespace probe {
         main_axis_normal1[_main_axis] = 1;
 
         _shellElements.resize(_shells.size());
+#pragma omp parallel for
         for (int i = 0; i < _shells.size(); ++i) {
             if (_useBBoxAsHull.Param<core::param::BoolParam>()->Value()) {
                 _shellElements[i].reserve(splits_main_axis * (2 * splits_phi));
@@ -1295,6 +1296,9 @@ namespace probe {
                     }
                 }
             }
+            std::string msg = "[ReconstructSurface] Elements for shell " + std::to_string(i) +
+                              " generated.";
+            core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
         }
 
         // fill shell elements vectors

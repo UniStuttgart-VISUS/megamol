@@ -117,17 +117,30 @@ bool megamol::probe::TableToProbes::generateProbes() {
 
     assert(_table != nullptr);
 
+    // check for probe type
+    bool distrib_probe = false;
+    for (uint32_t i = 0; i < _num_cols; i++) {
+       if (_col_info[i].Name().find("sample_value_lower") != std::string::npos) {
+            distrib_probe = true;
+        }
+    }
+
+    std::string check_num_str;
+    if (distrib_probe) {
+        check_num_str = "sample_value_lower";
+    } else {
+        check_num_str = "sample_value";
+    }
+
     uint32_t samples_per_probe = 0;
     std::map<std::string, uint32_t> col_to_id_map;
     for (uint32_t i = 0; i < _num_cols; i++) {
         col_to_id_map[_col_info[i].Name()] = i;
-        if (_col_info[i].Name().find("sample_value") != std::string::npos) {
+        if (_col_info[i].Name().find(check_num_str) != std::string::npos) {
             samples_per_probe += 1;
         }
     }
 
-
-    
     assert(col_to_id_map.find("cluster_id") != col_to_id_map.end());
     std::vector<int> cluster_ids(_num_rows);
     std::map<int, uint32_t> cluster_id_count;
@@ -246,45 +259,93 @@ bool megamol::probe::TableToProbes::generateProbes() {
             min_z = std::min(min_z, _table[_num_cols * i + col_to_id_map["position_z"]]);
             max_z = std::max(max_z, _table[_num_cols * i + col_to_id_map["position_z"]]);
 
+            if (distrib_probe) {
+                FloatDistributionProbe probe;
+                probe.m_position = {_table[_num_cols * i + col_to_id_map["position_x"]],
+                    _table[_num_cols * i + col_to_id_map["position_y"]],
+                    _table[_num_cols * i + col_to_id_map["position_z"]]};
+                probe.m_direction = {_table[_num_cols * i + col_to_id_map["direction_x"]],
+                    _table[_num_cols * i + col_to_id_map["direction_y"]],
+                    _table[_num_cols * i + col_to_id_map["direction_z"]]};
+                probe.m_begin = _table[_num_cols * i + col_to_id_map["begin"]];
+                probe.m_end = _table[_num_cols * i + col_to_id_map["end"]];
+                probe.m_sample_radius = _table[_num_cols * i + col_to_id_map["sample_radius"]];
+                probe.m_timestamp = _table[_num_cols * i + col_to_id_map["timestamp"]];
+                probe.m_cluster_id = _table[_num_cols * i + col_to_id_map["cluster_id"]];
 
-            FloatProbe probe;
-            probe.m_position = {_table[_num_cols * i + col_to_id_map["position_x"]],
-                _table[_num_cols * i + col_to_id_map["position_y"]],
-                _table[_num_cols * i + col_to_id_map["position_z"]]};
-            probe.m_direction = {_table[_num_cols * i + col_to_id_map["direction_x"]],
-                _table[_num_cols * i + col_to_id_map["direction_y"]],
-                _table[_num_cols * i + col_to_id_map["direction_z"]]};
-            probe.m_begin = _table[_num_cols * i + col_to_id_map["begin"]];
-            probe.m_end = _table[_num_cols * i + col_to_id_map["end"]];
-            probe.m_sample_radius = _table[_num_cols * i + col_to_id_map["sample_radius"]];
-            probe.m_timestamp = _table[_num_cols * i + col_to_id_map["timestamp"]];
-            probe.m_cluster_id = _table[_num_cols * i + col_to_id_map["cluster_id"]];
+                std::shared_ptr<FloatDistributionProbe::SamplingResult> samples = probe.getSamplingResult();
 
-            std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
+                samples->samples.resize(samples_per_probe);
+                float min_value = std::numeric_limits<float>::max();
+                float max_value = -std::numeric_limits<float>::min();
+                float avg_value = 0.0f;
+                for (int j = 0; j < samples_per_probe; j++) {
+                    std::string sv = "sample_value_" + std::to_string(j);
+                    std::string svl = "sample_value_lower_" + std::to_string(j);
+                    std::string svu = "sample_value_upper_" + std::to_string(j);
 
-            samples->samples.resize(samples_per_probe);
-            float min_value = std::numeric_limits<float>::max();
-            float max_value = -std::numeric_limits<float>::min();
-            float avg_value = 0.0f;
-            for (int j = 0; j < samples_per_probe; j++) {
-                std::string sv = "sample_value_" + std::to_string(j);
-                auto value = _table[_num_cols * i + col_to_id_map[sv]];
-                samples->samples[j] = value;
-                min_value = std::min(min_value, value);
-                max_value = std::max(max_value, value);
-                avg_value += value;
+                    auto mean = _table[_num_cols * i + col_to_id_map[sv]];
+                    auto lower = _table[_num_cols * i + col_to_id_map[svl]];
+                    auto upper = _table[_num_cols * i + col_to_id_map[svu]];
+                    samples->samples[j].mean = mean;
+                    samples->samples[j].lower_bound = lower;
+                    samples->samples[j].upper_bound = upper;
+                    min_value = std::min(min_value, mean);
+                    max_value = std::max(max_value, mean);
+                    avg_value += mean;
+                }
+
+                avg_value /= samples_per_probe;
+
+                samples->average_value = avg_value;
+                samples->max_value = max_value;
+                samples->min_value = min_value;
+
+                global_max_value = std::max(samples->max_value, global_max_value);
+                global_min_value = std::min(samples->min_value, global_min_value);
+
+
+                this->_probes->addProbe(std::move(probe));
+            } else {
+                FloatProbe probe;
+                probe.m_position = {_table[_num_cols * i + col_to_id_map["position_x"]],
+                    _table[_num_cols * i + col_to_id_map["position_y"]],
+                    _table[_num_cols * i + col_to_id_map["position_z"]]};
+                probe.m_direction = {_table[_num_cols * i + col_to_id_map["direction_x"]],
+                    _table[_num_cols * i + col_to_id_map["direction_y"]],
+                    _table[_num_cols * i + col_to_id_map["direction_z"]]};
+                probe.m_begin = _table[_num_cols * i + col_to_id_map["begin"]];
+                probe.m_end = _table[_num_cols * i + col_to_id_map["end"]];
+                probe.m_sample_radius = _table[_num_cols * i + col_to_id_map["sample_radius"]];
+                probe.m_timestamp = _table[_num_cols * i + col_to_id_map["timestamp"]];
+                probe.m_cluster_id = _table[_num_cols * i + col_to_id_map["cluster_id"]];
+
+                std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
+
+                samples->samples.resize(samples_per_probe);
+                float min_value = std::numeric_limits<float>::max();
+                float max_value = -std::numeric_limits<float>::min();
+                float avg_value = 0.0f;
+                for (int j = 0; j < samples_per_probe; j++) {
+                    std::string sv = "sample_value_" + std::to_string(j);
+                    auto value = _table[_num_cols * i + col_to_id_map[sv]];
+                    samples->samples[j] = value;
+                    min_value = std::min(min_value, value);
+                    max_value = std::max(max_value, value);
+                    avg_value += value;
+                }
+                avg_value /= samples_per_probe;
+
+                samples->average_value = avg_value;
+                samples->max_value = max_value;
+                samples->min_value = min_value;
+
+                global_max_value = std::max(samples->max_value, global_max_value);
+                global_min_value = std::min(samples->min_value, global_min_value);
+
+
+                this->_probes->addProbe(std::move(probe));
             }
-            avg_value /= samples_per_probe;
-
-            samples->average_value = avg_value;
-            samples->max_value = max_value;
-            samples->min_value = min_value;
-
-            global_max_value = std::max(samples->max_value, global_max_value);
-            global_min_value = std::min(samples->min_value, global_min_value);
-
-
-            this->_probes->addProbe(std::move(probe));
         }
     }
     _probes->setGlobalMinMax(global_min_value, global_max_value);
