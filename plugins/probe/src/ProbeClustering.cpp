@@ -139,9 +139,11 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
             auto const angle_threshold = glm::radians(_angle_threshold_slot.Param<core::param::FloatParam>()->Value());
 
             bool vec_probe = false;
+            bool distrib_probe = false;
             {
                 auto const test_probe = _probes->getGenericProbe(0);
                 vec_probe = std::holds_alternative<Vec4Probe>(test_probe);
+                distrib_probe = std::holds_alternative<FloatDistributionProbe>(test_probe);
             }
 
             std::vector<float> cur_points(num_probes * 3);
@@ -149,6 +151,14 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
             if (vec_probe) {
                 for (std::remove_const_t<decltype(num_probes)> pidx = 0; pidx < num_probes; ++pidx) {
                     auto const probe = _probes->getProbe<Vec4Probe>(pidx);
+                    cur_points[pidx * 3 + 0] = probe.m_position[0];
+                    cur_points[pidx * 3 + 1] = probe.m_position[1];
+                    cur_points[pidx * 3 + 2] = probe.m_position[2];
+                    _cur_dirs[pidx] = glm::vec3(probe.m_direction[0], probe.m_direction[1], probe.m_direction[2]);
+                }
+            } else if (distrib_probe) {
+                for (std::remove_const_t<decltype(num_probes)> pidx = 0; pidx < num_probes; ++pidx) {
+                    auto const probe = _probes->getProbe<FloatDistributionProbe>(pidx);
                     cur_points[pidx * 3 + 0] = probe.m_position[0];
                     cur_points[pidx * 3 + 1] = probe.m_position[1];
                     cur_points[pidx * 3 + 2] = probe.m_position[2];
@@ -244,6 +254,12 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                         probe.m_cluster_id = _cluster_res[pidx];
                         _probes->setProbe(pidx, probe);
                     }
+                } else if (distrib_probe) {
+                    for (decltype(_cluster_res)::size_type pidx = 0; pidx < _cluster_res.size(); ++pidx) {
+                        auto probe = _probes->getProbe<FloatDistributionProbe>(pidx);
+                        probe.m_cluster_id = _cluster_res[pidx];
+                        _probes->setProbe(pidx, probe);
+                    }
                 } else {
                     for (decltype(_cluster_res)::size_type pidx = 0; pidx < _cluster_res.size(); ++pidx) {
                         auto probe = _probes->getProbe<FloatProbe>(pidx);
@@ -291,13 +307,21 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
             }
 
             bool vec_probe = false;
+            bool distrib_probe = false;
             {
                 auto const test_probe = _probes->getGenericProbe(0);
                 vec_probe = std::holds_alternative<Vec4Probe>(test_probe);
+                distrib_probe = std::holds_alternative<FloatDistributionProbe>(test_probe);
             }
             if (vec_probe) {
                 for (auto const& el : cluster_reps) {
                     auto probe = _probes->getProbe<Vec4Probe>(el);
+                    probe.m_representant = true;
+                    _probes->setProbe(el, probe);
+                }
+            } else if (distrib_probe) {
+                for (auto const& el : cluster_reps) {
+                    auto probe = _probes->getProbe<FloatDistributionProbe>(el);
                     probe.m_representant = true;
                     _probes->setProbe(el, probe);
                 }

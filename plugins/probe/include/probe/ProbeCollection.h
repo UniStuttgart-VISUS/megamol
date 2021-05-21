@@ -72,6 +72,9 @@ public:
 
     struct SamplingResult {
         std::vector<SampleValue> samples;
+        float min_value;
+        float max_value;
+        float average_value;
     };
 
     FloatDistributionProbe() : m_result(std::make_shared<SamplingResult>()) {}

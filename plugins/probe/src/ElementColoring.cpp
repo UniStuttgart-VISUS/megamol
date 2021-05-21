@@ -104,6 +104,8 @@ bool ElementColoring::getData(core::Call& call) {
                     cluster_id = arg.m_cluster_id;
                 } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
                     cluster_id = arg.m_cluster_id;
+                } else if constexpr (std::is_same_v<T, probe::FloatDistributionProbe>) {
+                    cluster_id = arg.m_cluster_id;
                 } else {
                     // unknown probe type, throw error? do nothing?
                 }

@@ -114,11 +114,13 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
 
     // select Element
     for (int j = 0; j < elements[0].size(); ++j) {
-        FloatProbe probe;
+        FloatDistributionProbe probe;
+        
 
         auto visitor = [&probe, j, this](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe>) {
+            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe> ||
+                          std::is_same_v<T, probe::FloatProbe>) {
 
                 probe.m_timestamp = arg.m_timestamp;
                 probe.m_value_name = arg.m_value_name;
@@ -133,7 +135,7 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
 
                 _probes->setProbe(j, probe);
 
-            } else if constexpr (std::is_same_v<T, probe::FloatProbe>) {
+            } else if constexpr (std::is_same_v<T, probe::FloatDistributionProbe>) {
                 probe = arg;
 
             } else {
@@ -144,12 +146,11 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
         auto generic_probe = _probes->getGenericProbe(j);
         std::visit(visitor, generic_probe);
 
-        std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
+        std::shared_ptr<FloatDistributionProbe::SamplingResult> samples = probe.getSamplingResult();
         float min_value = std::numeric_limits<T>::max();
         float max_value = -std::numeric_limits<T>::max();
         float avg_value = 0.0f;
         samples->samples.resize(elements.size());
-
 
         // go through shells
         for (int i = 0; i < elements.size(); ++i) {
@@ -220,7 +221,12 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
             }
 
             value = nb_inside > 0 ? value / nb_inside : value;
-            samples->samples[i] = value;
+            FloatDistributionProbe::SampleValue s_result;
+            s_result.mean = value;
+            s_result.lower_bound = min_data;
+            s_result.upper_bound = max_data;
+
+            samples->samples[i] = s_result;
 
             min_value = std::min(min_value, value);
             max_value = std::max(max_value, value);

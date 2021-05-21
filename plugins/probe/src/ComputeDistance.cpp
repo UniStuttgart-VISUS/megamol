@@ -78,9 +78,11 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
             return false;
         std::size_t sample_count = 0;
         bool vec_probe = false;
+        bool distrib_probe = false;
         {
             auto test_probe = probe_data->getGenericProbe(0);
             vec_probe = std::holds_alternative<Vec4Probe>(test_probe);
+            distrib_probe = std::holds_alternative<FloatDistributionProbe>(test_probe);
         }
 
         if (vec_probe) {
@@ -189,6 +191,94 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                     el = 1.0;
             });
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished");
+        } else if (distrib_probe) {
+            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Computing distances for distribution probes");
+            std::size_t base_skip = 0;
+            for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
+                auto const a_probe = probe_data->getProbe<FloatDistributionProbe>(a_pidx);
+                auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
+                sample_count = a_samples_tmp.size();
+                decltype(a_samples_tmp.begin()) first_not_nan = a_samples_tmp.end();
+                for (auto it = a_samples_tmp.begin(); it != a_samples_tmp.end(); ++it) {
+                    if (std::isnan<float>(it->mean)) {
+                        first_not_nan = it;
+                        break;
+                    }
+                }
+                if (first_not_nan != a_samples_tmp.end()) {
+                    auto first_not_nan_idx = std::distance(a_samples_tmp.begin(), first_not_nan);
+                    if (first_not_nan_idx > base_skip) {
+                        base_skip = first_not_nan_idx;
+                    }
+                }
+            }
+            if (base_skip > sample_count)
+                base_skip = 0;
+            core::utility::log::Log::DefaultLog.WriteInfo(
+                "[ComputeDistance] Skipping first %d samples due to NaNs", base_skip);
+            auto base_sample_count = sample_count - base_skip;
+            auto X = Eigen::MatrixXd(probe_count, base_sample_count);
+            for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
+                auto const a_probe = probe_data->getProbe<FloatDistributionProbe>(a_pidx);
+                auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
+                for (std::size_t sample_idx = base_skip; sample_idx < base_sample_count; ++sample_idx) {
+                    X(a_pidx, sample_idx - base_skip) = a_samples_tmp[sample_idx].mean;
+                }
+            }
+            auto svd = Eigen::JacobiSVD<Eigen::MatrixXd>(X, Eigen::ComputeThinU | Eigen::ComputeThinV);
+            auto sv = svd.singularValues();
+            for (Eigen::Index idx = sv.size() / 2; idx < sv.size(); ++idx) {
+                sv[idx] = 0.0;
+            }
+            auto U = svd.matrixU();
+            auto V = svd.matrixV();
+            auto D = sv.asDiagonal();
+            X = U * D * V.transpose();
+
+            auto min_val = std::numeric_limits<double>::max();
+            auto max_val = std::numeric_limits<double>::lowest();
+#pragma omp parallel for
+            for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
+
+                for (std::int64_t b_pidx = a_pidx; b_pidx < probe_count; ++b_pidx) {
+
+
+                    std::vector<float> tmp_mat(sample_count * sample_count);
+                    for (std::int64_t as_idx = 0; as_idx < sample_count; ++as_idx) {
+                        for (std::int64_t bs_idx = as_idx; bs_idx < sample_count; ++bs_idx) {
+                            auto const val = std::abs(X(a_pidx, as_idx) - X(b_pidx, as_idx));
+                            tmp_mat[as_idx + bs_idx * sample_count] = val;
+                            tmp_mat[bs_idx + as_idx * sample_count] = val;
+                        }
+                    }
+
+                    auto const score = stdplugin::datatools::misc::frechet_distance<float>(
+                        sample_count, [&tmp_mat, sample_count](std::size_t lhs, std::size_t rhs) -> float {
+                            return tmp_mat[lhs + rhs * sample_count];
+                        });
+
+                    // auto const dis = DTW::dtw_distance_only(a_samples, b_samples, 2);
+                    _dis_mat[a_pidx + b_pidx * probe_count] = score;
+                    _dis_mat[b_pidx + a_pidx * probe_count] = score;
+#pragma omp critical
+                    {
+                        if (score < min_val)
+                            min_val = score;
+                        if (score > max_val)
+                            max_val = score;
+                    }
+                }
+            }
+            auto org = min_val;
+            auto diff = 1.0 / (max_val - min_val + 1e-8);
+            double stretching = _stretching_factor_slot.Param<core::param::FloatParam>()->Value();
+            std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
+            std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
+            std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
+                if (el > 1.0)
+                    el = 1.0;
+            });
+            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished");
         } else {
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Computing distances for scalar probes");
             std::size_t base_skip = 0;
@@ -272,7 +362,6 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
             });
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished");
         }
-
         for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
             auto const minmax = std::minmax_element(
                 _dis_mat.begin() + (a_pidx * probe_count), _dis_mat.begin() + (a_pidx * probe_count + probe_count));
