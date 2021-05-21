@@ -141,7 +141,8 @@ void SampleAlongPobes::doScalarSampling(
 
         auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe>) {
+            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe> ||
+                          std::is_same_v<T, probe::FloatDistributionProbe>) {
 
                 probe.m_timestamp = arg.m_timestamp;
                 probe.m_value_name = arg.m_value_name;
@@ -343,7 +344,8 @@ inline void SampleAlongPobes::doVectorSamling(
 
         auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::FloatProbe>) {
+            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::FloatProbe> ||
+                          std::is_same_v<T, probe::FloatDistributionProbe>) {
 
                 probe.m_timestamp = arg.m_timestamp;
                 probe.m_value_name = arg.m_value_name;
@@ -463,7 +465,8 @@ void SampleAlongPobes::doTetrahedralSampling(
 
         auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe>) {
+            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe> ||
+                          std::is_same_v<T, probe::FloatDistributionProbe>) {
 
                 probe.m_timestamp = arg.m_timestamp;
                 probe.m_value_name = arg.m_value_name;
@@ -615,7 +618,8 @@ void SampleAlongPobes::doTetrahedralSampling(
 
             auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
                 using T = std::decay_t<decltype(arg)>;
-                if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::FloatProbe>) {
+                if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::FloatProbe> ||
+                              std::is_same_v<T, probe::FloatDistributionProbe>) {
 
                     probe.m_timestamp = arg.m_timestamp;
                     probe.m_value_name = arg.m_value_name;
@@ -775,7 +779,8 @@ void SampleAlongPobes::doNearestNeighborSampling(
 
         auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe>) {
+            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe> ||
+                          std::is_same_v<T, probe::FloatDistributionProbe>) {
 
                 probe.m_timestamp = arg.m_timestamp;
                 probe.m_value_name = arg.m_value_name;

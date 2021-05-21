@@ -62,8 +62,7 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
         , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards")
         , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
         , m_use_interpolation_slot("UseInterpolation", "Interpolate between samples")
-        , m_tf_min(0.0f)
-        , m_tf_max(1.0f)
+        , m_tf_range({0.0f,0.0f})
         , m_show_glyphs(true) {
 
     this->m_transfer_function_Slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -138,16 +137,19 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     }
 
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
-    if (pc == NULL)
+    if (pc == NULL) {
         return false;
-    if (!(*pc)(0))
+    }
+    if (!(*pc)(0)) {
         return false;
-
+    }
 
     auto* tfc = this->m_transfer_function_Slot.CallAs<core::view::CallGetTransferFunction>();
     if (tfc != NULL) {
         ((*tfc)(0));
     }
+    
+    
 
     bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || this->m_billboard_size_slot.IsDirty() ||
                                  this->m_rendering_mode_slot.IsDirty() || ((tfc != NULL) ? tfc->IsDirty() : false);
@@ -159,6 +161,27 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         this->m_rendering_mode_slot.ResetDirty();
         auto gpu_mtl_storage = mtlc->getData();
         auto probes = pc->getData();
+
+        auto visitor = [this](auto&& arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, probe::FloatProbe>) {
+
+            } else if constexpr (std::is_same_v<T, std::array<float,2>>) {
+            m_tf_range = arg;
+            } else if constexpr (std::is_same_v<T, std::array<int,2>>) {
+                // TODO
+            } else {
+                // unknown probe type, throw error? do nothing?
+            }
+        };
+        
+        std::visit(visitor, probes->getGenericGlobalMinMax());
+
+        if (tfc != NULL) {
+            tfc->SetRange(m_tf_range);
+            ((*tfc)());
+            m_tf_range = tfc->Range();
+        }
 
         for (auto& identifier : m_rendertask_collection.second) {
             m_rendertask_collection.first->deleteRenderTask(identifier);
@@ -258,6 +281,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         } else if (m_rendering_mode_slot.Param<core::param::EnumParam>()->Value() == 1) {
             // Update transfer texture only if it available and has changed
             if (tfc != NULL) {
+
                 if (tfc->IsDirty()) {
                     //++m_version;
                     tfc->ResetDirty();
@@ -304,8 +328,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         }
                     }
 
-                    m_tf_min = std::get<0>(tfc->Range());
-                    m_tf_max = std::get<1>(tfc->Range());
+                    m_tf_range = tfc->Range();
                 }
             }
 
@@ -323,8 +346,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                         auto glyph_data = createScalarProbeGlyphData(arg, probe_idx, scale);
                         glyph_data.tf_texture_handle = texture_handle;
-                        glyph_data.min_value = m_tf_min;
-                        glyph_data.max_value = m_tf_max;
+                        glyph_data.min_value = std::get<0>(m_tf_range);
+                        glyph_data.max_value = std::get<1>(m_tf_range);
                         m_scalar_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_scalar_probe_glyph_data.push_back(glyph_data);
 
@@ -338,8 +361,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                         auto glyph_data = createScalarDistributionProbeGlyphData(arg, probe_idx, scale);
                         glyph_data.tf_texture_handle = texture_handle;
-                        glyph_data.tf_min = m_tf_min;
-                        glyph_data.tf_max = m_tf_max;
+                        glyph_data.tf_min = std::get<0>(m_tf_range);
+                        glyph_data.tf_max = std::get<1>(m_tf_range);
                         m_scalar_distribution_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_scalar_distribution_probe_glyph_data.push_back(glyph_data);
 
@@ -355,8 +378,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                         auto glyph_data = createVectorProbeGlyphData(arg, probe_idx, scale);
                         glyph_data.tf_texture_handle = texture_handle;
-                        glyph_data.tf_min = m_tf_min;
-                        glyph_data.tf_max = m_tf_max;
+                        glyph_data.tf_min = std::get<0>(m_tf_range);
+                        glyph_data.tf_max = std::get<1>(m_tf_range);
                         m_vector_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_vector_probe_glyph_data.push_back(glyph_data);
 
@@ -374,16 +397,16 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
             }
 
             // scan all scalar probes to compute global min/max
-            float min = std::numeric_limits<float>::max();
-            float max = std::numeric_limits<float>::min();
-            for (auto& data : m_scalar_probe_glyph_data) {
-                min = std::min(data.min_value, min);
-                max = std::max(data.max_value, max);
-            }
-            for (auto& data : m_scalar_probe_glyph_data) {
-                data.min_value = min;
-                data.max_value = max;
-            }
+            //float min = std::numeric_limits<float>::max();
+            //float max = std::numeric_limits<float>::min();
+            //for (auto& data : m_scalar_probe_glyph_data) {
+            //    min = std::min(data.min_value, min);
+            //    max = std::max(data.max_value, max);
+            //}
+            //for (auto& data : m_scalar_probe_glyph_data) {
+            //    data.min_value = min;
+            //    data.max_value = max;
+            //}
         } else {
             int total_cluster_cnt = 0;
             for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {

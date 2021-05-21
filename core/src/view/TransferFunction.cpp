@@ -67,7 +67,8 @@ bool TransferFunction::requestTF(Call& call) {
     TransferFunctionParam::NodeVector_t tmp_nodes;
     
     // Check if range of initially loaded project value should be ignored
-    if (this->check_ignore_project_range) {
+    //if (this->check_ignore_project_range)
+    {
         auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
         this->ignore_project_range = TransferFunctionParam::IgnoreProjectRange(tf_param_value);
         this->check_ignore_project_range = false;
