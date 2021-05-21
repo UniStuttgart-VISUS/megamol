@@ -347,9 +347,10 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         default:
             break;
         }
-
         // Set tesselation error: Smaller value => better tesselation of circles and round corners.
         style.CircleTessellationMaxError = 0.3f;
+        // Scale all ImGui style options with current scaling factor
+        style.ScaleAllSizes(megamol::gui::gui_scaling.Get());
 
         this->state.style_changed = false;
     }
@@ -531,6 +532,9 @@ bool GUIWindows::PostDraw(void) {
     ///////////////////////////////////////////////////////////////////////////
 
     // Render the current ImGui frame ------------------------------------------
+
+    /// TODO - SEPARATE RENDERING OF OPENGL-STUFF DEPENDING ON AVAILABLE API?!
+
     glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -565,8 +569,8 @@ bool GUIWindows::PostDraw(void) {
     // Apply new gui scale -----------------------------------------------------
     if (megamol::gui::gui_scaling.ConsumePendingChange()) {
 
-        // Scale all ImGui style options
-        style.ScaleAllSizes(megamol::gui::gui_scaling.TransitionFactor());
+        // Reload ImGui style options
+        this->state.style_changed = true;
 
         // Scale all windows
         if (this->state.rescale_windows) {
@@ -2423,10 +2427,10 @@ void megamol::gui::GUIWindows::load_imgui_settings_from_string(const std::string
 
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
+    this->state.load_docking_preset = true;
     if (!imgui_settings.empty()) {
         ImGui::LoadIniSettingsFromMemory(imgui_settings.c_str(), imgui_settings.size());
-    } else {
-        this->state.load_docking_preset = true;
+        this->state.load_docking_preset = false;
     }
 #endif
 }
