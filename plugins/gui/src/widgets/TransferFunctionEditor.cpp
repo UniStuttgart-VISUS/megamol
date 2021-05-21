@@ -564,6 +564,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
     if (this->show_options) {
 
         // Return true for current changes being applied
+        if (!this->pending_changes) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+        }
         ImGui::PushStyleColor(
             ImGuiCol_Button, this->pending_changes ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
@@ -573,6 +576,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             apply_changes = true;
         }
         ImGui::PopStyleColor(3);
+        if (!this->pending_changes) {
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
 
         ImGui::SameLine();
 
