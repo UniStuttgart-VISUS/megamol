@@ -11,6 +11,7 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmvtkm/mmvtkmDataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/param/ParamSlot.h"
@@ -102,9 +103,8 @@ private:
     core::param::ParamSlot psColorTables_;
 
     /** Some vtkm data set */
-    const vtkm::cont::DataSet* vtkmDataSet_;
-    vtkm::Bounds bounds_;
-    std::string fieldName_;
+    std::shared_ptr<VtkmData> vtkmDataSet_;
+    VtkmMetaData vtkmMetaData_;
 
     /** The vtkm structures used for rendering */
     vtkm::rendering::Scene scene_;

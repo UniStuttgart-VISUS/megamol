@@ -26,8 +26,7 @@ mmvtkmDataRenderer::mmvtkmDataRenderer(void)
     , vtkmDataCallerSlot_("getData", "Connects the vtkm renderer with a vtkm data source")
     , psColorTables_("colorTable", "Colortables specify the color range of the data")
     , vtkmDataSet_()
-    , bounds_()
-    , fieldName_("pointvar")
+    , vtkmMetaData_()
     , scene_()
     , mapper_()
     , canvas_()
@@ -84,33 +83,34 @@ void mmvtkmDataRenderer::release() {
  * mmvtkmDataRenderer::Render
  */
 bool mmvtkmDataRenderer::Render(core::view::CallRender3DGL& call) {
-    mmvtkmDataCall* lhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkmDataCall>();
+    mmvtkmDataCall* rhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkmDataCall>();
 
-    if (lhsVtkmDc == nullptr) {
-        core::utility::log::Log::DefaultLog.WriteError("In %s at line %d. lhsVtkmDc is nullptr.", __FILE__, __LINE__);
+    if (rhsVtkmDc == nullptr) {
+        core::utility::log::Log::DefaultLog.WriteError("In %s at line %d. rhsVtkmDc is nullptr.", __FILE__, __LINE__);
         return false;
     }
 
 
-    if (!(*lhsVtkmDc)(0)) { // getData
+    if (!(*rhsVtkmDc)(0)) { // getData
         return false;
     }
 
 
-    if (lhsVtkmDc->HasUpdate() || localUpdate_) {
-        vtkmDataSet_ = lhsVtkmDc->GetDataSet();
+    if (rhsVtkmDc->hasUpdate() || localUpdate_) {
+        vtkmDataSet_ = rhsVtkmDc->getData();
+        vtkmMetaData_ = rhsVtkmDc->getMetaData();
         
         vtkm::cont::ColorTable colorTable(psColorTables_.Param<core::param::EnumParam>()->ValueString().PeekBuffer());
         // default cellname = "cells"
         // default coordinatesystem name = "coordinates"
         // default fieldname = "pointvar"
-        vtkm::rendering::Actor actor(vtkmDataSet_->GetCellSet(0), vtkmDataSet_->GetCoordinateSystem(0),
-            vtkmDataSet_->GetPointField("pointvar"),
+        vtkm::rendering::Actor actor(vtkmDataSet_->data.GetCellSet(0), vtkmDataSet_->data.GetCoordinateSystem(0),
+            vtkmDataSet_->data.GetPointField("pointvar"),
             colorTable); // depending on dataset change to getCellField with according FrameID
         scene_ = vtkm::rendering::Scene();
         scene_.AddActor(actor); // makescene(...)
 
-        vtkmCamera_.ResetToBounds(bounds_);
+        vtkmCamera_.ResetToBounds(vtkmMetaData_.minMaxBounds);
 
         // TOOD set fieldnames of vtk file as dropdown as parameter
         localUpdate_ = false;
@@ -183,9 +183,9 @@ bool mmvtkmDataRenderer::Render(core::view::CallRender3DGL& call) {
  * mmvtkmDataRenderer::GetExtents
  */
 bool mmvtkmDataRenderer::GetExtents(core::view::CallRender3DGL& call) {
-    mmvtkmDataCall* lhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkmDataCall>();
-    if (lhsVtkmDc == nullptr) {
-        core::utility::log::Log::DefaultLog.WriteError("In %s at line %d. lhsVtkmDc is nullptr.", __FILE__, __LINE__);
+    mmvtkmDataCall* rhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkmDataCall>();
+    if (rhsVtkmDc == nullptr) {
+        core::utility::log::Log::DefaultLog.WriteError("In %s at line %d. rhsVtkmDc is nullptr.", __FILE__, __LINE__);
         return false;
     }
 
@@ -196,17 +196,18 @@ bool mmvtkmDataRenderer::GetExtents(core::view::CallRender3DGL& call) {
         return false;
     }
 
-    if (!(*lhsVtkmDc)(1)) { // getMetaData
+    if (!(*rhsVtkmDc)(1)) { // getMetaData
         return false;
     }
 
-    if (lhsVtkmDc->HasUpdate()) {
-        bounds_ = lhsVtkmDc->GetBounds();
+    if (rhsVtkmDc->hasUpdate()) {
+        vtkmMetaData_ = rhsVtkmDc->getMetaData();
+        vtkm::Bounds bounds = vtkmMetaData_.minMaxBounds;
 
         cr->AccessBoundingBoxes().SetBoundingBox(
-            bounds_.X.Min, bounds_.Y.Min, bounds_.Z.Min, bounds_.X.Max, bounds_.Y.Max, bounds_.Z.Max);
+            bounds.X.Min, bounds.Y.Min, bounds.Z.Min, bounds.X.Max, bounds.Y.Max, bounds.Z.Max);
         cr->AccessBoundingBoxes().SetClipBox(
-            bounds_.X.Min, bounds_.Y.Min, bounds_.Z.Min, bounds_.X.Max, bounds_.Y.Max, bounds_.Z.Max);
+            bounds.X.Min, bounds.Y.Min, bounds.Z.Min, bounds.X.Max, bounds.Y.Max, bounds.Z.Max);
     }
 
     return true;

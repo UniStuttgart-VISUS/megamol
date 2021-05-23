@@ -107,6 +107,8 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
+    uint32_t version_;
+
     /** The slot for requesting data */
     core::CalleeSlot getDataCalleeSlot_;
 
@@ -119,13 +121,11 @@ private:
     size_t oldLabelDataHash_;
 
     /** The vtkm data holder */
-    vtkm::cont::DataSet vtkmData_;
+    std::shared_ptr<VtkmData> vtkmData_;
+    VtkmMetaData vtkmMetaData_;
 
     /** The vtkm data file name */
     std::string vtkmDataFile_;
-
-	/** Min and max boundaries from vtkm data. Used for metadata */
-    vtkm::Bounds minMaxBounds_;
 };
 
 } /* end namespace mmvtkm */

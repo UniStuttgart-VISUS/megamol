@@ -28,9 +28,10 @@ mmvtkmFileLoader::mmvtkmFileLoader(void)
     : core::Module()
     , getDataCalleeSlot_("getdata", "Slot to request data from this data source.")
     , filename_("filename", "The path to the vtkm file to load.")
+    , version_(0)
     , vtkmData_()
+    , vtkmMetaData_()
     , vtkmDataFile_("")
-    , minMaxBounds_(0.f, 0.f, 0.f, 0.f, 0.f, 0.f) 
 	, fileChanged_(false)
 {
     this->filename_.SetParameter(new core::param::FilePathParam(""));
@@ -79,7 +80,10 @@ bool mmvtkmFileLoader::filenameChanged(core::param::ParamSlot& slot) {
 
 	try {
 		vtkm::io::reader::VTKDataSetReader dataReader(vtkmDataFile_);
-        vtkmData_ = dataReader.ReadDataSet();
+        vtkmData_ = std::make_shared<VtkmData>();
+        vtkmData_->data = dataReader.ReadDataSet();
+        vtkmMetaData_.minMaxBounds = vtkmData_->data.GetCoordinateSystem(0).GetBounds();
+
 		core::utility::log::Log::DefaultLog.WriteInfo("File successfully loaded.");
     } catch (const std::exception& e) {
         core::utility::log::Log::DefaultLog.WriteError("In % s at line %d. \n", __FILE__, __LINE__);
@@ -107,17 +111,14 @@ bool mmvtkmFileLoader::getDataCallback(core::Call& caller) {
 
 
 	if (fileChanged_) {
-        lhsVtkmDc->SetDataSet(&this->vtkmData_);
-        lhsVtkmDc->UpdateDataChanges(true);
+        lhsVtkmDc->setData(vtkmData_, ++version_);
+        lhsVtkmDc->setMetaData(vtkmMetaData_);
 
 		//filename_.ResetDirty();
         fileChanged_ = false;
 
 		return true;
 	}
-
-
-	lhsVtkmDc->UpdateDataChanges(false);
 	
     
     return true;
@@ -131,8 +132,8 @@ bool mmvtkmFileLoader::getMetaDataCallback(core::Call& caller) {
     mmvtkmDataCall* lhsVtkmDc = dynamic_cast<mmvtkmDataCall*>(&caller);
 
 	if (fileChanged_) {
-        minMaxBounds_ = vtkmData_.GetCoordinateSystem(0).GetBounds();
-        lhsVtkmDc->SetBounds(this->minMaxBounds_);
+        vtkmMetaData_.minMaxBounds = vtkmData_->data.GetCoordinateSystem(0).GetBounds();
+        lhsVtkmDc->setMetaData(vtkmMetaData_);
     }
 
 

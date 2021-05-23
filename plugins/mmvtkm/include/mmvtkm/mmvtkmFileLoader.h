@@ -96,6 +96,8 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
+    uint32_t version_;
+
 	/** The file name  */
     core::param::ParamSlot filename_;
 
@@ -103,13 +105,11 @@ private:
     core::CalleeSlot getDataCalleeSlot_;
 
     /** The vtkm data holder */
-    vtkm::cont::DataSet vtkmData_;
+    std::shared_ptr<VtkmData> vtkmData_;
+    VtkmMetaData vtkmMetaData_;
 
     /** The vtkm data file name */
     std::string vtkmDataFile_;
-
-	/** Min and max boundaries from vtkm data. Used for metadata */
-    vtkm::Bounds minMaxBounds_;
 
 	/** Used as flag if file has changed */
     bool fileChanged_;

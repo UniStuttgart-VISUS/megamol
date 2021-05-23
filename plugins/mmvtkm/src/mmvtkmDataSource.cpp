@@ -35,9 +35,10 @@ mmvtkmDataSource::mmvtkmDataSource(void)
     , labelAdiosCallerSlot_("adiosLabelSlot", "Slot to request label data from adios.")
     , oldNodeDataHash_(0) 
 	, oldLabelDataHash_(0)
+    , version_(0)
     , vtkmData_()
+    , vtkmMetaData_()
     , vtkmDataFile_("")
-    , minMaxBounds_(0.f, 0.f, 0.f, 1.f, 1.f, 1.f)
 {
     this->getDataCalleeSlot_.SetCallback(mmvtkmDataCall::ClassName(), mmvtkmDataCall::FunctionName(0),
         &mmvtkmDataSource::getDataCallback); // GetData is FunctionName(0)
@@ -253,26 +254,27 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 
 		    core::utility::log::Log::DefaultLog.WriteInfo("Number of skipped tetrahedrons: %i", numSkipped);
 
-		    vtkmData_ = dataSetBuilder.Create(points, cellShapes, numIndices, cellIndices);
+            vtkmData_ = std::make_shared<VtkmData>();
+		    vtkmData_->data = dataSetBuilder.Create(points, cellShapes, numIndices, cellIndices);
             std::string field0 = "hs1";
             std::string field1 = "hs2";
             std::string field2 = "hs3";
             std::string field3 = "hs";
-		    dataSetFieldAdd.AddPointField(vtkmData_, field0, pointHs1);
-		    dataSetFieldAdd.AddPointField(vtkmData_, field1, pointHs2);
-		    dataSetFieldAdd.AddPointField(vtkmData_, field2, pointHs3);
-		    dataSetFieldAdd.AddPointField(vtkmData_, field3, pointHs);
+		    dataSetFieldAdd.AddPointField(vtkmData_->data, field0, pointHs1);
+		    dataSetFieldAdd.AddPointField(vtkmData_->data, field1, pointHs2);
+		    dataSetFieldAdd.AddPointField(vtkmData_->data, field2, pointHs3);
+		    dataSetFieldAdd.AddPointField(vtkmData_->data, field3, pointHs);
 
 		    // vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
 		    // writer.WriteDataSet(vtkmData_);
 		    // core::utility::log::Log::DefaultLog.WriteInfo("vtkmData_ is successfully stored in tetrahedron.vtk.");
 
 		    // get min max bounds from dataset
-            minMaxBounds_ = vtkmData_.GetCoordinateSystem(0).GetBounds();
+            vtkmMetaData_.minMaxBounds = vtkmData_->data.GetCoordinateSystem(0).GetBounds();
+            vtkmMetaData_.fieldNames = {field0, field1, field2, field3};
 
-		    lhsVtkmDc->UpdateDataChanges(true);
-            lhsVtkmDc->SetDataSet(&this->vtkmData_);
-            lhsVtkmDc->SetFieldNames({field0, field1, field2, field3});
+            lhsVtkmDc->setData(vtkmData_, ++version_);
+            lhsVtkmDc->setMetaData(vtkmMetaData_);
 
             oldNodeDataHash_ = newNodeHash;
             oldLabelDataHash_ = newLabelHash;
@@ -286,9 +288,6 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
             return false;
         }
     }
-    
-
-	lhsVtkmDc->UpdateDataChanges(false);
 
     return true;
 }
@@ -312,7 +311,7 @@ bool mmvtkmDataSource::getMetaDataCallback(core::Call& caller) {
         return false;
     }
 
-    lhsVtkmDc->SetBounds(this->minMaxBounds_);
+    lhsVtkmDc->setMetaData(vtkmMetaData_);
 
     return true;
 }

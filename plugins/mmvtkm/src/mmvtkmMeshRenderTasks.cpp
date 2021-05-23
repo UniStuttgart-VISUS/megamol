@@ -164,10 +164,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
     } else {
         clearRenderTaskCollection();
     }
-    
-    // TODO merge meta data stuff, i.e. bounding box
 
-    // TODO set data if necessary
     lhs_rtc->setData(gpu_render_tasks, m_version);
 
     return true;

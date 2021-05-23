@@ -64,7 +64,6 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , resampleSeeds_(false)
     , planeUpdate_(false)
     , planeAppearanceUpdate_(false)
-    , hasBeenTraversed_(false)
     , planeNormalDirtyFlag_(false)
     , newVersion_(1)
     , meshDataAccess_({nullptr, {}})
@@ -1103,15 +1102,15 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         return true;
     }
     
-    bool vtkmUpdate = rhsVtkmDc->HasUpdate();
+    bool vtkmUpdate = rhsVtkmDc->hasUpdate();
     // plane calculation part here
-    if (vtkmUpdate || planeUpdate_ || !hasBeenTraversed_) {
-        if (vtkmUpdate || !hasBeenTraversed_) {
+    if (vtkmUpdate || planeUpdate_) {
+        if (vtkmUpdate) {
             if (!(*rhsVtkmDc)(1)) {
                 return false;
             }
 
-            dataSetBounds_ = rhsVtkmDc->GetBounds();
+            dataSetBounds_ = rhsVtkmDc->getMetaData().minMaxBounds;
             visVec3f low = {(float)dataSetBounds_.X.Min, (float)dataSetBounds_.Y.Min, (float)dataSetBounds_.Z.Min};
             visVec3f up = {(float)dataSetBounds_.X.Max, (float)dataSetBounds_.Y.Max, (float)dataSetBounds_.Z.Max};
             this->psLowerStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetValue(low, false);
@@ -1200,9 +1199,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             }
         }
 
-        
         vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> seedArray = vtkm::cont::make_ArrayHandle(seeds_);
-
 
         // streamline calculation part here
         try {
@@ -1219,8 +1216,8 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
 
             // calc streamlines
-            const vtkm::cont::DataSet* vtkmMesh = rhsVtkmDc->GetDataSet();
-            streamlineOutput_ = mmvtkmStreamLines.Execute(*vtkmMesh);
+            std::shared_ptr<VtkmData> vtkmMesh = rhsVtkmDc->getData();
+            streamlineOutput_ = mmvtkmStreamLines.Execute(vtkmMesh->data);
 
             // vtkm::io::writer::VTKDataSetWriter writer("streamlines.vtk");
             // writer.WriteDataSet(streamlineOutput_);
@@ -1331,12 +1328,9 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
         streamlineUpdate_ = false;
         resampleSeeds_ = false;
-        hasBeenTraversed_ = true;
         
         return true;
     }
-
-    hasBeenTraversed_ = true;
     return true;
 }
 
@@ -1361,7 +1355,7 @@ bool mmvtkmStreamLines::getMetaDataCallback(core::Call& caller) {
         return false;
     }
 
-    vtkm::Bounds rhsBounds = rhsVtkmDc->GetBounds();
+    vtkm::Bounds rhsBounds = rhsVtkmDc->getMetaData().minMaxBounds;
 
     std::array<float, 6> bbox;
     bbox[0] = rhsBounds.X.Min;
