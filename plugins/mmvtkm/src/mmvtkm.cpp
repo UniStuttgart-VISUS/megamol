@@ -16,7 +16,7 @@
 #include "mmvtkm/mmvtkmDataSource.h"
 #include "mmvtkm/mmvtkmFileLoader.h"
 #include "mmvtkm/mmvtkmMeshRenderTasks.h"
-#include "mmvtkm/mmvtkmRenderer.h"
+//#include "mmvtkm/mmvtkmRenderer.h"
 #include "mmvtkm/mmvtkmStreamLines.h"
 #include "mmvtkm/mmvtkmDataCall.h"
 
@@ -51,7 +51,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmFileLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmMeshRenderTasks>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataRenderer>();
+        //this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmStreamLines>();
 
 

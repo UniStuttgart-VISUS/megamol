@@ -16,12 +16,12 @@
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "vtkm/rendering/Actor.h"
-#include "vtkm/rendering/CanvasRayTracer.h"
-#include "vtkm/rendering/MapperRayTracer.h"
-#include "vtkm/rendering/MapperVolume.h"
-#include "vtkm/rendering/Scene.h"
-#include "vtkm/rendering/View3D.h"
+// #include "vtkm/rendering/Actor.h"
+// #include "vtkm/rendering/CanvasRayTracer.h"
+// #include "vtkm/rendering/MapperRayTracer.h"
+// #include "vtkm/rendering/MapperVolume.h"
+// #include "vtkm/rendering/Scene.h"
+// #include "vtkm/rendering/View3D.h"
 
 
 namespace megamol {
@@ -107,10 +107,10 @@ private:
     VtkmMetaData vtkmMetaData_;
 
     /** The vtkm structures used for rendering */
-    vtkm::rendering::Scene scene_;
-    vtkm::rendering::MapperRayTracer mapper_;
-    vtkm::rendering::CanvasRayTracer canvas_;
-    vtkm::rendering::Camera vtkmCamera_;
+    // vtkm::rendering::Scene scene_;
+    // vtkm::rendering::MapperRayTracer mapper_;
+    // vtkm::rendering::CanvasRayTracer canvas_;
+    // vtkm::rendering::Camera vtkmCamera_;
     // vtkm::rendering::View3D view;
     void* colorArray_;
     float canvasWidth_;
