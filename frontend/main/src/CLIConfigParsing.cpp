@@ -51,6 +51,12 @@ std::pair<RuntimeConfig, GlobalValueStore> megamol::frontend::handle_cli_and_con
         global_value_store.insert(pair.first, pair.second);
     }
 
+    // set delimiter ; in lua commands to newlines, so lua can actually execute
+    for (auto& character : config.cli_execute_lua_commands) {
+        if (character == ';')
+            character = '\n';
+    }
+
     return {config, global_value_store};
 }
 
@@ -71,12 +77,14 @@ static std::string logfile_option     = "logfile";
 static std::string loglevel_option    = "loglevel";
 static std::string echolevel_option   = "echolevel";
 static std::string project_option     = "p,project";
+static std::string execute_lua_option = "e,execute";
 static std::string global_option      = "g,global";
 
 // service-specific options
 // --project and loose project files are both valid ways to provide lua project files
 static std::string project_files_option = "project-files";
 static std::string host_option          = "host";
+static std::string opengl_context_option= "opengl";
 static std::string khrdebug_option      = "khrdebug";
 static std::string vsync_option         = "vsync";
 static std::string window_option        = "w,window";
@@ -87,6 +95,8 @@ static std::string nocursor_option      = "nocursor";
 static std::string interactive_option   = "i,interactive";
 static std::string guishow_option       = "guishow";
 static std::string guiscale_option      = "guiscale";
+static std::string privacynote_option   = "privacynote";
+static std::string param_option         = "param";
 static std::string help_option          = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -112,6 +122,11 @@ static void guishow_handler(std::string const& option_name, cxxopts::ParseResult
 static void guiscale_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.gui_scale = parsed_options[option_name].as<float>();
+};
+
+static void privacynote_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.screenshot_show_privacy_note = parsed_options[option_name].as<bool>();
 };
 
 static void config_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -187,6 +202,43 @@ static void project_handler(std::string const& option_name, cxxopts::ParseResult
     config.project_files.insert(config.project_files.end(), v.begin(), v.end());
 };
 
+static void execute_lua_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    auto commands = parsed_options[option_name].as<std::vector<std::string>>();
+
+    for (auto& cmd : commands) {
+        config.cli_execute_lua_commands += cmd + ";";
+    }
+};
+
+static void param_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    auto strings = parsed_options[option_name].as<std::vector<std::string>>();
+    std::string cmds;
+
+    std::regex param_value("(.+)=(.+)");
+
+    auto handle_param = [&](std::string const& string) {
+        std::smatch match;
+        if (std::regex_match(string, match, param_value)) {
+            auto param = "\"" + match[1].str() + "\"";
+            auto value = "\"" + match[2].str() + "\"";
+
+            std::string cmd = "mmSetParamValue(" + param + "," + value + ")";
+            cmds += cmd + ";";
+        } else {
+            exit("param option needs to be in the following format: param=value");
+        }
+    };
+
+    for (auto& paramstring : strings) {
+        handle_param(paramstring);
+    }
+
+    // prepend param value changes before other CLI Lua commands
+    config.cli_execute_lua_commands = cmds + config.cli_execute_lua_commands;
+};
+
 static void global_value_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     auto v = parsed_options[option_name].as<std::vector<std::string>>();
@@ -206,6 +258,28 @@ static void global_value_handler(std::string const& option_name, cxxopts::ParseR
 static void host_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.lua_host_address = parsed_options[option_name].as<std::string>();
+};
+
+
+static void opengl_context_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    auto string = parsed_options[option_name].as<std::string>();
+
+    std::regex version("(\\d+).(\\d+)(core|compat)?");
+    std::smatch match;
+    if (std::regex_match(string, match, version)) {
+        unsigned int major = std::stoul(match[1].str(), nullptr, 10);
+        unsigned int minor = std::stoul(match[2].str(), nullptr, 10);
+        bool profile = false;
+
+        if (match[3].matched) {
+            profile = match[3].str() == std::string("core");
+        }
+
+        config.opengl_context_version = {{major, minor, profile}};
+    } else {
+        exit("opengl option needs to be in the following format: major.minor[core|compat]");
+    }
 };
 
 static void khrdebug_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -273,9 +347,11 @@ std::vector<OptionsListEntry> cli_options_list =
         , {loglevel_option,      "Set logging level, accepted values: "+accepted_log_level_strings,                 cxxopts::value<std::string>(),              loglevel_handler}
         , {echolevel_option,     "Set echo level, accepted values see above",                                       cxxopts::value<std::string>(),              echolevel_handler}
         , {project_option,       "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
+        , {execute_lua_option,   "Execute Lua command(s). Commands separated by ;",                                 cxxopts::value<std::vector<std::string>>(), execute_lua_handler}
         , {global_option,        "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
         , {host_option,          "Address of lua host server",                                                      cxxopts::value<std::string>(),              host_handler         }
+        , {opengl_context_option,"OpenGL context to request: major.minor[core|compat], e.g. --opengl 3.2compat",    cxxopts::value<std::string>(),              opengl_context_handler}
         , {khrdebug_option,      "Enable OpenGL KHR debug messages",                                                cxxopts::value<bool>(),                     khrdebug_handler     }
         , {vsync_option,         "Enable VSync in OpenGL window",                                                   cxxopts::value<bool>(),                     vsync_handler        }
         , {window_option,        "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",     cxxopts::value<std::string>(),              window_handler       }
@@ -287,6 +363,8 @@ std::vector<OptionsListEntry> cli_options_list =
         , {project_files_option, "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
         , {guishow_option,       "Render GUI overlay, use '=false' to disable",                                     cxxopts::value<bool>(),                     guishow_handler}
         , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
+        , {privacynote_option,   "Show privacy note when taking screenshot, use '=false' to disable",               cxxopts::value<bool>(),                     privacynote_handler}
+        , {param_option,         "Set MegaMol Graph parameter to value: --param param=value",                       cxxopts::value<std::vector<std::string>>(), param_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 

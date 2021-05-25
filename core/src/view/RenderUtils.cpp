@@ -49,10 +49,14 @@ bool RenderUtils::LoadTextureFromData(
     if (data == nullptr)
         return false;
     try {
-        glowl::TextureLayout tex_layout(GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1);
+        std::vector<std::pair<GLenum, GLint>> int_parameters;
+        int_parameters.push_back({GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE});
+        int_parameters.push_back({GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE});
+        std::vector<std::pair<GLenum, GLfloat>> float_parameters;
+        glowl::TextureLayout tex_layout(GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1, int_parameters, float_parameters);
         if (out_texture_ptr == nullptr) {
             out_texture_ptr =
-                std::make_unique<glowl::Texture2D>("image_widget", tex_layout, static_cast<GLvoid*>(data), false);
+                std::make_unique<glowl::Texture2D>("image", tex_layout, static_cast<GLvoid*>(data), false);
         } else {
             // Reload data
             out_texture_ptr->reload(tex_layout, static_cast<GLvoid*>(data), false);

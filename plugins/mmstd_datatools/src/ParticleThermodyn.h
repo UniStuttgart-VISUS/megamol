@@ -12,7 +12,7 @@
 #include <Eigen/Eigenvalues>
 #include <nanoflann.hpp>
 #include <vector>
-#include "PointcloudHelpers.h"
+#include "mmstd_datatools/PointcloudHelpers.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"

@@ -6,7 +6,7 @@
 
 #include "mmcore/param/FilePathParam.h"
 
-#include "TFUtils.h"
+#include "mmstd_datatools/TFUtils.h"
 
 
 megamol::mesh::io::MeshAugmentInfo::MeshAugmentInfo()

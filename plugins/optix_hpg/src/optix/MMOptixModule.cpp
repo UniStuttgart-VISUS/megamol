@@ -14,7 +14,7 @@
 
 namespace megamol::optix_hpg {
 
-template<int N>
+template<unsigned int N>
 class simple_log {
 public:
     char const* read() {
@@ -47,7 +47,7 @@ std::string hide_optix_commands(std::string const& ptx_code) {
     std::istringstream ptx_in = std::istringstream(ptx_code);
     std::ostringstream ptx_out;
     for (std::string line; std::getline(ptx_in, line);) {
-        if (line.find(" _optix_") != std::string::npos) {
+        if (line.find("_optix_") != std::string::npos) {
             ptx_out << "// skipped: " << line << '\n';
         } else {
             ptx_out << line << '\n';
@@ -58,7 +58,10 @@ std::string hide_optix_commands(std::string const& ptx_code) {
 
 
 std::tuple<CUmodule, CUfunction> get_bounds_function(std::string const& ptx_code, std::string const& name) {
-    simple_log<2048> log;
+    auto ptx_out = hide_optix_commands(std::string(ptx_code));
+
+    unsigned int log_size = 2048;
+    char log[2048];
 
     CUmodule bounds_module = nullptr;
     CUfunction bounds_function = nullptr;
@@ -68,12 +71,11 @@ std::tuple<CUmodule, CUfunction> get_bounds_function(std::string const& ptx_code
         CU_JIT_ERROR_LOG_BUFFER,
         CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
     };
-    void* optionValues[] = {(void*) 0, (char*) log, (size_t*) log};
-    CUDA_CHECK_ERROR(cuModuleLoadDataEx(&bounds_module, ptx_code.c_str(), 3, options, optionValues));
+    void* optionValues[] = {(void*) 0, (char*) log, (unsigned int*) &log_size};
+    CUDA_CHECK_ERROR(cuModuleLoadDataEx(&bounds_module, ptx_out.c_str(), 3, options, optionValues));
 #if DEBUG
-    if (log.get_log_size() > 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[MMOptixModule] Bounds Module creation info: %s", log.read());
+    if (log_size > 1) {
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Bounds Module creation info: %s", log);
     }
 #endif
     std::string bounds_name = MM_OPTIX_BOUNDS_ANNOTATION_STRING + name;
@@ -170,13 +172,11 @@ megamol::optix_hpg::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDevi
     }
 #endif
 
-    auto ptx_out = hide_optix_commands(std::string(ptx_code));
-
     if (kind == MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP) {
         auto const fit = std::find_if(names.begin(), names.end(),
             [](auto const& el) { return el.first == MMOptixNameKind::MMOPTIX_NAME_BOUNDS; });
         std::string bounds_name = fit != names.end() ? fit->second : "bounds";
-        std::tie(bounds_module_, bounds_function_) = get_bounds_function(ptx_out, bounds_name);
+        std::tie(bounds_module_, bounds_function_) = get_bounds_function(ptx_code, bounds_name);
     }
 
     auto const desc = fill_optix_programgroupdesc(kind, module_, names);

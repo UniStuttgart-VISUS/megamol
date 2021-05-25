@@ -17,6 +17,7 @@
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
+#include "glowl/Texture2D.hpp"
 
 namespace megamol {
 namespace compositing {
@@ -99,11 +100,16 @@ protected:
 private:
     typedef vislib::graphics::gl::GLSLShader GLSLShader;
 
+    /** Dummy depth texture to use when no depth texture is connected */
+    std::shared_ptr<glowl::Texture2D> m_dummy_depth_tx;
+
     /** Shader program for deferred shading pass */
     std::unique_ptr<GLSLShader> m_drawToScreen_prgm;
 
     /** */
     core::CallerSlot m_input_texture_call;
+
+    core::CallerSlot m_input_depth_texture_call;
 
     GLint m_screenRestoreFBO;
 };

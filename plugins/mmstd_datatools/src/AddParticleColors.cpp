@@ -3,7 +3,7 @@
 
 #include "mmcore/view/CallGetTransferFunction.h"
 
-#include "TFUtils.h"
+#include "mmstd_datatools/TFUtils.h"
 
 
 megamol::stdplugin::datatools::AddParticleColors::AddParticleColors(void)

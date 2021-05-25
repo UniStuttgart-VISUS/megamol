@@ -8,17 +8,6 @@
 #ifndef MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 #define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 
-
-#ifdef _WIN32
-#ifdef GUI_EXPORTS
-#define GUI_API __declspec(dllexport)
-#else
-#define GUI_API __declspec(dllimport)
-#endif
-#else // _WIN32
-#define GUI_API
-#endif // _WIN32
-
 #include "Configurator.h"
 #include "LogConsole.h"
 #include "WindowCollection.h"
@@ -27,7 +16,7 @@
 #include "widgets/DefaultStyle.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/MinimalPopUp.h"
+#include "widgets/PopUps.h"
 #include "widgets/StringSearchWidget.h"
 #include "widgets/TransferFunctionEditor.h"
 #include "widgets/WidgetPicking_gl.h"
@@ -50,7 +39,7 @@
 namespace megamol {
 namespace gui {
 
-    class GUI_API GUIWindows {
+    class GUIWindows {
     public:
         /**
          * CTOR.
@@ -119,14 +108,14 @@ namespace gui {
          * @param as_lua   If true, GUI state, scale and visibility are returned wrapped into respective LUA commands.
          *                 If false, only GUI state JSON string is returned.
          */
-        std::string GetState(bool as_lua) {
+        inline std::string GetState(bool as_lua) {
             return this->project_to_lua_string(as_lua);
         }
 
         /**
          * Pass current GUI visibility.
          */
-        bool GetVisibility(void) const {
+        inline bool GetVisibility(void) const {
             return this->state.gui_visible;
         }
 
@@ -152,7 +141,7 @@ namespace gui {
         bool GetTriggeredScreenshot(void);
 
         // Valid filename is only ensured after screenshot was triggered.
-        inline const std::string GetScreenshotFileName(void) const {
+        inline std::string GetScreenshotFileName(void) const {
             return this->state.screenshot_filepath;
         }
 
@@ -216,7 +205,7 @@ namespace gui {
          * Set resource directories.
          */
         void SetResourceDirectories(const std::vector<std::string>& resource_directories) {
-            this->state.resource_directories = resource_directories;
+            megamol::gui::gui_resource_paths = resource_directories;
         }
 
         /**
@@ -228,15 +217,14 @@ namespace gui {
         /**
          * Synchronise changes between core graph <-> gui graph.
          *
-         * - 'Old' core instance graph:    Call this function after(!) rendering of current frame.
-         *                                 This way, graph changes will be applied next frame (and not 2 frames later).
-         *                                 In this case in PreDraw() a gui graph is created once.
-         * - 'New' megamol graph:          Call this function in GUI_Service::digestChangedRequestedResources() as
-         *                                 pre-rendering step. In this case a new gui graph is created before first
-         *                                 call of PreDraw() and a gui graph already exists.
+         * - 'Old' core instance graph:  Call this function after(!) rendering of current frame.
+         *                               This way, graph changes will be applied next frame (and not 2 frames later).
+         *                               In this case in PreDraw() a gui graph is created once.
+         * - 'New' megamol graph:        Call this function in GUI_Service::digestChangedRequestedResources() as
+         *                               pre-rendering step. In this case a new gui graph is created before first
+         *                               call of PreDraw() and a gui graph already exists.
          *
-         * @param megamol_graph            If no megamol_graph is given, 'old' graph is synchronised via
-         * core_instance.
+         * @param megamol_graph          If no megamol_graph is given, 'old' graph in core instance is synchronised.
          */
         bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
 
@@ -289,9 +277,8 @@ namespace gui {
             double stat_averaged_fps;             // current average fps value
             double stat_averaged_ms;              // current average fps value
             size_t stat_frame_count;              // current fame count
-            std::vector<std::string> resource_directories; // the global resource directories
-            bool load_docking_preset;                      // Flag indicating docking preset loading
-            bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
+            bool load_docking_preset;             // Flag indicating docking preset loading
+            bool hotkeys_check_once;              // WORKAROUND: Check multiple hotkey assignments once
         };
 
         /** The GUI hotkey array index mapping. */

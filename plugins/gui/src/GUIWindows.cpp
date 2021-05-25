@@ -80,11 +80,11 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
                 "[GUI] There is no current OpenGL rendering context available from the calling thread.");
             prerequisities_given = false;
         }
-#else // Linux
-      /// XXX The following throws segfault if OpenGL is not loaded yet:
-      // Display* gl_current_display = ::glXGetCurrentDisplay();
-      // GLXContext ogl_current_context = ::glXGetCurrentContext();
-      /// XXX Is there a better way to check existing OpenGL context?
+#else
+        /// XXX The following throws segfault if OpenGL is not loaded yet:
+        // Display* gl_current_display = ::glXGetCurrentDisplay();
+        // GLXContext ogl_current_context = ::glXGetCurrentContext();
+        /// XXX Is there a better way to check existing OpenGL context?
         if (glXGetCurrentDisplay == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_ERROR, "[GUI] There is no OpenGL rendering context available.");
@@ -95,7 +95,7 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
                 "[GUI] There is no current OpenGL rendering context available from the calling thread.");
             prerequisities_given = false;
         }
-#endif /// _WIN32
+#endif // _WIN32
         if (!prerequisities_given) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to create ImGui context for OpenGL API. [%s, %s, line %d]\n<<< HINT: Check if "
@@ -416,8 +416,8 @@ bool GUIWindows::PostDraw(void) {
                     for (auto& module_ptr : graph_ptr->Modules()) {
                         std::string module_full_name = module_ptr->FullName();
                         for (auto& param : module_ptr->Parameters()) {
-                            std::string param_full_name = module_full_name + "::" + param.FullName();
-                            if ((wc.tfe_active_param == param_full_name) &&
+                            std::string param_full_name = param.FullNameProject();
+                            if (GUIUtils::CaseInsensitiveStringCompare(wc.tfe_active_param, param_full_name) &&
                                 (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
                                 this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
                                 param.TransferFunctionEditor_ConnectExternal(this->tf_editor_ptr, true);
@@ -501,9 +501,9 @@ bool GUIWindows::PostDraw(void) {
     if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
         for (auto& module_ptr : graph_ptr->Modules()) {
 
-            module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_ptr->FullName(), "",
-                vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr,
-                GUI_INVALID_ID, &this->picking_buffer);
+            module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), "", vislib::math::Ternary::TRI_UNKNOWN,
+                false, Parameter::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr, GUI_INVALID_ID,
+                &this->picking_buffer);
         }
     }
 
@@ -1062,9 +1062,10 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                              si != se; ++si) {
                             auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
                             if (param_slot != nullptr) {
-                                std::string param_full_name(param_slot->Name().PeekBuffer());
+                                std::string param_full_name(param_slot->FullName().PeekBuffer());
                                 for (auto& parameter : module_ptr->Parameters()) {
-                                    if (parameter.FullName() == param_full_name) {
+                                    if (GUIUtils::CaseInsensitiveStringCompare(
+                                            parameter.FullNameCore(), param_full_name)) {
                                         megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                             (*param_slot), parameter, true, false, true);
                                     }
@@ -1226,7 +1227,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_position = ImVec2(vp[2] / 2.0f, 0.0f);
     buf_win.win_reset_position = buf_win.win_position;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking;
     buf_win.win_callback = WindowCollection::DRAWCALLBACK_PERFORMANCE;
     this->window_collection.AddWindowConfiguration(buf_win);
 
@@ -1392,14 +1393,15 @@ void megamol::gui::GUIWindows::load_default_fonts(void) {
     std::string configurator_font_path;
     std::string default_font_path;
 
-    auto get_preset_font_path = [&](auto directory) {
-        std::string font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, "Roboto-Regular.ttf");
+    auto get_preset_font_path = [&](std::string directory) {
+        std::string font_path =
+            megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_ROBOTOSANS);
         if (!font_path.empty()) {
             font_paths.emplace_back(font_path);
             configurator_font_path = font_path;
             default_font_path = font_path;
         }
-        font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, "SourceCodePro-Regular.ttf");
+        font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_SOURCECODEPRO);
         if (!font_path.empty()) {
             font_paths.emplace_back(font_path);
         }
@@ -1408,10 +1410,10 @@ void megamol::gui::GUIWindows::load_default_fonts(void) {
     if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
         auto search_paths = this->core_instance->Configuration().ResourceDirectories();
         for (size_t i = 0; i < search_paths.Count(); ++i) {
-            get_preset_font_path(std::wstring(search_paths[i].PeekBuffer()));
+            get_preset_font_path(megamol::core::utility::to_string(search_paths[i].PeekBuffer()));
         }
     } else {
-        for (auto& resource_directory : this->state.resource_directories) {
+        for (auto& resource_directory : megamol::gui::gui_resource_paths) {
             get_preset_font_path(resource_directory);
         }
     }
@@ -1604,7 +1606,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                     // Draw parameters
                     if (module_header_open) {
                         bool out_open_external_tf_editor;
-                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_label, search_string,
+                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
                             vislib::math::Ternary(wc.param_extended_mode), true, Parameter::WidgetScope::LOCAL,
                             this->tf_editor_ptr, &out_open_external_tf_editor, override_header_state, nullptr);
                         if (out_open_external_tf_editor) {
@@ -1728,7 +1730,6 @@ void GUIWindows::drawMenu(void) {
     if (!this->state.menu_visible)
         return;
 
-    ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
     bool megamolgraph_interface = false;
@@ -2100,8 +2101,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             popup_failed |=
                 !this->configurator.GetGraphCollection().SaveProjectToFile(graph_ptr->UID(), filename, gui_state);
         }
-        MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
-            confirmed, "Cancel", aborted);
+        PopUps::Minimal(
+            "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
     }
     this->state.open_popup_save = false;
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed = false;
@@ -2116,8 +2117,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             /// GUI graph and GUI state are updated at next synchronization
             this->state.request_load_projet_file = filename;
         }
-        MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
-            confirmed, "Cancel", aborted);
+        PopUps::Minimal(
+            "Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
     }
     this->state.open_popup_load = false;
     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed = false;
@@ -2128,6 +2129,9 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         this->state.screenshot_filepath_id = 0;
     }
     this->state.open_popup_screenshot = false;
+
+    // Screenshot Privacy note
+    this->console.PopUps();
 }
 
 
@@ -2300,7 +2304,7 @@ void GUIWindows::checkMultipleHotkeyAssignment(void) {
                             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                                 "[GUI] The hotkey [%s] of the parameter \"%s\" has already been assigned. "
                                 ">>> If this hotkey is pressed, there will be no effect on this parameter!",
-                                keyCode.ToString().c_str(), param.FullName().c_str());
+                                keyCode.ToString().c_str(), param.FullNameProject().c_str());
                         }
                     }
                 }
@@ -2465,7 +2469,6 @@ bool megamol::gui::GUIWindows::state_from_string(const std::string& state) {
                     gui_state, {"font_file_name"}, &this->state.font_file_name);
                 megamol::core::utility::get_json_value<int>(gui_state, {"font_size"}, &this->state.font_size);
                 this->state.font_apply = true;
-                float new_gui_scale = 1.0f;
                 std::string imgui_settings;
                 megamol::core::utility::get_json_value<std::string>(gui_state, {"imgui_settings"}, &imgui_settings);
                 this->load_imgui_settings_from_string(imgui_settings);
@@ -2486,8 +2489,7 @@ bool megamol::gui::GUIWindows::state_from_string(const std::string& state) {
                 module_ptr->GUIParameterGroups().StateFromJSON(state_json, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->Parameters()) {
-                    std::string param_full_name = module_full_name + "::" + param.FullName();
-                    param.StateFromJSON(state_json, param_full_name);
+                    param.StateFromJSON(state_json, param.FullNameProject());
                     param.ForceSetGUIStateDirty();
                 }
             }
@@ -2535,8 +2537,7 @@ bool megamol::gui::GUIWindows::state_to_string(std::string& out_state) {
                 module_ptr->GUIParameterGroups().StateToJSON(json_state, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->Parameters()) {
-                    std::string param_full_name = module_full_name + "::" + param.FullName();
-                    param.StateToJSON(json_state, param_full_name);
+                    param.StateToJSON(json_state, param.FullNameProject());
                 }
             }
         }
@@ -2590,7 +2591,6 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.stat_averaged_ms = 0.0;
     this->state.stat_frame_count = 0;
     this->state.font_size = 13;
-    this->state.resource_directories.clear();
     this->state.load_docking_preset = false;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);
@@ -2607,7 +2607,7 @@ void megamol::gui::GUIWindows::update_frame_statistics(WindowCollection::WindowC
 
             auto update_values = [](float current_value, float& max_value, std::vector<float>& values,
                                      size_t actual_buffer_size) {
-                auto buffer_size = static_cast<int>(values.size());
+                size_t buffer_size = values.size();
                 if (buffer_size != actual_buffer_size) {
                     if (buffer_size > actual_buffer_size) {
                         values.erase(values.begin(), values.begin() + (buffer_size - actual_buffer_size));

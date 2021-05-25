@@ -112,10 +112,10 @@ private:
     std::vector<std::string> colNames;
     GLint maxBinValue;
 
-    vislib::graphics::gl::GLSLComputeShader calcHistogramProgram;
-    vislib::graphics::gl::GLSLComputeShader selectionProgram;
-    vislib::graphics::gl::GLSLShader histogramProgram;
-    vislib::graphics::gl::GLSLShader axesProgram;
+    std::unique_ptr<glowl::GLSLProgram> calcHistogramProgram;
+    std::unique_ptr<glowl::GLSLProgram> selectionProgram;
+    std::unique_ptr<glowl::GLSLProgram> histogramProgram;
+    std::unique_ptr<glowl::GLSLProgram> axesProgram;
 
     GLuint floatDataBuffer = 0;
     GLuint minBuffer = 0;

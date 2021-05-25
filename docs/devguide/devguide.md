@@ -8,6 +8,7 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 - [Create new Plugin](#create-new-plugin)
     - [Add own plugin using the template](#add-own-plugin-using-the-template) 
+- [Create GLSL Shader with utility classes](#create-glsl-shader-with-utility-classes)
 - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
     - [Recipe](#recipe) 
     - [Usage: ```DATACallRead```](#usage-datacallread) 
@@ -56,6 +57,34 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 <!-- ###################################################################### -->
 -----
+
+## Create GLSL Shader with utility classes
+
+Required headers:
+- ```mmcore/utility/graphics/GLSLShader.h```
+- ```mmcore/CoreInstance.h```
+  
+Before creating a shader program with this wrapper, ```compiler_options``` need to be retrieved from ```CoreInstance```.
+This ```compiler_options``` instance contains default shader paths and default options.
+Additional include paths and definitions can be added prior to program creation.
+The constructor of the wrapper requires paths to source files of all shader stages in the form: ```<path>/<name>.<type>.glsl```.
+
+Allowed types are:   
+| Type | Shader Stage            |
+| ---- | ----------------------- |
+| vert | Vertex                  |
+| geom | Geometry                |
+| tesc | Tessellation Control    |
+| tese | Tessellation Evaluation |
+| frag | Fragment                |
+| comp | Compute                 |
+
+Uniform locations are retrieved at construction of GLSLShader instance.
+
+Within source files, includes can be defined in standard C style: ```#include "common.h"```
+
+Shader program can be created manually by calling ```megamol::core::utility::make_program``` from ```mmcore/utility/ShaderFactory.h``` (same parameter set as GLSLShader ctor).
+
 ## Bi-Directional Communication across Modules
 
 Bi-Directional Communication, while in principle enabled on any Call in MegaMol, has severe implications when data can be changed at an arbitrary end and multiple Modules work on the data that is passed around. The current state of knowledge is described here and should be used for any and all Calls moving forward.
@@ -172,17 +201,17 @@ There are different queues for different types of requests:
 For each of this queues, there is a list with indices into the respective queue pointing to the last queued event before a flush.
 It causes the graph updater to stop at the indicated event and delay further graph updates to the next frame.
 
-|Name|
-|---|
-|viewInstRequestsFlushIndices|
-|jobInstRequestsFlushIndices|
-|callInstRequestsFlushIndices|
-|chainCallInstRequestsFlushIndices|
-|moduleInstRequestsFlushIndices|
-|callDelRequestsFlushIndices|
-|moduleDelRequestsFlushIndices|
-|paramSetRequestsFlushIndices|
-|groupParamSetRequestsFlushIndices|
+| Name                              |
+| --------------------------------- |
+| viewInstRequestsFlushIndices      |
+| jobInstRequestsFlushIndices       |
+| callInstRequestsFlushIndices      |
+| chainCallInstRequestsFlushIndices |
+| moduleInstRequestsFlushIndices    |
+| callDelRequestsFlushIndices       |
+| moduleDelRequestsFlushIndices     |
+| paramSetRequestsFlushIndices      |
+| groupParamSetRequestsFlushIndices |
 
 
 <!-- ###################################################################### -->
@@ -228,13 +257,13 @@ add_external_headeronly_project(<NAME>
   [DEPENDS <DEPENDS>...])
 ```
 
-| Parameter              | Description  |
-| ---------------------- | ------------ |
-| ```<NAME>```           | Target name, usually the official name of the library or its abbreviation. |
-| ```<GIT_REPOSITORY>``` | URL of the git repository. |
+| Parameter              | Description                                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| ```<NAME>```           | Target name, usually the official name of the library or its abbreviation.                                                |
+| ```<GIT_REPOSITORY>``` | URL of the git repository.                                                                                                |
 | ```<GIT_TAG>```        | Tag or commit hash for getting a specific version, ensuring compatibility. Default behavior is to get the latest version. |
-| ```<INCLUDE_DIR>```    | Relative directory where the include files can be found, usually ```include```. Defaults to the main source directory. |
-| ```<DEPENDS>```        | Targets this library depends on, if any. |
+| ```<INCLUDE_DIR>```    | Relative directory where the include files can be found, usually ```include```. Defaults to the main source directory.    |
+| ```<DEPENDS>```        | Targets this library depends on, if any.                                                                                  |
 
 In the following example, the library Delaunator is downloaded from ```https://github.com/delfrrr/delaunator-cpp.git``` in its version ```v0.4.0```. 
 The header files can be found in the folder ```include```.
@@ -250,11 +279,11 @@ For more examples on how to include header-only libraries, see the ```CMakeExter
 
 Additionally, information about the header-only libraries can be queried with the command ```external_get_property(<NAME> <VARIABLE>)```, where variable has to be one of the provided variables in the following table, and at the same time is used as local variable name for storing the queried results.
 
-| Variable       | Description |
-| -------------- | ----------- |
-| GIT_REPOSITORY | The URL of the git repository. |
+| Variable       | Description                                           |
+| -------------- | ----------------------------------------------------- |
+| GIT_REPOSITORY | The URL of the git repository.                        |
 | GIT_TAG        | The git tag or commit hash of the downloaded library. |
-| SOURCE_DIR     | Source directory, where the downloaded files reside. |
+| SOURCE_DIR     | Source directory, where the downloaded files reside.  |
 
 ##### Built libraries
 
@@ -336,15 +365,15 @@ Further examples on how to include static libraries can be found in the ```CMake
 
 Additionally, information about the libraries can be queried with the command ```external_get_property(<NAME> <VARIABLE>)```, where variable has to be one of the provided variables in the following table, and at the same time is used as local variable name for storing the queried results.
 
-| Variable       | Description |
-| -------------- | ----------- |
-| GIT_REPOSITORY | The URL of the git repository. |
-| GIT_TAG        | The git tag or commit hash of the downloaded library. |
-| SOURCE_DIR     | Source directory, where the downloaded files reside. |
-| BINARY_DIR     | Directory of the CMake configuration files. |
+| Variable       | Description                                                                                                                                                                 |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GIT_REPOSITORY | The URL of the git repository.                                                                                                                                              |
+| GIT_TAG        | The git tag or commit hash of the downloaded library.                                                                                                                       |
+| SOURCE_DIR     | Source directory, where the downloaded files reside.                                                                                                                        |
+| BINARY_DIR     | Directory of the CMake configuration files.                                                                                                                                 |
 | INSTALL_DIR    | Target directory for the local installation. Note that for multi-configuration systems, the built static libraries are in a subdirectory corresponding to their build type. |
-| SHARED         | Indicates that the library was built as a dynamic library if ```TRUE```, or a static library otherwise. |
-| BUILD_TYPE     | Build type of the output library on single-configuration systems. |
+| SHARED         | Indicates that the library was built as a dynamic library if ```TRUE```, or a static library otherwise.                                                                     |
+| BUILD_TYPE     | Build type of the output library on single-configuration systems.                                                                                                           |
 
 
 <!-- ###################################################################### -->

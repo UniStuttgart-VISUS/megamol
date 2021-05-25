@@ -1,18 +1,19 @@
+#ifndef MEGAMOL_INFOVIS_AMORTIZEDRENDERER_H_INCLUDED
+#define MEGAMOL_INFOVIS_AMORTIZEDRENDERER_H_INCLUDED
+
+#include <glm/matrix.hpp>
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include <glowl/glowl.h>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender2DGL.h"
-#include "mmcore/view/Renderer2DModule.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-
-#include "glm/matrix.hpp"
-#include "glowl/FramebufferObject.hpp"
 #include "mmcore/view/MouseFlags.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "mmcore/view/Renderer2DModule.h"
 
-//#include "mmcore/view/MouseFlags.h"
 #include "Renderer2D.h"
 
 namespace megamol {
@@ -58,7 +59,7 @@ namespace infovis {
 
         std::vector<glm::fvec3> calculateHammersley(int until, int ow, int oh);
 
-        void makeShaders();
+        bool makeShaders();
 
         void setupAccel(int approach, int ow, int oh, int ssLevel);
 
@@ -80,9 +81,7 @@ namespace infovis {
 
     private:
         // required Shaders for different kinds of reconstruction
-        std::unique_ptr<vislib::graphics::gl::GLSLShader> amort_reconstruction_shdr_array[7];
-        vislib::graphics::gl::ShaderSource vertex_shader_src;
-        vislib::graphics::gl::ShaderSource fragment_shader_src;
+        std::unique_ptr<glowl::GLSLProgram> amort_reconstruction_shdr_array[7];
 
         enum AmortizationModes { MS_AR = 0, QUAD_AR, QUAD_AR_C, SS_AR, PARAMETER_AR, DEBUG_PLACEHOLDER, PUSH_AR };
 
@@ -128,3 +127,5 @@ namespace infovis {
     };
 } // namespace infovis
 } // namespace megamol
+
+#endif // MEGAMOL_INFOVIS_AMORTIZEDRENDERER_H_INCLUDED

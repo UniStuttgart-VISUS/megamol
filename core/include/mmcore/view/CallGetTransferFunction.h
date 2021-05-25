@@ -11,13 +11,18 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <array>
+#include <memory>
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include "glowl/glowl.h"
+
 #include "mmcore/Call.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include <array>
 
 namespace megamol {
 namespace core {
@@ -91,6 +96,8 @@ public:
      * wants to set `activeTexture` to `GL_TEXTURE0` and `textureUniform` to `0`.
      */
     void BindConvenience(vislib::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform);
+
+    void BindConvenience(std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform);
 
     /**
      * Unbinds convenience.
@@ -221,7 +228,7 @@ public:
         this->availableTFVersion = version;
     }
 
-    /** 
+    /**
      * Check for updated range value and consume triggered update
      */
     bool ConsumeRangeUpdate(void) {

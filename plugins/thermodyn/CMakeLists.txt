@@ -1,57 +1,25 @@
+# MegaMol
+# Copyright (c) 2021, MegaMol Dev Team
+# All rights reserved.
 #
-# MegaMol™ thermodyn Plugin
-# Copyright 2017, by MegaMol Team
-# Alle Rechte vorbehalten. All rights reserved.
-#
-string(TOUPPER thermodyn EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build thermodyn" ON)
 
-if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(thermodyn)
+megamol_plugin(thermodyn
+  BUILD_DEFAULT ON
+  DEPENDS_PLUGINS
+    mesh
+    mmstd_datatools
+  DEPENDS_EXTERNALS
+    Eigen
+    imgui
+    implot
+    nanoflann
+  )
 
-  # Check option dependencies: First list item is always the current build option,
-  # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE;BUILD_MESH_PLUGIN;BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
+if (thermodyn_PLUGIN_ENABLED)
+  find_package(CGAL REQUIRED)
 
-  find_package(CGAL CONFIG REQUIRED)
-
-  require_external(Eigen)
-  require_external(implot)
-  require_external(nanoflann)
-
-  # Collect source files
-  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "shaders/*")
-
-  # Target definition
-  #add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
-  target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
-  target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mesh mmstd_datatools nanoflann Eigen CGAL::CGAL imgui implot)
-
-  # Installation rules for generated files
-  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")
+  target_link_libraries(thermodyn PRIVATE CGAL::CGAL)
   if(WIN32)
-    #install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-    #install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
     install(FILES "${CGAL_DIR}/../../bin/mpir.dll" "${CGAL_DIR}/../../bin/mpfr.dll" DESTINATION "bin")
-  else()
-    #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
-
-  # Grouping in Visual Studio
-  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
-  source_group("Public Header Files" FILES ${public_header_files})
-  source_group("Header Files" FILES ${header_files})
-  source_group("Source Files" FILES ${source_files})
-  source_group("Shaders" FILES ${shader_files})
-
-  # Register plugin
-  megamol_register_plugin(${PROJECT_NAME})
-endif()
+endif ()
