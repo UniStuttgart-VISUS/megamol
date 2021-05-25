@@ -25,7 +25,6 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , dirty_flag(true)
         , filenames()
         , sync_queue()
-        , core_interface(GraphCoreInterface::NO_INTERFACE)
         , running(false)
         , gui_graph_state()
         , gui_show_grid(false)
@@ -99,11 +98,9 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     this->gui_graph_state.interact.interfaceslot_compat_ptr.reset();
 
     this->gui_graph_state.interact.parameters_extended_mode = false;
-
-    this->gui_graph_state.interact.graph_core_interface = this->GetCoreInterface();
-
+    this->gui_graph_state.interact.graph_is_running = false;
     this->gui_graph_state.groups.clear();
-    // this->gui_graph_state.hotkeys are already initialzed
+    // this->gui_graph_state.hotkeys are already initialized
 }
 
 megamol::gui::Graph::~Graph(void) {
@@ -225,22 +222,11 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
 }
 
 
-bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
+bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 
     try {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->UID() == module_uid) {
-
-                if (!force && (*iter)->IsGraphEntry()) {
-                    if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                            "[GUI] The action [Delete graph entry/ view instance] is not yet supported for the graph "
-                            "using the 'Core Instance Graph' interface. Open project from file to make desired "
-                            "changes. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        return false;
-                    }
-                }
 
                 this->ResetStatePointers();
                 QueueData queue_data;
@@ -857,7 +843,7 @@ void megamol::gui::Graph::Clear(void) {
         module_uids.emplace_back(module_ptr->UID());
     }
     for (auto& module_uid : module_uids) {
-        this->DeleteModule(module_uid, true);
+        this->DeleteModule(module_uid);
     }
 
     // 2) Delete all calls
@@ -1361,6 +1347,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             this->gui_change_show_parameter_sidebar = false;
 
             this->gui_show_parameter_sidebar = state.show_parameter_sidebar;
+            this->gui_graph_state.interact.graph_is_running = this->IsRunning();
 
             this->gui_graph_state.hotkeys = state.hotkeys;
             this->gui_graph_state.groups.clear();
@@ -1369,7 +1356,6 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 this->gui_graph_state.groups.emplace_back(group_pair);
             }
             this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
-            this->gui_graph_state.interact.graph_core_interface = this->GetCoreInterface();
 
             // Compatible slot pointers
             this->gui_graph_state.interact.callslot_compat_ptr.reset();
@@ -1516,56 +1502,48 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             }
             // Add module to group ------------------------------------------------
             if (!this->gui_graph_state.interact.modules_add_group_uids.empty()) {
-                if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] The action [Add Module to Group] is not yet supported for the graph "
-                        "using the 'Core Instance Graph' interface. Open project from file to make desired "
-                        "changes. [%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
-                } else {
-                    ModulePtr_t module_ptr;
-                    ImGuiID new_group_uid = GUI_INVALID_ID;
-                    for (auto& uid_pair : this->gui_graph_state.interact.modules_add_group_uids) {
-                        module_ptr.reset();
-                        for (auto& mod : this->Modules()) {
-                            if (mod->UID() == uid_pair.first) {
-                                module_ptr = mod;
-                            }
+                ModulePtr_t module_ptr;
+                ImGuiID new_group_uid = GUI_INVALID_ID;
+                for (auto& uid_pair : this->gui_graph_state.interact.modules_add_group_uids) {
+                    module_ptr.reset();
+                    for (auto& mod : this->Modules()) {
+                        if (mod->UID() == uid_pair.first) {
+                            module_ptr = mod;
                         }
-                        if (module_ptr != nullptr) {
-                            std::string current_module_fullname = module_ptr->FullName();
+                    }
+                    if (module_ptr != nullptr) {
+                        std::string current_module_fullname = module_ptr->FullName();
 
-                            // Add module to new or already existing group
-                            // Create new group for multiple selected modules only once!
-                            ImGuiID group_uid = GUI_INVALID_ID;
-                            if ((uid_pair.second == GUI_INVALID_ID) && (new_group_uid == GUI_INVALID_ID)) {
-                                new_group_uid = this->AddGroup();
-                            }
-                            if (uid_pair.second == GUI_INVALID_ID) {
-                                group_uid = new_group_uid;
-                            } else {
-                                group_uid = uid_pair.second;
-                            }
+                        // Add module to new or already existing group
+                        // Create new group for multiple selected modules only once!
+                        ImGuiID group_uid = GUI_INVALID_ID;
+                        if ((uid_pair.second == GUI_INVALID_ID) && (new_group_uid == GUI_INVALID_ID)) {
+                            new_group_uid = this->AddGroup();
+                        }
+                        if (uid_pair.second == GUI_INVALID_ID) {
+                            group_uid = new_group_uid;
+                        } else {
+                            group_uid = uid_pair.second;
+                        }
 
-                            if (auto add_group_ptr = this->GetGroup(group_uid)) {
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_ptr->FullName();
+                        if (auto add_group_ptr = this->GetGroup(group_uid)) {
+                            Graph::QueueData queue_data;
+                            queue_data.name_id = module_ptr->FullName();
 
-                                // Remove module from previous associated group
-                                ImGuiID module_group_uid = module_ptr->GroupUID();
-                                if (auto remove_group_ptr = this->GetGroup(module_group_uid)) {
-                                    if (remove_group_ptr->UID() != add_group_ptr->UID()) {
-                                        remove_group_ptr->RemoveModule(module_ptr->UID());
-                                        remove_group_ptr->RestoreInterfaceslots();
-                                    }
+                            // Remove module from previous associated group
+                            ImGuiID module_group_uid = module_ptr->GroupUID();
+                            if (auto remove_group_ptr = this->GetGroup(module_group_uid)) {
+                                if (remove_group_ptr->UID() != add_group_ptr->UID()) {
+                                    remove_group_ptr->RemoveModule(module_ptr->UID());
+                                    remove_group_ptr->RestoreInterfaceslots();
                                 }
-
-                                // Add module to group
-                                add_group_ptr->AddModule(module_ptr);
-                                queue_data.rename_id = module_ptr->FullName();
-                                this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
-                                this->ForceSetDirty();
                             }
+
+                            // Add module to group
+                            add_group_ptr->AddModule(module_ptr);
+                            queue_data.rename_id = module_ptr->FullName();
+                            this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                            this->ForceSetDirty();
                         }
                     }
                 }
@@ -1573,30 +1551,22 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             }
             // Remove module from group -------------------------------------------
             if (!this->gui_graph_state.interact.modules_remove_group_uids.empty()) {
-                if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] The action [Remove Module from Group] is not yet supported for the graph "
-                        "using the 'Core Instance Graph' interface. Open project from file to make desired "
-                        "changes. [%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
-                } else {
-                    for (auto& module_uid : this->gui_graph_state.interact.modules_remove_group_uids) {
-                        ModulePtr_t module_ptr;
-                        for (auto& mod : this->Modules()) {
-                            if (mod->UID() == module_uid) {
-                                module_ptr = mod;
-                            }
+                for (auto& module_uid : this->gui_graph_state.interact.modules_remove_group_uids) {
+                    ModulePtr_t module_ptr;
+                    for (auto& mod : this->Modules()) {
+                        if (mod->UID() == module_uid) {
+                            module_ptr = mod;
                         }
-                        for (auto& remove_group_ptr : this->GetGroups()) {
-                            if (remove_group_ptr->ContainsModule(module_uid)) {
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_ptr->FullName();
-                                remove_group_ptr->RemoveModule(module_ptr->UID());
-                                remove_group_ptr->RestoreInterfaceslots();
-                                queue_data.rename_id = module_ptr->FullName();
-                                this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
-                                this->ForceSetDirty();
-                            }
+                    }
+                    for (auto& remove_group_ptr : this->GetGroups()) {
+                        if (remove_group_ptr->ContainsModule(module_uid)) {
+                            Graph::QueueData queue_data;
+                            queue_data.name_id = module_ptr->FullName();
+                            remove_group_ptr->RemoveModule(module_ptr->UID());
+                            remove_group_ptr->RestoreInterfaceslots();
+                            queue_data.rename_id = module_ptr->FullName();
+                            this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                            this->ForceSetDirty();
                         }
                     }
                 }
@@ -1682,31 +1652,23 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                     this->DeleteCall(this->gui_graph_state.interact.call_selected_uid);
                 }
                 if (this->gui_graph_state.interact.group_selected_uid != GUI_INVALID_ID) {
-                    if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                            "[GUI] The action [Delete Group] is not yet supported for the graph "
-                            "using the 'Core Instance Graph' interface. Open project from file to make desired "
-                            "changes. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                    } else {
-                        // Save old name of modules
-                        std::vector<std::pair<ImGuiID, std::string>> module_uid_name_pair;
-                        if (auto group_ptr = this->GetGroup(this->gui_graph_state.interact.group_selected_uid)) {
-                            for (auto& module_ptr : group_ptr->Modules()) {
-                                module_uid_name_pair.push_back({module_ptr->UID(), module_ptr->FullName()});
-                            }
+                    // Save old name of modules
+                    std::vector<std::pair<ImGuiID, std::string>> module_uid_name_pair;
+                    if (auto group_ptr = this->GetGroup(this->gui_graph_state.interact.group_selected_uid)) {
+                        for (auto& module_ptr : group_ptr->Modules()) {
+                            module_uid_name_pair.push_back({module_ptr->UID(), module_ptr->FullName()});
                         }
-                        // Delete group
-                        this->DeleteGroup(this->gui_graph_state.interact.group_selected_uid);
-                        // Push module renaming to sync queue
-                        for (auto& module_ptr : this->Modules()) {
-                            for (auto& module_pair : module_uid_name_pair) {
-                                if (module_ptr->UID() == module_pair.first) {
-                                    Graph::QueueData queue_data;
-                                    queue_data.name_id = module_pair.second;
-                                    queue_data.rename_id = module_ptr->FullName();
-                                    this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
-                                }
+                    }
+                    // Delete group
+                    this->DeleteGroup(this->gui_graph_state.interact.group_selected_uid);
+                    // Push module renaming to sync queue
+                    for (auto& module_ptr : this->Modules()) {
+                        for (auto& module_pair : module_uid_name_pair) {
+                            if (module_ptr->UID() == module_pair.first) {
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_pair.second;
+                                queue_data.rename_id = module_ptr->FullName();
+                                this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                             }
                         }
                     }
@@ -1962,32 +1924,24 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     } else {
         bool is_graph_entry = selected_mod_ptr->IsGraphEntry();
         if (ImGui::Checkbox("Graph Entry", &is_graph_entry)) {
-            if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] The action [Change Graph Entry] is not yet supported for the graph "
-                    "using the 'Core Instance Graph' interface. Open project from file to make desired "
-                    "changes. [%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
-            } else {
-                Graph::QueueData queue_data;
-                if (is_graph_entry) {
-                    // Remove all graph entries
-                    for (auto module_ptr : this->Modules()) {
-                        if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
-                            module_ptr->SetGraphEntryName("");
-                            queue_data.name_id = module_ptr->FullName();
-                            this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
-                        }
+            Graph::QueueData queue_data;
+            if (is_graph_entry) {
+                // Remove all graph entries
+                for (auto module_ptr : this->Modules()) {
+                    if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                        module_ptr->SetGraphEntryName("");
+                        queue_data.name_id = module_ptr->FullName();
+                        this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                     }
-                    // Add new graph entry
-                    selected_mod_ptr->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
-                    queue_data.name_id = selected_mod_ptr->FullName();
-                    this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
-                } else {
-                    selected_mod_ptr->SetGraphEntryName("");
-                    queue_data.name_id = selected_mod_ptr->FullName();
-                    this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                 }
+                // Add new graph entry
+                selected_mod_ptr->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
+                queue_data.name_id = selected_mod_ptr->FullName();
+                this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+            } else {
+                selected_mod_ptr->SetGraphEntryName("");
+                queue_data.name_id = selected_mod_ptr->FullName();
+                this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
             }
         }
 
@@ -1999,15 +1953,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
         ImGui::InputText("###current_graph_entry_name", &this->gui_current_graph_entry_name, ImGuiInputTextFlags_None);
         GUIUtils::Utf8Decode(this->gui_current_graph_entry_name);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] The action [Change Graph Entry] is not yet supported for the graph "
-                    "using the 'Core Instance Graph' interface. Open project from file to make desired "
-                    "changes. [%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
-            } else {
                 selected_mod_ptr->SetGraphEntryName(this->gui_current_graph_entry_name);
-            }
         } else {
             this->gui_current_graph_entry_name = selected_mod_ptr->GraphEntryName();
         }

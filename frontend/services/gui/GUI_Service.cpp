@@ -37,6 +37,7 @@ bool GUI_Service::init(const Config& config) {
     this->m_window_size = glm::vec2(1.0f, 1.0f);
     this->m_megamol_graph = nullptr;
     this->m_gui = nullptr;
+    this->m_config = config;
 
     this->m_queuedProjectFiles.clear();
     this->m_requestedResourceReferences.clear();
@@ -64,7 +65,7 @@ bool GUI_Service::init(const Config& config) {
                 auto gui = this->m_gui->Get();
 
                 // Create context
-                if (gui->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL, config.core_instance)) {
+                if (gui->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL)) {
 
                     // Set function pointer in state resource once
                     this->m_providedStateResource.request_gui_state = [&](bool as_lua) -> std::string {return this->resource_request_gui_state(as_lua);};
@@ -128,7 +129,6 @@ void GUI_Service::digestChangedRequestedResources() {
 
     /// MegaMolGraph = resource index 0
     auto graph_resource_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>();
-    // Synchronise changes between core graph and gui graph
     /// WARNING: Changing a constant type will lead to an undefined behavior!
     this->m_megamol_graph = const_cast<megamol::core::MegaMolGraph*>(graph_resource_ptr);
 
@@ -252,9 +252,10 @@ void GUI_Service::resetProvidedResources() {
 void GUI_Service::preGraphRender() {
 
     VALIDATE_GUI_PTR()
-    if (this->m_megamol_graph != nullptr) {
+    // Synchronise changes between core graph and gui graph
+    if ((this->m_megamol_graph != nullptr) && (this->m_config.core_instance != nullptr)) {
         // Requires enabled OpenGL context, e.g. for textures used in parameters
-        gui->SynchronizeGraphs(this->m_megamol_graph);
+        gui->SynchronizeRunningGraph((*this->m_megamol_graph), (*this->m_config.core_instance));
     }
     gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
 }

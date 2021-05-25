@@ -221,12 +221,6 @@ namespace gui {
         ImFont* gui_font_ptr; // in
     } GraphCanvas_t;
 
-    enum GraphCoreInterface {
-        NO_INTERFACE,
-        CORE_INSTANCE_GRAPH,
-        MEGAMOL_GRAPH,
-    };
-
     /* Data type holding information on graph item interaction. */
     typedef struct _interact_state_ {
 
@@ -268,7 +262,7 @@ namespace gui {
 
         bool parameters_extended_mode; // in
 
-        GraphCoreInterface graph_core_interface; // in
+        bool graph_is_running; // in
 
     } GraphItemsInteract_t;
 

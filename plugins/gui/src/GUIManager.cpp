@@ -21,8 +21,7 @@ using namespace megamol::gui;
 
 
 GUIManager::GUIManager(void)
-        : core_instance(nullptr)
-        , hotkeys()
+        : hotkeys()
         , context(nullptr)
         , initialized_api(megamol::gui::GUIImGuiAPI::NONE)
         , window_collection()
@@ -71,7 +70,7 @@ GUIManager::~GUIManager(void) {
 }
 
 
-bool GUIManager::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstance* core_instance) {
+bool GUIManager::CreateContext(GUIImGuiAPI imgui_api) {
 
     // Check prerequisities for requested API
     switch (imgui_api) {
@@ -120,14 +119,6 @@ bool GUIManager::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
         return false;
     } break;
     }
-
-    // Set pointer to core instance
-    if (core_instance == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    this->core_instance = core_instance;
 
     // Create ImGui Context
     bool other_context_exists = (ImGui::GetCurrentContext() != nullptr);
@@ -207,7 +198,6 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->hotkeys[GUIManager::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
     }
     if (this->hotkeys[GUIManager::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
-        this->triggerCoreInstanceShutdown();
         this->state.shutdown_triggered = true;
         return true;
     }
@@ -270,16 +260,6 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
-
-    /// DEPRECATED: No longer required since static build. Just draw your ImGui stuff ...
-    // Propagate ImGui context to core instance
-    // if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { } /// mmconsole
-    this->core_instance->SetCurrentImGuiContext(this->context);
-
-    // Create new running gui graph once if core instance graph is used /// mmconsole?
-    if (this->configurator.GetGraphCollection().GetRunningGraph() == nullptr) {
-        this->SynchronizeGraphs();
-    }
 
     // Update windows
     const auto func = [&, this](WindowConfiguration& wc) {
@@ -898,7 +878,7 @@ void megamol::gui::GUIManager::SetClipboardFunc(const char* (*get_clipboard_func
 }
 
 
-bool megamol::gui::GUIManager::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
+bool megamol::gui::GUIManager::SynchronizeRunningGraph(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
 
     // Synchronization is not required when no gui element is visible
     if (!this->state.gui_visible)
@@ -930,75 +910,26 @@ bool megamol::gui::GUIManager::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             synced = true;
             switch (action) {
             case (Graph::QueueAction::ADD_MODULE): {
-                if (megamol_graph != nullptr) {
-                    graph_sync_success &= megamol_graph->CreateModule(data.class_name, data.name_id);
-                } else if ((this->core_instance != nullptr) &&
-                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-                    graph_sync_success &= this->core_instance->RequestModuleInstantiation(
-                        vislib::StringA(data.class_name.c_str()), vislib::StringA(data.name_id.c_str()));
-                }
+                graph_sync_success &= megamol_graph.CreateModule(data.class_name, data.name_id);
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
-                if (megamol_graph != nullptr) {
-                    bool rename_success = megamol_graph->RenameModule(data.name_id, data.rename_id);
-                    graph_sync_success &= rename_success;
-                } else if ((this->core_instance != nullptr) &&
-                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-                    /* XXX Currently not supported by core graph
-                    bool rename_success = false;
-                    std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
-                        mod->setName(vislib::StringA(data.rename_id.c_str()));
-                        rename_success = true;
-                    };
-                    this->core_instance->FindModuleNoLock(data.name_id, fun);
-                    graph_sync_success &= rename_success;
-                    */
-                }
+                bool rename_success = megamol_graph.RenameModule(data.name_id, data.rename_id);
+                graph_sync_success &= rename_success;
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
-                if (megamol_graph != nullptr) {
-                    graph_sync_success &= megamol_graph->DeleteModule(data.name_id);
-                } else if (this->core_instance != nullptr) {
-                    graph_sync_success &=
-                        this->core_instance->RequestModuleDeletion(vislib::StringA(data.name_id.c_str()));
-                }
+                graph_sync_success &= megamol_graph.DeleteModule(data.name_id);
             } break;
             case (Graph::QueueAction::ADD_CALL): {
-                if (megamol_graph != nullptr) {
-                    graph_sync_success &= megamol_graph->CreateCall(data.class_name, data.caller, data.callee);
-                } else if ((this->core_instance != nullptr) &&
-                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-                    graph_sync_success &=
-                        this->core_instance->RequestCallInstantiation(vislib::StringA(data.class_name.c_str()),
-                            vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
-                }
+                graph_sync_success &= megamol_graph.CreateCall(data.class_name, data.caller, data.callee);
             } break;
             case (Graph::QueueAction::DELETE_CALL): {
-                if (megamol_graph != nullptr) {
-                    graph_sync_success &= megamol_graph->DeleteCall(data.caller, data.callee);
-                } else if ((this->core_instance != nullptr) &&
-                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-                    graph_sync_success &= this->core_instance->RequestCallDeletion(
-                        vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
-                }
+                graph_sync_success &= megamol_graph.DeleteCall(data.caller, data.callee);
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
-                if (megamol_graph != nullptr) {
-                    megamol_graph->SetGraphEntryPoint(data.name_id);
-                } else if ((this->core_instance != nullptr) &&
-                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-                    /* XXX Currently not supported by core graph
-                     */
-                }
+                megamol_graph.SetGraphEntryPoint(data.name_id);
             } break;
             case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
-                if (megamol_graph != nullptr) {
-                    megamol_graph->RemoveGraphEntryPoint(data.name_id);
-                } else if ((this->core_instance != nullptr) &&
-                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-                    /* XXX Currently not supported by core graph
-                     */
-                }
+                megamol_graph.RemoveGraphEntryPoint(data.name_id);
             } break;
             default:
                 break;
@@ -1017,7 +948,7 @@ bool megamol::gui::GUIManager::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         // Creates new graph at first call
         ImGuiID running_graph_uid = (graph_ptr != nullptr) ? (graph_ptr->UID()) : (GUI_INVALID_ID);
         bool graph_sync_success = this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(
-            running_graph_uid, this->core_instance, megamol_graph);
+            running_graph_uid, megamol_graph);
         if (!graph_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -1034,16 +965,9 @@ bool megamol::gui::GUIManager::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         if (graph_sync_success) {
             if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
                 std::string script_filename;
-                // Get project filename from lua state of core instance
-                if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-                    if (auto lua_state = this->core_instance->GetLuaState()) {
-                        script_filename = lua_state->GetScriptPath();
-                    }
-                } else {
-                    // Get project filename from lua state of frontend service
-                    if (!this->state.project_script_paths.empty()) {
-                        script_filename = this->state.project_script_paths.front();
-                    }
+                // Get project filename from lua state of frontend service
+                if (!this->state.project_script_paths.empty()) {
+                    script_filename = this->state.project_script_paths.front();
                 }
                 // Load GUI state from project file when project file changed
                 if (!script_filename.empty()) {
@@ -1065,16 +989,7 @@ bool megamol::gui::GUIManager::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 if (param.CoreParamPtr().IsNull()) {
                     auto module_name = module_ptr->FullName();
                     megamol::core::Module* core_module_ptr = nullptr;
-                    if (megamol_graph != nullptr) {
-                        core_module_ptr = megamol_graph->FindModule(module_name).get();
-                    } else if ((this->core_instance != nullptr) &&
-                               core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-                        // New core module will only be available next frame after module request is processed.
-                        std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
-                            core_module_ptr = mod;
-                        };
-                        this->core_instance->FindModuleNoLock(module_name, fun);
-                    }
+                    core_module_ptr = megamol_graph.FindModule(module_name).get();
                     // Connect pointer of new parameters of core module to parameters in gui module
                     if (core_module_ptr != nullptr) {
                         auto se = core_module_ptr->ChildList_End();
@@ -1377,8 +1292,6 @@ bool GUIManager::destroyContext(void) {
         this->configurator.GetGraphCollection().DeleteGraph(running_graph_uid);
     }
 
-    this->core_instance = nullptr;
-
     return true;
 }
 
@@ -1416,15 +1329,8 @@ void megamol::gui::GUIManager::load_default_fonts(void) {
         }
     };
 
-    if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-        auto search_paths = this->core_instance->Configuration().ResourceDirectories();
-        for (size_t i = 0; i < search_paths.Count(); ++i) {
-            get_preset_font_path(megamol::core::utility::to_string(search_paths[i].PeekBuffer()));
-        }
-    } else {
-        for (auto& resource_directory : megamol::gui::gui_resource_paths) {
-            get_preset_font_path(resource_directory);
-        }
+    for (auto& resource_directory : megamol::gui::gui_resource_paths) {
+        get_preset_font_path(resource_directory);
     }
 
     // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
@@ -1673,11 +1579,6 @@ void GUIManager::drawFpsWindowCallback(WindowConfiguration& wc) {
     ImGui::TextDisabled("Frame ID:");
     ImGui::SameLine();
     auto frameid = this->state.stat_frame_count;
-    if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-        if (frameid == 0) {
-            frameid = static_cast<size_t>(this->core_instance->GetFrameID());
-        }
-    }
     ImGui::Text("%lu", frameid);
 
     ImGui::SameLine(
@@ -1745,21 +1646,14 @@ void GUIManager::drawMenu(void) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
-    bool megamolgraph_interface = false;
-    if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
-        megamolgraph_interface = (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH);
-    }
-
     ImGui::BeginMainMenuBar();
 
     // FILE -------------------------------------------------------------------
     if (ImGui::BeginMenu("File")) {
 
-        if (megamolgraph_interface) {
-            if (ImGui::MenuItem("Load Project",
-                    this->hotkeys[GUIManager::GuiHotkeyIndex::LOAD_PROJECT].keycode.ToString().c_str())) {
-                this->state.open_popup_load = true;
-            }
+        if (ImGui::MenuItem("Load Project",
+                this->hotkeys[GUIManager::GuiHotkeyIndex::LOAD_PROJECT].keycode.ToString().c_str())) {
+            this->state.open_popup_load = true;
         }
         if (ImGui::MenuItem(
                 "Save Project", this->hotkeys[GUIManager::GuiHotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str())) {
@@ -1767,7 +1661,6 @@ void GUIManager::drawMenu(void) {
         }
         if (ImGui::MenuItem(
                 "Exit", this->hotkeys[GUIManager::GuiHotkeyIndex::EXIT_PROGRAM].keycode.ToString().c_str())) {
-            this->triggerCoreInstanceShutdown();
             this->state.shutdown_triggered = true;
         }
         ImGui::EndMenu();
@@ -1821,85 +1714,81 @@ void GUIManager::drawMenu(void) {
     ImGui::Separator();
 
     // SCREENSHOT -------------------------------------------------------------
-    if (megamolgraph_interface) {
-        if (ImGui::BeginMenu("Screenshot")) {
-            this->create_not_existing_png_filepath(this->state.screenshot_filepath);
-            if (ImGui::MenuItem("Select Filename", this->state.screenshot_filepath.c_str())) {
-                this->state.open_popup_screenshot = true;
-            }
-            if (ImGui::MenuItem("Trigger",
-                    this->hotkeys[GUIManager::GuiHotkeyIndex::TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
-                this->state.screenshot_triggered = true;
-            }
-            ImGui::EndMenu();
+    if (ImGui::BeginMenu("Screenshot")) {
+        this->create_not_existing_png_filepath(this->state.screenshot_filepath);
+        if (ImGui::MenuItem("Select Filename", this->state.screenshot_filepath.c_str())) {
+            this->state.open_popup_screenshot = true;
         }
-        ImGui::Separator();
+        if (ImGui::MenuItem("Trigger",
+                this->hotkeys[GUIManager::GuiHotkeyIndex::TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
+            this->state.screenshot_triggered = true;
+        }
+        ImGui::EndMenu();
     }
+    ImGui::Separator();
 
     // RENDER -----------------------------------------------------------------
-    if (megamolgraph_interface) {
-        if (ImGui::BeginMenu("Projects")) {
-            for (auto& graph_ptr : this->configurator.GetGraphCollection().GetGraphs()) {
-                bool running = graph_ptr->IsRunning();
-                std::string button_label = "graph_running_button" + std::to_string(graph_ptr->UID());
-                if (megamol::gui::ButtonWidgets::OptionButton(button_label, "", running)) {
-                    if (!running) {
-                        this->configurator.GetGraphCollection().RequestNewRunningGraph(graph_ptr->UID());
-                    }
+    if (ImGui::BeginMenu("Projects")) {
+        for (auto& graph_ptr : this->configurator.GetGraphCollection().GetGraphs()) {
+            bool running = graph_ptr->IsRunning();
+            std::string button_label = "graph_running_button" + std::to_string(graph_ptr->UID());
+            if (megamol::gui::ButtonWidgets::OptionButton(button_label, "", running)) {
+                if (!running) {
+                    this->configurator.GetGraphCollection().RequestNewRunningGraph(graph_ptr->UID());
                 }
-                std::string tooltip_str = "Click to run project";
-                if (running) {
-                    tooltip_str = "Project is running";
-                }
-                this->tooltip.ToolTip(tooltip_str);
-                ImGui::SameLine();
-                ImGui::AlignTextToFramePadding();
+            }
+            std::string tooltip_str = "Click to run project";
+            if (running) {
+                tooltip_str = "Project is running";
+            }
+            this->tooltip.ToolTip(tooltip_str);
+            ImGui::SameLine();
+            ImGui::AlignTextToFramePadding();
 
-                if (ImGui::BeginMenu(graph_ptr->Name().c_str(), running)) {
-                    ImGui::TextDisabled("Graph Entry");
-                    ImGui::Separator();
-                    for (auto& module_ptr : graph_ptr->Modules()) {
-                        if (module_ptr->IsView()) {
-                            if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
-                                if (!module_ptr->IsGraphEntry()) {
-                                    // Remove all graph entries
-                                    for (auto& rem_module_ptr : graph_ptr->Modules()) {
-                                        if (rem_module_ptr->IsView() && rem_module_ptr->IsGraphEntry()) {
-                                            rem_module_ptr->SetGraphEntryName("");
-                                            Graph::QueueData queue_data;
-                                            queue_data.name_id = rem_module_ptr->FullName();
-                                            graph_ptr->PushSyncQueue(
-                                                Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
-                                        }
+            if (ImGui::BeginMenu(graph_ptr->Name().c_str(), running)) {
+                ImGui::TextDisabled("Graph Entry");
+                ImGui::Separator();
+                for (auto& module_ptr : graph_ptr->Modules()) {
+                    if (module_ptr->IsView()) {
+                        if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
+                            if (!module_ptr->IsGraphEntry()) {
+                                // Remove all graph entries
+                                for (auto& rem_module_ptr : graph_ptr->Modules()) {
+                                    if (rem_module_ptr->IsView() && rem_module_ptr->IsGraphEntry()) {
+                                        rem_module_ptr->SetGraphEntryName("");
+                                        Graph::QueueData queue_data;
+                                        queue_data.name_id = rem_module_ptr->FullName();
+                                        graph_ptr->PushSyncQueue(
+                                            Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                                     }
-                                    // Add new graph entry
-                                    module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
-                                    Graph::QueueData queue_data;
-                                    queue_data.name_id = module_ptr->FullName();
-                                    graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
-                                } else {
-                                    module_ptr->SetGraphEntryName("");
-                                    Graph::QueueData queue_data;
-                                    queue_data.name_id = module_ptr->FullName();
-                                    graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                                 }
+                                // Add new graph entry
+                                module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_ptr->FullName();
+                                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                            } else {
+                                module_ptr->SetGraphEntryName("");
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_ptr->FullName();
+                                graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                             }
                         }
                     }
-
-                    ImGui::Separator();
-                    if (ImGui::MenuItem("Toggle Graph Entry",
-                            this->hotkeys[GUIManager::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].keycode.ToString().c_str())) {
-                        this->state.toggle_graph_entry = true;
-                    }
-
-                    ImGui::EndMenu();
                 }
+
+                ImGui::Separator();
+                if (ImGui::MenuItem("Toggle Graph Entry",
+                        this->hotkeys[GUIManager::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].keycode.ToString().c_str())) {
+                    this->state.toggle_graph_entry = true;
+                }
+
+                ImGui::EndMenu();
             }
-            ImGui::EndMenu();
         }
-        ImGui::Separator();
+        ImGui::EndMenu();
     }
+    ImGui::Separator();
 
     // SETTINGS ---------------------------------------------------------------
     if (ImGui::BeginMenu("Settings")) {
@@ -2381,17 +2270,6 @@ bool megamol::gui::GUIManager::isHotkeyPressed(megamol::core::view::KeyCode keyc
            (keycode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
            (keycode.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
            (keycode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
-}
-
-
-void megamol::gui::GUIManager::triggerCoreInstanceShutdown(void) {
-
-    if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-#ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");
-#endif // GUI_VERBOSE
-        this->core_instance->Shutdown();
-    }
 }
 
 

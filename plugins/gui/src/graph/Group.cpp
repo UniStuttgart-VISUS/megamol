@@ -482,26 +482,16 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             } /// else { this->allow_context = false; }
 
             // Rename pop-up
-            if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                if (popup_rename) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] The action [Rename Group] is not yet supported for the graph "
-                        "using the 'Core Instance Graph' interface. Open project from file to make desired "
-                        "changes. [%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
-                }
-            } else {
-                if (this->gui_rename_popup.Rename("Rename Group", popup_rename, this->name)) {
-                    for (auto& module_ptr : this->modules) {
-                        std::string last_module_name = module_ptr->FullName();
-                        module_ptr->SetGroupName(this->name);
-                        module_ptr->Update(state);
-                        if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
-                            state.interact.module_rename.push_back(StrPair_t(last_module_name, module_ptr->FullName()));
-                        }
+            if (this->gui_rename_popup.Rename("Rename Group", popup_rename, this->name)) {
+                for (auto& module_ptr : this->modules) {
+                    std::string last_module_name = module_ptr->FullName();
+                    module_ptr->SetGroupName(this->name);
+                    module_ptr->Update(state);
+                    if (state.interact.graph_is_running) {
+                        state.interact.module_rename.push_back(StrPair_t(last_module_name, module_ptr->FullName()));
                     }
-                    this->UpdatePositionSize(state.canvas);
                 }
+                this->UpdatePositionSize(state.canvas);
             }
 
             ImGui::PopFont();

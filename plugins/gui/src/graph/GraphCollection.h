@@ -26,11 +26,8 @@ namespace gui {
     class GraphCollection;
 
     // Types
-    typedef std::shared_ptr<GraphCollection> GraphCollectionhPtr_t;
     typedef std::shared_ptr<Graph> GraphPtr_t;
     typedef std::vector<GraphPtr_t> GraphPtrVector_t;
-    typedef std::map<megamol::core::param::AbstractParam*, std::shared_ptr<megamol::gui::Parameter>>
-        ParamInterfaceMap_t;
 
 
     /** ************************************************************************
@@ -53,8 +50,8 @@ namespace gui {
         }
         GraphPtr_t GetRunningGraph(void);
 
-        bool LoadModuleStock(const megamol::core::CoreInstance* core_instance);
-        bool LoadCallStock(const megamol::core::CoreInstance* core_instance);
+        bool LoadModuleStock(const megamol::core::CoreInstance& core_instance);
+        bool LoadCallStock(const megamol::core::CoreInstance& core_instance);
         inline const ModuleStockVector_t& GetModulesStock(void) {
             return this->modules_stock;
         }
@@ -71,17 +68,12 @@ namespace gui {
         /**
          * Load or update project from graph of core instance or directly from megamol graph.
          *
-         * @param inout_graph_uid  The graph uid to use. If graph uid is GUI_INVALID_ID a new graph is created and its
-         * uid is returned.
-         * @param core_instance    The pointer to the core instance. If pointer is not null, the core graph is
-         * considered.
-         * @param megamol_graph    The pointer to the megamol graph. If pointer is not null, the megamol graph is
-         * considered.
+         * @param inout_graph_uid  The graph uid to use. If graph uid is GUI_INVALID_ID a new graph is created.
+         * @param megamol_graph    The megamol graph.
          *
          * @return                 True on success, false otherwise.
          */
-        bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
-            megamol::core::MegaMolGraph* megamol_graph);
+        bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::MegaMolGraph& megamol_graph);
 
         ImGuiID LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 
@@ -107,8 +99,7 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool add_update_project_from_core(ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance,
-            megamol::core::MegaMolGraph* megamol_graph, bool use_stock);
+        bool add_update_project_from_core(ImGuiID in_graph_uid, megamol::core::MegaMolGraph& megamol_graph, bool use_stock);
 
         std::string get_state(ImGuiID graph_id, const std::string& filename);
 

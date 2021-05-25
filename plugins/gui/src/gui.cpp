@@ -4,16 +4,15 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 
+#include "stdafx.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
-
-#include "GUIView.h"
 #include "OverlayRenderer.h"
+
 
 namespace megamol::gui {
 /** Implementing the instance class of this plugin */
@@ -38,7 +37,6 @@ public:
     }
     /** Registers modules and calls */
     virtual void registerClasses(void) {
-        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIView>();
         this->module_descriptions.RegisterAutoDescription<megamol::gui::OverlayRenderer>();
     }
 };

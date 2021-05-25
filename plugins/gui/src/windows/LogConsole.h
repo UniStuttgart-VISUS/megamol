@@ -44,7 +44,7 @@ namespace gui {
 
 
     /*
-     * The content of the log cnsole GUI window
+     * The content of the log console GUI window
      */
     class LogConsole {
     public:

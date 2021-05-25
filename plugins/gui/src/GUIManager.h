@@ -43,7 +43,7 @@ namespace gui {
          *
          * @param core_instance     The currently available core instance.
          */
-        bool CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstance* core_instance);
+        bool CreateContext(GUIImGuiAPI imgui_api);
 
         /**
          * Setup and enable ImGui context for subsequent use.
@@ -217,16 +217,10 @@ namespace gui {
         /**
          * Synchronise changes between core graph <-> gui graph.
          *
-         * - 'Old' core instance graph:  Call this function after(!) rendering of current frame.
-         *                               This way, graph changes will be applied next frame (and not 2 frames later).
-         *                               In this case in PreDraw() a gui graph is created once.
-         * - 'New' megamol graph:        Call this function in GUI_Service::digestChangedRequestedResources() as
-         *                               pre-rendering step. In this case a new gui graph is created before first
-         *                               call of PreDraw() and a gui graph already exists.
-         *
-         * @param megamol_graph          If no megamol_graph is given, 'old' graph in core instance is synchronised.
+         * @param megamol_graph          The megamol graph.
+         * @param core_instance          The core_instance.
          */
-        bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
+        bool SynchronizeRunningGraph(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
         ///////////////////////////////////////////////////////////////////////
 
@@ -296,9 +290,6 @@ namespace gui {
 
         // VARIABLES --------------------------------------------------------------
 
-        /** Pointer to core instance. */
-        megamol::core::CoreInstance* core_instance;
-
         /** Hotkeys */
         std::array<megamol::gui::HotkeyData_t, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
 
@@ -352,7 +343,6 @@ namespace gui {
         bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
         void checkMultipleHotkeyAssignment(void);
         bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
-        void triggerCoreInstanceShutdown(void);
 
         void load_preset_window_docking(ImGuiID global_docking_id);
 

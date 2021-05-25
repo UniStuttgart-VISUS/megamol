@@ -62,7 +62,7 @@ namespace gui {
         ModulePtr_t AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name);
         ModulePtr_t AddModule(const std::string& class_name, const std::string& description,
             const std::string& plugin_name, bool is_view);
-        bool DeleteModule(ImGuiID module_uid, bool force = false);
+        bool DeleteModule(ImGuiID module_uid);
         inline const ModulePtrVector_t& Modules(void) {
             return this->modules;
         }
@@ -111,21 +111,11 @@ namespace gui {
             }
         }
 
-        inline GraphCoreInterface GetCoreInterface(void) const {
-            return this->core_interface;
-        }
-        inline void SetCoreInterface(GraphCoreInterface graph_core_interface) {
-            this->core_interface = graph_core_interface;
-        }
-
         inline bool IsRunning(void) const {
             return this->running;
         }
         inline void SetRunning(bool run) {
             this->running = run;
-            if (!this->running) {
-                this->core_interface = GraphCoreInterface::NO_INTERFACE;
-            }
         }
 
         const std::string GenerateUniqueGraphEntryName(void);
@@ -189,7 +179,6 @@ namespace gui {
         std::pair<std::pair<bool, std::string>, std::pair<bool, std::string>>
             filenames; // (1) script path from core | (2) saved file name
         SyncQueue_t sync_queue;
-        GraphCoreInterface core_interface;
         bool running; // Do not change in Graph class, only via GraphCollection
 
         megamol::gui::GraphItemsState_t gui_graph_state; /// State propagated and shared by all graph items

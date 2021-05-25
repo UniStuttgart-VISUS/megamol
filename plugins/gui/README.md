@@ -40,8 +40,6 @@ The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui) *V
 
 See the *Bug and Feature Tracker* [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress. 
 
-**DISCLAIMER: The following descriptions are no longer valid for the old frontend *mmconsole***   
-
 **NOTE**
 * Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considered or recognized. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
 * Parameter values in the lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported any more.
@@ -213,10 +211,6 @@ The following hotkeys are used in the GUI plugin:
 ## Modules
 
 Additional modules provided by the GUI plugin:
-
-### GUIView
-
-The GUIView module is deprecated. It was required for using the GUI with the former MegaMol frontend provided by mmconsole.exe / mmconsole.sh.
 
 ### OverlayRenderer
 

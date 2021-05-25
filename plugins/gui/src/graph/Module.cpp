@@ -327,21 +327,11 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     }
 
                     // Rename pop-up
-                    if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                        if (popup_rename) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                                "[GUI] The action [Rename Module] is not yet supported for the graph "
-                                "using the 'Core Instance Graph' interface. Open project from file to make desired "
-                                "changes. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                    } else {
-                        std::string last_module_name = this->FullName();
-                        if (this->gui_rename_popup.Rename("Rename Project", popup_rename, this->name)) {
-                            this->Update(state);
-                            if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
-                                state.interact.module_rename.push_back(StrPair_t(last_module_name, this->FullName()));
-                            }
+                    std::string last_module_name = this->FullName();
+                    if (this->gui_rename_popup.Rename("Rename Module", popup_rename, this->name)) {
+                        this->Update(state);
+                        if (state.interact.graph_is_running) {
+                            state.interact.module_rename.push_back(StrPair_t(last_module_name, this->FullName()));
                         }
                     }
 
@@ -461,18 +451,10 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         if (graph_entry_button) {
                             bool is_graph_entry = this->IsGraphEntry();
                             if (ImGui::RadioButton("###graph_entry_switch", is_graph_entry)) {
-                                if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                                        "[GUI] The action [Change Graph Entry] is not yet supported for the graph "
-                                        "using the 'Core Instance Graph' interface. Open project from file to make "
-                                        "desired changes. [%s, %s, line %d]\n",
-                                        __FILE__, __FUNCTION__, __LINE__);
+                                if (!is_graph_entry) {
+                                    state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_TRUE;
                                 } else {
-                                    if (!is_graph_entry) {
-                                        state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_TRUE;
-                                    } else {
-                                        state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_FALSE;
-                                    }
+                                    state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_FALSE;
                                 }
                             }
                             ImGui::SetItemAllowOverlap();

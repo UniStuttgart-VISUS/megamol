@@ -72,6 +72,7 @@ private:
     double m_time;
     glm::vec2 m_framebuffer_size;
     glm::vec2 m_window_size;
+    Config m_config;
     megamol::core::MegaMolGraph* m_megamol_graph;
     std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;
     std::vector<std::string> m_queuedProjectFiles;
