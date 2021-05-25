@@ -19,6 +19,7 @@
 #include "ParticleSpawner.h"
 #include "rendering/BoxRenderer.h"
 #include "rendering/TimeLinePlot.h"
+#include "PointInterfaceClassification.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -55,6 +56,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticleSpawner>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::BoxRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::TimeLinePlot>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PointInterfaceClassification>();
         //
         // TODO: Register your plugin's modules here
         // like:
