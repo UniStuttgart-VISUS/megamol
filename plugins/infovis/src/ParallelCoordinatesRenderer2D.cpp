@@ -231,7 +231,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     font.SetBatchDrawMode(true);
 #endif
 
-    auto const shader_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
     try {
         drawAxesProgram = core::utility::make_glowl_shader("pc_axes_draw_axes", shader_options,
