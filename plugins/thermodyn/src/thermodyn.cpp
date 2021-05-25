@@ -16,6 +16,7 @@
 #include "PhaseAnimator.h"
 #include "ParticleSurface.h"
 #include "VelocityDistribution.h"
+#include "ParticleSpawner.h"
 #include "rendering/BoxRenderer.h"
 #include "rendering/TimeLinePlot.h"
 
@@ -51,6 +52,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PhaseAnimator>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticleSurface>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::VelocityDistribution>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticleSpawner>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::BoxRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::TimeLinePlot>();
         //
