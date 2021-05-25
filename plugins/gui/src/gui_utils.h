@@ -1,5 +1,5 @@
 /*
- * GUIUtils.h
+ * gui_utils.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -290,12 +290,12 @@ namespace gui {
     enum class HeaderType { MODULE_GROUP, MODULE, PARAMETER_GROUP };
 
 
-    /********** GUIUtils *****************************************************/
+    /********** gui_utils *****************************************************/
 
     /**
      * Static GUI utility functions.
      */
-    class GUIUtils {
+    class gui_utils {
     public:
         /** Extract string enclosed in predefined tags. */
         static std::string ExtractTaggedString(
@@ -403,7 +403,7 @@ namespace gui {
             bool searched = true;
             if (!inout_search.empty()) {
                 headerState = 1;
-                searched = GUIUtils::FindCaseInsensitiveSubstring(name, inout_search);
+                searched = gui_utils::FindCaseInsensitiveSubstring(name, inout_search);
                 if (!searched) {
                     auto header_col = ImGui::GetStyleColorVec4(ImGuiCol_Header);
                     header_col.w *= 0.25;
@@ -432,8 +432,8 @@ namespace gui {
         }
 
     private:
-        GUIUtils(void) = default;
-        ~GUIUtils(void) = default;
+        gui_utils(void) = default;
+        ~gui_utils(void) = default;
     };
 
 } // namespace gui

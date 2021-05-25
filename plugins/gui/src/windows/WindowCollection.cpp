@@ -7,7 +7,7 @@
 
 
 #include "WindowCollection.h"
-#include "GUIUtils.h"
+#include "gui_utils.h"
 #include "imgui_internal.h"
 
 
@@ -301,12 +301,12 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
                 wc.config.specific.param_show_hotkeys;
 
             for (auto& pm : wc.config.specific.param_modules_list) {
-                GUIUtils::Utf8Encode(pm);
+                gui_utils::Utf8Encode(pm);
             }
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_modules_list"] =
                 wc.config.specific.param_modules_list;
             for (auto& pm : wc.config.specific.param_modules_list) {
-                GUIUtils::Utf8Decode(pm);
+                gui_utils::Utf8Decode(pm);
             }
 
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_extended_mode"] =
@@ -326,10 +326,10 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_view_vertical"] =
                 wc.config.specific.tfe_view_vertical;
 
-            GUIUtils::Utf8Encode(wc.config.specific.tfe_active_param);
+            gui_utils::Utf8Encode(wc.config.specific.tfe_active_param);
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_active_param"] =
                 wc.config.specific.tfe_active_param;
-            GUIUtils::Utf8Decode(wc.config.specific.tfe_active_param);
+            gui_utils::Utf8Decode(wc.config.specific.tfe_active_param);
 
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["log_level"] = wc.config.specific.log_level;
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["log_force_open"] = wc.config.specific.log_force_open;

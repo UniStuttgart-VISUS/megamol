@@ -253,7 +253,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
         // Filter module by given search string
         search_filter = true;
         if (!search_string.empty()) {
-            search_filter = GUIUtils::FindCaseInsensitiveSubstring(mod.class_name, search_string);
+            search_filter = gui_utils::FindCaseInsensitiveSubstring(mod.class_name, search_string);
         }
 
         // Filter module by compatible call slots
@@ -387,7 +387,7 @@ bool megamol::gui::Configurator::StateToJSON(nlohmann::json& inout_json) {
                 graph_ptr->StateToJSON(inout_json);
             } else {
                 std::string filename = graph_ptr->GetFilename();
-                GUIUtils::Utf8Encode(filename);
+                gui_utils::Utf8Encode(filename);
                 if (!filename.empty()) {
                     inout_json[GUI_JSON_TAG_GRAPHS][filename] = nlohmann::json::object();
                 }
@@ -443,7 +443,7 @@ bool megamol::gui::Configurator::StateFromJSON(const nlohmann::json& in_json) {
             if (graph_header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& graph_item : graph_header_item.value().items()) {
                     std::string json_graph_id = graph_item.key();
-                    GUIUtils::Utf8Decode(json_graph_id);
+                    gui_utils::Utf8Decode(json_graph_id);
                     if (json_graph_id != GUI_JSON_TAG_PROJECT) {
                         // Otherwise load additonal graph from given file name
                         this->GetGraphCollection().LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
@@ -565,7 +565,7 @@ bool megamol::gui::Configurator::load_graph_state_from_file(const std::string& f
 
     std::string state_str;
     if (megamol::core::utility::FileUtils::ReadFile(filename, state_str)) {
-        state_str = GUIUtils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
+        state_str = gui_utils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (state_str.empty())
             return false;
         nlohmann::json in_json = nlohmann::json::parse(state_str);

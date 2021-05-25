@@ -76,9 +76,9 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
             }
             ImGui::SameLine();
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            GUIUtils::Utf8Encode(this->file_path_str);
+            gui_utils::Utf8Encode(this->file_path_str);
             ImGui::InputText("Directory", &this->file_path_str, ImGuiInputTextFlags_AutoSelectAll);
-            GUIUtils::Utf8Decode(this->file_path_str);
+            gui_utils::Utf8Decode(this->file_path_str);
             if (last_file_path_str != this->file_path_str) {
                 this->path_changed = true;
                 this->validate_directory(this->file_path_str);
@@ -179,7 +179,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                     bool showSearchedParameter = true;
                     if (!currentSearchString.empty()) {
                         showSearchedParameter =
-                            GUIUtils::FindCaseInsensitiveSubstring(select_label, currentSearchString);
+                            gui_utils::FindCaseInsensitiveSubstring(select_label, currentSearchString);
                     }
                     if (showSearchedParameter) {
                         // Different color for directories
@@ -191,7 +191,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                                 select_label.c_str(), (select_label == this->file_name_str), select_flags)) {
                             last_file_path_str = this->file_path_str;
                             auto new_path = path_pair.first.generic_u8string();
-                            GUIUtils::Utf8Decode(new_path);
+                            gui_utils::Utf8Decode(new_path);
                             this->validate_split_path(new_path, this->file_path_str, this->file_name_str);
                             this->validate_file(this->file_name_str, extension, flag);
                             if (last_file_path_str != this->file_path_str) {
@@ -230,12 +230,12 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
             }
             auto last_file_name_str = this->file_name_str;
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            GUIUtils::Utf8Encode(this->file_name_str);
+            gui_utils::Utf8Encode(this->file_name_str);
             if (ImGui::InputText("File Name", &this->file_name_str,
                     ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                 apply = true;
             }
-            GUIUtils::Utf8Decode(this->file_name_str);
+            gui_utils::Utf8Decode(this->file_name_str);
             if (flag == FileBrowserFlag::LOAD) {
                 ImGui::PopItemFlag();
             }
@@ -255,7 +255,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
             // Buttons --------------------------
             std::string button_label;
             if (!(this->valid_directory && this->valid_file)) {
-                GUIUtils::ReadOnlyWigetStyle(true);
+                gui_utils::ReadOnlyWigetStyle(true);
             }
             if (flag == FileBrowserFlag::SAVE) {
                 button_label = "Save";
@@ -268,7 +268,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                 apply = true;
             }
             if (!(this->valid_directory && this->valid_file)) {
-                GUIUtils::ReadOnlyWigetStyle(false);
+                gui_utils::ReadOnlyWigetStyle(false);
             }
 
             ImGui::SameLine();
@@ -288,7 +288,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                 stdfs::path tmp_file_path =
                     static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(this->file_name_str);
                 inout_filename = tmp_file_path.generic_u8string();
-                GUIUtils::Utf8Decode(inout_filename);
+                gui_utils::Utf8Decode(inout_filename);
                 inout_save_gui_state = this->save_gui_state;
                 ImGui::CloseCurrentPopup();
                 retval = true;
@@ -392,7 +392,7 @@ std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string
         }
 #endif // _MSC_VER > 1916
         return_path_str = return_path.generic_u8string();
-        GUIUtils::Utf8Decode(return_path_str);
+        gui_utils::Utf8Decode(return_path_str);
     }
     return return_path_str;
 }
@@ -432,8 +432,8 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
                 out_path = ".";
             }
         }
-        GUIUtils::Utf8Decode(out_path);
-        GUIUtils::Utf8Decode(out_file);
+        gui_utils::Utf8Decode(out_path);
+        gui_utils::Utf8Decode(out_file);
 
     } catch (stdfs::filesystem_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

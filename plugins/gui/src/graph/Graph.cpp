@@ -1055,7 +1055,7 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
             if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& content_item : header_item.value().items()) {
                     std::string json_graph_id = content_item.key();
-                    GUIUtils::Utf8Decode(json_graph_id);
+                    gui_utils::Utf8Decode(json_graph_id);
                     if (json_graph_id == GUI_JSON_TAG_PROJECT) {
                         auto graph_state = content_item.value();
 
@@ -1238,11 +1238,11 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
     try {
         // Write graph state
         /// std::string filename = this->GetFilename();
-        /// GUIUtils::Utf8Encode(filename);
+        /// gui_utils::Utf8Encode(filename);
         /// inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["project_file"] = filename;
-        GUIUtils::Utf8Encode(this->name);
+        gui_utils::Utf8Encode(this->name);
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["project_name"] = this->name;
-        GUIUtils::Utf8Decode(this->name);
+        gui_utils::Utf8Decode(this->name);
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_parameter_sidebar"] =
             this->gui_show_parameter_sidebar;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["parameter_sidebar_width"] =
@@ -1282,7 +1282,7 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
                             callslot_fullname =
                                 callslot_ptr->GetParentModule()->FullName() + "::" + callslot_ptr->Name();
                         }
-                        GUIUtils::Utf8Encode(callslot_fullname);
+                        gui_utils::Utf8Encode(callslot_fullname);
                         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT][GUI_JSON_TAG_INTERFACES]
                                   [group_ptr->Name()][interface_label] += callslot_fullname;
                     }
@@ -1423,7 +1423,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                     ImGui::TextDisabled("Filename");
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
                     std::string filename = this->GetFilename();
-                    GUIUtils::Utf8Encode(filename);
+                    gui_utils::Utf8Encode(filename);
                     ImGui::TextUnformatted(filename.c_str());
                     ImGui::PopTextWrapPos();
                 }
@@ -1889,11 +1889,11 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     bool button = megamol::gui::ButtonWidgets::OptionButton("graph_running_button", "", this->IsRunning());
     bool readonly = this->IsRunning();
     if (readonly) {
-        gui::GUIUtils::ReadOnlyWigetStyle(true);
+        gui::gui_utils::ReadOnlyWigetStyle(true);
     }
     button |= ImGui::Button(((this->IsRunning()) ? ("Running") : ("Run")));
     if (readonly) {
-        gui::GUIUtils::ReadOnlyWigetStyle(false);
+        gui::gui_utils::ReadOnlyWigetStyle(false);
     }
     if (button && !this->IsRunning()) {
         state.new_running_graph_uid = this->uid;
@@ -1915,12 +1915,12 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     // Graph Entry Checkbox
     const float min_text_width = 3.0f * ImGui::GetFrameHeightWithSpacing();
     if (selected_mod_ptr == nullptr) {
-        GUIUtils::ReadOnlyWigetStyle(true);
+        gui_utils::ReadOnlyWigetStyle(true);
         bool is_graph_entry = false;
         this->gui_current_graph_entry_name.clear();
         ImGui::Checkbox("Graph Entry", &is_graph_entry);
         // ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
-        GUIUtils::ReadOnlyWigetStyle(false);
+        gui_utils::ReadOnlyWigetStyle(false);
     } else {
         bool is_graph_entry = selected_mod_ptr->IsGraphEntry();
         if (ImGui::Checkbox("Graph Entry", &is_graph_entry)) {
@@ -1949,9 +1949,9 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
         float input_text_width = std::max(min_text_width,
             (ImGui::CalcTextSize(this->gui_current_graph_entry_name.c_str()).x + 2.0f * style.ItemSpacing.x));
         ImGui::PushItemWidth(input_text_width);
-        GUIUtils::Utf8Encode(this->gui_current_graph_entry_name);
+        gui_utils::Utf8Encode(this->gui_current_graph_entry_name);
         ImGui::InputText("###current_graph_entry_name", &this->gui_current_graph_entry_name, ImGuiInputTextFlags_None);
-        GUIUtils::Utf8Decode(this->gui_current_graph_entry_name);
+        gui_utils::Utf8Decode(this->gui_current_graph_entry_name);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
                 selected_mod_ptr->SetGraphEntryName(this->gui_current_graph_entry_name);
         } else {
@@ -2379,7 +2379,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
             bool group_header_open = group.first.empty();
             if (!group_header_open) {
                 group_header_open =
-                    GUIUtils::GroupHeader(megamol::gui::HeaderType::MODULE_GROUP, group.first, search_string);
+                    gui_utils::GroupHeader(megamol::gui::HeaderType::MODULE_GROUP, group.first, search_string);
                 indent = true;
                 ImGui::Indent();
             }
@@ -2390,7 +2390,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
 
                     // Draw module header
                     bool module_header_open =
-                        GUIUtils::GroupHeader(megamol::gui::HeaderType::MODULE, module_label, search_string);
+                        gui_utils::GroupHeader(megamol::gui::HeaderType::MODULE, module_label, search_string);
                     // Module description as hover tooltip
                     this->gui_tooltip.ToolTip(
                         module_ptr->Description(), ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);

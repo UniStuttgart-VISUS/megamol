@@ -7,7 +7,7 @@
 
 
 #include "TransferFunctionEditor.h"
-#include "GUIUtils.h"
+#include "gui_utils.h"
 #include "graph/Parameter.h"
 #include "widgets/ButtonWidgets.h"
 #include "widgets/ColorPalettes.h"
@@ -353,7 +353,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         // Interval range -----------------------------------------------------
         ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
         if (!this->range_overwrite) {
-            GUIUtils::ReadOnlyWigetStyle(true);
+            gui_utils::ReadOnlyWigetStyle(true);
         }
         ImGui::InputFloat("###min", &this->widget_buffer.left_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -367,7 +367,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->reload_texture = true;
         }
         if (!this->range_overwrite) {
-            GUIUtils::ReadOnlyWigetStyle(false);
+            gui_utils::ReadOnlyWigetStyle(false);
         }
         ImGui::PopItemWidth();
         ImGui::SameLine(0.0f, (style.ItemSpacing.x + style.ItemInnerSpacing.x));
@@ -401,7 +401,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         bool node_selected =
             ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size()));
         if (!node_selected) {
-            megamol::gui::GUIUtils::ReadOnlyWigetStyle(true);
+            megamol::gui::gui_utils::ReadOnlyWigetStyle(true);
         }
 
         // Sigma slider -------------------------------------------------------
@@ -456,7 +456,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
         // END selected NODE options ------------------------------------------
         if (!node_selected) {
-            megamol::gui::GUIUtils::ReadOnlyWigetStyle(false);
+            megamol::gui::gui_utils::ReadOnlyWigetStyle(false);
         }
 
         // Plot ---------------------------------------------------------------
@@ -491,7 +491,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         }
         ImGui::SameLine();
         if (!node_selected) {
-            megamol::gui::GUIUtils::ReadOnlyWigetStyle(true);
+            megamol::gui::gui_utils::ReadOnlyWigetStyle(true);
         }
         if (ImGui::Button("Selected Node")) {
             for (int i = 0; i < 4; i++) {
@@ -500,7 +500,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->reload_texture = true;
         }
         if (!node_selected) {
-            megamol::gui::GUIUtils::ReadOnlyWigetStyle(false);
+            megamol::gui::gui_utils::ReadOnlyWigetStyle(false);
         }
         ImGui::SameLine();
         ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());

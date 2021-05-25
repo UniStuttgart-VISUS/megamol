@@ -922,7 +922,7 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             ImGui::PushItemWidth(widget_width);
             // Set read only
             if (this->IsGUIReadOnly()) {
-                GUIUtils::ReadOnlyWigetStyle(true);
+                gui_utils::ReadOnlyWigetStyle(true);
             }
         }
 
@@ -1319,7 +1319,7 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
         if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
             // Reset read only
             if (this->IsGUIReadOnly()) {
-                GUIUtils::ReadOnlyWigetStyle(false);
+                gui_utils::ReadOnlyWigetStyle(false);
             }
             // Reset item width
             ImGui::PopItemWidth();
@@ -1400,7 +1400,7 @@ bool megamol::gui::Parameter::widget_string(
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
             std::string utf8Str = value;
-            GUIUtils::Utf8Encode(utf8Str);
+            gui_utils::Utf8Encode(utf8Str);
             this->gui_widget_store = utf8Str;
         }
         std::string hidden_label = "###" + label;
@@ -1415,12 +1415,12 @@ bool megamol::gui::Parameter::widget_string(
             ImGuiInputTextFlags_CtrlEnterForNewLine);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             std::string utf8Str = std::get<std::string>(this->gui_widget_store);
-            GUIUtils::Utf8Decode(utf8Str);
+            gui_utils::Utf8Decode(utf8Str);
             value = utf8Str;
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             std::string utf8Str = value;
-            GUIUtils::Utf8Encode(utf8Str);
+            gui_utils::Utf8Encode(utf8Str);
             this->gui_widget_store = utf8Str;
         }
         ImGui::SameLine();
@@ -1459,13 +1459,13 @@ bool megamol::gui::Parameter::widget_enum(
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         std::string utf8Str = storage[value];
-        GUIUtils::Utf8Encode(utf8Str);
+        gui_utils::Utf8Encode(utf8Str);
         auto combo_flags = ImGuiComboFlags_HeightRegular;
         if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str(), combo_flags)) {
             for (auto& pair : storage) {
                 bool isSelected = (pair.first == value);
                 utf8Str = pair.second;
-                GUIUtils::Utf8Encode(utf8Str);
+                gui_utils::Utf8Encode(utf8Str);
                 if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
                     value = pair.first;
                     retval = true;
@@ -1489,16 +1489,16 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
             this->gui_widget_store = std::string();
         }
         std::string utf8Str = value;
-        GUIUtils::Utf8Encode(utf8Str);
+        gui_utils::Utf8Encode(utf8Str);
         auto combo_flags = ImGuiComboFlags_HeightRegular;
         if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str(), combo_flags)) {
             bool one_present = false;
             for (auto& valueOption : storage) {
                 bool isSelected = (valueOption == value);
                 utf8Str = valueOption;
-                GUIUtils::Utf8Encode(utf8Str);
+                gui_utils::Utf8Encode(utf8Str);
                 if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
-                    GUIUtils::Utf8Decode(utf8Str);
+                    gui_utils::Utf8Decode(utf8Str);
                     value = utf8Str;
                     retval = true;
                 }
@@ -1522,7 +1522,7 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
                 "###flex_enum_text_edit", &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 if (!std::get<std::string>(this->gui_widget_store).empty()) {
-                    GUIUtils::Utf8Decode(std::get<std::string>(this->gui_widget_store));
+                    gui_utils::Utf8Decode(std::get<std::string>(this->gui_widget_store));
                     value = std::get<std::string>(this->gui_widget_store);
                     retval = true;
                     std::get<std::string>(this->gui_widget_store) = std::string();
@@ -1549,7 +1549,7 @@ bool megamol::gui::Parameter::widget_filepath(
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
             std::string utf8Str = value;
-            GUIUtils::Utf8Encode(utf8Str);
+            gui_utils::Utf8Encode(utf8Str);
             this->gui_widget_store = utf8Str;
         }
         ImGuiStyle& style = ImGui::GetStyle();
@@ -1565,12 +1565,12 @@ bool megamol::gui::Parameter::widget_filepath(
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
-            GUIUtils::Utf8Decode(std::get<std::string>(this->gui_widget_store));
+            gui_utils::Utf8Decode(std::get<std::string>(this->gui_widget_store));
             value = std::get<std::string>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             std::string utf8Str = value;
-            GUIUtils::Utf8Encode(utf8Str);
+            gui_utils::Utf8Encode(utf8Str);
             this->gui_widget_store = utf8Str;
         }
         ImGui::PopItemWidth();
@@ -1660,12 +1660,12 @@ bool megamol::gui::Parameter::widget_int(
             this->gui_widget_store = value;
         }
         if (this->gui_show_minmax) {
-            GUIUtils::ReadOnlyWigetStyle(true);
+            gui_utils::ReadOnlyWigetStyle(true);
             auto min_value = minval;
             ImGui::InputInt("Min Value", &min_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
             auto max_value = maxval;
             ImGui::InputInt("Max Value", &max_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
-            GUIUtils::ReadOnlyWigetStyle(false);
+            gui_utils::ReadOnlyWigetStyle(false);
         }
         ImGui::EndGroup();
     }
@@ -1730,14 +1730,14 @@ bool megamol::gui::Parameter::widget_float(
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
-                GUIUtils::ReadOnlyWigetStyle(true);
+                gui_utils::ReadOnlyWigetStyle(true);
                 auto min_value = minval;
                 ImGui::InputFloat("Min Value", &min_value, min_step_size, max_step_size, this->gui_float_format.c_str(),
                     ImGuiInputTextFlags_None);
                 auto max_value = maxval;
                 ImGui::InputFloat("Max Value", &max_value, min_step_size, max_step_size, this->gui_float_format.c_str(),
                     ImGuiInputTextFlags_None);
-                GUIUtils::ReadOnlyWigetStyle(false);
+                gui_utils::ReadOnlyWigetStyle(false);
             }
         }
         ImGui::EndGroup();
@@ -1808,14 +1808,14 @@ bool megamol::gui::Parameter::widget_vector2f(megamol::gui::Parameter::WidgetSco
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
-                GUIUtils::ReadOnlyWigetStyle(true);
+                gui_utils::ReadOnlyWigetStyle(true);
                 auto min_value = minval;
                 ImGui::InputFloat2(
                     "Min Value", glm::value_ptr(min_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
                 auto max_value = maxval;
                 ImGui::InputFloat2(
                     "Max Value", glm::value_ptr(max_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
-                GUIUtils::ReadOnlyWigetStyle(false);
+                gui_utils::ReadOnlyWigetStyle(false);
             }
         }
         ImGui::EndGroup();
@@ -1888,14 +1888,14 @@ bool megamol::gui::Parameter::widget_vector3f(megamol::gui::Parameter::WidgetSco
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
-                GUIUtils::ReadOnlyWigetStyle(true);
+                gui_utils::ReadOnlyWigetStyle(true);
                 auto min_value = minval;
                 ImGui::InputFloat3(
                     "Min Value", glm::value_ptr(min_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
                 auto max_value = maxval;
                 ImGui::InputFloat3(
                     "Max Value", glm::value_ptr(max_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
-                GUIUtils::ReadOnlyWigetStyle(false);
+                gui_utils::ReadOnlyWigetStyle(false);
             }
         }
         ImGui::EndGroup();
@@ -1968,14 +1968,14 @@ bool megamol::gui::Parameter::widget_vector4f(megamol::gui::Parameter::WidgetSco
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
-                GUIUtils::ReadOnlyWigetStyle(true);
+                gui_utils::ReadOnlyWigetStyle(true);
                 auto min_value = minval;
                 ImGui::InputFloat4(
                     "Min Value", glm::value_ptr(min_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
                 auto max_value = maxval;
                 ImGui::InputFloat4(
                     "Max Value", glm::value_ptr(max_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
-                GUIUtils::ReadOnlyWigetStyle(false);
+                gui_utils::ReadOnlyWigetStyle(false);
             }
         }
         ImGui::EndGroup();
@@ -2056,14 +2056,14 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
 
         // Toggle inplace and external editor, if available
         if (this->tf_editor_external_ptr == nullptr) {
-            GUIUtils::ReadOnlyWigetStyle(true);
+            gui_utils::ReadOnlyWigetStyle(true);
         }
         if (ImGui::RadioButton("External Editor", this->tf_use_external_editor)) {
             this->tf_use_external_editor = true;
             this->tf_show_editor = false;
         }
         if (this->tf_editor_external_ptr == nullptr) {
-            GUIUtils::ReadOnlyWigetStyle(false);
+            gui_utils::ReadOnlyWigetStyle(false);
         }
         ImGui::SameLine();
         if (ImGui::RadioButton("Inplace", !this->tf_use_external_editor)) {
@@ -2078,13 +2078,13 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
 
             // Editor
             if (isActive || (this->tf_editor_external_ptr == nullptr)) {
-                GUIUtils::ReadOnlyWigetStyle(true);
+                gui_utils::ReadOnlyWigetStyle(true);
             }
             if (ImGui::Button("Connect")) {
                 retval = true;
             }
             if (isActive || (this->tf_editor_external_ptr == nullptr)) {
-                GUIUtils::ReadOnlyWigetStyle(false);
+                gui_utils::ReadOnlyWigetStyle(false);
             }
 
         } else { // Inplace Editor

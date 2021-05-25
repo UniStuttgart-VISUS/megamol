@@ -11,7 +11,7 @@
 
 
 #include <string>
-#include "GUIUtils.h"
+#include "gui_utils.h"
 
 
 namespace megamol {

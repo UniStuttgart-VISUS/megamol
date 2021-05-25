@@ -122,7 +122,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                     // Call group widget draw function
                     if (group_widget_data->IsGUIVisible() || in_extended.IsTrue()) {
                         if (group_widget_data->IsGUIReadOnly()) {
-                            GUIUtils::ReadOnlyWigetStyle(true);
+                            gui_utils::ReadOnlyWigetStyle(true);
                         }
 
                         if (!group_widget_data->Draw(group.second, in_search, in_scope, inout_picking_buffer)) {
@@ -136,7 +136,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                         }
 
                         if (group_widget_data->IsGUIReadOnly()) {
-                            GUIUtils::ReadOnlyWigetStyle(false);
+                            gui_utils::ReadOnlyWigetStyle(false);
                         }
                     }
                 } else {
@@ -225,7 +225,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
         auto param_fullname = inout_param.FullNameProject();
         bool param_searched = true;
         if (in_scope == Parameter::WidgetScope::LOCAL) {
-            param_searched = GUIUtils::FindCaseInsensitiveSubstring(param_fullname, in_search);
+            param_searched = gui_utils::FindCaseInsensitiveSubstring(param_fullname, in_search);
         }
         bool visible = (inout_param.IsGUIVisible() || inout_param.IsExtended()) && param_searched;
 
@@ -268,7 +268,7 @@ void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_
 
     // Open namespace header when parameter search is active.
     auto search_string = in_search;
-    bool param_group_header_open = megamol::gui::GUIUtils::GroupHeader(
+    bool param_group_header_open = megamol::gui::gui_utils::GroupHeader(
         megamol::gui::HeaderType::PARAMETER_GROUP, in_group_name, search_string, in_override_header_state);
 
     if (param_group_header_open) {

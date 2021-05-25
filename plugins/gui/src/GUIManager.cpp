@@ -411,7 +411,7 @@ bool GUIManager::PostDraw(void) {
                         std::string module_full_name = module_ptr->FullName();
                         for (auto& param : module_ptr->Parameters()) {
                             std::string param_full_name = param.FullNameProject();
-                            if (GUIUtils::CaseInsensitiveStringCompare(
+                            if (gui_utils::CaseInsensitiveStringCompare(
                                     wc.config.specific.tfe_active_param, param_full_name) &&
                                 (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
                                 this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
@@ -581,7 +581,7 @@ bool GUIManager::PostDraw(void) {
             config.OversampleH = 4;
             config.OversampleV = 4;
             config.GlyphRanges = this->state.font_utf8_ranges.data();
-            GUIUtils::Utf8Encode(this->state.font_file_name);
+            gui_utils::Utf8Encode(this->state.font_file_name);
             if (io.Fonts->AddFontFromFileTTF(this->state.font_file_name.c_str(),
                     static_cast<float>(this->state.font_size), &config) != nullptr) {
 
@@ -601,14 +601,14 @@ bool GUIManager::PostDraw(void) {
                     load_success = true;
                 }
             }
-            GUIUtils::Utf8Decode(this->state.font_file_name);
+            gui_utils::Utf8Decode(this->state.font_file_name);
         } else if (this->state.font_file_name != "<unknown>") {
             std::string imgui_font_string =
                 this->state.font_file_name + ", " + std::to_string(this->state.font_size) + "px";
             for (unsigned int n = this->state.graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size);
                  n++) {
                 std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
-                GUIUtils::Utf8Decode(font_name);
+                gui_utils::Utf8Decode(font_name);
                 if (font_name == imgui_font_string) {
                     io.FontDefault = io.Fonts->Fonts[n];
                     load_success = true;
@@ -998,7 +998,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(megamol::core::MegaMolGra
                             if (param_slot != nullptr) {
                                 std::string param_full_name(param_slot->FullName().PeekBuffer());
                                 for (auto& parameter : module_ptr->Parameters()) {
-                                    if (GUIUtils::CaseInsensitiveStringCompare(
+                                    if (gui_utils::CaseInsensitiveStringCompare(
                                             parameter.FullNameCore(), param_full_name)) {
                                         megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                             (*param_slot), parameter, true, false, true);
@@ -1453,7 +1453,7 @@ void GUIManager::drawParamWindowCallback(WindowConfiguration& wc) {
             bool indent = false;
             bool group_header_open = group.first.empty();
             if (!group_header_open) {
-                group_header_open = GUIUtils::GroupHeader(
+                group_header_open = gui_utils::GroupHeader(
                     megamol::gui::HeaderType::MODULE_GROUP, group.first, search_string, override_header_state);
                 indent = true;
                 ImGui::Indent();
@@ -1469,7 +1469,7 @@ void GUIManager::drawParamWindowCallback(WindowConfiguration& wc) {
                     }
 
                     // Draw module header
-                    bool module_header_open = GUIUtils::GroupHeader(
+                    bool module_header_open = gui_utils::GroupHeader(
                         megamol::gui::HeaderType::MODULE, module_label, search_string, override_header_state);
                     // Module description as hover tooltip
                     this->tooltip.ToolTip(module_ptr->Description(), ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
@@ -1854,15 +1854,15 @@ void GUIManager::drawMenu(void) {
             this->file_browser.Button(
                 this->state.font_file_name, megamol::gui::FileBrowserWidget::FileBrowserFlag::LOAD, "ttf");
             ImGui::SameLine();
-            GUIUtils::Utf8Encode(this->state.font_file_name);
+            gui_utils::Utf8Encode(this->state.font_file_name);
             ImGui::InputText("Font Filename (.ttf)", &this->state.font_file_name, ImGuiInputTextFlags_None);
-            GUIUtils::Utf8Decode(this->state.font_file_name);
+            gui_utils::Utf8Decode(this->state.font_file_name);
             ImGui::PopItemWidth();
             // Validate font file before offering load button
             bool valid_file = megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
                 this->state.font_file_name, std::string("ttf"));
             if (!valid_file) {
-                megamol::gui::GUIUtils::ReadOnlyWigetStyle(true);
+                megamol::gui::gui_utils::ReadOnlyWigetStyle(true);
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             if (ImGui::Button("Add Font")) {
@@ -1870,7 +1870,7 @@ void GUIManager::drawMenu(void) {
             }
             if (!valid_file) {
                 ImGui::PopItemFlag();
-                megamol::gui::GUIUtils::ReadOnlyWigetStyle(false);
+                megamol::gui::gui_utils::ReadOnlyWigetStyle(false);
                 ImGui::SameLine();
                 ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font file name.");
             }
@@ -2453,9 +2453,9 @@ bool megamol::gui::GUIManager::state_to_string(std::string& out_state) {
         // Write GUI state
         json_state[GUI_JSON_TAG_GUI]["menu_visible"] = this->state.menu_visible;
         json_state[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->state.style);
-        GUIUtils::Utf8Encode(this->state.font_file_name);
+        gui_utils::Utf8Encode(this->state.font_file_name);
         json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->state.font_file_name;
-        GUIUtils::Utf8Decode(this->state.font_file_name);
+        gui_utils::Utf8Decode(this->state.font_file_name);
         json_state[GUI_JSON_TAG_GUI]["font_size"] = this->state.font_size;
         json_state[GUI_JSON_TAG_GUI]["imgui_settings"] = this->save_imgui_settings_to_string();
 
