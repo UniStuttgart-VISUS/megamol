@@ -123,27 +123,27 @@ namespace gui {
         Parameter(ImGuiID uid, ParamType_t type, Stroage_t store, Min_t minval, Max_t maxval,
             const std::string& param_name, const std::string& description);
 
-        ~Parameter(void);
+        ~Parameter();
 
         bool Draw(WidgetScope scope);
 
-        bool IsValueDirty(void) {
+        bool IsValueDirty() {
             return this->value_dirty;
         }
-        void ResetValueDirty(void) {
+        void ResetValueDirty() {
             this->value_dirty = false;
         }
-        void ForceSetValueDirty(void) {
+        void ForceSetValueDirty() {
             this->value_dirty = true;
         }
 
-        bool IsGUIStateDirty(void) {
+        bool IsGUIStateDirty() {
             return this->gui_state_dirty;
         }
-        void ResetGUIStateDirty(void) {
+        void ResetGUIStateDirty() {
             this->gui_state_dirty = false;
         }
-        void ForceSetGUIStateDirty(void) {
+        void ForceSetGUIStateDirty() {
             this->gui_state_dirty = true;
         }
 
@@ -162,11 +162,11 @@ namespace gui {
 
         // GET ----------------------------------------------------------------
 
-        inline const ImGuiID UID(void) const {
+        inline const ImGuiID UID() const {
             return this->uid;
         }
         // <param_name>
-        inline std::string Name(void) const {
+        inline std::string Name() const {
             std::string name = this->param_name;
             auto idx = this->param_name.rfind(':');
             if (idx != std::string::npos) {
@@ -175,7 +175,7 @@ namespace gui {
             return name;
         }
         // <param_namespace>
-        inline std::string NameSpace(void) const {
+        inline std::string NameSpace() const {
             std::string name_space;
             auto idx = this->param_name.find_first_of(':');
             if (idx != std::string::npos) {
@@ -184,54 +184,54 @@ namespace gui {
             return name_space;
         }
         // ::<module_group>::<module_name> + :: + <param_namespace>::<param_name>
-        inline std::string FullNameProject(void) const {
+        inline std::string FullNameProject() const {
             return std::string(this->parent_module_name + "::" + this->param_name);
         }
         // :: + ::<module_group>::<module_name> + :: + <param_namespace>::<param_name>
-        inline std::string FullNameCore(void) const {
+        inline std::string FullNameCore() const {
             return std::string("::" + this->parent_module_name + "::" + this->param_name);
         }
 
-        std::string GetValueString(void) const;
+        std::string GetValueString() const;
 
-        Value_t& GetValue(void) {
+        Value_t& GetValue() {
             return this->value;
         }
 
         template<typename T>
-        const T& GetMinValue(void) const {
+        const T& GetMinValue() const {
             return std::get<T>(this->minval);
         }
 
         template<typename T>
-        const T& GetMaxValue(void) const {
+        const T& GetMaxValue() const {
             return std::get<T>(this->maxval);
         }
 
         template<typename T>
-        const T& GetStorage(void) const {
+        const T& GetStorage() const {
             return std::get<T>(this->storage);
         }
 
-        inline bool DefaultValueMismatch(void) {
+        inline bool DefaultValueMismatch() {
             return this->default_value_mismatch;
         }
-        inline size_t GetTransferFunctionHash(void) const {
+        inline size_t GetTransferFunctionHash() const {
             return this->tf_string_hash;
         }
-        inline const ParamType_t Type(void) const {
+        inline const ParamType_t Type() const {
             return this->type;
         }
-        inline const std::string FloatFormat(void) const {
+        inline const std::string FloatFormat() const {
             return this->gui_float_format;
         }
-        inline const bool IsExtended(void) const {
+        inline const bool IsExtended() const {
             return this->gui_extended;
         }
-        inline vislib::SmartPtr<megamol::core::param::AbstractParam> CoreParamPtr(void) const {
+        inline vislib::SmartPtr<megamol::core::param::AbstractParam> CoreParamPtr() const {
             return this->core_param_ptr;
         }
-        inline void ResetCoreParamPtr(void) {
+        inline void ResetCoreParamPtr() {
             this->core_param_ptr = nullptr;
         }
 

@@ -100,7 +100,7 @@ namespace gui {
     /// ! Do not directly change
     extern ImGuiID gui_generated_uid;
 
-    inline ImGuiID GenerateUniqueID(void) {
+    inline ImGuiID GenerateUniqueID() {
         return (++gui_generated_uid);
     }
 
@@ -129,20 +129,20 @@ namespace gui {
         GUIScaling() = default;
         ~GUIScaling() = default;
 
-        float Get(void) const {
+        float Get() const {
             return this->scale;
         }
 
-        float TransitionFactor(void) const {
+        float TransitionFactor() const {
             return (this->scale / this->last_scale);
         }
 
-        bool PendingChange(void) const {
+        bool PendingChange() const {
             return this->pending_change;
         }
 
     private:
-        bool ConsumePendingChange(void) {
+        bool ConsumePendingChange() {
             bool current_pending_change = this->pending_change;
             this->pending_change = false;
             return current_pending_change;
@@ -432,8 +432,8 @@ namespace gui {
         }
 
     private:
-        gui_utils(void) = default;
-        ~gui_utils(void) = default;
+        gui_utils() = default;
+        ~gui_utils() = default;
     };
 
 } // namespace gui

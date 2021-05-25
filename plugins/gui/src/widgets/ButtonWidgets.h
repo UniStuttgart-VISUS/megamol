@@ -42,9 +42,9 @@ namespace gui {
         static bool ToggleButton(const std::string& id, bool& inout_bool);
 
     private:
-        ButtonWidgets(void) = default;
+        ButtonWidgets() = default;
 
-        ~ButtonWidgets(void) = default;
+        ~ButtonWidgets() = default;
     };
 
 

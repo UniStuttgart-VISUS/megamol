@@ -16,7 +16,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::GraphCollection::GraphCollection(void)
+megamol::gui::GraphCollection::GraphCollection()
         : graphs()
         , modules_stock()
         , calls_stock()
@@ -25,10 +25,10 @@ megamol::gui::GraphCollection::GraphCollection(void)
         , gui_graph_delete_uid(GUI_INVALID_ID) {}
 
 
-megamol::gui::GraphCollection::~GraphCollection(void) {}
+megamol::gui::GraphCollection::~GraphCollection() {}
 
 
-bool megamol::gui::GraphCollection::AddEmptyProject(void) {
+bool megamol::gui::GraphCollection::AddEmptyProject() {
 
     ImGuiID graph_uid = this->AddGraph();
     if (graph_uid != GUI_INVALID_ID) {
@@ -42,7 +42,7 @@ bool megamol::gui::GraphCollection::AddEmptyProject(void) {
 }
 
 
-ImGuiID megamol::gui::GraphCollection::AddGraph(void) {
+ImGuiID megamol::gui::GraphCollection::AddGraph() {
 
     ImGuiID retval = GUI_INVALID_ID;
 
@@ -110,7 +110,7 @@ megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetGraph(ImGuiID in_grap
 }
 
 
-megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetRunningGraph(void) {
+megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetRunningGraph() {
 
     for (auto& graph_ptr : this->graphs) {
         if (graph_ptr->IsRunning()) {

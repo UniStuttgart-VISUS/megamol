@@ -46,7 +46,7 @@ megamol::gui::CallSlot::~CallSlot() {
 }
 
 
-bool megamol::gui::CallSlot::CallsConnected(void) const {
+bool megamol::gui::CallSlot::CallsConnected() const {
 
     /// Check for unclean references
     for (auto& call_ptr : this->connected_calls) {
@@ -108,7 +108,7 @@ bool megamol::gui::CallSlot::DisconnectCall(ImGuiID call_uid) {
 }
 
 
-bool megamol::gui::CallSlot::DisconnectCalls(void) {
+bool megamol::gui::CallSlot::DisconnectCalls() {
 
     try {
         for (auto& call_ptr : this->connected_calls) {
@@ -131,7 +131,7 @@ bool megamol::gui::CallSlot::DisconnectCalls(void) {
 }
 
 
-const std::vector<megamol::gui::CallPtr_t>& megamol::gui::CallSlot::GetConnectedCalls(void) {
+const std::vector<megamol::gui::CallPtr_t>& megamol::gui::CallSlot::GetConnectedCalls() {
 
     /// Check for unclean references
     for (auto& call_ptr : this->connected_calls) {
@@ -145,7 +145,7 @@ const std::vector<megamol::gui::CallPtr_t>& megamol::gui::CallSlot::GetConnected
 }
 
 
-bool megamol::gui::CallSlot::IsParentModuleConnected(void) const {
+bool megamol::gui::CallSlot::IsParentModuleConnected() const {
     return (this->parent_module != nullptr);
 }
 
@@ -167,7 +167,7 @@ bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t pm) {
 }
 
 
-bool megamol::gui::CallSlot::DisconnectParentModule(void) {
+bool megamol::gui::CallSlot::DisconnectParentModule() {
 
     if (parent_module == nullptr) {
 #ifdef GUI_VERBOSE
@@ -182,7 +182,7 @@ bool megamol::gui::CallSlot::DisconnectParentModule(void) {
 }
 
 
-const megamol::gui::ModulePtr_t& megamol::gui::CallSlot::GetParentModule(void) {
+const megamol::gui::ModulePtr_t& megamol::gui::CallSlot::GetParentModule() {
 
     if (this->parent_module == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(

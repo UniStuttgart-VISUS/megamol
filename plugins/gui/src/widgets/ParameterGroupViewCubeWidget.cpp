@@ -17,7 +17,7 @@ using namespace megamol::gui;
 
 // *** Pickable Cube ******************************************************** //
 
-megamol::gui::PickableCube::PickableCube(void) : image_up_arrow(), shader(nullptr) {}
+megamol::gui::PickableCube::PickableCube() : image_up_arrow(), shader(nullptr) {}
 
 
 bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_selected_face_id,
@@ -220,7 +220,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
             "    } \n"
             "} \n"
             "\n"
-            "void main(void) { \n"
+            "void main() { \n"
             "    vec4 out_color = vec4(vertex_color, 1.0); \n"
             "    \n"
             "    // Arrow Texture - supersample 4 extra points \n"
@@ -449,7 +449,7 @@ InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) cons
 
 // *** Pickable Cube ******************************************************** //
 
-megamol::gui::PickableTexture::PickableTexture(void) : image_rotation_arrow(), shader(nullptr) {}
+megamol::gui::PickableTexture::PickableTexture() : image_rotation_arrow(), shader(nullptr) {}
 
 
 bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_face_id, int& out_orientation_change,
@@ -499,7 +499,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
             "float supersample(in vec2 uv, float w, float alpha) { \n"
             "    return smoothstep(0.5 - w, 0.5 + w, alpha); \n"
             "} \n"
-            "void main(void) { \n"
+            "void main() { \n"
             "    // Same colors as in vertex shader of pickable cube \n"
             "    const vec3 colors[6] = vec3[6](vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 1.0), \n"
             "                                   vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 1.0), \n"
@@ -607,7 +607,7 @@ InteractVector megamol::gui::PickableTexture::GetInteractions(unsigned int id) c
 
 // *** Parameter Group View Cube Widget ************************************ //
 
-megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget(void)
+megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget()
         : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
         , tooltip()
         , cube_widget()

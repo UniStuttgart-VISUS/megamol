@@ -7,76 +7,37 @@
 
 
 #include "WindowCollection.h"
-#include "gui_utils.h"
-#include "imgui_internal.h"
+#include "Configurator.h"
+#include "TransferFunctionEditor.h"
+#include "LogConsole.h"
+#include "PerformanceMonitor.h"
+#include "ParameterList.h"
 
 
 using namespace megamol;
 using namespace megamol::gui;
 
 
-void WindowConfiguration::ApplyWindowSizePosition(bool consider_menu) {
+WindowCollection::WindowCollection() {
 
-    assert(ImGui::GetCurrentContext() != nullptr);
-
-    ImGuiIO& io = ImGui::GetIO();
-
-    // Main menu height
-    float y_offset = ImGui::GetFrameHeight();
-
-    ImVec2 win_pos = this->config.basic.position;
-    ImVec2 win_size = this->config.basic.size;
-    if (this->config.basic.flags & ImGuiWindowFlags_AlwaysAutoResize) {
-        win_size = ImGui::GetWindowSize();
-    }
-
-    // Fit max window size to viewport
-    if (win_size.x > io.DisplaySize.x) {
-        win_size.x = io.DisplaySize.x;
-    }
-    if (win_size.y > (io.DisplaySize.y - y_offset)) {
-        win_size.y = (io.DisplaySize.y - y_offset);
-    }
-
-    // Snap to viewport
-    /// ImGui automatically moves windows lying outside viewport
-    // float win_width = io.DisplaySize.x - (win_pos.x);
-    // if (win_width < win_size.x) {
-    //    win_pos.x = io.DisplaySize.x - (win_size.x);
-    //}
-    // float win_height = io.DisplaySize.y - (win_pos.y);
-    // if (win_height < win_size.y) {
-    //    win_pos.y = io.DisplaySize.y - (win_size.y);
-    //}
-    // if (win_pos.x < 0) {
-    //    win_pos.x = 0.0f;
-    //}
-
-    // Snap window below menu bar
-    if (consider_menu && (win_pos.y < y_offset)) {
-        win_pos.y = y_offset;
-    }
-
-    this->config.basic.position = win_pos;
-    // wc.config.basic.reset_position = win_pos;
-    ImGui::SetWindowPos(win_pos, ImGuiCond_Always);
-
-    this->config.basic.size = win_size;
-    // wc.config.basic.reset_size = win_size;
-    ImGui::SetWindowSize(win_size, ImGuiCond_Always);
+    this->windows.push_back(std::make_unique<Configurator>());
+    this->windows.push_back(std::make_unique<LogConsole>());
+    this->windows.push_back(std::make_unique<PerformanceMonitor>());
+    this->windows.push_back(std::make_unique<ParameterList>());
+    this->windows.push_back(std::make_unique<TransferFunctionEditor>());
 }
 
 
-// --------------------------------------------------------------------
+bool WindowCollection::AddWindow(WindowConfiguration& wc) {
 
+    /// TODO only alow to add volalatile windows
 
-bool WindowCollection::AddWindowConfiguration(WindowConfiguration& wc) {
     if (wc.Name().empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] Invalid window name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (this->WindowConfigurationExists(wc.Hash())) {
+    if (this->WindowExists(wc.Hash())) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] Found already existing window with name '%s'. Window names must be unique. [%s, %s, line %d]\n",
             wc.Name().c_str(), __FILE__, __FUNCTION__, __LINE__);
@@ -87,7 +48,7 @@ bool WindowCollection::AddWindowConfiguration(WindowConfiguration& wc) {
 }
 
 
-bool WindowCollection::DeleteWindowConfiguration(size_t win_hash_id) {
+bool WindowCollection::DeleteWindow(size_t win_hash_id) {
     for (auto iter = this->windows.begin(); iter != this->windows.end(); iter++) {
         if (iter->Hash() == win_hash_id) {
             this->windows.erase(iter);
@@ -208,13 +169,6 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                     megamol::core::utility::get_json_value<std::string>(
                         config_values, {"tfe_active_param"}, &tmp_config.config.specific.tfe_active_param);
 
-                    // Log Config ---------------------------------------------
-                    megamol::core::utility::get_json_value<unsigned int>(
-                        config_values, {"log_level"}, &tmp_config.config.specific.log_level);
-
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"log_force_open"}, &tmp_config.config.specific.log_force_open);
-
                     // --------------------------------------------------------
                     // add current window config to tmp window config list
                     tmp_windows.emplace_back(tmp_config);
@@ -331,8 +285,7 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
                 wc.config.specific.tfe_active_param;
             gui_utils::Utf8Decode(wc.config.specific.tfe_active_param);
 
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["log_level"] = wc.config.specific.log_level;
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["log_force_open"] = wc.config.specific.log_force_open;
+
         }
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote window configurations to JSON.");

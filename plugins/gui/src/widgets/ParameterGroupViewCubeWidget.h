@@ -25,8 +25,8 @@ namespace gui {
      */
     class PickableCube {
     public:
-        PickableCube(void);
-        ~PickableCube(void) = default;
+        PickableCube();
+        ~PickableCube() = default;
 
         bool Draw(unsigned int picking_id, int& inout_selected_face_id, int& inout_selected_orientation_id,
             int& out_hovered_face_id, int& out_hovered_orientation_id, const glm::vec4& cube_orientation,
@@ -45,8 +45,8 @@ namespace gui {
      */
     class PickableTexture {
     public:
-        PickableTexture(void);
-        ~PickableTexture(void) = default;
+        PickableTexture();
+        ~PickableTexture() = default;
 
         bool Draw(unsigned int picking_id, int selected_face_id, int& out_orientation_change, int& out_hovered_arrow_id,
             ManipVector& pending_manipulations);
@@ -64,9 +64,9 @@ namespace gui {
      */
     class ParameterGroupViewCubeWidget : public AbstractParameterGroupWidget {
     public:
-        ParameterGroupViewCubeWidget(void);
+        ParameterGroupViewCubeWidget();
 
-        ~ParameterGroupViewCubeWidget(void) = default;
+        ~ParameterGroupViewCubeWidget() = default;
 
         bool Check(bool only_check, ParamPtrVector_t& params);
 

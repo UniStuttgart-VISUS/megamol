@@ -326,7 +326,7 @@ bool megamol::gui::Group::ContainsInterfaceSlot(ImGuiID interfaceslot_uid) {
 }
 
 
-void megamol::gui::Group::RestoreInterfaceslots(void) {
+void megamol::gui::Group::RestoreInterfaceslots() {
 
     /// 1] REMOVE connected call slots of group interface if connected module is part of same group
     for (auto& module_ptr : this->modules) {

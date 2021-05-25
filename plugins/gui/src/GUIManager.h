@@ -10,17 +10,16 @@
 #pragma once
 
 
-#include "windows/Configurator.h"
-#include "windows/LogConsole.h"
-#include "windows/TransferFunctionEditor.h"
 #include "windows/WindowCollection.h"
+#include "windows/Configurator.h"
+#include "windows/TransferFunctionEditor.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
-#include "widgets/StringSearchWidget.h"
 #include "widgets/WidgetPicking_gl.h"
+
 
 
 namespace megamol {
@@ -31,12 +30,12 @@ namespace gui {
         /**
          * CTOR.
          */
-        GUIManager(void);
+        GUIManager();
 
         /**
          * DTOR.
          */
-        virtual ~GUIManager(void);
+        virtual ~GUIManager();
 
         /**
          * Create ImGui context using OpenGL.
@@ -57,7 +56,7 @@ namespace gui {
         /**
          * Actual drawing of Gui windows and final rendering of pushed ImGui draw commands.
          */
-        bool PostDraw(void);
+        bool PostDraw();
 
         /**
          * Process key events.
@@ -102,21 +101,21 @@ namespace gui {
         /**
          * Pass current GUI visibility.
          */
-        inline bool GetVisibility(void) const {
+        inline bool GetVisibility() const {
             return this->state.gui_visible;
         }
 
         /**
          * Pass current GUI scale.
          */
-        float GetScale(void) const {
+        float GetScale() const {
             return megamol::gui::gui_scaling.Get();
         }
 
         /**
          * Pass triggered Shutdown.
          */
-        inline bool GetTriggeredShutdown(void) {
+        inline bool GetTriggeredShutdown() {
             bool request_shutdown = this->state.shutdown_triggered;
             this->state.shutdown_triggered = false;
             return request_shutdown;
@@ -125,10 +124,10 @@ namespace gui {
         /**
          * Pass triggered Screenshot.
          */
-        bool GetTriggeredScreenshot(void);
+        bool GetTriggeredScreenshot();
 
         // Valid filename is only ensured after screenshot was triggered.
-        inline std::string GetScreenshotFileName(void) const {
+        inline std::string GetScreenshotFileName() const {
             return this->state.screenshot_filepath;
         }
 
@@ -136,7 +135,7 @@ namespace gui {
          * Pass project load request.
          * Request is consumed when calling this function.
          */
-        std::string GetProjectLoadRequest(void);
+        std::string GetProjectLoadRequest();
 
         /**
          * Pass current mouse cursor request.
@@ -146,7 +145,7 @@ namespace gui {
          *
          * @return Retured mouse cursor is in range [ImGuiMouseCursor_None=-1, (ImGuiMouseCursor_COUNT-1)=8]
          */
-        int GetMouseCursor(void) const {
+        int GetMouseCursor() const {
             return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
         }
 
@@ -208,9 +207,9 @@ namespace gui {
          * @param callback      The window callback function containing the GUI content of the window
          */
         void RegisterWindow(
-                const std::string& window_name, std::function<void(WindowConfiguration::Basic&)> const& callback);
+                const std::string& window_name, std::function<void(WindowConfiguration::BasicConfig&)> const& callback);
 
-        void RegisterPopUp(const std::string& name, bool& open, std::function<void(void)> const& callback);
+        void RegisterPopUp(const std::string& name, bool& open, std::function<void()> const& callback);
 
         void RegisterNotification(const std::string& name, bool& open, const std::string& message);
 
@@ -225,6 +224,7 @@ namespace gui {
         ///////////////////////////////////////////////////////////////////////
 
     private:
+
         /** Available GUI styles. */
         enum Styles {
             CorporateGray,
@@ -299,68 +299,54 @@ namespace gui {
         /** The currently initialized ImGui API */
         GUIImGuiAPI initialized_api;
 
-        /** The window collection. */
-        WindowCollection window_collection;
-
-        /** The configurator. */
-        megamol::gui::Configurator configurator;
-
-        /** The configurator. */
-        megamol::gui::LogConsole console;
-
         /** The current local state of the gui. */
         StateBuffer state;
 
-        /** List of externally registered pop-up/notifications */
-        std::map<std::string, std::pair<bool*, std::function<void(void)>>> external_popup_registry;
-        std::map<std::string, std::tuple<bool*, bool, std::string>> external_notification_registry;
+        /** GUI element collections. */
+        WindowCollection win_collection;
+        std::map<std::string, std::pair<bool*, std::function<void()>>> popup_collection;
+        std::map<std::string, std::tuple<bool*, bool, std::string>> notification_collection;
+
+        /** Shortcut pointers to windows. */
+        Configurator* configurator_ptr;
+        TransferFunctionEditor* tfeditor_ptr;
 
         // Widgets
         FileBrowserWidget file_browser;
-        StringSearchWidget search_widget;
-        std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
         HoverToolTip tooltip;
         PickingBuffer picking_buffer;
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool createContext(void);
-        bool destroyContext(void);
+        void init_state();
 
-        void load_default_fonts(void);
+        bool create_context();
 
-        void drawParamWindowCallback(WindowConfiguration& wc);
-        void drawFpsWindowCallback(WindowConfiguration& wc);
-        void drawTransferFunctionWindowCallback(WindowConfiguration& wc);
-        void drawConfiguratorWindowCallback(WindowConfiguration& wc);
+        bool destroy_context();
 
-        void drawMenu(void);
-        void drawPopUps(void);
+        void load_default_fonts();
 
-        // Only call after ImGui::Begin() and before next ImGui::End()
-        void window_sizing_and_positioning(WindowConfiguration& wc, bool& out_collapsing_changed);
+        void draw_menu();
 
-        bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
-        void checkMultipleHotkeyAssignment(void);
-        bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
+        void draw_popups();
+
+        void check_multiple_hotkey_assignment();
+
+        bool is_hotkey_pressed(megamol::core::view::KeyCode keycode);
 
         void load_preset_window_docking(ImGuiID global_docking_id);
 
-        // Required to save/load docking
         void load_imgui_settings_from_string(const std::string& imgui_settings);
-        std::string save_imgui_settings_to_string(void);
+
+        std::string save_imgui_settings_to_string();
 
         std::string project_to_lua_string(bool as_lua);
+
         bool state_from_string(const std::string& state);
+
         bool state_to_string(std::string& out_state);
 
-        void init_state(void);
-
-        void update_frame_statistics(WindowConfiguration& wc);
-
         bool create_not_existing_png_filepath(std::string& inout_filepath);
-
-        std::string full_window_title(WindowConfiguration& wc) const;
     };
 
 } // namespace gui

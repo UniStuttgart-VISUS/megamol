@@ -166,8 +166,9 @@ std::array<std::tuple<std::string, PresetGenerator>, 21> PRESETS = {
 };
 
 
-TransferFunctionEditor::TransferFunctionEditor(void)
-        : connected_parameter_ptr(nullptr)
+TransferFunctionEditor::TransferFunctionEditor()
+        : WindowConfiguration("Transfer Function Editor", WindowConfiguration::WINDOW_ID_TRANSFER_FUNCTION)
+        , connected_parameter_ptr(nullptr)
         , connected_parameter_name()
         , nodes()
         , range({0.0f, 1.0f})
@@ -199,6 +200,12 @@ TransferFunctionEditor::TransferFunctionEditor(void)
 
     // Load ramp as initial preset
     RampAdapter(this->nodes, this->texture_size);
+
+    // Configure TRANSFER FUNCTION Window
+    this->config.size = ImVec2(0.0f, 0.0f);
+    this->config.reset_size = this->config.size;
+    this->config.hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
+    this->config.flags = ImGuiWindowFlags_AlwaysAutoResize;
 }
 
 
@@ -1127,4 +1134,11 @@ void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, u
             }
         }
     }
+}
+
+void TransferFunctionEditor::Draw() {
+
+    this->tf_editor_ptr->Widget(true);
+    wc.config.specific.tfe_active_param = this->tf_editor_ptr->GetConnectedParameterName();
+
 }

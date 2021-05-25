@@ -24,9 +24,9 @@ namespace gui {
      */
     class ParameterOrbitalWidget {
     public:
-        ParameterOrbitalWidget(void);
+        ParameterOrbitalWidget();
 
-        ~ParameterOrbitalWidget(void) = default;
+        ~ParameterOrbitalWidget() = default;
 
         bool gizmo3D_rotation_axes(glm::vec4& inout_rotation);
         bool gizmo3D_rotation_direction(glm::vec3& inout_direction);

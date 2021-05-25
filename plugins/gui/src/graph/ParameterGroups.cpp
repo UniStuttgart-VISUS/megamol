@@ -15,7 +15,7 @@ using namespace megamol::core;
 using namespace megamol::gui;
 
 
-megamol::gui::ParameterGroups::ParameterGroups(void)
+megamol::gui::ParameterGroups::ParameterGroups()
         : tooltip(), cube_widget_group(), animation_group(), group_widgets() {
 
     // Create/register available group widgets
@@ -24,7 +24,7 @@ megamol::gui::ParameterGroups::ParameterGroups(void)
 }
 
 
-megamol::gui::ParameterGroups::~ParameterGroups(void) {}
+megamol::gui::ParameterGroups::~ParameterGroups() {}
 
 
 bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search,

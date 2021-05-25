@@ -74,7 +74,7 @@ bool megamol::gui::Module::AddCallSlot(megamol::gui::CallSlotPtr_t callslot) {
 }
 
 
-bool megamol::gui::Module::DeleteCallSlots(void) {
+bool megamol::gui::Module::DeleteCallSlots() {
 
     try {
         for (auto& callslots_map : this->callslots) {

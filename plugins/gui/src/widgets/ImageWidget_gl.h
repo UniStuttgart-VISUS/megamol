@@ -23,11 +23,11 @@ namespace gui {
      */
     class ImageWidget {
     public:
-        ImageWidget(void);
+        ImageWidget();
 
-        ~ImageWidget(void) = default;
+        ~ImageWidget() = default;
 
-        bool IsLoaded(void) {
+        bool IsLoaded() {
             if (this->tex_ptr == nullptr)
                 return false;
             return (this->tex_ptr->getName() != 0); // OpenGL texture id
@@ -52,7 +52,7 @@ namespace gui {
         /**
          * Return texture id for external usage.
          */
-        GLuint GetTextureID(void) const {
+        GLuint GetTextureID() const {
             return ((this->tex_ptr != nullptr) ? (this->tex_ptr->getName()) : (0));
         }
 

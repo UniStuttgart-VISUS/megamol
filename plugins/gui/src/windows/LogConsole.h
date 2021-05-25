@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "WindowCollection.h"
+#include "WindowConfiguration.h"
 #include "mmcore/utility/log/StreamTarget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
@@ -32,9 +32,9 @@ namespace gui {
             std::string message;
         };
 
-        int sync(void);
+        int sync();
 
-        inline const std::vector<LogEntry>& log(void) const {
+        inline const std::vector<LogEntry>& log() const {
             return this->messages;
         }
 
@@ -46,19 +46,25 @@ namespace gui {
     /*
      * The content of the log console GUI window
      */
-    class LogConsole {
+    class LogConsole : public WindowConfiguration {
     public:
+
         LogConsole();
         ~LogConsole();
 
-        void Update(WindowConfiguration& wc);
+        void Update() override;
 
-        bool Draw(WindowConfiguration& wc);
+        void Draw() override;
 
-        void PopUps(void);
+        void PopUps() override;
+
+        bool SpecificStateFromJSON(const nlohmann::json& in_json) override;
+
+        bool SpecificStateToJSON(nlohmann::json& inout_json) override;
 
     private:
         // VARIABLES --------------------------------------------------------------
+
 
         LogBuffer echo_log_buffer;
         std::ostream echo_log_stream;
@@ -68,7 +74,8 @@ namespace gui {
         unsigned int scroll_down;
         unsigned int scroll_up;
         float last_window_height;
-        std::string window_title;
+        unsigned int log_level;    // [SAVED] Log level used in log window
+        bool log_force_open;       // [SAVED] flag indicating if log window should be forced open on warnings and errors
 
         struct LogPopUpData {
             std::string title;
@@ -83,7 +90,7 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool connect_log(void);
+        bool connect_log();
 
         void print_message(LogBuffer::LogEntry entry, unsigned int global_log_level) const;
 

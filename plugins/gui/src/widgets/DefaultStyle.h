@@ -18,7 +18,7 @@
  *
  * See imgui.cpp line 953, section: USER FACING STRUCTURES (ImGuiStyle, ImGuiIO)
  */
-inline void DefaultStyle(void) {
+inline void DefaultStyle() {
 
     // Geometry
     ImGuiStyle& style = ImGui::GetStyle();

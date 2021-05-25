@@ -67,7 +67,7 @@ namespace gui {
             this->available_interactions.insert({obj_id, interactions});
         }
 
-        ManipVector& GetPendingManipulations(void) {
+        ManipVector& GetPendingManipulations() {
             return this->pending_manipulations;
         }
 
@@ -75,14 +75,14 @@ namespace gui {
         // FUNCTIONS --------------------------------------------------------------
         /// Should only be callable by friend class who owns the object
 
-        PickingBuffer(void);
-        ~PickingBuffer(void);
+        PickingBuffer();
+        ~PickingBuffer();
 
         // Call only once per frame
         bool EnableInteraction(glm::vec2 vp_dim);
 
         // Call only once per frame
-        bool DisableInteraction(void);
+        bool DisableInteraction();
 
         bool ProcessMouseMove(double x, double y);
 

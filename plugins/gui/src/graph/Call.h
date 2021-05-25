@@ -52,20 +52,20 @@ namespace gui {
             const std::vector<std::string>& functions);
         ~Call();
 
-        bool IsConnected(void);
+        bool IsConnected();
         bool ConnectCallSlots(CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
         bool DisconnectCallSlots(ImGuiID calling_callslot_uid = GUI_INVALID_ID);
         const CallSlotPtr_t& CallSlotPtr(CallSlotType type);
 
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
 
-        inline const ImGuiID UID(void) const {
+        inline const ImGuiID UID() const {
             return this->uid;
         }
-        inline const std::string ClassName(void) const {
+        inline const std::string ClassName() const {
             return this->class_name;
         }
-        const std::string SlotsLabel(void) const {
+        const std::string SlotsLabel() const {
             return std::string(this->caller_slot_name + this->slot_name_separator + this->callee_slot_name);
         }
 

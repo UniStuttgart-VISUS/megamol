@@ -14,7 +14,8 @@ using namespace megamol::gui;
 
 
 megamol::gui::Configurator::Configurator()
-        : graph_collection()
+        : WindowConfiguration("Configurator", WindowConfiguration::WINDOW_ID_CONFIGURATOR)
+        , graph_collection()
         , module_list_sidebar_width(250.0f)
         , selected_list_module_uid(GUI_INVALID_ID)
         , add_project_graph_uid(GUI_INVALID_ID)
@@ -25,7 +26,6 @@ megamol::gui::Configurator::Configurator()
         , last_selected_callslot_uid(GUI_INVALID_ID)
         , graph_state()
         , open_popup_load(false)
-        , project_file_drop_valid(false)
         , file_browser()
         , search_widget()
         , splitter_widget()
@@ -49,28 +49,34 @@ megamol::gui::Configurator::Configurator()
     this->graph_state.configurator_graph_save = false;
     this->graph_state.global_graph_save = false;
     this->graph_state.new_running_graph_uid = GUI_INVALID_ID;
+
+    // WINDOW_ID_CONFIGURATOR Window
+    this->config.size = ImVec2(750.0f, 500.0f);
+    this->config.reset_size = this->config.size;
+    this->config.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
+    this->config.hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
 }
 
 
 Configurator::~Configurator() {}
 
 
-bool megamol::gui::Configurator::Draw(WindowConfiguration& wc) {
+void megamol::gui::Configurator::Draw() {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return;
     }
     if (!this->graph_collection.IsCallStockLoaded()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Calls stock is not loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return;
     }
     if (!this->graph_collection.IsModuleStockLoaded()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Modules stock is not loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        return;
     }
 
     // Update state -------------------------------------------------------
@@ -97,8 +103,6 @@ bool megamol::gui::Configurator::Draw(WindowConfiguration& wc) {
         this->search_widget.SetSearchFocus(true);
         this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed = false;
     }
-
-    this->project_file_drop_valid = (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows));
 
     // Draw Windows -------------------------------------------------------
 
@@ -129,8 +133,6 @@ bool megamol::gui::Configurator::Draw(WindowConfiguration& wc) {
     // Only reset 'externally' processed hotkeys
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].is_pressed = false;
-
-    return true;
 }
 
 

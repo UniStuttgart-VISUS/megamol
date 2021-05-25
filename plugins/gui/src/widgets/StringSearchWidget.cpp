@@ -14,7 +14,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-StringSearchWidget::StringSearchWidget(void) : search_focus(false), search_string(), tooltip() {}
+StringSearchWidget::StringSearchWidget() : search_focus(false), search_string(), tooltip() {}
 
 
 bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::string& help, bool apply_focus) {

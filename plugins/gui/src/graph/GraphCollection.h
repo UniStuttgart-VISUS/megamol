@@ -37,31 +37,31 @@ namespace gui {
     public:
         // FUNCTIONS --------------------------------------------------------------
 
-        GraphCollection(void);
-        ~GraphCollection(void);
+        GraphCollection();
+        ~GraphCollection();
 
-        bool AddEmptyProject(void);
+        bool AddEmptyProject();
 
-        ImGuiID AddGraph(void);
+        ImGuiID AddGraph();
         bool DeleteGraph(ImGuiID in_graph_uid);
         GraphPtr_t GetGraph(ImGuiID in_graph_uid);
-        const GraphPtrVector_t& GetGraphs(void) {
+        const GraphPtrVector_t& GetGraphs() {
             return this->graphs;
         }
-        GraphPtr_t GetRunningGraph(void);
+        GraphPtr_t GetRunningGraph();
 
         bool LoadModuleStock(const megamol::core::CoreInstance& core_instance);
         bool LoadCallStock(const megamol::core::CoreInstance& core_instance);
-        inline const ModuleStockVector_t& GetModulesStock(void) {
+        inline const ModuleStockVector_t& GetModulesStock() {
             return this->modules_stock;
         }
-        inline const CallStockVector_t& GetCallsStock(void) {
+        inline const CallStockVector_t& GetCallsStock() {
             return this->calls_stock;
         }
-        bool IsCallStockLoaded(void) const {
+        bool IsCallStockLoaded() const {
             return (!this->calls_stock.empty());
         }
-        bool IsModuleStockLoaded(void) const {
+        bool IsModuleStockLoaded() const {
             return (!this->modules_stock.empty());
         }
 
@@ -116,7 +116,7 @@ namespace gui {
         bool project_separate_name_and_namespace(
             const std::string& full_name, std::string& name_space, std::string& name);
 
-        inline const std::string generate_unique_graph_name(void) {
+        inline const std::string generate_unique_graph_name() {
             return ("Project_" + std::to_string(++graph_name_uid));
         }
 

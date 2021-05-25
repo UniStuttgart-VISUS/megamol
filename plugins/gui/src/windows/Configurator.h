@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "WindowCollection.h"
+#include "WindowConfiguration.h"
 #include "graph/GraphCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
@@ -22,65 +22,57 @@ namespace megamol {
 namespace gui {
 
 
-    class Configurator {
+    class Configurator : public WindowConfiguration {
     public:
-        /**
-         * CTOR.
-         */
-        Configurator();
 
-        /**
-         * DTOR.
-         */
-        virtual ~Configurator();
+        Configurator();
+        ~Configurator();
+
+        void Update() override;
+
+        void Draw() override;
+
+        void PopUps() override;
 
         /**
          * Get hotkey of configurator.
          *
          * @return Hotkeys of configurator.
          */
-        inline megamol::gui::HotkeyArray_t& GetHotkeys(void) {
+        inline megamol::gui::HotkeyArray_t& GetHotkeys() {
             return this->graph_state.hotkeys;
         }
 
         /**
-         * Draw configurator window.
-         */
-        bool Draw(WindowConfiguration& wc);
-
-        /**
          * Returns required font scalings for graph canvas
          */
-        inline const FontScalingArray_t& GetGraphFontScalings(void) const {
+        inline const FontScalingArray_t& GetGraphFontScalings() const {
             return this->graph_state.graph_zoom_font_scalings;
         }
 
         /**
          * Return graph collection.
          */
-        GraphCollection& GetGraphCollection(void) {
+        GraphCollection& GetGraphCollection() {
             return this->graph_collection;
         }
+
         /**
          * State to and from JSON.
          */
         bool StateToJSON(nlohmann::json& inout_json);
         bool StateFromJSON(const nlohmann::json& in_json);
 
+        bool SpecificStateFromJSON(const nlohmann::json& in_json) override;
+        bool SpecificStateToJSON(nlohmann::json& inout_json) override;
+
         /**
          * Globally save currently selected graph in configurator.
          */
-        inline bool ConsumeTriggeredGlobalProjectSave(void) {
+        inline bool ConsumeTriggeredGlobalProjectSave() {
             bool trigger_global_graph_save = this->graph_state.global_graph_save;
             this->graph_state.global_graph_save = false;
             return trigger_global_graph_save;
-        }
-
-        /**
-         * Indicates whether project file drop for configurator is valid.
-         */
-        inline bool IsProjectFileDropValid(void) {
-            return this->project_file_drop_valid;
         }
 
     private:
@@ -98,7 +90,6 @@ namespace gui {
         ImGuiID last_selected_callslot_uid;
         megamol::gui::GraphState_t graph_state;
         bool open_popup_load;
-        bool project_file_drop_valid;
 
         // Widgets
         FileBrowserWidget file_browser;
@@ -108,10 +99,10 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        void draw_window_menu(void);
+        void draw_window_menu();
         void draw_window_module_list(float width, float height, bool apply_focus);
 
-        void drawPopUps(void);
+        void drawPopUps();
 
         bool load_graph_state_from_file(const std::string& filename);
     };

@@ -19,9 +19,9 @@ namespace gui {
      */
     class SplitterWidget {
     public:
-        SplitterWidget(void);
+        SplitterWidget();
 
-        ~SplitterWidget(void) = default;
+        ~SplitterWidget() = default;
 
         enum FixedSplitterSide { LEFT, RIGHT };
 

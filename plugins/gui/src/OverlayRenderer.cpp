@@ -14,7 +14,7 @@ using namespace megamol::core;
 using namespace megamol::gui;
 
 
-OverlayRenderer::OverlayRenderer(void)
+OverlayRenderer::OverlayRenderer()
         : view::RendererModule<view::CallRender3DGL>()
         , megamol::core::view::RenderUtils()
         , paramMode("mode", "Overlay mode.")
@@ -150,12 +150,12 @@ OverlayRenderer::OverlayRenderer(void)
 }
 
 
-OverlayRenderer::~OverlayRenderer(void) {
+OverlayRenderer::~OverlayRenderer() {
     this->Release();
 }
 
 
-void OverlayRenderer::release(void) {
+void OverlayRenderer::release() {
 
     this->m_font_ptr.reset();
     this->m_parameter_ptr = nullptr;
@@ -164,7 +164,7 @@ void OverlayRenderer::release(void) {
 }
 
 
-bool OverlayRenderer::create(void) {
+bool OverlayRenderer::create() {
 
     if (!this->InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -376,7 +376,7 @@ bool OverlayRenderer::onTriggerRecalcRectangle(core::param::ParamSlot& slot) {
 }
 
 
-void OverlayRenderer::setParameterGUIVisibility(void) {
+void OverlayRenderer::setParameterGUIVisibility() {
 
     Mode mode = static_cast<Mode>(this->paramMode.Param<param::EnumParam>()->Value());
     bool texture_mode = (mode == Mode::TEXTURE);

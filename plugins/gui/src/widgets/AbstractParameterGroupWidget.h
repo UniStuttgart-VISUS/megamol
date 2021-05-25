@@ -24,14 +24,14 @@ namespace gui {
     public:
         typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
 
-        ~AbstractParameterGroupWidget(void) = default;
+        ~AbstractParameterGroupWidget() = default;
 
         virtual bool Check(bool only_check, ParamPtrVector_t& params) = 0;
 
         virtual bool Draw(ParamPtrVector_t params, const std::string& in_search,
             megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) = 0;
 
-        bool IsActive(void) const {
+        bool IsActive() const {
             return this->active;
         }
 
@@ -39,7 +39,7 @@ namespace gui {
             this->active = active;
         }
 
-        std::string GetName(void) const {
+        std::string GetName() const {
             return this->name;
         };
 

@@ -57,13 +57,13 @@ namespace gui {
         };
 
         Graph(const std::string& graph_name);
-        ~Graph(void);
+        ~Graph();
 
         ModulePtr_t AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name);
         ModulePtr_t AddModule(const std::string& class_name, const std::string& description,
             const std::string& plugin_name, bool is_view);
         bool DeleteModule(ImGuiID module_uid);
-        inline const ModulePtrVector_t& Modules(void) {
+        inline const ModulePtrVector_t& Modules() {
             return this->modules;
         }
         ModulePtr_t GetModule(ImGuiID module_uid);
@@ -74,88 +74,88 @@ namespace gui {
         bool AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
 
         bool DeleteCall(ImGuiID call_uid);
-        inline const CallPtrVector_t& Calls(void) {
+        inline const CallPtrVector_t& Calls() {
             return this->calls;
         }
 
         ImGuiID AddGroup(const std::string& group_name = "");
         bool DeleteGroup(ImGuiID group_uid);
-        inline const GroupPtrVector_t& GetGroups(void) {
+        inline const GroupPtrVector_t& GetGroups() {
             return this->groups;
         }
         GroupPtr_t GetGroup(ImGuiID group_uid);
         ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr);
 
-        void Clear(void);
+        void Clear();
 
-        inline bool IsDirty(void) const {
+        inline bool IsDirty() const {
             return this->dirty_flag;
         }
-        inline void ResetDirty(void) {
+        inline void ResetDirty() {
             this->dirty_flag = false;
         }
-        inline void ForceSetDirty(void) {
+        inline void ForceSetDirty() {
             this->dirty_flag = true;
         }
 
         bool UniqueModuleRename(const std::string& module_full_name);
 
-        const std::string GetFilename(void) const;
+        const std::string GetFilename() const;
         void SetFilename(const std::string& filename, bool saved_filename);
 
         bool PushSyncQueue(QueueAction in_action, const QueueData& in_data);
         bool PopSyncQueue(QueueAction& out_action, QueueData& out_data);
-        inline void ClearSyncQueue(void) {
+        inline void ClearSyncQueue() {
             while (!this->sync_queue.empty()) {
                 this->sync_queue.pop();
             }
         }
 
-        inline bool IsRunning(void) const {
+        inline bool IsRunning() const {
             return this->running;
         }
         inline void SetRunning(bool run) {
             this->running = run;
         }
 
-        const std::string GenerateUniqueGraphEntryName(void);
+        const std::string GenerateUniqueGraphEntryName();
 
         bool StateFromJSON(const nlohmann::json& in_json);
         bool StateToJSON(nlohmann::json& inout_json);
 
         void Draw(GraphState_t& state);
 
-        inline const ImGuiID UID(void) const {
+        inline const ImGuiID UID() const {
             return this->uid;
         }
-        inline const std::string Name(void) const {
+        inline const std::string Name() const {
             return this->name;
         }
 
-        void ForceUpdate(void) {
+        void ForceUpdate() {
             this->gui_update = true;
         }
-        void ResetStatePointers(void) {
+        void ResetStatePointers() {
             this->gui_graph_state.interact.callslot_compat_ptr.reset();
             this->gui_graph_state.interact.interfaceslot_compat_ptr.reset();
         }
 
-        ImGuiID GetHoveredGroup(void) const {
+        ImGuiID GetHoveredGroup() const {
             return this->gui_graph_state.interact.group_hovered_uid;
         }
-        ImGuiID GetSelectedGroup(void) const {
+        ImGuiID GetSelectedGroup() const {
             return this->gui_graph_state.interact.group_selected_uid;
         }
-        ImGuiID GetSelectedCallSlot(void) const {
+        ImGuiID GetSelectedCallSlot() const {
             return this->gui_graph_state.interact.callslot_selected_uid;
         }
-        ImGuiID GetSelectedInterfaceSlot(void) const {
+        ImGuiID GetSelectedInterfaceSlot() const {
             return this->gui_graph_state.interact.interfaceslot_selected_uid;
         }
-        ImGuiID GetDropSlot(void) const {
+        ImGuiID GetDropSlot() const {
             return this->gui_graph_state.interact.slot_dropped_uid;
         }
-        bool IsCanvasHoverd(void) const {
+        bool IsCanvasHoverd() const {
             return this->gui_canvas_hovered;
         }
 
@@ -211,11 +211,11 @@ namespace gui {
         void draw_canvas(float child_width, GraphState_t& state);
         void draw_parameters(float child_width);
 
-        void draw_canvas_grid(void);
-        void draw_canvas_dragged_call(void);
-        void draw_canvas_multiselection(void);
+        void draw_canvas_grid();
+        void draw_canvas_dragged_call();
+        void draw_canvas_multiselection();
 
-        void layout_graph(void);
+        void layout_graph();
         void layout(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, ImVec2 init_position);
 
         bool connected_callslot(
@@ -227,7 +227,7 @@ namespace gui {
         bool contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid);
         bool contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid);
 
-        const std::string generate_unique_group_name(void);
+        const std::string generate_unique_group_name();
         const std::string generate_unique_module_name(const std::string& name);
     };
 

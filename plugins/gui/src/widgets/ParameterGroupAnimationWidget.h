@@ -22,9 +22,9 @@ namespace gui {
      */
     class ParameterGroupAnimationWidget : public AbstractParameterGroupWidget {
     public:
-        ParameterGroupAnimationWidget(void);
+        ParameterGroupAnimationWidget();
 
-        ~ParameterGroupAnimationWidget(void) = default;
+        ~ParameterGroupAnimationWidget() = default;
 
         bool Check(bool only_check, ParamPtrVector_t& params);
 

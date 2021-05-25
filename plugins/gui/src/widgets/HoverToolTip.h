@@ -23,9 +23,9 @@ namespace gui {
      */
     class HoverToolTip {
     public:
-        HoverToolTip(void);
+        HoverToolTip();
 
-        ~HoverToolTip(void) = default;
+        ~HoverToolTip() = default;
 
         /**
          * Draw tooltip on hover.
@@ -49,7 +49,7 @@ namespace gui {
         /**
          * Reset toopltip time and widget id.
          */
-        void Reset(void);
+        void Reset();
 
     private:
         // VARIABLES --------------------------------------------------------------

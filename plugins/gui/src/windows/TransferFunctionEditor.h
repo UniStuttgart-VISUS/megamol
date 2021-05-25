@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include "WindowConfiguration.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget_gl.h"
@@ -24,17 +25,24 @@ namespace gui {
 
     // Forward declarations
     class Parameter;
-    typedef std::shared_ptr<Parameter> ParamPtr_t;
 
 
     /**
      * 1D Transfer Function Editor.
      */
-    class TransferFunctionEditor {
+    class TransferFunctionEditor : public WindowConfiguration {
     public:
-        TransferFunctionEditor(void);
 
-        ~TransferFunctionEditor(void) = default;
+        TransferFunctionEditor();
+        ~TransferFunctionEditor() = default;
+
+        void Update() override;
+
+        void Draw() override;
+
+        bool SpecificStateFromJSON(const nlohmann::json& in_json) override;
+
+        bool SpecificStateToJSON(nlohmann::json& inout_json) override;
 
         /**
          * Draws the transfer function editor.
@@ -65,14 +73,14 @@ namespace gui {
         /**
          * Get currently connected parameter.
          */
-        inline std::string GetConnectedParameterName(void) const {
+        inline std::string GetConnectedParameterName() const {
             return this->connected_parameter_name;
         }
 
         /**
          * Returns true if editor is in minimized view.
          */
-        inline bool IsMinimized(void) const {
+        inline bool IsMinimized() const {
             return !this->show_options;
         }
 
@@ -86,7 +94,7 @@ namespace gui {
         /**
          * Returns true if editor is in vertical view.
          */
-        inline bool IsVertical(void) const {
+        inline bool IsVertical() const {
             return this->flip_legend;
         }
 
@@ -131,6 +139,12 @@ namespace gui {
         bool check_once_force_set_overwrite_range;
         bool plot_paint_mode;
         bool plot_dragging;
+
+        /// TODO
+        bool tfe_view_minimized = false; // [SAVED] flag indicating minimized window state
+        bool tfe_view_vertical = false;  // [SAVED] flag indicating vertical window state
+        std::string tfe_active_param;    // [SAVED] last active parameter connected to editor
+        bool tmp_tfe_reset = false;      // flag for reset of tfe window on state loading
 
         // Widgets
         HoverToolTip tooltip;

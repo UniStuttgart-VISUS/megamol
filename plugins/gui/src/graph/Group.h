@@ -39,13 +39,13 @@ namespace gui {
         bool AddModule(const ModulePtr_t& module_ptr);
         bool RemoveModule(ImGuiID module_uid);
         bool ContainsModule(ImGuiID module_uid);
-        inline bool Empty(void) {
+        inline bool Empty() {
             return (this->modules.empty());
         }
 
         InterfaceSlotPtr_t AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add = true);
         InterfaceSlotPtr_t InterfaceSlotPtr(ImGuiID interfaceslot_uid);
-        inline InterfaceSlotPtrMap_t& InterfaceSlots(void) {
+        inline InterfaceSlotPtrMap_t& InterfaceSlots() {
             return this->interfaceslots;
         }
         inline InterfaceSlotPtrVector_t& InterfaceSlots(CallSlotType type) {
@@ -56,27 +56,27 @@ namespace gui {
         bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid, bool force = false);
         bool InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid);
 
-        void RestoreInterfaceslots(void);
+        void RestoreInterfaceslots();
 
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
         void UpdatePositionSize(const GraphCanvas_t& in_canvas);
 
-        inline const ImGuiID UID(void) const {
+        inline const ImGuiID UID() const {
             return this->uid;
         }
-        inline ModulePtrVector_t& Modules(void) {
+        inline ModulePtrVector_t& Modules() {
             return this->modules;
         }
-        inline const std::string Name(void) const {
+        inline const std::string Name() const {
             return this->name;
         }
-        inline ImVec2 Size(void) {
+        inline ImVec2 Size() {
             return this->gui_size;
         }
-        inline bool IsViewCollapsed(void) {
+        inline bool IsViewCollapsed() {
             return this->gui_collapsed_view;
         }
-        inline void ForceUpdate(void) {
+        inline void ForceUpdate() {
             this->gui_update = true;
         }
 
@@ -107,7 +107,7 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        void spacial_sort_interfaceslots(void) {
+        void spacial_sort_interfaceslots() {
             for (auto& interfaceslot_map : this->interfaceslots) {
                 std::sort(interfaceslot_map.second.begin(), interfaceslot_map.second.end(),
                     [](InterfaceSlotPtr_t isptr1, InterfaceSlotPtr_t isptr2) {

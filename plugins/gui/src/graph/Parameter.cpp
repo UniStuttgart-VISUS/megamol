@@ -119,7 +119,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Stroage_t stor
 }
 
 
-megamol::gui::Parameter::~Parameter(void) {
+megamol::gui::Parameter::~Parameter() {
 
     if (this->tf_editor_external_ptr != nullptr) {
         this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
@@ -127,7 +127,7 @@ megamol::gui::Parameter::~Parameter(void) {
 }
 
 
-std::string megamol::gui::Parameter::GetValueString(void) const {
+std::string megamol::gui::Parameter::GetValueString() const {
 
     std::string value_string("UNKNOWN PARAMETER TYPE");
 

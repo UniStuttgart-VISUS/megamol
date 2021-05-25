@@ -40,7 +40,7 @@ megamol::gui::Call::~Call() {
 }
 
 
-bool megamol::gui::Call::IsConnected(void) {
+bool megamol::gui::Call::IsConnected() {
 
     unsigned int connected = 0;
     for (auto& callslot_map : this->connected_callslots) {

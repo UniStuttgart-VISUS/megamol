@@ -45,34 +45,34 @@ namespace gui {
         bool ContainsCallSlot(ImGuiID callslot_uid);
         bool IsConnectionValid(CallSlot& callslot);
         bool IsConnectionValid(InterfaceSlot& interfaceslot);
-        CallSlotPtr_t GetCompatibleCallSlot(void);
-        CallSlotPtrVector_t& CallSlots(void) {
+        CallSlotPtr_t GetCompatibleCallSlot();
+        CallSlotPtrVector_t& CallSlots() {
             return this->callslots;
         }
-        bool IsConnected(void);
-        CallSlotType GetCallSlotType(void);
-        bool IsEmpty(void);
-        bool IsAutoCreated(void) {
+        bool IsConnected();
+        CallSlotType GetCallSlotType();
+        bool IsEmpty();
+        bool IsAutoCreated() {
             return this->auto_created;
         }
 
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
 
-        inline std::string Label(void) const {
+        inline std::string Label() const {
             return this->gui_label;
         }
-        inline const ImGuiID UID(void) const {
+        inline const ImGuiID UID() const {
             return this->uid;
         }
-        inline const ImGuiID GroupUID(void) const {
+        inline const ImGuiID GroupUID() const {
             return this->group_uid;
         }
-        ImVec2 Position(void) {
+        ImVec2 Position() {
             return this->Position(this->gui_group_collapsed_view);
         }
         ImVec2 Position(bool group_collapsed_view);
 
-        inline bool IsGroupViewCollapsed(void) const {
+        inline bool IsGroupViewCollapsed() const {
             return this->gui_group_collapsed_view;
         }
 

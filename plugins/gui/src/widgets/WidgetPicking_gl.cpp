@@ -25,7 +25,7 @@ using namespace megamol::gui;
     }
 
 
-megamol::gui::PickingBuffer::PickingBuffer(void)
+megamol::gui::PickingBuffer::PickingBuffer()
         : cursor_x(0.0)
         , cursor_y(0.0)
         , viewport_dim{0.0f, 0.0f}
@@ -38,7 +38,7 @@ megamol::gui::PickingBuffer::PickingBuffer(void)
         , enabled(false) {}
 
 
-megamol::gui::PickingBuffer::~PickingBuffer(void) {
+megamol::gui::PickingBuffer::~PickingBuffer() {
     this->fbo.reset();
 }
 
@@ -205,7 +205,7 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
 }
 
 
-bool megamol::gui::PickingBuffer::DisableInteraction(void) {
+bool megamol::gui::PickingBuffer::DisableInteraction() {
 
     if (!this->enabled) {
         // megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -221,7 +221,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
     if (this->fbo_shader == nullptr) {
         std::string vertex_src = "#version 130 \n "
                                  "out vec2 uv_coord; \n "
-                                 "void main(void) { \n "
+                                 "void main() { \n "
                                  "    const vec4 vertices[6] = vec4[6](vec4(-1.0, -1.0, 0.0, 0.0), \n "
                                  "        vec4(1.0, 1.0, 1.0, 1.0), \n "
                                  "        vec4(-1.0, 1.0, 0.0, 1.0), \n "
@@ -239,7 +239,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
                                    "uniform sampler2D col_tex; \n "
                                    "uniform sampler2D depth_tex; \n "
                                    "layout(location = 0) out vec4 outFragColor; \n "
-                                   "void main(void) { \n "
+                                   "void main() { \n "
                                    "    vec4 color = texture(col_tex, uv_coord).rgba; \n "
                                    "    if (color == vec4(0.0)) discard; \n "
                                    "    float depth = texture(depth_tex, uv_coord).g; \n "

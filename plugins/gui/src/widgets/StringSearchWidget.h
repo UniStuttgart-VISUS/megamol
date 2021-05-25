@@ -22,9 +22,9 @@ namespace gui {
      */
     class StringSearchWidget {
     public:
-        StringSearchWidget(void);
+        StringSearchWidget();
 
-        ~StringSearchWidget(void) = default;
+        ~StringSearchWidget() = default;
 
         bool Widget(const std::string& label, const std::string& help, bool apply_focus = true);
 
@@ -32,11 +32,11 @@ namespace gui {
             this->search_focus = focus;
         }
 
-        inline std::string GetSearchString(void) const {
+        inline std::string GetSearchString() const {
             return this->search_string;
         }
 
-        inline void ClearSearchString(void) {
+        inline void ClearSearchString() {
             this->search_string.clear();
         }
 

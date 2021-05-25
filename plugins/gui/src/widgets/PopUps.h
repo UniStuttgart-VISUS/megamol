@@ -22,9 +22,9 @@ namespace gui {
      */
     class PopUps {
     public:
-        PopUps(void);
+        PopUps();
 
-        ~PopUps(void) = default;
+        ~PopUps() = default;
 
         // Rename pop-up
         bool Rename(const std::string& caption, bool open_popup, std::string& rename);

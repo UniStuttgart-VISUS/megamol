@@ -103,7 +103,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     // this->gui_graph_state.hotkeys are already initialized
 }
 
-megamol::gui::Graph::~Graph(void) {
+megamol::gui::Graph::~Graph() {
 
     this->Clear();
 }
@@ -833,7 +833,7 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
 }
 
 
-void megamol::gui::Graph::Clear(void) {
+void megamol::gui::Graph::Clear() {
 
     this->ResetStatePointers();
 
@@ -892,7 +892,7 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_full_name
 }
 
 
-const std::string megamol::gui::Graph::GetFilename(void) const {
+const std::string megamol::gui::Graph::GetFilename() const {
 
     if (this->filenames.first.first) {
         // Return script path
@@ -2416,7 +2416,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
 }
 
 
-void megamol::gui::Graph::draw_canvas_grid(void) {
+void megamol::gui::Graph::draw_canvas_grid() {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -2441,7 +2441,7 @@ void megamol::gui::Graph::draw_canvas_grid(void) {
 }
 
 
-void megamol::gui::Graph::draw_canvas_dragged_call(void) {
+void megamol::gui::Graph::draw_canvas_dragged_call() {
 
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
@@ -2515,7 +2515,7 @@ void megamol::gui::Graph::draw_canvas_dragged_call(void) {
 }
 
 
-void megamol::gui::Graph::draw_canvas_multiselection(void) {
+void megamol::gui::Graph::draw_canvas_multiselection() {
 
     bool no_graph_item_selected = ((this->gui_graph_state.interact.callslot_selected_uid == GUI_INVALID_ID) &&
                                    (this->gui_graph_state.interact.call_selected_uid == GUI_INVALID_ID) &&
@@ -2573,7 +2573,7 @@ void megamol::gui::Graph::draw_canvas_multiselection(void) {
 }
 
 
-void megamol::gui::Graph::layout_graph(void) {
+void megamol::gui::Graph::layout_graph() {
 
     ImVec2 init_position = megamol::gui::Module::GetDefaultModulePosition(this->gui_graph_state.canvas);
 
@@ -2999,7 +2999,7 @@ bool megamol::gui::Graph::contains_group(const GroupPtrVector_t& groups, ImGuiID
 }
 
 
-const std::string megamol::gui::Graph::generate_unique_group_name(void) {
+const std::string megamol::gui::Graph::generate_unique_group_name() {
 
     int new_name_id = 0;
     std::string new_name_prefix("Group_");
@@ -3033,7 +3033,7 @@ const std::string megamol::gui::Graph::generate_unique_module_name(const std::st
 }
 
 
-const std::string megamol::gui::Graph::GenerateUniqueGraphEntryName(void) {
+const std::string megamol::gui::Graph::GenerateUniqueGraphEntryName() {
 
     int new_name_id = 0;
     std::string new_name_prefix("GraphEntry_");

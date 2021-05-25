@@ -31,7 +31,7 @@ megamol::gui::InterfaceSlot::InterfaceSlot(ImGuiID uid, bool auto_create)
         , gui_tooltip() {}
 
 
-megamol::gui::InterfaceSlot::~InterfaceSlot(void) {
+megamol::gui::InterfaceSlot::~InterfaceSlot() {
 
     // Remove all call slots from interface slot
     std::vector<ImGuiID> callslots_uids;
@@ -171,7 +171,7 @@ bool megamol::gui::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
 }
 
 
-CallSlotPtr_t megamol::gui::InterfaceSlot::GetCompatibleCallSlot(void) {
+CallSlotPtr_t megamol::gui::InterfaceSlot::GetCompatibleCallSlot() {
 
     if (!this->callslots.empty()) {
         return this->callslots[0];
@@ -180,7 +180,7 @@ CallSlotPtr_t megamol::gui::InterfaceSlot::GetCompatibleCallSlot(void) {
 }
 
 
-bool megamol::gui::InterfaceSlot::IsConnected(void) {
+bool megamol::gui::InterfaceSlot::IsConnected() {
 
     for (auto& callslot_ptr : this->callslots) {
         if (callslot_ptr->CallsConnected()) {
@@ -191,7 +191,7 @@ bool megamol::gui::InterfaceSlot::IsConnected(void) {
 }
 
 
-CallSlotType megamol::gui::InterfaceSlot::GetCallSlotType(void) {
+CallSlotType megamol::gui::InterfaceSlot::GetCallSlotType() {
 
     CallSlotType ret_type = CallSlotType::CALLER;
     if (!this->callslots.empty()) {
@@ -201,7 +201,7 @@ CallSlotType megamol::gui::InterfaceSlot::GetCallSlotType(void) {
 }
 
 
-bool megamol::gui::InterfaceSlot::IsEmpty(void) {
+bool megamol::gui::InterfaceSlot::IsEmpty() {
     return (this->callslots.empty());
 }
 
