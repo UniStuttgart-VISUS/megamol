@@ -48,26 +48,26 @@ public:
 
     virtual ~ParticleSurface();
 
-    //using Gt = CGAL::Exact_predicates_inexact_constructions_kernel;
+    // using Gt = CGAL::Exact_predicates_inexact_constructions_kernel;
     //// using Gt = CGAL::Exact_predicates_exact_constructions_kernel;
 
-    //using Vbt = CGAL::Triangulation_vertex_base_with_info_3<std::size_t, Gt>;
-    //using Vb = CGAL::Fixed_alpha_shape_vertex_base_3<Gt, Vbt>;
-    //using Fb = CGAL::Fixed_alpha_shape_cell_base_3<Gt>;
-    //using Tds = CGAL::Triangulation_data_structure_3<Vb, Fb>;
-    //using Triangulation_3 = CGAL::Delaunay_triangulation_3<Gt, Tds>;
-    //using Alpha_shape_3 = CGAL::Fixed_alpha_shape_3<Triangulation_3>;
+    // using Vbt = CGAL::Triangulation_vertex_base_with_info_3<std::size_t, Gt>;
+    // using Vb = CGAL::Fixed_alpha_shape_vertex_base_3<Gt, Vbt>;
+    // using Fb = CGAL::Fixed_alpha_shape_cell_base_3<Gt>;
+    // using Tds = CGAL::Triangulation_data_structure_3<Vb, Fb>;
+    // using Triangulation_3 = CGAL::Delaunay_triangulation_3<Gt, Tds>;
+    // using Alpha_shape_3 = CGAL::Fixed_alpha_shape_3<Triangulation_3>;
 
-    //using Delaunay = CGAL::Delaunay_triangulation_3<Gt>;
-    //using DFacet = Delaunay::Facet;
+    // using Delaunay = CGAL::Delaunay_triangulation_3<Gt>;
+    // using DFacet = Delaunay::Facet;
 
     //// using Point_3 = Gt::Point_3;
-    //using Point_3 = Alpha_shape_3::Point;
+    // using Point_3 = Alpha_shape_3::Point;
 
     //// using Triangle = Alpha_shape_3::Triangle;
-    //using Triangle = Triangulation_3::Triangle;
-    //using Facet = Alpha_shape_3::Facet;
-    //using Vertex = Alpha_shape_3::Vertex_handle;
+    // using Triangle = Triangulation_3::Triangle;
+    // using Facet = Alpha_shape_3::Facet;
+    // using Vertex = Alpha_shape_3::Vertex_handle;
 
 protected:
     bool create() override;
@@ -81,13 +81,15 @@ private:
     enum class surface_type : std::uint8_t { alpha_shape, gtim };
 
     bool is_dirty() {
-        return _alpha_slot.IsDirty() || _type_slot.IsDirty() || _vert_type_slot.IsDirty();
+        return _alpha_slot.IsDirty() || _type_slot.IsDirty() || _vert_type_slot.IsDirty() ||
+               toggle_interface_slot_.IsDirty();
     }
 
     void reset_dirty() {
         _alpha_slot.ResetDirty();
         _type_slot.ResetDirty();
         _vert_type_slot.ResetDirty();
+        toggle_interface_slot_.ResetDirty();
     }
 
     bool assert_data(core::moldyn::MultiParticleDataCall& call);
@@ -99,6 +101,8 @@ private:
     bool get_part_data_cb(core::Call& c);
 
     bool get_part_extent_cb(core::Call& c);
+
+    bool write_info_cb(core::param::ParamSlot& p);
 
     core::CalleeSlot _out_mesh_slot;
 
@@ -115,6 +119,12 @@ private:
     core::param::ParamSlot _type_slot;
 
     core::param::ParamSlot _vert_type_slot;
+
+    core::param::ParamSlot toggle_interface_slot_;
+
+    core::param::ParamSlot info_filename_slot_;
+
+    core::param::ParamSlot write_info_slot_;
 
     std::vector<std::vector<float>> _vertices;
 
@@ -145,5 +155,7 @@ private:
     int _fcr_version = -1;
 
     std::vector<std::tuple<size_t, size_t>> _sel;
+
+    std::size_t increment = 0;
 };
 } // namespace megamol::thermodyn
