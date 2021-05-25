@@ -80,7 +80,7 @@
 namespace megamol {
 namespace gui {
 
-    /********** Additional Global ImGui Operators ********************************/
+    /********** Additional Global ImGui Operators ****************************/
 
     namespace {
 
@@ -97,6 +97,7 @@ namespace gui {
 
     /********** Global Unique ID *********************************************/
 
+    /// ! Do not directly change
     extern ImGuiID gui_generated_uid;
 
     inline ImGuiID GenerateUniqueID(void) {
@@ -319,7 +320,6 @@ namespace gui {
 
         /** Decode string from UTF-8. */
         static bool Utf8Decode(std::string& str) {
-
             vislib::StringA dec_tmp;
             if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
                 str = std::string(dec_tmp.PeekBuffer());
@@ -330,7 +330,6 @@ namespace gui {
 
         /** Encode string into UTF-8. */
         static bool Utf8Encode(std::string& str) {
-
             vislib::StringA dec_tmp;
             if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
                 str = std::string(dec_tmp.PeekBuffer());
@@ -343,7 +342,6 @@ namespace gui {
          * Enable/Disable read only widget style.
          */
         static void ReadOnlyWigetStyle(bool set) {
-
             if (set) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);

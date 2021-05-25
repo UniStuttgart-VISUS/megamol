@@ -11,17 +11,12 @@
 
 
 #include "AbstractFrontendService.hpp"
-
 #include "gui-wrapper.h"
-
-#include "IOpenGL_Context.h"
 #include "GUIRegisterWindow.h"
 #include "GUIState.h"
-
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
-#include <glm/glm.hpp>
 
 
 namespace megamol {
@@ -97,6 +92,7 @@ private:
 
     void resource_register_window(const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func);
     void resource_register_popup(const std::string& name, bool& open, std::function<void(void)>& func);
+    void resource_register_notification(const std::string& name, bool& open, const std::string& message);
 };
 
 } // namespace frontend

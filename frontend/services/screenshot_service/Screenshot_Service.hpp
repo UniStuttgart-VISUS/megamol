@@ -63,9 +63,6 @@ private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
-
-    /// XXX TEMP
-    bool m_setup_window_once = true;
 };
 
 } // namespace frontend
