@@ -65,6 +65,8 @@ void main() {
     if(r > 1.0) discard;
     if(r < 0.1) discard;
 
+    float pixel_diag_width = 1.5 * max(dFdx(uv_coords.x),dFdy(uv_coords.y));
+
     float border_circle_width = 0.02;
     if(mesh_shader_params[draw_id].state == 1) {
         border_circle_width = 0.06;
@@ -72,6 +74,7 @@ void main() {
     else if(mesh_shader_params[draw_id].state == 2) {
         border_circle_width = 0.06;
     }
+    border_circle_width = max(border_circle_width,pixel_diag_width);
 
     if(r > (1.0 - border_circle_width)){
         albedo_out = glyph_border_color;
@@ -135,7 +138,7 @@ void main() {
     float arc_length = (inner_angle / (2.0*PI)) * 2.0 * circumference;
     float tgt_arc_length = ( 1.0 - (acos(abs(sample_dot_probe)) / (0.5*PI)) ) * circumference;
 
-    float eps = -0.05;
+    float eps = -max(0.05,pixel_diag_width);
     if( (arc_length + eps) > tgt_arc_length ) discard;
 
     sampler2D tf_tx = sampler2D(mesh_shader_params[draw_id].tf_texture_handle);
