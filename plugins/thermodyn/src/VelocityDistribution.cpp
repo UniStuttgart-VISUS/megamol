@@ -247,7 +247,8 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
                         static_cast<int>(((val_dy - min_dy_i) * fac_dy_i) * static_cast<float>(num_buckets - 1));
                     auto const idx_dz =
                         static_cast<int>(((val_dz - min_dz_i) * fac_dz_i) * static_cast<float>(num_buckets - 1));
-                    auto const idx_mag = static_cast<int>(((val_mag - min_mag_i) * fac_mag_i) * static_cast<float>(num_buckets - 1));
+                    auto const idx_mag =
+                        static_cast<int>(((val_mag - min_mag_i) * fac_mag_i) * static_cast<float>(num_buckets - 1));
 
                     ++histo_dx[idx_dx];
                     ++histo_dy[idx_dy];
@@ -281,6 +282,8 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
     col_cnt_ = histograms_.size();
     row_cnt_ = num_buckets;
 
+    ++out_data_hash_;
+
     return true;
 }
 
@@ -288,7 +291,7 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
 bool megamol::thermodyn::VelocityDistribution::dump_histo(core::param::ParamSlot& p) {
     auto const path = std::filesystem::path(path_slot_.Param<core::param::FilePathParam>()->Value().PeekBuffer());
 
-    //compute_statistics();
+    // compute_statistics();
 
     for (std::size_t pl_idx = 0; pl_idx < histograms_.size(); ++pl_idx) {
         auto const& histo = histograms_[pl_idx];
@@ -333,7 +336,7 @@ void megamol::thermodyn::VelocityDistribution::compute_statistics() {
         auto const weighted_mean = std::accumulate(tmp_avg.begin(), tmp_avg.end(), 0.0f);
         auto const mean = weighted_mean / sum_weights;
 
-        auto const fac = sum_weights* static_cast<float>((histo.size() - 1)) / static_cast<float>(histo.size());
+        auto const fac = sum_weights * static_cast<float>((histo.size() - 1)) / static_cast<float>(histo.size());
         std::transform(histo.begin(), histo.end(), domain.begin(), tmp_avg.begin(),
             [mean](auto const& h, auto const& d) { return static_cast<float>(h) * (d - mean) * (d - mean); });
         auto const stddev = std::sqrtf(std::accumulate(tmp_avg.begin(), tmp_avg.end(), 0.0f) / fac);
@@ -341,7 +344,7 @@ void megamol::thermodyn::VelocityDistribution::compute_statistics() {
         mean_[pl_idx] = mean;
         stddev_[pl_idx] = stddev;
 
-        //core::utility::log::Log::DefaultLog.WriteInfo("[VelocityDistribution] Mean %f Stddev %f", mean, stddev);
+        // core::utility::log::Log::DefaultLog.WriteInfo("[VelocityDistribution] Mean %f Stddev %f", mean, stddev);
     }
 }
 
@@ -353,8 +356,8 @@ bool megamol::thermodyn::VelocityDistribution::get_data_cb(core::Call& c) {
     auto in_data = in_data_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
     if (in_data == nullptr)
         return false;
-
-    in_data->SetFrameID(out_dist->GetFrameID());
+    auto tmp_frame_id = out_dist->GetFrameID();
+    in_data->SetFrameID(tmp_frame_id);
     if (!(*in_data)(1))
         return false;
     if (!(*in_data)(0))
@@ -384,9 +387,8 @@ bool megamol::thermodyn::VelocityDistribution::get_data_cb(core::Call& c) {
         }
 
         reset_dirty();
-        frame_id_ = in_data->FrameID();
+        frame_id_ = tmp_frame_id;
         in_data_hash_ = in_data->DataHash();
-        ++out_data_hash_;
     }
 
     out_dist->Set(col_cnt_, row_cnt_, ci_.data(), data_.data());
@@ -424,7 +426,7 @@ bool megamol::thermodyn::VelocityDistribution::get_stats_data_cb(core::Call& c) 
     if (in_data == nullptr)
         return false;
 
-    //in_data->SetFrameID(out_dist->GetFrameID());
+    // in_data->SetFrameID(out_dist->GetFrameID());
     auto meta = out_stats->getMetaData();
 
     in_data->SetFrameID(meta.m_frame_ID);
@@ -450,7 +452,7 @@ bool megamol::thermodyn::VelocityDistribution::get_stats_data_cb(core::Call& c) 
     }
 
     out_stats->setData(tmp_data, out_data_hash_);
-    //core::utility::log::Log::DefaultLog.WriteInfo("[VelocityDistribution] Setting stats data %d", tmp_data.size());
+    // core::utility::log::Log::DefaultLog.WriteInfo("[VelocityDistribution] Setting stats data %d", tmp_data.size());
 
     meta.m_frame_ID = in_data->FrameID();
 
@@ -534,7 +536,7 @@ bool megamol::thermodyn::VelocityDistribution::get_parts_data_cb(core::Call& c) 
 
     out_data->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
     out_data->AccessBoundingBoxes().SetObjectSpaceClipBox(cbox);
-    
+
 
     return true;
 }
