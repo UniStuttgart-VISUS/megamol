@@ -278,6 +278,14 @@ namespace mesh {
         if (query != m_sub_mesh_data.end()) {
             m_sub_mesh_data.erase(query);
         }
+
+        // (Memory) Optimization: check for batch meshes without reference by any submesh,
+        // i.e., shared_ptr ref cnt == 1, and delete it from vector
+        for (size_t i = 0; i < m_batched_meshes.size(); ++i) {
+            if (m_batched_meshes[i].use_count() < 2) {
+                m_batched_meshes.erase(m_batched_meshes.begin() + i);
+            }
+        }
     }
 
     inline void GPUMeshCollection::clear() {
