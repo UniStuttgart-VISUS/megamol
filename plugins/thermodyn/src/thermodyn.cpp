@@ -22,9 +22,11 @@
 #include "PointMeshDistance.h"
 #include "PointInterfaceClassification.h"
 #include "AccumulateInterfacePresence.h"
+#include "PrepareSurfaceEvents.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
+#include "thermodyn/CallEvents.h"
 
 namespace megamol::thermodyn {
 /** Implementing the instance class of this plugin */
@@ -61,6 +63,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PointMeshDistance>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PointInterfaceClassification>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::AccumulateInterfacePresence>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PrepareSurfaceEvents>();
         //
         // TODO: Register your plugin's modules here
         // like:
@@ -72,6 +75,7 @@ public:
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::BoxDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::CallStatsInfo>();
+        this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::CallEvents>();
         //
         // TODO: Register your plugin's calls here
         // like:
