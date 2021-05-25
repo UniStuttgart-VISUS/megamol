@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "TransitionCalculator.h"
 
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 
 #include "glm/glm.hpp"
 
@@ -216,7 +216,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
 
     OptixBuildInput build_input = {};
     unsigned int geo_flag = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT;
-    //unsigned int geo_flag = OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL;
+    // unsigned int geo_flag = OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL;
     memset(&build_input, 0, sizeof(OptixBuildInput));
     build_input.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
     auto& tr_input = build_input.triangleArray;
@@ -332,16 +332,16 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
                 for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
                     orgs[pIdx] = std::make_pair(glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx)),
                         glm::vec3(std::numeric_limits<float>::lowest()));
-                    //idc[pIdx] = idAcc->Get_u64(pIdx);
+                    // idc[pIdx] = idAcc->Get_u64(pIdx);
                     idc[idAcc->Get_u64(pIdx)] = pIdx;
                 }
             } else {
                 for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
                     auto const id = idAcc->Get_u64(pIdx);
                     auto fit = idc.find(id);
-                    //auto fit = std::find(idc.begin(), idc.end(), id);
+                    // auto fit = std::find(idc.begin(), idc.end(), id);
                     if (fit != idc.end()) {
-                        //auto const idx = std::distance(idc.begin(), fit);
+                        // auto const idx = std::distance(idc.begin(), fit);
                         auto const idx = fit->second;
                         orgs[idx] = std::make_pair(glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx)),
                             glm::vec3(std::numeric_limits<float>::lowest()));
@@ -378,10 +378,10 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
 
             for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
                 auto const id = idAcc->Get_u64(pIdx);
-                //auto fit = std::find(idc.begin(), idc.end(), id);
+                // auto fit = std::find(idc.begin(), idc.end(), id);
                 auto fit = idc.find(id);
                 if (fit != idc.end()) {
-                    //auto const idx = std::distance(idc.begin(), fit);
+                    // auto const idx = std::distance(idc.begin(), fit);
                     auto const idx = fit->second;
                     orgs[idx].second = glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx));
                 }
@@ -486,7 +486,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
         CUDA_CHECK_ERROR(cuMemFree(ray_state));
 
         auto const num_rel_trans =
-            std::count_if(ray_state_vec.begin(), ray_state_vec.end(), [](auto el) { return el == 3; });
+            std::count_if(ray_state_vec.begin(), ray_state_vec.end(), [](auto el) { return el == 4; });
 
         int best_idx = -1;
         /*auto best_fit = std::find(ray_state_vec.begin(), ray_state_vec.end(), 3);
@@ -495,8 +495,9 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
             best_idx = idx_map[plIdx][best_idx];
         }*/
 
-        core::utility::log::Log::DefaultLog.WriteInfo(
-            "[TransitionCalculator] Ending computation with %d relevant transitions from %d particles at base %d beginning at %d", num_rel_trans, ray_vec.size(), frameID, best_idx);
+        core::utility::log::Log::DefaultLog.WriteInfo("[TransitionCalculator] Ending computation with %d relevant "
+                                                      "transitions from %d particles at base %d beginning at %d",
+            num_rel_trans, ray_vec.size(), frameID, best_idx);
 
         auto mesh_indices = reinterpret_cast<glm::u32vec3 const*>(mesh_data.indices.data);
         auto vert_glm_ptr = reinterpret_cast<glm::vec3 const*>(vert_ptr);
@@ -786,7 +787,7 @@ bool megamol::optix_hpg::TransitionCalculator::get_extent_cb(core::Call& c) {
     out_meta = in_meta;
     out_geo->setMetaData(out_meta);
 
-    //if ((*in_data)(1) && (*in_data)(0)) {
+    // if ((*in_data)(1) && (*in_data)(0)) {
     //    auto const meta = in_data->getMetaData();
     //    out_geo->setMetaData(meta);
     //}
@@ -851,9 +852,9 @@ bool megamol::optix_hpg::TransitionCalculator::get_arr_data_cb(core::Call& c) {
     out_geo->set_record_stride(sizeof(SBTRecord<device::MeshGeoData>));
     out_geo->set_num_records(sbt_records_.size());*/
 
-    //out_geo->setMetaData(meta);
+    // out_geo->setMetaData(meta);
     // out_geo->setData(in_mesh->getData(), in_mesh->version());
-    //out_geo->setData(mesh_access_collection_, out_data_hash_);
+    // out_geo->setData(mesh_access_collection_, out_data_hash_);
 
     out_arr->SetParticleListCount(out_arrows_pos_.size());
     for (unsigned int plIdx = 0; plIdx < out_arrows_pos_.size(); ++plIdx) {
