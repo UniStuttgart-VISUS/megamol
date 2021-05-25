@@ -1,19 +1,19 @@
 /*
- * GUIWindows.h
+ * GUIManager.h
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
-#define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
+#ifndef MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
+#define MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
 #pragma once
 
 
-#include "Configurator.h"
-#include "LogConsole.h"
-#include "TransferFunctionEditor.h"
-#include "WindowCollection.h"
+#include "windows/Configurator.h"
+#include "windows/LogConsole.h"
+#include "windows/TransferFunctionEditor.h"
+#include "windows/WindowCollection.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "widgets/FileBrowserWidget.h"
@@ -26,17 +26,17 @@
 namespace megamol {
 namespace gui {
 
-    class GUIWindows {
+    class GUIManager {
     public:
         /**
          * CTOR.
          */
-        GUIWindows(void);
+        GUIManager(void);
 
         /**
          * DTOR.
          */
-        virtual ~GUIWindows(void);
+        virtual ~GUIManager(void);
 
         /**
          * Create ImGui context using OpenGL.
@@ -302,7 +302,7 @@ namespace gui {
         /** Hotkeys */
         std::array<megamol::gui::HotkeyData_t, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
 
-        /** The ImGui context created and used by this GUIWindows */
+        /** The ImGui context created and used by this GUIManager */
         ImGuiContext* context;
 
         /** The currently initialized ImGui API */
@@ -376,4 +376,4 @@ namespace gui {
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
+#endif // MEGAMOL_GUI_GUIMANAGER_H_INCLUDED

@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "GUIWindows.h"
+#include "GUIManager.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
@@ -111,7 +111,7 @@ namespace gui {
         megamol::core::CallerSlot render_view_slot;
 
         /** The gui */
-        megamol::gui::GUIWindows gui;
+        megamol::gui::GUIManager gui;
 
         std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
 

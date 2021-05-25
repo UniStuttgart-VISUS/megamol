@@ -11,7 +11,7 @@
 
 
 #include <variant>
-#include "TransferFunctionEditor.h"
+#include "windows/TransferFunctionEditor.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"

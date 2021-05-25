@@ -51,7 +51,7 @@ namespace gui {
     typedef std::vector<Interaction> InteractVector;
     typedef std::vector<Manipulation> ManipVector;
 
-    class GUIWindows;
+    class GUIManager;
 
     /**
      * OpenGL implementation of widget picking.
@@ -61,7 +61,7 @@ namespace gui {
      */
     class PickingBuffer {
     public:
-        friend class GUIWindows;
+        friend class GUIManager;
 
         void AddInteractionObject(unsigned int obj_id, std::vector<Interaction> const& interactions) {
             this->available_interactions.insert({obj_id, interactions});

@@ -8,7 +8,7 @@
 #pragma once
 
 
-#include "WindowCollection.h"
+#include "windows/WindowCollection.h"
 
 
 namespace megamol {

@@ -107,24 +107,24 @@ namespace gui {
 
     /********** Global ImGui Context Pointer Counter *************************/
 
-    // Only accessed by possible multiple instances of GUIWindows
+    // Only accessed by possible multiple instances of GUIManager
     extern unsigned int gui_context_count;
 
 
     /********** Global Resource Paths ****************************************/
 
-    // Resource paths set by GUIWindows
+    // Resource paths set by GUIManager
     extern std::vector<std::string> gui_resource_paths;
 
 
     /********** Global GUI Scaling Factor ************************************/
 
     // Forward declaration
-    class GUIWindows;
+    class GUIManager;
 
     class GUIScaling {
     public:
-        friend class GUIWindows;
+        friend class GUIManager;
 
         GUIScaling() = default;
         ~GUIScaling() = default;
