@@ -34,7 +34,7 @@ The plugin includes the following modules that are briefly described below:
 | vtkmDataSource      | This module is required for streamline calculation as it loads the necessary nodes which build the tetrahedrons used in the vector field and also the tetrahedron labels which are used to determine which four nodes represent a tetrahedron. |
 | vtkmStreamLines     | Calculates a number of streamlines in a previously loaded vector field. The streamlines are spawned on an interactively changable seed plane. Both the streamlines and the seed plane can be adapted with the provided parameters during runtime. A list of available parameters is given below. |
 | vtkmFileLoader      | A very simple module that just loads a single .vtk file and stores it into a vtkm dataset. |
-| vtkmDataRenderer    | Renders the contents of a vtkm dataset, which e. g. is previously loaded by the vtkmFileLoader. |
+| (vtkmDataRenderer)  | (CURRENTLY NOT IMPLEMENTED!) Renders the contents of a vtkm dataset, which e. g. is previously loaded by the vtkmFileLoader. |
 | vtkmMeshRenderTasks | Specifically this is used to set OpenGL states per render task using two functions: set_states and reset_states and need to be hardcoded in megamol by yourself. In set_states you should only set the required states and these states should be immediately reset to their default values in reset_states. The default implementation only enables GL_DEPTH (and GL_BLEND with glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) for the seed- and ghost plane render task). |
 
 
@@ -70,6 +70,11 @@ When running the project, it first takes a bit of time to load all necessary dat
 
 
 ## Changelog
+#### 25.05.2021
+* temporarily removed the vtkmDataRenderer module due to causing issues under Ubuntu
+* fixed several issues under Ubuntu, now works fine
+
+
 #### 28.12.2020
 * added vtkmMeshRenderTask module
 * added various new features to the streamline module. Among them are:
