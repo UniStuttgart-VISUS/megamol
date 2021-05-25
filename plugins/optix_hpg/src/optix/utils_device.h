@@ -64,6 +64,11 @@ namespace optix_hpg {
             float tmax;
         } Ray;
 
+        inline __device__ float gauss(glm::vec3 const& a, glm::vec3 const& b, float mean, float var) {
+            auto const dis = glm::distance(a, b);
+            return expf(-powf(dis - mean, 2.f) / (2.f * var * var)) / (sqrtf(2.f * MMO_PI * var * var));
+        }
+
         // OptiX SDK
 
         //
