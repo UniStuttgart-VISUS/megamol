@@ -314,8 +314,8 @@ inline void SampleAlongPobes::doScalarDistributionSampling(
             samples->samples[j].lower_bound = min_data;
             samples->samples[j].upper_bound = max_data;
 
-            min_value = std::min(min_value, value);
-            max_value = std::max(max_value, value);
+            min_value = std::min(min_value, min_data);
+            max_value = std::max(max_value, max_data);
             avg_value += value;
         } // end num samples per probe
 
@@ -553,15 +553,9 @@ void SampleAlongPobes::doTetrahedralSampling(
         } // end num samples per probe
 
         avg_value /= samples_per_probe;
-        /*if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
-            samples->average_value = avg_value;
-            samples->max_value = max_value;
-            samples->min_value = min_value;
-        } else {
-            samples->average_value = max_data;
-            samples->max_value = max_data;
-            samples->min_value = max_data;
-        }*/
+        samples->average_value = avg_value;
+        samples->max_value = max_value;
+        samples->min_value = min_value;
         global_min = std::min(global_min, samples->min_value);
         global_max = std::max(global_max, samples->max_value);
     } // end for probes
@@ -659,8 +653,6 @@ void SampleAlongPobes::doTetrahedralSampling(
         
             float min_value = std::numeric_limits<float>::max();
             float max_value = std::numeric_limits<float>::lowest();
-            /*float min_data = std::numeric_limits<float>::max();
-            float max_data = -std::numeric_limits<float>::max();*/
             float avg_value = 0.0f;
             samples->samples.resize(samples_per_probe);
         
@@ -719,23 +711,15 @@ void SampleAlongPobes::doTetrahedralSampling(
                     std::get<0>(val), std::get<1>(val), std::get<2>(val), std::get<3>(val)};
                 samples->samples[j] = sample;
         
-                //min_value = std::min<decltype(min_value)>(min_value, val);
-                //max_value = std::max<decltype(max_value)>(max_value, val);
-                //avg_value += val;
+                min_value = std::min(min_value, std::get<3>(sample));
+                max_value = std::max(max_value, std::get<3>(sample));
+                avg_value += std::get<3>(sample);
             } // end num samples per probe
         
             avg_value /= samples_per_probe;
-            /*if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
-                samples->average_value = avg_value;
-                samples->max_value = max_value;
-                samples->min_value = min_value;
-            } else {
-                samples->average_value = max_data;
-                samples->max_value = max_data;
-                samples->min_value = max_data;
-            }*/
-            //global_min = std::min(global_min, samples->min_value);
-            //global_max = std::max(global_max, samples->max_value);
+            
+            global_min = std::min(global_min, min_value);
+            global_max = std::max(global_max, max_value);
         } // end for probes
         _probes->setGlobalMinMax(global_min, global_max);
         _probes->erase_probes(invalid_probes);
