@@ -21,6 +21,7 @@
 #include "rendering/TimeLinePlot.h"
 #include "PointMeshDistance.h"
 #include "PointInterfaceClassification.h"
+#include "AccumulateInterfacePresence.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -59,6 +60,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::TimeLinePlot>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PointMeshDistance>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PointInterfaceClassification>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::AccumulateInterfacePresence>();
         //
         // TODO: Register your plugin's modules here
         // like:
