@@ -267,7 +267,8 @@ bool datatools::ParticleThermodyn::assertData(
         assert(allpartcnt == totalParts);
         this->myPts = simplePointcloud(in, allParts.size());
 
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleThermodyn: building acceleration structure...");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "ParticleThermodyn: building acceleration structure for %d points...", totalParts);
         particleTree = std::make_unique<my_kd_tree_t>(
             3 /* dim */, myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
         particleTree->buildIndex();
@@ -278,10 +279,7 @@ bool datatools::ParticleThermodyn::assertData(
         this->radiusSlot.ForceSetDirty();
     }
 
-    if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() ||
-        this->cyclZSlot.IsDirty() || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty() ||
-        this->metricsSlot.IsDirty() || this->removeSelfSlot.IsDirty() || this->findExtremesSlot.IsDirty() ||
-        this->extremeValueSlot.IsDirty() || this->fluidDensitySlot.IsDirty()) {
+    if (isDirty()) {
         allpartcnt = 0;
         ++myHash;
 
@@ -525,17 +523,7 @@ bool datatools::ParticleThermodyn::assertData(
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "ParticleThermodyn: min metric: %f max metric: %f", theMinTemp, theMaxTemp);
 
-        this->radiusSlot.ResetDirty();
-        this->cyclXSlot.ResetDirty();
-        this->cyclYSlot.ResetDirty();
-        this->cyclZSlot.ResetDirty();
-        this->numNeighborSlot.ResetDirty();
-        this->searchTypeSlot.ResetDirty();
-        this->metricsSlot.ResetDirty();
-        this->removeSelfSlot.ResetDirty();
-        this->findExtremesSlot.ResetDirty();
-        this->extremeValueSlot.ResetDirty();
-        this->fluidDensitySlot.ResetDirty();
+        resetDirty();
     }
 
     // now the colors are known, inject them
