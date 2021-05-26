@@ -202,13 +202,17 @@ namespace gui {
             void (*set_clipboard_func)(void* user_data, const char* string), void* user_data);
 
         /**
-         * Register GUI window/pop-up for external window callback function containing ImGui content.
+         * Register GUI window/pop-up/notification for external window callback function containing ImGui content.
          *
          * @param window_name   The unique window name
          * @param callback      The window callback function containing the GUI content of the window
          */
         void RegisterWindow(
-            const std::string& window_name, std::function<void(WindowConfiguration::Basic&)> const& callback);
+                const std::string& window_name, std::function<void(WindowConfiguration::Basic&)> const& callback);
+
+        void RegisterPopUp(const std::string& name, bool& open, std::function<void(void)> const& callback);
+
+        void RegisterNotification(const std::string& name, bool& open, const std::string& message);
 
         /**
          * Synchronise changes between core graph <-> gui graph.
@@ -316,8 +320,9 @@ namespace gui {
         /** The current local state of the gui. */
         StateBuffer state;
 
-        /** List of externally registered pop-up callbacks. */
-        std::map<std::string, std::vector<std::pair<bool*, std::function<void(void)>>>> external_popup_registry;
+        /** List of externally registered pop-up/notifications */
+        std::map<std::string, std::pair<bool*, std::function<void(void)>>> external_popup_registry;
+        std::map<std::string, std::tuple<bool*, bool, std::string>> external_notification_registry;
 
         // Widgets
         FileBrowserWidget file_browser;

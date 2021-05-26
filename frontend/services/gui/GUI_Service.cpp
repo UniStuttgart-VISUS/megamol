@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "GUI_Service.hpp"
 
+#include "GUI_Service.hpp"
 #include "Window_Events.h"
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
@@ -15,7 +15,6 @@
 #include "FrameStatistics.h"
 #include "RuntimeConfig.h"
 #include "WindowManipulation.h"
-
 #include "mmcore/utility/log/Log.h"
 
 
@@ -85,6 +84,12 @@ bool GUI_Service::init(const Config& config) {
 
                     this->m_providedRegisterWindowResource.register_window = [&](const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)> func) -> void {
                         this->resource_register_window(name, func);
+                    };
+                    this->m_providedRegisterWindowResource.register_popup = [&](const std::string& name, bool& open, std::function<void(void)> func) -> void {
+                        this->resource_register_popup(name, open, func);
+                    };
+                    this->m_providedRegisterWindowResource.register_notification = [&](const std::string& name, bool& open, const std::string& message) -> void {
+                        this->resource_register_notification(name, open, message);
                     };
 
                     gui->SetVisibility(config.gui_show);
@@ -233,14 +238,6 @@ void GUI_Service::digestChangedRequestedResources() {
     auto& frame_statistics =  this->m_requestedResourceReferences[9].getResource<megamol::frontend_resources::FrameStatistics>();
     gui->SetFrameStatistics(frame_statistics.last_averaged_fps, frame_statistics.last_averaged_mspf, frame_statistics.rendered_frames_count);
 
-    /// Get resource directories = resource index 10
-    // XXX Only request once?!
-    auto& runtime_config =
-        this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
-    if (!runtime_config.resource_directories.empty()) {
-        gui->SetResourceDirectories(runtime_config.resource_directories);
-    }
-
     /// Get window manipulation resource = resource index 11
     auto& window_manipulation = this->m_requestedResourceReferences[11].getResource<megamol::frontend_resources::WindowManipulation>();
     window_manipulation.set_mouse_cursor(gui->GetMouseCursor());
@@ -289,6 +286,15 @@ const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
 void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources) {
 
     this->m_requestedResourceReferences = resources;
+
+    /// Get resource directories = resource index 10
+    // (Required to set only once)
+    VALIDATE_GUI_PTR()
+    auto& runtime_config =
+            this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
+    if (!runtime_config.resource_directories.empty()) {
+        gui->SetResourceDirectories(runtime_config.resource_directories);
+    }
 }
 
 
@@ -340,6 +346,19 @@ void GUI_Service::resource_register_window(const std::string& name, std::functio
     gui->RegisterWindow(name, func);
 }
 
+
+void GUI_Service::resource_register_popup(const std::string& name, bool& open, std::function<void(void)>& func) {
+
+    VALIDATE_GUI_PTR()
+    gui->RegisterPopUp(name, open, func);
+}
+
+
+void GUI_Service::resource_register_notification(const std::string& name, bool& open, const std::string& message) {
+
+    VALIDATE_GUI_PTR()
+    gui->RegisterNotification(name, open, message);
+}
 
 } // namespace frontend
 } // namespace megamol

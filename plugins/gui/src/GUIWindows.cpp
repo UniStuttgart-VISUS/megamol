@@ -29,6 +29,8 @@ GUIWindows::GUIWindows(void)
         , configurator()
         , console()
         , state()
+        , external_popup_registry()
+        , external_notification_registry()
         , file_browser()
         , search_widget()
         , tf_editor_ptr(nullptr)
@@ -136,8 +138,7 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
             switch (imgui_api) {
             case (GUIImGuiAPI::OPEN_GL): {
                 // Init OpenGL for ImGui
-                const char* glsl_version = "#version 150"; /// or "#version 130" or nullptr
-                if (ImGui_ImplOpenGL3_Init(glsl_version)) {
+                if (ImGui_ImplOpenGL3_Init(nullptr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui context for Open GL.");
                 } else {
                     this->destroyContext();
@@ -347,9 +348,10 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         default:
             break;
         }
-
         // Set tesselation error: Smaller value => better tesselation of circles and round corners.
         style.CircleTessellationMaxError = 0.3f;
+        // Scale all ImGui style options with current scaling factor
+        style.ScaleAllSizes(megamol::gui::gui_scaling.Get());
 
         this->state.style_changed = false;
     }
@@ -488,9 +490,11 @@ bool GUIWindows::PostDraw(void) {
             } else if (wc.VolatileCallback()) {
                 wc.VolatileCallback()(wc.config.basic);
             } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Missing valid draw callback for GUI window '%s'. [%s, %s, line %d]\n", wc.Name().c_str(),
-                    __FILE__, __FUNCTION__, __LINE__);
+                // Delete window without valid callback
+                this->state.win_delete_hash_id = wc.Hash();
+                //megamol::core::utility::log::Log::DefaultLog.WriteError(
+                //    "[GUI] Missing valid draw callback for GUI window '%s'. [%s, %s, line %d]\n", wc.Name().c_str(),
+                //    __FILE__, __FUNCTION__, __LINE__);
             }
 
             // Saving some of the current window state.
@@ -531,6 +535,9 @@ bool GUIWindows::PostDraw(void) {
     ///////////////////////////////////////////////////////////////////////////
 
     // Render the current ImGui frame ------------------------------------------
+
+    /// TODO - SEPARATE RENDERING OF OPENGL-STUFF DEPENDING ON AVAILABLE API?!
+
     glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -565,8 +572,8 @@ bool GUIWindows::PostDraw(void) {
     // Apply new gui scale -----------------------------------------------------
     if (megamol::gui::gui_scaling.ConsumePendingChange()) {
 
-        // Scale all ImGui style options
-        style.ScaleAllSizes(megamol::gui::gui_scaling.TransitionFactor());
+        // Reload ImGui style options
+        this->state.style_changed = true;
 
         // Scale all windows
         if (this->state.rescale_windows) {
@@ -2023,23 +2030,44 @@ void GUIWindows::drawMenu(void) {
 
 void megamol::gui::GUIWindows::drawPopUps(void) {
 
-    // Externally registered Pop-Ups
+    // Externally registered pop-ups
     auto external_popup_flags =
         ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
     for (auto& popup_map : this->external_popup_registry) {
-        bool open = false;
-        for (auto& popup : popup_map.second) {
-            open |= (*popup.first);
-            (*popup.first) = false;
-        }
-        if (open) {
+        if ((*popup_map.second.first)) {
             ImGui::OpenPopup(popup_map.first.c_str());
+            (*popup_map.second.first) = false;
         }
         if (ImGui::BeginPopupModal(popup_map.first.c_str(), nullptr, external_popup_flags)) {
-            for (auto& popup : popup_map.second) {
-                popup.second();
-            }
+            popup_map.second.second();
             if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
+
+    // Externally registered notifications
+    for (auto& popup_map : this->external_notification_registry) {
+        if (!std::get<1>(popup_map.second) && (*std::get<0>(popup_map.second))) {
+            ImGui::OpenPopup(popup_map.first.c_str());
+            (*std::get<0>(popup_map.second)) = false;
+            // Mirror message in console log with info level
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(std::get<2>(popup_map.second).c_str());
+        }
+        if (ImGui::BeginPopupModal(popup_map.first.c_str(), nullptr, external_popup_flags)) {
+            ImGui::TextUnformatted(std::get<2>(popup_map.second).c_str());
+            bool close = false;
+            if (ImGui::Button("Ok")) {
+                close = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Ok - Disable further notifications.")) {
+                close = true;
+                // Disable further notifications
+                std::get<1>(popup_map.second) = true;
+            }
+            if (close || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -2423,10 +2451,10 @@ void megamol::gui::GUIWindows::load_imgui_settings_from_string(const std::string
 
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
+    this->state.load_docking_preset = true;
     if (!imgui_settings.empty()) {
         ImGui::LoadIniSettingsFromMemory(imgui_settings.c_str(), imgui_settings.size());
-    } else {
-        this->state.load_docking_preset = true;
+        this->state.load_docking_preset = false;
     }
 #endif
 }
@@ -2735,4 +2763,16 @@ void GUIWindows::RegisterWindow(
         }
     };
     this->window_collection.EnumWindows(func);
+}
+
+
+void GUIWindows::RegisterPopUp(const std::string& name, bool& open, const std::function<void(void)> &callback) {
+
+    this->external_popup_registry[name] = std::pair<bool*, std::function<void(void)>>(&open, const_cast<std::function<void(void)>&>(callback));
+}
+
+
+void GUIWindows::RegisterNotification(const std::string &name, bool &open, const std::string &message) {
+
+    this->external_notification_registry[name] = std::tuple<bool*, bool, std::string>(&open, false, message);
 }
