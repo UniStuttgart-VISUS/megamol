@@ -19,7 +19,8 @@
 namespace megamol {
 namespace gui {
 
-    /*
+
+    /* ************************************************************************
      * The log buffer collecting all the messages
      */
     class LogBuffer : public std::stringbuf {
@@ -42,10 +43,9 @@ namespace gui {
         std::vector<LogEntry> messages;
     };
 
-    // ------------------------------------------------------------------------
 
-    /*
-     * The content of the log console GUI window.
+    /* ************************************************************************
+     * The content of the log console GUI window
      */
     class LogConsole : public WindowConfiguration {
     public:

@@ -29,7 +29,7 @@ namespace gui {
 
 
     /** ************************************************************************
-     * Defines module data structure for graph.
+     * Defines module data structure for graph
      */
     class Group {
     public:
@@ -100,7 +100,6 @@ namespace gui {
         ImVec2 gui_size;     /// Relative size without considering zooming
         bool gui_collapsed_view;
         bool gui_allow_selection;
-        bool gui_allow_context;
         bool gui_update;
 
         PopUps gui_rename_popup;

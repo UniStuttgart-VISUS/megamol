@@ -24,8 +24,8 @@
 namespace megamol {
 namespace gui {
 
-    /**
-     * This class holds the configuration of a GUI window.
+    /** ************************************************************************
+     * This class holds the configuration of a GUI window
      */
     class WindowConfiguration {
     public:

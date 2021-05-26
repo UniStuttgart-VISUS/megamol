@@ -19,8 +19,9 @@
 namespace megamol {
 namespace gui {
 
-    /*
-     * The parameter list GUI window.
+
+    /* ************************************************************************
+     * The parameter list GUI window
      */
     class ParameterList : public WindowConfiguration {
     public:
@@ -61,7 +62,6 @@ namespace gui {
         // FUNCTIONS --------------------------------------------------------------
 
         bool consider_module(const std::string& modname, std::vector<std::string>& modules_list);
-
     };
 
 } // namespace gui

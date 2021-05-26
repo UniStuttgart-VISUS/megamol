@@ -17,13 +17,12 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * Pup-ups.
+    /** ************************************************************************
+     * Different pup-up widgets
      */
     class PopUps {
     public:
         PopUps();
-
         ~PopUps() = default;
 
         // Rename pop-up

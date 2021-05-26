@@ -16,10 +16,13 @@
 namespace megamol {
 namespace gui {
 
+
+    /** Forward declaration */
     class Parameter;
 
-    /**
-     * Different button widgets.
+
+    /** ************************************************************************
+     * Different button widgets
      */
     class ButtonWidgets {
     public:
@@ -42,8 +45,8 @@ namespace gui {
         static bool ToggleButton(const std::string& id, bool& inout_bool);
 
     private:
-        ButtonWidgets() = default;
 
+        ButtonWidgets() = default;
         ~ButtonWidgets() = default;
     };
 

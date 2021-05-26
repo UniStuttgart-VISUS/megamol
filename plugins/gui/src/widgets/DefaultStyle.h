@@ -13,7 +13,7 @@
 #include "imgui.h"
 
 
-/**
+/** ************************************************************************
  * Default style
  *
  * See imgui.cpp line 953, section: USER FACING STRUCTURES (ImGuiStyle, ImGuiIO)

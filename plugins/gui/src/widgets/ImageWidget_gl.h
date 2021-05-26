@@ -18,13 +18,12 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * OpenGL implementation of textured image widget.
+    /** ************************************************************************
+     * OpenGL implementation of textured image widget
      */
     class ImageWidget {
     public:
         ImageWidget();
-
         ~ImageWidget() = default;
 
         bool IsLoaded() {

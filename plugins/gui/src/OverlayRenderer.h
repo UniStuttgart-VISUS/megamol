@@ -40,8 +40,9 @@
 namespace megamol {
 namespace gui {
 
-    /**
-     * Renders various kinds of overlays.
+
+    /** ************************************************************************
+     * Renders various kinds of overlays
      */
     class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>,
                             megamol::core::view::RenderUtils {
@@ -214,6 +215,7 @@ namespace gui {
         bool onParameterName(core::param::ParamSlot& slot);
         bool onTriggerRecalcRectangle(core::param::ParamSlot& slot);
     };
+
 
 } /* end namespace gui */
 } /* end namespace megamol */

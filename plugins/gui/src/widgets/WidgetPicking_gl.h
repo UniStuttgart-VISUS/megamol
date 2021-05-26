@@ -53,11 +53,10 @@ namespace gui {
 
     class GUIManager;
 
-    /**
-     * OpenGL implementation of widget picking.
+    /** ************************************************************************
+     * OpenGL implementation of widget picking
      *
      * (Code adapted from megamol::mesh::Render3DUI)
-     *
      */
     class PickingBuffer {
     public:

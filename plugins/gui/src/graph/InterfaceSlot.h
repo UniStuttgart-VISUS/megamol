@@ -33,7 +33,7 @@ namespace gui {
 
 
     /** ************************************************************************
-     * Defines group interface slots bundling and redirecting calls of compatible call slots.
+     * Defines group interface slots bundling and redirecting calls of compatible call slots
      */
     class InterfaceSlot {
     public:

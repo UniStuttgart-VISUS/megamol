@@ -23,8 +23,8 @@
 namespace megamol {
 namespace gui {
 
-    /**
-     * This class hold the GUI windows and controls the placement and appearance.
+    /** ************************************************************************
+     * This class hold the GUI windows and controls the placement and appearance
      */
     class WindowCollection {
     public:

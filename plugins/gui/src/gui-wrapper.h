@@ -30,6 +30,7 @@ namespace gui {
         GUIManagerPtr_t m_gui;
     };
 
+
 } // namespace gui
 } // namespace megamol
 

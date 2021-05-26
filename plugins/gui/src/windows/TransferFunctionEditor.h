@@ -27,8 +27,8 @@ namespace gui {
     class Parameter;
 
 
-    /**
-     * 1D Transfer Function Editor GUI window.
+    /** ************************************************************************
+     * 1D Transfer Function Editor GUI window
      */
     class TransferFunctionEditor : public WindowConfiguration {
     public:

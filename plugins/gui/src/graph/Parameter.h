@@ -32,12 +32,11 @@ namespace gui {
     typedef std::shared_ptr<Module> ModulePtr_t;
 
     // Types
-    typedef std::shared_ptr<Parameter> ParamPtr_t;
     typedef std::vector<Parameter> ParamVector_t;
 
 
     /** ************************************************************************
-     * Defines parameter data structure for graph.
+     * Defines parameter data structure for graph
      */
     class Parameter : public megamol::core::param::AbstractParamPresentation {
     public:

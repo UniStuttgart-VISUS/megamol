@@ -13,8 +13,8 @@
 #include "DefaultStyle.h"
 
 
-/**
- * Slightly modified "CorporateGrey"-Style, as proposed by Aiden Koss.
+/** ************************************************************************
+ * Slightly modified "CorporateGrey"-Style, as proposed by Aiden Koss
  *
  * 0 = FLAT APPEARENCE, 1 = MORE "3D" LOOK
  */

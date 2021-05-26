@@ -80,6 +80,7 @@
 namespace megamol {
 namespace gui {
 
+
     /********** Additional Global ImGui Operators ****************************/
 
     namespace {
@@ -445,6 +446,7 @@ namespace gui {
         gui_utils() = default;
         ~gui_utils() = default;
     };
+
 
 } // namespace gui
 } // namespace megamol

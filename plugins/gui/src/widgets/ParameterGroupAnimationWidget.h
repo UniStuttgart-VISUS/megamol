@@ -17,13 +17,12 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * Animation widget for parameter group.
+    /** ************************************************************************
+     * Animation widget for parameter group
      */
     class ParameterGroupAnimationWidget : public AbstractParameterGroupWidget {
     public:
         ParameterGroupAnimationWidget();
-
         ~ParameterGroupAnimationWidget() = default;
 
         bool Check(bool only_check, ParamPtrVector_t& params);
@@ -34,8 +33,6 @@ namespace gui {
     private:
         // VARIABLES --------------------------------------------------------------
 
-        ImVec2 speed_knob_pos;
-        ImVec2 time_knob_pos;
         struct {
             ImageWidget play;
             ImageWidget pause;

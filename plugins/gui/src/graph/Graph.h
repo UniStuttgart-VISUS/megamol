@@ -33,9 +33,8 @@ namespace gui {
 
 
     /** ************************************************************************
-     * Defines the graph.
+     * Defines the graph
      */
-
     class Graph {
     public:
         enum QueueAction {
@@ -199,7 +198,6 @@ namespace gui {
         bool gui_reset_zooming;
         bool gui_increment_zooming;
         bool gui_decrement_zooming;
-        std::string gui_param_name_space;
         std::string gui_current_graph_entry_name;
         ImVec2 gui_multiselect_start_pos;
         ImVec2 gui_multiselect_end_pos;

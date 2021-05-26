@@ -17,8 +17,8 @@
 namespace megamol {
 namespace gui {
 
-    /**
-     * Animation widget for parameter group.
+    /** ************************************************************************
+     * Animation widget for parameter group
      */
     class AbstractParameterGroupWidget : public megamol::core::param::AbstractParamPresentation {
     public:

@@ -17,8 +17,8 @@
 namespace megamol {
 namespace gui {
 
-    /*
-     * The performance monitor GUI window.
+    /* ************************************************************************
+     * The performance monitor GUI window
      */
     class PerformanceMonitor : public WindowConfiguration {
     public:

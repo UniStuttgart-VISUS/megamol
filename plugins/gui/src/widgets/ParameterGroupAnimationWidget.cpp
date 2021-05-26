@@ -18,8 +18,6 @@ using namespace megamol::gui;
 
 megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget()
         : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
-        , speed_knob_pos()
-        , time_knob_pos()
         , image_buttons()
         , tooltip() {
 

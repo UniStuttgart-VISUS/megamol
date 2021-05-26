@@ -31,7 +31,6 @@ megamol::gui::CallSlot::CallSlot(ImGuiID uid, const std::string& name, const std
         , gui_selected(false)
         , gui_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_update_once(true)
-        , gui_show_modulestock()
         , gui_last_compat_callslot_uid(GUI_INVALID_ID)
         , gui_last_compat_interface_uid(GUI_INVALID_ID)
         , gui_compatible(false)

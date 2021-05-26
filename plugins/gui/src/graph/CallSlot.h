@@ -40,7 +40,7 @@ namespace gui {
 
 
     /** ************************************************************************
-     * Defines call slot data structure for graph.
+     * Defines call slot data structure for graph
      */
     class CallSlot {
     public:
@@ -119,7 +119,6 @@ namespace gui {
         bool gui_selected;
         ImVec2 gui_position; /// Absolute position including canvas offset and zooming
         bool gui_update_once;
-        bool gui_show_modulestock;
         ImGuiID gui_last_compat_callslot_uid;
         ImGuiID gui_last_compat_interface_uid;
         bool gui_compatible;

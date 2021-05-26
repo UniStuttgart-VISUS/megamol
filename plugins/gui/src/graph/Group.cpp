@@ -22,7 +22,6 @@ megamol::gui::Group::Group(ImGuiID uid)
         , gui_size(ImVec2(0.0f, 0.0f))
         , gui_collapsed_view(false)
         , gui_allow_selection(false)
-        , gui_allow_context(false)
         , gui_selected(false)
         , gui_update(true)
         , gui_rename_popup() {
@@ -431,9 +430,6 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             if ((mouse_pos.x >= group_rect_min.x) && (mouse_pos.y >= group_rect_min.y) &&
                 (mouse_pos.x <= header_rect_max.x) && (mouse_pos.y <= header_rect_max.y)) {
                 this->gui_allow_selection = true;
-                if (state.interact.group_hovered_uid == this->uid) {
-                    this->gui_allow_context = true;
-                }
             }
 
             // Button

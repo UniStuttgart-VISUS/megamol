@@ -19,13 +19,12 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * Orbital parameter widget.
+    /** ************************************************************************
+     * Orbital parameter widget
      */
     class ParameterOrbitalWidget {
     public:
         ParameterOrbitalWidget();
-
         ~ParameterOrbitalWidget() = default;
 
         bool gizmo3D_rotation_axes(glm::vec4& inout_rotation);

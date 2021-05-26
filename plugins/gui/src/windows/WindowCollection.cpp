@@ -25,11 +25,13 @@ WindowCollection::WindowCollection() {
     auto win_paramlist = std::make_shared<ParameterList>("Parameters");
     auto win_tfeditor = std::make_shared<TransferFunctionEditor>("Transfer Function Editor", false);
     auto win_perfmonitor = std::make_shared<PerformanceMonitor>("Performance Metrics");
+
+    // Windows are sorted depending on hotkey
     this->windows.emplace_back(win_configurator);
-    this->windows.emplace_back(win_logconsole);
-    this->windows.emplace_back(win_perfmonitor);
     this->windows.emplace_back(win_paramlist);
+    this->windows.emplace_back(win_logconsole);
     this->windows.emplace_back(win_tfeditor);
+    this->windows.emplace_back(win_perfmonitor);
 
     win_configurator->SetData(win_tfeditor);
     win_paramlist->SetData(win_configurator, win_tfeditor, [&](const std::string &window_name) {

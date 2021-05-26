@@ -211,46 +211,38 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     ImGui::SetCurrentContext(this->context);
 
     // Process hotkeys
-    for (auto& hotkey : this->hotkeys) {
-        if (hotkey.second.is_pressed) {
-            switch (hotkey.first) {
-                case (HOTKEY_GUI_SHOW_HIDE_GUI) : {
-                    if (this->gui_state.gui_visible) {
-                        this->gui_state.gui_hide_next_frame = 2;
-                    } else {
-                        // Show GUI after it was hidden (before early exit!)
-                        // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
-                        this->gui_state.menu_visible = true;
-                        const auto func = [&, this](WindowConfiguration &wc) {
-                            if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
-                                          this->gui_state.gui_restore_hidden_windows.end(),
-                                          wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
-                                wc.Config().show = true;
-                            }
-                        };
-                        this->win_collection.EnumWindows(func);
-                        this->gui_state.gui_restore_hidden_windows.clear();
-                        this->gui_state.gui_visible = true;
-                    }
-                } break;
-                case (HOTKEY_GUI_EXIT_PROGRAM) : {
-                    this->gui_state.shutdown_triggered = true;
-                    return true;
-                } break;
-                case (HOTKEY_GUI_TRIGGER_SCREENSHOT) : {
-                    this->gui_state.screenshot_triggered = true;
-                } break;
-                case (HOTKEY_GUI_MENU) : {
-                    this->gui_state.menu_visible = !this->gui_state.menu_visible;
-                } break;
-                case (HOTKEY_GUI_TOGGLE_GRAPH_ENTRY) : {
-                    if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-                        graph_ptr->ToggleGraphEntry();
-                    }
-                } break;
-                default : break;
-            }
-            hotkey.second.is_pressed = false;
+    if (this->hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].is_pressed) {
+        if (this->gui_state.gui_visible) {
+            this->gui_state.gui_hide_next_frame = 2;
+        } else {
+            // Show GUI after it was hidden (before early exit!)
+            // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
+            this->gui_state.menu_visible = true;
+            const auto func = [&, this](WindowConfiguration &wc) {
+                if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
+                              this->gui_state.gui_restore_hidden_windows.end(),
+                              wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
+                    wc.Config().show = true;
+                }
+            };
+            this->win_collection.EnumWindows(func);
+            this->gui_state.gui_restore_hidden_windows.clear();
+            this->gui_state.gui_visible = true;
+        }
+    }
+    if (this->hotkeys[HOTKEY_GUI_EXIT_PROGRAM].is_pressed) {
+        this->gui_state.shutdown_triggered = true;
+        return true;
+    }
+    if (this->hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].is_pressed) {
+        this->gui_state.screenshot_triggered = true;
+    }
+    if (this->hotkeys[HOTKEY_GUI_MENU].is_pressed) {
+        this->gui_state.menu_visible = !this->gui_state.menu_visible;
+    }
+    if (this->hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].is_pressed) {
+        if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+            graph_ptr->ToggleGraphEntry();
         }
     }
 
@@ -395,12 +387,12 @@ bool GUIManager::PostDraw() {
     this->draw_popups();
 
     // Draw global parameter widgets -------------------------------------------
-    /// ! Is only enabled in second frame if interaction objects are added during first frame !
-    this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
+    /// ! Only enabled in second frame if interaction objects are added during first frame !
     if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+        this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
         graph_ptr->DrawGlobalParameterWidgets(this->picking_buffer);
+        this->picking_buffer.DisableInteraction();
     }
-    this->picking_buffer.DisableInteraction();
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -810,8 +802,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(megamol::core::MegaMolGra
     if (!synced) {
         // Creates new graph at first call
         ImGuiID running_graph_uid = (graph_ptr != nullptr) ? (graph_ptr->UID()) : (GUI_INVALID_ID);
-        bool graph_sync_success = this->win_configurator_ptr->GetGraphCollection().LoadUpdateProjectFromCore(
-            running_graph_uid, megamol_graph);
+        bool graph_sync_success = this->win_configurator_ptr->GetGraphCollection().LoadUpdateProjectFromCore(running_graph_uid, megamol_graph);
         if (!graph_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -1542,23 +1533,18 @@ void megamol::gui::GUIManager::draw_popups() {
     bool confirmed, aborted;
     bool popup_failed = false;
     std::string filename;
-    GraphPtr_t graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph();
-    if (graph_ptr != nullptr) {
+    if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
         filename = graph_ptr->GetFilename();
         vislib::math::Ternary save_gui_state(
             vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
         this->gui_state.open_popup_save |= this->win_configurator_ptr->ConsumeTriggeredGlobalProjectSave();
-
         if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
                 this->gui_state.open_popup_save, "lua", save_gui_state)) {
-
             std::string gui_state;
             if (save_gui_state.IsTrue()) {
                 gui_state = this->project_to_lua_string(true);
             }
-
-            popup_failed |=
-                !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(graph_ptr->UID(), filename, gui_state);
+            popup_failed |= !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(graph_ptr->UID(), filename, gui_state);
         }
         PopUps::Minimal(
             "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
@@ -1568,17 +1554,15 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // Load project pop-up
     popup_failed = false;
-    if (graph_ptr != nullptr) {
-        this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
-        if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project",
-                this->gui_state.open_popup_load, "lua")) {
-            // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
-            /// GUI graph and GUI state are updated at next synchronization
-            this->gui_state.request_load_projet_file = filename;
-        }
-        PopUps::Minimal(
-            "Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
+    this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
+    if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project",
+            this->gui_state.open_popup_load, "lua")) {
+        // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
+        /// GUI graph and GUI state are updated at next synchronization
+        this->gui_state.request_load_projet_file = filename;
     }
+    PopUps::Minimal(
+        "Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
     this->gui_state.open_popup_load = false;
     this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed = false;
 

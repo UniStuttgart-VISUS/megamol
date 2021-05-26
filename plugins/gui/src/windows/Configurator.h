@@ -21,8 +21,9 @@
 namespace megamol {
 namespace gui {
 
-    /*
-     * The graph configurator GUI window.
+
+    /* ************************************************************************
+     * The graph configurator GUI window
      */
     class Configurator : public WindowConfiguration {
     public:

@@ -25,7 +25,6 @@ namespace gui {
     class Call;
     class CallSlot;
     class Parameter;
-    typedef std::shared_ptr<Parameter> ParamPtr_t;
     typedef std::shared_ptr<Call> CallPtr_t;
     typedef std::shared_ptr<CallSlot> CallSlotPtr_t;
 
@@ -35,7 +34,7 @@ namespace gui {
 
 
     /** ************************************************************************
-     * Defines module data structure for graph.
+     * Defines module data structure for graph
      */
     class Module {
     public:

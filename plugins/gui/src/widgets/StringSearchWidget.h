@@ -17,13 +17,12 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * String search widget.
+    /** ************************************************************************
+     * String search widget
      */
     class StringSearchWidget {
     public:
         StringSearchWidget();
-
         ~StringSearchWidget() = default;
 
         bool Widget(const std::string& label, const std::string& help, bool apply_focus = true);

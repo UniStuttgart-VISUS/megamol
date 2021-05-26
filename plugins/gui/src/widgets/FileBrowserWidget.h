@@ -19,13 +19,12 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * String search widget.
+    /** ************************************************************************
+     * File browser widget
      */
     class FileBrowserWidget {
     public:
         FileBrowserWidget();
-
         ~FileBrowserWidget() = default;
 
         enum FileBrowserFlag { SAVE, LOAD, SELECT };

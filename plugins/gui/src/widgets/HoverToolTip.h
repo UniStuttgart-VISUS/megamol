@@ -18,13 +18,12 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * String search widget.
+    /** ************************************************************************
+     * Hover tooltip widget
      */
     class HoverToolTip {
     public:
         HoverToolTip();
-
         ~HoverToolTip() = default;
 
         /**

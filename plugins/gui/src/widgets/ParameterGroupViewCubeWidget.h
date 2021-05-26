@@ -17,8 +17,10 @@
 namespace megamol {
 namespace gui {
 
+
     typedef megamol::core::view::AbstractView3D::DefaultView DefaultView_t;
     typedef megamol::core::view::AbstractView3D::DefaultOrientation DefaultOrientation_t;
+
 
     /** ***********************************************************************
      * Pickable Cube
@@ -60,12 +62,11 @@ namespace gui {
 
 
     /** ***********************************************************************
-     * View cube widget for parameter group.
+     * View cube widget for parameter group
      */
     class ParameterGroupViewCubeWidget : public AbstractParameterGroupWidget {
     public:
         ParameterGroupViewCubeWidget();
-
         ~ParameterGroupViewCubeWidget() = default;
 
         bool Check(bool only_check, ParamPtrVector_t& params);

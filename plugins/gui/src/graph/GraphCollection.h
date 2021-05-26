@@ -31,12 +31,10 @@ namespace gui {
 
 
     /** ************************************************************************
-     * Defines the graph collection.
+     * Defines the graph collection
      */
     class GraphCollection {
     public:
-        // FUNCTIONS --------------------------------------------------------------
-
         GraphCollection();
         ~GraphCollection();
 

@@ -23,6 +23,10 @@
 namespace megamol {
 namespace gui {
 
+
+    /** ************************************************************************
+     * The central class managing all GUI related stuff
+     */
     class GUIManager {
     public:
         /**
@@ -81,6 +85,7 @@ namespace gui {
          * Process mouse scroll events.
          */
         bool OnMouseScroll(double dx, double dy);
+
 
         // FUNCTIONS used in GUI_Service //////////////////////////////////////
 
@@ -323,8 +328,6 @@ namespace gui {
 
         void draw_popups();
 
-        void check_multiple_hotkey_assignment();
-
         bool is_hotkey_pressed(megamol::core::view::KeyCode keycode);
 
         void load_preset_window_docking(ImGuiID global_docking_id);
@@ -341,6 +344,7 @@ namespace gui {
 
         bool create_unique_screenshot_filename(std::string& inout_filepath);
     };
+
 
 } // namespace gui
 } // namespace megamol

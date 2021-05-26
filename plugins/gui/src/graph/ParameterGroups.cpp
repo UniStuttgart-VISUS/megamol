@@ -29,7 +29,7 @@ megamol::gui::ParameterGroups::~ParameterGroups() {}
 
 bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search,
     vislib::math::Ternary in_extended, bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
-    const std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
+    std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
     ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
@@ -204,7 +204,7 @@ bool megamol::gui::ParameterGroups::StateFromJSON(const nlohmann::json& in_json,
 
 
 void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout_param, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, const std::shared_ptr<TransferFunctionEditor> tfeditor_ptr) {
+    megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr) {
 
     if (inout_param.Type() == ParamType_t::TRANSFERFUNCTION) {
         inout_param.TransferFunctionEditor_ConnectExternal(tfeditor_ptr, false);
@@ -240,7 +240,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
 
 void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_group_name,
     AbstractParameterGroupWidget::ParamPtrVector_t& params, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, const std::shared_ptr<TransferFunctionEditor> tfeditor_ptr, ImGuiID in_override_header_state) {
+    megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr, ImGuiID in_override_header_state) {
 
     if (in_scope != Parameter::WidgetScope::LOCAL) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
