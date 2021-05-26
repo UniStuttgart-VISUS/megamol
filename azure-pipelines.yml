@@ -84,7 +84,7 @@ jobs:
     demands:
     - Agent.OS -equals Linux
   steps:
-  - task: Bash@3
+  - task: PowerShell@2
     displayName: 'Run File Checks'
     inputs:
-      filePath: '.ci/check_files.sh'
+      filePath: '.ci/check_files.ps1'
