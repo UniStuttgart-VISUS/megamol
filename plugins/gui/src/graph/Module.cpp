@@ -255,7 +255,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         ImGui::TextDisabled("Module");
                         ImGui::Separator();
 
-                        if (ImGui::MenuItem("Delete", state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]
+                        if (ImGui::MenuItem("Delete", state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM]
                                                           .keycode.ToString()
                                                           .c_str())) {
                             state.interact.process_deletion = true;

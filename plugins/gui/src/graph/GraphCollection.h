@@ -111,8 +111,6 @@ namespace gui {
         bool read_project_command_arguments(
             const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
 
-        ImVec2 project_read_confpos(const std::string& line);
-
         bool project_separate_name_and_namespace(
             const std::string& full_name, std::string& name_space, std::string& name);
 

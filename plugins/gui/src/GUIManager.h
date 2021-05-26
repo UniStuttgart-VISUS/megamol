@@ -100,7 +100,7 @@ namespace gui {
          * Pass current GUI visibility.
          */
         inline bool GetVisibility() const {
-            return this->state.gui_visible;
+            return this->gui_state.gui_visible;
         }
 
         /**
@@ -114,8 +114,8 @@ namespace gui {
          * Pass triggered Shutdown.
          */
         inline bool GetTriggeredShutdown() {
-            bool request_shutdown = this->state.shutdown_triggered;
-            this->state.shutdown_triggered = false;
+            bool request_shutdown = this->gui_state.shutdown_triggered;
+            this->gui_state.shutdown_triggered = false;
             return request_shutdown;
         }
 
@@ -123,8 +123,8 @@ namespace gui {
          * Pass triggered Screenshot.
          */
         bool GetTriggeredScreenshot() {
-            bool trigger_screenshot = this->state.screenshot_triggered;
-            this->state.screenshot_triggered = false;
+            bool trigger_screenshot = this->gui_state.screenshot_triggered;
+            this->gui_state.screenshot_triggered = false;
             return trigger_screenshot;
         }
 
@@ -132,8 +132,8 @@ namespace gui {
          * Return current screenshot file name and create new file name for next screenshot
          */
         inline std::string GetScreenshotFileName() {
-            auto screenshot_filepath = this->state.screenshot_filepath;
-            this->create_unique_screenshot_filename(this->state.screenshot_filepath);
+            auto screenshot_filepath = this->gui_state.screenshot_filepath;
+            this->create_unique_screenshot_filename(this->gui_state.screenshot_filepath);
             return screenshot_filepath;
         }
 
@@ -142,8 +142,8 @@ namespace gui {
          * Request is consumed when calling this function.
          */
         std::string GetProjectLoadRequest() {
-            auto project_file_name = this->state.request_load_projet_file;
-            this->state.request_load_projet_file.clear();
+            auto project_file_name = this->gui_state.request_load_projet_file;
+            this->gui_state.request_load_projet_file.clear();
             return project_file_name;
         }
 
@@ -165,7 +165,7 @@ namespace gui {
          * Set GUI state.
          */
         void SetState(const std::string& json_state) {
-            this->state.new_gui_state = json_state;
+            this->gui_state.new_gui_state = json_state;
         }
 
         /**
@@ -173,7 +173,7 @@ namespace gui {
          */
         void SetVisibility(bool visible) {
             // In order to take immediate effect, the GUI visibility directly is set (and not indirectly via hotkey)
-            this->state.gui_visible = visible;
+            this->gui_state.gui_visible = visible;
         }
 
         /**
@@ -185,16 +185,16 @@ namespace gui {
          * Set project script paths.
          */
         void SetProjectScriptPaths(const std::vector<std::string>& script_paths) {
-            this->state.project_script_paths = script_paths;
+            this->gui_state.project_script_paths = script_paths;
         }
 
         /**
          * Set current frame statistics.
          */
         void SetFrameStatistics(double last_averaged_fps, double last_averaged_ms, size_t frame_count) {
-            this->state.stat_averaged_fps = static_cast<float>(last_averaged_fps);
-            this->state.stat_averaged_ms = static_cast<float>(last_averaged_ms);
-            this->state.stat_frame_count = frame_count;
+            this->gui_state.stat_averaged_fps = static_cast<float>(last_averaged_fps);
+            this->gui_state.stat_averaged_ms = static_cast<float>(last_averaged_ms);
+            this->gui_state.stat_frame_count = frame_count;
         }
 
         /**
@@ -286,26 +286,15 @@ namespace gui {
 
         // VARIABLES --------------------------------------------------------------
 
-        enum HotkeyIndex : size_t {
-            EXIT_PROGRAM = 0,
-            PARAMETER_SEARCH = 1,
-            SAVE_PROJECT = 2,
-            LOAD_PROJECT = 3,
-            MENU = 4,
-            TOGGLE_GRAPH_ENTRY = 5,
-            TRIGGER_SCREENSHOT = 6,
-            SHOW_HIDE_GUI = 7,
-        };
-        std::map<HotkeyIndex, megamol::gui::HotkeyData_t> hotkeys;
+        megamol::gui::HotkeyMap_t hotkeys;
 
         /** The ImGui context created and used by this GUIManager */
         ImGuiContext* context;
 
-        /** The currently initialized ImGui API */
         GUIImGuiAPI initialized_api;
 
         /** The current local state of the gui. */
-        StateBuffer state;
+        StateBuffer gui_state;
 
         /** GUI element collections. */
         WindowCollection win_collection;

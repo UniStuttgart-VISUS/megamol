@@ -96,6 +96,12 @@ namespace gui {
             return (this->connected_parameter_ptr != nullptr);
         }
 
+        std::string ProcessParameterConnectionRequest() {
+            auto rpnc = this->request_parameter_name_connect;
+            this->request_parameter_name_connect.clear();
+            return rpnc;
+        }
+
     private:
         /** The global input widget state buffer. */
         struct WidgetBuffer {
@@ -130,10 +136,11 @@ namespace gui {
         bool check_once_force_set_overwrite_range;
         bool plot_paint_mode;
         bool plot_dragging;
+        std::string request_parameter_name_connect;
 
         bool win_view_minimized;        // [SAVED] flag indicating minimized window state
         bool win_view_vertical;         // [SAVED] flag indicating vertical window state
-        std::string win_active_param;   // [SAVED] last active parameter connected to editor
+        std::string win_connected_param_name;   // [SAVED] last active parameter connected to editor
         bool win_tfe_reset;             // flag for reset of tfe window on state loading
 
         // Widgets

@@ -2024,7 +2024,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
 
     if (this->tf_use_external_editor) {
         if (this->tf_editor_external_ptr != nullptr) {
-            isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
+            isActive = this->tf_editor_external_ptr->IsParameterConnected();
         }
     }
 

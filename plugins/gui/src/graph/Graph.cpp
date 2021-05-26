@@ -1680,7 +1680,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             // Process module/call/group deletion ---------------------------------
             if ((this->gui_graph_state.interact.process_deletion) ||
                 (!io.WantTextInput &&
-                    this->gui_graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].is_pressed)) {
+                    this->gui_graph_state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].is_pressed)) {
                 if (!this->gui_graph_state.interact.modules_selected_uids.empty()) {
                     for (auto& module_uid : this->gui_graph_state.interact.modules_selected_uids) {
                         this->DeleteModule(module_uid);
@@ -1858,9 +1858,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
                     if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
                         // Draw parameters
-                        selected_mod_ptr->GUIParameterGroups().Draw(selected_mod_ptr->Parameters(), "",
-                            vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::LOCAL, nullptr, nullptr,
-                            GUI_INVALID_ID, nullptr);
+                        selected_mod_ptr->GUIParameterGroups().Draw(selected_mod_ptr->Parameters(), "", vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::LOCAL, nullptr, GUI_INVALID_ID, nullptr);
 
                         ImVec2 popup_pos = ImGui::GetWindowPos();
                         ImVec2 popup_size = ImGui::GetWindowSize();
@@ -1913,11 +1911,13 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
 
 void Graph::DrawGlobalParameterWidgets(PickingBuffer& picking_buffer) {
 
+    /* TODO
     for (auto& module_ptr : this->Modules()) {
         module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), "", vislib::math::Ternary::TRI_UNKNOWN,
               false, Parameter::WidgetScope::GLOBAL, this->win_tfeditor_ptr, nullptr, GUI_INVALID_ID,
               picking_buffer);
     }
+    */
 }
 
 
@@ -2388,11 +2388,11 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
     }
 
     // Parameter Search
-    if (this->gui_graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].is_pressed) {
+    if (this->gui_graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].is_pressed) {
         this->gui_search_widget.SetSearchFocus(true);
     }
     std::string help_text =
-        "[" + this->gui_graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
+        "[" + this->gui_graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].keycode.ToString() +
         "] Set keyboard focus to search input field.\n"
         "Case insensitive substring search in module and parameter names.";
     this->gui_search_widget.Widget("graph_parameter_search", help_text);
@@ -2447,7 +2447,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
                     if (module_header_open) {
                         module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
                             vislib::math::Ternary(this->gui_graph_state.interact.parameters_extended_mode), true,
-                            Parameter::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID, nullptr);
+                            Parameter::WidgetScope::LOCAL, nullptr, GUI_INVALID_ID, nullptr);
                     }
 
                     ImGui::PopID();

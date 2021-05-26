@@ -83,7 +83,7 @@ bool GUI_Service::init(const Config& config) {
                     this->resource_provide_gui_visibility(config.gui_show);
                     this->resource_provide_gui_scale(config.gui_scale);
 
-                    this->m_providedRegisterWindowResource.register_window = [&](const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)> func) -> void {
+                    this->m_providedRegisterWindowResource.register_window = [&](const std::string& name, std::function<void(megamol::gui::WindowConfiguration::BasicConfig&)> func) -> void {
                         this->resource_register_window(name, func);
                     };
                     this->m_providedRegisterWindowResource.register_popup = [&](const std::string& name, bool& open, std::function<void(void)> func) -> void {
@@ -341,7 +341,7 @@ void GUI_Service::resource_provide_gui_scale(float scale) {
 }
 
 
-void GUI_Service::resource_register_window(const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func) {
+void GUI_Service::resource_register_window(const std::string& name, std::function<void(megamol::gui::WindowConfiguration::BasicConfig&)>& func) {
 
     VALIDATE_GUI_PTR()
     gui->RegisterWindow(name, func);

@@ -175,10 +175,31 @@ namespace gui {
     /** Available ImGui APIs */
     enum class GUIImGuiAPI { NONE, OPEN_GL };
 
+    // Hotkeys
+    enum HotkeyIndex : size_t {
+        HOTKEY_GUI_EXIT_PROGRAM,
+        HOTKEY_GUI_PARAMETER_SEARCH,
+        HOTKEY_GUI_SAVE_PROJECT,
+        HOTKEY_GUI_LOAD_PROJECT,
+        HOTKEY_GUI_MENU,
+        HOTKEY_GUI_TOGGLE_GRAPH_ENTRY,
+        HOTKEY_GUI_TRIGGER_SCREENSHOT,
+        HOTKEY_GUI_SHOW_HIDE_GUI,
+        HOTKEY_CONFIGURATOR_MODULE_SEARCH,
+        HOTKEY_CONFIGURATOR_PARAMETER_SEARCH,
+        HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM,
+        HOTKEY_CONFIGURATOR_SAVE_PROJECT,
+        HOTKEY_WINDOW_CONFIGURATOR,
+        HOTKEY_WINDOW_TRANSFER_FUNCTION_EDITOR,
+        HOTKEY_WINDOW_LOG_CONSOLE,
+        HOTKEY_WINDOW_MAIN_PARAMETER_LIST,
+        HOTKEY_WINDOW_PERFORMANCE_MONITOR
+    };
     struct HotkeyData_t {
         megamol::core::view::KeyCode keycode;
         bool is_pressed = false;
     };
+    typedef std::map<HotkeyIndex, megamol::gui::HotkeyData_t> HotkeyMap_t;
 
     typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;
     typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType_t;
@@ -259,7 +280,7 @@ namespace gui {
     typedef struct _graph_item_state_ {
         megamol::gui::GraphCanvas_t canvas;          // (see above)
         megamol::gui::GraphItemsInteract_t interact; // (see above)
-        megamol::gui::HotkeyArray_t hotkeys;         // in out
+        megamol::gui::HotkeyMap_t hotkeys;           // in out
         megamol::gui::GraphGroupPairVector_t groups; // in
     } GraphItemsState_t;
 
@@ -268,7 +289,7 @@ namespace gui {
         FontScalingArray_t graph_zoom_font_scalings; // in
         float graph_width;                           // in
         bool show_parameter_sidebar;                 // in
-        megamol::gui::HotkeyArray_t hotkeys;         // in out
+        megamol::gui::HotkeyMap_t hotkeys;           // in out
         ImGuiID graph_selected_uid;                  // out
         bool graph_delete;                           // out
         bool configurator_graph_save;                // out

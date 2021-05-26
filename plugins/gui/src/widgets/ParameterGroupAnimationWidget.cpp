@@ -82,9 +82,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
 
         if (in_scope == Parameter::WidgetScope::LOCAL) {
 
-            ParameterGroups::DrawGroupedParameters(
-                this->name, params, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
-
+            ParameterGroups::DrawGroupedParameters(this->name, params, in_search, in_scope, nullptr, GUI_INVALID_ID);
             return true;
 
         } else if (in_scope == Parameter::WidgetScope::GLOBAL) {

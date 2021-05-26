@@ -73,10 +73,10 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
     this->connect_log();
 
     // Configure CONSOLE Window
-    this->config.size = ImVec2(500.0f, 50.0f);
-    this->config.reset_size = this->config.size;
-    this->config.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
-    this->config.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
+    this->win_config.size = ImVec2(500.0f * megamol::gui::gui_scaling.Get(), 50.0f * megamol::gui::gui_scaling.Get());
+    this->win_config.reset_size = this->win_config.size;
+    this->win_config.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
+    this->win_config.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F9, core::view::Modifier::NONE);
 }
 
 
@@ -106,7 +106,7 @@ bool megamol::gui::LogConsole::Update() {
                     if (this->win_log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
                         this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
                     }
-                    this->config.show = true;
+                    this->win_config.show = true;
                 }
             }
 

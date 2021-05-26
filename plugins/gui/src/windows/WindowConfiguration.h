@@ -18,6 +18,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
 #include "mmcore/utility/JSONHelper.h"
+#include "gui_utils.h"
 
 
 namespace megamol {
@@ -44,7 +45,7 @@ namespace gui {
         struct BasicConfig {
             bool show = false;                                  // [SAVED] show/hide window
             ImGuiWindowFlags flags = 0;                         // [SAVED] imgui window flags
-            core::view::KeyCode hotkey;                         // [SAVED] hotkey for opening/closing window
+            megamol::core::view::KeyCode hotkey;                // [SAVED] hotkey for opening/closing window
             ImVec2 position = ImVec2(0.0f, 0.0f);        // [SAVED] position for reset on state loading (current position)
             ImVec2 size = ImVec2(0.0f, 0.0f);            // [SAVED] size for reset on state loading (current size)
             ImVec2 reset_size = ImVec2(0.0f, 0.0f);      // [SAVED] minimum window size for soft reset
@@ -59,14 +60,16 @@ namespace gui {
                 : hash_id(std::hash<std::string>()(name))
                 , name(name)
                 , window_id(window_id)
-                , config()
+                , win_config()
+                , hotkeys()
                 , volatile_draw_callback(nullptr) {}
 
         WindowConfiguration(const std::string& name, VolatileDrawCallback_t callback)
                 : hash_id(std::hash<std::string>()(name))
                 , name(name)
                 , window_id(WINDOW_ID_VOLATILE)
-                , config()
+                , win_config()
+                , hotkeys()
                 , volatile_draw_callback(callback) {}
 
         ~WindowConfiguration() = default;
@@ -84,11 +87,11 @@ namespace gui {
         }
 
         inline BasicConfig& Config() {
-            return this->config;
+            return this->win_config;
         }
 
         inline std::string FullWindowTitle() const {
-            return (this->Name() + "     " + this->config.hotkey.ToString());
+            return (this->Name() + "     " + this->win_config.hotkey.ToString());
         }
 
         void SetVolatileCallback(std::function<void(WindowConfiguration::BasicConfig&)> const& callback) {
@@ -104,6 +107,10 @@ namespace gui {
 
         void StateToJSON(nlohmann::json& inout_json);
 
+        inline megamol::gui::HotkeyMap_t& GetHotkeys() {
+            return this->hotkeys;
+        }
+
         // --------------------------------------------------------------------
         // IMPLEMENT
 
@@ -111,7 +118,7 @@ namespace gui {
 
         virtual bool Draw() {
             if ((window_id == WINDOW_ID_VOLATILE) && (volatile_draw_callback != nullptr)) {
-               volatile_draw_callback(this->config);
+               volatile_draw_callback(this->win_config);
                return true;
             }
         }
@@ -124,13 +131,14 @@ namespace gui {
 
     protected:
 
-        BasicConfig config;
+        BasicConfig win_config;
+        megamol::gui::HotkeyMap_t hotkeys;
 
     private:
 
-        size_t hash_id;                 // unique hash generated from name to omit string comparison
-        std::string name;               // [SAVED] unique name of the window
-        WindowConfigID window_id;       // [SAVED] ID of the predefined callback drawing the window content
+        size_t hash_id;                    // unique hash generated from name to omit string comparison
+        std::string name;                  // [SAVED] unique name of the window
+        WindowConfigID window_id;          // [SAVED] ID of the predefined callback drawing the window content
         VolatileDrawCallback_t volatile_draw_callback;
     };
 

@@ -190,9 +190,10 @@ TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, b
         , check_once_force_set_overwrite_range(true)
         , plot_paint_mode(false)
         , plot_dragging(false)
+        , request_parameter_name_connect()
         , win_view_minimized(false)
         , win_view_vertical(false)
-        , win_active_param()
+        , win_connected_param_name()
         , win_tfe_reset(false)
         , tooltip()
         , image_widget() {
@@ -207,10 +208,8 @@ TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, b
     RampAdapter(this->nodes, this->texture_size);
 
     // Configure TRANSFER FUNCTION Window
-    this->config.size = ImVec2(0.0f, 0.0f);
-    this->config.reset_size = this->config.size;
-    this->config.hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
-    this->config.flags = ImGuiWindowFlags_AlwaysAutoResize;
+    this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
+    this->win_config.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F8, core::view::Modifier::NONE);
 }
 
 
@@ -286,11 +285,11 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
 
 void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const std::string& param_full_name) {
     this->connected_parameter_ptr = nullptr;
-    this->win_active_param = "";
+    this->win_connected_param_name = "";
     if (param_ptr != nullptr) {
         if (param_ptr->Type() == ParamType_t::TRANSFERFUNCTION) {
             this->connected_parameter_ptr = param_ptr;
-            this->win_active_param = param_full_name;
+            this->win_connected_param_name = param_full_name;
             this->check_once_force_set_overwrite_range = true;
             this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
         } else {
@@ -306,35 +305,16 @@ bool TransferFunctionEditor::Update() {
     if (this->win_tfe_reset) {
         this->SetMinimized(this->win_view_minimized);
         this->SetVertical(this->win_view_vertical);
-        /* TODO
-         * Move to configurator?
-        if (!this->win_active_param.empty()) {
-            if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-                for (auto& module_ptr : graph_ptr->Modules()) {
-                    std::string module_full_name = module_ptr->FullName();
-                    for (auto& param : module_ptr->Parameters()) {
-                        std::string param_full_name = param.FullNameProject();
-                        if (gui_utils::CaseInsensitiveStringCompare(
-                                this->win_active_param, param_full_name) &&
-                            (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
-                            this->SetConnectedParameter(&param, param_full_name);
-                            param.TransferFunctionEditor_ConnectExternal(this->tf_editor_ptr, true);
-                        }
-                    }
-                }
-            }
-        }
-         */
+        this->request_parameter_name_connect = this->win_connected_param_name;
         this->win_tfe_reset = false;
     }
 
     // Change window flags depending on current view of transfer function editor
     if (this->IsMinimized()) {
-        this->config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
+        this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
                              ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
-
     } else {
-        this->config.flags = ImGuiWindowFlags_AlwaysAutoResize;
+        this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
     }
     this->win_view_minimized = this->IsMinimized();
     this->win_view_vertical = this->IsVertical();
@@ -690,7 +670,7 @@ void TransferFunctionEditor::SpecificStateFromJSON(const nlohmann::json &in_json
 
                     megamol::core::utility::get_json_value<bool>(config_values, {"tfe_view_minimized"}, &this->win_view_minimized);
                     megamol::core::utility::get_json_value<bool>(config_values, {"tfe_view_vertical"}, &this->win_view_vertical);
-                    megamol::core::utility::get_json_value<std::string>(config_values, {"tfe_active_param"}, &this->win_active_param);
+                    megamol::core::utility::get_json_value<std::string>(config_values, {"tfe_active_param"}, &this->win_connected_param_name);
                     this->win_tfe_reset = true;
                 }
             }
@@ -703,9 +683,9 @@ void TransferFunctionEditor::SpecificStateToJSON(nlohmann::json &inout_json) {
 
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_view_minimized"] =  this->win_view_minimized;
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_view_vertical"] =  this->win_view_vertical;
-    gui_utils::Utf8Encode(this->win_active_param);
-    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_active_param"] =  this->win_active_param;
-    gui_utils::Utf8Decode(this->win_active_param);
+    gui_utils::Utf8Encode(this->win_connected_param_name);
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_active_param"] =  this->win_connected_param_name;
+    gui_utils::Utf8Decode(this->win_connected_param_name);
 }
 
 

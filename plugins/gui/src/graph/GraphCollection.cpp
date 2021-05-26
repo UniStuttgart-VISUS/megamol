@@ -1386,46 +1386,6 @@ bool megamol::gui::GraphCollection::read_project_command_arguments(
 }
 
 
-ImVec2 megamol::gui::GraphCollection::project_read_confpos(const std::string& line) {
-
-    ImVec2 conf_pos(FLT_MAX, FLT_MAX);
-
-    std::string x_start_tag("--confPos={X=");
-    std::string y_start_tag(",Y=");
-    std::string end_tag("}");
-    size_t x_start_idx = line.find(x_start_tag);
-    size_t y_start_idx = line.find(y_start_tag);
-    size_t end_idx = line.find(end_tag);
-    if ((x_start_idx != std::string::npos) && (y_start_idx != std::string::npos) && (end_idx != std::string::npos)) {
-        size_t x_length = ((y_start_idx) - (x_start_idx + x_start_tag.length()));
-        size_t y_length = ((end_idx) - (y_start_idx + y_start_tag.length()));
-        float x = 0.0f;
-        float y = 0.0f;
-        try {
-            std::string val_str = line.substr(x_start_idx + x_start_tag.length(), x_length);
-            x = std::stof(val_str);
-        } catch (std::invalid_argument& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI]  Error while reading x value of confPos: %s [%s, %s, line %d]\n", e.what(), __FILE__,
-                __FUNCTION__, __LINE__);
-            return conf_pos;
-        }
-        try {
-            std::string val_str = line.substr(y_start_idx + y_start_tag.length(), y_length);
-            y = std::stof(val_str);
-        } catch (std::invalid_argument& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI]  Error while reading y value of confPos: %s [%s, %s, line %d]\n", e.what(), __FILE__,
-                __FUNCTION__, __LINE__);
-            return conf_pos;
-        }
-        conf_pos = ImVec2(x, y);
-    }
-
-    return conf_pos;
-}
-
-
 bool megamol::gui::GraphCollection::project_separate_name_and_namespace(
     const std::string& full_name, std::string& name_space, std::string& name) {
 
@@ -1719,7 +1679,6 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool op
     bool confirmed, aborted;
     bool popup_failed = false;
     std::string project_filename;
-    GraphPtr_t graph_ptr;
     if (open_dialog) {
         if (auto graph_ptr = this->GetGraph(graph_uid)) {
             project_filename = graph_ptr->GetFilename();

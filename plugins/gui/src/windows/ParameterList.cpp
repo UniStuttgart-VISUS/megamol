@@ -16,18 +16,20 @@ using namespace megamol::gui;
 
 ParameterList::ParameterList(const std::string& window_name)
     : WindowConfiguration(window_name, WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS)
-    , win_show_hotkeys(false)
+    , win_show_param_hotkeys(false)
     , win_modules_list()
     , win_extended_mode(false)
     , search_widget()
     , tooltip() {
 
+    this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = {megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
+    
     // Configure PARAMETER LIST Window
-    this->config.show = true;
-    this->config.size = ImVec2(400.0f, 500.0f);
-    this->config.reset_size = this->config.size;
-    this->config.hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
-    this->config.flags = ImGuiWindowFlags_NoScrollbar;
+    this->win_config.show = true;
+    this->win_config.size = ImVec2(400.0f * megamol::gui::gui_scaling.Get(), 500.0f * megamol::gui::gui_scaling.Get());
+    this->win_config.reset_size = this->win_config.size;
+    this->win_config.flags = ImGuiWindowFlags_NoScrollbar;
+    this->win_config.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F10, core::view::Modifier::NONE);
 }
 
 
@@ -69,11 +71,11 @@ bool ParameterList::Draw() {
 
     // Parameter substring name filtering (only for main parameter view)
     if (this->WindowID() == WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS) {
-        if (this->hotkeys[GUIManager::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed) {
+        if (this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed) {
             this->search_widget.SetSearchFocus(true);
-            this->hotkeys[GUIManager::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
+            this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed = false;
         }
-        std::string help_test = "[" + this->hotkeys[GUIManager::GuiHotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
+        std::string help_test = "[" + this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].keycode.ToString() +
                                 "] Set keyboard focus to search input field.\n"
                                 "Case insensitive substring search in module and parameter names.\nSearches globally "
                                 "in all parameter windows.\n";
@@ -87,7 +89,7 @@ bool ParameterList::Draw() {
 
     // Listing modules and their parameters
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
-    if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
+    if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
 
         // Get module groups
         std::map<std::string, std::vector<ModulePtr_t>> group_map;
@@ -130,29 +132,18 @@ bool ParameterList::Draw() {
                         if (ImGui::MenuItem("Copy to new Window")) {
                             std::srand(std::time(nullptr));
                             std::string window_name = "Parameters###parameters_" + std::to_string(std::rand());
-                            WindowConfiguration wc_param(window_name, WindowConfiguration::WINDOW_ID_PARAMETERS);
-                            wc_param.config.basic.show = true;
-                            wc_param.config.basic.flags = ImGuiWindowFlags_NoScrollbar;
-                            wc_param.config.specific.param_show_hotkeys = false;
-                            wc_param.config.basic.position =
-                                    ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing());
-                            wc_param.config.basic.size = ImVec2(
-                                    (400.0f * megamol::gui::gui_scaling.Get()), (600.0f * megamol::gui::gui_scaling.Get()));
-                            wc_param.config.specific.param_modules_list.emplace_back(module_label);
-                            this->windows.AddWindowConfiguration(wc_param);
+                            this->win_modules_list.emplace_back(module_label);
+                            this->add_window_func(window_name);
                         }
 
                         // Deleting module's parameters is not available in main parameter window.
-                        if (wc.CallbackID() != WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS) {
+                        if (this->WindowID() != WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS) {
                             if (ImGui::MenuItem("Delete from List")) {
                                 auto find_iter = std::find(this->win_modules_list.begin(),
                                                            this->win_modules_list.end(), module_label);
                                 // Break if module name is not contained in list
                                 if (find_iter != this->win_modules_list.end()) {
                                     this->win_modules_list.erase(find_iter);
-                                }
-                                if (this->win_modules_list.empty()) {
-                                    this->state.win_delete_hash_id = wc.Hash();
                                 }
                             }
                         }
@@ -170,19 +161,10 @@ bool ParameterList::Draw() {
 
                     // Draw parameters
                     if (module_header_open) {
-                        bool out_open_external_tf_editor;
                         module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
-                                                              vislib::math::Ternary(this->win_extended_mode), true,
-                                                              Parameter::WidgetScope::LOCAL, this->tf_editor_ptr, &out_open_external_tf_editor,
-                                                              override_header_state, nullptr);
-                        if (out_open_external_tf_editor) {
-                            const auto func = [](WindowConfiguration& wc) {
-                                if (wc.CallbackID() == WindowConfiguration::WINDOW_ID_TRANSFER_FUNCTION) {
-                                    wc.config.basic.show = true;
-                                }
-                            };
-                            this->windows.EnumWindows(func);
-                        }
+                              vislib::math::Ternary(this->win_extended_mode), true,
+                              Parameter::WidgetScope::LOCAL, this->win_tfeditor_ptr,
+                              override_header_state, nullptr);
                     }
 
                     ImGui::PopID();
@@ -230,7 +212,7 @@ void ParameterList::SpecificStateFromJSON(const nlohmann::json &in_json) {
                 if (config_item.key() == this->Name()) {
                     auto config_values = config_item.value();
 
-                    megamol::core::utility::get_json_value<bool>(config_values, {"param_show_hotkeys"}, &this->win_show_hotkeys);
+                    megamol::core::utility::get_json_value<bool>(config_values, {"param_show_hotkeys"}, &this->win_show_param_hotkeys);
                     this->win_modules_list.clear();
                     if (config_values.at("param_modules_list").is_array()) {
                         size_t tmp_size = config_values.at("param_modules_list").size();
@@ -252,7 +234,7 @@ void ParameterList::SpecificStateFromJSON(const nlohmann::json &in_json) {
 
 void ParameterList::SpecificStateToJSON(nlohmann::json &inout_json) {
                     
-    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_show_hotkeys"] = this->win_show_hotkeys;
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_show_hotkeys"] = this->win_show_param_hotkeys;
     for (auto& pm : this->win_modules_list) {
         gui_utils::Utf8Encode(pm);
     }

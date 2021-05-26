@@ -475,7 +475,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                     popup_rename = true;
                 }
                 if (ImGui::MenuItem("Delete",
-                        state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
+                        state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
                     state.interact.process_deletion = true;
                 }
                 ImGui::EndPopup();

@@ -67,15 +67,7 @@ namespace gui {
     private:
         // VARIABLES --------------------------------------------------------------
 
-        enum HotkeyIndex : size_t {
-            MODULE_SEARCH = 0,
-            PARAMETER_SEARCH = 1,
-            DELETE_GRAPH_ITEM = 2,
-            SAVE_PROJECT = 3,
-            INDEX_COUNT = 4
-        };
-        std::map<HotkeyIndex, megamol::gui::HotkeyData_t> hotkeys;
-
+        megamol::gui::GraphState_t graph_state;
         GraphCollection graph_collection;
 
         /** Shortcut pointer to transfer function window */
@@ -89,7 +81,6 @@ namespace gui {
         bool show_module_list_popup;
         ImVec2 module_list_popup_pos;
         ImGuiID last_selected_callslot_uid;
-        megamol::gui::GraphState_t graph_state;
         bool open_popup_load;
 
         // Widgets
