@@ -2,40 +2,36 @@
 
 EXIT_CODE=0
 
-# Search CRLF line endings
-BAD_LINE_ENDING_FILES=$(find . -type f -exec file {} \; | grep CRLF)
-if [[ $BAD_LINE_ENDING_FILES ]]; then
-    EXIT_CODE=1
-    echo "############################################################"
-    echo " ERROR: Files with CRLF line ending found!"
-    echo "############################################################"
-    echo "$BAD_LINE_ENDING_FILES"
-else
-    echo "Good: No CRLF line endings found."
-fi
+find . -type f -print0 | while read -d $'\0' file
+do
+  # only process file if mime type is text
+  mime=$(file -b --mime-type "$file")
+  if ! [[ $mime == "text/"* ]]; then
+    continue
+  fi
 
-# Search non ASCII/UTF-8 Text files
-BAD_ENCODING_FILES=$(find . -type f -exec file --mime {} \; | grep -Pi ": text/.*" | grep -vi "charset=us-ascii\|charset=utf-8")
-if [[ $BAD_ENCODING_FILES ]]; then
+  # Check if file is UTF-8 (or ASCII)
+  encoding=$(file -b --mime-encoding "$file")
+  if ! [[ $encoding == "us-ascii" || $encoding == "utf-8" ]]; then
     EXIT_CODE=1
-    echo "############################################################"
-    echo " ERROR: The following text files are not UTF-8 encoded!"
-    echo "############################################################"
-    echo "$BAD_ENCODING_FILES"
-else
-    echo "Good: All text files are UTF-8 encoded."
-fi
+    echo "ERROR: File is not UTF-8 encoded: $file ($encoding)"
+    continue
+  fi
 
-# Search for BOM
-BAD_FILES_WITH_BOM=$(grep -rl $'^\xEF\xBB\xBF' .)
-if [[ $BAD_FILES_WITH_BOM ]]; then
+  # Check if file contains CRLF line endings
+  fileinfo=$(file "$file")
+  if [[ $fileinfo == *"CRLF"* ]]; then
     EXIT_CODE=1
-    echo "############################################################"
-    echo " ERROR: The following text files start with BOM!"
-    echo "############################################################"
-    echo "$BAD_FILES_WITH_BOM"
-else
-    echo "Good: All text files do not start with BOM."
-fi
+    echo "ERROR: File contains CRLF line endings: $file"
+    continue
+  fi
+
+  # Check if file starts with BOM
+  if [[ $fileinfo == *"BOM"* ]]; then
+    EXIT_CODE=1
+    echo "ERROR: File starts with BOM: $file"
+    continue
+  fi
+done
 
 exit $EXIT_CODE
