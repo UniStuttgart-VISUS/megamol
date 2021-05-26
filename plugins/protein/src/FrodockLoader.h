@@ -76,7 +76,7 @@ namespace protein {
 	        Potential_FI *potentials;   //entries for each potential (each one stores the filename of the receptor potential and Multiplication factor)
 
 	        //SEARCH PARAMETERS
-	        int bw;						//Bandwitdh in spherical harmonic representation. Define rotational stepsize (default: 32. Rotational stepsize ~11บ)
+	        int bw;						//Bandwitdh in spherical harmonic representation. Define rotational stepsize (default: 32. Rotational stepsize ~11ยบ)
 	        float lmax;					//External Mask reduction ratio (default: 0.25).
 	        float lmin;			      	//Internal Mask reduction ratio (default: 0.26).
 	        float th;	      			//Electrostatic map threshold (default: 10.0)

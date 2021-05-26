@@ -1,6 +1,6 @@
 // vislib.autopkg
 //
-// Copyright (C) 2014 Visualisierungsinstitut der Universit‰t Stuttgart.
+// Copyright (C) 2014 Visualisierungsinstitut der Universit√§t Stuttgart.
 // All rights reserved.
 
 @import "nuget.version";
@@ -15,7 +15,7 @@ nuget {
 		id = vislib;
 		version : "${package-version}";
 		title: VISlib;
-		authors: {Visualisierungsinstitut der Universit‰t Stuttgart};
+		authors: {Visualisierungsinstitut der Universit√§t Stuttgart};
 		owners: {grottel, mueller, reina};
 		licenseUrl: "https://svn.vis.uni-stuttgart.de/trac/vislib/attachment/wiki/WikiStart/LICENCE.TXT";
 		projectUrl: "https://svn.vis.uni-stuttgart.de/trac/vislib";
@@ -24,7 +24,7 @@ nuget {
 		summary: "TODO.";
 		description: @"TODO.";
 		//releaseNotes: "Release of C++ Rest SDK 0.6 libraries.";
-		copyright: Copyright 2016 - 2012 Visualisierungsinstitut der Universit‰t Stuttgart;
+		copyright: Copyright 2016 - 2012 Visualisierungsinstitut der Universit√§t Stuttgart;
 		tags: { VISlib, native, CoApp };
 	}
 

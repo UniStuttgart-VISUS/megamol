@@ -1,7 +1,7 @@
 /*
  * MpiProvider.h
  *
- * Copyright (C) 2014 Visualisierungsinstitut der Universit‰t Stuttgart.
+ * Copyright (C) 2014 Visualisierungsinstitut der Universit√§t Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
