@@ -26,4 +26,16 @@ else
     echo "Good: All text files are UTF-8 encoded."
 fi
 
+# Search for BOM
+BAD_FILES_WITH_BOM=$(grep -rl $'^\xEF\xBB\xBF' .)
+if [[ $BAD_FILES_WITH_BOM ]]; then
+    EXIT_CODE=1
+    echo "############################################################"
+    echo " ERROR: The following text files start with BOM!"
+    echo "############################################################"
+    echo "$BAD_FILES_WITH_BOM"
+else
+    echo "Good: All text files do not start with BOM."
+fi
+
 exit $EXIT_CODE
