@@ -50,6 +50,8 @@ void main() {
 
     if(radius > 1.0) discard;
 
+    float pixel_diag_width = 1.5 * max(dFdx(uv_coords.x),dFdy(uv_coords.y));
+
     float border_circle_width = 0.04;
     if(mesh_shader_params[draw_id].state == 1) {
         border_circle_width = 0.08;
@@ -57,6 +59,7 @@ void main() {
     else if(mesh_shader_params[draw_id].state == 2) {
         border_circle_width = 0.08;
     }
+    border_circle_width = 2.0 * max(border_circle_width,pixel_diag_width);
 
     float angle = atan(
         pixel_coords.x,
@@ -77,7 +80,7 @@ void main() {
     float value_range = max_value - min_value;
 
     float zero_value_radius = -min_value / value_range;
-    float zero_arc_width = 0.005;
+    float zero_arc_width = max(0.005, 0.5 * pixel_diag_width);
 
     if(angle_normalized > 0.025 && angle_normalized < 0.975 && (radius > zero_value_radius+zero_arc_width || radius < zero_value_radius-zero_arc_width) )
     {
@@ -136,8 +139,8 @@ void main() {
         }
     }
 
-    if(abs(radius - zero_value_radius) < 0.005) out_colour = vec3(1.0);
-    if(radius > (1.0 - border_circle_width) && radius < (1.0 - 0.02)) out_colour = glyph_border_color.rgb;
+    if(abs(radius - zero_value_radius) < zero_arc_width) out_colour = vec3(1.0);
+    if(radius > (1.0 - border_circle_width) && radius < (1.0 - (0.5*border_circle_width))) out_colour = glyph_border_color.rgb;
 
     float test = dFdx(radius);
 
