@@ -77,6 +77,7 @@ jobs:
     inputs:
       cmakeArgs: '--build . --parallel $(numberOfCpuCores)'
 
+# The file check runs on Linux. Windows clients probably uses git autocrlf, making it hard to detect wrong line endings in the repo.
 - job: FileChecks
   displayName: 'File Checks'
   pool:
@@ -84,7 +85,7 @@ jobs:
     demands:
     - Agent.OS -equals Linux
   steps:
-  - task: PowerShell@2
+  - task: Bash@3
     displayName: 'Run File Checks'
     inputs:
-      filePath: '.ci/check_files.ps1'
+      filePath: '.ci/check_files.sh'
