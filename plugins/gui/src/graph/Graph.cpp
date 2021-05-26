@@ -892,6 +892,44 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_full_name
 }
 
 
+bool Graph::ToggleGraphEntry() {
+    
+    auto module_graph_entry_iter = this->modules.begin();
+    // Search for first graph entry and set next view to graph entry (= graph entry point)
+    for (auto module_iter = this->modules.begin(); module_iter != this->modules.end(); module_iter++) {
+        if ((*module_iter)->IsView() && (*module_iter)->IsGraphEntry()) {
+            // Remove all graph entries
+            (*module_iter)->SetGraphEntryName("");
+            if (this->IsRunning()) {
+                QueueData queue_data;
+                queue_data.name_id = (*module_iter)->FullName();
+                this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+            }
+            // Save index of last found graph entry
+            if (module_iter != this->modules.end()) {
+                module_graph_entry_iter = module_iter + 1;
+            }
+        }
+    }
+    if ((module_graph_entry_iter == this->modules.begin()) ||
+        (module_graph_entry_iter != this->modules.end())) {
+        // Search for next graph entry
+        for (auto module_iter = module_graph_entry_iter; module_iter != this->modules.end(); module_iter++) {
+            if ((*module_iter)->IsView()) {
+                (*module_iter)->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
+                if (this->IsRunning()) {
+                    QueueData queue_data;
+                    queue_data.name_id = (*module_iter)->FullName();
+                    this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                }
+                break;
+            }
+        }
+    }
+    return true;
+}
+
+
 const std::string megamol::gui::Graph::GetFilename() const {
 
     if (this->filenames.first.first) {
@@ -1869,6 +1907,16 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
+    }
+}
+
+
+void Graph::DrawGlobalParameterWidgets(PickingBuffer& picking_buffer) {
+
+    for (auto& module_ptr : this->Modules()) {
+        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), "", vislib::math::Ternary::TRI_UNKNOWN,
+              false, Parameter::WidgetScope::GLOBAL, this->win_tfeditor_ptr, nullptr, GUI_INVALID_ID,
+              picking_buffer);
     }
 }
 

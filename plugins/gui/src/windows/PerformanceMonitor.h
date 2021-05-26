@@ -11,47 +11,55 @@
 
 
 #include "WindowConfiguration.h"
+#include "widgets/HoverToolTip.h"
 
 
 namespace megamol {
 namespace gui {
 
     /*
-     * The ...
+     * The performance monitor GUI window.
      */
     class PerformanceMonitor : public WindowConfiguration {
     public:
 
-        /** Timing mode for performance windows. */
         enum TimingMode { TIMINGMODE_FPS, TIMINGMODE_MS };
 
-        PerformanceMonitor();
-        ~PerformanceMonitor();
+        PerformanceMonitor(const std::string& window_name);
+        ~PerformanceMonitor() = default;
 
-        void Update() override;
+        // Call each new frame
+        inline void SetData(float averaged_fps, float averaged_ms, size_t frameid) {
+            this->averaged_fps = averaged_fps;
+            this->averaged_ms = averaged_ms;
+            this->frame_id = frameid;
+        }
+        bool Update() override;
+        bool Draw() override;
+        void PopUps() override;
 
-        void Draw() override;
-
-        bool SpecificStateFromJSON(const nlohmann::json& in_json) override;
-
-        bool SpecificStateToJSON(nlohmann::json& inout_json) override;
+        void SpecificStateFromJSON(const nlohmann::json& in_json) override;
+        void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
     private:
         // VARIABLES --------------------------------------------------------------
 
-        bool fpsms_show_options = false;        // [SAVED] show/hide fps/ms options.
-        int fpsms_buffer_size = 20;             // [SAVED] maximum count of values in value array
-        float fpsms_refresh_rate = 2.0f;        // [SAVED] maximum delay when fps/ms value should be renewed.
-        TimingMode fpsms_mode = TIMINGMODE_FPS; // [SAVED] mode for displaying either FPS or MS
-        float tmp_current_delay = 0.0f;         // current delay between frames
-        std::vector<float> tmp_ms_values;       // current ms values
-        std::vector<float> tmp_fps_values;      // current fps values
-        float tmp_ms_max = 1.0f;                // current ms plot scaling factor
-        float tmp_fps_max = 1.0f;               // current fps plot scaling factor
+        bool win_show_options = false;        // [SAVED] show/hide fps/ms options.
+        int win_buffer_size = 20;             // [SAVED] maximum count of values in value array
+        float win_refresh_rate = 2.0f;        // [SAVED] maximum delay when fps/ms value should be renewed.
+        TimingMode win_mode = TIMINGMODE_FPS; // [SAVED] mode for displaying either FPS or MS
+        float win_current_delay = 0.0f;         // current delay between frames
+        std::vector<float> win_ms_values;       // current ms values
+        std::vector<float> win_fps_values;      // current fps values
+        float win_ms_max = 1.0f;                // current ms plot scaling factor
+        float win_fps_max = 1.0f;               // current fps plot scaling factor
 
-        // FUNCTIONS --------------------------------------------------------------
+        size_t frame_id;
+        float averaged_fps;
+        float averaged_ms;
 
-
+        // Widgets
+        HoverToolTip tooltip;
     };
 
 } // namespace gui

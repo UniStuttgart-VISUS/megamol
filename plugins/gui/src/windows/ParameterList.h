@@ -18,33 +18,35 @@ namespace megamol {
 namespace gui {
 
     /*
-     * The ...
+     * The parameter list GUI window.
      */
     class ParameterList : public WindowConfiguration {
     public:
 
-        ParameterList();
-        ~ParameterList();
+        ParameterList(const std::string& window_name);
+        ~ParameterList() = default;
 
-        void Update() override;
+        bool Update() override;
+        bool Draw() override;
+        void PopUps() override;
 
-        void Draw() override;
-
-        bool SpecificStateFromJSON(const nlohmann::json& in_json) override;
-
-        bool SpecificStateToJSON(nlohmann::json& inout_json) override;
+        void SpecificStateFromJSON(const nlohmann::json& in_json) override;
+        void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
     private:
         // VARIABLES --------------------------------------------------------------
 
-        StringSearchWidget search_widget;
+        bool win_show_hotkeys;                      // [SAVED] flag to toggle showing only parameter hotkeys
+        std::vector<std::string> win_modules_list;  // [SAVED] modules to show in a parameter window (show all if empty)
+        bool win_extended_mode;                     // [SAVED] flag toggling between Expert and Basic parameter mode.
 
-        bool param_show_hotkeys = false;             // [SAVED] flag to toggle showing only parameter hotkeys
-        std::vector<std::string> param_modules_list; // [SAVED] modules to show in a parameter window (show all if empty)
-        bool param_extended_mode = false;            // [SAVED] flag toggling between Expert and Basic parameter mode.
+        // Widgets
+        StringSearchWidget search_widget;
+        HoverToolTip tooltip;
 
         // FUNCTIONS --------------------------------------------------------------
 
+        bool consider_module(const std::string& modname, std::vector<std::string>& modules_list);
 
     };
 

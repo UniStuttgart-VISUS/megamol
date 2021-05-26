@@ -28,26 +28,20 @@ namespace gui {
 
 
     /**
-     * 1D Transfer Function Editor.
+     * 1D Transfer Function Editor GUI window.
      */
     class TransferFunctionEditor : public WindowConfiguration {
     public:
 
-        TransferFunctionEditor();
+        TransferFunctionEditor(const std::string& window_name, bool non_window_mode);
         ~TransferFunctionEditor() = default;
 
-        void Update() override;
+        bool Update() override;
+        bool Draw() override;
+        void PopUps() override;
 
-        void Draw() override;
-
-        bool SpecificStateFromJSON(const nlohmann::json& in_json) override;
-
-        bool SpecificStateToJSON(nlohmann::json& inout_json) override;
-
-        /**
-         * Draws the transfer function editor.
-         */
-        bool Widget(bool connected_parameter_mode);
+        void SpecificStateFromJSON(const nlohmann::json& in_json) override;
+        void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
         /**
          * Set transfer function data to use in editor.
@@ -69,13 +63,6 @@ namespace gui {
          * Set the currently connected parameter.
          */
         void SetConnectedParameter(Parameter* param_ptr, const std::string& param_full_name);
-
-        /**
-         * Get currently connected parameter.
-         */
-        inline std::string GetConnectedParameterName() const {
-            return this->connected_parameter_name;
-        }
 
         /**
          * Returns true if editor is in minimized view.
@@ -105,6 +92,10 @@ namespace gui {
             this->flip_legend = vertical;
         }
 
+        bool IsParameterConnected() const {
+            return (this->connected_parameter_ptr != nullptr);
+        }
+
     private:
         /** The global input widget state buffer. */
         struct WidgetBuffer {
@@ -117,9 +108,9 @@ namespace gui {
 
         // VARIABLES -----------------------------------------------------------
 
+        const bool non_window_mode;
         /** The currently active parameter whose transfer function is currently loaded into this editor. */
         Parameter* connected_parameter_ptr;
-        std::string connected_parameter_name;
         TransferFunctionParam::NodeVector_t nodes;
         std::array<float, 2> range;
         std::array<float, 2> last_range;
@@ -140,11 +131,10 @@ namespace gui {
         bool plot_paint_mode;
         bool plot_dragging;
 
-        /// TODO
-        bool tfe_view_minimized = false; // [SAVED] flag indicating minimized window state
-        bool tfe_view_vertical = false;  // [SAVED] flag indicating vertical window state
-        std::string tfe_active_param;    // [SAVED] last active parameter connected to editor
-        bool tmp_tfe_reset = false;      // flag for reset of tfe window on state loading
+        bool win_view_minimized;        // [SAVED] flag indicating minimized window state
+        bool win_view_vertical;         // [SAVED] flag indicating vertical window state
+        std::string win_active_param;   // [SAVED] last active parameter connected to editor
+        bool win_tfe_reset;             // flag for reset of tfe window on state loading
 
         // Widgets
         HoverToolTip tooltip;

@@ -103,6 +103,8 @@ namespace gui {
         const std::string GetFilename() const;
         void SetFilename(const std::string& filename, bool saved_filename);
 
+        bool ToggleGraphEntry();
+
         bool PushSyncQueue(QueueAction in_action, const QueueData& in_data);
         bool PopSyncQueue(QueueAction& out_action, QueueData& out_data);
         inline void ClearSyncQueue() {
@@ -125,9 +127,12 @@ namespace gui {
 
         void Draw(GraphState_t& state);
 
+        void DrawGlobalParameterWidgets(PickingBuffer& picking_buffer);
+
         inline const ImGuiID UID() const {
             return this->uid;
         }
+
         inline const std::string Name() const {
             return this->name;
         }
@@ -135,6 +140,7 @@ namespace gui {
         void ForceUpdate() {
             this->gui_update = true;
         }
+
         void ResetStatePointers() {
             this->gui_graph_state.interact.callslot_compat_ptr.reset();
             this->gui_graph_state.interact.interfaceslot_compat_ptr.reset();

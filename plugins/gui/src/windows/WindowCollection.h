@@ -24,34 +24,25 @@ namespace megamol {
 namespace gui {
 
     /**
-     * This class controls the placement and appearance of windows.
+     * This class hold the GUI windows and controls the placement and appearance.
      */
     class WindowCollection {
     public:
 
         WindowCollection();
-
         ~WindowCollection() = default;
 
-        inline void Update() {
-            for (auto& win : this->windows) {
-                win->Update();
-            }
-        }
+        void Update();
+        void Draw(bool menu_visible);
+        void PopUps();
 
-        inline void Draw() {
-            for (auto& win : this->windows) {
-                win->Draw();
-            }
-        }
+        bool StateFromJSON(const nlohmann::json& in_json);
+        bool StateToJSON(nlohmann::json& inout_json);
 
-        inline void PopUps() {
-            for (auto& win : this->windows) {
-                win->PopUps();
-            }
-        }
+        bool AddWindow(const std::string& window_name, std::function<void(WindowConfiguration::BasicConfig&)> const& callback);
 
-        bool AddWindow(WindowConfiguration& wc);
+        template<typename T>
+        bool AddWindow(const std::string &window_name);
 
         inline void EnumWindows(std::function<void(WindowConfiguration&)> cb) {
             // Needs fixed size if window is added while looping
@@ -61,12 +52,6 @@ namespace gui {
             }
         }
 
-        inline WindowConfiguration& GetWindow(WindowConfiguration::WindowConfigID win_id) {
-
-        }
-
-        bool DeleteWindow(size_t hash_id);
-
         inline bool WindowExists(size_t hash_id) const {
             for (auto& wc : this->windows) {
                 if (wc->Hash() == hash_id)
@@ -75,34 +60,42 @@ namespace gui {
             return false;
         }
 
-        // --------------------------------------------------------------------
-        // STATE
+        template<typename T>
+        std::shared_ptr<T> GetWindow() const {
+            for (auto& win_ptr : this->windows) {
+                if (auto ret_win_ptr = std::dynamic_pointer_cast<T>(win_ptr))
+                    return ret_win_ptr;
+            }
+            return nullptr;
+        }
 
-        /**
-         * Deserializes a window configuration state.
-         * Should be called before(!) ImGui::Begin() because existing window configurations are overwritten.
-         *
-         * @param json  The JSON to deserialize from.
-         *
-         * @return True on success, false otherwise.
-         */
-        bool StateFromJSON(const nlohmann::json& in_json);
-
-        /**
-         * Serializes the current window configuration.
-         *
-         * @param json  The JSON to serialize to.
-         *
-         * @return True on success, false otherwise.
-         */
-        bool StateToJSON(nlohmann::json& inout_json);
+        bool DeleteWindow(size_t hash_id);
 
     private:
 
         // VARIABLES ------------------------------------------------------
 
-        std::vector<std::unique_ptr<WindowConfiguration>> windows;
+        std::vector<std::shared_ptr<WindowConfiguration>> windows;
     };
+
+    template<typename T>
+    bool WindowCollection::AddWindow(const std::string &window_name) {
+
+        if (window_name.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[GUI] Invalid window name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        auto win_hash = std::hash<std::string>()(window_name);
+        if (this->WindowExists(win_hash)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[GUI] Found already existing window with name '%s'. Window names must be unique. [%s, %s, line %d]\n",
+                    window_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        this->windows.push_back(std::make_shared<T>(window_name));
+        return true;
+    }
 
 } // namespace gui
 } // namespace megamol

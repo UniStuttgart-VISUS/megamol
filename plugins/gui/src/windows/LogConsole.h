@@ -42,29 +42,26 @@ namespace gui {
         std::vector<LogEntry> messages;
     };
 
+    // ------------------------------------------------------------------------
 
     /*
-     * The content of the log console GUI window
+     * The content of the log console GUI window.
      */
     class LogConsole : public WindowConfiguration {
     public:
 
-        LogConsole();
+        LogConsole(const std::string& window_name);
         ~LogConsole();
 
-        void Update() override;
-
-        void Draw() override;
-
+        bool Update() override;
+        bool Draw() override;
         void PopUps() override;
 
-        bool SpecificStateFromJSON(const nlohmann::json& in_json) override;
-
-        bool SpecificStateToJSON(nlohmann::json& inout_json) override;
+        void SpecificStateFromJSON(const nlohmann::json& in_json) override;
+        void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
     private:
         // VARIABLES --------------------------------------------------------------
-
 
         LogBuffer echo_log_buffer;
         std::ostream echo_log_stream;
@@ -74,8 +71,9 @@ namespace gui {
         unsigned int scroll_down;
         unsigned int scroll_up;
         float last_window_height;
-        unsigned int log_level;    // [SAVED] Log level used in log window
-        bool log_force_open;       // [SAVED] flag indicating if log window should be forced open on warnings and errors
+
+        unsigned int win_log_level;    // [SAVED] Log level used in log window
+        bool win_log_force_open;       // [SAVED] flag indicating if log window should be forced open on warnings and errors
 
         struct LogPopUpData {
             std::string title;

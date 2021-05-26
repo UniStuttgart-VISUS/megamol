@@ -157,15 +157,52 @@ void WindowConfiguration::WindowContextMenu(bool menu_visible, bool& out_collaps
 }
 
 
-bool WindowConfiguration::StateFromJSON(const nlohmann::json &in_json) {
+void WindowConfiguration::StateFromJSON(const nlohmann::json &in_json) {
 
+    for (auto &header_item : in_json.items()) {
+        if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
+            for (auto &config_item : header_item.value().items()) {
+                auto config_values = config_item.value();
 
-    return false;
+                int win_flags = 0;
+                megamol::core::utility::get_json_value<int>(config_values, {"win_flags"}, &win_flags);
+                this->config.flags = static_cast<ImGuiWindowFlags>(win_flags);
+                megamol::core::utility::get_json_value<bool>(config_values, {"win_show"}, &this->config.show);
+                std::array<int, 2> hotkey = {0, 0};
+                megamol::core::utility::get_json_value<int>(config_values, {"win_hotkey"}, hotkey.data(), hotkey.size());
+                this->config.hotkey = core::view::KeyCode(static_cast<core::view::Key>(hotkey[0]), static_cast<core::view::Modifiers>(hotkey[1]));
+                std::array<float, 2> position;
+                megamol::core::utility::get_json_value<float>(config_values, {"win_position"}, position.data(), position.size());
+                this->config.position = ImVec2(position[0], position[1]);
+                std::array<float, 2> size;
+                megamol::core::utility::get_json_value<float>(config_values, {"win_size"}, size.data(), size.size());
+                this->config.size = ImVec2(size[0], size[1]);
+                std::array<float, 2> reset_size;
+                megamol::core::utility::get_json_value<float>(config_values, {"win_reset_size"}, reset_size.data(), reset_size.size());
+                this->config.reset_size = ImVec2(reset_size[0], reset_size[1]);
+                std::array<float, 2> reset_position;
+                megamol::core::utility::get_json_value<float>(config_values, {"win_reset_position"}, reset_position.data(), reset_position.size());
+                this->config.reset_position = ImVec2(reset_position[0], reset_position[1]);
+                megamol::core::utility::get_json_value<bool>( config_values, {"win_collapsed"}, &this->config.collapsed);
+                this->config.reset_pos_size = true;
+            }
+        }
+    }
 }
 
 
-bool WindowConfiguration::StateToJSON(nlohmann::json &inout_json) {
+void WindowConfiguration::StateToJSON(nlohmann::json &inout_json) {
 
-
-    return false;
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_show"] = this->config.show;
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_flags"] = static_cast<int>(this->config.flags);
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_hotkey"] = { static_cast<int>(this->config.hotkey.key), this->config.hotkey.mods.toInt()};
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_position"] = { this->config.position.x, this->config.position.y };
+    auto rescale_win_size = this->config.size;
+    rescale_win_size /= megamol::gui::gui_scaling.Get();
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_size"] = { rescale_win_size.x, rescale_win_size.y };
+    auto rescale_win_reset_size = this->config.reset_size;
+    rescale_win_reset_size /= megamol::gui::gui_scaling.Get();
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_reset_size"] = { rescale_win_reset_size.x, rescale_win_reset_size.y };
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_reset_position"] = {this->config.reset_position.x, this->config.reset_position.y };
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_collapsed"] = this->config.collapsed;
 }

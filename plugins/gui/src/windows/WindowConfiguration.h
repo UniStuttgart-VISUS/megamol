@@ -53,11 +53,21 @@ namespace gui {
             bool reset_pos_size = true;                         // flag indicates whether to reset window position and size
         };
 
+        typedef std::function<void(WindowConfiguration::BasicConfig&)> VolatileDrawCallback_t;
+
         WindowConfiguration(const std::string& name, WindowConfigID window_id)
                 : hash_id(std::hash<std::string>()(name))
                 , name(name)
                 , window_id(window_id)
-                , config() {}
+                , config()
+                , volatile_draw_callback(nullptr) {}
+
+        WindowConfiguration(const std::string& name, VolatileDrawCallback_t callback)
+                : hash_id(std::hash<std::string>()(name))
+                , name(name)
+                , window_id(WINDOW_ID_VOLATILE)
+                , config()
+                , volatile_draw_callback(callback) {}
 
         ~WindowConfiguration() = default;
 
@@ -77,30 +87,40 @@ namespace gui {
             return this->config;
         }
 
-        std::string FullWindowTitle() const {
+        inline std::string FullWindowTitle() const {
             return (this->Name() + "     " + this->config.hotkey.ToString());
+        }
+
+        void SetVolatileCallback(std::function<void(WindowConfiguration::BasicConfig&)> const& callback) {
+            this->volatile_draw_callback = const_cast<std::function<void(WindowConfiguration::BasicConfig &)> &>(callback);
+            this->window_id = WINDOW_ID_VOLATILE;
         }
 
         void ApplyWindowSizePosition(bool consider_menu);
 
         void WindowContextMenu(bool menu_visible, bool& out_collapsing_changed);
 
-        bool StateFromJSON(const nlohmann::json& in_json);
+        void StateFromJSON(const nlohmann::json& in_json);
 
-        bool StateToJSON(nlohmann::json& inout_json);
+        void StateToJSON(nlohmann::json& inout_json);
 
         // --------------------------------------------------------------------
         // IMPLEMENT
 
-        virtual bool SpecificStateToJSON(nlohmann::json& inout_json) { return true; };
+        virtual bool Update() { return true; }
 
-        virtual bool SpecificStateFromJSON(const nlohmann::json& in_json) { return true; };
+        virtual bool Draw() {
+            if ((window_id == WINDOW_ID_VOLATILE) && (volatile_draw_callback != nullptr)) {
+               volatile_draw_callback(this->config);
+               return true;
+            }
+        }
 
-        virtual void Update() { };
+        virtual void PopUps() { }
 
-        virtual void Draw() { };
+        virtual void SpecificStateToJSON(nlohmann::json& inout_json) {  }
 
-        virtual void PopUps() { };
+        virtual void SpecificStateFromJSON(const nlohmann::json& in_json) {  };
 
     protected:
 
@@ -108,9 +128,10 @@ namespace gui {
 
     private:
 
-        size_t hash_id;         // unique hash generated from name to omit string comparison
-        std::string name;       // [SAVED] unique name of the window
-        WindowConfigID window_id;     // [SAVED] ID of the predefined callback drawing the window content
+        size_t hash_id;                 // unique hash generated from name to omit string comparison
+        std::string name;               // [SAVED] unique name of the window
+        WindowConfigID window_id;       // [SAVED] ID of the predefined callback drawing the window content
+        VolatileDrawCallback_t volatile_draw_callback;
     };
 
 } // namespace gui

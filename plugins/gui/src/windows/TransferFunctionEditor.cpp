@@ -165,11 +165,12 @@ std::array<std::tuple<std::string, PresetGenerator>, 21> PRESETS = {
     std::make_tuple("12-class Set3", ColormapAdapter<12, true>(Set3Map)),
 };
 
+// ----------------------------------------------------------------------------
 
-TransferFunctionEditor::TransferFunctionEditor()
-        : WindowConfiguration("Transfer Function Editor", WindowConfiguration::WINDOW_ID_TRANSFER_FUNCTION)
+TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, bool non_window_mode)
+        : WindowConfiguration(window_name , WindowConfiguration::WINDOW_ID_TRANSFER_FUNCTION)
+        , non_window_mode(non_window_mode)
         , connected_parameter_ptr(nullptr)
-        , connected_parameter_name()
         , nodes()
         , range({0.0f, 1.0f})
         , last_range({0.0f, 1.0f})
@@ -189,6 +190,10 @@ TransferFunctionEditor::TransferFunctionEditor()
         , check_once_force_set_overwrite_range(true)
         , plot_paint_mode(false)
         , plot_dragging(false)
+        , win_view_minimized(false)
+        , win_view_vertical(false)
+        , win_active_param()
+        , win_tfe_reset(false)
         , tooltip()
         , image_widget() {
 
@@ -281,11 +286,11 @@ bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
 
 void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const std::string& param_full_name) {
     this->connected_parameter_ptr = nullptr;
-    this->connected_parameter_name = "";
+    this->win_active_param = "";
     if (param_ptr != nullptr) {
         if (param_ptr->Type() == ParamType_t::TRANSFERFUNCTION) {
             this->connected_parameter_ptr = param_ptr;
-            this->connected_parameter_name = param_full_name;
+            this->win_active_param = param_full_name;
             this->check_once_force_set_overwrite_range = true;
             this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
         } else {
@@ -296,14 +301,54 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
 }
 
 
-bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
+bool TransferFunctionEditor::Update() {
+
+    if (this->win_tfe_reset) {
+        this->SetMinimized(this->win_view_minimized);
+        this->SetVertical(this->win_view_vertical);
+        /* TODO
+         * Move to configurator?
+        if (!this->win_active_param.empty()) {
+            if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+                for (auto& module_ptr : graph_ptr->Modules()) {
+                    std::string module_full_name = module_ptr->FullName();
+                    for (auto& param : module_ptr->Parameters()) {
+                        std::string param_full_name = param.FullNameProject();
+                        if (gui_utils::CaseInsensitiveStringCompare(
+                                this->win_active_param, param_full_name) &&
+                            (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
+                            this->SetConnectedParameter(&param, param_full_name);
+                            param.TransferFunctionEditor_ConnectExternal(this->tf_editor_ptr, true);
+                        }
+                    }
+                }
+            }
+        }
+         */
+        this->win_tfe_reset = false;
+    }
+
+    // Change window flags depending on current view of transfer function editor
+    if (this->IsMinimized()) {
+        this->config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
+                             ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+
+    } else {
+        this->config.flags = ImGuiWindowFlags_AlwaysAutoResize;
+    }
+    this->win_view_minimized = this->IsMinimized();
+    this->win_view_vertical = this->IsVertical();
+}
+
+
+bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
 
     std::string help;
 
     ImGui::BeginGroup();
     ImGui::PushID("TransferFunctionEditor");
 
-    if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
+    if (this->non_window_mode && (this->IsParameterConnected())) {
         const char* message = "Changes have no effect.\n"
                               "No transfer function parameter connected for edit.\n";
         ImGui::TextColored(GUI_COLOR_TEXT_ERROR, message);
@@ -575,7 +620,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
         // Return true for current changes being applied
         if (!this->pending_changes) {
-            GUIUtils::ReadOnlyWigetStyle(true);
+            gui_utils::ReadOnlyWigetStyle(true);
         }
         ImGui::PushStyleColor(
             ImGuiCol_Button, this->pending_changes ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
@@ -587,7 +632,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         }
         ImGui::PopStyleColor(3);
         if (!this->pending_changes) {
-            GUIUtils::ReadOnlyWigetStyle(false);
+            gui_utils::ReadOnlyWigetStyle(false);
         }
 
         ImGui::SameLine();
@@ -604,9 +649,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->pending_changes = false;
         }
 
-        if (connected_parameter_mode) {
+        if (this->non_window_mode) {
             if (apply_changes) {
-                if (this->connected_parameter_ptr != nullptr) {
+                if (this->IsParameterConnected()) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
                         if (this->connected_parameter_ptr->Type() == ParamType_t::TRANSFERFUNCTION) {
@@ -626,6 +671,41 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
     ImGui::EndGroup();
 
     return apply_changes;
+}
+
+
+void TransferFunctionEditor::PopUps() {
+
+    // UNUSED
+}
+
+
+void TransferFunctionEditor::SpecificStateFromJSON(const nlohmann::json &in_json) {
+
+    for (auto& header_item : in_json.items()) {
+        if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
+            for (auto &config_item : header_item.value().items()) {
+                if (config_item.key() == this->Name()) {
+                    auto config_values = config_item.value();
+
+                    megamol::core::utility::get_json_value<bool>(config_values, {"tfe_view_minimized"}, &this->win_view_minimized);
+                    megamol::core::utility::get_json_value<bool>(config_values, {"tfe_view_vertical"}, &this->win_view_vertical);
+                    megamol::core::utility::get_json_value<std::string>(config_values, {"tfe_active_param"}, &this->win_active_param);
+                    this->win_tfe_reset = true;
+                }
+            }
+        }
+    }
+}
+
+
+void TransferFunctionEditor::SpecificStateToJSON(nlohmann::json &inout_json) {
+
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_view_minimized"] =  this->win_view_minimized;
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_view_vertical"] =  this->win_view_vertical;
+    gui_utils::Utf8Encode(this->win_active_param);
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_active_param"] =  this->win_active_param;
+    gui_utils::Utf8Decode(this->win_active_param);
 }
 
 
@@ -1043,6 +1123,7 @@ bool TransferFunctionEditor::paintModeNode(
     return true;
 }
 
+
 bool TransferFunctionEditor::changeNodeSelection(unsigned int new_selected_node_index,
     unsigned int new_selected_channel_index, ImVec2 new_selected_node_drag_delta) {
 
@@ -1140,11 +1221,4 @@ void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, u
             }
         }
     }
-}
-
-void TransferFunctionEditor::Draw() {
-
-    this->tf_editor_ptr->Widget(true);
-    wc.config.specific.tfe_active_param = this->tf_editor_ptr->GetConnectedParameterName();
-
 }

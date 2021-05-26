@@ -21,27 +21,25 @@
 namespace megamol {
 namespace gui {
 
-
+    /*
+     * The graph configurator GUI window.
+     */
     class Configurator : public WindowConfiguration {
     public:
 
-        Configurator();
+        Configurator(const std::string& window_name);
         ~Configurator();
 
-        void Update() override;
-
-        void Draw() override;
-
+        // Call once
+        void SetData(std::shared_ptr<TransferFunctionEditor> win_tfe_ptr) {
+            this->win_tfeditor_ptr = win_tfe_ptr;
+        }
+        bool Update() override;
+        bool Draw() override;
         void PopUps() override;
 
-        /**
-         * Get hotkey of configurator.
-         *
-         * @return Hotkeys of configurator.
-         */
-        inline megamol::gui::HotkeyArray_t& GetHotkeys() {
-            return this->graph_state.hotkeys;
-        }
+        void SpecificStateFromJSON(const nlohmann::json& in_json) override;
+        void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
         /**
          * Returns required font scalings for graph canvas
@@ -58,15 +56,6 @@ namespace gui {
         }
 
         /**
-         * State to and from JSON.
-         */
-        bool StateToJSON(nlohmann::json& inout_json);
-        bool StateFromJSON(const nlohmann::json& in_json);
-
-        bool SpecificStateFromJSON(const nlohmann::json& in_json) override;
-        bool SpecificStateToJSON(nlohmann::json& inout_json) override;
-
-        /**
          * Globally save currently selected graph in configurator.
          */
         inline bool ConsumeTriggeredGlobalProjectSave() {
@@ -78,7 +67,19 @@ namespace gui {
     private:
         // VARIABLES --------------------------------------------------------------
 
+        enum HotkeyIndex : size_t {
+            MODULE_SEARCH = 0,
+            PARAMETER_SEARCH = 1,
+            DELETE_GRAPH_ITEM = 2,
+            SAVE_PROJECT = 3,
+            INDEX_COUNT = 4
+        };
+        std::map<HotkeyIndex, megamol::gui::HotkeyData_t> hotkeys;
+
         GraphCollection graph_collection;
+
+        /** Shortcut pointer to transfer function window */
+        std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr;
 
         float module_list_sidebar_width;
         ImGuiID selected_list_module_uid;
@@ -100,11 +101,8 @@ namespace gui {
         // FUNCTIONS --------------------------------------------------------------
 
         void draw_window_menu();
+
         void draw_window_module_list(float width, float height, bool apply_focus);
-
-        void drawPopUps();
-
-        bool load_graph_state_from_file(const std::string& filename);
     };
 
 

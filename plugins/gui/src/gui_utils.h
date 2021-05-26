@@ -175,21 +175,10 @@ namespace gui {
     /** Available ImGui APIs */
     enum class GUIImGuiAPI { NONE, OPEN_GL };
 
-    /** Hotkey Data Types (exclusively for configurator) */
-    enum HotkeyIndex : size_t {
-        MODULE_SEARCH = 0,
-        PARAMETER_SEARCH = 1,
-        DELETE_GRAPH_ITEM = 2,
-        SAVE_PROJECT = 3,
-        INDEX_COUNT = 4
-    };
-
     struct HotkeyData_t {
         megamol::core::view::KeyCode keycode;
         bool is_pressed = false;
     };
-
-    typedef std::array<megamol::gui::HotkeyData_t, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArray_t;
 
     typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;
     typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType_t;

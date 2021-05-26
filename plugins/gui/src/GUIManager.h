@@ -12,14 +12,12 @@
 
 #include "windows/WindowCollection.h"
 #include "windows/Configurator.h"
-#include "windows/TransferFunctionEditor.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "widgets/WidgetPicking_gl.h"
-
 
 
 namespace megamol {
@@ -124,18 +122,30 @@ namespace gui {
         /**
          * Pass triggered Screenshot.
          */
-        bool GetTriggeredScreenshot();
+        bool GetTriggeredScreenshot() {
+            bool trigger_screenshot = this->state.screenshot_triggered;
+            this->state.screenshot_triggered = false;
+            return trigger_screenshot;
+        }
 
-        // Valid filename is only ensured after screenshot was triggered.
-        inline std::string GetScreenshotFileName() const {
-            return this->state.screenshot_filepath;
+        /**
+         * Return current screenshot file name and create new file name for next screenshot
+         */
+        inline std::string GetScreenshotFileName() {
+            auto screenshot_filepath = this->state.screenshot_filepath;
+            this->create_unique_screenshot_filename(this->state.screenshot_filepath);
+            return screenshot_filepath;
         }
 
         /**
          * Pass project load request.
          * Request is consumed when calling this function.
          */
-        std::string GetProjectLoadRequest();
+        std::string GetProjectLoadRequest() {
+            auto project_file_name = this->state.request_load_projet_file;
+            this->state.request_load_projet_file.clear();
+            return project_file_name;
+        }
 
         /**
          * Pass current mouse cursor request.
@@ -259,7 +269,6 @@ namespace gui {
             bool open_popup_screenshot;                    // Flag for opening screenshot file pop-up
             bool menu_visible;                             // Flag indicating menu state
             unsigned int graph_fonts_reserved;             // Number of fonts reserved for the configurator graph canvas
-            bool toggle_graph_entry;                       // Flag indicating that the main view should be toggeled
             bool shutdown_triggered;                       // Flag indicating user triggered shutdown
             bool screenshot_triggered;                     // Trigger and file name for screenshot
             std::string screenshot_filepath;               // Filename the screenshot should be saved to
@@ -272,11 +281,12 @@ namespace gui {
             float stat_averaged_ms;               // current average fps value
             size_t stat_frame_count;              // current fame count
             bool load_docking_preset;             // Flag indicating docking preset loading
-            bool hotkeys_check_once;              // WORKAROUND: Check multiple hotkey assignments once
         };
 
-        /** The GUI hotkey array index mapping. */
-        enum GuiHotkeyIndex : size_t {
+
+        // VARIABLES --------------------------------------------------------------
+
+        enum HotkeyIndex : size_t {
             EXIT_PROGRAM = 0,
             PARAMETER_SEARCH = 1,
             SAVE_PROJECT = 2,
@@ -285,13 +295,8 @@ namespace gui {
             TOGGLE_GRAPH_ENTRY = 5,
             TRIGGER_SCREENSHOT = 6,
             SHOW_HIDE_GUI = 7,
-            INDEX_COUNT = 8
         };
-
-        // VARIABLES --------------------------------------------------------------
-
-        /** Hotkeys */
-        std::array<megamol::gui::HotkeyData_t, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
+        std::map<HotkeyIndex, megamol::gui::HotkeyData_t> hotkeys;
 
         /** The ImGui context created and used by this GUIManager */
         ImGuiContext* context;
@@ -307,9 +312,8 @@ namespace gui {
         std::map<std::string, std::pair<bool*, std::function<void()>>> popup_collection;
         std::map<std::string, std::tuple<bool*, bool, std::string>> notification_collection;
 
-        /** Shortcut pointers to windows. */
-        Configurator* configurator_ptr;
-        TransferFunctionEditor* tfeditor_ptr;
+        /** Shortcut pointer to configurator window */
+        std::shared_ptr<Configurator> win_configurator_ptr;
 
         // Widgets
         FileBrowserWidget file_browser;
@@ -346,7 +350,7 @@ namespace gui {
 
         bool state_to_string(std::string& out_state);
 
-        bool create_not_existing_png_filepath(std::string& inout_filepath);
+        bool create_unique_screenshot_filename(std::string& inout_filepath);
     };
 
 } // namespace gui

@@ -20,42 +20,99 @@ using namespace megamol::gui;
 
 WindowCollection::WindowCollection() {
 
-    this->windows.push_back(std::make_unique<Configurator>());
-    this->windows.push_back(std::make_unique<LogConsole>());
-    this->windows.push_back(std::make_unique<PerformanceMonitor>());
-    this->windows.push_back(std::make_unique<ParameterList>());
-    this->windows.push_back(std::make_unique<TransferFunctionEditor>());
+    auto win_configurator = std::make_shared<Configurator>("Configurator");
+    auto win_logconsole = std::make_shared<LogConsole>("Log Console");
+    auto win_perfmonitor = std::make_shared<PerformanceMonitor>("Performance Metrics");
+    auto win_paramlist = std::make_shared<ParameterList>("Parameters");
+    auto win_tfeditor = std::make_shared<TransferFunctionEditor>("Transfer Function Editor", false);
+    this->windows.emplace_back(win_configurator);
+    this->windows.emplace_back(win_logconsole);
+    this->windows.emplace_back(win_perfmonitor);
+    this->windows.emplace_back(win_paramlist);
+    this->windows.emplace_back(win_tfeditor);
+
+    win_configurator->SetData(win_tfeditor);
 }
 
 
-bool WindowCollection::AddWindow(WindowConfiguration& wc) {
+bool WindowCollection::AddWindow(const std::string &window_name, const std::function<void(WindowConfiguration::BasicConfig &)> &callback) {
 
-    /// TODO only alow to add volalatile windows
-
-    if (wc.Name().empty()) {
+    if (window_name.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] Invalid window name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (this->WindowExists(wc.Hash())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] Found already existing window with name '%s'. Window names must be unique. [%s, %s, line %d]\n",
-            wc.Name().c_str(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
+    auto win_hash = std::hash<std::string>()(window_name);
+    if (this->WindowExists(win_hash)) {
+        // Overwrite volatile callback for existing window
+        for (auto& win : this->windows) {
+            if (win->Hash() == win_hash) {
+                win->SetVolatileCallback(callback);
+                continue;
+            }
+        }
     }
-    this->windows.emplace_back(wc);
+    else {
+        this->windows.push_back(std::make_shared<WindowConfiguration>(window_name, callback)); /// const_cast<std::function<void(WindowConfiguration::BasicConfig &)> &>(callback)
+    }
     return true;
 }
 
 
-bool WindowCollection::DeleteWindow(size_t win_hash_id) {
-    for (auto iter = this->windows.begin(); iter != this->windows.end(); iter++) {
-        if (iter->Hash() == win_hash_id) {
-            this->windows.erase(iter);
-            return true;
-        }
+void WindowCollection::Update() {
+
+    for (auto& win : this->windows) {
+        win->Update();
     }
-    return false;
+}
+
+
+void WindowCollection::Draw(bool menu_visible) {
+    
+    const auto func = [&, this](WindowConfiguration& wc) {
+
+        if (wc.Config().show) {
+            ImGui::SetNextWindowBgAlpha(1.0f);
+            ImGui::SetNextWindowCollapsed(wc.Config().collapsed, ImGuiCond_Always);
+
+            // Begin Window
+            if (!ImGui::Begin(wc.FullWindowTitle().c_str(), &wc.Config().show, wc.Config().flags)) {
+                wc.Config().collapsed = ImGui::IsWindowCollapsed();
+                ImGui::End(); // early ending
+                return;
+            }
+
+            // Context menu of window
+            bool collapsing_changed = false;
+            wc.WindowContextMenu(menu_visible, collapsing_changed);
+
+            // Draw window content
+            wc.Draw();
+
+            // Omit updating size and position of window from imgui for current frame when reset
+            bool update_window_pos_size = !wc.Config().reset_pos_size;
+            if (update_window_pos_size) {
+                wc.Config().position = ImGui::GetWindowPos();
+                wc.Config().size = ImGui::GetWindowSize();
+
+                if (!collapsing_changed) {
+                    wc.Config().collapsed = ImGui::IsWindowCollapsed();
+                }
+            }
+
+            ImGui::End();
+        }
+    };
+
+    this->EnumWindows(func);
+}
+
+
+void WindowCollection::PopUps() {
+
+    for (auto& win : this->windows) {
+        win->PopUps();
+    }
 }
 
 
@@ -64,160 +121,52 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
     try {
         if (!in_json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
-        bool found = false;
-        bool valid = true;
-        std::vector<WindowConfiguration> tmp_windows;
-        for (auto& header_item : in_json.items()) {
+        // First, search for not predefined window configurations and create additional windows
+        for (auto &header_item : in_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
-                found = true;
-                for (auto& config_item : header_item.value().items()) {
-                    auto config_values = config_item.value();
+                for (auto &config_item : header_item.value().items()) {
+                    auto window_name = config_item.key();
+                    auto win_hash = std::hash<std::string>()(window_name);
+                    if (!this->WindowExists(win_hash)) {
 
-                    int win_callback_id = 0;
-                    megamol::core::utility::get_json_value<int>(config_values, {"win_callback"}, &win_callback_id);
+                        int tmp_win_config_id = 0;
+                        megamol::core::utility::get_json_value<int>(config_item.value(), {"win_callback"}, /// TODO rename to "win_config_id"
+                            &tmp_win_config_id);
+                        auto win_config_id = static_cast<WindowConfiguration::WindowConfigID>(tmp_win_config_id);
 
-                    WindowConfiguration tmp_config(
-                        config_item.key(), static_cast<WindowConfiguration::PredefinedCallbackID>(win_callback_id));
-
-                    tmp_config.config.basic.reset_pos_size = true;
-                    tmp_config.config.specific.tmp_tfe_reset = true;
-
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"win_show"}, &tmp_config.config.basic.show);
-
-                    int win_flags = 0;
-                    megamol::core::utility::get_json_value<int>(config_values, {"win_flags"}, &win_flags);
-                    tmp_config.config.basic.flags = static_cast<ImGuiWindowFlags>(win_flags);
-
-                    std::array<int, 2> hotkey = {0, 0};
-                    megamol::core::utility::get_json_value<int>(
-                        config_values, {"win_hotkey"}, hotkey.data(), hotkey.size());
-                    tmp_config.config.basic.hotkey = core::view::KeyCode(
-                        static_cast<core::view::Key>(hotkey[0]), static_cast<core::view::Modifiers>(hotkey[1]));
-
-                    std::array<float, 2> position;
-                    megamol::core::utility::get_json_value<float>(
-                        config_values, {"win_position"}, position.data(), position.size());
-                    tmp_config.config.basic.position = ImVec2(position[0], position[1]);
-
-                    std::array<float, 2> size;
-                    megamol::core::utility::get_json_value<float>(
-                        config_values, {"win_size"}, size.data(), size.size());
-                    tmp_config.config.basic.size = ImVec2(size[0], size[1]);
-
-                    std::array<float, 2> reset_size;
-                    megamol::core::utility::get_json_value<float>(
-                        config_values, {"win_reset_size"}, reset_size.data(), reset_size.size());
-                    tmp_config.config.basic.reset_size = ImVec2(reset_size[0], reset_size[1]);
-
-                    std::array<float, 2> reset_position;
-                    megamol::core::utility::get_json_value<float>(
-                        config_values, {"win_reset_position"}, reset_position.data(), reset_position.size());
-                    tmp_config.config.basic.reset_position = ImVec2(reset_position[0], reset_position[1]);
-
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"win_collapsed"}, &tmp_config.config.basic.collapsed);
-
-                    // Param Config --------------------------------------------
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"param_show_hotkeys"}, &tmp_config.config.specific.param_show_hotkeys);
-
-                    tmp_config.config.specific.param_modules_list.clear();
-                    if (config_values.at("param_modules_list").is_array()) {
-                        size_t tmp_size = config_values.at("param_modules_list").size();
-                        for (size_t i = 0; i < tmp_size; ++i) {
-                            std::string value;
-                            megamol::core::utility::get_json_value<std::string>(
-                                config_values.at("param_modules_list")[i], {}, &value);
-                            tmp_config.config.specific.param_modules_list.emplace_back(value);
+                        if (win_config_id == WindowConfiguration::WINDOW_ID_VOLATILE) {
+                            this->AddWindow(window_name, std::function<void(WindowConfiguration::BasicConfig &)>());
+                        } else if (win_config_id == WindowConfiguration::WINDOW_ID_PARAMETERS) {
+                            this->AddWindow<ParameterList>(window_name);
+                        } else {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                    "[GUI] Only additional volatile and custom parameter windows can be loaded from state file. [%s, %s, line %d]\n",
+                                    __FILE__, __FUNCTION__, __LINE__);
                         }
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'param_modules_list' as array. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
                     }
-
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"param_extended_mode"}, &tmp_config.config.specific.param_extended_mode);
-
-                    // FpsMs Config --------------------------------------------
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"fpsms_show_options"}, &tmp_config.config.specific.fpsms_show_options);
-
-                    megamol::core::utility::get_json_value<int>(
-                        config_values, {"fpsms_max_value_count"}, &tmp_config.config.specific.fpsms_buffer_size);
-
-                    megamol::core::utility::get_json_value<float>(
-                        config_values, {"fpsms_refresh_rate"}, &tmp_config.config.specific.fpsms_refresh_rate);
-
-                    int mode = 0;
-                    megamol::core::utility::get_json_value<int>(config_values, {"fpsms_mode"}, &mode);
-                    tmp_config.config.specific.fpsms_mode = static_cast<WindowConfiguration::TimingMode>(mode);
-
-                    // TFE Config ---------------------------------------------
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"tfe_view_minimized"}, &tmp_config.config.specific.tfe_view_minimized);
-
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"tfe_view_vertical"}, &tmp_config.config.specific.tfe_view_vertical);
-
-                    megamol::core::utility::get_json_value<std::string>(
-                        config_values, {"tfe_active_param"}, &tmp_config.config.specific.tfe_active_param);
-
-                    // --------------------------------------------------------
-                    // add current window config to tmp window config list
-                    tmp_windows.emplace_back(tmp_config);
                 }
             }
         }
-        if (found) {
-            if (valid) {
+
+        // Then read configuration for all existing windows
+        for (auto& window : this->windows) {
+            window->StateFromJSON(in_json);
+            window->SpecificStateFromJSON(in_json);
+        }
+
 #ifdef GUI_VERBOSE
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[GUI] Read window configurations from JSON string.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read window configurations from JSON string.");
 #endif // GUI_VERBOSE
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] Error while loading window configuration state from JSON. [%s, %s, line %d]\n", __FILE__,
-                    __FUNCTION__, __LINE__);
-                return false;
-            }
-        } else {
-            return false;
-        }
 
-        /// Not omitting complete read windows configuration if there was an error while reading
-        /// (preventing 'old' configurations going out of use)
-        // Replace existing window configurations and add new windows.
-        for (auto& new_win : tmp_windows) {
-            bool found_existing = false;
-            for (auto& win : this->windows) {
-                // Check for same name
-                if (win.Hash() == new_win.Hash()) {
-                    auto tmp_volatile_callback = win.VolatileCallback();
-                    win = new_win;
-                    if (tmp_volatile_callback) {
-                        // Restore previously set volatile callback
-                        win.SetVolatileCallback(tmp_volatile_callback);
-                    }
-                    found_existing = true;
-                }
-            }
-            if (!found_existing) {
-                this->windows.emplace_back(new_win);
-            }
-        }
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
     return true;
 }
 
@@ -227,65 +176,11 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
     try {
         // Append to given json
         for (auto& window : this->windows) {
-            std::string window_name = window.Name();
-            WindowConfiguration wc = window;
 
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_show"] = wc.config.basic.show;
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_flags"] = static_cast<int>(wc.config.basic.flags);
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_callback"] = static_cast<int>(wc.CallbackID());
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_hotkey"] = {
-                static_cast<int>(wc.config.basic.hotkey.key), wc.config.basic.hotkey.mods.toInt()};
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_position"] = {
-                wc.config.basic.position.x, wc.config.basic.position.y};
+            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window->Name()]["win_callback"] = static_cast<int>(window->WindowID()); /// TODO rename to "win_config_id"
 
-            auto rescale_win_size = wc.config.basic.size;
-            rescale_win_size /= megamol::gui::gui_scaling.Get();
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_size"] = {rescale_win_size.x, rescale_win_size.y};
-
-            auto rescale_win_reset_size = wc.config.basic.reset_size;
-            rescale_win_reset_size /= megamol::gui::gui_scaling.Get();
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_reset_size"] = {
-                rescale_win_reset_size.x, rescale_win_reset_size.y};
-
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_reset_position"] = {
-                wc.config.basic.reset_position.x, wc.config.basic.reset_position.y};
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_collapsed"] = wc.config.basic.collapsed;
-
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_show_hotkeys"] =
-                wc.config.specific.param_show_hotkeys;
-
-            for (auto& pm : wc.config.specific.param_modules_list) {
-                gui_utils::Utf8Encode(pm);
-            }
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_modules_list"] =
-                wc.config.specific.param_modules_list;
-            for (auto& pm : wc.config.specific.param_modules_list) {
-                gui_utils::Utf8Decode(pm);
-            }
-
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_extended_mode"] =
-                wc.config.specific.param_extended_mode;
-
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_show_options"] =
-                wc.config.specific.fpsms_show_options;
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_max_value_count"] =
-                wc.config.specific.fpsms_buffer_size;
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_refresh_rate"] =
-                wc.config.specific.fpsms_refresh_rate;
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_mode"] =
-                static_cast<int>(wc.config.specific.fpsms_mode);
-
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_view_minimized"] =
-                wc.config.specific.tfe_view_minimized;
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_view_vertical"] =
-                wc.config.specific.tfe_view_vertical;
-
-            gui_utils::Utf8Encode(wc.config.specific.tfe_active_param);
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_active_param"] =
-                wc.config.specific.tfe_active_param;
-            gui_utils::Utf8Decode(wc.config.specific.tfe_active_param);
-
-
+            window->StateToJSON(inout_json);
+            window->SpecificStateToJSON(inout_json);
         }
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote window configurations to JSON.");
@@ -293,9 +188,27 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
 
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
     return true;
+}
+
+
+bool WindowCollection::DeleteWindow(size_t win_hash_id) {
+
+    for (auto iter = this->windows.begin(); iter != this->windows.end(); iter++) {
+        if (((*iter)->Hash() == win_hash_id)) {
+            if (((*iter)->WindowID() == WindowConfiguration::WINDOW_ID_VOLATILE) || ((*iter)->WindowID() == WindowConfiguration::WINDOW_ID_PARAMETERS)) {
+                this->windows.erase(iter);
+                return true;
+            }
+            else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] Only volatile and custom parameter windows can be deleted. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return false;
+            }
+        }
+    }
+    return false;
 }

@@ -59,7 +59,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Stroage_t stor
         , gui_rotation_widget()
         , tf_string_hash(0)
         , tf_editor_external_ptr(nullptr)
-        , tf_editor_inplace()
+        , tf_editor_inplace(std::string("inplace_tfeditor_parameter_" + std::to_string(uid)) ,true)
         , tf_use_external_editor(false)
         , tf_show_editor(false)
         , tf_editor_hash(0) {
@@ -2138,7 +2138,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
             }
             // Draw transfer function editor
             if (this->tf_show_editor) {
-                if (this->tf_editor_inplace.Widget(false)) {
+                if (this->tf_editor_inplace.Draw()) {
                     std::string value;
                     if (this->tf_editor_inplace.GetTransferFunction(value)) {
                         this->SetValue(value);

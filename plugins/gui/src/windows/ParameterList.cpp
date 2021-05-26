@@ -8,13 +8,19 @@
 
 #include "ParameterList.h"
 #include "widgets/ButtonWidgets.h"
+#include "graph/Parameter.h"
 
 
 using namespace megamol::gui;
 
 
-
-ParameterList::ParameterList() : WindowConfiguration("Parameters", WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS) {
+ParameterList::ParameterList(const std::string& window_name)
+    : WindowConfiguration(window_name, WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS)
+    , win_show_hotkeys(false)
+    , win_modules_list()
+    , win_extended_mode(false)
+    , search_widget()
+    , tooltip() {
 
     // Configure PARAMETER LIST Window
     this->config.show = true;
@@ -24,11 +30,19 @@ ParameterList::ParameterList() : WindowConfiguration("Parameters", WindowConfigu
     this->config.flags = ImGuiWindowFlags_NoScrollbar;
 }
 
-void ParameterList::Draw() {
+
+bool ParameterList::Update() {
+
+    // UNUSED
+
+    return true;
+}
+
+
+bool ParameterList::Draw() {
 
     // Mode
-    megamol::gui::ButtonWidgets::ExtendedModeButton(
-            "draw_param_window_callback", wc.config.specific.param_extended_mode);
+    megamol::gui::ButtonWidgets::ExtendedModeButton("draw_param_window_callback", this->win_extended_mode);
     this->tooltip.Marker("Expert mode enables options for additional parameter presentation options.");
     ImGui::SameLine();
 
@@ -53,8 +67,8 @@ void ParameterList::Draw() {
     ImGui::TextDisabled(help_marker.c_str());
     this->tooltip.ToolTip(param_help);
 
-    // Paramter substring name filtering (only for main parameter view)
-    if (wc.CallbackID() == WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS) {
+    // Parameter substring name filtering (only for main parameter view)
+    if (this->WindowID() == WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS) {
         if (this->hotkeys[GUIManager::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed) {
             this->search_widget.SetSearchFocus(true);
             this->hotkeys[GUIManager::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
@@ -101,7 +115,7 @@ void ParameterList::Draw() {
                     ImGui::PushID(module_ptr->UID());
 
                     // Check if module should be considered.
-                    if (!this->considerModule(module_label, wc.config.specific.param_modules_list)) {
+                    if (!this->consider_module(module_label, this->win_modules_list)) {
                         continue;
                     }
 
@@ -131,13 +145,13 @@ void ParameterList::Draw() {
                         // Deleting module's parameters is not available in main parameter window.
                         if (wc.CallbackID() != WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS) {
                             if (ImGui::MenuItem("Delete from List")) {
-                                auto find_iter = std::find(wc.config.specific.param_modules_list.begin(),
-                                                           wc.config.specific.param_modules_list.end(), module_label);
+                                auto find_iter = std::find(this->win_modules_list.begin(),
+                                                           this->win_modules_list.end(), module_label);
                                 // Break if module name is not contained in list
-                                if (find_iter != wc.config.specific.param_modules_list.end()) {
-                                    wc.config.specific.param_modules_list.erase(find_iter);
+                                if (find_iter != this->win_modules_list.end()) {
+                                    this->win_modules_list.erase(find_iter);
                                 }
-                                if (wc.config.specific.param_modules_list.empty()) {
+                                if (this->win_modules_list.empty()) {
                                     this->state.win_delete_hash_id = wc.Hash();
                                 }
                             }
@@ -158,7 +172,7 @@ void ParameterList::Draw() {
                     if (module_header_open) {
                         bool out_open_external_tf_editor;
                         module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
-                                                              vislib::math::Ternary(wc.config.specific.param_extended_mode), true,
+                                                              vislib::math::Ternary(this->win_extended_mode), true,
                                                               Parameter::WidgetScope::LOCAL, this->tf_editor_ptr, &out_open_external_tf_editor,
                                                               override_header_state, nullptr);
                         if (out_open_external_tf_editor) {
@@ -189,18 +203,69 @@ void ParameterList::Draw() {
             std::string payload_id = (const char*) payload->Data;
 
             // Insert dragged module name only if not contained in list
-            if (!this->considerModule(payload_id, wc.config.specific.param_modules_list)) {
-                wc.config.specific.param_modules_list.emplace_back(payload_id);
+            if (!this->consider_module(payload_id, this->win_modules_list)) {
+                this->win_modules_list.emplace_back(payload_id);
             }
         }
         ImGui::EndDragDropTarget();
     }
 
     ImGui::EndChild();
+
+    return true;
 }
 
 
-bool GUIManager::considerModule(const std::string& modname, std::vector<std::string>& modules_list) {
+void ParameterList::PopUps() {
+
+    // UNUSED
+}
+
+
+void ParameterList::SpecificStateFromJSON(const nlohmann::json &in_json) {
+
+    for (auto& header_item : in_json.items()) {
+        if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
+            for (auto &config_item : header_item.value().items()) {
+                if (config_item.key() == this->Name()) {
+                    auto config_values = config_item.value();
+
+                    megamol::core::utility::get_json_value<bool>(config_values, {"param_show_hotkeys"}, &this->win_show_hotkeys);
+                    this->win_modules_list.clear();
+                    if (config_values.at("param_modules_list").is_array()) {
+                        size_t tmp_size = config_values.at("param_modules_list").size();
+                        for (size_t i = 0; i < tmp_size; ++i) {
+                            std::string value;
+                            megamol::core::utility::get_json_value<std::string>(config_values.at("param_modules_list")[i], {}, &value);
+                            this->win_modules_list.emplace_back(value);
+                        }
+                    } else {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] JSON state: Failed to read 'param_modules_list' as array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    }
+                    megamol::core::utility::get_json_value<bool>(config_values, {"param_extended_mode"},&this->win_extended_mode);
+                }
+            }
+        }
+    }
+}
+
+
+void ParameterList::SpecificStateToJSON(nlohmann::json &inout_json) {
+                    
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_show_hotkeys"] = this->win_show_hotkeys;
+    for (auto& pm : this->win_modules_list) {
+        gui_utils::Utf8Encode(pm);
+    }
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_modules_list"] = this->win_modules_list;
+    for (auto& pm : this->win_modules_list) {
+        gui_utils::Utf8Decode(pm);
+    }
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_extended_mode"] = this->win_extended_mode;
+}
+
+
+bool ParameterList::consider_module(const std::string& modname, std::vector<std::string>& modules_list) {
+
     bool retval = false;
     // Empty module list means that all modules should be considered.
     if (modules_list.empty()) {
