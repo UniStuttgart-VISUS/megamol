@@ -36,6 +36,7 @@
 #include "ElementSampling.h"
 #include "ExtractSkeleton.h"
 #include "ElementColoring.h"
+#include "ConstructHull.h"
 
 namespace megamol::probe {
     /** Implementing the instance class of this plugin */
@@ -86,6 +87,8 @@ namespace megamol::probe {
 #endif
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractSkeleton>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ElementColoring>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ConstructHull>();
+
 
             // register calls here:
 
