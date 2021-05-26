@@ -60,7 +60,6 @@ bool adiosDataSource::create() {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Declaring IO");
         this->io = std::make_shared<adios2::IO>(adiosInst->DeclareIO("Input"));
 
-
     } catch (std::invalid_argument& e) {
 #ifdef WITH_MPI
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -106,12 +105,16 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
     if (cad == nullptr) return false;
 
     if (!this->dataMap.empty()) {
-        auto inq = cad->getVarsToInquire();
-        for (auto var : inq) {
+        auto inqV = cad->getVarsToInquire();
+        for (auto var : inqV) {
             this->inquireChanged = this->inquireChanged || this->dataMap.find(var) == this->dataMap.end();
         }
+        auto inqA = cad->getAttributesToInquire();
+        for (auto attr : inqA) {
+            this->inquireChanged = this->inquireChanged || this->dataMap.find(attr) == this->dataMap.end();
+        }
     } else {
-        if (!cad->getVarsToInquire().empty()) {
+        if (!cad->getVarsToInquire().empty() || !cad->getAttributesToInquire().empty()) {
             this->inquireChanged = true;
         }
     }
@@ -126,17 +129,9 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
             if (this->reader) {
                 this->reader->Close();
                 io->RemoveAllVariables();
+                io->RemoveAllAttributes();
             }
             this->reader = std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
-
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[adiosDataSource] Stepping to frame number: %d", cad->getFrameIDtoLoad());
-            if (cad->getFrameIDtoLoad() != 0) {
-                for (auto i = 0; i < cad->getFrameIDtoLoad(); i++) {
-                    reader->BeginStep();
-                    reader->EndStep();
-                }
-            }
 
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Beginning step");
             const adios2::StepStatus status = reader->BeginStep();
@@ -146,134 +141,189 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
             }
 
 
-            auto varsToInquire = cad->getVarsToInquire();
-            if (varsToInquire.empty()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("[adiosDataSource] varsToInquire is empty.");
+            auto toInquire = cad->getVarsToInquire();
+            auto attrsToInquire = cad->getAttributesToInquire();
+            toInquire.insert(toInquire.end(), attrsToInquire.begin(), attrsToInquire.end());
+            if (toInquire.empty()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[adiosDataSource] Nothing inquired ... exiting");
                 return false;
             }
 
-            for (auto toInq : varsToInquire) {
-                for (auto var : variables) {
-                    if (var.first == toInq) {
+            auto const frameIDtoLoad = cad->getFrameIDtoLoad();
+            std::vector<adios2Params> content = variables;
+            content.insert(content.end(), attributes.begin(), attributes.end());
+
+            for (auto toInq : toInquire) {
+                for (auto var : content) {
+                    if (var.name == toInq) {
                         std::vector<size_t> shape(1);
                         bool singleValue = true;
-                        if (var.second["SingleValue"] != std::string("true")) {
+                        if (var.params["SingleValue"] != std::string("true")) {
                             // num = std::stoi(var.second["Shape"]);
                             singleValue = false;
                         }
                         auto num = 1;
-                        if (var.second["Type"] == "float") {
+                        if (var.params["Type"] == "float") {
 
                             auto fc = std::make_shared<FloatContainer>(FloatContainer());
                             fc->singleValue = singleValue;
                             std::vector<float>& tmp_vec = fc->getVec();
-                            adios2::Variable<float> advar = io->InquireVariable<float>(var.first);
-                            auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            fc->shape = info[0].Count;
-                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                            tmp_vec.resize(num);
 
-                            reader->Get<float>(advar, tmp_vec);
-                            dataMap[var.first] = std::move(fc);
+                            if (var.isAttribute) {
+                                auto advar = io->InquireAttribute<float>(var.name);
+                                tmp_vec = advar.Data();
+                            } else {
+                                auto advar = io->InquireVariable<float>(var.name);
+                                advar.SetStepSelection({frameIDtoLoad, 1});
+                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
+                                fc->shape = info[0].Count;
+                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
+                                tmp_vec.resize(num);
 
-                        } else if (var.second["Type"] == "double") {
+                                reader->Get<float>(advar, tmp_vec);
+                            }
+                            dataMap[var.name] = std::move(fc);
+
+                        } else if (var.params["Type"] == "double") {
 
                             auto fc = std::make_shared<DoubleContainer>(DoubleContainer());
                             fc->singleValue = singleValue;
                             std::vector<double>& tmp_vec = fc->getVec();
 
-                            adios2::Variable<double> advar = io->InquireVariable<double>(var.first);
-                            auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            fc->shape = info[0].Count;
-                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                            tmp_vec.resize(num);
+                            if (var.isAttribute) {
+                                auto advar = io->InquireAttribute<double>(var.name);
+                                tmp_vec = advar.Data();
+                            } else {
+                                auto advar = io->InquireVariable<double>(var.name);
+                                advar.SetStepSelection({frameIDtoLoad, 1});
+                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
+                                fc->shape = info[0].Count;
+                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
+                                tmp_vec.resize(num);
 
-                            reader->Get<double>(advar, tmp_vec);
-                            dataMap[var.first] = std::move(fc);
+                                reader->Get<double>(advar, tmp_vec);
+                            }
+                            dataMap[var.name] = std::move(fc);
 
-                        } else if (var.second["Type"] == "int32_t") {
+                        } else if (var.params["Type"] == "int32_t") {
 
                             auto fc = std::make_shared<Int32Container>(Int32Container());
                             fc->singleValue = singleValue;
                             std::vector<int32_t>& tmp_vec = fc->getVec();
 
-                            adios2::Variable<int32_t> advar = io->InquireVariable<int32_t>(var.first);
-                            auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            fc->shape = info[0].Count;
-                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                            tmp_vec.resize(num);
+                            if (var.isAttribute) {
+                                auto advar = io->InquireAttribute<int32_t>(var.name);
+                                tmp_vec = advar.Data();
+                            } else {
+                                adios2::Variable<int32_t> advar = io->InquireVariable<int32_t>(var.name);
+                                advar.SetStepSelection({frameIDtoLoad, 1});
+                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
+                                fc->shape = info[0].Count;
+                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
+                                tmp_vec.resize(num);
 
-                            reader->Get<int32_t>(advar, tmp_vec);
-                            dataMap[var.first] = std::move(fc);
-                        } else if (var.second["Type"] == "int8_t" || var.second["Type"] == "char") {
+                                reader->Get<int32_t>(advar, tmp_vec);
+                            }
+                            dataMap[var.name] = std::move(fc);
+                        } else if (var.params["Type"] == "int8_t" || var.params["Type"] == "char") {
 
                             auto fc = std::make_shared<CharContainer>(CharContainer());
                             fc->singleValue = singleValue;
                             std::vector<char>& tmp_vec = fc->getVec();
 
-                            adios2::Variable<char> advar = io->InquireVariable<char>(var.first);
-                            auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            fc->shape = info[0].Count;
-                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                            tmp_vec.resize(num);
+                            if (var.isAttribute) {
+                                auto advar = io->InquireAttribute<char>(var.name);
+                                tmp_vec = advar.Data();
+                            } else {
+                                adios2::Variable<char> advar = io->InquireVariable<char>(var.name);
+                                advar.SetStepSelection({frameIDtoLoad, 1});
+                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
+                                fc->shape = info[0].Count;
+                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
+                                tmp_vec.resize(num);
 
-                            reader->Get<char>(advar, tmp_vec);
-                            dataMap[var.first] = std::move(fc);
-                        } else if (var.second["Type"] == "uint64_t") {
+                                reader->Get<char>(advar, tmp_vec);
+                            }
+                            dataMap[var.name] = std::move(fc);
+                        } else if (var.params["Type"] == "uint64_t") {
                             auto fc = std::make_shared<UInt64Container>(UInt64Container());
                             fc->singleValue = singleValue;
                             std::vector<uint64_t>& tmp_vec = fc->getVec();
 
-                            adios2::Variable<uint64_t> advar =
-                                io->InquireVariable<uint64_t>(var.first);
-                            auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            fc->shape = info[0].Count;
-                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                            tmp_vec.resize(num);
+                            if (var.isAttribute) {
+                                auto advar = io->InquireAttribute<uint64_t>(var.name);
+                                tmp_vec = advar.Data();
+                            } else {
+                                adios2::Variable<uint64_t> advar =
+                                    io->InquireVariable<uint64_t>(var.name);
+                                advar.SetStepSelection({frameIDtoLoad, 1});
+                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
+                                fc->shape = info[0].Count;
+                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
+                                tmp_vec.resize(num);
 
-                            reader->Get<uint64_t>(advar, tmp_vec);
-                            dataMap[var.first] = std::move(fc);
-                        } else if ((var.second["Type"] == "unsigned char")
-                            || (var.second["Type"] == "uint8_t")) {
+                                reader->Get<uint64_t>(advar, tmp_vec);
+                            }
+                            dataMap[var.name] = std::move(fc);
+                        } else if ((var.params["Type"] == "unsigned char")
+                            || (var.params["Type"] == "uint8_t")) {
                             auto fc = std::make_shared<UCharContainer>(UCharContainer());
                             fc->singleValue = singleValue;
                             std::vector<unsigned char>& tmp_vec = fc->getVec();
 
-                            adios2::Variable<unsigned char> advar = io->InquireVariable<unsigned char>(var.first);
-                            auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            fc->shape = info[0].Count;
-                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                            tmp_vec.resize(num);
+                            if (var.isAttribute) {
+                                auto advar = io->InquireAttribute<unsigned char>(var.name);
+                                tmp_vec = advar.Data();
+                            } else {
+                                adios2::Variable<unsigned char> advar = io->InquireVariable<unsigned char>(var.name);
+                                advar.SetStepSelection({frameIDtoLoad, 1});
+                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
+                                fc->shape = info[0].Count;
+                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
+                                tmp_vec.resize(num);
 
-                            reader->Get<unsigned char>(advar, tmp_vec);
-                            dataMap[var.first] = std::move(fc);
-                        } else if (var.second["Type"] == "uint32_t") {
+                                reader->Get<unsigned char>(advar, tmp_vec);
+                            }
+                            dataMap[var.name] = std::move(fc);
+                        } else if (var.params["Type"] == "uint32_t") {
                             auto fc = std::make_shared<UInt32Container>(UInt32Container());
                             fc->singleValue = singleValue;
                             std::vector<unsigned int>& tmp_vec = fc->getVec();
 
-                            adios2::Variable<unsigned int> advar = io->InquireVariable<unsigned int>(var.first);
-                            auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            fc->shape = info[0].Count;
-                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                            tmp_vec.resize(num);
+                            if (var.isAttribute) {
+                                auto advar = io->InquireAttribute<unsigned int>(var.name);
+                                tmp_vec = advar.Data();
+                            } else {
+                                adios2::Variable<unsigned int> advar = io->InquireVariable<unsigned int>(var.name);
+                                advar.SetStepSelection({frameIDtoLoad, 1});
+                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
+                                fc->shape = info[0].Count;
+                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
+                                tmp_vec.resize(num);
 
-                            reader->Get<unsigned int>(advar, tmp_vec);
-                            dataMap[var.first] = std::move(fc);
-                        } else if (var.second["Type"] == "string") {
+                                reader->Get<unsigned int>(advar, tmp_vec);
+                            }
+                            dataMap[var.name] = std::move(fc);
+                        } else if (var.params["Type"] == "string") {
 
                             auto fc = std::make_shared<StringContainer>(StringContainer());
                             fc->singleValue = singleValue;
                             std::vector<std::string>& tmp_vec = fc->getVec();
 
-                            adios2::Variable<std::string> advar = io->InquireVariable<std::string>(var.first);
-                            auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            fc->shape = info[0].Count;
-                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                            tmp_vec.resize(num);
+                            if (var.isAttribute) {
+                                auto advar = io->InquireAttribute<std::string>(var.name);
+                                tmp_vec = advar.Data();
+                            } else {
+                                adios2::Variable<std::string> advar = io->InquireVariable<std::string>(var.name);
+                                advar.SetStepSelection({frameIDtoLoad, 1});
+                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
+                                fc->shape = info[0].Count;
+                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
+                                tmp_vec.resize(num);
 
-                            reader->Get<std::string>(advar, tmp_vec);
-                            dataMap[var.first] = std::move(fc);
+                                reader->Get<std::string>(advar, tmp_vec);
+                            }
+                            dataMap[var.name] = std::move(fc);
                         }
                     }
                 }
@@ -360,6 +410,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             if (this->reader) {
                 this->reader->Close();
                 this->adiosInst->AtIO("Input").RemoveAllVariables();
+                this->adiosInst->AtIO("Input").RemoveAllAttributes();
             }
             this->reader = std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
 
@@ -367,18 +418,38 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             // auto availAttrib =io->AvailableAttributes();
             // megamol::core::utility::log::Log::DefaultLog.WriteInfo("ADIOS2: Number of attributes %d", availAttrib.size());
 
-            this->variables = io->AvailableVariables();
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Number of variables %d", variables.size());
+            auto tmp_variables = io->AvailableVariables();
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[adiosDataSource] Number of variables %d", tmp_variables.size());
+            auto tmp_attributes = io->AvailableAttributes();
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[adiosDataSource] Number of attributes %d", tmp_attributes.size());
 
-
-            availVars.reserve(variables.size());
-
+            availVars.reserve(tmp_variables.size());
+            variables.reserve(tmp_variables.size());
+            availAttribs.reserve(tmp_attributes.size());
+            attributes.reserve(tmp_attributes.size());
             timesteps.clear();
-            for (auto var : variables) {
-                availVars.push_back(var.first);
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] %s", var.first.c_str());
+            for (auto var : tmp_variables) {
+                adios2Params tmp_param;
+                tmp_param.name = var.first;
+                tmp_param.params = var.second;
+                variables.emplace_back(tmp_param);
+                availVars.emplace_back(var.first);
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource]: Available Variable %s", var.first.c_str());
                 // get timesteps
                 timesteps.push_back(std::stoi(var.second["AvailableStepsCount"]));
+            }
+
+            for (auto atr : tmp_attributes) {
+                adios2Params tmp_param;
+                tmp_param.name = atr.first;
+                tmp_param.params = atr.second;
+                tmp_param.isAttribute = true;
+                attributes.emplace_back(tmp_param);
+                availAttribs.emplace_back(atr.first);
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "[adiosDataSource]: Available Attribute %s", atr.first.c_str());
             }
 
             // Check of all variables have same timestep count
@@ -417,6 +488,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
     }
 
     cad->setAvailableVars(availVars);
+    cad->setAvailableAttributes(availAttribs);
     if (timesteps.size() != 1) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[adiosDataSource] Detected variables with different count of time steps - Using lowest");

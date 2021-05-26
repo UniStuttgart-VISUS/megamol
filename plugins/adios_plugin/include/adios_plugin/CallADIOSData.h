@@ -541,12 +541,15 @@ public:
     void setTime(float time);
     float getTime() const;
 
-    bool inquire(const std::string& varname);
-
+    bool inquireVar(const std::string& varname);
     std::vector<std::string> getVarsToInquire() const;
-
     std::vector<std::string> getAvailableVars() const;
     void setAvailableVars(const std::vector<std::string>& avars);
+
+    bool inquireAttr(const std::string& attrname);
+    std::vector<std::string> getAttributesToInquire() const;
+    std::vector<std::string> getAvailableAttributes() const;
+    void setAvailableAttributes(const std::vector<std::string>& availattribs);
 
     void setDataHash(size_t datah) { this->dataHash = datah; }
     size_t getDataHash() const { return this->dataHash; }
@@ -561,7 +564,8 @@ public:
     std::shared_ptr<abstractContainer> getData(std::string _str) const;
 
     bool isInVars(std::string);
-
+    bool isInAttributes(std::string);
+    
 private:
     size_t dataHash;
     float time;
@@ -569,6 +573,8 @@ private:
     size_t frameIDtoLoad;
     std::vector<std::string> inqVars;
     std::vector<std::string> availableVars;
+    std::vector<std::string> inqAttributes;
+    std::vector<std::string> availableAttributes;
 
     std::shared_ptr<adiosDataMap> dataptr;
 };

@@ -145,7 +145,7 @@ function(require_external NAME)
 
     add_external_project(adios2 STATIC
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-      GIT_TAG "v2.4.0"
+      GIT_TAG "v2.5.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
