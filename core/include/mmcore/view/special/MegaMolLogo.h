@@ -21,7 +21,7 @@ namespace view {
 namespace special {
 
     /**
-     * Logo rendering helper class for the MegaMol™ logo
+     * Logo rendering helper class for the MegaMol logo
      */
     class MegaMolLogo : public vislib::graphics::AbstractVISLogo {
     public:

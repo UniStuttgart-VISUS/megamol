@@ -1,7 +1,7 @@
 /*
  * TableSort.h
  *
- * Copyright (C) 2019 Visualisierungsinstitut der Universit‰t Stuttgart
+ * Copyright (C) 2019 Visualisierungsinstitut der Universit√§t Stuttgart
  * Alle Rechte vorbehalten.
  */
 

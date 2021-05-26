@@ -26,7 +26,6 @@ TransferFunction::TransferFunction(void)
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGBA)
     , interpolMode(TransferFunctionParam::InterpolationMode::LINEAR)
     , range({0.0f, 1.0f})
-    , check_ignore_project_range(true)
     , ignore_project_range(false)
     , version(0)
     , last_frame_id(0) {
@@ -67,16 +66,11 @@ bool TransferFunction::requestTF(Call& call) {
     TransferFunctionParam::NodeVector_t tmp_nodes;
     
     // Check if range of initially loaded project value should be ignored
-    if (this->check_ignore_project_range) {
-        auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
-        this->ignore_project_range = TransferFunctionParam::IgnoreProjectRange(tf_param_value);
-        this->check_ignore_project_range = false;
-    }
+    auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
+    this->ignore_project_range = TransferFunctionParam::IgnoreProjectRange(tf_param_value);
 
     // Update changed range propagated from the module via the call
     if (this->ignore_project_range && cgtf->ConsumeRangeUpdate()) {
-        // Get current values from parameter string
-        auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
         if (TransferFunctionParam::GetParsedTransferFunctionData( tf_param_value, tmp_nodes, tmp_interpol, tmp_tex_size,tmp_range)) {
             // Set transfer function parameter value using updated range
             std::string tf_str;

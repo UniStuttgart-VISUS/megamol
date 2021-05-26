@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2006 - 2009 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
- * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
+ * Copyright (C) 2009 by Christoph MÃ¼ller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_ABSTRACTASYNCCONTEXT_H_INCLUDED

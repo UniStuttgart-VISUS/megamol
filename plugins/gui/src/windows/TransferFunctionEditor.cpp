@@ -247,7 +247,9 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
 
     if (this->check_once_force_set_overwrite_range) {
         this->range_overwrite = !TransferFunctionParam::IgnoreProjectRange(tfs);
+        this->last_range = this->range;
         this->check_once_force_set_overwrite_range = false;
+        tf_changed = true;
     }
 
     if (this->texture_size != static_cast<int>(new_tex_size)) {
@@ -282,11 +284,10 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
     this->connected_parameter_name = "";
     if (param_ptr != nullptr) {
         if (param_ptr->Type() == ParamType_t::TRANSFERFUNCTION) {
-            if (this->connected_parameter_ptr != param_ptr) {
-                this->connected_parameter_ptr = param_ptr;
-                this->connected_parameter_name = param_full_name;
-                this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
-            }
+            this->connected_parameter_ptr = param_ptr;
+            this->connected_parameter_name = param_full_name;
+            this->check_once_force_set_overwrite_range = true;
+            this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -396,12 +397,11 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 } else {
                     this->widget_buffer.range_value = this->widget_buffer.left_range;
                 }
-                this->reload_texture = true;
             }
+            this->reload_texture = true;
         }
         help = "[Enable] for overwriting value range propagated from connected module(s).\n"
-               "[Disable] for recovery of last value range or last value range propagated from connected module(s).\n"
-               "NB: This option will be disabled when running animation propagates new range every frame.";
+               "[Disable] for recovery of last value range propagated from connected module(s).";
         this->tooltip.Marker(help);
 
         // START selected NODE options ----------------------------------------
@@ -574,15 +574,21 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
     if (this->show_options) {
 
         // Return true for current changes being applied
+        if (!this->pending_changes) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+        }
         ImGui::PushStyleColor(
             ImGuiCol_Button, this->pending_changes ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
             this->pending_changes ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
-        if (ImGui::Button("Apply")) {
+        if (ImGui::Button("Apply Pending Changes")) {
             apply_changes = true;
         }
         ImGui::PopStyleColor(3);
+        if (!this->pending_changes) {
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
 
         ImGui::SameLine();
 
