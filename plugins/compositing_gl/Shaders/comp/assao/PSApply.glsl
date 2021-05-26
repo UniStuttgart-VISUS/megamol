@@ -6,18 +6,18 @@ void main()
     vec3 inPos = gl_GlobalInvocationID;
 
     float ao;
-    uvec2 pixPos     = (uvec2)inPos.xy;
+    uvec2 pixPos     = uvec2(inPos.xy);
     uvec2 pixPosHalf = pixPos / uvec2(2, 2);
 
     // calculate index in the four deinterleaved source array texture
-    int mx = (pixPos.x % 2);
-    int my = (pixPos.y % 2);
+    int mx = int(pixPos.x % 2);
+    int my = int(pixPos.y % 2);
     int ic = mx + my * 2;       // center index
     int ih = (1 - mx) + my * 2;   // neighbouring, horizontal
     int iv = mx + (1 - my) * 2;   // neighbouring, vertical
     int id = (1 - mx) + (1 - my) * 2; // diagonal
 
-    vec2 centerVal = texelFetch(g_FinalSSAO, ivec4( pixPosHalf, ic, 0 )).xy;
+    vec2 centerVal = texelFetch(g_FinalSSAO, ivec3( pixPosHalf, ic ), 0).xy;
     //vec2 centerVal = g_FinalSSAO.Load( ivec4( pixPosHalf, ic, 0 ) ).xy;
 
     ao = centerVal.x;
@@ -28,8 +28,8 @@ void main()
     // return 1.0 - vec4( edgesLRTB.x, edgesLRTB.y * 0.5 + edgesLRTB.w * 0.5, edgesLRTB.z, 0.0 ); // debug show edges
 
     // convert index shifts to sampling offsets
-    float fmx   = (float)mx;
-    float fmy   = (float)my;
+    float fmx   = float(mx);
+    float fmy   = float(my);
 
     // in case of an edge, push sampling offsets away from the edge (towards pixel center)
     float fmxe  = (edgesLRTB.y - edgesLRTB.x);
@@ -60,5 +60,5 @@ void main()
 
     //return vec4( ao.xxx, 1.0 );
     // TODO: look into the host code: is this the correct sampler?
-    imageStore(g_FinalOutput, pixPos, vec4(ao.xxx, 1.f));
+    imageStore(g_FinalOutput, ivec2(pixPos), vec4(ao.xxx, 1.f));
 }

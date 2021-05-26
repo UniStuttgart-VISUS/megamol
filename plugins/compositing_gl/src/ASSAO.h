@@ -110,20 +110,21 @@ struct ASSAO_Settings {
                                 // detail but also reduces temporal stability (adds aliasing).
 
     ASSAO_Settings() {
+        QualityLevel = 2;
+        BlurPassCount = 2;
         Radius = 1.2f;
         ShadowMultiplier = 1.0f;
         ShadowPower = 1.50f;
-        ShadowClamp = 0.98f;
-        HorizonAngleThreshold = 0.06f;
         FadeOutFrom = 50.0f;
         FadeOutTo = 300.0f;
-        AdaptiveQualityLimit = 0.45f;
-        QualityLevel = 2;
-        BlurPassCount = 2;
         Sharpness = 0.98f;
+        DetailShadowStrength = 0.5f;
+        HorizonAngleThreshold = 0.06f;
+        ShadowClamp = 0.98f;
+
+        AdaptiveQualityLimit = 0.45f;
         TemporalSupersamplingAngleOffset = 0.0f;
         TemporalSupersamplingRadiusOffset = 1.0f;
-        DetailShadowStrength = 0.5f;
     }
 };
 
@@ -195,7 +196,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "Compositing module that compute adaptive screen space ambient occlusion"; }
+    static const char* Description() { return "Compositing module that computes screen space ambient occlusion"; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -266,14 +267,6 @@ private:
     std::unique_ptr<GLSLComputeShader> m_prepare_depths_and_normals_half_prgm;
     std::vector<std::unique_ptr<GLSLComputeShader>> m_prepare_depth_mip_prgms;
     std::array<std::unique_ptr<GLSLComputeShader>, 5> m_generate_prgms;
-    // TODO: redundant, take them out
-    // -------------------
-    std::unique_ptr<GLSLComputeShader> m_generate_q0_prgm;
-    std::unique_ptr<GLSLComputeShader> m_generate_q1_prgm;
-    std::unique_ptr<GLSLComputeShader> m_generate_q2_prgm;
-    std::unique_ptr<GLSLComputeShader> m_generate_q3_prgm;
-    std::unique_ptr<GLSLComputeShader> m_generate_q3_base_prgm;
-    // -------------------
     std::unique_ptr<GLSLComputeShader> m_smart_blur_prgm;
     std::unique_ptr<GLSLComputeShader> m_smart_blur_wide_prgm;
     std::unique_ptr<GLSLComputeShader> m_apply_prgm;

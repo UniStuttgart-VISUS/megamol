@@ -14,10 +14,10 @@ void main()
     float d = depths.z;  // texelFetchOffset(g_DepthSource, ivec3( ivec2(inPos.xy) * 2, 0 ), ivec2( 1, 0 ) ).x;
 #else
     ivec3 baseCoord = ivec3( ivec2(inPos.xy) * 2, 0 );
-    float a = texelFetchOffset(g_DepthSource, baseCoord, ivec2( 0, 1 ) ).x;
-    float b = texelFetchOffset(g_DepthSource, baseCoord, ivec2( 1, 1 ) ).x;
-    float c = texelFetchOffset(g_DepthSource, baseCoord, ivec2( 0, 0 ) ).x;
-    float d = texelFetchOffset(g_DepthSource, baseCoord, ivec2( 1, 0 ) ).x;
+    float a = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 0, 1 ) ).x;
+    float b = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 1, 1 ) ).x;
+    float c = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 0, 0 ) ).x;
+    float d = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 1, 0 ) ).x;
 #endif
 
     float out0 = ScreenSpaceToViewSpaceDepth( a );
@@ -25,8 +25,9 @@ void main()
     float out2 = ScreenSpaceToViewSpaceDepth( c );
     float out3 = ScreenSpaceToViewSpaceDepth( d );
 
-    imageStore(g_HalfDepths0, vec4(inPos.xy, 0.f, 0.f), vec4(out0, 0.f, 0.f, 0.f));
-    imageStore(g_HalfDepths1, vec4(inPos.xy, 0.f, 0.f), vec4(out1, 0.f, 0.f, 0.f));
-    imageStore(g_HalfDepths2, vec4(inPos.xy, 0.f, 0.f), vec4(out2, 0.f, 0.f, 0.f));
-    imageStore(g_HalfDepths3, vec4(inPos.xy, 0.f, 0.f), vec4(out3, 0.f, 0.f, 0.f));
+    ivec2 storePos = ivec2(inPos.xy);
+    imageStore(g_HalfDepths0, storePos, vec4(out0, 0.f, 0.f, 0.f));
+    imageStore(g_HalfDepths1, storePos, vec4(out1, 0.f, 0.f, 0.f));
+    imageStore(g_HalfDepths2, storePos, vec4(out2, 0.f, 0.f, 0.f));
+    imageStore(g_HalfDepths3, storePos, vec4(out3, 0.f, 0.f, 0.f));
 }

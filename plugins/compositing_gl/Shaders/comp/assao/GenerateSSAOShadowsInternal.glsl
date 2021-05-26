@@ -4,7 +4,8 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     vec2 SVPosRounded = trunc( SVPos );
     uvec2 SVPosui = uvec2( SVPosRounded ); //same as uvec2( SVPos )
 
-    const int numberOfTaps = (adaptiveBase) ? (SSAO_ADAPTIVE_TAP_BASE_COUNT) : ( g_numTaps[qualityLevel] );
+    //const int numberOfTaps = (adaptiveBase) ? (SSAO_ADAPTIVE_TAP_BASE_COUNT) : ( g_numTaps[qualityLevel] );
+    const int numberOfTaps = int(g_numTaps[qualityLevel]);
     float pixZ, pixLZ, pixTZ, pixRZ, pixBZ;
 
     vec4 valuesBL = textureGather(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize );
@@ -24,7 +25,7 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
 
     // Load this pixel's viewspace normal
     uvec2 fullResCoord = SVPosui * 2 + g_ASSAOConsts.PerPassFullResCoordOffset.xy;
-    vec3 pixelNormal = LoadNormal( fullResCoord );
+    vec3 pixelNormal = LoadNormal( ivec2(fullResCoord) );
 
     const vec2 pixelDirRBViewspaceSizeAtCenterZ = pixCenterPos.z * g_ASSAOConsts.NDCToViewMul * g_ASSAOConsts.Viewport2xPixelSize;  // optimized approximation of:  vec2 pixelDirRBViewspaceSizeAtCenterZ = NDCToViewspace( normalizedScreenPos.xy + g_ASSAOConsts.ViewportPixelSize.xy, pixCenterPos.z ).xy - pixCenterPos.xy;
 
@@ -96,10 +97,10 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     // Sharp normals also create edges - but this adds to the cost as well
     if( !adaptiveBase && (qualityLevel >= SSAO_NORMAL_BASED_EDGES_ENABLE_AT_QUALITY_PRESET ) )
     {
-        vec3 neighbourNormalL  = LoadNormal( fullResCoord, ivec2( -2,  0 ) );
-        vec3 neighbourNormalR  = LoadNormal( fullResCoord, ivec2(  2,  0 ) );
-        vec3 neighbourNormalT  = LoadNormal( fullResCoord, ivec2(  0, -2 ) );
-        vec3 neighbourNormalB  = LoadNormal( fullResCoord, ivec2(  0,  2 ) );
+        vec3 neighbourNormalL  = LoadNormal( ivec2(fullResCoord), ivec2( -2,  0 ) );
+        vec3 neighbourNormalR  = LoadNormal( ivec2(fullResCoord), ivec2(  2,  0 ) );
+        vec3 neighbourNormalT  = LoadNormal( ivec2(fullResCoord), ivec2(  0, -2 ) );
+        vec3 neighbourNormalB  = LoadNormal( ivec2(fullResCoord), ivec2(  0,  2 ) );
 
         const float dotThreshold = SSAO_NORMAL_BASED_EDGES_DOT_THRESHOLD;
 

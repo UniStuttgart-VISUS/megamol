@@ -6,7 +6,7 @@ void SSAOTap( const int qualityLevel, inout float obscuranceSum, inout float wei
     // patterns
     {
         vec4 newSample = g_samplePatternMain[tapIndex];
-        sampleOffset    = mul( rotScale, newSample.xy );
+        sampleOffset    = rotScale * newSample.xy;
         samplePow2Len   = newSample.w;                      // precalculated, same as: samplePow2Len = log2( length( newSample.xy ) );
         weightMod *= newSample.z;
     }

@@ -5,14 +5,14 @@ void main()
 {
     vec3 inPos = gl_GlobalInvocationID;
 
-    ivec2 baseCoords = (( ivec2 )inPos.xy) * 2;
+    ivec2 baseCoords = ivec2(inPos.xy) * 2;
     vec2  bottomLeftUV = (inPos.xy - 0.25) * g_ASSAOConsts.Viewport2xPixelSize;
 
     ivec3 baseCoord = ivec3( ivec2(inPos.xy) * 2, 0 );
-    float out0 = ScreenSpaceToViewSpaceDepth( texelFetchOffset(g_DepthSource, baseCoord, ivec2( 0, 1 ) ).x );
-    float out1 = ScreenSpaceToViewSpaceDepth( texelFetchOffset(g_DepthSource, baseCoord, ivec2( 1, 1 ) ).x );
-    float out2 = ScreenSpaceToViewSpaceDepth( texelFetchOffset(g_DepthSource, baseCoord, ivec2( 0, 0 ) ).x );
-    float out3 = ScreenSpaceToViewSpaceDepth( texelFetchOffset(g_DepthSource, baseCoord, ivec2( 1, 0 ) ).x );
+    float out0 = ScreenSpaceToViewSpaceDepth( texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 0, 1 ) ).x );
+    float out1 = ScreenSpaceToViewSpaceDepth( texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 1, 1 ) ).x );
+    float out2 = ScreenSpaceToViewSpaceDepth( texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 0, 0 ) ).x );
+    float out3 = ScreenSpaceToViewSpaceDepth( texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 1, 0 ) ).x );
 
     float pixZs[4][4];
 
@@ -70,8 +70,8 @@ void main()
     imageStore(g_NormalsOutputUAV, baseCoords + ivec2( 0, 0 ), vec4( norm0 * 0.5 + 0.5, 0.0 ));
     imageStore(g_NormalsOutputUAV, baseCoords + ivec2( 1, 1 ), vec4( norm3 * 0.5 + 0.5, 0.0 ));
 
-    imageStore(g_HalfDepthsMipView0, inPos.xy, vec4( out0, 0.f, 0.f, 0.f ));
-    imageStore(g_HalfDepthsMipView3, inPos.xy, vec4( out3, 0.f, 0.f, 0.f ));
+    imageStore(g_HalfDepthsMipView0, ivec2(inPos.xy), vec4( out0, 0.f, 0.f, 0.f ));
+    imageStore(g_HalfDepthsMipView3, ivec2(inPos.xy), vec4( out3, 0.f, 0.f, 0.f ));
 
     //g_NormalsOutputUAV[ baseCoords + ivec2( 0, 0 ) ] = vec4( norm0 * 0.5 + 0.5, 0.0 );
     //g_NormalsOutputUAV[ baseCoords + ivec2( 1, 1 ) ] = vec4( norm3 * 0.5 + 0.5, 0.0 );

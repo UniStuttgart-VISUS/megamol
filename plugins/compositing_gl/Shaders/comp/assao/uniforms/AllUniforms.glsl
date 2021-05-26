@@ -9,7 +9,6 @@ uniform sampler2D g_ImportanceMap;
 uniform sampler2D g_LoadCounter;
 uniform sampler2D g_BlurInput;
 uniform sampler2DArray g_FinalSSAO;
-// TODO: how to do UNORM for layouts?
 // halfDepthsMipViews
 // -----------------------
 layout(r16f, binding = 0) uniform image2D      g_HalfDepthsMipView0;
@@ -36,5 +35,5 @@ layout(rgba8, binding = 7) uniform image2D      g_NormalsOutputUAV;
 
 // only needed for adaptive SSAO
 // -----------------------
-layout(r32ui, binding = 8) uniform image1D      g_LoadCounterOutputUAV;
+//layout(r32ui, binding = 8) uniform image1D      g_LoadCounterOutputUAV;
 // -----------------------

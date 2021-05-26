@@ -162,11 +162,6 @@ bool megamol::compositing::ASSAO::create() {
             for (auto& cs : m_generate_prgms) {
                 cs = std::make_unique<GLSLComputeShader>();
             }
-            m_generate_q0_prgm = std::make_unique<GLSLComputeShader>();
-            m_generate_q1_prgm = std::make_unique<GLSLComputeShader>();
-            m_generate_q2_prgm = std::make_unique<GLSLComputeShader>();
-            m_generate_q3_prgm = std::make_unique<GLSLComputeShader>();
-            m_generate_q3_base_prgm = std::make_unique<GLSLComputeShader>();
             m_smart_blur_prgm = std::make_unique<GLSLComputeShader>();
             m_smart_blur_wide_prgm = std::make_unique<GLSLComputeShader>();
             m_apply_prgm = std::make_unique<GLSLComputeShader>();
@@ -174,20 +169,12 @@ bool megamol::compositing::ASSAO::create() {
             m_non_smart_apply_prgm = std::make_unique<GLSLComputeShader>();
             m_non_smart_half_apply_prgm = std::make_unique<GLSLComputeShader>();
 
-            vislib::graphics::gl::ShaderSource cs_prepapre_depths;
+            vislib::graphics::gl::ShaderSource cs_prepare_depths;
             vislib::graphics::gl::ShaderSource cs_prepare_depths_half;
             vislib::graphics::gl::ShaderSource cs_prepare_depths_and_normals;
             vislib::graphics::gl::ShaderSource cs_prepare_depths_and_normals_half;
             std::vector<vislib::graphics::gl::ShaderSource> cs_prepare_depth_mip(SSAO_DEPTH_MIP_LEVELS - 1);
             std::vector<vislib::graphics::gl::ShaderSource> cs_generate(5);
-            // be// -----------------------low shaders probably irrelevant due to vector cs_generate(5)
-            // ----------------------------
-            vislib::graphics::gl::ShaderSource cs_generate_q0;
-            vislib::graphics::gl::ShaderSource cs_generate_q1;
-            vislib::graphics::gl::ShaderSource cs_generate_q2;
-            vislib::graphics::gl::ShaderSource cs_generate_q3;
-            vislib::graphics::gl::ShaderSource cs_generate_q3_base;
-            // ----------------------------
             vislib::graphics::gl::ShaderSource cs_smart_blur;
             vislib::graphics::gl::ShaderSource cs_smart_blur_wide;
             vislib::graphics::gl::ShaderSource cs_apply;
@@ -195,14 +182,16 @@ bool megamol::compositing::ASSAO::create() {
             vislib::graphics::gl::ShaderSource cs_non_smart_apply;
             vislib::graphics::gl::ShaderSource cs_non_smart_half_apply;
 
+            std::cout << "Compiling: Compositing::assao::CSPrepareDepths\n";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepths", cs_prepapre_depths))
+                    "Compositing::assao::CSPrepareDepths", cs_prepare_depths))
                 return false;
-            if (!m_prepare_depths_prgm->Compile(cs_prepapre_depths.Code(), cs_prepapre_depths.Count()))
+            if (!m_prepare_depths_prgm->Compile(cs_prepare_depths.Code(), cs_prepare_depths.Count()))
                 return false;
             if (!m_prepare_depths_prgm->Link())
                 return false;
 
+            std::cout << "Compiling: Compositing::assao::CSPrepareDepthsHalf\n";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
                     "Compositing::assao::CSPrepareDepthsHalf", cs_prepare_depths_half))
                 return false;
@@ -211,6 +200,7 @@ bool megamol::compositing::ASSAO::create() {
             if (!m_prepare_depths_half_prgm->Link())
                 return false;
 
+            std::cout << "Compiling: Compositing::assao::CSPrepareDepthsAndNormals\n";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
                     "Compositing::assao::CSPrepareDepthsAndNormals", cs_prepare_depths_and_normals))
                 return false;
@@ -220,6 +210,7 @@ bool megamol::compositing::ASSAO::create() {
             if (!m_prepare_depths_and_normals_prgm->Link())
                 return false;
 
+            std::cout << "Compiling: Compositing::assao::CSPrepareDepthsAndNormalsHalf\n";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
                     "Compositing::assao::CSPrepareDepthsAndNormalsHalf", cs_prepare_depths_and_normals_half))
                 return false;
@@ -229,8 +220,9 @@ bool megamol::compositing::ASSAO::create() {
             if (!m_prepare_depths_and_normals_half_prgm->Link())
                 return false;
 
-            for (int i = 1; i < SSAO_DEPTH_MIP_LEVELS; ++i) {
-                std::string identifier = "Compositing::assao::CSPrepareDepthMip" + std::to_string(i);
+            for (int i = 0; i < SSAO_DEPTH_MIP_LEVELS - 1; ++i) {
+                std::cout << "Compiling: Compositing::assao::CSPrepareDepthMip" << i + 1 << "\n";
+                std::string identifier = "Compositing::assao::CSPrepareDepthMip" + std::to_string(i + 1);
                 if (!instance()->ShaderSourceFactory().MakeShaderSource(
                         identifier.c_str(), cs_prepare_depth_mip[i]))
                     return false;
@@ -241,7 +233,9 @@ bool megamol::compositing::ASSAO::create() {
                     return false;
             }
 
-            for (int i = 1; i < 5; ++i) {
+            // one less than cs_generate.size() because the adaptive quality level is not implemented (yet)
+            for (int i = 0; i < 4; ++i) { 
+                std::cout << "Compiling: Compositing::assao::CSGenerateQ" << i << "\n";
                 std::string identifier = "Compositing::assao::CSGenerateQ" + std::to_string(i);
                 if (i < 4)
                     identifier = "Compositing::assao::CSGenerateQ" + std::to_string(i);
@@ -256,42 +250,7 @@ bool megamol::compositing::ASSAO::create() {
                     return false;
             }
 
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSGenerateQ0", cs_generate_q0))
-                return false;
-            if (!m_generate_q0_prgm->Compile(cs_generate_q0.Code(), cs_generate_q0.Count()))
-                return false;
-            if (!m_generate_q0_prgm->Link())
-                return false;
-
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSGenerateQ1", cs_generate_q1))
-                return false;
-            if (!m_generate_q1_prgm->Compile(cs_generate_q1.Code(), cs_generate_q1.Count()))
-                return false;
-            if (!m_generate_q1_prgm->Link())
-                return false;
-
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSGenerateQ2", cs_generate_q2))
-                return false;
-            if (!m_generate_q2_prgm->Compile(cs_generate_q2.Code(), cs_generate_q2.Count()))
-                return false;
-            if (!m_generate_q2_prgm->Link())
-                return false;
-
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSGenerateQ3", cs_generate_q3))
-                return false;
-            if (!m_generate_q3_prgm->Compile(cs_generate_q3.Code(), cs_generate_q3.Count()))
-                return false;
-            if (!m_generate_q3_prgm->Link())
-                return false;
-
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSGenerateQ3Base", cs_generate_q3_base))
-                return false;
-            if (!m_generate_q3_base_prgm->Compile(cs_generate_q3_base.Code(), cs_generate_q3_base.Count()))
-                return false;
-            if (!m_generate_q3_base_prgm->Link())
-                return false;
-
+            std::cout << "Compiling: Compositing::assao::CSSmartBlur\n";
             if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSSmartBlur", cs_smart_blur))
                 return false;
             if (!m_smart_blur_prgm->Compile(cs_smart_blur.Code(), cs_smart_blur.Count()))
@@ -299,6 +258,7 @@ bool megamol::compositing::ASSAO::create() {
             if (!m_smart_blur_prgm->Link())
                 return false;
 
+            std::cout << "Compiling: Compositing::assao::CSSmartBlurWide\n";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
                     "Compositing::assao::CSSmartBlurWide", cs_smart_blur_wide))
                 return false;
@@ -307,13 +267,7 @@ bool megamol::compositing::ASSAO::create() {
             if (!m_smart_blur_wide_prgm->Link())
                 return false;
 
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSApply", cs_apply))
-                return false;
-            if (!m_apply_prgm->Compile(cs_apply.Code(), cs_apply.Count()))
-                return false;
-            if (!m_apply_prgm->Link())
-                return false;
-
+            std::cout << "Compiling: Compositing::assao::CSNonSmartBlur\n";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
                     "Compositing::assao::CSNonSmartBlur", cs_non_smart_blur))
                 return false;
@@ -322,6 +276,15 @@ bool megamol::compositing::ASSAO::create() {
             if (!m_non_smart_blur_prgm->Link())
                 return false;
 
+            std::cout << "Compiling: Compositing::assao::CSApply\n";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSApply", cs_apply))
+                return false;
+            if (!m_apply_prgm->Compile(cs_apply.Code(), cs_apply.Count()))
+                return false;
+            if (!m_apply_prgm->Link())
+                return false;
+
+            std::cout << "Compiling: Compositing::assao::CSNonSmartApply\n";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
                     "Compositing::assao::CSNonSmartApply", cs_non_smart_apply))
                 return false;
@@ -330,6 +293,7 @@ bool megamol::compositing::ASSAO::create() {
             if (!m_non_smart_apply_prgm->Link())
                 return false;
 
+            std::cout << "Compiling: Compositing::assao::CSNonSmartHalfApply\n";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
                     "Compositing::assao::CSNonSmartHalfApply", cs_non_smart_half_apply))
                 return false;
@@ -337,6 +301,8 @@ bool megamol::compositing::ASSAO::create() {
                 return false;
             if (!m_non_smart_half_apply_prgm->Link())
                 return false;
+
+            std::cout << "Done Compiling\n";
         }
 
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
@@ -355,7 +321,7 @@ bool megamol::compositing::ASSAO::create() {
     }
 
     m_depthBufferViewspaceLinearLayout = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
-    m_AOResultLayout = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_HALF_FLOAT, 1);
+    m_AOResultLayout = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_UNSIGNED_BYTE, 1);
     m_halfDepths[0] = std::make_shared<glowl::Texture2D>("m_halfDepths0", m_depthBufferViewspaceLinearLayout, nullptr);
     m_halfDepths[1] = std::make_shared<glowl::Texture2D>("m_halfDepths1", m_depthBufferViewspaceLinearLayout, nullptr);
     m_halfDepths[2] = std::make_shared<glowl::Texture2D>("m_halfDepths2", m_depthBufferViewspaceLinearLayout, nullptr);
@@ -550,7 +516,7 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
         
 
     if (lhs_tc->version() < m_version) {
-        //lhs_tc->setData(m_output_texture, m_version);
+        lhs_tc->setData(m_finalOutput, m_version);
     }
 
     return true;
@@ -844,7 +810,7 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
         reCreateArrayIfNeeded(m_finalResultsArrayViews[i], m_finalResults, m_halfSize, m_AOResultLayout, i);
     }
 
-    //reCreateIfNeeded(m_normals, m_size, normal_layout); // is this needed?
+    reCreateIfNeeded(m_finalOutput, m_size, m_depthBufferViewspaceLinearLayout); // is this needed?
 
     // trigger a full buffers clear first time; only really required when using scissor rects
     //m_requiresClear = true;

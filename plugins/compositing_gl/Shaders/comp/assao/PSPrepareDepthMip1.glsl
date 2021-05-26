@@ -12,8 +12,8 @@ void main()
 
     PrepareDepthMip( inPos/*, inUV*/, 1, out0, out1, out2, out3 );
 
-    imageStore(g_HalfDepthsMipView0, inPos.xy, vec4(out0, 0.f, 0.f, 0.f));
-    imageStore(g_HalfDepthsMipView1, inPos.xy, vec4(out1, 0.f, 0.f, 0.f));
-    imageStore(g_HalfDepthsMipView2, inPos.xy, vec4(out2, 0.f, 0.f, 0.f));
-    imageStore(g_HalfDepthsMipView3, inPos.xy, vec4(out3, 0.f, 0.f, 0.f));
+    imageStore(g_HalfDepthsMipView0, ivec2(inPos.xy), vec4(out0, 0.f, 0.f, 0.f));
+    imageStore(g_HalfDepthsMipView1, ivec2(inPos.xy), vec4(out1, 0.f, 0.f, 0.f));
+    imageStore(g_HalfDepthsMipView2, ivec2(inPos.xy), vec4(out2, 0.f, 0.f, 0.f));
+    imageStore(g_HalfDepthsMipView3, ivec2(inPos.xy), vec4(out3, 0.f, 0.f, 0.f));
 }
