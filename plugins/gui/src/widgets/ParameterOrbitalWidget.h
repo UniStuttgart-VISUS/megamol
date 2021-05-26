@@ -20,7 +20,7 @@ namespace gui {
 
 
     /**
-     * String search widget.
+     * Orbital parameter widget.
      */
     class ParameterOrbitalWidget {
     public:
@@ -34,6 +34,8 @@ namespace gui {
     private:
         ::quat m_rotation;
         ::vec3 m_direction;
+
+        bool init;
     };
 
 

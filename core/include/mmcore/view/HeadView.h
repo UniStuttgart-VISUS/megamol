@@ -11,7 +11,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 
 #include "vislib/Serialiser.h"
 
@@ -96,7 +96,7 @@ public:
      *
      * @param context
      */
-    virtual void Render(const mmcRenderViewContext& context);
+    virtual void Render(const mmcRenderViewContext& context, Call* call) override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -173,7 +173,7 @@ private:
     unsigned int width, height;
 
     /** Incoming call */
-    view::CallRenderView* override_view_call;
+    view::CallRenderViewGL* override_view_call;
 };
 
 } /* end namespace view */

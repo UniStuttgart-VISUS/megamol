@@ -72,7 +72,13 @@ std::vector<std::string> CallADIOSData::getAvailableVars() const { return availa
 void CallADIOSData::setAvailableVars(const std::vector<std::string> &avars) { this->availableVars = avars; }
 
 void CallADIOSData::setData(std::shared_ptr<adiosDataMap> _dta) {
-    this->dataptr = _dta; }
+    this->dataptr = _dta;
+    availableVars.clear();
+    availableVars.reserve(dataptr->size());
+    for (auto& entry : *dataptr) {
+        availableVars.emplace_back(entry.first);
+    }
+}
 
 std::shared_ptr<abstractContainer> CallADIOSData::getData(std::string _str) const { return this->dataptr->at(_str); }
 

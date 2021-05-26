@@ -10,7 +10,7 @@
 #include "AbstractTexQuartzRenderer.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/CallRender2DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/glfunctions.h"
 
@@ -80,7 +80,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender2D& call);
+        virtual bool GetExtents(core::view::CallRender2DGL& call);
 
         /**
          * Implementation of 'Release'.
@@ -94,7 +94,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender2D& call);
+        virtual bool Render(core::view::CallRender2DGL& call);
 
     private:
 

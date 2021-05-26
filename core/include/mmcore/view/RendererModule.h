@@ -15,9 +15,9 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/InputCall.h"
 #include "mmcore/view/MouseFlags.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include <AbstractInputScope.h>
 
 namespace megamol {
@@ -56,6 +56,8 @@ public:
         this->renderSlot.SetCallback(C::ClassName(), AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents),
             &RendererModule::GetExtentsChainCallback);
         // Do not make it available yet (extensibility).
+
+        this->renderSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
     }
 
     /** Dtor. */
@@ -106,7 +108,7 @@ protected:
             view::MouseFlagsSetFlag(mouseFlags, view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
         }
         // TODO: Verify semantics of (X,Y) coordinates...
-        // - Could be "world space" (see View2D/View3D) instead of window space!
+        // - Could be "world space" (see View2DGL/View3D) instead of window space!
         // - If so, then provide a freaking method in the Call to the the transformation instead of passing around black
         // magic!
         this->MouseEvent(lastX, lastY, mouseFlags);

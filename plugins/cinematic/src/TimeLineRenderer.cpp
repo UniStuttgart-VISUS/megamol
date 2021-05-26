@@ -25,7 +25,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
     , resetPanScaleParam("resetAxes", "Reset shifted and scaled time axes.")
     , axes()
     , utils()
-    , texture(0)
+    , texture_id(0)
     , yAxisParam(ActiveParam::SIMULATION_TIME)
     , dragDropKeyframe()
     , dragDropActive(false)
@@ -82,18 +82,35 @@ bool TimeLineRenderer::create(void) {
 	
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     // Load texture
-    vislib::StringA shortfilename = "arrow.png";
-    auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), shortfilename);
-    if (!this->utils.LoadTextureFromFile(std::wstring(fullfilename.PeekBuffer()), this->texture)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+    std::string texture_shortfilename = "arrow.png";
+    bool loaded_texture = false;
+    if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+        auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(
+            this->GetCoreInstance()->Configuration(), vislib::StringA(texture_shortfilename.c_str()));
+        std::wstring texture_filename = std::wstring(fullfilename.PeekBuffer());
+        loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filename);
+    } else {
+        std::string texture_filepath;
+        auto resource_directories = frontend_resources.get<megamol::frontend_resources::RuntimeConfig>().resource_directories;
+        for (auto& resource_directory : resource_directories) {
+            auto found_filepath = megamol::core::utility::FileUtils::SearchFileRecursive(
+                resource_directory, texture_shortfilename);
+            if (!found_filepath.empty()) {
+                texture_filepath = found_filepath;
+            }
+        }
+        loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filepath);
     }
 
+    if (!loaded_texture) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+     }
     return true;
 }
 
@@ -103,15 +120,25 @@ void TimeLineRenderer::release(void) {
 }
 
 
-bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
+bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
 
-    glm::vec2 currentViewport;
-    currentViewport.x = static_cast<float>(call.GetViewport().GetSize().GetWidth());
-    currentViewport.y = static_cast<float>(call.GetViewport().GetSize().GetHeight());
-    call.SetBoundingBox(call.GetViewport());
+    call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0.0f, this->viewport.x, this->viewport.y, 0.0f);
 
-    if (currentViewport != this->viewport) {
-        this->viewport = currentViewport;
+    return true;
+}
+
+
+bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
+
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    glm::vec2 current_viewport;
+    current_viewport.x = static_cast<float>(cam.resolution_gate().width());
+    current_viewport.y = static_cast<float>(cam.resolution_gate().height());
+    glm::mat4 ortho = glm::ortho(0.0f, current_viewport.x, 0.0f, current_viewport.y, -1.0f, 1.0f);
+
+    if (current_viewport != this->viewport) {
+        this->viewport = current_viewport;
 
         // Set axes position depending on font size
         vislib::StringA tmpStr;
@@ -120,13 +147,12 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
         } else {
             tmpStr.Format("%.6f ", this->axes[Axis::X].maxValue);
         }
-
         float strHeight = this->utils.GetTextLineHeight();
         float strWidth = this->utils.GetTextLineWidth(std::string(tmpStr.PeekBuffer()));
         this->rulerMarkHeight = strHeight / 2.0f;
-        this->keyframeMarkHeight = strHeight*1.5f;
-
-        this->axes[Axis::X].startPos = this->axes[Axis::Y].startPos = glm::vec2(strWidth + strHeight * 1.5f, strHeight*2.5f);
+        this->keyframeMarkHeight = strHeight * 1.5f;
+        this->axes[Axis::X].startPos = glm::vec2(strWidth + strHeight * 1.5f, (strHeight * 2.5f));
+        this->axes[Axis::Y].startPos = this->axes[Axis::X].startPos;
         this->axes[Axis::X].endPos = glm::vec2(this->viewport.x - strWidth, strHeight * 2.5f);
         this->axes[Axis::Y].endPos = glm::vec2(strWidth + strHeight * 1.5f, this->viewport.y - (this->keyframeMarkHeight * 1.1f) - strHeight);
         for (size_t i = 0; i < Axis::COUNT; ++i) {
@@ -134,14 +160,8 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
             this->axes[i].scaleFactor = 1.0f;
         }
 
-        return this->recalcAxesData();
+        this->recalcAxesData();
     }
-
-    return true;
-}
-
-
-bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     // Get update data from keyframe keeper
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
@@ -149,7 +169,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
      auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] Pointer to keyframe array is nullptr.");
         return false;
     }
 
@@ -220,10 +240,9 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glm::vec3 cam_pos = { 0.0f, 0.0f, 1.0f };
     glm::vec3 origin = { this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, 0.0f };
     float yAxisValue = 0.0f;
-    auto cbc = call.GetBackgroundColour();
+    auto cbc = call.BackgroundColor();
     glm::vec4 back_color = glm::vec4(static_cast<float>(cbc[0]) / 255.0f, static_cast<float>(cbc[1]) / 255.0f, static_cast<float>(cbc[2]) / 255.0f, 1.0f);
     this->utils.SetBackgroundColor(back_color);
-    glm::mat4 ortho = glm::ortho(0.0f, this->viewport.x, 0.0f, this->viewport.y, -1.0f, 1.0f);
     auto skf = ccc->GetSelectedKeyframe();
 
     // Push rulers ------------------------------------------------------------
@@ -363,7 +382,9 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     for (float f = this->axes[Axis::X].scaleOffset; f < this->axes[Axis::X].length + (this->axes[Axis::X].segmSize / 10.0f); f = f + this->axes[Axis::X].segmSize) {
         if (f >= 0.0f) {
             tmpStr.Format(this->axes[Axis::X].formatStr.c_str(), timeStep);
-            this->utils.PushText(std::string(tmpStr.PeekBuffer()), this->axes[Axis::X].startPos.x + f - strWidth / 2.0f, this->axes[Axis::X].startPos.y - this->rulerMarkHeight, 0.0f);
+            this->utils.Push2DText(ortho, std::string(tmpStr.PeekBuffer()),
+                this->axes[Axis::X].startPos.x + f - strWidth / 2.0f, // x
+                this->axes[Axis::X].startPos.y - this->rulerMarkHeight); // y
         }
         timeStep += this->axes[Axis::X].segmValue;
     }
@@ -375,14 +396,18 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     for (float f = this->axes[Axis::Y].scaleOffset; f < this->axes[Axis::Y].length + (this->axes[Axis::Y].segmSize / 10.0f); f = f + this->axes[Axis::Y].segmSize) {
         if (f >= 0.0f) {
             tmpStr.Format(this->axes[Axis::Y].formatStr.c_str(), timeStep);
-            this->utils.PushText(std::string(tmpStr.PeekBuffer()), this->axes[Axis::X].startPos.x - this->rulerMarkHeight - strWidth, this->axes[Axis::X].startPos.y + strHeight / 2.0f + f, 0.0f);
+            this->utils.Push2DText(ortho, std::string(tmpStr.PeekBuffer()),
+                this->axes[Axis::X].startPos.x - this->rulerMarkHeight - strWidth, // x
+                this->axes[Axis::X].startPos.y + strHeight / 2.0f + f); // y
         }
         timeStep += this->axes[Axis::Y].segmValue;
     }
     // Axis captions
     std::string caption = "Animation Time and Frames ";
     strWidth = this->utils.GetTextLineWidth(caption);
-    this->utils.PushText(caption, this->axes[Axis::X].startPos.x + this->axes[Axis::X].length / 2.0f - strWidth / 2.0f, this->axes[Axis::X].startPos.y - this->utils.GetTextLineHeight() - this->rulerMarkHeight, 0.0f);
+    this->utils.Push2DText(ortho, caption,
+        this->axes[Axis::X].startPos.x + this->axes[Axis::X].length / 2.0f - strWidth / 2.0f, // x
+        this->axes[Axis::X].startPos.y - this->utils.GetTextLineHeight() - this->rulerMarkHeight); // y
     caption = " ";
     switch (this->yAxisParam) {
         case (ActiveParam::SIMULATION_TIME): caption = "Simulation Time "; break;
@@ -390,7 +415,9 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
     strWidth = this->utils.GetTextLineWidth(caption);
     this->utils.SetTextRotation(90.0f, 0.0f, 0.0f, 1.0f);
-    this->utils.PushText(caption, this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, (-1.0f)*this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f*strHeight, 0.0f);
+    this->utils.Push2DText(ortho, caption,
+        this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, // x
+        (-1.0f) * this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f * strHeight); // y
     this->utils.SetTextRotation(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Push menu --------------------------------------------------------------
@@ -406,14 +433,14 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     std::string leftLabel = " TIMELINE ";
     std::string midLabel = stream.str();
     std::string rightLabel = "";
-    this->utils.PushMenu(leftLabel, midLabel, rightLabel, this->viewport.x, this->viewport.y);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, this->viewport);
 
     // Draw all ---------------------------------------------------------------
     this->utils.DrawAll(ortho, this->viewport);
 
+
 	return true;
 }
-
 
 void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color) {
 
@@ -422,25 +449,16 @@ void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, g
     glm::vec3 pos_upper_left   = { pos_x - (size / 2.0f), pos_y + size, 0.0f };
     glm::vec3 pos_upper_right  = { pos_x + (size / 2.0f), pos_y + size, 0.0f };
     glm::vec3 pos_bottom_right = { pos_x + (size / 2.0f), pos_y, 0.0f };
-    this->utils.Push2DColorTexture(this->texture, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
+    this->utils.Push2DColorTexture(
+        this->texture_id, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
 }
 
 
 bool TimeLineRenderer::recalcAxesData(void) {
 
-    vislib::StringA tmpStr;
-
-    // Check for too small viewport
-    if ((this->axes[Axis::X].startPos.x >= this->axes[Axis::X].endPos.x) ||
-        (this->axes[Axis::Y].startPos.y >= this->axes[Axis::Y].endPos.y)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [GetExtents] Viewport is too small to calculate proper dimensions of time line diagram.");
-        return false;
-    }
-
     for (size_t i = 0; i < Axis::COUNT; ++i) {
-
         if (this->axes[i].maxValue <= 0.0f) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [recalcAxesData] Invalid max value %f of axis %d. [%s, %s, line %d]", this->axes[i].maxValue, i, __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] Invalid max value %f of axis %d. [%s, %s, line %d]", this->axes[i].maxValue, i, __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -454,7 +472,6 @@ bool TimeLineRenderer::recalcAxesData(void) {
 
         unsigned int animPot = 0;
         unsigned int refine = 1;
-
         while (refine != 0) {
             float div = 5.0f;
             if (refine % 2 == 1) {
@@ -518,7 +535,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
     auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [OnMouseButton] Pointer to keyframe array is nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] Pointer to keyframe array is nullptr.");
         return false;
     }
 

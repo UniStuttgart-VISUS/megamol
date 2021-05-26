@@ -8,22 +8,12 @@
 #include "OSPRayRenderer.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/graphics/CameraParamsStore.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/math/Vector.h"
 #include "mmcore/utility/log/Log.h"
-
-#include "mmcore/CoreInstance.h"
-
 #include <chrono>
-#include <functional>
-
 #include "ospray/ospray_cpp.h"
 
 #include <sstream>
 #include <stdint.h>
-#include <corecrt_math_defines.h>
 
 using namespace megamol::ospray;
 
@@ -32,9 +22,9 @@ ospray::OSPRayRenderer::OSPRaySphereRenderer
 */
 OSPRayRenderer::OSPRayRenderer(void)
     : AbstractOSPRayRenderer()
-	, _cam()
-    , _osprayShader()
+    , _cam()
     , _getStructureSlot("getStructure", "Connects to an OSPRay structure")
+        , _enablePickingSlot("enable picking", "")
 
 {
     this->_getStructureSlot.SetCompatibleCall<CallOSPRayStructureDescription>();
@@ -49,6 +39,9 @@ OSPRayRenderer::OSPRayRenderer(void)
 
     _accum_time.count = 0;
     _accum_time.amount = 0;
+
+    _enablePickingSlot << new core::param::BoolParam(false);
+    MakeSlotAvailable(&_enablePickingSlot);
 }
 
 
@@ -56,7 +49,6 @@ OSPRayRenderer::OSPRayRenderer(void)
 ospray::OSPRayRenderer::~OSPRaySphereRenderer
 */
 OSPRayRenderer::~OSPRayRenderer(void) {
-    this->_osprayShader.Release();
     this->Release();
 }
 
@@ -65,43 +57,6 @@ OSPRayRenderer::~OSPRayRenderer(void) {
 ospray::OSPRayRenderer::create
 */
 bool OSPRayRenderer::create() {
-    ASSERT(IsAvailable());
-
-    vislib::graphics::gl::ShaderSource vert, frag;
-
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("ospray::vertex", vert)) {
-        return false;
-    }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("ospray::fragment", frag)) {
-        return false;
-    }
-
-    try {
-        if (!this->_osprayShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile ospray shader: Unknown error\n");
-            return false;
-        }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile ospray shader: (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile ospray shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile ospray shader: Unknown exception\n");
-        return false;
-    }
-
-    // this->initOSPRay(device);
-    this->setupTextureScreen();
-    // this->setupOSPRay(renderer, camera, world, "scivis");#
-
     return true;
 }
 
@@ -109,20 +64,16 @@ bool OSPRayRenderer::create() {
 ospray::OSPRayRenderer::release
 */
 void OSPRayRenderer::release() {
-
+    this->clearOSPRayStuff();
     ospShutdown();
-
-    releaseTextureScreen();
-
 }
 
 /*
 ospray::OSPRayRenderer::Render
 */
-bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
+bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
     this->initOSPRay();
 
-    
     // if user wants to switch renderer
     if (this->_rd_type.IsDirty()) {
         //ospRelease(_camera);
@@ -158,6 +109,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     _data_has_changed = false;
     _material_has_changed = false;
     _transformation_has_changed = false;
+    _clipping_geo_changed = false;
     for (auto element : this->_structureMap) {
         auto structure = element.second;
         if (structure.dataChanged) {
@@ -168,6 +120,9 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         }
         if (structure.transformationChanged) {
             _transformation_has_changed = true;
+        }
+        if (structure.clippingPlaneChanged) {
+            _clipping_geo_changed = true;
         }
     }
 
@@ -185,18 +140,18 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
 
-	// Generate complete snapshot and calculate matrices
+    // Generate complete snapshot and calculate matrices
     tmp_newcam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
 
     // check data and camera hash
     if (_cam.eye_position().x() != tmp_newcam.eye_position().x() ||
-	    _cam.eye_position().y() != tmp_newcam.eye_position().y() ||
-	    _cam.eye_position().z() != tmp_newcam.eye_position().z() ||
-	    _cam.view_vector() != tmp_newcam.view_vector()
-	    ) {
-	    _cam_has_changed = true;
+        _cam.eye_position().y() != tmp_newcam.eye_position().y() ||
+        _cam.eye_position().z() != tmp_newcam.eye_position().z() ||
+        _cam.view_vector() != tmp_newcam.view_vector()
+        ) {
+        _cam_has_changed = true;
     } else {
-	    _cam_has_changed = false;
+        _cam_has_changed = false;
     }
 
     // Generate complete snapshot and calculate matrices
@@ -238,15 +193,16 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     setupOSPRayCamera(_cam);
     _camera->commit();
 
-    _osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
     if (_data_has_changed || _material_has_changed || _light_has_changed || _cam_has_changed || _renderer_has_changed ||
-        _transformation_has_changed || !(this->_accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
+        _transformation_has_changed || _clipping_geo_changed ||
+        !(this->_accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
         _frameID != static_cast<size_t>(cr.Time()) || this->InterfaceIsDirty()) {
 
         std::array<float, 4> eyeDir = {
             _cam.view_vector().x(), _cam.view_vector().y(), _cam.view_vector().z(), _cam.view_vector().w()};
-        if (_data_has_changed || _frameID != static_cast<size_t>(cr.Time()) || _renderer_has_changed) {
+        if (_data_has_changed || _frameID != static_cast<size_t>(cr.Time()) || _renderer_has_changed ||
+            _clipping_geo_changed) {
             // || this->InterfaceIsDirty()) {
             if (!this->generateRepresentations()) return false;
             this->createInstances();
@@ -296,26 +252,29 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         */
         RendererSettings(cr.BackgroundColor());
 
+        // Only usefull if dephbuffer is used as input
+        //if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
+        //    // far distance
+        //    float far_clip = _cam.far_clipping_plane();
+        //    std::vector<float> far_dist(_imgSize[0] * _imgSize[1], far_clip);
+        //    rkcommon::math::vec2i imgSize = {
+        //        _imgSize[0],
+        //        _imgSize[1]
+        //    };
 
-        if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
-            // far distance
-            float far_clip = _cam.far_clipping_plane();
-            std::vector<float> far_dist(_imgSize[0] * _imgSize[1], far_clip);
-            rkcommon::math::vec2i imgSize = {
-                _imgSize[0],
-                _imgSize[1]
-            };
+        //    auto depth_texture_data = ::ospray::cpp::CopiedData(far_dist.data(), OSP_FLOAT, imgSize);
+        //    depth_texture_data.commit();
+        //    auto depth_texture = ::ospray::cpp::Texture("texture2d");
+        //    depth_texture.setParam("format", OSP_TEXTURE_R32F);
+        //    depth_texture.setParam("filter", OSP_TEXTURE_FILTER_NEAREST);
+        //    depth_texture.setParam("data", depth_texture_data);
+        //    depth_texture.commit();
 
-            auto depth_texture_data = ::ospray::cpp::CopiedData(far_dist.data(), OSP_FLOAT, imgSize);
-            depth_texture_data.commit();
-            auto depth_texture = ::ospray::cpp::Texture("texture2d");
-            depth_texture.setParam("format", OSP_TEXTURE_R32F);
-            depth_texture.setParam("filter", OSP_TEXTURE_FILTER_NEAREST);
-            depth_texture.setParam("data", depth_texture_data);
-            depth_texture.commit();
+        //    _renderer->setParam("map_maxDepth", depth_texture);
+        //} else {
+        //    _renderer->setParam("map_maxDepth", NULL);
+        //}
 
-            _renderer->setParam("map_maxDepth", depth_texture);
-        }
         _renderer->commit();
 
         // setup framebuffer and measure time
@@ -325,7 +284,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         _framebuffer->renderFrame(*_renderer, *_camera, *_world);
 
         // get the texture from the framebuffer
-        _fb = reinterpret_cast<uint32_t*>(_framebuffer->map(OSP_FB_COLOR));
+        auto fb = reinterpret_cast<uint32_t*>(_framebuffer->map(OSP_FB_COLOR));
+        _fb = std::vector<uint32_t>(fb, fb + _imgSize[0] * _imgSize[1]);
 
         auto t2 = std::chrono::high_resolution_clock::now();
         const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
@@ -340,12 +300,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         }
 
 
-        float* db;
         if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
-             db = static_cast<float*>(_framebuffer->map(OSP_FB_DEPTH));
-            _db = std::vector<float>(db, db + _imgSize[0] * _imgSize[1]);
-        
-            getOpenGLDepthFromOSPPerspective(_db.data());
+            getOpenGLDepthFromOSPPerspective(_db, projTemp);
         }
 
         // write a sequence of single pictures while the screenshooter is running
@@ -363,35 +319,69 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         //}
 
         //std::string fname("blub.ppm");
-        //writePPM(fname, _imgSize, _fb);
+        //writePPM(fname, _imgSize, fb);
         
-
-        this->renderTexture2D(_osprayShader, _fb, _db.data(), _imgSize[0], _imgSize[1], cr);
+        auto frmbuffer = cr.GetFramebuffer();
+        frmbuffer->width = _imgSize[0];
+        frmbuffer->height = _imgSize[1];
+        frmbuffer->depthBuffer = _db;
+        frmbuffer->colorBuffer = _fb;
+        frmbuffer->depthBufferActive = this->_useDB.Param<core::param::BoolParam>()
+                                           ->Value();
 
         // clear stuff
-         _framebuffer->unmap(_fb);
-        if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
-            _framebuffer->unmap(db);
-        }
+         _framebuffer->unmap(fb);
 
         //auto dvce_ = ospGetCurrentDevice();
         //auto error_ = std::string(ospDeviceGetLastErrorMsg(dvce_));
         //megamol::core::utility::log::Log::DefaultLog.WriteError(std::string("OSPRAY last ERROR: " + error_).c_str());
 
-        this->releaseOSPRayStuff();
-
-
     } else {
         _framebuffer->renderFrame(*_renderer, *_camera, *_world);
-        _fb = reinterpret_cast<uint32_t*>(_framebuffer->map(OSP_FB_COLOR));
+        auto fb = reinterpret_cast<uint32_t*>(_framebuffer->map(OSP_FB_COLOR));
+        _fb = std::vector<uint32_t>(fb, fb + _imgSize[0] * _imgSize[1]);
 
-        this->renderTexture2D(_osprayShader, _fb, _db.data(), _imgSize[0], _imgSize[1], cr);
-        _framebuffer->unmap(_fb);
+        auto frmbuffer = cr.GetFramebuffer();
+        frmbuffer->width = _imgSize[0];
+        frmbuffer->height = _imgSize[1];
+        frmbuffer->depthBuffer = _db;
+        frmbuffer->colorBuffer = _fb;
+
+        _framebuffer->unmap(fb);
     }
 
-    _osprayShader.Disable();
-
     return true;
+}
+
+bool OSPRayRenderer::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+    if (mods.test(core::view::Modifier::SHIFT) && action == core::view::MouseButtonAction::PRESS &&
+        _enablePickingSlot.Param<core::param::BoolParam>()->Value()) {
+        auto const screenX = _mouse_x / _imgSize[0];
+        auto const screenY = 1.f - (_mouse_y / _imgSize[1]);
+        auto const pick_res = _framebuffer->pick(*_renderer, *_camera, *_world, screenX, screenY);
+
+        for (auto const& entry : _geometricModels) {
+            entry.first->setPickResult(-1, -1);
+            if (pick_res.hasHit) {
+                auto const fit = std::find(entry.second.begin(), entry.second.end(), pick_res.model);
+                if (fit != entry.second.end()) {
+                    entry.first->setPickResult(std::distance(entry.second.begin(), fit), pick_res.primID);
+                }
+                //core::utility::log::Log::DefaultLog.WriteInfo("[OSPRayRenderer] Pick result %d", pick_res.primID);
+            }
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+bool OSPRayRenderer::OnMouseMove(double x, double y) {
+    this->_mouse_x = static_cast<float>(x);
+    this->_mouse_y = static_cast<float>(y);
+    return false;
 }
 
 /*
@@ -414,7 +404,7 @@ void OSPRayRenderer::InterfaceResetDirty() { this->AbstractResetDirty(); }
 /*
  * ospray::OSPRayRenderer::GetExtents
  */
-bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) {
+bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D& cr) {
 
     if (&cr == NULL) return false;
     CallOSPRayStructure* os = this->_getStructureSlot.CallAs<CallOSPRayStructure>();
@@ -474,12 +464,10 @@ bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) {
     return true;
 }
 
-void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
+void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(std::vector<float>& db, cam_type::matrix_type projTemp) {
 
     const float fovy = _cam.aperture_angle();
     const float aspect = _cam.resolution_gate_aspect();
-    const float zNear = _cam.near_clipping_plane();
-    const float zFar = _cam.far_clipping_plane();
 
     const glm::vec3 cameraUp = {_cam.up_vector().x(), _cam.up_vector().y(), _cam.up_vector().z()};
     const glm::vec3 cameraDir = {_cam.view_vector().x(), _cam.view_vector().y(), _cam.view_vector().z()};
@@ -489,6 +477,8 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
 
     const auto ospDepthBufferWidth = static_cast<const size_t>(_imgSize[0]);
     const auto ospDepthBufferHeight = static_cast<const size_t>(_imgSize[1]);
+
+    db.resize(ospDepthBufferWidth * ospDepthBufferHeight);
 
     // transform from ray distance t to orthogonal Z depth
     auto dir_du = glm::normalize(glm::cross(cameraDir, cameraUp));
@@ -502,8 +492,9 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
 
     const auto dir_00 = cameraDir - .5f * dir_du - .5f * dir_dv;
 
-    const float A = -(zFar + zNear) / (zFar - zNear);
-    const float B = -2. * zFar * zNear / (zFar - zNear);
+    // transform from linear to nonlinear OpenGL depth
+    const auto A = projTemp.operator()(2,2);
+    const auto B = projTemp.operator()(3, 2);
 
     int j, i;
 #pragma omp parallel for private(i)
@@ -512,7 +503,7 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
             const auto dir_ij = glm::normalize(dir_00 + float(i) / float(ospDepthBufferWidth - 1) * dir_du +
                                                       float(j) / float(ospDepthBufferHeight - 1) * dir_dv);
 
-            const float tmp = ospDepthBuffer[j * ospDepthBufferWidth + i];// * dot(cameraDir, dir_ij);
+            const float tmp = ospDepthBuffer[j * ospDepthBufferWidth + i];
             float res = 0.5 * (-A * tmp + B) / tmp + 0.5;
             if (!std::isfinite(res)) res = 1.0f;
             db[j * ospDepthBufferWidth + i] = res;

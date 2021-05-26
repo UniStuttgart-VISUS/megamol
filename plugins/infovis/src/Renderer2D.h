@@ -23,11 +23,6 @@ namespace infovis {
         void computeDispatchSizes(
             uint64_t numItems, GLint const localSizes[3], GLint const maxCounts[3], GLuint dispatchCounts[3]) const;
 
-        bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program) const;
-        bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLGeometryShader& program) const;
-        bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLTesselationShader& program) const;
-        bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLComputeShader& program) const;
-
         void makeDebugLabel(GLenum identifier, GLuint name, const char* label) const;
         void debugNotify(GLuint name, const char* message) const;
         void debugPush(GLuint name, const char* groupLabel) const;

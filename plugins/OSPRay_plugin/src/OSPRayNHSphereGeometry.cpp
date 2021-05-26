@@ -48,15 +48,24 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     // get transformation parameter
     this->processTransformation();
 
+    // fill clipping plane container
+    this->processClippingPlane();
+
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
-	cd->SetTimeStamp(os->getTime());
-    cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+    cd->SetTimeStamp(os->getTime());
+    cd->SetFrameID(os->getTime(), true);
+    if (!(*cd)(1))
+        return false;
+    if (!(*cd)(0))
+        return false;
+
+    auto interface_dirty = this->InterfaceIsDirty();
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || interface_dirty ) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
@@ -64,8 +73,6 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
         return true;
     }
 
-    if (!(*cd)(1)) return false;
-    if (!(*cd)(0)) return false;
     if (cd->GetParticleListCount() == 0) return false;
 
     if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
@@ -121,6 +128,8 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     ss.partCount = partCount;
     ss.globalRadius = globalRadius;
     ss.mmpldColor = parts.GetColourDataType();
+
+    this->structureContainer.structure = ss;
 
     return true;
 }

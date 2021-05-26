@@ -56,7 +56,10 @@ megamol::remote::RendernodeView::~RendernodeView() { this->Release(); }
 void megamol::remote::RendernodeView::release(void) { shutdown_threads(); }
 
 
-bool megamol::remote::RendernodeView::create(void) { return true; }
+bool megamol::remote::RendernodeView::create(void) {
+    _fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    return true;
+}
 
 
 bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
@@ -140,7 +143,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 }
 
 
-void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context) {
+void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context, core::Call* call) {
 #ifdef WITH_MPI
     static bool first_frame = true;
 
@@ -182,6 +185,11 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
 #    ifdef RV_DEBUG_OUTPUT
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: Starting broadcast.");
 #    endif
+    if (bcast_rank_ < 0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "RendernodeView: Bcast rank not set. Skipping.");
+        return;
+    }
     MPI_Bcast(timestamps.data(), 2, MPI_DOUBLE, bcast_rank_, this->comm_);
     MPI_Bcast(&msg_size, 1, MPI_UINT64_T, bcast_rank_, this->comm_);
     msg.resize(msg_size);
@@ -233,7 +241,6 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
         crv->ResetAll();
         crv->SetTime(static_cast<float>(timestamps[0]));
         crv->SetInstanceTime(timestamps[1]);
-        crv->SetGpuAffinity(context.GpuAffinity);
         crv->SetProjection(this->getProjType(), this->getEye());
 
         if (this->hasTile()) {
@@ -241,11 +248,31 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
                 this->getTileW(), this->getTileH());
         }
 
-        crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
+        if ((this->_fbo->GetWidth() != this->getTileW()) || (this->_fbo->GetHeight() != this->getTileH()) ||
+            (!this->_fbo->IsValid())) {
+            this->_fbo->Release();
+            if (!this->_fbo->Create(this->getTileW(), this->getTileH(), GL_RGBA8, GL_RGBA,
+                    GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
+                    GL_DEPTH_COMPONENT)) {
+                throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
+                return;
+            }
+        }
+        this->_fbo->Enable();
+        auto bgcol = this->BkgndColour();
+        glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+        glClearDepth(1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        crv->SetFramebufferObject(this->_fbo);
 
-        if (!crv->operator()(core::view::CallRenderView::CALL_RENDER)) {
+
+        if (!crv->operator()(core::view::CallRenderViewGL::CALL_RENDER)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("RendernodeView: Failed to call render on dependend view.");
         }
+
+        this->_fbo->Disable();
+        this->_fbo->DrawColourTexture();
+
 
         glFinish();
     } else {
@@ -261,7 +288,7 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
 
 
 bool megamol::remote::RendernodeView::OnRenderView(core::Call& call) {
-    auto crv = dynamic_cast<core::view::CallRenderView*>(&call);
+    auto crv = dynamic_cast<core::view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
     auto overrideCall = dynamic_cast<core::view::AbstractCallRender*>(&call);
 
@@ -272,7 +299,7 @@ bool megamol::remote::RendernodeView::OnRenderView(core::Call& call) {
     context.Time = time;
     context.InstanceTime = crv->InstanceTime();
 
-    this->Render(context);
+    this->Render(context, &call);
 
     return true;
 }

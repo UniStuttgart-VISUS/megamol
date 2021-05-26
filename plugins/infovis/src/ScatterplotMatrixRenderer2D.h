@@ -3,12 +3,12 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagCall_GL.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/SSBOBufferArray.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/table/TableDataCall.h"
@@ -18,6 +18,7 @@
 #include <optional>
 #include "Renderer2D.h"
 #include "mmcore/FlagStorage.h"
+#include "vislib/math/Matrix.h"
 
 namespace megamol::infovis {
 
@@ -78,7 +79,6 @@ protected:
 
     bool OnMouseMove(double x, double y) override;
 
-
 private:
     enum ValueMapping {
         VALUE_MAPPING_KERNEL_BLEND = 0,
@@ -128,7 +128,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender2D& call) override;
+    bool Render(core::view::CallRender2DGL& call) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -139,7 +139,7 @@ private:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender2D& call) override;
+    bool GetExtents(core::view::CallRender2DGL& call) override;
 
     bool hasDirtyData() const;
 
@@ -149,15 +149,15 @@ private:
 
     void resetDirtyScreen();
 
-    bool validate(core::view::CallRender2D& call, bool ignoreMVP);
+    bool validate(core::view::CallRender2DGL& call, bool ignoreMVP);
 
     void updateColumns();
 
-    void drawMinimalisticAxis();
+    void drawMinimalisticAxis(glm::mat4 ortho);
 
-    void drawScientificAxis();
+    void drawScientificAxis(glm::mat4 ortho);
 
-    void bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader);
+    void bindMappingUniforms(std::unique_ptr<glowl::GLSLProgram>& shader);
 
     void bindFlagsAttribute();
 
@@ -169,13 +169,13 @@ private:
 
     void drawTriangulation();
 
-    void validateText();
+    void validateText(glm::mat4 ortho);
 
-    void drawText();
+    void drawText(glm::mat4 ortho);
 
     void drawPickIndicator();
 
-    void drawMouseLabels();
+    void drawMouseLabels(glm::mat4 ortho);
 
     void unbindScreen();
 
@@ -235,6 +235,10 @@ private:
 
     core::param::ParamSlot axisTickSizeParam;
 
+    core::param::ParamSlot axisTickPrecisionX;
+
+    core::param::ParamSlot axisTickPrecisionY;
+
     core::param::ParamSlot drawOuterLabelsParam;
 
     core::param::ParamSlot drawDiagonalLabelsParam;
@@ -270,23 +274,23 @@ private:
 
     std::vector<PlotInfo> plots;
 
-    vislib::math::Rectangle<float> bounds;
+    core::BoundingBoxes_2 bounds;
 
-    vislib::graphics::gl::GLSLShader minimalisticAxisShader;
+    std::unique_ptr<glowl::GLSLProgram> minimalisticAxisShader;
 
-    vislib::graphics::gl::GLSLShader scientificAxisShader;
+    std::unique_ptr<glowl::GLSLProgram> scientificAxisShader;
 
-    vislib::graphics::gl::GLSLShader pointShader;
+    std::unique_ptr<glowl::GLSLProgram> pointShader;
 
-    vislib::graphics::gl::GLSLGeometryShader lineShader;
+    std::unique_ptr<glowl::GLSLProgram> lineShader;
 
-    vislib::graphics::gl::GLSLShader triangleShader;
+    std::unique_ptr<glowl::GLSLProgram> triangleShader;
 
-    vislib::graphics::gl::GLSLShader pickIndicatorShader;
+    std::unique_ptr<glowl::GLSLProgram> pickIndicatorShader;
 
-    vislib::graphics::gl::GLSLShader screenShader;
+    std::unique_ptr<glowl::GLSLProgram> screenShader;
 
-    vislib::graphics::gl::GLSLComputeShader pickProgram;
+    std::unique_ptr<glowl::GLSLProgram> pickProgram;
 
     GLint pickWorkgroupSize[3];
     GLint maxWorkgroupCount[3];

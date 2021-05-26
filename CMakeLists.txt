@@ -9,6 +9,9 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 cmake_policy(SET CMP0054 NEW)
 cmake_policy(SET CMP0079 NEW) # Needed for static build, requires CMake 3.13!
+if (POLICY CMP0104)
+  cmake_policy(SET CMP0104 NEW)
+endif()
 
 project(megamol)
 
@@ -43,7 +46,7 @@ include(ClangFormat)
 # External
 include("externals/CMakeExternals.cmake")
 
-# Frontend Resources, Input Events interfaces 
+# Frontend Resources, Input Events interfaces
 add_subdirectory(${MEGAMOL_DIR}/frontend/resources)
 
 # Frontend Services (e.g. OpenGL_GLFW provider)
@@ -69,14 +72,6 @@ add_subdirectory(${MEGAMOL_DIR}/frontend/main)
 if(WIN32)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
-endif()
-
-# Configurator
-if(WIN32)
-  # NuGet
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config
-    ${CMAKE_CURRENT_BINARY_DIR}/NuGet.Config COPYONLY)
-  add_subdirectory(configurator)
 endif()
 
 # Plugin register function
@@ -110,6 +105,12 @@ endfunction(megamol_register_plugin)
 
 # Plugins
 add_subdirectory(plugins)
+if (BUILD_CONSOLE)
+  target_link_libraries(mmconsole PRIVATE plugins)
+endif()
+if (BUILD_FRONTEND)
+  target_link_libraries(megamol PRIVATE plugins)
+endif()
 
 # Utils
 add_subdirectory(utils)

@@ -18,7 +18,7 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2()
+TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModuleGL()
     , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
     , stepsParam("splineSubdivision", "Amount of interpolation steps between keyframes.")
     , toggleHelpTextParam("helpText", "Show/hide help text for key assignments.")
@@ -76,10 +76,10 @@ void TrackingShotRenderer::release(void) {
 }
 
 
-bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
+bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) {
 
-    // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming CallRender3D_2 (cr3d_in).
-    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    // Propagate changes made in GetExtents() from outgoing CallRender3DGL (cr3d_out) to incoming CallRender3DGL (cr3d_in).
+    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
 
     if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
         CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
@@ -102,7 +102,7 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
         ccc->SetBboxCenter(vislib_point_to_glm(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
         if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return false;
 
-        // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming  CallRender3D_2 (cr3d_in) => Bboxes and times.
+        // Propagate changes made in GetExtents() from outgoing CallRender3DGL (cr3d_out) to incoming  CallRender3DGL (cr3d_in) => Bboxes and times.
         unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
         call.SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
         call.SetTime(cr3d_out->Time());
@@ -116,9 +116,9 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
 }
 
 
-bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
+bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
-    auto cr3d_out = this->chainRenderSlot.CallAs<CallRender3D_2>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<CallRender3DGL>();
     if (cr3d_out == nullptr) return false;
 
     // Get update data from keyframe keeper -----------------------------------
@@ -177,19 +177,16 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glm::mat4 proj = projTemp;
     glm::mat4 mvp = proj * view;
 
-    // Get current viewport
-    auto viewport = call.GetViewport();
-    const float vp_fw = static_cast<float>(viewport.Width());
-    const float vp_fh = static_cast<float>(viewport.Height());
-
-    // Get matrix for orthogonal projection of 2D rendering
-    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
+    glm::vec2 viewport;
+    viewport.x = static_cast<float>(cam.resolution_gate().width());
+    viewport.y = static_cast<float>(cam.resolution_gate().height());
+    glm::mat4 ortho = glm::ortho(0.0f, viewport.x, 0.0f, viewport.y, -1.0f, 1.0f);
 
     // Push manipulators ------------------------------------------------------
     if (keyframes->size() > 0) {
         cam_type::minimal_state_type camera_state;
         cam.get_minimal_state(camera_state);
-        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera_state, glm::vec2(vp_fw, vp_fh), mvp);
+        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera_state, viewport, mvp);
         this->manipulators.PushRendering(this->utils);
     }
 
@@ -210,25 +207,22 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
 
     // Draw 3D ---------------------------------------------------------------
-    this->utils.DrawAll(mvp, glm::vec2(vp_fw, vp_fh));
+    this->utils.DrawAll(mvp, viewport);
 
     // Push hotkey list ------------------------------------------------------
-    // Draw help text 
-    if (this->showHelpText) {
-        this->utils.PushHotkeyList(vp_fw, vp_fh);
-    }
+    this->utils.HotkeyWindow(this->showHelpText, ortho, viewport);
 
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " TRACKING SHOT ";
     std::string midLabel = "";
-    std::string rightLabel = " [Shift+h] Show Help Text ";
+    std::string rightLabel = " [Shift+h] Show Hotkeys ";
     if (this->showHelpText) {
-        rightLabel = " [Shift+h] Hide Help Text ";
+        rightLabel = " [Shift+h] Hide Hotkeys ";
     }
-    this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, viewport);
 
     // Draw 2D ---------------------------------------------------------------
-    this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
+    this->utils.DrawAll(ortho, viewport);
 
     return true;
 }
@@ -236,7 +230,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
 bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
 
-    auto cr = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto cr = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (cr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseButton;
@@ -244,7 +238,7 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
         cr->SetInputEvent(evt);
-        if ((*cr)(view::CallRender3D_2::FnOnMouseButton)) return true;
+        if ((*cr)(view::CallRender3DGL::FnOnMouseButton)) return true;
     }
 
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
@@ -302,14 +296,14 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
 
 bool TrackingShotRenderer::OnMouseMove(double x, double y) {
 
-    auto cr = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto cr = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (cr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
         cr->SetInputEvent(evt);
-        if ((*cr)(view::CallRender3D_2::FnOnMouseMove))  return true;
+        if ((*cr)(view::CallRender3DGL::FnOnMouseMove))  return true;
     }
 
     // Just store current mouse position

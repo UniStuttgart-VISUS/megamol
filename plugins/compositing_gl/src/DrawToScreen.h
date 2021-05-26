@@ -12,11 +12,12 @@
 #include "vislib/math/Matrix.h"
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
+#include "glowl/Texture2D.hpp"
 
 namespace megamol {
 namespace compositing {
@@ -24,7 +25,7 @@ namespace compositing {
 /**
  * TODO
  */
-class DrawToScreen : public megamol::core::view::Renderer3DModule_2 {
+class DrawToScreen : public megamol::core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -78,7 +79,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3D_2& call);
+    bool GetExtents(core::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -87,23 +88,28 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3D_2& call);
+    bool Render(core::view::CallRender3DGL& call);
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    void PreRender(core::view::CallRender3D_2& call);
+    void PreRender(core::view::CallRender3DGL& call);
 
 private:
     typedef vislib::graphics::gl::GLSLShader GLSLShader;
+
+    /** Dummy depth texture to use when no depth texture is connected */
+    std::shared_ptr<glowl::Texture2D> m_dummy_depth_tx;
 
     /** Shader program for deferred shading pass */
     std::unique_ptr<GLSLShader> m_drawToScreen_prgm;
 
     /** */
     core::CallerSlot m_input_texture_call;
+
+    core::CallerSlot m_input_depth_texture_call;
 
     GLint m_screenRestoreFBO;
 };

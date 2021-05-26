@@ -16,6 +16,7 @@
 #include "mmcore/ViewInstance.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 
 namespace megamol {
@@ -30,6 +31,12 @@ namespace special {
     class ScreenShooter : public job::AbstractJob, public Module,
         public view::AbstractView::Hooks {
     public:
+
+        std::vector<std::string> requested_lifetime_resources() {
+            auto lifetime_resources = Module::requested_lifetime_resources();
+            lifetime_resources.push_back("MegaMolGraph");
+            return lifetime_resources;
+        }
 
         /**
          * Answer the name of this module.
@@ -178,6 +185,8 @@ namespace special {
 
         /** A simple running flag */
         bool running;
+
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> currentFbo;
 
     };
 

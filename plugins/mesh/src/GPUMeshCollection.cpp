@@ -1,17 +1,12 @@
 #include "mesh/GPUMeshCollection.h"
 
-namespace megamol
-{
-	namespace mesh
-	{
-		//std::vector<GPUMeshCollection::BatchedMeshes> const & GPUMeshCollection::getMeshes()
-		//{
-		//	return m_batched_meshes;
-		//}
-		//
-		//std::vector<GPUMeshCollection::SubMeshData> const & GPUMeshCollection::getSubMeshData()
-		//{
-		//	return m_sub_mesh_data;
-		//}
-	}
+namespace megamol {
+namespace mesh {
+    //void GPUMeshCollection::defrag() {
+    //
+    //    //TODO create new GPU mesh object for each existing mesh
+    //
+    //    //TODO copy data from old to new meshes. update submeshes
+    //}
 }
+} // namespace megamol

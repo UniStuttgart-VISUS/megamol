@@ -4,7 +4,6 @@
 #include "mmcore/MegaMolGraph.h"
 
 #include "mmcore/AbstractSlot.h"
-#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include "mmcore/utility/log/Log.h"
 
@@ -159,6 +158,15 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& oldId, std::st
         }
     }
 
+    // dont know what we are supposed to do when entry point renaming fails... how can it fail?
+    if (module_it->isGraphEntryPoint) {
+        bool view_rename_ok = m_image_presentation->rename_entry_point(oldId, newId);
+        if (!view_rename_ok) {
+            log_error("error renaming graph entry point. image presentation service could not rename module: " + oldId + " -> " + newId);
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -303,6 +311,11 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         return {slot_ptr, module_ptr};
     };
 
+    if (call_description == nullptr) {
+        log_error("error. could not find call class name: " + request.className);
+        return false;
+    }
+
     auto from_slot = getCallSlotOfModule(request.from);
     if (!from_slot.first) {
         log_error("error. could not find from-slot: " + request.from +
@@ -434,13 +447,6 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
     return true;
 }
 
-
-void megamol::core::MegaMolGraph::RenderNextFrame() {
-    for (auto& entry : graph_entry_points) {
-        entry.execute(entry.modulePtr, entry.entry_point_resources);
-    }
-}
-
 megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::string const& moduleName) const {
     auto module_it = find_module(moduleName);
 
@@ -464,26 +470,21 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
     return call_it->callPtr;
 }
 
-megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& name) {
-    auto module_it = std::find_if(module_list_.begin(), module_list_.end(),
-        [&](auto const& module) 
-    {
-        const auto found = name.find(module.request.id);
-        return (found != std::string::npos) && found == 0; // substing found && substring starts at beginning
-    });
+static const auto check_module_is_prefix = [](std::string const& request, auto const& module) {
+        const auto& module_name = module.request.id;
+        const auto substring = request.substr(0, module_name.size());
+        return (module_name == substring) && // module name is prefix of request
+            (request.size() == module_name.size() // module name matches whole request
+            || (request.size() >= module_name.size()+2 && request.substr(module_name.size(), 2) == "::")); // OR request has :: after module name
+    };
 
-    return module_it;
+// find module where module name is prefix of request
+megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& request) {
+    return std::find_if(module_list_.begin(), module_list_.end(), [&](auto const& module){ return check_module_is_prefix(request, module); });
 }
 
-megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& name) const {
-    auto module_it = std::find_if(module_list_.begin(), module_list_.end(),
-        [&](auto const& module) 
-    {
-        const auto found = name.find(module.request.id);
-        return (found != std::string::npos) && found == 0; // substing found && substring starts at beginning
-    });
-
-    return module_it;
+megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& request) const {
+    return std::find_if(module_list_.begin(), module_list_.end(), [&](auto const& module){ return check_module_is_prefix(request, module); });
 }
 
 megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {
@@ -585,12 +586,9 @@ std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::L
     return parameters;
 }
 
-bool megamol::core::MegaMolGraph::SetGraphEntryPoint(
-    std::string moduleName,
-    std::vector<std::string> execution_resource_requests,
-    EntryPointExecutionCallback render_callback,
-    EntryPointExecutionCallback init_callback)
+bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName)
 {
+    // currently, we expect the entry point to be derived from AbstractView
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
@@ -598,20 +596,20 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(
         return false;
     }
     
-    auto module_ptr = module_it->modulePtr;
+    auto module_shared_ptr = module_it->modulePtr; // we cant cast shared_ptr to void* for image presentation rendering
+    auto& module_ref = *module_shared_ptr;
+    auto* module_raw_ptr = &module_ref;
 
-    auto resources = get_requested_resources(execution_resource_requests);
+    // the image presentation will issue the rendering and provide the view with resources for rendering
+    // probably we dont care or dont check wheter the same view is added as entry point multiple times
+    bool view_presentation_ok = m_image_presentation->add_entry_point(moduleName, static_cast<void*>(module_raw_ptr));
 
-    if (resources.size() != execution_resource_requests.size() ||
-        !std::equal<>(resources.begin(), resources.end(), 
-            execution_resource_requests.begin(), execution_resource_requests.end(), 
-            [](megamol::frontend::FrontendResource& l, std::string& r) { return l.getIdentifier() == r; })) 
-    {
+    if (!view_presentation_ok) {
+        log_error("error adding graph entry point. image presentation service rejected module: " + moduleName);
         return false;
     }
 
-    this->graph_entry_points.push_back({moduleName, module_ptr, resources, render_callback});
-    init_callback(module_ptr, resources);
+    this->graph_entry_points.push_back(module_shared_ptr);
 
     module_it->isGraphEntryPoint = true;
     log("set graph entry point: " + moduleName);
@@ -627,7 +625,18 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) 
         return false;
     }
 
-    this->graph_entry_points.remove_if([&](GraphEntryPoint& entry) { return entry.moduleName == moduleName; });
+    bool view_removal_ok = m_image_presentation->remove_entry_point(moduleName);
+
+    // note that for us it is not an error to try to remove a module as graph entry point
+    // if that module is not registered as an entry point
+    // but maybe image presentation may tell us that for some other reason removal failed?
+    if (!view_removal_ok) {
+        log_error("error adding graph entry point. image presentation service could not remove module: " + moduleName);
+        return false;
+    }
+
+    this->graph_entry_points.remove_if(
+        [&](Module::ptr_type& module) { return std::string{module->Name().PeekBuffer()} == moduleName; });
 
     module_it->isGraphEntryPoint = false;
     log("remove graph entry point: " + moduleName);
@@ -635,12 +644,35 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) 
     return true;
 }
 
-void megamol::core::MegaMolGraph::AddModuleDependencies(std::vector<megamol::frontend::FrontendResource> const& resources) {
+bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::frontend::FrontendResource> const& resources) {
     this->provided_resources.insert(provided_resources.end(), resources.begin(), resources.end());
+
+    auto find_it = std::find_if(provided_resources.begin(), provided_resources.end(),
+        [&](megamol::frontend::FrontendResource const& resource) {
+            return resource.getIdentifier() == "ImagePresentationEntryPoints";
+        });
+
+    if (find_it == provided_resources.end()) {
+        return false;
+    }
+
+    m_image_presentation = & const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
+        find_it->getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+
+    return true;
 }
 
 megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenience() {
     return this->convenience_functions;
+}
+
+void megamol::core::MegaMolGraph::Clear() {
+    // currently entry points are expected to be graph modules, i.e. views
+    // therefore it is ok for us to clear all entry points if the graph shuts down
+    m_image_presentation->clear_entry_points();
+    graph_entry_points.clear();
+    call_list_.clear();
+    module_list_.clear();
 }
 
 std::vector<megamol::frontend::FrontendResource> megamol::core::MegaMolGraph::get_requested_resources(std::vector<std::string> resource_requests) {

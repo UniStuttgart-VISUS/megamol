@@ -11,6 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/UniFlagCalls.h"
 
 
 namespace megamol {
@@ -32,6 +33,7 @@ protected:
     bool getStructureCallback(core::Call& call);
     void processMaterial();
     void processTransformation();
+    void processClippingPlane();
 
     /** The callee for Structure */
     core::CalleeSlot deployStructureSlot;
@@ -44,6 +46,11 @@ protected:
 
     /** The call for transformation */
     core::CallerSlot getTransformationSlot;
+
+    core::CallerSlot getClipplaneSlot;
+
+    core::CallerSlot writeFlagsSlot;
+    core::CallerSlot readFlagsSlot;
 
     SIZE_T datahash;
     float time;

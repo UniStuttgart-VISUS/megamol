@@ -12,11 +12,11 @@ Windows Registry Editor Version 5.00
 @="Show Data Info"
 
 [HKEY_CLASSES_ROOT\MegaMol.mmpld\shell\info\command]
-@="\"@CURSRC@mmpld.bat\" info \"%1\""
+@="\"@THEBIN@mmpld.bat\" info \"%1\""
 
 [HKEY_CLASSES_ROOT\MegaMol.mmpld\shell\view]
 @="Render in MegaMol"
 
 [HKEY_CLASSES_ROOT\MegaMol.mmpld\shell\view\command]
-@="\"@CURSRC@mmpld.bat\" render \"%1\""
+@="\"@THEBIN@mmpld.bat\" render \"%1\""
 
