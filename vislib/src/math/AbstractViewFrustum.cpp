@@ -1,9 +1,9 @@
 /*
  * AbstractViewFrustum.cpp
  *
- * Copyright (C) 2009 by Universität Stuttgart (VISUS).
+ * Copyright (C) 2009 by UniversitÃ¤t Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
- * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
+ * Copyright (C) 2008 by Christoph MÃ¼ller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */

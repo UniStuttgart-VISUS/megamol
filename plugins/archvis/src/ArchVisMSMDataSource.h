@@ -43,7 +43,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source for visualizing SFB1244's 'Maﬂstabsmodell'"; }
+    static const char* Description(void) { return "Data source for visualizing SFB1244's 'Ma√üstabsmodell'"; }
 
     /**
      * Answers whether this module is available on the current system.
