@@ -187,7 +187,6 @@ bool Screenshot_Service::init(const Config& config) {
         "MegaMolGraph",
         "GUIState",
         "RuntimeConfig",
-        /// TEMP XXX
         "GUIRegisterWindow"
     };
 

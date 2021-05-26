@@ -492,7 +492,7 @@ bool GUIWindows::PostDraw(void) {
             } else {
                 // Delete window without valid callback
                 this->state.win_delete_hash_id = wc.Hash();
-                //megamol::core::utility::log::Log::DefaultLog.WriteError(
+                // megamol::core::utility::log::Log::DefaultLog.WriteError(
                 //    "[GUI] Missing valid draw callback for GUI window '%s'. [%s, %s, line %d]\n", wc.Name().c_str(),
                 //    __FILE__, __FUNCTION__, __LINE__);
             }
@@ -2766,13 +2766,14 @@ void GUIWindows::RegisterWindow(
 }
 
 
-void GUIWindows::RegisterPopUp(const std::string& name, bool& open, const std::function<void(void)> &callback) {
+void GUIWindows::RegisterPopUp(const std::string& name, bool& open, const std::function<void(void)>& callback) {
 
-    this->external_popup_registry[name] = std::pair<bool*, std::function<void(void)>>(&open, const_cast<std::function<void(void)>&>(callback));
+    this->external_popup_registry[name] =
+        std::pair<bool*, std::function<void(void)>>(&open, const_cast<std::function<void(void)>&>(callback));
 }
 
 
-void GUIWindows::RegisterNotification(const std::string &name, bool &open, const std::string &message) {
+void GUIWindows::RegisterNotification(const std::string& name, bool& open, const std::string& message) {
 
     this->external_notification_registry[name] = std::tuple<bool*, bool, std::string>(&open, false, message);
 }
