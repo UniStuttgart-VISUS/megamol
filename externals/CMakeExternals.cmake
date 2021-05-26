@@ -10,10 +10,6 @@ endif()
 # Include external script
 include("${CMAKE_BINARY_DIR}/script-externals/cmake/External.cmake")
 
-# other includes
-# TODO: remove when uploading
-include(CMakePrintHelpers)
-
 #
 # Centralized function to require externals to add them once by invoking
 # require_external(<EXTERNAL_TARGET>).
