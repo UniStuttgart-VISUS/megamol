@@ -388,4 +388,4 @@ See [developer information for GUI plugin](../../plugins/gui#new-parameter-widge
 
 ### Window/PopUp/Notification for Frontend Service
 
-See [developer information for GUI plugin](../../plugins/gui#windowpopupnotification-for-frontend-service).
+See [developer information for GUI plugin](../../plugins/gui#gui-windowpopupnotification-for-frontend-service).
