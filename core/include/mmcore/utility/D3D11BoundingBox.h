@@ -1,7 +1,7 @@
 /*
  * D3D11BoundingBox.h
  *
- * Copyright (C) 2013 by Visualisierungsinstitut der Universit‰t Stuttgart.
+ * Copyright (C) 2013 by Visualisierungsinstitut der Universit√§t Stuttgart.
  * Alle Rechte vorbehalten.
  */
 

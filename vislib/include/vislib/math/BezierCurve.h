@@ -27,7 +27,7 @@ namespace math {
 
 
     /**
-     * Stores and evaluates a bézier curve of degree E. The curve is defined
+     * Stores and evaluates a bÃ©zier curve of degree E. The curve is defined
      * by E + 1 control points (type T) forming the control polygon.
      *
      * Template parameters:
@@ -51,7 +51,7 @@ namespace math {
         ~BezierCurve(void);
 
         /*
-         * Evaluates the position on the bézier curve for the
+         * Evaluates the position on the bÃ©zier curve for the
          * interpolation parameter t based on the algorithm of de Casteljau.
          *
          * @param outPt The variable to be set to the calculated point.
@@ -96,13 +96,13 @@ namespace math {
         const T& ControlPoint(unsigned int idx) const;
 
         /**
-         * Evaluates the position on the bézier curve for the
+         * Evaluates the position on the bÃ©zier curve for the
          * interpolation parameter t based on the algorithm of de Casteljau.
          *
          * @param t The interpolation parameter (0..1); Results for values
          *          outside this range are undefined.
          *
-         * @return The position on the bézier curve
+         * @return The position on the bÃ©zier curve
          */
         VISLIB_FORCEINLINE T Evaluate(float t) const {
             T rv;
@@ -120,13 +120,13 @@ namespace math {
         }
 
         /**
-         * Evaluates the position on the bézier curve for the
+         * Evaluates the position on the bÃ©zier curve for the
          * interpolation parameter t based on the algorithm of de Casteljau.
          *
          * @param t The interpolation parameter (0..1); Results for values
          *          outside this range are undefined.
          *
-         * @return The position on the bézier curve
+         * @return The position on the bÃ©zier curve
          */
         VISLIB_FORCEINLINE T operator()(float t) const {
             T rv;

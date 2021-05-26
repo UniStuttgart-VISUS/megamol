@@ -16,6 +16,7 @@
 #include "glad/glad_wgl.h"
 #else
 #include "glad/glad_glx.h"
+#undef Status
 #endif
 
 //#include <atomic>

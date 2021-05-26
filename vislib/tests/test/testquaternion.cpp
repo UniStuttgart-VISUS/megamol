@@ -32,11 +32,11 @@ void TestQuaternion(void) {
 
     q3 = q1 * q2;
 
-    q1.Set(M_PI * 0.5, Vector<double, 3>(0.0, 1.0, 0.0)); // rotates 90° around the y-axis
+    q1.Set(M_PI * 0.5, Vector<double, 3>(0.0, 1.0, 0.0)); // rotates 90Â° around the y-axis
     Vector<double, 3> v1 = q1 * Vector<double, 3>(1.0, 0.0f, 0.0);
     AssertEqual("Rotation 1 works", v1, Vector<double, 3>(0.0, 0.0, -1.0));
 
-    q2.Set(M_PI * 0.25, Vector<double, 3>(1.0, 0.0, 0.0)); // rotates 45° around the x-axis
+    q2.Set(M_PI * 0.25, Vector<double, 3>(1.0, 0.0, 0.0)); // rotates 45Â° around the x-axis
     Vector<double, 3> v2 = q2 * v1;
     AssertEqual("Rotation 2 works", v2, Vector<double, 3>(0.0, 0.5 * sqrt(2.0), -0.5 * sqrt(2.0)));
 
