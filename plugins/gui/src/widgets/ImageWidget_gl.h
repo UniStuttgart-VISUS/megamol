@@ -46,7 +46,7 @@ namespace gui {
         /**
          * Draw texture as button.
          */
-        bool Button(const std::string& tooltip, ImVec2 size);
+        bool Button(const std::string& tooltip_text, ImVec2 size);
 
         /**
          * Return texture id for external usage.

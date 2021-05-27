@@ -20,9 +20,11 @@ namespace gui {
     class GUIWrapper {
     public:
         typedef std::shared_ptr<megamol::gui::GUIManager> GUIManagerPtr_t;
+
         GUIWrapper();
         ~GUIWrapper();
-        const GUIManagerPtr_t& Get() {
+
+        const GUIManagerPtr_t& Get() const {
             return this->m_gui;
         }
 

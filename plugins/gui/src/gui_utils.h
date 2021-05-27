@@ -396,7 +396,7 @@ namespace gui {
 
             // Determine header state and change color depending on active parameter search
             auto headerId = ImGui::GetID(name.c_str());
-            auto headerState = override_header_state;
+            auto headerState = static_cast<int>(override_header_state);
             if (headerState == GUI_INVALID_ID) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
@@ -411,10 +411,9 @@ namespace gui {
                 pop_style_color_number += 3;
             }
 
-            bool searched = true;
             if (!inout_search.empty()) {
                 headerState = 1;
-                searched = gui_utils::FindCaseInsensitiveSubstring(name, inout_search);
+                bool searched = gui_utils::FindCaseInsensitiveSubstring(name, inout_search);
                 if (!searched) {
                     auto header_col = ImGui::GetStyleColorVec4(ImGuiCol_Header);
                     header_col.w *= 0.25;
@@ -440,6 +439,24 @@ namespace gui {
                 header_open = true;
             }
             return header_open;
+        }
+
+        /*
+         * Convert given string to lower case.
+         */
+        static void StringToLowerCase(std::string& str) {
+            for (auto& c : str) {
+                c = static_cast<char>(std::tolower(c));
+            }
+        }
+
+        /*
+         * Convert given string to upper case.
+         */
+        static void StringToUpperCase(std::string& str) {
+            for (auto& c : str) {
+                c = static_cast<char>(std::toupper(c));
+            }
         }
 
     private:

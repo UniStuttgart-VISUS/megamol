@@ -28,7 +28,7 @@ namespace gui {
     public:
 
         ParameterGroups();
-        ~ParameterGroups();
+        ~ParameterGroups() = default;
 
         bool Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search,
             vislib::math::Ternary in_extended, bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,

@@ -27,6 +27,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , sync_queue()
         , running(false)
         , gui_graph_state()
+        , gui_update(true)
         , gui_show_grid(false)
         , gui_show_parameter_sidebar(true)
         , gui_params_visible(true)
@@ -182,16 +183,16 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                 // Automatically set new view module as graph entry, if no other entry point is set
                 if (mod_ptr->IsView()) {
                     bool create_new_graph_entry = true;
-                    for (auto module_ptr : this->Modules()) {
+                    for (auto& module_ptr : this->Modules()) {
                         if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
                             create_new_graph_entry = false;
                         }
                     }
                     if (create_new_graph_entry) {
-                        Graph::QueueData queue_data;
-                        queue_data.name_id = mod_ptr->FullName();
+                        Graph::QueueData entry_queue_data;
+                        entry_queue_data.name_id = mod_ptr->FullName();
                         mod_ptr->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
-                        this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                        this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, entry_queue_data);
                     }
                 }
 
@@ -929,7 +930,7 @@ bool Graph::ToggleGraphEntry() {
 }
 
 
-const std::string megamol::gui::Graph::GetFilename() const {
+std::string megamol::gui::Graph::GetFilename() const {
 
     if (this->filenames.first.first) {
         // Return script path
@@ -1136,7 +1137,7 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                         megamol::core::utility::get_json_value<bool>(graph_state, {"param_extended_mode"},
                             &this->gui_graph_state.interact.parameters_extended_mode);
 
-                        std::array<float, 2> canvas_scrolling;
+                        std::array<float, 2> canvas_scrolling = {0.0f, 0.0f};
                         megamol::core::utility::get_json_value<float>(
                             graph_state, {"canvas_scrolling"}, canvas_scrolling.data(), canvas_scrolling.size());
                         this->gui_graph_state.canvas.scrolling = ImVec2(canvas_scrolling[0], canvas_scrolling[1]);
@@ -1152,7 +1153,7 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                                 for (auto& module_state : module_item.value().items()) {
                                     std::string module_fullname = module_state.key();
                                     auto position_item = module_state.value();
-                                    std::array<float, 2> graph_position;
+                                    std::array<float, 2> graph_position = {0.0f, 0.0f};
                                     megamol::core::utility::get_json_value<float>(module_state.value(),
                                         {"graph_position"}, graph_position.data(), graph_position.size());
                                     auto module_position = ImVec2(graph_position[0], graph_position[1]);
@@ -3046,7 +3047,7 @@ bool megamol::gui::Graph::contains_group(const GroupPtrVector_t& groups, ImGuiID
 }
 
 
-const std::string megamol::gui::Graph::generate_unique_group_name() {
+std::string megamol::gui::Graph::generate_unique_group_name() const {
 
     int new_name_id = 0;
     std::string new_name_prefix("Group_");
@@ -3063,7 +3064,7 @@ const std::string megamol::gui::Graph::generate_unique_group_name() {
 }
 
 
-const std::string megamol::gui::Graph::generate_unique_module_name(const std::string& module_name) {
+std::string megamol::gui::Graph::generate_unique_module_name(const std::string& module_name) const {
 
     int new_name_id = 0;
     std::string new_name_prefix = module_name + "_";
@@ -3080,7 +3081,7 @@ const std::string megamol::gui::Graph::generate_unique_module_name(const std::st
 }
 
 
-const std::string megamol::gui::Graph::GenerateUniqueGraphEntryName() {
+std::string megamol::gui::Graph::GenerateUniqueGraphEntryName() {
 
     int new_name_id = 0;
     std::string new_name_prefix("GraphEntry_");

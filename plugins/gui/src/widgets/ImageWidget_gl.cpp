@@ -44,7 +44,7 @@ void megamol::gui::ImageWidget::Widget(ImVec2 size, ImVec2 uv0, ImVec2 uv1) {
 }
 
 
-bool megamol::gui::ImageWidget::Button(const std::string& tooltip, ImVec2 size) {
+bool megamol::gui::ImageWidget::Button(const std::string& tooltip_text, ImVec2 size) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -57,7 +57,7 @@ bool megamol::gui::ImageWidget::Button(const std::string& tooltip, ImVec2 size) 
 
     bool retval = ImGui::ImageButton(reinterpret_cast<ImTextureID>(this->tex_ptr->getName()), size, ImVec2(0.0f, 0.0f),
         ImVec2(1.0f, 1.0f), 1, style.Colors[ImGuiCol_Button], style.Colors[ImGuiCol_ButtonActive]);
-    this->tooltip.ToolTip(tooltip, ImGui::GetItemID(), 1.0f, 5.0f);
+    this->tooltip.ToolTip(tooltip_text, ImGui::GetItemID(), 1.0f, 5.0f);
 
     return retval;
 }

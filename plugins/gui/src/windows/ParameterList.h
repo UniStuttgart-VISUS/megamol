@@ -26,11 +26,11 @@ namespace gui {
     class ParameterList : public WindowConfiguration {
     public:
 
-        ParameterList(const std::string& window_name);
+        explicit ParameterList(const std::string& window_name);
         ~ParameterList() = default;
 
         // Call once
-        void SetData(std::shared_ptr<Configurator> win_configurator, std::shared_ptr<TransferFunctionEditor> win_tfeditor, std::function<void(const std::string &window_name)> add_window) {
+        void SetData(std::shared_ptr<Configurator>& win_configurator, std::shared_ptr<TransferFunctionEditor>& win_tfeditor, const std::function<void(const std::string &window_name)>& add_window) {
             this->win_configurator_ptr = win_configurator;
             this->win_tfeditor_ptr = win_tfeditor;
             this->add_window_func = add_window;
@@ -61,7 +61,7 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool consider_module(const std::string& modname, std::vector<std::string>& modules_list);
+        bool consider_module(const std::string& modname, std::vector<std::string>& modules_list) const;
     };
 
 } // namespace gui

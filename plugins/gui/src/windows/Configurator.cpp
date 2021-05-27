@@ -55,9 +55,6 @@ megamol::gui::Configurator::Configurator(const std::string& window_name)
 }
 
 
-Configurator::~Configurator() {}
-
-
 bool Configurator::Update() {
 
     auto tf_param_connect_request = this->win_tfeditor_ptr->ProcessParameterConnectionRequest();
@@ -157,9 +154,7 @@ bool megamol::gui::Configurator::Draw() {
 }
 
 
-void megamol::gui::Configurator::PopUps(void) {
-
-    bool confirmed, aborted;
+void megamol::gui::Configurator::PopUps() {
 
     // Load Project -----------------------------------------------------------
     bool popup_failed = false;
@@ -252,7 +247,7 @@ void megamol::gui::Configurator::PopUps(void) {
 }
 
 
-void megamol::gui::Configurator::draw_window_menu(void) {
+void megamol::gui::Configurator::draw_window_menu() {
 
     ImGui::PushID("Configurator::Menu");
     // Menu
@@ -336,9 +331,6 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
     ImGui::BeginChild(
         "module_list_child_window", ImVec2(width, std::max(0.0f, height - search_child_height)), true, child_flags);
 
-    bool search_filter = true;
-    bool compat_filter = true;
-
     bool interfaceslot_selected = false;
     std::string compat_callslot_name;
     CallSlotPtr_t selected_callslot_ptr;
@@ -354,9 +346,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
         auto interfaceslot_id = selected_graph_ptr->GetSelectedInterfaceSlot();
         if (interfaceslot_id != GUI_INVALID_ID) {
             for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
-                InterfaceSlotPtr_t interfaceslot_ptr;
                 if (auto interfaceslot_ptr = group_ptr->InterfaceSlotPtr(interfaceslot_id)) {
-                    CallSlotPtr_t callslot_ptr;
                     if (auto callslot_ptr = interfaceslot_ptr->GetCompatibleCallSlot()) {
                         selected_callslot_ptr = callslot_ptr;
                         interfaceslot_selected = true;
@@ -369,13 +359,13 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
     ImGuiID id = 1;
     for (auto& mod : this->graph_collection.GetModulesStock()) {
         // Filter module by given search string
-        search_filter = true;
+        bool search_filter = true;
         if (!search_string.empty()) {
             search_filter = gui_utils::FindCaseInsensitiveSubstring(mod.class_name, search_string);
         }
 
         // Filter module by compatible call slots
-        compat_filter = true;
+        bool compat_filter = true;
         if (selected_callslot_ptr != nullptr) {
             compat_filter = false;
             for (auto& stock_callslot_map : mod.callslots) {
@@ -389,7 +379,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
         }
 
         if (search_filter && compat_filter) {
-            ImGui::PushID(id);
+            ImGui::PushID(static_cast<int>(id));
 
             std::string label = mod.class_name + " (" + mod.plugin_name + ")";
             if (mod.is_view) {
@@ -534,8 +524,6 @@ void megamol::gui::Configurator::SpecificStateToJSON(nlohmann::json& inout_json)
             "[GUI] JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
-
-    return;
 }
 
 
@@ -606,6 +594,4 @@ void megamol::gui::Configurator::SpecificStateFromJSON(const nlohmann::json& in_
             "[GUI] JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
-
-    return;
 }

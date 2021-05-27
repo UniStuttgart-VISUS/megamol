@@ -81,7 +81,7 @@ namespace gui {
             EnumStorage_t,                                 // ENUM
             megamol::core::param::FlexEnumParam::Storage_t // FLEXENUM
             >
-            Stroage_t;
+            Storage_t;
 
         struct StockParameter {
             std::string param_name;
@@ -90,7 +90,7 @@ namespace gui {
             std::string default_value;
             Min_t minval;
             Max_t maxval;
-            Stroage_t storage;
+            Storage_t storage;
             bool gui_visibility;
             bool gui_read_only;
             Present_t gui_presentation;
@@ -119,14 +119,14 @@ namespace gui {
 
         // ----------------------------
 
-        Parameter(ImGuiID uid, ParamType_t type, Stroage_t store, Min_t minval, Max_t maxval,
+        Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minval, Max_t maxval,
             const std::string& param_name, const std::string& description);
 
-        ~Parameter();
+        ~Parameter() override;
 
         bool Draw(WidgetScope scope);
 
-        bool IsValueDirty() {
+        bool IsValueDirty() const {
             return this->value_dirty;
         }
         void ResetValueDirty() {
@@ -136,7 +136,7 @@ namespace gui {
             this->value_dirty = true;
         }
 
-        bool IsGUIStateDirty() {
+        bool IsGUIStateDirty() const {
             return this->gui_state_dirty;
         }
         void ResetGUIStateDirty() {
@@ -161,7 +161,7 @@ namespace gui {
 
         // GET ----------------------------------------------------------------
 
-        inline const ImGuiID UID() const {
+        inline ImGuiID UID() const {
             return this->uid;
         }
         // <param_name>
@@ -258,9 +258,9 @@ namespace gui {
 
                     if (this->type == ParamType_t::FLEXENUM) {
                         // Flex Enum
-                        auto storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
-                        storage.insert(std::get<std::string>(this->value));
-                        this->SetStorage(storage);
+                        auto flex_storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
+                        flex_storage.insert(std::get<std::string>(this->value));
+                        this->SetStorage(flex_storage);
                     } else if (this->type == ParamType_t::TRANSFERFUNCTION) {
                         // Transfer Function
                         if constexpr (std::is_same_v<T, std::string>) {
@@ -301,9 +301,9 @@ namespace gui {
         }
 
         template<typename T>
-        void SetMinValue(T minval) {
+        void SetMinValue(T minv) {
             if (std::holds_alternative<T>(this->minval)) {
-                this->minval = minval;
+                this->minval = minv;
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -311,9 +311,9 @@ namespace gui {
         }
 
         template<typename T>
-        void SetMaxValue(T maxval) {
+        void SetMaxValue(T maxv) {
             if (std::holds_alternative<T>(this->maxval)) {
-                this->maxval = maxval;
+                this->maxval = maxv;
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -347,7 +347,7 @@ namespace gui {
 
         Min_t minval;
         Max_t maxval;
-        Stroage_t storage;
+        Storage_t storage;
         Value_t value;
 
         Value_t default_value;

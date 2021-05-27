@@ -27,7 +27,6 @@ namespace gui {
     enum CallSlotType { CALLEE, CALLER };
 #define _CALL_SLOT_TYPE_
 #endif
-    typedef std::shared_ptr<Parameter> ParamPtr_t;
     typedef std::shared_ptr<CallSlot> CallSlotPtr_t;
     typedef std::shared_ptr<Module> ModulePtr_t;
 
@@ -60,13 +59,13 @@ namespace gui {
 
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
 
-        inline const ImGuiID UID() const {
+        inline ImGuiID UID() const {
             return this->uid;
         }
-        inline const std::string ClassName() const {
+        inline std::string ClassName() const {
             return this->class_name;
         }
-        const std::string SlotsLabel() const {
+        std::string SlotsLabel() const {
             return std::string(this->caller_slot_name + this->slot_name_separator + this->callee_slot_name);
         }
 

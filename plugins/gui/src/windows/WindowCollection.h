@@ -39,12 +39,12 @@ namespace gui {
         bool StateFromJSON(const nlohmann::json& in_json);
         bool StateToJSON(nlohmann::json& inout_json);
 
-        bool AddWindow(const std::string& window_name, std::function<void(WindowConfiguration::BasicConfig&)> const& callback);
+        bool AddWindow(const std::string& window_name, const std::function<void(WindowConfiguration::BasicConfig&)>& callback);
 
         template<typename T>
         bool AddWindow(const std::string &window_name);
 
-        inline void EnumWindows(std::function<void(WindowConfiguration&)> cb) {
+        inline void EnumWindows(const std::function<void(WindowConfiguration&)>& cb) {
             // Needs fixed size if window is added while looping
             auto window_count = this->windows.size();
             for (size_t i = 0; i < window_count; i++) {

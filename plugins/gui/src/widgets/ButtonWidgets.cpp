@@ -121,11 +121,10 @@ bool megamol::gui::ButtonWidgets::KnobButton(
     // Calculate knob position
     ImVec2 knob_pos = ImVec2(0.0f, -(knob_center_dist));
     float tmp_value = inout_value / scaling;
-    float angle = (tmp_value - floor(tmp_value)) * pi * 2.0f;
-    float cos_angle = cosf(angle);
-    float sin_angle = sinf(angle);
-    knob_pos =
-        ImVec2((cos_angle * knob_pos.x - sin_angle * knob_pos.y), (sin_angle * knob_pos.x + cos_angle * knob_pos.y));
+    float knob_angle = (tmp_value - floor(tmp_value)) * pi * 2.0f;
+    float cos_angle = cosf(knob_angle);
+    float sin_angle = sinf(knob_angle);
+    knob_pos = ImVec2((cos_angle * knob_pos.x - sin_angle * knob_pos.y), (sin_angle * knob_pos.x + cos_angle * knob_pos.y));
 
     ImVec2 knob_button_pos = widget_center + knob_pos - half_rect;
     ImGui::SetCursorScreenPos(knob_button_pos);

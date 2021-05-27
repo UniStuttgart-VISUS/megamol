@@ -22,10 +22,8 @@ megamol::gui::GraphCollection::GraphCollection()
         , calls_stock()
         , graph_name_uid(0)
         , gui_file_browser()
-        , gui_graph_delete_uid(GUI_INVALID_ID) {}
-
-
-megamol::gui::GraphCollection::~GraphCollection() {}
+        , gui_graph_delete_uid(GUI_INVALID_ID) {
+}
 
 
 bool megamol::gui::GraphCollection::AddEmptyProject() {
@@ -146,9 +144,8 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
 
             // Get plugin calls (get prior to core calls for being  able to find duplicates in core instance call desc.
             // manager)
-            const std::vector<core::utility::plugins::AbstractPluginInstance::ptr_type>& plugins =
-                core_instance.Plugins().GetPlugins();
-            for (core::utility::plugins::AbstractPluginInstance::ptr_type plugin : plugins) {
+            auto plugins = core_instance.Plugins().GetPlugins();
+            for (auto& plugin : plugins) {
                 plugin_name = plugin->GetAssemblyName();
                 for (auto& c_desc : plugin->GetCallDescriptionManager()) {
                     Call::StockCall call;
@@ -226,9 +223,8 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
             // Get plugin modules (get prior to core modules for being  able to find duplicates in core instance module
             // desc. manager)
-            const std::vector<core::utility::plugins::AbstractPluginInstance::ptr_type>& plugins =
-                core_instance.Plugins().GetPlugins();
-            for (core::utility::plugins::AbstractPluginInstance::ptr_type plugin : plugins) {
+            auto plugins = core_instance.Plugins().GetPlugins();
+            for (auto& plugin : plugins) {
                 plugin_name = plugin->GetAssemblyName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
                     std::string class_name(m_desc->ClassName());
@@ -273,13 +269,11 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
             // Sorting module by alphabetically ascending class names.
             std::sort(this->modules_stock.begin(), this->modules_stock.end(),
-                [](Module::StockModule mod1, Module::StockModule mod2) {
+                [](Module::StockModule& mod1, Module::StockModule& mod2) {
                     std::string a_str(mod1.class_name);
-                    for (auto& c : a_str)
-                        c = std::toupper(c);
+                    megamol::gui::gui_utils::StringToUpperCase(a_str);
                     std::string b_str(mod2.class_name);
-                    for (auto& c : b_str)
-                        c = std::toupper(c);
+                    megamol::gui::gui_utils::StringToUpperCase(b_str);
                     return (a_str < b_str);
                 });
         }
@@ -417,7 +411,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                 //    }
                 //}
                 /// XXX VIEW TEST
-                core::view::AbstractView* viewptr = dynamic_cast<core::view::AbstractView*>(module_ptr);
+                auto viewptr = dynamic_cast<core::view::AbstractView*>(module_ptr);
                 bool is_view = (viewptr != nullptr);
 
                 new_module_ptr = graph_ptr->AddModule(class_name, module_description, module_plugin, is_view);
@@ -453,11 +447,8 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                 continue;
             }
 
-            megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se =
-                module_ptr->ChildList_End();
-            for (megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator si =
-                     module_ptr->ChildList_Begin();
-                 si != se; ++si) {
+            auto se = module_ptr->ChildList_End();
+            for (auto si = module_ptr->ChildList_Begin(); si != se; ++si) {
 
                 // Parameters
                 auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
@@ -524,7 +515,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
             std::string class_name;
             std::string from;
             std::string to;
-            ImGuiID uid;
+            ImGuiID uid = GUI_INVALID_ID;
         };
         std::vector<CallInfo> gui_graph_call_info;
         for (auto& call_ptr : graph_ptr->Calls()) {
@@ -1176,7 +1167,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
 
 
 bool megamol::gui::GraphCollection::get_module_stock_data(
-    Module::StockModule& mod, const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc) {
+    Module::StockModule& mod, std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc) {
 
     mod.class_name = std::string(mod_desc->ClassName());
     mod.description = std::string(mod_desc->Description());
@@ -1227,8 +1218,8 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         std::vector<std::shared_ptr<core::CallerSlot>> callerSlots;
         std::vector<std::shared_ptr<core::CalleeSlot>> calleeSlots;
 
-        core::Module::child_list_type::iterator ano_end = new_mod->ChildList_End();
-        for (core::Module::child_list_type::iterator ano_i = new_mod->ChildList_Begin(); ano_i != ano_end; ++ano_i) {
+        auto ano_end = new_mod->ChildList_End();
+        for (auto ano_i = new_mod->ChildList_Begin(); ano_i != ano_end; ++ano_i) {
             std::shared_ptr<core::param::ParamSlot> p_ptr = std::dynamic_pointer_cast<core::param::ParamSlot>(*ano_i);
             if (p_ptr != nullptr)
                 paramSlots.push_back(p_ptr);
@@ -1241,7 +1232,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         }
 
         // Param Slots
-        for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
+        for (auto& param_slot : paramSlots) {
             if (param_slot == nullptr)
                 continue;
             Parameter::StockParameter psd;
@@ -1251,7 +1242,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         }
 
         // CallerSlots
-        for (std::shared_ptr<core::CallerSlot> caller_slot : callerSlots) {
+        for (auto& caller_slot : callerSlots) {
             CallSlot::StockCallSlot csd;
             csd.name = std::string(caller_slot->Name().PeekBuffer());
             csd.description = std::string(caller_slot->Description().PeekBuffer());
@@ -1263,7 +1254,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         }
 
         // CalleeSlots
-        for (std::shared_ptr<core::CalleeSlot> callee_slot : calleeSlots) {
+        for (auto& callee_slot : calleeSlots) {
             CallSlot::StockCallSlot csd;
             csd.name = std::string(callee_slot->Name().PeekBuffer());
             csd.description = std::string(callee_slot->Description().PeekBuffer());
@@ -1300,7 +1291,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
 
 
 bool megamol::gui::GraphCollection::get_call_stock_data(
-    Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc) {
+    Call::StockCall& call, std::shared_ptr<const megamol::core::factories::CallDescription> call_desc) {
 
     try {
         call.class_name = std::string(call_desc->ClassName());
@@ -1326,7 +1317,7 @@ bool megamol::gui::GraphCollection::get_call_stock_data(
 
 
 bool megamol::gui::GraphCollection::read_project_command_arguments(
-    const std::string& line, size_t arg_count, std::vector<std::string>& out_args) {
+    const std::string& line, size_t arg_count, std::vector<std::string>& out_args) const {
 
     /// Can be used for mmCreateView, mmCreateModule and mmCreateCall lua commands
 
@@ -1387,7 +1378,7 @@ bool megamol::gui::GraphCollection::read_project_command_arguments(
 
 
 bool megamol::gui::GraphCollection::project_separate_name_and_namespace(
-    const std::string& full_name, std::string& name_space, std::string& name) {
+    const std::string& full_name, std::string& name_space, std::string& name) const {
 
     name = full_name;
     name_space = "";
@@ -1427,12 +1418,12 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
     std::set<std::string> uniqueCallNames, completeCallNames;
     for (SIZE_T i = 0; i < callbackCount; ++i) {
         uniqueCallNames.insert(callee_slot->GetCallbackCallName(i));
-        callNames.push_back(callee_slot->GetCallbackCallName(i));
-        funcNames.push_back(callee_slot->GetCallbackFuncName(i));
+        callNames.emplace_back(callee_slot->GetCallbackCallName(i));
+        funcNames.emplace_back(callee_slot->GetCallbackFuncName(i));
     }
     size_t ll = callNames.size();
     assert(ll == funcNames.size());
-    for (std::string callName : uniqueCallNames) {
+    for (auto& callName : uniqueCallNames) {
         bool found_call = false;
         Call::StockCall call;
         for (auto& c : this->calls_stock) {
@@ -1464,7 +1455,7 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
             completeCallNames.insert(callName);
         }
     }
-    for (std::string callName : completeCallNames) {
+    for (auto& callName : completeCallNames) {
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
             // Case-Insensitive call slot comparison
@@ -1628,7 +1619,7 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
             // Catch call drop event and create new call(s) ...
             if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
                 if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
-                    ImGuiID* dragged_slot_uid_ptr = (ImGuiID*) payload->Data;
+                    auto* dragged_slot_uid_ptr = (ImGuiID*) payload->Data;
                     auto drag_slot_uid = (*dragged_slot_uid_ptr);
                     auto drop_slot_uid = graph_ptr->GetDropSlot();
                     graph_ptr->AddCall(this->GetCallsStock(), drag_slot_uid, drop_slot_uid);

@@ -49,7 +49,7 @@ bool PerformanceMonitor::Update() {
                 size_t buffer_size = values.size();
                 if (buffer_size != actual_buffer_size) {
                     if (buffer_size > actual_buffer_size) {
-                        values.erase(values.begin(), values.begin() + (buffer_size - actual_buffer_size));
+                        values.erase(values.begin(), values.begin() + static_cast<long>(buffer_size - actual_buffer_size));
 
                     } else if (buffer_size < actual_buffer_size) {
                         values.insert(values.begin(), (actual_buffer_size - buffer_size), 0.0f);

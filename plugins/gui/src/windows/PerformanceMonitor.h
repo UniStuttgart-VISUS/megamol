@@ -25,14 +25,14 @@ namespace gui {
 
         enum TimingMode { TIMINGMODE_FPS, TIMINGMODE_MS };
 
-        PerformanceMonitor(const std::string& window_name);
+        explicit PerformanceMonitor(const std::string& window_name);
         ~PerformanceMonitor() = default;
 
         // Call each new frame
-        inline void SetData(float averaged_fps, float averaged_ms, size_t frameid) {
-            this->averaged_fps = averaged_fps;
-            this->averaged_ms = averaged_ms;
-            this->frame_id = frameid;
+        inline void SetData(float current_averaged_fps, float current_averaged_ms, size_t current_frame_id) {
+            this->averaged_fps = current_averaged_fps;
+            this->averaged_ms = current_averaged_ms;
+            this->frame_id = current_frame_id;
         }
         bool Update() override;
         bool Draw() override;

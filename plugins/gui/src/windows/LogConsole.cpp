@@ -18,12 +18,12 @@ int megamol::gui::LogBuffer::sync() {
         auto message_str = this->str();
         if (!message_str.empty()) {
             // Split message string
-            auto split_index = message_str.find("\n");
+            auto split_index = message_str.find('\n');
             while (split_index != std::string::npos) {
                 // Assuming new line of log message of format "<level>|<message>\r\n"
                 auto new_message = message_str.substr(0, split_index + 1);
                 bool extracted_new_message = false;
-                auto seperator_index = new_message.find("|");
+                auto seperator_index = new_message.find('|');
                 if (seperator_index != std::string::npos) {
                     unsigned int log_level = megamol::core::utility::log::Log::LEVEL_NONE;
                     auto level_str = new_message.substr(0, seperator_index);
@@ -40,7 +40,7 @@ int megamol::gui::LogBuffer::sync() {
                     this->messages.back().message.append(new_message);
                 }
                 message_str = message_str.substr(split_index + 1);
-                split_index = message_str.find("\n");
+                split_index = message_str.find('\n');
             }
             this->str("");
         }
@@ -259,7 +259,7 @@ bool megamol::gui::LogConsole::connect_log() {
 }
 
 
-void megamol::gui::LogConsole::print_message(LogBuffer::LogEntry entry, unsigned int global_log_level) const {
+void megamol::gui::LogConsole::print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const {
 
     if (entry.level <= global_log_level) {
         if (entry.level >= megamol::core::utility::log::Log::LEVEL_INFO) {

@@ -28,11 +28,11 @@ namespace gui {
     class Configurator : public WindowConfiguration {
     public:
 
-        Configurator(const std::string& window_name);
-        ~Configurator();
+        explicit Configurator(const std::string& window_name);
+        ~Configurator() = default;
 
         // Call once
-        void SetData(std::shared_ptr<TransferFunctionEditor> win_tfe_ptr) {
+        void SetData(std::shared_ptr<TransferFunctionEditor>& win_tfe_ptr) {
             this->win_tfeditor_ptr = win_tfe_ptr;
         }
         bool Update() override;

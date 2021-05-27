@@ -24,9 +24,6 @@ megamol::gui::ParameterGroups::ParameterGroups()
 }
 
 
-megamol::gui::ParameterGroups::~ParameterGroups() {}
-
-
 bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search,
     vislib::math::Ternary in_extended, bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
     std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,

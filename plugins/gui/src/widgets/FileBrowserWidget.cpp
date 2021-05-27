@@ -8,6 +8,7 @@
 
 #include "FileBrowserWidget.h"
 #include "imgui_stdlib.h"
+#include "gui_utils.h"
 
 
 using namespace megamol;
@@ -143,22 +144,18 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                     } catch (...) {}
 
                     // Sort path case insensitive alphabetically ascending
-                    std::sort(paths.begin(), paths.end(), [](ChildData_t const& a, ChildData_t const& b) {
+                    std::sort(paths.begin(), paths.end(), [&](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_u8string();
-                        for (auto& c : a_str)
-                            c = std::toupper(c);
+                        megamol::gui::gui_utils::StringToUpperCase(a_str);
                         std::string b_str = b.first.filename().generic_u8string();
-                        for (auto& c : b_str)
-                            c = std::toupper(c);
+                        megamol::gui::gui_utils::StringToUpperCase(b_str);
                         return (a_str < b_str);
                     });
-                    std::sort(files.begin(), files.end(), [](ChildData_t const& a, ChildData_t const& b) {
+                    std::sort(files.begin(), files.end(), [&](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_u8string();
-                        for (auto& c : a_str)
-                            c = std::toupper(c);
+                        megamol::gui::gui_utils::StringToUpperCase(a_str);
                         std::string b_str = b.first.filename().generic_u8string();
-                        for (auto& c : b_str)
-                            c = std::toupper(c);
+                        megamol::gui::gui_utils::StringToUpperCase(b_str);
                         return (a_str < b_str);
                     });
 
@@ -282,7 +279,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                 // Appending required extension
                 if (!this->valid_ending) {
                     std::string ext_lower = "." + extension;
-                    this->string_to_lower_case(ext_lower);
+                    megamol::gui::gui_utils::StringToLowerCase(ext_lower);
                     this->file_name_str.append(ext_lower);
                 }
                 stdfs::path tmp_file_path =
@@ -398,16 +395,7 @@ std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string
 }
 
 
-void megamol::gui::FileBrowserWidget::string_to_lower_case(std::string& str) {
-
-    for (auto& c : str) {
-        c = std::tolower(c);
-    }
-}
-
-
-bool megamol::gui::FileBrowserWidget::validate_split_path(
-    const std::string& in_path_file, std::string& out_path, std::string& out_file) {
+bool megamol::gui::FileBrowserWidget::validate_split_path(const std::string& in_path_file, std::string& out_path, std::string& out_file) const {
 
     // Splitting file path into path string and file string
     try {
@@ -467,10 +455,10 @@ void megamol::gui::FileBrowserWidget::validate_file(
     // Validating file
     try {
         std::string file_lower = file_str;
-        this->string_to_lower_case(file_lower);
+        megamol::gui::gui_utils::StringToLowerCase(file_lower);
 
         std::string ext_lower = "." + extension;
-        this->string_to_lower_case(ext_lower);
+        megamol::gui::gui_utils::StringToLowerCase(ext_lower);
 
         this->file_error.clear();
         this->file_warning.clear();

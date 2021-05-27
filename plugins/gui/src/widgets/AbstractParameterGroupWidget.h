@@ -24,7 +24,7 @@ namespace gui {
     public:
         typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
 
-        ~AbstractParameterGroupWidget() = default;
+        ~AbstractParameterGroupWidget() override = default;
 
         virtual bool Check(bool only_check, ParamPtrVector_t& params) = 0;
 
@@ -35,8 +35,8 @@ namespace gui {
             return this->active;
         }
 
-        void SetActive(bool active) {
-            this->active = active;
+        void SetActive(bool a) {
+            this->active = a;
         }
 
         std::string GetName() const {
@@ -52,8 +52,9 @@ namespace gui {
 
         // FUNCTIONS ----------------------------------------------------------
 
-        AbstractParameterGroupWidget(ImGuiID uid)
-                : megamol::core::param::AbstractParamPresentation(), active(false), name(), uid(uid){};
+        explicit AbstractParameterGroupWidget(ImGuiID uid)
+                : megamol::core::param::AbstractParamPresentation(), active(false), name(), uid(uid){
+        };
     };
 
 

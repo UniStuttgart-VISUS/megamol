@@ -57,19 +57,19 @@ namespace gui {
         typedef std::function<void(WindowConfiguration::BasicConfig&)> VolatileDrawCallback_t;
 
         WindowConfiguration(const std::string& name, WindowConfigID window_id)
-                : hash_id(std::hash<std::string>()(name))
+                : win_config()
+                , hotkeys()
+                , hash_id(std::hash<std::string>()(name))
                 , name(name)
                 , window_id(window_id)
-                , win_config()
-                , hotkeys()
                 , volatile_draw_callback(nullptr) {}
 
-        WindowConfiguration(const std::string& name, VolatileDrawCallback_t callback)
-                : hash_id(std::hash<std::string>()(name))
+        WindowConfiguration(const std::string& name, VolatileDrawCallback_t& callback)
+                : win_config()
+                , hotkeys()
+                , hash_id(std::hash<std::string>()(name))
                 , name(name)
                 , window_id(WINDOW_ID_VOLATILE)
-                , win_config()
-                , hotkeys()
                 , volatile_draw_callback(callback) {}
 
         ~WindowConfiguration() = default;

@@ -40,7 +40,7 @@ WindowCollection::WindowCollection() {
 }
 
 
-bool WindowCollection::AddWindow(const std::string &window_name, const std::function<void(WindowConfiguration::BasicConfig &)> &callback) {
+bool WindowCollection::AddWindow(const std::string &window_name, const std::function<void(WindowConfiguration::BasicConfig &)>& callback) {
 
     if (window_name.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -58,7 +58,7 @@ bool WindowCollection::AddWindow(const std::string &window_name, const std::func
         }
     }
     else {
-        this->windows.push_back(std::make_shared<WindowConfiguration>(window_name, callback)); /// const_cast<std::function<void(WindowConfiguration::BasicConfig &)> &>(callback)
+        this->windows.push_back(std::make_shared<WindowConfiguration>(window_name, const_cast<std::function<void(WindowConfiguration::BasicConfig &)> &>(callback)));
     }
     return true;
 }
@@ -74,8 +74,7 @@ void WindowCollection::Update() {
 
 void WindowCollection::Draw(bool menu_visible) {
     
-    const auto func = [&, this](WindowConfiguration& wc) {
-
+    const auto func = [&](WindowConfiguration& wc) {
         if (wc.Config().show) {
             ImGui::SetNextWindowBgAlpha(1.0f);
             ImGui::SetNextWindowCollapsed(wc.Config().collapsed, ImGuiCond_Always);
@@ -133,7 +132,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
         // First, search for not predefined window configurations and create additional windows
         for (auto &header_item : in_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
-                for (auto &config_item : header_item.value().items()) {
+                for (auto& config_item : header_item.value().items()) {
                     auto window_name = config_item.key();
                     auto win_hash = std::hash<std::string>()(window_name);
                     if (!this->WindowExists(win_hash)) {

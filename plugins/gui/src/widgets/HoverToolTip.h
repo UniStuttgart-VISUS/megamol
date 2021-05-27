@@ -43,7 +43,7 @@ namespace gui {
          * @param text   The help tooltip text.
          * @param label  The visible text for which the tooltip is enabled.
          */
-        bool Marker(const std::string& text, std::string label = "(?)");
+        bool Marker(const std::string& text, const std::string& label = "(?)");
 
         /**
          * Reset toopltip time and widget id.

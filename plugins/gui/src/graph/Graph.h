@@ -48,14 +48,14 @@ namespace gui {
         };
 
         struct QueueData {
-            std::string name_id = "";    // Requierd for ADD_MODULE, DELETE_MODUL, RENAME_MODULE
-            std::string class_name = ""; // Requierd for ADD_MODULE, ADD_CALL
-            std::string rename_id = "";  // Requierd for RENAME_MODULE
-            std::string caller = "";     // Requierd for ADD_CALL, DELETE_CALL
-            std::string callee = "";     // Requierd for ADD_CALL, DELETE_CALL
+            std::string name_id;    // Requierd for ADD_MODULE, DELETE_MODUL, RENAME_MODULE
+            std::string class_name; // Requierd for ADD_MODULE, ADD_CALL
+            std::string rename_id;  // Requierd for RENAME_MODULE
+            std::string caller;     // Requierd for ADD_CALL, DELETE_CALL
+            std::string callee;     // Requierd for ADD_CALL, DELETE_CALL
         };
 
-        Graph(const std::string& graph_name);
+        explicit Graph(const std::string& graph_name);
         ~Graph();
 
         ModulePtr_t AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name);
@@ -99,7 +99,7 @@ namespace gui {
 
         bool UniqueModuleRename(const std::string& module_full_name);
 
-        const std::string GetFilename() const;
+        std::string GetFilename() const;
         void SetFilename(const std::string& filename, bool saved_filename);
 
         bool ToggleGraphEntry();
@@ -119,7 +119,7 @@ namespace gui {
             this->running = run;
         }
 
-        const std::string GenerateUniqueGraphEntryName();
+        std::string GenerateUniqueGraphEntryName();
 
         bool StateFromJSON(const nlohmann::json& in_json);
         bool StateToJSON(nlohmann::json& inout_json);
@@ -128,11 +128,11 @@ namespace gui {
 
         void DrawGlobalParameterWidgets(PickingBuffer& picking_buffer);
 
-        inline const ImGuiID UID() const {
+        inline ImGuiID UID() const {
             return this->uid;
         }
 
-        inline const std::string Name() const {
+        inline std::string Name() const {
             return this->name;
         }
 
@@ -231,8 +231,8 @@ namespace gui {
         bool contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid);
         bool contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid);
 
-        const std::string generate_unique_group_name();
-        const std::string generate_unique_module_name(const std::string& name);
+        std::string generate_unique_group_name() const;
+        std::string generate_unique_module_name(const std::string& name) const;
     };
 
 

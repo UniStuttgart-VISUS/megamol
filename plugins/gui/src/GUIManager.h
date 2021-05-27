@@ -328,13 +328,13 @@ namespace gui {
 
         void draw_popups();
 
-        bool is_hotkey_pressed(megamol::core::view::KeyCode keycode);
+        bool is_hotkey_pressed(megamol::core::view::KeyCode keycode) const;
 
         void load_preset_window_docking(ImGuiID global_docking_id);
 
         void load_imgui_settings_from_string(const std::string& imgui_settings);
 
-        std::string save_imgui_settings_to_string();
+        std::string save_imgui_settings_to_string() const;
 
         std::string project_to_lua_string(bool as_lua);
 

@@ -69,19 +69,19 @@ namespace gui {
             return this->callslots;
         }
 
-        inline const ImGuiID UID() const {
+        inline ImGuiID UID() const {
             return this->uid;
         }
-        inline const std::string ClassName() const {
+        inline std::string ClassName() const {
             return this->class_name;
         }
-        bool IsGraphEntry() {
+        bool IsGraphEntry() const {
             return (!this->graph_entry_name.empty());
         }
-        inline const std::string Name() const {
+        inline std::string Name() const {
             return this->name;
         }
-        const inline std::string FullName() const {
+        inline std::string FullName() const {
             std::string fullname = "::" + this->name;
             if (!this->group_name.empty()) {
                 fullname = "::" + this->group_name + fullname;
@@ -106,13 +106,13 @@ namespace gui {
         inline ParameterGroups& GUIParameterGroups() {
             return this->gui_param_groups;
         }
-        inline const std::string GroupName() const {
+        inline std::string GroupName() const {
             return this->group_name;
         }
-        inline const std::string Description() const {
+        inline std::string Description() const {
             return this->description;
         }
-        inline const std::string GraphEntryName() const {
+        inline std::string GraphEntryName() const {
             return this->graph_entry_name;
         }
         inline bool IsHidden() const {
@@ -128,8 +128,8 @@ namespace gui {
         inline void SetGraphEntryName(const std::string& graph_entry) {
             this->graph_entry_name = graph_entry;
         }
-        inline void SetGroupUID(ImGuiID uid) {
-            this->group_uid = uid;
+        inline void SetGroupUID(ImGuiID guid) {
+            this->group_uid = guid;
         }
         inline void SetHidden(bool hidden) {
             this->gui_hidden = hidden;

@@ -47,9 +47,9 @@ namespace gui {
         float value;
     };
 
-    typedef std::shared_ptr<glowl::GLSLProgram> ShaderPtr;
-    typedef std::vector<Interaction> InteractVector;
-    typedef std::vector<Manipulation> ManipVector;
+    typedef std::shared_ptr<glowl::GLSLProgram> ShaderPtr_t;
+    typedef std::vector<Interaction> InteractVector_t;
+    typedef std::vector<Manipulation> ManipVector_t;
 
     class GUIManager;
 
@@ -66,7 +66,7 @@ namespace gui {
             this->available_interactions.insert({obj_id, interactions});
         }
 
-        ManipVector& GetPendingManipulations() {
+        ManipVector_t& GetPendingManipulations() {
             return this->pending_manipulations;
         }
 
@@ -92,7 +92,7 @@ namespace gui {
         // VARIABLES --------------------------------------------------------------
 
         double cursor_x, cursor_y;
-        glm::vec2 viewport_dim;
+        glm::ivec2 viewport_dim;
 
         /**
          * Set to true if cursor is on interactable object during current frame with respective obj id as second value
@@ -107,8 +107,8 @@ namespace gui {
          */
         std::tuple<bool, unsigned int, float> active_interaction_obj;
 
-        std::map<int, std::vector<Interaction>> available_interactions;
-        ManipVector pending_manipulations;
+        std::map<unsigned int, std::vector<Interaction>> available_interactions;
+        ManipVector_t pending_manipulations;
 
         std::shared_ptr<glowl::FramebufferObject> fbo;
         std::shared_ptr<glowl::GLSLProgram> fbo_shader;

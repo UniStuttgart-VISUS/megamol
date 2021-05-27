@@ -56,14 +56,11 @@ std::array<double, 3> CubeHelixRGB(double t, double start, double rots, double h
  * Transform from Hue to RGB.
  */
 std::array<double, 3> HueToRGB(double hue) {
-    std::array<double, 3> color;
-    color[0] = hue;
-    color[1] = hue + 1.0 / 3.0;
-    color[2] = hue + 2.0 / 3.0;
+    std::array<double, 3> color = {hue, (hue + 1.0 / 3.0), (hue + 2.0 / 3.0) };
     for (size_t i = 0; i < color.size(); ++i) {
         color[i] = std::max(0.0, std::min(6.0 * std::abs(color[i] - std::floor(color[i]) - 0.5) - 1.0, 1.0));
     }
-    return std::move(color);
+    return color;
 }
 
 using PresetGenerator = std::function<void(TransferFunctionParam::NodeVector_t&, size_t)>;
@@ -72,7 +69,7 @@ PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double g
     return [=](auto& nodes, auto n) {
         nodes.clear();
         for (size_t i = 0; i < n; ++i) {
-            auto t = i / static_cast<double>(n - 1);
+            auto t = static_cast<double>(i) / static_cast<double>(n - 1);
             auto color = CubeHelixRGB(t, start, rots, hue, gamma);
             nodes.push_back({
                 static_cast<float>(color[0]),
@@ -88,15 +85,15 @@ PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double g
 
 template<size_t PaletteSize, bool NearestNeighbor = false>
 PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
-    const double LastIndex = static_cast<double>(PaletteSize - 1);
+    auto LastIndex = static_cast<double>(PaletteSize - 1);
     return [=](auto& nodes, auto n) {
         nodes.clear();
         for (size_t i = 0; i < n; ++i) {
-            auto t = i / static_cast<double>(n - 1);
+            auto t = static_cast<double>(i) / static_cast<double>(n - 1);
 
             // Linear interpolation from palette.
-            size_t i0 = static_cast<size_t>(std::floor(t * LastIndex));
-            size_t i1 = static_cast<size_t>(std::ceil(t * LastIndex));
+            auto i0 = static_cast<size_t>(std::floor(t * LastIndex));
+            auto i1 = static_cast<size_t>(std::ceil(t * LastIndex));
             double unused;
             double it = std::modf(t * LastIndex, &unused);
             if (NearestNeighbor) {
@@ -128,7 +125,7 @@ void RampAdapter(TransferFunctionParam::NodeVector_t& nodes, size_t n) {
 void RainbowAdapter(TransferFunctionParam::NodeVector_t& nodes, size_t n) {
     nodes.clear();
     for (size_t i = 0; i < n; ++i) {
-        auto t = i / static_cast<double>(n - 1);
+        auto t = static_cast<double>(i) / static_cast<double>(n - 1);
         auto color = HueToRGB(t);
         nodes.push_back({
             static_cast<float>(color[0]),
@@ -225,7 +222,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
     this->selected_node_drag_delta = ImVec2(0.0f, 0.0f);
 
     unsigned int new_tex_size = 0;
-    std::array<float, 2> new_range;
+    std::array<float, 2> new_range = {0.0f, 1.0f};
     TransferFunctionParam::NodeVector_t new_nodes;
     TransferFunctionParam::InterpolationMode new_interpolation_mode;
     if (!TransferFunctionParam::GetParsedTransferFunctionData(
@@ -355,8 +352,8 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
     }
 
     ImGui::BeginGroup();
-    this->drawTextureBox(image_size, this->flip_legend);
-    this->drawScale(ImGui::GetCursorScreenPos(), image_size, this->flip_legend);
+    this->drawTextureBox(image_size);
+    this->drawScale(ImGui::GetCursorScreenPos(), image_size);
     ImGui::EndGroup();
 
     ImGui::SameLine();
@@ -689,14 +686,14 @@ void TransferFunctionEditor::SpecificStateToJSON(nlohmann::json &inout_json) {
 }
 
 
-void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend) {
+void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
 
     ImVec2 pos = ImGui::GetCursorScreenPos();
 
     ImVec2 image_size = size;
     ImVec2 uv0 = ImVec2(0.0f, 0.0f);
     ImVec2 uv1 = ImVec2(1.0f, 1.0f);
-    if (flip_legend) {
+    if (this->flip_legend) {
         uv0 = ImVec2(1.0f, 1.0f);
         uv1 = ImVec2(0.0f, 0.0f);
     }
@@ -723,7 +720,7 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend
 }
 
 
-void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bool flip_legend) {
+void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -746,7 +743,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     ImVec2 init_pos = pos;
     float width_delta = 0.0f;
     float height_delta = 0.0f;
-    if (flip_legend) {
+    if (this->flip_legend) {
         init_pos.x += width + item_x_spacing / 2.0f;
         init_pos.y -= (height + item_y_spacing);
         height_delta = height / static_cast<float>(scale_count - 1);
@@ -756,7 +753,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     }
 
     for (unsigned int i = 0; i < scale_count; i++) {
-        if (flip_legend) {
+        if (this->flip_legend) {
             float y = height_delta * static_cast<float>(i);
             if (i == 0)
                 y += (line_thickness / 2.0f);
@@ -793,7 +790,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     std::string mid_label_str = label_stream.str();
     float mid_item_width = ImGui::CalcTextSize(mid_label_str.c_str()).x;
 
-    if (flip_legend) {
+    if (this->flip_legend) {
         float font_size = ImGui::GetFontSize();
         ImVec2 text_pos = init_pos + ImVec2(item_y_spacing + line_length, 0.0f);
         // Max Value
@@ -823,7 +820,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
         ImGui::TextUnformatted(max_label_str.c_str());
     }
 
-    if (flip_legend) {
+    if (this->flip_legend) {
         ImGui::SetCursorScreenPos(reset_pos);
     }
 }
@@ -860,7 +857,6 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     const float point_radius = (6.0f * megamol::gui::gui_scaling.Get());
     const float point_border_width = (2.0f * megamol::gui::gui_scaling.Get());
     const float point_border_radius = point_radius + point_border_width;
-    ImVec2 delta_border = style.ItemInnerSpacing;
 
     // Draw a background rectangle.
     drawList->AddRectFilled(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), frameBkgrd);
@@ -982,7 +978,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     // Track mouse even outside canvas in paint mode when dragging started within canvas
     if (this->plot_dragging && ImGui::IsMouseDragging(0)) {
         if (!this->plot_paint_mode) {
-            this->moveSelectedNode(this->selected_node_index, mouse_pos, canvas_pos, canvas_size);
+            this->moveSelectedNode(mouse_pos, canvas_pos, canvas_size);
         } else {
             this->paintModeNode(mouse_pos, canvas_pos, canvas_size);
         }
@@ -1090,8 +1086,7 @@ bool TransferFunctionEditor::paintModeNode(
         }
     }
     // Reverse erase items to keep indices valid while erasing
-    for (std::vector<unsigned int>::reverse_iterator i = delete_nodes_indices.rbegin();
-         i != delete_nodes_indices.rend(); ++i) {
+    for (auto i = delete_nodes_indices.rbegin(); i != delete_nodes_indices.rend(); ++i) {
         this->nodes.erase(this->nodes.begin() + (*i));
     }
 
@@ -1123,8 +1118,7 @@ bool TransferFunctionEditor::changeNodeSelection(unsigned int new_selected_node_
 }
 
 
-bool TransferFunctionEditor::moveSelectedNode(
-    unsigned int selected_node_index, const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
+bool TransferFunctionEditor::moveSelectedNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
 
     if ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size())) {
 
@@ -1134,12 +1128,12 @@ bool TransferFunctionEditor::moveSelectedNode(
         float new_y = 1.0f - ((mouse_pos.y - canvas_pos.y + this->selected_node_drag_delta.y) / canvas_size.y);
         new_y = std::max(0.0f, std::min(new_y, 1.0f));
 
-        this->nodes[selected_node_index][4] = new_x;
+        this->nodes[this->selected_node_index][4] = new_x;
         this->widget_buffer.range_value = (new_x * (this->range[1] - this->range[0])) + this->range[0];
 
         for (unsigned int cc = 0; cc < 4; cc++) {
             if (this->active_color_channels[cc] && (this->selected_channel_index == cc)) {
-                this->nodes[selected_node_index][cc] = new_y;
+                this->nodes[this->selected_node_index][cc] = new_y;
             }
         }
 

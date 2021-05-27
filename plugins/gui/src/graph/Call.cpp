@@ -15,8 +15,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::string& description,
-    const std::string& plugin_name, const std::vector<std::string>& functions)
+megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::string& description, const std::string& plugin_name, const std::vector<std::string>& functions)
         : uid(uid)
         , class_name(class_name)
         , description(description)
@@ -161,7 +160,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                     }
                 }
 
-                ImGui::PushID(this->uid);
+                ImGui::PushID(static_cast<int>(this->uid));
 
                 /// COLOR_CALL_BACKGROUND
                 ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];

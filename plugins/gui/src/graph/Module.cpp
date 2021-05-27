@@ -78,8 +78,7 @@ bool megamol::gui::Module::DeleteCallSlots() {
 
     try {
         for (auto& callslots_map : this->callslots) {
-            for (auto callslot_iter = callslots_map.second.begin(); callslot_iter != callslots_map.second.end();
-                 callslot_iter++) {
+            for (auto callslot_iter = callslots_map.second.begin(); callslot_iter != callslots_map.second.end(); callslot_iter++) {
                 (*callslot_iter)->DisconnectCalls();
                 (*callslot_iter)->DisconnectParentModule();
 
@@ -192,13 +191,13 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
         }
         if ((this->gui_position.x == FLT_MAX) && (this->gui_position.y == FLT_MAX)) {
             // See layout border_offset in Graph::Presentation::layout_graph
-            this->gui_position = this->GetDefaultModulePosition(state.canvas);
+            this->gui_position = megamol::gui::Module::GetDefaultModulePosition(state.canvas);
         }
 
         if (!this->gui_hidden) {
             bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
-            ImGui::PushID(this->uid);
+            ImGui::PushID(static_cast<int>(this->uid));
 
             // Get current module information
             ImVec2 module_size = this->gui_size * state.canvas.zooming;
@@ -413,7 +412,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     const float line_height = ImGui::GetTextLineHeightWithSpacing();
                     bool other_item_hovered = false;
                     bool graph_entry_button = this->is_view;
-                    bool parameter_button = (this->parameters.size() > 0);
+                    bool parameter_button = (!this->parameters.empty());
                     bool any_option_button = (graph_entry_button || parameter_button);
 
                     if (state.interact.module_show_label) {

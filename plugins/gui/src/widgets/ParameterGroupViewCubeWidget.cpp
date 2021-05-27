@@ -22,7 +22,7 @@ megamol::gui::PickableCube::PickableCube() : image_up_arrow(), shader(nullptr) {
 
 bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_selected_face_id,
     int& inout_selected_orientation_id, int& out_hovered_face_id, int& out_hovered_orientation_id,
-    const glm::vec4& cube_orientation, ManipVector& pending_manipulations) {
+    const glm::vec4& cube_orientation, ManipVector_t& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -394,7 +394,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
     if (!culling) {
         glEnable(GL_CULL_FACE);
     }
-    std::array<GLint, 4> viewport;
+    std::array<GLint, 4> viewport = {0, 0, 0, 0};
     glGetIntegerv(GL_VIEWPORT, viewport.data());
     int size = (100 * static_cast<int>(megamol::gui::gui_scaling.Get()));
     int x = viewport[2] - size;
@@ -438,9 +438,9 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
 }
 
 
-InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
+InteractVector_t megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
 
-    InteractVector interactions;
+    InteractVector_t interactions;
     interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
@@ -453,7 +453,7 @@ megamol::gui::PickableTexture::PickableTexture() : image_rotation_arrow(), shade
 
 
 bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_face_id, int& out_orientation_change,
-    int& out_hovered_arrow_id, ManipVector& pending_manipulations) {
+    int& out_hovered_arrow_id, ManipVector_t& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -553,7 +553,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
     if (!culling) {
         glEnable(GL_CULL_FACE);
     }
-    std::array<GLint, 4> viewport;
+    std::array<GLint, 4> viewport = {0, 0, 0, 0};
     glGetIntegerv(GL_VIEWPORT, viewport.data());
     int size = (2 * 100 * static_cast<int>(megamol::gui::gui_scaling.Get()));
     int x = viewport[2] - size;
@@ -567,7 +567,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
         glEnable(GL_TEXTURE_2D);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture_id);
-        glUniform1i(this->shader->getUniformLocation("tex"), static_cast<GLint>(0));
+        glUniform1i(static_cast<int>(this->shader->getUniformLocation("tex")), static_cast<GLint>(0));
     }
 
     this->shader->setUniform("selected_face_id", selected_face_id);
@@ -596,9 +596,9 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
 }
 
 
-InteractVector megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
+InteractVector_t megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
 
-    InteractVector interactions;
+    InteractVector_t interactions;
     interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
@@ -730,7 +730,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 return false;
             }
 
-            ImGui::PushID(this->uid);
+            ImGui::PushID(static_cast<int>(this->uid));
 
             auto default_view = std::get<int>(param_defaultView->GetValue());
             auto default_orientation = std::get<int>(param_defaultOrientation->GetValue());

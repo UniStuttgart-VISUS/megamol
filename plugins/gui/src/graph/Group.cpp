@@ -15,14 +15,14 @@ using namespace megamol::gui;
 
 megamol::gui::Group::Group(ImGuiID uid)
         : uid(uid)
-        , name("")
+        , name()
         , modules()
         , interfaceslots()
+        , gui_selected(false)
         , gui_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_size(ImVec2(0.0f, 0.0f))
         , gui_collapsed_view(false)
         , gui_allow_selection(false)
-        , gui_selected(false)
         , gui_update(true)
         , gui_rename_popup() {
 
@@ -310,21 +310,6 @@ bool megamol::gui::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
 }
 
 
-bool megamol::gui::Group::ContainsInterfaceSlot(ImGuiID interfaceslot_uid) {
-
-    if (interfaceslot_uid != GUI_INVALID_ID) {
-        for (auto& interfaceslots_map : this->interfaceslots) {
-            for (auto& interfaceslot : interfaceslots_map.second) {
-                if (interfaceslot->UID() == interfaceslot_uid) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-
 void megamol::gui::Group::RestoreInterfaceslots() {
 
     /// 1] REMOVE connected call slots of group interface if connected module is part of same group
@@ -418,7 +403,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
         ImVec2 header_size = ImVec2(group_size.x, ImGui::GetTextLineHeightWithSpacing());
         ImVec2 header_rect_max = group_rect_min + header_size;
 
-        ImGui::PushID(this->uid);
+        ImGui::PushID(static_cast<int>(this->uid));
 
         bool changed_view = false;
 
@@ -632,7 +617,7 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
     float pos_minX = FLT_MAX;
     float pos_minY = FLT_MAX;
     ImVec2 tmp_pos;
-    if (this->modules.size() > 0) {
+    if (!this->modules.empty()) {
         for (auto& mod : this->modules) {
             tmp_pos = mod->Position();
             pos_minX = std::min(tmp_pos.x, pos_minX);
@@ -646,8 +631,6 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
     }
 
     // SIZE
-    float group_width = 0.0f;
-    float group_height = 0.0f;
     size_t caller_count = this->InterfaceSlots().operator[](CallSlotType::CALLER).size();
     size_t callee_count = this->InterfaceSlots().operator[](CallSlotType::CALLEE).size();
     size_t max_slot_count = std::max(caller_count, callee_count);
@@ -666,17 +649,16 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
             max_label_length = (2.0f * max_label_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
         }
     }
-    group_width = std::max((1.5f * ImGui::CalcTextSize(this->name.c_str()).x / in_canvas.zooming), max_label_length) +
+    float group_width = std::max((1.5f * ImGui::CalcTextSize(this->name.c_str()).x / in_canvas.zooming), max_label_length) +
                   (3.0f * GUI_SLOT_RADIUS);
 
     // HEIGHT
-    group_height = std::max((3.0f * line_height),
+    float group_height = std::max((3.0f * line_height),
         (line_height + (static_cast<float>(max_slot_count) * (GUI_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_SLOT_RADIUS));
 
     if (!this->gui_collapsed_view) {
         float pos_maxX = -FLT_MAX;
         float pos_maxY = -FLT_MAX;
-        ImVec2 tmp_pos;
         ImVec2 tmp_size;
         for (auto& mod : this->modules) {
             tmp_pos = mod->Position();

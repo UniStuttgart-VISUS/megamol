@@ -218,7 +218,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             // Show GUI after it was hidden (before early exit!)
             // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
             this->gui_state.menu_visible = true;
-            const auto func = [&, this](WindowConfiguration &wc) {
+            const auto func = [&](WindowConfiguration &wc) {
                 if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
                               this->gui_state.gui_restore_hidden_windows.end(),
                               wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
@@ -416,7 +416,7 @@ bool GUIManager::PostDraw() {
             // Save 'open' state of windows for later restore. Closing all windows before omitting GUI rendering is
             // required to set right ImGui state for mouse handling
             this->gui_state.gui_restore_hidden_windows.clear();
-            const auto func = [&, this](WindowConfiguration& wc) {
+            const auto func = [&](WindowConfiguration& wc) {
                 if (wc.Config().show) {
                     this->gui_state.gui_restore_hidden_windows.push_back(wc.Name());
                     wc.Config().show = false;
@@ -439,7 +439,7 @@ bool GUIManager::PostDraw() {
         // Scale all windows
         if (this->gui_state.rescale_windows) {
             // Do not adjust window scale after loading from project file (window size is already fine)
-            const auto size_func = [&, this](WindowConfiguration& wc) {
+            const auto size_func = [&](WindowConfiguration& wc) {
                 wc.Config().reset_size *= megamol::gui::gui_scaling.TransitionFactor();
                 wc.Config().size *= megamol::gui::gui_scaling.TransitionFactor();
                 wc.Config().reset_pos_size = true;
@@ -486,8 +486,7 @@ bool GUIManager::PostDraw() {
         } else if (this->gui_state.font_file_name != "<unknown>") {
             std::string imgui_font_string =
                 this->gui_state.font_file_name + ", " + std::to_string(this->gui_state.font_size) + "px";
-            for (unsigned int n = this->gui_state.graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size);
-                 n++) {
+            for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < (io.Fonts->Fonts.Size); n++) {
                 std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
                 gui_utils::Utf8Decode(font_name);
                 if (font_name == imgui_font_string) {
@@ -817,7 +816,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(megamol::core::MegaMolGra
 
         // Check for new script path name
         if (graph_sync_success) {
-            if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+            if (auto synced_graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
                 std::string script_filename;
                 // Get project filename from lua state of frontend service
                 if (!this->gui_state.project_script_paths.empty()) {
@@ -825,7 +824,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(megamol::core::MegaMolGra
                 }
                 // Load GUI state from project file when project file changed
                 if (!script_filename.empty()) {
-                    graph_ptr->SetFilename(script_filename, false);
+                    synced_graph_ptr->SetFilename(script_filename, false);
                 }
             }
         }
@@ -1171,7 +1170,7 @@ void GUIManager::draw_menu() {
     if (ImGui::BeginMenu("Windows")) {
         ImGui::MenuItem("Menu", this->hotkeys[HOTKEY_GUI_MENU].keycode.ToString().c_str(),
             &this->gui_state.menu_visible);
-        const auto func = [&, this](WindowConfiguration& wc) {
+        const auto func = [&](WindowConfiguration& wc) {
             bool registered_window = (wc.Config().hotkey.key != core::view::Key::KEY_UNKNOWN);
             if (registered_window) {
                 ImGui::MenuItem(wc.Name().c_str(), wc.Config().hotkey.ToString().c_str(), &wc.Config().show);
@@ -1320,7 +1319,7 @@ void GUIManager::draw_menu() {
             ImFont* font_current = ImGui::GetFont();
             if (ImGui::BeginCombo("Select Available Font", font_current->GetDebugName())) {
                 /// first fonts until index this->graph_fonts_reserved are exclusively used by graph in configurator
-                for (int n = this->gui_state.graph_fonts_reserved; n < io.Fonts->Fonts.Size; n++) {
+                for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < io.Fonts->Fonts.Size; n++) {
                     if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current))) {
                         io.FontDefault = io.Fonts->Fonts[n];
                         // Saving font to window configuration (Remove font size from font name)
@@ -1540,11 +1539,11 @@ void megamol::gui::GUIManager::draw_popups() {
         this->gui_state.open_popup_save |= this->win_configurator_ptr->ConsumeTriggeredGlobalProjectSave();
         if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
                 this->gui_state.open_popup_save, "lua", save_gui_state)) {
-            std::string gui_state;
+            std::string state_str;
             if (save_gui_state.IsTrue()) {
-                gui_state = this->project_to_lua_string(true);
+                state_str = this->project_to_lua_string(true);
             }
-            popup_failed |= !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(graph_ptr->UID(), filename, gui_state);
+            popup_failed |= !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(graph_ptr->UID(), filename, state_str);
         }
         PopUps::Minimal(
             "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
@@ -1575,7 +1574,7 @@ void megamol::gui::GUIManager::draw_popups() {
 }
 
 
-bool megamol::gui::GUIManager::is_hotkey_pressed(megamol::core::view::KeyCode keycode) {
+bool megamol::gui::GUIManager::is_hotkey_pressed(megamol::core::view::KeyCode keycode) const {
 
     ImGuiIO& io = ImGui::GetIO();
     return (ImGui::IsKeyDown(static_cast<int>(keycode.key))) &&
@@ -1612,7 +1611,7 @@ void megamol::gui::GUIManager::load_preset_window_docking(ImGuiID global_docking
     ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Down, 0.25f, nullptr, &dock_id_main);
     ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, nullptr, &dock_id_main);
 
-    const auto func = [&, this](WindowConfiguration& wc) {
+    const auto func = [&](WindowConfiguration& wc) {
         switch (wc.WindowID()) {
         case (WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS): {
             ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_prop);
@@ -1650,7 +1649,7 @@ void megamol::gui::GUIManager::load_imgui_settings_from_string(const std::string
 }
 
 
-std::string megamol::gui::GUIManager::save_imgui_settings_to_string() {
+std::string megamol::gui::GUIManager::save_imgui_settings_to_string() const {
 
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
@@ -1669,8 +1668,8 @@ std::string megamol::gui::GUIManager::save_imgui_settings_to_string() {
 
 std::string megamol::gui::GUIManager::project_to_lua_string(bool as_lua) {
 
-    std::string gui_state;
-    if (this->state_to_string(gui_state)) {
+    std::string state_str;
+    if (this->state_to_string(state_str)) {
         std::string return_state_str;
 
         if (as_lua) {
@@ -1683,9 +1682,9 @@ std::string megamol::gui::GUIManager::project_to_lua_string(bool as_lua) {
                                 std::string(GUI_END_TAG_SET_GUI_SCALE) + "\n";
 
             return_state_str +=
-                std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
+                std::string(GUI_START_TAG_SET_GUI_STATE) + state_str + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
         } else {
-            return_state_str += gui_state;
+            return_state_str += state_str;
         }
 
         return return_state_str;
@@ -1707,18 +1706,17 @@ bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
         // Read GUI state
         for (auto& header_item : state_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUI) {
-                auto gui_state = header_item.value();
-                megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->gui_state.menu_visible);
+                auto state_str = header_item.value();
+                megamol::core::utility::get_json_value<bool>(state_str, {"menu_visible"}, &this->gui_state.menu_visible);
                 int style = 0;
-                megamol::core::utility::get_json_value<int>(gui_state, {"style"}, &style);
+                megamol::core::utility::get_json_value<int>(state_str, {"style"}, &style);
                 this->gui_state.style = static_cast<GUIManager::Styles>(style);
                 this->gui_state.style_changed = true;
-                megamol::core::utility::get_json_value<std::string>(
-                    gui_state, {"font_file_name"}, &this->gui_state.font_file_name);
-                megamol::core::utility::get_json_value<int>(gui_state, {"font_size"}, &this->gui_state.font_size);
+                megamol::core::utility::get_json_value<std::string>(state_str, {"font_file_name"}, &this->gui_state.font_file_name);
+                megamol::core::utility::get_json_value<int>(state_str, {"font_size"}, &this->gui_state.font_size);
                 this->gui_state.font_apply = true;
                 std::string imgui_settings;
-                megamol::core::utility::get_json_value<std::string>(gui_state, {"imgui_settings"}, &imgui_settings);
+                megamol::core::utility::get_json_value<std::string>(state_str, {"imgui_settings"}, &imgui_settings);
                 this->load_imgui_settings_from_string(imgui_settings);
             }
         }

@@ -28,7 +28,7 @@ using namespace megamol::gui;
 megamol::gui::PickingBuffer::PickingBuffer()
         : cursor_x(0.0)
         , cursor_y(0.0)
-        , viewport_dim{0.0f, 0.0f}
+        , viewport_dim{0, 0}
         , cursor_on_interaction_obj(GUI_INTERACTION_TUPLE_INIT)
         , active_interaction_obj(GUI_INTERACTION_TUPLE_INIT)
         , available_interactions()
@@ -177,7 +177,7 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
     // Interactions are processed in ProcessMouseMove() and should be cleared each frame
     this->available_interactions.clear();
     this->enabled = false;
-    this->viewport_dim = vp_dim;
+    this->viewport_dim = glm::ivec2(static_cast<int>(vp_dim.x), static_cast<int>(vp_dim.y));
 
     if (this->fbo == nullptr) {
         try {

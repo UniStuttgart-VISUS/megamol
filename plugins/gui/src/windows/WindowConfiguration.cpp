@@ -174,16 +174,16 @@ void WindowConfiguration::StateFromJSON(const nlohmann::json &in_json) {
                                                                 hotkey.size());
                     this->win_config.hotkey = core::view::KeyCode(static_cast<core::view::Key>(hotkey[0]),
                                                                   static_cast<core::view::Modifiers>(hotkey[1]));
-                    std::array<float, 2> position;
+                    std::array<float, 2> position = {0.0f, 0.0f};
                     megamol::core::utility::get_json_value<float>(config_values, {"win_position"}, position.data(), position.size());
                     this->win_config.position = ImVec2(position[0], position[1]);
-                    std::array<float, 2> size;
+                    std::array<float, 2> size = {0.0f, 0.0f};
                     megamol::core::utility::get_json_value<float>(config_values, {"win_size"}, size.data(), size.size());
                     this->win_config.size = ImVec2(size[0], size[1]);
-                    std::array<float, 2> reset_size;
+                    std::array<float, 2> reset_size = {0.0f, 0.0f};
                     megamol::core::utility::get_json_value<float>(config_values, {"win_reset_size"}, reset_size.data(), reset_size.size());
                     this->win_config.reset_size = ImVec2(reset_size[0], reset_size[1]);
-                    std::array<float, 2> reset_position;
+                    std::array<float, 2> reset_position = {0.0f, 0.0f};
                     megamol::core::utility::get_json_value<float>(config_values, {"win_reset_position"},
                                                                   reset_position.data(), reset_position.size());
                     this->win_config.reset_position = ImVec2(reset_position[0], reset_position[1]);

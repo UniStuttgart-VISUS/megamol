@@ -77,13 +77,13 @@ namespace gui {
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
         void Update(const GraphItemsState_t& state);
 
-        inline const ImGuiID UID() const {
+        inline ImGuiID UID() const {
             return this->uid;
         }
-        inline const std::string Name() const {
+        inline std::string Name() const {
             return this->name;
         }
-        inline const CallSlotType Type() const {
+        inline CallSlotType Type() const {
             return this->type;
         }
         inline InterfaceSlotPtr_t InterfaceSlotPtr() const {
@@ -92,7 +92,7 @@ namespace gui {
         inline ImVec2 Position() const {
             return this->gui_position;
         }
-        inline const std::vector<size_t> CompatibleCallIdxs() const {
+        inline std::vector<size_t> CompatibleCallIdxs() const {
             return this->compatible_call_idxs;
         }
 

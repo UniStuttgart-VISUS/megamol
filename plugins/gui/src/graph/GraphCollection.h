@@ -36,7 +36,7 @@ namespace gui {
     class GraphCollection {
     public:
         GraphCollection();
-        ~GraphCollection();
+        ~GraphCollection() = default;
 
         bool AddEmptyProject();
 
@@ -102,17 +102,17 @@ namespace gui {
         std::string get_state(ImGuiID graph_id, const std::string& filename);
 
         bool get_call_stock_data(
-            Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
+            Call::StockCall& call, std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
         bool get_module_stock_data(Module::StockModule& mod,
-            const std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
+            std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
 
         bool read_project_command_arguments(
-            const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
+            const std::string& line, size_t arg_count, std::vector<std::string>& out_args) const;
 
         bool project_separate_name_and_namespace(
-            const std::string& full_name, std::string& name_space, std::string& name);
+            const std::string& full_name, std::string& name_space, std::string& name) const;
 
-        inline const std::string generate_unique_graph_name() {
+        inline std::string generate_unique_graph_name() {
             return ("Project_" + std::to_string(++graph_name_uid));
         }
 

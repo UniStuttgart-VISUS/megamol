@@ -29,7 +29,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Stroage_t store, Min_t minval, Max_t maxval,
+megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minv, Max_t maxv,
     const std::string& param_name, const std::string& description)
         : megamol::core::param::AbstractParamPresentation()
         , uid(uid)
@@ -38,8 +38,8 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Stroage_t stor
         , parent_module_name("")
         , description(description)
         , core_param_ptr(nullptr)
-        , minval(minval)
-        , maxval(maxval)
+        , minval(minv)
+        , maxval(maxv)
         , storage(store)
         , value()
         , default_value()
@@ -217,8 +217,8 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
     case (ParamType_t::COLOR): {
         megamol::core::param::ColorParam parameter(val_tstr);
         retval = parameter.ParseValue(val_tstr);
-        auto value = parameter.Value();
-        this->SetValue(glm::vec4(value[0], value[1], value[2], value[3]), set_default_val, set_dirty);
+        auto val = parameter.Value();
+        this->SetValue(glm::vec4(val[0], val[1], val[2], val[3]), set_default_val, set_dirty);
     } break;
     case (ParamType_t::ENUM): {
         megamol::core::param::EnumParam parameter(0);
@@ -361,17 +361,17 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector3fParam>()) {
         out_param.type = ParamType_t::VECTOR3F;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-        auto minval = p_ptr->MinValue();
-        out_param.minval = glm::vec3(minval.X(), minval.Y(), minval.Z());
-        auto maxval = p_ptr->MaxValue();
-        out_param.maxval = glm::vec3(maxval.X(), maxval.Y(), maxval.Z());
+        auto minv = p_ptr->MinValue();
+        out_param.minval = glm::vec3(minv.X(), minv.Y(), minv.Z());
+        auto maxv = p_ptr->MaxValue();
+        out_param.maxval = glm::vec3(maxv.X(), maxv.Y(), maxv.Z());
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector4fParam>()) {
         out_param.type = ParamType_t::VECTOR4F;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-        auto minval = p_ptr->MinValue();
-        out_param.minval = glm::vec4(minval.X(), minval.Y(), minval.Z(), minval.W());
-        auto maxval = p_ptr->MaxValue();
-        out_param.maxval = glm::vec4(maxval.X(), maxval.Y(), maxval.Z(), maxval.W());
+        auto minv = p_ptr->MinValue();
+        out_param.minval = glm::vec4(minv.X(), minv.Y(), minv.Z(), minv.W());
+        auto maxv = p_ptr->MaxValue();
+        out_param.maxval = glm::vec4(maxv.X(), maxv.Y(), maxv.Z(), maxv.W());
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found unknown parameter type. Please extend parameter types "
@@ -439,28 +439,28 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
             p_ptr->MinValue(), p_ptr->MaxValue(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector2fParam>()) {
-        auto minval = p_ptr->MinValue();
-        auto maxval = p_ptr->MaxValue();
+        auto minv = p_ptr->MinValue();
+        auto maxv = p_ptr->MaxValue();
         auto val = p_ptr->Value();
         out_param =
             std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR2F, std::monostate(),
-                glm::vec2(minval.X(), minval.Y()), glm::vec2(maxval.X(), maxval.Y()), param_name, description);
+                glm::vec2(minv.X(), minv.Y()), glm::vec2(maxv.X(), maxv.Y()), param_name, description);
         out_param->SetValue(glm::vec2(val.X(), val.Y()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector3fParam>()) {
-        auto minval = p_ptr->MinValue();
-        auto maxval = p_ptr->MaxValue();
+        auto minv = p_ptr->MinValue();
+        auto maxv = p_ptr->MaxValue();
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR3F,
-            std::monostate(), glm::vec3(minval.X(), minval.Y(), minval.Z()),
-            glm::vec3(maxval.X(), maxval.Y(), maxval.Z()), param_name, description);
+            std::monostate(), glm::vec3(minv.X(), minv.Y(), minv.Z()),
+            glm::vec3(maxv.X(), maxv.Y(), maxv.Z()), param_name, description);
         out_param->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector4fParam>()) {
-        auto minval = p_ptr->MinValue();
-        auto maxval = p_ptr->MaxValue();
+        auto minv = p_ptr->MinValue();
+        auto maxv = p_ptr->MaxValue();
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR4F,
-            std::monostate(), glm::vec4(minval.X(), minval.Y(), minval.Z(), minval.W()),
-            glm::vec4(maxval.X(), maxval.Y(), maxval.Z(), maxval.W()), param_name, description);
+            std::monostate(), glm::vec4(minv.X(), minv.Y(), minv.Z(), minv.W()),
+            glm::vec4(maxv.X(), maxv.Y(), maxv.Z(), maxv.W()), param_name, description);
         out_param->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::TernaryParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::TERNARY,
@@ -593,10 +593,10 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         if (out_param.type == ParamType_t::VECTOR2F) {
             auto val = p_ptr->Value();
             out_param.SetValue(glm::vec2(val.X(), val.Y()), set_default_val, set_dirty);
-            auto minval = p_ptr->MinValue();
-            out_param.SetMinValue(glm::vec2(minval.X(), minval.Y()));
-            auto maxval = p_ptr->MaxValue();
-            out_param.SetMaxValue(glm::vec2(maxval.X(), maxval.Y()));
+            auto minv = p_ptr->MinValue();
+            out_param.SetMinValue(glm::vec2(minv.X(), minv.Y()));
+            auto maxv = p_ptr->MaxValue();
+            out_param.SetMaxValue(glm::vec2(maxv.X(), maxv.Y()));
         } else {
             type_error = true;
         }
@@ -604,10 +604,10 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         if (out_param.type == ParamType_t::VECTOR3F) {
             auto val = p_ptr->Value();
             out_param.SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val, set_dirty);
-            auto minval = p_ptr->MinValue();
-            out_param.SetMinValue(glm::vec3(minval.X(), minval.Y(), minval.Z()));
-            auto maxval = p_ptr->MaxValue();
-            out_param.SetMaxValue(glm::vec3(maxval.X(), maxval.Y(), maxval.Z()));
+            auto minv = p_ptr->MinValue();
+            out_param.SetMinValue(glm::vec3(minv.X(), minv.Y(), minv.Z()));
+            auto maxv = p_ptr->MaxValue();
+            out_param.SetMaxValue(glm::vec3(maxv.X(), maxv.Y(), maxv.Z()));
         } else {
             type_error = true;
         }
@@ -615,10 +615,10 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         if (out_param.type == ParamType_t::VECTOR4F) {
             auto val = p_ptr->Value();
             out_param.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val, set_dirty);
-            auto minval = p_ptr->MinValue();
-            out_param.SetMinValue(glm::vec4(minval.X(), minval.Y(), minval.Z(), minval.W()));
-            auto maxval = p_ptr->MaxValue();
-            out_param.SetMaxValue(glm::vec4(maxval.X(), maxval.Y(), maxval.Z(), maxval.W()));
+            auto minv = p_ptr->MinValue();
+            out_param.SetMinValue(glm::vec4(minv.X(), minv.Y(), minv.Z(), minv.W()));
+            auto maxv = p_ptr->MaxValue();
+            out_param.SetMaxValue(glm::vec4(maxv.X(), maxv.Y(), maxv.Z(), maxv.W()));
         } else {
             type_error = true;
         }
@@ -738,7 +738,7 @@ bool megamol::gui::Parameter::WriteCoreParameterValue(
         }
     } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::TransferFunctionParam>()) {
         if (in_param.type == ParamType_t::TRANSFERFUNCTION) {
-            p_ptr->SetValue(std::get<std::string>(in_param.GetValue()).c_str());
+            p_ptr->SetValue(std::get<std::string>(in_param.GetValue()));
         } else {
             type_error = true;
         }
@@ -795,7 +795,7 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
     }
 
     try {
-        ImGui::PushID(this->uid);
+        ImGui::PushID(static_cast<int>(this->uid));
 
         this->gui_help = "";
         this->gui_tooltip_text = this->description;

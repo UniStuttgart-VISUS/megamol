@@ -33,7 +33,7 @@ namespace gui {
      */
     class Group {
     public:
-        Group(ImGuiID uid);
+        explicit Group(ImGuiID uid);
         ~Group();
 
         bool AddModule(const ModulePtr_t& module_ptr);
@@ -52,7 +52,6 @@ namespace gui {
             return this->interfaceslots[type];
         }
         bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
-        bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);
         bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid, bool force = false);
         bool InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid);
 
@@ -61,20 +60,17 @@ namespace gui {
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
         void UpdatePositionSize(const GraphCanvas_t& in_canvas);
 
-        inline const ImGuiID UID() const {
+        inline ImGuiID UID() const {
             return this->uid;
         }
-        inline ModulePtrVector_t& Modules() {
+        inline const ModulePtrVector_t& Modules() const {
             return this->modules;
         }
-        inline const std::string Name() const {
+        inline std::string Name() const {
             return this->name;
         }
-        inline ImVec2 Size() {
+        inline ImVec2 Size() const {
             return this->gui_size;
-        }
-        inline bool IsViewCollapsed() {
-            return this->gui_collapsed_view;
         }
         inline void ForceUpdate() {
             this->gui_update = true;

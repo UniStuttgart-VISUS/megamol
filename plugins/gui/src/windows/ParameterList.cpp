@@ -114,7 +114,7 @@ bool ParameterList::Draw() {
             if (group_header_open) {
                 for (auto& module_ptr : group.second) {
                     std::string module_label = module_ptr->FullName();
-                    ImGui::PushID(module_ptr->UID());
+                    ImGui::PushID(static_cast<int>(module_ptr->UID()));
 
                     // Check if module should be considered.
                     if (!this->consider_module(module_label, this->win_modules_list)) {
@@ -246,7 +246,7 @@ void ParameterList::SpecificStateToJSON(nlohmann::json &inout_json) {
 }
 
 
-bool ParameterList::consider_module(const std::string& modname, std::vector<std::string>& modules_list) {
+bool ParameterList::consider_module(const std::string& modname, std::vector<std::string>& modules_list) const {
 
     bool retval = false;
     // Empty module list means that all modules should be considered.

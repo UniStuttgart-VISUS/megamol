@@ -57,7 +57,7 @@ bool HoverToolTip::ToolTip(const std::string& text, ImGuiID id, float time_start
 }
 
 
-bool HoverToolTip::Marker(const std::string& text, std::string label) {
+bool HoverToolTip::Marker(const std::string& text, const std::string& label) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 

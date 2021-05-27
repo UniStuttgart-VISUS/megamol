@@ -67,7 +67,7 @@ bool megamol::gui::CallSlot::ConnectCall(const megamol::gui::CallPtr_t& call_ptr
         return false;
     }
     if (this->type == CallSlotType::CALLER) {
-        if (this->connected_calls.size() > 0) {
+        if (!this->connected_calls.empty()) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] Caller slots can only be connected to one call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
@@ -337,7 +337,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 slot_label.append(" [REQUIRED]");
             }
 
-            ImGui::PushID(this->uid);
+            ImGui::PushID(static_cast<int>(this->uid));
 
             if (phase == megamol::gui::PresentPhase::INTERACTION) {
 

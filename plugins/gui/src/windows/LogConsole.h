@@ -26,14 +26,14 @@ namespace gui {
     class LogBuffer : public std::stringbuf {
     public:
         LogBuffer() = default;
-        ~LogBuffer() = default;
+        ~LogBuffer() override = default;
 
         struct LogEntry {
             unsigned int level;
             std::string message;
         };
 
-        int sync();
+        int sync() override;
 
         inline const std::vector<LogEntry>& log() const {
             return this->messages;
@@ -50,7 +50,7 @@ namespace gui {
     class LogConsole : public WindowConfiguration {
     public:
 
-        LogConsole(const std::string& window_name);
+        explicit LogConsole(const std::string& window_name);
         ~LogConsole();
 
         bool Update() override;
@@ -90,7 +90,7 @@ namespace gui {
 
         bool connect_log();
 
-        void print_message(LogBuffer::LogEntry entry, unsigned int global_log_level) const;
+        void print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const;
 
         void draw_popup(LogPopUpData& log_popup);
     };

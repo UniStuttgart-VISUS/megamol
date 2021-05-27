@@ -23,12 +23,12 @@ namespace gui {
     class ParameterGroupAnimationWidget : public AbstractParameterGroupWidget {
     public:
         ParameterGroupAnimationWidget();
-        ~ParameterGroupAnimationWidget() = default;
+        ~ParameterGroupAnimationWidget() override = default;
 
-        bool Check(bool only_check, ParamPtrVector_t& params);
+        bool Check(bool only_check, ParamPtrVector_t& params) override;
 
         bool Draw(ParamPtrVector_t params, const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
-            PickingBuffer* inout_picking_buffer);
+            PickingBuffer* inout_picking_buffer) override;
 
     private:
         // VARIABLES --------------------------------------------------------------

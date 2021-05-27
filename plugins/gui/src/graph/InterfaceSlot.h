@@ -49,10 +49,9 @@ namespace gui {
         CallSlotPtrVector_t& CallSlots() {
             return this->callslots;
         }
-        bool IsConnected();
         CallSlotType GetCallSlotType();
         bool IsEmpty();
-        bool IsAutoCreated() {
+        bool IsAutoCreated() const {
             return this->auto_created;
         }
 
@@ -61,10 +60,10 @@ namespace gui {
         inline std::string Label() const {
             return this->gui_label;
         }
-        inline const ImGuiID UID() const {
+        inline ImGuiID UID() const {
             return this->uid;
         }
-        inline const ImGuiID GroupUID() const {
+        inline ImGuiID GroupUID() const {
             return this->group_uid;
         }
         ImVec2 Position() {
@@ -72,18 +71,14 @@ namespace gui {
         }
         ImVec2 Position(bool group_collapsed_view);
 
-        inline bool IsGroupViewCollapsed() const {
-            return this->gui_group_collapsed_view;
-        }
-
         void SetPosition(ImVec2 pos) {
             this->gui_position = pos;
         }
         inline void SetGroupViewCollapsed(bool collapsed) {
             this->gui_group_collapsed_view = collapsed;
         }
-        inline void SetGroupUID(ImGuiID uid) {
-            this->group_uid = uid;
+        inline void SetGroupUID(ImGuiID guid) {
+            this->group_uid = guid;
         }
 
     private:
