@@ -5,8 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "FileBrowserWidget.h"
+#include "imgui_stdlib.h"
 
 
 using namespace megamol;

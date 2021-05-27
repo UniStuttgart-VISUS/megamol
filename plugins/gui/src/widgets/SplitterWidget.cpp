@@ -5,8 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "SplitterWidget.h"
+#include "GUIUtils.h"
 
 
 using namespace megamol;

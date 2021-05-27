@@ -5,9 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
-#include "CallSlot.h"
 
+#include "CallSlot.h"
 #include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"

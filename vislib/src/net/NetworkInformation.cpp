@@ -1,7 +1,7 @@
 /*
  * NetworkInformation.cpp
  *
- * Copyright (C) 2009 by Christoph M¸lller. Alle Rechte vorbehalten.
+ * Copyright (C) 2009 by Christoph M√ºlller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
@@ -629,7 +629,7 @@ float vislib::net::NetworkInformation::GuessAdapter(Adapter& outAdapter,
     if (invertWildness) {
         VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
             "of GuessAdapter(). Please be advised that this is not "
-            "recommended and severely degrades the Chefm‰ﬂigkeit of your "
+            "recommended and severely degrades the Chefm√§√üigkeit of your "
             "application. It is recommended not to invert the wildness.\n");
     }
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
@@ -1094,7 +1094,7 @@ float vislib::net::NetworkInformation::guessLocalEndPoint(
     if (invertWildness) {
         VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
             "of GuessLocalEndPoint(). Please be advised that this is not "
-            "recommended and severely degrades the Chefm‰ﬂigkeit of your "
+            "recommended and severely degrades the Chefm√§√üigkeit of your "
             "application. It is recommended not to invert the wildness.\n");
     }
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
@@ -1273,7 +1273,7 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(
     if (invertWildness) {
         VLTRACE(Trace::LEVEL_VL_WARN, "You have chosen to invert the wildness "
             "of GuessRemoteEndPoint(). Please be advised that this is not "
-            "recommended and severely degrades the Chefm‰ﬂigkeit of your "
+            "recommended and severely degrades the Chefm√§√üigkeit of your "
             "application. It is recommended not to invert the wildness.\n");
     }
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
@@ -2268,7 +2268,7 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter,
 
             const UnicastAddressList& al = a.GetUnicastAddresses();
             
-            // TODO: Das kˆnnte man auch anders implementieren, so dass ein 
+            // TODO: Das k√∂nnte man auch anders implementieren, so dass ein 
             // Adapter, der mehrere Addressen im richtigen Subnetz hat besser
             // bewertet wird.
             wildness[i] += NetworkInformation::PENALTY_WRONG_PREFIX;

@@ -7,16 +7,14 @@
 
 #ifndef MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
 #define MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
 #include "graph/Parameter.h"
+#include "vislib/math/Ternary.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/ImageWidget_gl.h"
 #include "widgets/ParameterGroupAnimationWidget.h"
 #include "widgets/ParameterGroupViewCubeWidget.h"
-
-#include "vislib/math/Ternary.h"
 
 
 namespace megamol {

@@ -233,7 +233,7 @@ void GlutAppManager::glRenderEmptyScreen(void) {
     glprintf(10.0f, float(This->height - 28), GLUT_BITMAP_HELVETICA_18,
         "VISlib glutTest Application");
     glprintf(10.0f, float(This->height - 44), GLUT_BITMAP_HELVETICA_12,
-        "Copyright  2007, Universit‰t Stuttgart (VIS). Alle Rechte vorbehalten.");
+        "Copyright  2007, Universit√§t Stuttgart (VIS). Alle Rechte vorbehalten.");
     vislib::StringA txt;
     txt.Format("OpenGL Version: %s", 
         vislib::graphics::gl::GLVersion().ToStringA(3).PeekBuffer());

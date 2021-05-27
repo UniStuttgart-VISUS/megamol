@@ -1,62 +1,35 @@
+# MegaMol
+# Copyright (c) 2021, MegaMol Dev Team
+# All rights reserved.
 #
-# MegaMol™ OSPRay_plugin
-# Copyright 2017, by MegaMol Team
-# Alle Rechte vorbehalten. All rights reserved.
-#
-string(TOUPPER OSPRay_plugin EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build OSPRay_plugin" OFF)
 
-if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(OSPRay_plugin)
+megamol_plugin(OSPRay_plugin
+  BUILD_DEFAULT OFF
+  DEPENDS_PLUGINS
+    geometry_calls
+    mmstd_datatools
+    protein_calls
+    mesh)
 
-  # Check option dependencies: First list item is always the current build option,
-  # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_OSPRAY_PLUGIN BUILD_CORE BUILD_GEOMETRY_CALLS_PLUGIN BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN BUILD_MESH_PLUGIN" CACHE INTERNAL "")
+if (OSPRay_plugin_PLUGIN_ENABLED)
 
   find_package(ospray CONFIG REQUIRED)
   find_package(rkcommon CONFIG REQUIRED)
- 
-  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
-  # Target definition
-  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-  target_link_libraries(${PROJECT_NAME} 
-    PRIVATE core geometry_calls mmstd_datatools protein_calls mesh
-    PUBLIC ospray::ospray ospray::ospray_module_ispc rkcommon::rkcommon)
+  target_link_libraries(OSPRay_plugin PUBLIC ospray::ospray ospray::ospray_module_ispc rkcommon::rkcommon)
 
-  # Installation rules for generated files
-  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
-  if(WIN32)
-    #install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-    #install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+  if (WIN32)
     install(DIRECTORY "${OSPRAY_ROOT}/bin/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
-  else()
-    #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
+  else ()
     if (TARGET ospray::ospray)
       get_target_property(OSPRAY_LIB_PATH ospray::ospray IMPORTED_LOCATION_RELEASE)
       get_filename_component(dir ${OSPRAY_LIB_PATH} DIRECTORY)
       install(DIRECTORY "${dir}" DESTINATION "${CMAKE_INSTALL_PREFIX}" FILES_MATCHING PATTERN "lib*")
-    else(TARGET ospray::ospray)
-      foreach(lib ${OSPRAY_LIBRARIES})
+    else (TARGET ospray::ospray)
+      foreach (lib ${OSPRAY_LIBRARIES})
         get_filename_component(dir ${lib} DIRECTORY)
         install(DIRECTORY "${dir}" DESTINATION "${CMAKE_INSTALL_PREFIX}" FILES_MATCHING PATTERN "lib*")
-      endforeach()
-    endif(TARGET ospray::ospray)
-  endif()
-
-  # Grouping in Visual Studio
-  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
-  source_group("Public Header Files" FILES ${public_header_files})
-  source_group("Header Files" FILES ${header_files})
-  source_group("Source Files" FILES ${source_files})
-  source_group("Shaders" FILES ${shader_files})
-
-  # Register plugin
-  megamol_register_plugin(${PROJECT_NAME})
-endif()
+      endforeach ()
+    endif (TARGET ospray::ospray)
+  endif ()
+endif ()

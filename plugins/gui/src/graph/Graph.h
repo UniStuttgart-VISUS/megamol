@@ -7,22 +7,17 @@
 
 #ifndef MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
+#include <queue>
+#include "Call.h"
+#include "Group.h"
+#include "Module.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
-
-#include "Call.h"
-#include "Group.h"
-#include "Module.h"
-
-#include "vislib/math/Ternary.h"
-
-#include <queue>
-#include <tuple>
 
 
 namespace megamol {

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
@@ -472,7 +473,7 @@ private:
 
     template<class R>
     std::vector<std::enable_if_t<!(std::is_same<value_type, R>::value || std::is_same<char, R>::value), R>> getAs() {
-        throw std::exception("[CallADIOSData] Conversion not supported.");
+        throw std::runtime_error("[CallADIOSData] Conversion not supported.");
     }
 
     std::vector<value_type> dataVec;

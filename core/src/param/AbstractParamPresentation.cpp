@@ -57,6 +57,7 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     this->presentation_name_map.emplace(Presentation::PinMouse, "Pin to Mouse");
     this->presentation_name_map.emplace(Presentation::Group_Animation, "Animation");
     this->presentation_name_map.emplace(Presentation::Group_3D_Cube, "3D Cube");
+    this->presentation_name_map.emplace(Presentation::Checkbox, "Checkbox");
 }
 
 
@@ -70,7 +71,7 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
         // Initialize presentations depending on parameter type
         switch (param_type) {
         case (ParamType::BOOL): {
-            this->compatible = Presentation::Basic | Presentation::String;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::Checkbox;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::BUTTON): {
