@@ -29,7 +29,7 @@ namespace frontend_resources {
 
         // Register GUI notification popup
         // Parameters: Pop-up name, message
-        std::function<void(const std::string&, bool&, std::string&)> register_notification;
+        std::function<void(const std::string&, bool&, const std::string&)> register_notification;
     };
 
 } /* end namespace frontend_resources */
