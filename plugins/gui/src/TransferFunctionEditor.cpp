@@ -5,9 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "TransferFunctionEditor.h"
+#include "GUIUtils.h"
 #include "graph/Parameter.h"
+#include "widgets/ButtonWidgets.h"
+#include "widgets/ColorPalettes.h"
 
 
 #define TF_FLOAT_EPS 1e-5f
