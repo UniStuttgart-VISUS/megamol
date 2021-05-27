@@ -37,8 +37,10 @@ struct BaseProbe {
     int m_cluster_id;
     /** true, if clustering considers this probe to be a representant */
     bool m_representant;
-    /** ids connected to the geometry like mesh or primitives of vertices */
+    /** string id of the meshes that the probe goes through */
     std::vector<std::string> m_geo_ids;
+    /** string id of the meshes that the probe goes through */
+    std::vector<uint64_t> m_vert_ids;
 
     // virtual void probe() = 0;
 };

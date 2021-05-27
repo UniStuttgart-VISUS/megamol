@@ -74,20 +74,6 @@ bool ElementColoring::getData(core::Call& call) {
         ++_version;
         _mesh_collection_copy = *celements->getData();
 
-        // get dimensions for elements
-        int shell_max = 0;
-        int shell_element_max = 0;
-        auto meshes = celements->getData()->accessMeshes();
-        for (auto& mesh: meshes) {
-            auto tmp_string_vec = this->split(mesh.first, '_');
-            auto index_vec = this->split(tmp_string_vec[tmp_string_vec.size()-1], ',');
-            auto shell = std::stoi(index_vec[0]);
-            auto shell_element = std::stoi(index_vec[1]);
-            shell_max = std::max(shell, shell_max);
-            shell_element_max = std::max(shell_element, shell_element_max);
-        }
-        shell_max += 1;
-        shell_element_max += 1;
 
         auto const probe_count = cp->getData()->getProbeCount();
         std::vector<int> cluster_ids(probe_count);
@@ -122,47 +108,90 @@ bool ElementColoring::getData(core::Call& call) {
         auto non_unique_items = std::unique(unique_cluster_ids.begin(), unique_cluster_ids.end());
         unique_cluster_ids.erase(non_unique_items, unique_cluster_ids.end());
         auto num_clusters = unique_cluster_ids.size();
-        int lowes_cluster_id = unique_cluster_ids[0];
+        int lowest_cluster_id = unique_cluster_ids[0];
 
+        if (_mesh_collection_copy.accessMeshes().size() > 1) {
 
-        _colors.clear();
-        _colors.resize(shell_max);
-        _mesh_copy.resize(meshes.size());
-        for (int i = 0; i < shell_max; ++i) {
-            _colors[i].resize(shell_element_max);
-            for (int j = 0; j < shell_element_max; ++j) {
-                auto flat_id = shell_max * j;
-                std::string access_str = "element_mesh_" + std::to_string(i) + "," + std::to_string(j);
-                auto current_id = cluster_ids[j];
-                auto current_color = hsvSpiralColor(current_id - lowes_cluster_id, num_clusters); // id can be -1
-
-                int num_verts = 0;
-                auto& attribs = celements->getData()->accessMesh(access_str).attributes;
-                for (auto& attr :attribs) {
-                    if (attr.semantic == mesh::MeshDataAccessCollection::POSITION) {
-                        num_verts = attr.byte_size / sizeof(std::array<float, 3>);
-                    }
-                }
-
-                _colors[i][j].resize(num_verts);
-                for (int v = 0; v < num_verts; ++v) {
-                    _colors[i][j][v] = {current_color.x, current_color.y, current_color.z, 1.0f};
-                }
-
-                auto col_attr = mesh::MeshDataAccessCollection::VertexAttribute();
-                col_attr.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-                col_attr.byte_size = _colors[i][j].size() * sizeof(std::array<float, 4>);
-                col_attr.component_cnt = 4;
-                col_attr.stride = sizeof(std::array<float, 4>);
-                col_attr.offset = 0;
-                col_attr.data = reinterpret_cast<uint8_t*>(_colors[i][j].data());
-                col_attr.semantic = mesh::MeshDataAccessCollection::COLOR;
-                // put data into mesh
-                _mesh_copy[flat_id] = _mesh_collection_copy.accessMesh(access_str);
-                _mesh_copy[flat_id].attributes.emplace_back(col_attr);
-                _mesh_collection_copy.deleteMesh(access_str);
-                _mesh_collection_copy.addMesh(access_str, _mesh_copy[flat_id].attributes, _mesh_copy[flat_id].indices);
+            // get dimensions for elements
+            int shell_max = 0;
+            int shell_element_max = 0;
+            auto meshes = celements->getData()->accessMeshes();
+            for (auto& mesh: meshes) {
+                auto tmp_string_vec = this->split(mesh.first, '_');
+                auto index_vec = this->split(tmp_string_vec[tmp_string_vec.size()-1], ',');
+                auto shell = std::stoi(index_vec[0]);
+                auto shell_element = std::stoi(index_vec[1]);
+                shell_max = std::max(shell, shell_max);
+                shell_element_max = std::max(shell_element, shell_element_max);
             }
+            shell_max += 1;
+            shell_element_max += 1;
+
+            _colors.clear();
+            _colors.resize(shell_max);
+            _mesh_copy.resize(meshes.size());
+            for (int i = 0; i < shell_max; ++i) {
+                _colors[i].resize(shell_element_max);
+                for (int j = 0; j < shell_element_max; ++j) {
+                    auto flat_id = shell_max * j;
+                    std::string access_str = "element_mesh_" + std::to_string(i) + "," + std::to_string(j);
+                    auto current_id = cluster_ids[j];
+                    auto current_color = hsvSpiralColor(current_id - lowest_cluster_id, num_clusters); // id can be -1
+
+                    int num_verts = 0;
+                    auto& attribs = celements->getData()->accessMesh(access_str).attributes;
+                    for (auto& attr :attribs) {
+                        if (attr.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                            num_verts = attr.byte_size / sizeof(std::array<float, 3>);
+                        }
+                    }
+
+                    _colors[i][j].resize(num_verts);
+                    for (int v = 0; v < num_verts; ++v) {
+                        _colors[i][j][v] = {current_color.x, current_color.y, current_color.z, 1.0f};
+                    }
+
+                    auto col_attr = mesh::MeshDataAccessCollection::VertexAttribute();
+                    col_attr.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+                    col_attr.byte_size = _colors[i][j].size() * sizeof(std::array<float, 4>);
+                    col_attr.component_cnt = 4;
+                    col_attr.stride = sizeof(std::array<float, 4>);
+                    col_attr.offset = 0;
+                    col_attr.data = reinterpret_cast<uint8_t*>(_colors[i][j].data());
+                    col_attr.semantic = mesh::MeshDataAccessCollection::COLOR;
+                    // put data into mesh
+                    _mesh_copy[flat_id] = _mesh_collection_copy.accessMesh(access_str);
+                    _mesh_copy[flat_id].attributes.emplace_back(col_attr);
+                    _mesh_collection_copy.deleteMesh(access_str);
+                    _mesh_collection_copy.addMesh(access_str, _mesh_copy[flat_id].attributes, _mesh_copy[flat_id].indices);
+                }
+            }
+        } else {
+            std::string mesh_id;
+            for (auto& m : _mesh_collection_copy.accessMeshes()) {
+                mesh_id = m.first;
+            }
+            _mesh_copy.resize(1);
+            _vertColors.resize(probe_count);
+            for (int j = 0; j < probe_count; ++j) {
+                auto current_id = cluster_ids[j];
+                auto current_color = hsvSpiralColor(current_id - lowest_cluster_id, num_clusters); // id can be -1
+
+                _vertColors[j] = { current_color.x, current_color.y, current_color.z, 1.0f };
+            }
+            auto col_attr = mesh::MeshDataAccessCollection::VertexAttribute();
+            col_attr.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+            col_attr.byte_size = _vertColors.size() * sizeof(std::array<float, 4>);
+            col_attr.component_cnt = 4;
+            col_attr.stride = sizeof(std::array<float, 4>);
+            col_attr.offset = 0;
+            col_attr.data = reinterpret_cast<uint8_t*>(_vertColors.data());
+            col_attr.semantic = mesh::MeshDataAccessCollection::COLOR;
+            // put data into mesh
+            _mesh_copy[0] = _mesh_collection_copy.accessMesh(mesh_id);
+            _mesh_copy[0].attributes.emplace_back(col_attr);
+            _mesh_collection_copy.deleteMesh(mesh_id);
+            _mesh_collection_copy.addMesh(mesh_id, _mesh_copy[0].attributes, _mesh_copy[0].indices);
         }
     } 
     cmesh->setData(std::make_shared<mesh::MeshDataAccessCollection>(_mesh_collection_copy), _version);

@@ -64,6 +64,7 @@ private:
 
     std::vector<std::string> split(std::string, const char);
     std::vector<std::vector<std::vector<std::array<float,4>>>> _colors;
+    std::vector<std::array<float, 4>> _vertColors;
     glm::vec3 hsvSpiralColor(int color_idx, int total_colors);
     glm::vec3 hsv2rgb(glm::vec3 c);
 

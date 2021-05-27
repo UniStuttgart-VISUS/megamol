@@ -108,6 +108,7 @@ private:
     std::map<uint32_t, std::vector<uint32_t>> _neighborMap;
     uint32_t _numFaces = 0;
     std::vector<std::array<float, 4>> _probePositions;
+    std::vector<uint64_t> _probeVertices;
     adios::adiosDataMap dataMap;
 
 };

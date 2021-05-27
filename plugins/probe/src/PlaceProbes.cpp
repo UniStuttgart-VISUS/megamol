@@ -92,7 +92,6 @@ namespace probe {
         if (!(*cm)(0))
             return false;
 
-
         bool something_changed = cm->hasUpdate();
 
         auto mesh_meta_data = cm->getMetaData();
@@ -102,7 +101,6 @@ namespace probe {
         _bbox = mesh_meta_data.m_bboxs;
 
         _mesh = cm->getData();
-
         core::Spatial3DMetaData centerline_meta_data;
         if (ccl != nullptr) {
             if (!(*ccl)(0))
@@ -484,9 +482,9 @@ namespace probe {
 
     void megamol::probe::PlaceProbes::vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices) {
 
-
         uint32_t probe_count = vertices.byte_size / vertices.stride;
         _probePositions.resize(probe_count);
+        _probeVertices.resize(probe_count);
 
         auto vertex_accessor = reinterpret_cast<float*>(vertices.data);
         auto vertex_step = vertices.stride / sizeof(float);
@@ -497,6 +495,7 @@ namespace probe {
             _probePositions[i][1] = vertex_accessor[vertex_step * i + 1];
             _probePositions[i][2] = vertex_accessor[vertex_step * i + 2];
             _probePositions[i][3] = 1.0f;
+            _probeVertices[i] = i;
         }
     }
 
@@ -620,6 +619,18 @@ namespace probe {
 
         if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 0) {
             this->vertexSampling(vertices);
+            mesh::CallMesh* ccl = this->_centerline_slot.CallAs<mesh::CallMesh>();
+            if (ccl == nullptr) {
+                this->placeByCenterpoint();
+            } else {
+                assert(_centerline->accessMeshes().size() == 1);
+                for (auto& attribute : _centerline->accessMeshes().begin()->second.attributes) {
+                    if (attribute.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                        centerline = attribute;
+                    }
+                }
+                this->placeByCenterline(_longest_edge_index, centerline);
+            }
         } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 1) {
             this->dartSampling(vertices, _mesh->accessMeshes().begin()->second.indices, distanceIndicator);
         } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 2) {
@@ -678,19 +689,6 @@ namespace probe {
 
                 this->faceNormalSampling(vertices, normals, probe_ids, mesh.second.indices);
             }
-        } else {
-            mesh::CallMesh* ccl = this->_centerline_slot.CallAs<mesh::CallMesh>();
-            if (ccl == nullptr) {
-                this->placeByCenterpoint();
-            } else {
-                assert(_centerline->accessMeshes().size() == 1);
-                for (auto& attribute : _centerline->accessMeshes().begin()->second.attributes) {
-                    if (attribute.semantic == mesh::MeshDataAccessCollection::POSITION) {
-                        centerline = attribute;
-                    }
-                }
-                this->placeByCenterline(_longest_edge_index, centerline);
-            }
         }
 
         return true;
@@ -709,6 +707,13 @@ namespace probe {
 
         auto vertex_step = 4;
         auto centerline_step = centerline.stride / sizeof(centerline.component_type);
+
+        std::string mesh_id;
+        if (_mesh->accessMeshes().size() == 1) {
+            for (auto& m : _mesh->accessMeshes()) {
+                mesh_id = m.first;
+            }
+        }
 
         for (uint32_t i = 0; i < probe_count; i++) {
             BaseProbe probe;
@@ -815,10 +820,13 @@ namespace probe {
             probe.m_begin = -0.1 * final_dist;
             probe.m_end = final_dist;
             probe.m_cluster_id = -1;
+            if (!mesh_id.empty()) {
+                probe.m_geo_ids.emplace_back(mesh_id);
+                probe.m_vert_ids.emplace_back(_probeVertices[i]);
+            }
 
             this->_probes->addProbe(std::move(probe));
         }
-
 
         return true;
     }
@@ -827,11 +835,17 @@ namespace probe {
         std::array<float, 3> center = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(),
             _bbox.BoundingBox().CalcCenter().GetZ()};
 
-
         uint32_t probe_count = _probePositions.size();
 
         auto probe_accessor = reinterpret_cast<float*>(_probePositions.data()->data());
         auto probe_step = 4;
+
+        std::string mesh_id;
+        if (_mesh->accessMeshes().size() == 1) {
+            for (auto&m :_mesh->accessMeshes()) {
+                mesh_id = m.first;
+            }
+        }
 
         for (uint32_t i = 0; i < probe_count; i++) {
             BaseProbe probe;
@@ -854,6 +868,10 @@ namespace probe {
             probe.m_begin = -0.02 * normal_length;
             probe.m_end = normal_length;
             probe.m_cluster_id = -1;
+            if (!mesh_id.empty()) {
+                probe.m_geo_ids.emplace_back(mesh_id);
+                probe.m_vert_ids.emplace_back(_probeVertices[i]);
+            }
 
             this->_probes->addProbe(std::move(probe));
         }
