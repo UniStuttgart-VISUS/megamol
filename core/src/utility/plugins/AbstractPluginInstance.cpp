@@ -1,47 +1,59 @@
-/*
- * AbstractPluginInstance.cpp
- * Copyright (C) 2015 by MegaMol Consortium
- * All rights reserved. Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2015-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include <cassert>
 
 using namespace megamol::core;
 using namespace megamol::core::utility::plugins;
 
-
-/*
- * AbstractPluginInstance::GetAssemblyName
- */
-const std::string& AbstractPluginInstance::GetAssemblyName(void) const {
-    return this->asm_name;
-}
-
-
-/*
- * AbstractPluginInstance::GetDescription
- */
-const std::string& AbstractPluginInstance::GetDescription(void) const {
-    return this->description;
-}
-
-
 /*
  * AbstractPluginInstance::AbstractPluginInstance
  */
-AbstractPluginInstance::AbstractPluginInstance(const char *asm_name,
-        const char *description) : factories::AbstractAssemblyInstance(),
-        asm_name(asm_name), description(description) {
-    assert(asm_name != nullptr);
-    // intentionally empty
+AbstractPluginInstance::AbstractPluginInstance(const char* asm_name, const char* description)
+        : factories::AbstractAssemblyInstance()
+        , asm_name(asm_name)
+        , description(description)
+        , classes_registered(false) {
+    if (asm_name == nullptr) {
+        throw std::runtime_error("Empty plugin name!");
+    }
 }
-
 
 /*
  * AbstractPluginInstance::~AbstractPluginInstance
  */
-AbstractPluginInstance::~AbstractPluginInstance(void) {
-    // intentionally empty
+AbstractPluginInstance::~AbstractPluginInstance() {
+    // first remove the descriptions
+    this->module_descriptions.Shutdown();
+    this->call_descriptions.Shutdown();
+}
+
+/*
+ * AbstractPluginInstance::GetCallDescriptionManager
+ */
+const factories::CallDescriptionManager& AbstractPluginInstance::GetCallDescriptionManager() const {
+    this->ensureRegisterClassesWrapper();
+    return AbstractAssemblyInstance::GetCallDescriptionManager();
+}
+
+/*
+ * AbstractPluginInstance::GetModuleDescriptionManager
+ */
+const factories::ModuleDescriptionManager& AbstractPluginInstance::GetModuleDescriptionManager() const {
+    this->ensureRegisterClassesWrapper();
+    return AbstractAssemblyInstance::GetModuleDescriptionManager();
+}
+
+/*
+ * AbstractPluginInstance::ensureRegisterClassesWrapper
+ */
+void AbstractPluginInstance::ensureRegisterClassesWrapper() const {
+    if (classes_registered) {
+        return;
+    }
+    const_cast<AbstractPluginInstance*>(this)->registerClasses();
+    const_cast<AbstractPluginInstance*>(this)->classes_registered = true;
 }

@@ -1,22 +1,19 @@
-/*
- * AbstractPluginInstance.h
- * Copyright (C) 2015 by MegaMol Consortium
- * All rights reserved. Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2015-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #ifndef MEGAMOLCORE_UTILITY_PLUGINS_ABSTRACTPLUGININSTANCE_H_INCLUDED
 #define MEGAMOLCORE_UTILITY_PLUGINS_ABSTRACTPLUGININSTANCE_H_INCLUDED
 #pragma once
 
-#include "mmcore/factories/AbstractAssemblyInstance.h"
 #include <memory>
-#include "vislib/macro_utils.h"
+#include <string>
 
+#include "mmcore/factories/AbstractAssemblyInstance.h"
 
-namespace megamol {
-namespace core {
-namespace utility {
-namespace plugins {
+namespace megamol::core::utility::plugins {
 
     /**
      * Abstract base class for all object descriptions.
@@ -24,36 +21,10 @@ namespace plugins {
      * An object is described using a unique name. This name is compared case
      * insensitive!
      */
-    class MEGAMOLCORE_API AbstractPluginInstance : public factories::AbstractAssemblyInstance {
+    class AbstractPluginInstance : public factories::AbstractAssemblyInstance {
     public:
-
         /** The shared pointer type to be used */
         typedef std::shared_ptr<AbstractPluginInstance const> ptr_type;
-
-        /**
-        * Answer the (machine-readable) name of the assembly. This usually is
-        * The name of the plugin dll/so without prefix and extension.
-        *
-        * @return The (machine-readable) name of the assembly
-        */
-        virtual const std::string& GetAssemblyName(void) const;
-
-        /**
-        * Answer the (human-readable) description of the plugin assembly.
-        *
-        * @return The (human-readable) description of the plugin assembly
-        */
-        virtual const std::string& GetDescription(void) const;
-
-    protected:
-
-        /** Ctor. */
-        AbstractPluginInstance(const char *asm_name, const char *description);
-
-        /** Dtor. */
-        virtual ~AbstractPluginInstance(void);
-
-    private:
 
         /** deleted copy ctor */
         AbstractPluginInstance(const AbstractPluginInstance& src) = delete;
@@ -61,19 +32,68 @@ namespace plugins {
         /** deleted assignment operatior */
         AbstractPluginInstance& operator=(const AbstractPluginInstance& rhs) = delete;
 
+        /**
+         * Answer the (machine-readable) name of the plugin.
+         *
+         * @return The (machine-readable) name of the plugin
+         */
+        const std::string& GetAssemblyName() const override {
+            return asm_name;
+        }
+
+        /**
+         * Answer the (human-readable) description of the plugin.
+         *
+         * @return The (human-readable) description of the plugin.
+         */
+        virtual const std::string& GetDescription() const {
+            return description;
+        }
+
+        /**
+         * Answer the call description manager of the plugin.
+         *
+         * @return The call description manager of the plugin.
+         */
+        const factories::CallDescriptionManager& GetCallDescriptionManager() const override;
+
+        /**
+         * Answer the module description manager of the plugin.
+         *
+         * @return The module description manager of the plugin.
+         */
+        const factories::ModuleDescriptionManager& GetModuleDescriptionManager() const override;
+
+    protected:
+        /** Ctor. */
+        AbstractPluginInstance(const char* asm_name, const char* description);
+
+        /** Dtor. */
+        ~AbstractPluginInstance() override;
+
+        /**
+         * This factory methode registers all module and call classes exported
+         * by this plugin instance at the respective factories.
+         *
+         * @remarks This method is automatically called when the factories are
+         *          accessed for the first time. Do not call manually.
+         */
+        virtual void registerClasses() = 0;
+
+    private:
+        /** Ensures that registered classes was called */
+        void ensureRegisterClassesWrapper() const;
+
         /** The (machine-readable) name of the assembly */
-        VISLIB_MSVC_SUPPRESS_WARNING(4251)
         std::string asm_name;
 
         /** The (human-readable) description of the plugin assembly */
-        VISLIB_MSVC_SUPPRESS_WARNING(4251)
         std::string description;
 
+        /** Flag whether or not the module and call classes have been registered */
+        bool classes_registered;
     };
 
-} /* end namespace plugins */
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::utility::plugins
 
-#endif /* MEGAMOLCORE_UTILITY_PLUGINS_ABSTRACTPLUGININSTANCE_H_INCLUDED */
+#endif // MEGAMOLCORE_UTILITY_PLUGINS_ABSTRACTPLUGININSTANCE_H_INCLUDED
