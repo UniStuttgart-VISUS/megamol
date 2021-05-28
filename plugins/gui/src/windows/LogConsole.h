@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "WindowConfiguration.h"
+#include "AbstractWindow.h"
 #include "mmcore/utility/log/StreamTarget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
@@ -47,7 +47,7 @@ namespace gui {
     /* ************************************************************************
      * The content of the log console GUI window
      */
-    class LogConsole : public WindowConfiguration {
+    class LogConsole : public AbstractWindow {
     public:
 
         explicit LogConsole(const std::string& window_name);

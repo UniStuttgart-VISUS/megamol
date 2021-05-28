@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "WindowConfiguration.h"
+#include "AbstractWindow.h"
 #include "windows/Configurator.h"
 #include "windows/TransferFunctionEditor.h"
 #include "widgets/StringSearchWidget.h"
@@ -23,7 +23,7 @@ namespace gui {
     /* ************************************************************************
      * The parameter list GUI window
      */
-    class ParameterList : public WindowConfiguration {
+    class ParameterList : public AbstractWindow {
     public:
 
         explicit ParameterList(const std::string& window_name);

@@ -165,7 +165,7 @@ std::array<std::tuple<std::string, PresetGenerator>, 21> PRESETS = {
 // ----------------------------------------------------------------------------
 
 TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, bool non_window_mode)
-        : WindowConfiguration(window_name , WindowConfiguration::WINDOW_ID_TRANSFER_FUNCTION)
+        : AbstractWindow(window_name , AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION)
         , non_window_mode(non_window_mode)
         , connected_parameter_ptr(nullptr)
         , nodes()

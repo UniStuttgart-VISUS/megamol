@@ -21,7 +21,7 @@ namespace frontend_resources {
 
         // Register GUI window rendering callback
         // Parameters: window name, rendering callback function
-        std::function<void(const std::string&, std::function<void(megamol::gui::WindowConfiguration::BasicConfig&)> )> register_window;
+        std::function<void(const std::string&, std::function<void(megamol::gui::AbstractWindow::BasicConfig&)> )> register_window;
 
         // Register GUI pop-up rendering callback
         // Parameters: Pop-up name, open opop-up flag, rendering callback function

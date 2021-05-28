@@ -40,7 +40,7 @@ WindowCollection::WindowCollection() {
 }
 
 
-bool WindowCollection::AddWindow(const std::string &window_name, const std::function<void(WindowConfiguration::BasicConfig &)>& callback) {
+bool WindowCollection::AddWindow(const std::string &window_name, const std::function<void(AbstractWindow::BasicConfig &)>& callback) {
 
     if (window_name.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -58,7 +58,7 @@ bool WindowCollection::AddWindow(const std::string &window_name, const std::func
         }
     }
     else {
-        this->windows.push_back(std::make_shared<WindowConfiguration>(window_name, const_cast<std::function<void(WindowConfiguration::BasicConfig &)> &>(callback)));
+        this->windows.push_back(std::make_shared<AbstractWindow>(window_name, const_cast<std::function<void(AbstractWindow::BasicConfig &)> &>(callback)));
     }
     return true;
 }
@@ -74,7 +74,7 @@ void WindowCollection::Update() {
 
 void WindowCollection::Draw(bool menu_visible) {
     
-    const auto func = [&](WindowConfiguration& wc) {
+    const auto func = [&](AbstractWindow& wc) {
         if (wc.Config().show) {
             ImGui::SetNextWindowBgAlpha(1.0f);
             ImGui::SetNextWindowCollapsed(wc.Config().collapsed, ImGuiCond_Always);
@@ -140,11 +140,11 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                         int tmp_win_config_id = 0;
                         megamol::core::utility::get_json_value<int>(config_item.value(), {"win_callback"}, /// TODO rename to "win_config_id"
                             &tmp_win_config_id);
-                        auto win_config_id = static_cast<WindowConfiguration::WindowConfigID>(tmp_win_config_id);
+                        auto win_config_id = static_cast<AbstractWindow::WindowConfigID>(tmp_win_config_id);
 
-                        if (win_config_id == WindowConfiguration::WINDOW_ID_VOLATILE) {
-                            this->AddWindow(window_name, std::function<void(WindowConfiguration::BasicConfig &)>());
-                        } else if (win_config_id == WindowConfiguration::WINDOW_ID_PARAMETERS) {
+                        if (win_config_id == AbstractWindow::WINDOW_ID_VOLATILE) {
+                            this->AddWindow(window_name, std::function<void(AbstractWindow::BasicConfig &)>());
+                        } else if (win_config_id == AbstractWindow::WINDOW_ID_PARAMETERS) {
                             this->AddWindow<ParameterList>(window_name);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -203,7 +203,7 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
 
     for (auto iter = this->windows.begin(); iter != this->windows.end(); iter++) {
         if (((*iter)->Hash() == win_hash_id)) {
-            if (((*iter)->WindowID() == WindowConfiguration::WINDOW_ID_VOLATILE) || ((*iter)->WindowID() == WindowConfiguration::WINDOW_ID_PARAMETERS)) {
+            if (((*iter)->WindowID() == AbstractWindow::WINDOW_ID_VOLATILE) || ((*iter)->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS)) {
                 this->windows.erase(iter);
                 return true;
             }

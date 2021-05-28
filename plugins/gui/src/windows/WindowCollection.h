@@ -17,7 +17,7 @@
 #include "imgui.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
-#include "WindowConfiguration.h"
+#include "AbstractWindow.h"
 
 
 namespace megamol {
@@ -39,12 +39,12 @@ namespace gui {
         bool StateFromJSON(const nlohmann::json& in_json);
         bool StateToJSON(nlohmann::json& inout_json);
 
-        bool AddWindow(const std::string& window_name, const std::function<void(WindowConfiguration::BasicConfig&)>& callback);
+        bool AddWindow(const std::string& window_name, const std::function<void(AbstractWindow::BasicConfig&)>& callback);
 
         template<typename T>
         bool AddWindow(const std::string &window_name);
 
-        inline void EnumWindows(const std::function<void(WindowConfiguration&)>& cb) {
+        inline void EnumWindows(const std::function<void(AbstractWindow&)>& cb) {
             // Needs fixed size if window is added while looping
             auto window_count = this->windows.size();
             for (size_t i = 0; i < window_count; i++) {
@@ -75,7 +75,7 @@ namespace gui {
 
         // VARIABLES ------------------------------------------------------
 
-        std::vector<std::shared_ptr<WindowConfiguration>> windows;
+        std::vector<std::shared_ptr<AbstractWindow>> windows;
     };
 
     template<typename T>

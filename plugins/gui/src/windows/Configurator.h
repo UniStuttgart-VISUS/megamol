@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "WindowConfiguration.h"
+#include "AbstractWindow.h"
 #include "graph/GraphCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
@@ -25,7 +25,7 @@ namespace gui {
     /* ************************************************************************
      * The graph configurator GUI window
      */
-    class Configurator : public WindowConfiguration {
+    class Configurator : public AbstractWindow {
     public:
 
         explicit Configurator(const std::string& window_name);

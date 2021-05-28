@@ -55,7 +55,7 @@ int megamol::gui::LogBuffer::sync() {
 // ----------------------------------------------------------------------------
 
 megamol::gui::LogConsole::LogConsole(const std::string& window_name)
-        : WindowConfiguration(window_name, WindowConfiguration::WINDOW_ID_LOGCONSOLE)
+        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_LOGCONSOLE)
         , echo_log_buffer()
         , echo_log_stream(&this->echo_log_buffer)
         , echo_log_target(nullptr)

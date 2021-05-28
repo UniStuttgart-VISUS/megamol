@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "WindowConfiguration.h"
+#include "AbstractWindow.h"
 #include "widgets/HoverToolTip.h"
 
 
@@ -20,7 +20,7 @@ namespace gui {
     /* ************************************************************************
      * The performance monitor GUI window
      */
-    class PerformanceMonitor : public WindowConfiguration {
+    class PerformanceMonitor : public AbstractWindow {
     public:
 
         enum TimingMode { TIMINGMODE_FPS, TIMINGMODE_MS };

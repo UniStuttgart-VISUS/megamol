@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_WINDOWCONFIGURATION_INCLUDED
-#define MEGAMOL_GUI_WINDOWCONFIGURATION_INCLUDED
+#ifndef MEGAMOL_GUI_ABSTRACTWINDOW_INCLUDED
+#define MEGAMOL_GUI_ABSTRACTWINDOW_INCLUDED
 #pragma once
 
 
@@ -27,7 +27,7 @@ namespace gui {
     /** ************************************************************************
      * This class holds the configuration of a GUI window
      */
-    class WindowConfiguration {
+    class AbstractWindow {
     public:
 
         /** Identifiers for the predefined window draw callbacks. */
@@ -54,9 +54,9 @@ namespace gui {
             bool reset_pos_size = true;                         // flag indicates whether to reset window position and size
         };
 
-        typedef std::function<void(WindowConfiguration::BasicConfig&)> VolatileDrawCallback_t;
+        typedef std::function<void(AbstractWindow::BasicConfig&)> VolatileDrawCallback_t;
 
-        WindowConfiguration(const std::string& name, WindowConfigID window_id)
+        AbstractWindow(const std::string& name, WindowConfigID window_id)
                 : win_config()
                 , hotkeys()
                 , hash_id(std::hash<std::string>()(name))
@@ -64,7 +64,7 @@ namespace gui {
                 , window_id(window_id)
                 , volatile_draw_callback(nullptr) {}
 
-        WindowConfiguration(const std::string& name, VolatileDrawCallback_t& callback)
+        AbstractWindow(const std::string& name, VolatileDrawCallback_t& callback)
                 : win_config()
                 , hotkeys()
                 , hash_id(std::hash<std::string>()(name))
@@ -72,7 +72,7 @@ namespace gui {
                 , window_id(WINDOW_ID_VOLATILE)
                 , volatile_draw_callback(callback) {}
 
-        ~WindowConfiguration() = default;
+        ~AbstractWindow() = default;
 
         std::string Name() const {
             return this->name;
@@ -94,8 +94,8 @@ namespace gui {
             return (this->Name() + "     " + this->win_config.hotkey.ToString());
         }
 
-        void SetVolatileCallback(std::function<void(WindowConfiguration::BasicConfig&)> const& callback) {
-            this->volatile_draw_callback = const_cast<std::function<void(WindowConfiguration::BasicConfig &)> &>(callback);
+        void SetVolatileCallback(std::function<void(AbstractWindow::BasicConfig&)> const& callback) {
+            this->volatile_draw_callback = const_cast<std::function<void(AbstractWindow::BasicConfig &)> &>(callback);
             this->window_id = WINDOW_ID_VOLATILE;
         }
 
@@ -145,4 +145,4 @@ namespace gui {
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_WINDOWCONFIGURATION_INCLUDED
+#endif // MEGAMOL_GUI_ABSTRACTWINDOW_INCLUDED

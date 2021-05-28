@@ -16,7 +16,7 @@ using namespace megamol::gui;
 
 
 PerformanceMonitor::PerformanceMonitor(const std::string& window_name)
-    : WindowConfiguration(window_name, WindowConfiguration::WINDOW_ID_PERFORMANCE)
+    : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_PERFORMANCE)
     , win_show_options(false)
     , win_buffer_size(20)
     , win_refresh_rate(2.0f)

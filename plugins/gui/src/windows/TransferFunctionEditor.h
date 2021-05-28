@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "WindowConfiguration.h"
+#include "AbstractWindow.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget_gl.h"
@@ -30,7 +30,7 @@ namespace gui {
     /** ************************************************************************
      * 1D Transfer Function Editor GUI window
      */
-    class TransferFunctionEditor : public WindowConfiguration {
+    class TransferFunctionEditor : public AbstractWindow {
     public:
 
         TransferFunctionEditor(const std::string& window_name, bool non_window_mode);

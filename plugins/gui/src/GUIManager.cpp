@@ -218,7 +218,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             // Show GUI after it was hidden (before early exit!)
             // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
             this->gui_state.menu_visible = true;
-            const auto func = [&](WindowConfiguration &wc) {
+            const auto func = [&](AbstractWindow &wc) {
                 if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
                               this->gui_state.gui_restore_hidden_windows.end(),
                               wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
@@ -416,7 +416,7 @@ bool GUIManager::PostDraw() {
             // Save 'open' state of windows for later restore. Closing all windows before omitting GUI rendering is
             // required to set right ImGui state for mouse handling
             this->gui_state.gui_restore_hidden_windows.clear();
-            const auto func = [&](WindowConfiguration& wc) {
+            const auto func = [&](AbstractWindow& wc) {
                 if (wc.Config().show) {
                     this->gui_state.gui_restore_hidden_windows.push_back(wc.Name());
                     wc.Config().show = false;
@@ -439,7 +439,7 @@ bool GUIManager::PostDraw() {
         // Scale all windows
         if (this->gui_state.rescale_windows) {
             // Do not adjust window scale after loading from project file (window size is already fine)
-            const auto size_func = [&](WindowConfiguration& wc) {
+            const auto size_func = [&](AbstractWindow& wc) {
                 wc.Config().reset_size *= megamol::gui::gui_scaling.TransitionFactor();
                 wc.Config().size *= megamol::gui::gui_scaling.TransitionFactor();
                 wc.Config().reset_pos_size = true;
@@ -579,7 +579,7 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
         }
     }
     // Hotkeys of window(s)
-    const auto windows_func = [&](WindowConfiguration& wc) {
+    const auto windows_func = [&](AbstractWindow& wc) {
         // Check Window Hotkey
         bool windowHotkeyPressed = this->is_hotkey_pressed(wc.Config().hotkey);
         if (windowHotkeyPressed) {
@@ -1170,7 +1170,7 @@ void GUIManager::draw_menu() {
     if (ImGui::BeginMenu("Windows")) {
         ImGui::MenuItem("Menu", this->hotkeys[HOTKEY_GUI_MENU].keycode.ToString().c_str(),
             &this->gui_state.menu_visible);
-        const auto func = [&](WindowConfiguration& wc) {
+        const auto func = [&](AbstractWindow& wc) {
             bool registered_window = (wc.Config().hotkey.key != core::view::Key::KEY_UNKNOWN);
             if (registered_window) {
                 ImGui::MenuItem(wc.Name().c_str(), wc.Config().hotkey.ToString().c_str(), &wc.Config().show);
@@ -1184,7 +1184,7 @@ void GUIManager::draw_menu() {
                         wc.Config().show = !wc.Config().show;
                     }
                     // Enable option to delete custom newly created parameter windows
-                    if (wc.WindowID() == WindowConfiguration::WINDOW_ID_PARAMETERS) {
+                    if (wc.WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
                         if (ImGui::MenuItem("Delete Window")) {
                             this->gui_state.win_delete_hash_id = wc.Hash();
                         }
@@ -1611,18 +1611,18 @@ void megamol::gui::GUIManager::load_preset_window_docking(ImGuiID global_docking
     ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Down, 0.25f, nullptr, &dock_id_main);
     ImGuiID dock_id_prop = ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.25f, nullptr, &dock_id_main);
 
-    const auto func = [&](WindowConfiguration& wc) {
+    const auto func = [&](AbstractWindow& wc) {
         switch (wc.WindowID()) {
-        case (WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS): {
+        case (AbstractWindow::WINDOW_ID_MAIN_PARAMETERS): {
             ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_prop);
         } break;
-        case (WindowConfiguration::WINDOW_ID_TRANSFER_FUNCTION): {
+        case (AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION): {
             ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_prop);
         } break;
-        case (WindowConfiguration::WINDOW_ID_CONFIGURATOR): {
+        case (AbstractWindow::WINDOW_ID_CONFIGURATOR): {
             ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_main);
         } break;
-        case (WindowConfiguration::WINDOW_ID_LOGCONSOLE): {
+        case (AbstractWindow::WINDOW_ID_LOGCONSOLE): {
             ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_bottom);
         } break;
         default:
@@ -1807,7 +1807,7 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
 
 
 void GUIManager::RegisterWindow(
-    const std::string& window_name, std::function<void(WindowConfiguration::BasicConfig&)> const& callback) {
+    const std::string& window_name, std::function<void(AbstractWindow::BasicConfig&)> const& callback) {
 
     this->win_collection.AddWindow(window_name, callback);
 }

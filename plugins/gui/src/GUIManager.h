@@ -222,7 +222,7 @@ namespace gui {
          * @param callback      The window callback function containing the GUI content of the window
          */
         void RegisterWindow(
-                const std::string& window_name, std::function<void(WindowConfiguration::BasicConfig&)> const& callback);
+                const std::string& window_name, std::function<void(AbstractWindow::BasicConfig&)> const& callback);
 
         void RegisterPopUp(const std::string& name, bool& open, std::function<void()> const& callback);
 

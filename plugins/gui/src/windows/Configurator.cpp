@@ -14,7 +14,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::Configurator::Configurator(const std::string& window_name)
-        : WindowConfiguration(window_name, WindowConfiguration::WINDOW_ID_CONFIGURATOR)
+        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_CONFIGURATOR)
         , graph_state()
         , graph_collection()
         , win_tfeditor_ptr(nullptr)

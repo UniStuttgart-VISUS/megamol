@@ -7,14 +7,14 @@
 
 
 #include "gui_utils.h"
-#include "WindowConfiguration.h"
+#include "AbstractWindow.h"
 
 
 using namespace megamol;
 using namespace megamol::gui;
 
 
-void WindowConfiguration::ApplyWindowSizePosition(bool consider_menu) {
+void AbstractWindow::ApplyWindowSizePosition(bool consider_menu) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 
@@ -66,7 +66,7 @@ void WindowConfiguration::ApplyWindowSizePosition(bool consider_menu) {
 }
 
 
-void WindowConfiguration::WindowContextMenu(bool menu_visible, bool& out_collapsing_changed) {
+void AbstractWindow::WindowContextMenu(bool menu_visible, bool& out_collapsing_changed) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 viewport = io.DisplaySize;
@@ -157,7 +157,7 @@ void WindowConfiguration::WindowContextMenu(bool menu_visible, bool& out_collaps
 }
 
 
-void WindowConfiguration::StateFromJSON(const nlohmann::json &in_json) {
+void AbstractWindow::StateFromJSON(const nlohmann::json &in_json) {
 
     for (auto &header_item : in_json.items()) {
         if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
@@ -197,7 +197,7 @@ void WindowConfiguration::StateFromJSON(const nlohmann::json &in_json) {
 }
 
 
-void WindowConfiguration::StateToJSON(nlohmann::json &inout_json) {
+void AbstractWindow::StateToJSON(nlohmann::json &inout_json) {
 
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_show"] = this->win_config.show;
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_flags"] = static_cast<int>(this->win_config.flags);

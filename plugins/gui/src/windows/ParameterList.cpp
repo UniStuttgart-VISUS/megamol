@@ -15,7 +15,7 @@ using namespace megamol::gui;
 
 
 ParameterList::ParameterList(const std::string& window_name)
-    : WindowConfiguration(window_name, WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS)
+    : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_MAIN_PARAMETERS)
     , win_show_param_hotkeys(false)
     , win_modules_list()
     , win_extended_mode(false)
@@ -70,7 +70,7 @@ bool ParameterList::Draw() {
     this->tooltip.ToolTip(param_help);
 
     // Parameter substring name filtering (only for main parameter view)
-    if (this->WindowID() == WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS) {
+    if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
         if (this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed) {
             this->search_widget.SetSearchFocus(true);
             this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed = false;
@@ -137,7 +137,7 @@ bool ParameterList::Draw() {
                         }
 
                         // Deleting module's parameters is not available in main parameter window.
-                        if (this->WindowID() != WindowConfiguration::WINDOW_ID_MAIN_PARAMETERS) {
+                        if (this->WindowID() != AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
                             if (ImGui::MenuItem("Delete from List")) {
                                 auto find_iter = std::find(this->win_modules_list.begin(),
                                                            this->win_modules_list.end(), module_label);
