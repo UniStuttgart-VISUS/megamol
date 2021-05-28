@@ -10,14 +10,14 @@
 #pragma once
 
 
-#include "windows/WindowCollection.h"
-#include "windows/Configurator.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "widgets/WidgetPicking_gl.h"
+#include "windows/Configurator.h"
+#include "windows/WindowCollection.h"
 
 
 namespace megamol {
@@ -222,7 +222,7 @@ namespace gui {
          * @param callback      The window callback function containing the GUI content of the window
          */
         void RegisterWindow(
-                const std::string& window_name, std::function<void(AbstractWindow::BasicConfig&)> const& callback);
+            const std::string& window_name, std::function<void(AbstractWindow::BasicConfig&)> const& callback);
 
         void RegisterPopUp(const std::string& name, bool& open, std::function<void()> const& callback);
 
@@ -234,12 +234,12 @@ namespace gui {
          * @param megamol_graph          The megamol graph.
          * @param core_instance          The core_instance.
          */
-        bool SynchronizeRunningGraph(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+        bool SynchronizeRunningGraph(
+            megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
         ///////////////////////////////////////////////////////////////////////
 
     private:
-
         /** Available GUI styles. */
         enum Styles {
             CorporateGray,

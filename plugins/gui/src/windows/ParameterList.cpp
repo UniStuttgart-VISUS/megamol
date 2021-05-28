@@ -7,29 +7,31 @@
 
 
 #include "ParameterList.h"
-#include "widgets/ButtonWidgets.h"
 #include "graph/Parameter.h"
+#include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol::gui;
 
 
 ParameterList::ParameterList(const std::string& window_name)
-    : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_MAIN_PARAMETERS)
-    , win_show_param_hotkeys(false)
-    , win_modules_list()
-    , win_extended_mode(false)
-    , search_widget()
-    , tooltip() {
+        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_MAIN_PARAMETERS)
+        , win_show_param_hotkeys(false)
+        , win_modules_list()
+        , win_extended_mode(false)
+        , search_widget()
+        , tooltip() {
 
-    this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = {megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
-    
+    this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
+
     // Configure PARAMETER LIST Window
     this->win_config.show = true;
     this->win_config.size = ImVec2(400.0f * megamol::gui::gui_scaling.Get(), 500.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
     this->win_config.flags = ImGuiWindowFlags_NoScrollbar;
-    this->win_config.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F10, core::view::Modifier::NONE);
+    this->win_config.hotkey =
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F10, core::view::Modifier::NONE);
 }
 
 
@@ -107,7 +109,7 @@ bool ParameterList::Draw() {
             bool group_header_open = group.first.empty();
             if (!group_header_open) {
                 group_header_open = gui_utils::GroupHeader(
-                        megamol::gui::HeaderType::MODULE_GROUP, group.first, search_string, override_header_state);
+                    megamol::gui::HeaderType::MODULE_GROUP, group.first, search_string, override_header_state);
                 indent = true;
                 ImGui::Indent();
             }
@@ -123,7 +125,7 @@ bool ParameterList::Draw() {
 
                     // Draw module header
                     bool module_header_open = gui_utils::GroupHeader(
-                            megamol::gui::HeaderType::MODULE, module_label, search_string, override_header_state);
+                        megamol::gui::HeaderType::MODULE, module_label, search_string, override_header_state);
                     // Module description as hover tooltip
                     this->tooltip.ToolTip(module_ptr->Description(), ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
 
@@ -139,8 +141,8 @@ bool ParameterList::Draw() {
                         // Deleting module's parameters is not available in main parameter window.
                         if (this->WindowID() != AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
                             if (ImGui::MenuItem("Delete from List")) {
-                                auto find_iter = std::find(this->win_modules_list.begin(),
-                                                           this->win_modules_list.end(), module_label);
+                                auto find_iter = std::find(
+                                    this->win_modules_list.begin(), this->win_modules_list.end(), module_label);
                                 // Break if module name is not contained in list
                                 if (find_iter != this->win_modules_list.end()) {
                                     this->win_modules_list.erase(find_iter);
@@ -154,7 +156,7 @@ bool ParameterList::Draw() {
                     module_label.resize(dnd_size);
                     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
                         ImGui::SetDragDropPayload(
-                                "DND_COPY_MODULE_PARAMETERS", module_label.c_str(), (module_label.size() * sizeof(char)));
+                            "DND_COPY_MODULE_PARAMETERS", module_label.c_str(), (module_label.size() * sizeof(char)));
                         ImGui::TextUnformatted(module_label.c_str());
                         ImGui::EndDragDropSource();
                     }
@@ -162,9 +164,8 @@ bool ParameterList::Draw() {
                     // Draw parameters
                     if (module_header_open) {
                         module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
-                              vislib::math::Ternary(this->win_extended_mode), true,
-                              Parameter::WidgetScope::LOCAL, this->win_tfeditor_ptr,
-                              override_header_state, nullptr);
+                            vislib::math::Ternary(this->win_extended_mode), true, Parameter::WidgetScope::LOCAL,
+                            this->win_tfeditor_ptr, override_header_state, nullptr);
                     }
 
                     ImGui::PopID();
@@ -204,27 +205,32 @@ void ParameterList::PopUps() {
 }
 
 
-void ParameterList::SpecificStateFromJSON(const nlohmann::json &in_json) {
+void ParameterList::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
     for (auto& header_item : in_json.items()) {
         if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
-            for (auto &config_item : header_item.value().items()) {
+            for (auto& config_item : header_item.value().items()) {
                 if (config_item.key() == this->Name()) {
                     auto config_values = config_item.value();
 
-                    megamol::core::utility::get_json_value<bool>(config_values, {"param_show_hotkeys"}, &this->win_show_param_hotkeys);
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"param_show_hotkeys"}, &this->win_show_param_hotkeys);
                     this->win_modules_list.clear();
                     if (config_values.at("param_modules_list").is_array()) {
                         size_t tmp_size = config_values.at("param_modules_list").size();
                         for (size_t i = 0; i < tmp_size; ++i) {
                             std::string value;
-                            megamol::core::utility::get_json_value<std::string>(config_values.at("param_modules_list")[i], {}, &value);
+                            megamol::core::utility::get_json_value<std::string>(
+                                config_values.at("param_modules_list")[i], {}, &value);
                             this->win_modules_list.emplace_back(value);
                         }
                     } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] JSON state: Failed to read 'param_modules_list' as array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] JSON state: Failed to read 'param_modules_list' as array. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                     }
-                    megamol::core::utility::get_json_value<bool>(config_values, {"param_extended_mode"},&this->win_extended_mode);
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"param_extended_mode"}, &this->win_extended_mode);
                 }
             }
         }
@@ -232,8 +238,8 @@ void ParameterList::SpecificStateFromJSON(const nlohmann::json &in_json) {
 }
 
 
-void ParameterList::SpecificStateToJSON(nlohmann::json &inout_json) {
-                    
+void ParameterList::SpecificStateToJSON(nlohmann::json& inout_json) {
+
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_show_hotkeys"] = this->win_show_param_hotkeys;
     for (auto& pm : this->win_modules_list) {
         gui_utils::Utf8Encode(pm);

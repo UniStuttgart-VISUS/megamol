@@ -11,9 +11,9 @@
 
 
 #include "AbstractWindow.h"
+#include "widgets/StringSearchWidget.h"
 #include "windows/Configurator.h"
 #include "windows/TransferFunctionEditor.h"
-#include "widgets/StringSearchWidget.h"
 
 
 namespace megamol {
@@ -25,12 +25,13 @@ namespace gui {
      */
     class ParameterList : public AbstractWindow {
     public:
-
         explicit ParameterList(const std::string& window_name);
         ~ParameterList() = default;
 
         // Call once
-        void SetData(std::shared_ptr<Configurator>& win_configurator, std::shared_ptr<TransferFunctionEditor>& win_tfeditor, const std::function<void(const std::string &window_name)>& add_window) {
+        void SetData(std::shared_ptr<Configurator>& win_configurator,
+            std::shared_ptr<TransferFunctionEditor>& win_tfeditor,
+            const std::function<void(const std::string& window_name)>& add_window) {
             this->win_configurator_ptr = win_configurator;
             this->win_tfeditor_ptr = win_tfeditor;
             this->add_window_func = add_window;
@@ -49,11 +50,11 @@ namespace gui {
         std::shared_ptr<Configurator> win_configurator_ptr;
         std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr;
 
-        std::function<void(const std::string &window_name)> add_window_func;
+        std::function<void(const std::string& window_name)> add_window_func;
 
-        bool win_show_param_hotkeys;                // [SAVED] flag to toggle showing only parameter hotkeys
-        std::vector<std::string> win_modules_list;  // [SAVED] modules to show in a parameter window (show all if empty)
-        bool win_extended_mode;                     // [SAVED] flag toggling between Expert and Basic parameter mode.
+        bool win_show_param_hotkeys;               // [SAVED] flag to toggle showing only parameter hotkeys
+        std::vector<std::string> win_modules_list; // [SAVED] modules to show in a parameter window (show all if empty)
+        bool win_extended_mode;                    // [SAVED] flag toggling between Expert and Basic parameter mode.
 
         // Widgets
         StringSearchWidget search_widget;

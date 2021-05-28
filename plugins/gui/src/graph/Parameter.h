@@ -11,11 +11,11 @@
 
 
 #include <variant>
-#include "windows/TransferFunctionEditor.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterOrbitalWidget.h"
+#include "windows/TransferFunctionEditor.h"
 
 
 namespace megamol {

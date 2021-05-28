@@ -78,7 +78,8 @@ bool megamol::gui::Module::DeleteCallSlots() {
 
     try {
         for (auto& callslots_map : this->callslots) {
-            for (auto callslot_iter = callslots_map.second.begin(); callslot_iter != callslots_map.second.end(); callslot_iter++) {
+            for (auto callslot_iter = callslots_map.second.begin(); callslot_iter != callslots_map.second.end();
+                 callslot_iter++) {
                 (*callslot_iter)->DisconnectCalls();
                 (*callslot_iter)->DisconnectParentModule();
 
@@ -254,9 +255,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         ImGui::TextDisabled("Module");
                         ImGui::Separator();
 
-                        if (ImGui::MenuItem("Delete", state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM]
-                                                          .keycode.ToString()
-                                                          .c_str())) {
+                        if (ImGui::MenuItem("Delete",
+                                state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
                             state.interact.process_deletion = true;
                         }
                         if (ImGui::MenuItem("Layout", nullptr, false, !singleselect)) {

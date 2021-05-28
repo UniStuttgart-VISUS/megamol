@@ -22,7 +22,6 @@ namespace gui {
      */
     class PerformanceMonitor : public AbstractWindow {
     public:
-
         enum TimingMode { TIMINGMODE_FPS, TIMINGMODE_MS };
 
         explicit PerformanceMonitor(const std::string& window_name);
@@ -48,11 +47,11 @@ namespace gui {
         int win_buffer_size = 20;             // [SAVED] maximum count of values in value array
         float win_refresh_rate = 2.0f;        // [SAVED] maximum delay when fps/ms value should be renewed.
         TimingMode win_mode = TIMINGMODE_FPS; // [SAVED] mode for displaying either FPS or MS
-        float win_current_delay = 0.0f;         // current delay between frames
-        std::vector<float> win_ms_values;       // current ms values
-        std::vector<float> win_fps_values;      // current fps values
-        float win_ms_max = 1.0f;                // current ms plot scaling factor
-        float win_fps_max = 1.0f;               // current fps plot scaling factor
+        float win_current_delay = 0.0f;       // current delay between frames
+        std::vector<float> win_ms_values;     // current ms values
+        std::vector<float> win_fps_values;    // current fps values
+        float win_ms_max = 1.0f;              // current ms plot scaling factor
+        float win_fps_max = 1.0f;             // current fps plot scaling factor
 
         size_t frame_id;
         float averaged_fps;

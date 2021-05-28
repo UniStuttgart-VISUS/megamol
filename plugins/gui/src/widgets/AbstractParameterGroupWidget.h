@@ -53,8 +53,7 @@ namespace gui {
         // FUNCTIONS ----------------------------------------------------------
 
         explicit AbstractParameterGroupWidget(ImGuiID uid)
-                : megamol::core::param::AbstractParamPresentation(), active(false), name(), uid(uid){
-        };
+                : megamol::core::param::AbstractParamPresentation(), active(false), name(), uid(uid){};
     };
 
 

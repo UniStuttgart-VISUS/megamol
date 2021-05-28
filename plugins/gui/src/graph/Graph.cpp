@@ -893,7 +893,7 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_full_name
 
 
 bool Graph::ToggleGraphEntry() {
-    
+
     auto module_graph_entry_iter = this->modules.begin();
     // Search for first graph entry and set next view to graph entry (= graph entry point)
     for (auto module_iter = this->modules.begin(); module_iter != this->modules.end(); module_iter++) {
@@ -911,8 +911,7 @@ bool Graph::ToggleGraphEntry() {
             }
         }
     }
-    if ((module_graph_entry_iter == this->modules.begin()) ||
-        (module_graph_entry_iter != this->modules.end())) {
+    if ((module_graph_entry_iter == this->modules.begin()) || (module_graph_entry_iter != this->modules.end())) {
         // Search for next graph entry
         for (auto module_iter = module_graph_entry_iter; module_iter != this->modules.end(); module_iter++) {
             if ((*module_iter)->IsView()) {
@@ -1855,7 +1854,9 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
                     if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
                         // Draw parameters
-                        selected_mod_ptr->GUIParameterGroups().Draw(selected_mod_ptr->Parameters(), "", vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::LOCAL, nullptr, GUI_INVALID_ID, nullptr);
+                        selected_mod_ptr->GUIParameterGroups().Draw(selected_mod_ptr->Parameters(), "",
+                            vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::LOCAL, nullptr,
+                            GUI_INVALID_ID, nullptr);
 
                         ImVec2 popup_pos = ImGui::GetWindowPos();
                         ImVec2 popup_size = ImGui::GetWindowSize();
@@ -1998,7 +1999,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
         ImGui::InputText("###current_graph_entry_name", &this->gui_current_graph_entry_name, ImGuiInputTextFlags_None);
         gui_utils::Utf8Decode(this->gui_current_graph_entry_name);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-                selected_mod_ptr->SetGraphEntryName(this->gui_current_graph_entry_name);
+            selected_mod_ptr->SetGraphEntryName(this->gui_current_graph_entry_name);
         } else {
             this->gui_current_graph_entry_name = selected_mod_ptr->GraphEntryName();
         }
@@ -2388,10 +2389,10 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
     if (this->gui_graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].is_pressed) {
         this->gui_search_widget.SetSearchFocus(true);
     }
-    std::string help_text =
-        "[" + this->gui_graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].keycode.ToString() +
-        "] Set keyboard focus to search input field.\n"
-        "Case insensitive substring search in module and parameter names.";
+    std::string help_text = "[" +
+                            this->gui_graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].keycode.ToString() +
+                            "] Set keyboard focus to search input field.\n"
+                            "Case insensitive substring search in module and parameter names.";
     this->gui_search_widget.Widget("graph_parameter_search", help_text);
 
 
@@ -2638,8 +2639,7 @@ void megamol::gui::Graph::layout_graph() {
 }
 
 
-void megamol::gui::Graph::layout(
-    const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, ImVec2 init_position) {
+void megamol::gui::Graph::layout(const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, ImVec2 init_position) {
 
     struct LayoutItem {
         ModulePtr_t module_ptr;
@@ -2870,8 +2870,7 @@ void megamol::gui::Graph::layout(
             if (layer_item.module_ptr != nullptr) {
                 if (this->gui_graph_state.interact.call_show_label) {
                     for (auto& callerslot_ptr : layer_item.module_ptr->CallSlots(CallSlotType::CALLER)) {
-                        if (callerslot_ptr->CallsConnected() &&
-                            this->connected_callslot(ms, gs, callerslot_ptr)) {
+                        if (callerslot_ptr->CallsConnected() && this->connected_callslot(ms, gs, callerslot_ptr)) {
                             for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                 auto call_name_length = ImGui::CalcTextSize(call_ptr->ClassName().c_str()).x;
                                 max_call_width = std::max(call_name_length, max_call_width);
@@ -2881,8 +2880,7 @@ void megamol::gui::Graph::layout(
                 }
                 if (this->gui_graph_state.interact.call_show_slots_label) {
                     for (auto& callerslot_ptr : layer_item.module_ptr->CallSlots(CallSlotType::CALLER)) {
-                        if (callerslot_ptr->CallsConnected() &&
-                            this->connected_callslot(ms, gs, callerslot_ptr)) {
+                        if (callerslot_ptr->CallsConnected() && this->connected_callslot(ms, gs, callerslot_ptr)) {
                             for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                 auto call_name_length = ImGui::CalcTextSize(call_ptr->SlotsLabel().c_str()).x;
                                 max_call_width = std::max(call_name_length, max_call_width);
@@ -2900,8 +2898,7 @@ void megamol::gui::Graph::layout(
                 if (this->gui_graph_state.interact.call_show_label) {
                     for (auto& interfaceslot_slot : layer_item.group_ptr->InterfaceSlots(CallSlotType::CALLER)) {
                         for (auto& callerslot_ptr : interfaceslot_slot->CallSlots()) {
-                            if (callerslot_ptr->CallsConnected() &&
-                                this->connected_callslot(ms, gs, callerslot_ptr)) {
+                            if (callerslot_ptr->CallsConnected() && this->connected_callslot(ms, gs, callerslot_ptr)) {
                                 for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                     auto call_name_length = ImGui::CalcTextSize(call_ptr->ClassName().c_str()).x;
                                     max_call_width = std::max(call_name_length, max_call_width);
@@ -2913,8 +2910,7 @@ void megamol::gui::Graph::layout(
                 if (this->gui_graph_state.interact.call_show_slots_label) {
                     for (auto& interfaceslot_slot : layer_item.group_ptr->InterfaceSlots(CallSlotType::CALLER)) {
                         for (auto& callerslot_ptr : interfaceslot_slot->CallSlots()) {
-                            if (callerslot_ptr->CallsConnected() &&
-                                this->connected_callslot(ms, gs, callerslot_ptr)) {
+                            if (callerslot_ptr->CallsConnected() && this->connected_callslot(ms, gs, callerslot_ptr)) {
                                 for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                     auto call_name_length = ImGui::CalcTextSize(call_ptr->SlotsLabel().c_str()).x;
                                     max_call_width = std::max(call_name_length, max_call_width);

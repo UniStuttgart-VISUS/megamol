@@ -32,7 +32,6 @@ namespace gui {
      */
     class TransferFunctionEditor : public AbstractWindow {
     public:
-
         TransferFunctionEditor(const std::string& window_name, bool non_window_mode);
         ~TransferFunctionEditor() = default;
 
@@ -138,10 +137,10 @@ namespace gui {
         bool plot_dragging;
         std::string request_parameter_name_connect;
 
-        bool win_view_minimized;        // [SAVED] flag indicating minimized window state
-        bool win_view_vertical;         // [SAVED] flag indicating vertical window state
-        std::string win_connected_param_name;   // [SAVED] last active parameter connected to editor
-        bool win_tfe_reset;             // flag for reset of tfe window on state loading
+        bool win_view_minimized;              // [SAVED] flag indicating minimized window state
+        bool win_view_vertical;               // [SAVED] flag indicating vertical window state
+        std::string win_connected_param_name; // [SAVED] last active parameter connected to editor
+        bool win_tfe_reset;                   // flag for reset of tfe window on state loading
 
         // Widgets
         HoverToolTip tooltip;
@@ -155,7 +154,8 @@ namespace gui {
 
         bool addNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
         bool paintModeNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
-        bool changeNodeSelection(unsigned int new_selected_node_index, unsigned int new_selected_channel_index, ImVec2 new_selected_node_drag_delta);
+        bool changeNodeSelection(unsigned int new_selected_node_index, unsigned int new_selected_channel_index,
+            ImVec2 new_selected_node_drag_delta);
         bool moveSelectedNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
         bool deleteNode(unsigned int node_index);
         void sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const;

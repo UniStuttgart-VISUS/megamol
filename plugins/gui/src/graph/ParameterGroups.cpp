@@ -15,8 +15,7 @@ using namespace megamol::core;
 using namespace megamol::gui;
 
 
-megamol::gui::ParameterGroups::ParameterGroups()
-        : tooltip(), cube_widget_group(), animation_group(), group_widgets() {
+megamol::gui::ParameterGroups::ParameterGroups() : tooltip(), cube_widget_group(), animation_group(), group_widgets() {
 
     // Create/register available group widgets
     this->group_widgets.emplace_back(static_cast<AbstractParameterGroupWidget*>(&this->cube_widget_group));
@@ -26,8 +25,8 @@ megamol::gui::ParameterGroups::ParameterGroups()
 
 bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search,
     vislib::math::Ternary in_extended, bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
-    std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
-    ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer) {
+    std::shared_ptr<TransferFunctionEditor> tfeditor_ptr, ImGuiID in_override_header_state,
+    PickingBuffer* inout_picking_buffer) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 
@@ -148,14 +147,13 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
             if (in_scope == Parameter::WidgetScope::LOCAL) {
                 /// LOCAL
 
-                ParameterGroups::DrawGroupedParameters(group_name, group.second, in_search, in_scope,
-                                                       tfeditor_ptr, in_override_header_state);
+                ParameterGroups::DrawGroupedParameters(
+                    group_name, group.second, in_search, in_scope, tfeditor_ptr, in_override_header_state);
             } else {
                 /// GLOBAL
 
                 for (auto& param : group.second) {
-                    ParameterGroups::DrawParameter(
-                        (*param), in_search, in_scope, tfeditor_ptr);
+                    ParameterGroups::DrawParameter((*param), in_search, in_scope, tfeditor_ptr);
                 }
             }
         }
@@ -237,7 +235,8 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
 
 void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_group_name,
     AbstractParameterGroupWidget::ParamPtrVector_t& params, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr, ImGuiID in_override_header_state) {
+    megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
+    ImGuiID in_override_header_state) {
 
     if (in_scope != Parameter::WidgetScope::LOCAL) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

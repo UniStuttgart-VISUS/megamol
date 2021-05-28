@@ -14,10 +14,10 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "AbstractWindow.h"
 #include "imgui.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
-#include "AbstractWindow.h"
 
 
 namespace megamol {
@@ -28,7 +28,6 @@ namespace gui {
      */
     class WindowCollection {
     public:
-
         WindowCollection();
         ~WindowCollection() = default;
 
@@ -39,10 +38,11 @@ namespace gui {
         bool StateFromJSON(const nlohmann::json& in_json);
         bool StateToJSON(nlohmann::json& inout_json);
 
-        bool AddWindow(const std::string& window_name, const std::function<void(AbstractWindow::BasicConfig&)>& callback);
+        bool AddWindow(
+            const std::string& window_name, const std::function<void(AbstractWindow::BasicConfig&)>& callback);
 
         template<typename T>
-        bool AddWindow(const std::string &window_name);
+        bool AddWindow(const std::string& window_name);
 
         inline void EnumWindows(const std::function<void(AbstractWindow&)>& cb) {
             // Needs fixed size if window is added while looping
@@ -72,25 +72,24 @@ namespace gui {
         bool DeleteWindow(size_t hash_id);
 
     private:
-
         // VARIABLES ------------------------------------------------------
 
         std::vector<std::shared_ptr<AbstractWindow>> windows;
     };
 
     template<typename T>
-    bool WindowCollection::AddWindow(const std::string &window_name) {
+    bool WindowCollection::AddWindow(const std::string& window_name) {
 
         if (window_name.empty()) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] Invalid window name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Invalid window name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         auto win_hash = std::hash<std::string>()(window_name);
         if (this->WindowExists(win_hash)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] Found already existing window with name '%s'. Window names must be unique. [%s, %s, line %d]\n",
-                    window_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Found already existing window with name '%s'. Window names must be unique. [%s, %s, line %d]\n",
+                window_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         this->windows.push_back(std::make_shared<T>(window_name));

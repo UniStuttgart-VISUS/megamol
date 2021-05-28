@@ -33,10 +33,14 @@ megamol::gui::Configurator::Configurator(const std::string& window_name)
         , tooltip() {
 
     // init hotkeys
-    this->hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = {core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = {core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
+    this->hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = {
+        core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
+    this->hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = {
+        core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
     this->hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = {core::view::KeyCode(core::view::Key::KEY_DELETE), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = {megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT), false};
+    this->hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = {
+        megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+        false};
 
     this->graph_state.graph_zoom_font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.graph_width = 0.0f;
@@ -51,7 +55,8 @@ megamol::gui::Configurator::Configurator(const std::string& window_name)
     this->win_config.size = ImVec2(750.0f * megamol::gui::gui_scaling.Get(), 500.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
     this->win_config.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
-    this->win_config.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F11, core::view::Modifier::NONE);
+    this->win_config.hotkey =
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F11, core::view::Modifier::NONE);
 }
 
 
@@ -180,9 +185,9 @@ void megamol::gui::Configurator::PopUps() {
         bool valid_double_click = (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->IsCanvasHoverd() &&
                                    (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup));
         bool valid_double_click_callslot =
-                (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->IsCanvasHoverd() &&
-                 (selected_callslot_uid != GUI_INVALID_ID) &&
-                 ((!this->show_module_list_popup) || (this->last_selected_callslot_uid != selected_callslot_uid)));
+            (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->IsCanvasHoverd() &&
+                (selected_callslot_uid != GUI_INVALID_ID) &&
+                ((!this->show_module_list_popup) || (this->last_selected_callslot_uid != selected_callslot_uid)));
 
         if (valid_double_click || valid_double_click_callslot) {
             this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].is_pressed = true;
@@ -227,7 +232,7 @@ void megamol::gui::Configurator::PopUps() {
         if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
 
             this->draw_window_module_list(
-                    std::max(0.0f, (popup_width - offset_x)), std::max(0.0f, (popup_height - offset_y)), true);
+                std::max(0.0f, (popup_width - offset_x)), std::max(0.0f, (popup_height - offset_y)), true);
 
             bool module_list_popup_hovered = false;
             if ((ImGui::GetMousePos().x >= this->module_list_popup_pos.x) &&
@@ -271,8 +276,8 @@ void megamol::gui::Configurator::draw_window_menu() {
 
             // Save currently active project to LUA file
             if (ImGui::MenuItem("Save Project",
-                    this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT].keycode.ToString().c_str(),
-                    false, ((this->graph_state.graph_selected_uid != GUI_INVALID_ID)))) {
+                    this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT].keycode.ToString().c_str(), false,
+                    ((this->graph_state.graph_selected_uid != GUI_INVALID_ID)))) {
                 bool is_running_graph = false;
                 if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
                     is_running_graph = graph_ptr->IsRunning();
@@ -316,8 +321,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
     ImGui::TextUnformatted("Available Modules");
     ImGui::Separator();
 
-    std::string help_text = "[" +
-                            this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].keycode.ToString() +
+    std::string help_text = "[" + this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].keycode.ToString() +
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in module names.";
     this->search_widget.Widget("configurator_module_search", help_text, apply_focus);

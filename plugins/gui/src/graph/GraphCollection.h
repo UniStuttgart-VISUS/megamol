@@ -97,14 +97,15 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool add_update_project_from_core(ImGuiID in_graph_uid, megamol::core::MegaMolGraph& megamol_graph, bool use_stock);
+        bool add_update_project_from_core(
+            ImGuiID in_graph_uid, megamol::core::MegaMolGraph& megamol_graph, bool use_stock);
 
         std::string get_state(ImGuiID graph_id, const std::string& filename);
 
         bool get_call_stock_data(
             Call::StockCall& call, std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
-        bool get_module_stock_data(Module::StockModule& mod,
-            std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
+        bool get_module_stock_data(
+            Module::StockModule& mod, std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc);
 
         bool read_project_command_arguments(
             const std::string& line, size_t arg_count, std::vector<std::string>& out_args) const;

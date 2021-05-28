@@ -17,9 +17,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget()
-        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
-        , image_buttons()
-        , tooltip() {
+        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID()), image_buttons(), tooltip() {
 
     this->InitPresentation(ParamType_t::GROUP_ANIMATION);
     this->name = "anim";
@@ -220,8 +218,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
             // GLOBAL
 
             ImGui::End();
-        }
-        else if (in_scope == Parameter::WidgetScope::LOCAL) {
+        } else if (in_scope == Parameter::WidgetScope::LOCAL) {
             /// LOCAL
             // Alternative LOCAL presentation
 

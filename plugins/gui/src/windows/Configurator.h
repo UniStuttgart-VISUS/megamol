@@ -27,7 +27,6 @@ namespace gui {
      */
     class Configurator : public AbstractWindow {
     public:
-
         explicit Configurator(const std::string& window_name);
         ~Configurator() = default;
 

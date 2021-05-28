@@ -7,8 +7,8 @@
 
 
 #include "FileBrowserWidget.h"
-#include "imgui_stdlib.h"
 #include "gui_utils.h"
+#include "imgui_stdlib.h"
 
 
 using namespace megamol;
@@ -395,7 +395,8 @@ std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string
 }
 
 
-bool megamol::gui::FileBrowserWidget::validate_split_path(const std::string& in_path_file, std::string& out_path, std::string& out_file) const {
+bool megamol::gui::FileBrowserWidget::validate_split_path(
+    const std::string& in_path_file, std::string& out_path, std::string& out_file) const {
 
     // Splitting file path into path string and file string
     try {

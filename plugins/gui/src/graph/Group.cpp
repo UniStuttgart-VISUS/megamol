@@ -455,8 +455,8 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;
                 }
-                if (ImGui::MenuItem("Delete",
-                        state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
+                if (ImGui::MenuItem(
+                        "Delete", state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
                     state.interact.process_deletion = true;
                 }
                 ImGui::EndPopup();
@@ -649,8 +649,9 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
             max_label_length = (2.0f * max_label_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
         }
     }
-    float group_width = std::max((1.5f * ImGui::CalcTextSize(this->name.c_str()).x / in_canvas.zooming), max_label_length) +
-                  (3.0f * GUI_SLOT_RADIUS);
+    float group_width =
+        std::max((1.5f * ImGui::CalcTextSize(this->name.c_str()).x / in_canvas.zooming), max_label_length) +
+        (3.0f * GUI_SLOT_RADIUS);
 
     // HEIGHT
     float group_height = std::max((3.0f * line_height),

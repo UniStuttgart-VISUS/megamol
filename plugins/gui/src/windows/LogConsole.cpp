@@ -76,7 +76,8 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
     this->win_config.size = ImVec2(500.0f * megamol::gui::gui_scaling.Get(), 50.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
     this->win_config.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
-    this->win_config.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F9, core::view::Modifier::NONE);
+    this->win_config.hotkey =
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F9, core::view::Modifier::NONE);
 }
 
 
@@ -164,8 +165,7 @@ bool megamol::gui::LogConsole::Draw() {
         // Log Level
         ImGui::TextUnformatted("Show");
         ImGui::SameLine();
-        if (ImGui::RadioButton(
-                "Errors", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
+        if (ImGui::RadioButton("Errors", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
             if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
                 this->win_log_level = megamol::core::utility::log::Log::LEVEL_NONE;
             } else {
@@ -174,8 +174,7 @@ bool megamol::gui::LogConsole::Draw() {
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton(
-                "Warnings", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
+        if (ImGui::RadioButton("Warnings", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
             if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN) {
                 this->win_log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
             } else {
@@ -184,8 +183,7 @@ bool megamol::gui::LogConsole::Draw() {
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton(
-                "Infos", (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
+        if (ImGui::RadioButton("Infos", (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
             if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
                 this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             } else {
@@ -315,16 +313,18 @@ void megamol::gui::LogConsole::draw_popup(LogPopUpData& log_popup) {
 }
 
 
-void LogConsole::SpecificStateFromJSON(const nlohmann::json &in_json) {
+void LogConsole::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
     for (auto& header_item : in_json.items()) {
         if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
-            for (auto &config_item : header_item.value().items()) {
+            for (auto& config_item : header_item.value().items()) {
                 if (config_item.key() == this->Name()) {
                     auto config_values = config_item.value();
 
-                    megamol::core::utility::get_json_value<unsigned int>(config_values, {"log_level"}, &this->win_log_level);
-                    megamol::core::utility::get_json_value<bool>(config_values, {"log_force_open"}, &this->win_log_force_open);
+                    megamol::core::utility::get_json_value<unsigned int>(
+                        config_values, {"log_level"}, &this->win_log_level);
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"log_force_open"}, &this->win_log_force_open);
                 }
             }
         }
@@ -332,7 +332,7 @@ void LogConsole::SpecificStateFromJSON(const nlohmann::json &in_json) {
 }
 
 
-void LogConsole::SpecificStateToJSON(nlohmann::json &inout_json) {
+void LogConsole::SpecificStateToJSON(nlohmann::json& inout_json) {
 
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["log_level"] = this->win_log_level;
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["log_force_open"] = this->win_log_force_open;

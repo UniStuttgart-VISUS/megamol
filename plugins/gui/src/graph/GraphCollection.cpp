@@ -22,8 +22,7 @@ megamol::gui::GraphCollection::GraphCollection()
         , calls_stock()
         , graph_name_uid(0)
         , gui_file_browser()
-        , gui_graph_delete_uid(GUI_INVALID_ID) {
-}
+        , gui_graph_delete_uid(GUI_INVALID_ID) {}
 
 
 bool megamol::gui::GraphCollection::AddEmptyProject() {
@@ -299,7 +298,8 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 }
 
 
-bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::MegaMolGraph& megamol_graph) {
+bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
+    ImGuiID& inout_graph_uid, megamol::core::MegaMolGraph& megamol_graph) {
 
     bool created_new_graph = false;
     ImGuiID valid_graph_id = inout_graph_uid;
@@ -336,7 +336,8 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
 }
 
 
-bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_graph_uid, megamol::core::MegaMolGraph& megamol_graph, bool use_stock) {
+bool megamol::gui::GraphCollection::add_update_project_from_core(
+    ImGuiID in_graph_uid, megamol::core::MegaMolGraph& megamol_graph, bool use_stock) {
 
     // Apply updates from core graph -> gui graph
     try {
@@ -403,7 +404,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                 std::string module_description = "[n/a]";
                 std::string module_plugin = "[n/a]";
                 /// XXX ModuleDescriptionManager is only available via core instance graph yet.
-                //if (use_core_instance) {
+                // if (use_core_instance) {
                 //    auto mod_desc =
                 //        core_instance->GetModuleDescriptionManager().Find(vislib::StringA(class_name.c_str()));
                 //    if (mod_desc != nullptr) {
@@ -577,8 +578,8 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
             if (!this->project_separate_name_and_namespace(
                     call.request.from, call_caller_parent_name, call_caller_name)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n",
-                    call.request.from.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                    "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n", call.request.from.c_str(),
+                    __FILE__, __FUNCTION__, __LINE__);
             }
             std::string call_callee_name;
             std::string call_callee_parent_name;

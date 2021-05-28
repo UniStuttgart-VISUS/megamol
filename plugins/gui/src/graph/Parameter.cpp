@@ -59,7 +59,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , gui_rotation_widget()
         , tf_string_hash(0)
         , tf_editor_external_ptr(nullptr)
-        , tf_editor_inplace(std::string("inplace_tfeditor_parameter_" + std::to_string(uid)) ,true)
+        , tf_editor_inplace(std::string("inplace_tfeditor_parameter_" + std::to_string(uid)), true)
         , tf_use_external_editor(false)
         , tf_show_editor(false)
         , tf_editor_hash(0) {
@@ -442,17 +442,16 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         auto minv = p_ptr->MinValue();
         auto maxv = p_ptr->MaxValue();
         auto val = p_ptr->Value();
-        out_param =
-            std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR2F, std::monostate(),
-                glm::vec2(minv.X(), minv.Y()), glm::vec2(maxv.X(), maxv.Y()), param_name, description);
+        out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR2F,
+            std::monostate(), glm::vec2(minv.X(), minv.Y()), glm::vec2(maxv.X(), maxv.Y()), param_name, description);
         out_param->SetValue(glm::vec2(val.X(), val.Y()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector3fParam>()) {
         auto minv = p_ptr->MinValue();
         auto maxv = p_ptr->MaxValue();
         auto val = p_ptr->Value();
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::VECTOR3F,
-            std::monostate(), glm::vec3(minv.X(), minv.Y(), minv.Z()),
-            glm::vec3(maxv.X(), maxv.Y(), maxv.Z()), param_name, description);
+            std::monostate(), glm::vec3(minv.X(), minv.Y(), minv.Z()), glm::vec3(maxv.X(), maxv.Y(), maxv.Z()),
+            param_name, description);
         out_param->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::Vector4fParam>()) {
         auto minv = p_ptr->MinValue();
@@ -1646,7 +1645,8 @@ bool megamol::gui::Parameter::widget_int(
             ImGui::SliderInt(label.c_str(), &std::get<int>(this->gui_widget_store), slider_min, slider_max);
             this->gui_help = "[Ctrl + Click] to turn slider into an input box.";
         } else if (p == Present_t::Drag) {
-            ImGui::DragInt(label.c_str(), &std::get<int>(this->gui_widget_store), static_cast<float>(min_step_size), minv, maxv);
+            ImGui::DragInt(
+                label.c_str(), &std::get<int>(this->gui_widget_store), static_cast<float>(min_step_size), minv, maxv);
             this->gui_help = "[Ctrl + Click] to turn slider into an input box.";
         } else { // Present_t::Basic
             ImGui::InputInt(label.c_str(), &std::get<int>(this->gui_widget_store), min_step_size, max_step_size,
@@ -1706,8 +1706,7 @@ bool megamol::gui::Parameter::widget_float(
         // Value
         if (p == Present_t::Slider) {
             const float offset = 2.0f;
-            auto slider_min =
-                (minv > -FLT_MAX) ? (minv) : ((val == 0.0f) ? (-offset) : (val - (offset * val)));
+            auto slider_min = (minv > -FLT_MAX) ? (minv) : ((val == 0.0f) ? (-offset) : (val - (offset * val)));
             auto slider_max = (maxv < FLT_MAX) ? (maxv) : ((val == 0.0f) ? (offset) : (val + (offset * val)));
             ImGui::SliderFloat(label.c_str(), &std::get<float>(this->gui_widget_store), slider_min, slider_max,
                 this->gui_float_format.c_str());

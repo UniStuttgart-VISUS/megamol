@@ -14,11 +14,11 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "gui_utils.h"
 #include "imgui.h"
+#include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
-#include "mmcore/utility/JSONHelper.h"
-#include "gui_utils.h"
 
 
 namespace megamol {
@@ -29,7 +29,6 @@ namespace gui {
      */
     class AbstractWindow {
     public:
-
         /** Identifiers for the predefined window draw callbacks. */
         /// XXX Keep explicit numbers for backward compatibility
         enum WindowConfigID {
@@ -43,15 +42,15 @@ namespace gui {
         };
 
         struct BasicConfig {
-            bool show = false;                                  // [SAVED] show/hide window
-            ImGuiWindowFlags flags = 0;                         // [SAVED] imgui window flags
-            megamol::core::view::KeyCode hotkey;                // [SAVED] hotkey for opening/closing window
-            ImVec2 position = ImVec2(0.0f, 0.0f);        // [SAVED] position for reset on state loading (current position)
-            ImVec2 size = ImVec2(0.0f, 0.0f);            // [SAVED] size for reset on state loading (current size)
-            ImVec2 reset_size = ImVec2(0.0f, 0.0f);      // [SAVED] minimum window size for soft reset
-            ImVec2 reset_position = ImVec2(0.0f, 0.0f);  // [SAVED] window position for minimize reset
-            bool collapsed = false;                             // [SAVED] flag indicating whether window is collapsed or not
-            bool reset_pos_size = true;                         // flag indicates whether to reset window position and size
+            bool show = false;                      // [SAVED] show/hide window
+            ImGuiWindowFlags flags = 0;             // [SAVED] imgui window flags
+            megamol::core::view::KeyCode hotkey;    // [SAVED] hotkey for opening/closing window
+            ImVec2 position = ImVec2(0.0f, 0.0f);   // [SAVED] position for reset on state loading (current position)
+            ImVec2 size = ImVec2(0.0f, 0.0f);       // [SAVED] size for reset on state loading (current size)
+            ImVec2 reset_size = ImVec2(0.0f, 0.0f); // [SAVED] minimum window size for soft reset
+            ImVec2 reset_position = ImVec2(0.0f, 0.0f); // [SAVED] window position for minimize reset
+            bool collapsed = false;                     // [SAVED] flag indicating whether window is collapsed or not
+            bool reset_pos_size = true;                 // flag indicates whether to reset window position and size
         };
 
         typedef std::function<void(AbstractWindow::BasicConfig&)> VolatileDrawCallback_t;
@@ -95,7 +94,7 @@ namespace gui {
         }
 
         void SetVolatileCallback(std::function<void(AbstractWindow::BasicConfig&)> const& callback) {
-            this->volatile_draw_callback = const_cast<std::function<void(AbstractWindow::BasicConfig &)> &>(callback);
+            this->volatile_draw_callback = const_cast<std::function<void(AbstractWindow::BasicConfig&)>&>(callback);
             this->window_id = WINDOW_ID_VOLATILE;
         }
 
@@ -114,31 +113,31 @@ namespace gui {
         // --------------------------------------------------------------------
         // IMPLEMENT
 
-        virtual bool Update() { return true; }
+        virtual bool Update() {
+            return true;
+        }
 
         virtual bool Draw() {
             if ((window_id == WINDOW_ID_VOLATILE) && (volatile_draw_callback != nullptr)) {
-               volatile_draw_callback(this->win_config);
-               return true;
+                volatile_draw_callback(this->win_config);
+                return true;
             }
         }
 
-        virtual void PopUps() { }
+        virtual void PopUps() {}
 
-        virtual void SpecificStateToJSON(nlohmann::json& inout_json) {  }
+        virtual void SpecificStateToJSON(nlohmann::json& inout_json) {}
 
-        virtual void SpecificStateFromJSON(const nlohmann::json& in_json) {  };
+        virtual void SpecificStateFromJSON(const nlohmann::json& in_json){};
 
     protected:
-
         BasicConfig win_config;
         megamol::gui::HotkeyMap_t hotkeys;
 
     private:
-
-        size_t hash_id;                    // unique hash generated from name to omit string comparison
-        std::string name;                  // [SAVED] unique name of the window
-        WindowConfigID window_id;          // [SAVED] ID of the predefined callback drawing the window content
+        size_t hash_id;           // unique hash generated from name to omit string comparison
+        std::string name;         // [SAVED] unique name of the window
+        WindowConfigID window_id; // [SAVED] ID of the predefined callback drawing the window content
         VolatileDrawCallback_t volatile_draw_callback;
     };
 

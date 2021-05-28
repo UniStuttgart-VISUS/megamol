@@ -222,8 +222,10 @@ namespace gui {
         void layout_graph();
         void layout(const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, ImVec2 init_position);
 
-        bool connected_callslot(const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, const CallSlotPtr_t& callslot_ptr) const;
-        bool connected_interfaceslot(const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, const InterfaceSlotPtr_t& interfaceslot_ptr) const;
+        bool connected_callslot(
+            const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, const CallSlotPtr_t& callslot_ptr) const;
+        bool connected_interfaceslot(
+            const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, const InterfaceSlotPtr_t& interfaceslot_ptr) const;
         bool contains_callslot(const ModulePtrVector_t& ms, ImGuiID callslot_uid) const;
         bool contains_interfaceslot(const GroupPtrVector_t& gs, ImGuiID interfaceslot_uid) const;
         bool contains_module(const ModulePtrVector_t& ms, ImGuiID module_uid) const;

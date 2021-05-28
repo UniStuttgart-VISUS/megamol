@@ -7,8 +7,8 @@
 
 
 #include "TransferFunctionEditor.h"
-#include "gui_utils.h"
 #include "graph/Parameter.h"
+#include "gui_utils.h"
 #include "widgets/ButtonWidgets.h"
 #include "widgets/ColorPalettes.h"
 
@@ -56,7 +56,7 @@ std::array<double, 3> CubeHelixRGB(double t, double start, double rots, double h
  * Transform from Hue to RGB.
  */
 std::array<double, 3> HueToRGB(double hue) {
-    std::array<double, 3> color = {hue, (hue + 1.0 / 3.0), (hue + 2.0 / 3.0) };
+    std::array<double, 3> color = {hue, (hue + 1.0 / 3.0), (hue + 2.0 / 3.0)};
     for (size_t i = 0; i < color.size(); ++i) {
         color[i] = std::max(0.0, std::min(6.0 * std::abs(color[i] - std::floor(color[i]) - 0.5) - 1.0, 1.0));
     }
@@ -165,7 +165,7 @@ std::array<std::tuple<std::string, PresetGenerator>, 21> PRESETS = {
 // ----------------------------------------------------------------------------
 
 TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, bool non_window_mode)
-        : AbstractWindow(window_name , AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION)
+        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION)
         , non_window_mode(non_window_mode)
         , connected_parameter_ptr(nullptr)
         , nodes()
@@ -206,7 +206,8 @@ TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, b
 
     // Configure TRANSFER FUNCTION Window
     this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
-    this->win_config.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F8, core::view::Modifier::NONE);
+    this->win_config.hotkey =
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F8, core::view::Modifier::NONE);
 }
 
 
@@ -309,12 +310,14 @@ bool TransferFunctionEditor::Update() {
     // Change window flags depending on current view of transfer function editor
     if (this->IsMinimized()) {
         this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
-                             ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+                                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
     } else {
         this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
     }
     this->win_view_minimized = this->IsMinimized();
     this->win_view_vertical = this->IsVertical();
+
+    return true;
 }
 
 
@@ -657,17 +660,20 @@ void TransferFunctionEditor::PopUps() {
 }
 
 
-void TransferFunctionEditor::SpecificStateFromJSON(const nlohmann::json &in_json) {
+void TransferFunctionEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
     for (auto& header_item : in_json.items()) {
         if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
-            for (auto &config_item : header_item.value().items()) {
+            for (auto& config_item : header_item.value().items()) {
                 if (config_item.key() == this->Name()) {
                     auto config_values = config_item.value();
 
-                    megamol::core::utility::get_json_value<bool>(config_values, {"tfe_view_minimized"}, &this->win_view_minimized);
-                    megamol::core::utility::get_json_value<bool>(config_values, {"tfe_view_vertical"}, &this->win_view_vertical);
-                    megamol::core::utility::get_json_value<std::string>(config_values, {"tfe_active_param"}, &this->win_connected_param_name);
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"tfe_view_minimized"}, &this->win_view_minimized);
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"tfe_view_vertical"}, &this->win_view_vertical);
+                    megamol::core::utility::get_json_value<std::string>(
+                        config_values, {"tfe_active_param"}, &this->win_connected_param_name);
                     this->win_tfe_reset = true;
                 }
             }
@@ -676,12 +682,12 @@ void TransferFunctionEditor::SpecificStateFromJSON(const nlohmann::json &in_json
 }
 
 
-void TransferFunctionEditor::SpecificStateToJSON(nlohmann::json &inout_json) {
+void TransferFunctionEditor::SpecificStateToJSON(nlohmann::json& inout_json) {
 
-    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_view_minimized"] =  this->win_view_minimized;
-    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_view_vertical"] =  this->win_view_vertical;
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_view_minimized"] = this->win_view_minimized;
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_view_vertical"] = this->win_view_vertical;
     gui_utils::Utf8Encode(this->win_connected_param_name);
-    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_active_param"] =  this->win_connected_param_name;
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_active_param"] = this->win_connected_param_name;
     gui_utils::Utf8Decode(this->win_connected_param_name);
 }
 
@@ -1118,7 +1124,8 @@ bool TransferFunctionEditor::changeNodeSelection(unsigned int new_selected_node_
 }
 
 
-bool TransferFunctionEditor::moveSelectedNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
+bool TransferFunctionEditor::moveSelectedNode(
+    const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size) {
 
     if ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size())) {
 

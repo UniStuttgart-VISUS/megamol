@@ -49,7 +49,6 @@ namespace gui {
      */
     class LogConsole : public AbstractWindow {
     public:
-
         explicit LogConsole(const std::string& window_name);
         ~LogConsole();
 
@@ -72,8 +71,8 @@ namespace gui {
         unsigned int scroll_up;
         float last_window_height;
 
-        unsigned int win_log_level;    // [SAVED] Log level used in log window
-        bool win_log_force_open;       // [SAVED] flag indicating if log window should be forced open on warnings and errors
+        unsigned int win_log_level; // [SAVED] Log level used in log window
+        bool win_log_force_open; // [SAVED] flag indicating if log window should be forced open on warnings and errors
 
         struct LogPopUpData {
             std::string title;

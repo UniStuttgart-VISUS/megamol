@@ -40,7 +40,6 @@ namespace gui {
      */
     class Call {
     public:
-
         struct StockCall {
             std::string class_name;
             std::string description;

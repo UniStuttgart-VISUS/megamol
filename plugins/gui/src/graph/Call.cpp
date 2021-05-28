@@ -15,7 +15,8 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::string& description, const std::string& plugin_name, const std::vector<std::string>& functions)
+megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::string& description,
+    const std::string& plugin_name, const std::vector<std::string>& functions)
         : uid(uid)
         , class_name(class_name)
         , description(description)
@@ -252,9 +253,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                             ImGui::TextDisabled("Call");
                             ImGui::Separator();
 
-                            if (ImGui::MenuItem("Delete", state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM]
-                                                              .keycode.ToString()
-                                                              .c_str())) {
+                            if (ImGui::MenuItem("Delete",
+                                    state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
                                 state.interact.process_deletion = true;
                             }
                             ImGui::Separator();

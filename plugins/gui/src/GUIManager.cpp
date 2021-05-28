@@ -35,13 +35,20 @@ GUIManager::GUIManager()
         , picking_buffer() {
 
     // Init hotkeys
-    this->hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT] = {megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
-    this->hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY] = {megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
-    this->hotkeys[HOTKEY_GUI_EXIT_PROGRAM] = {megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
-    this->hotkeys[HOTKEY_GUI_MENU] = {megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
-    this->hotkeys[HOTKEY_GUI_SAVE_PROJECT] = {megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
-    this->hotkeys[HOTKEY_GUI_LOAD_PROJECT] = {megamol::core::view::KeyCode(megamol::core::view::Key::KEY_L, core::view::Modifier::CTRL), false};
-    this->hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI] = {megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
+    this->hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
+    this->hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
+    this->hotkeys[HOTKEY_GUI_EXIT_PROGRAM] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
+    this->hotkeys[HOTKEY_GUI_MENU] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
+    this->hotkeys[HOTKEY_GUI_SAVE_PROJECT] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
+    this->hotkeys[HOTKEY_GUI_LOAD_PROJECT] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_L, core::view::Modifier::CTRL), false};
+    this->hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
     if (this->win_configurator_ptr == nullptr) {
@@ -198,13 +205,13 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Check for initialized imgui api
     if (this->initialized_api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for existing imgui context
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Set ImGui context
@@ -218,10 +225,10 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             // Show GUI after it was hidden (before early exit!)
             // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
             this->gui_state.menu_visible = true;
-            const auto func = [&](AbstractWindow &wc) {
+            const auto func = [&](AbstractWindow& wc) {
                 if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
-                              this->gui_state.gui_restore_hidden_windows.end(),
-                              wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
+                        this->gui_state.gui_restore_hidden_windows.end(),
+                        wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
                     wc.Config().show = true;
                 }
             };
@@ -276,8 +283,8 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
                        ? (static_cast<float>(instance_time - this->gui_state.last_instance_time))
                        : (io.DeltaTime);
     this->gui_state.last_instance_time = ((instance_time - this->gui_state.last_instance_time) > 0.0)
-                                         ? (instance_time)
-                                         : (this->gui_state.last_instance_time + io.DeltaTime);
+                                             ? (instance_time)
+                                             : (this->gui_state.last_instance_time + io.DeltaTime);
 
     // Style
     if (this->gui_state.style_changed) {
@@ -314,7 +321,8 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     // Propagate window specific data
     if (auto win_perfmon_ptr = this->win_collection.GetWindow<PerformanceMonitor>()) {
-        win_perfmon_ptr->SetData(this->gui_state.stat_averaged_fps, this->gui_state.stat_averaged_ms, this->gui_state.stat_frame_count);
+        win_perfmon_ptr->SetData(
+            this->gui_state.stat_averaged_fps, this->gui_state.stat_averaged_ms, this->gui_state.stat_frame_count);
     }
 
     // Update windows
@@ -732,7 +740,8 @@ void megamol::gui::GUIManager::SetClipboardFunc(const char* (*get_clipboard_func
 }
 
 
-bool megamol::gui::GUIManager::SynchronizeRunningGraph(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GUIManager::SynchronizeRunningGraph(
+    megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
 
     // Synchronization is not required when no gui element is visible
     if (!this->gui_state.gui_visible)
@@ -801,7 +810,8 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(megamol::core::MegaMolGra
     if (!synced) {
         // Creates new graph at first call
         ImGuiID running_graph_uid = (graph_ptr != nullptr) ? (graph_ptr->UID()) : (GUI_INVALID_ID);
-        bool graph_sync_success = this->win_configurator_ptr->GetGraphCollection().LoadUpdateProjectFromCore(running_graph_uid, megamol_graph);
+        bool graph_sync_success = this->win_configurator_ptr->GetGraphCollection().LoadUpdateProjectFromCore(
+            running_graph_uid, megamol_graph);
         if (!graph_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -1150,16 +1160,13 @@ void GUIManager::draw_menu() {
     // FILE -------------------------------------------------------------------
     if (ImGui::BeginMenu("File")) {
 
-        if (ImGui::MenuItem("Load Project",
-                this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem("Load Project", this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].keycode.ToString().c_str())) {
             this->gui_state.open_popup_load = true;
         }
-        if (ImGui::MenuItem(
-                "Save Project", this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem("Save Project", this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].keycode.ToString().c_str())) {
             this->gui_state.open_popup_save = true;
         }
-        if (ImGui::MenuItem(
-                "Exit", this->hotkeys[HOTKEY_GUI_EXIT_PROGRAM].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem("Exit", this->hotkeys[HOTKEY_GUI_EXIT_PROGRAM].keycode.ToString().c_str())) {
             this->gui_state.shutdown_triggered = true;
         }
         ImGui::EndMenu();
@@ -1168,8 +1175,8 @@ void GUIManager::draw_menu() {
 
     // WINDOWS ----------------------------------------------------------------
     if (ImGui::BeginMenu("Windows")) {
-        ImGui::MenuItem("Menu", this->hotkeys[HOTKEY_GUI_MENU].keycode.ToString().c_str(),
-            &this->gui_state.menu_visible);
+        ImGui::MenuItem(
+            "Menu", this->hotkeys[HOTKEY_GUI_MENU].keycode.ToString().c_str(), &this->gui_state.menu_visible);
         const auto func = [&](AbstractWindow& wc) {
             bool registered_window = (wc.Config().hotkey.key != core::view::Key::KEY_UNKNOWN);
             if (registered_window) {
@@ -1197,8 +1204,8 @@ void GUIManager::draw_menu() {
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Show/Hide All Windows",
-                this->hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem(
+                "Show/Hide All Windows", this->hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].keycode.ToString().c_str())) {
             this->gui_state.gui_hide_next_frame = 2;
         }
 
@@ -1217,8 +1224,7 @@ void GUIManager::draw_menu() {
         if (ImGui::MenuItem("Select Filename", this->gui_state.screenshot_filepath.c_str())) {
             this->gui_state.open_popup_screenshot = true;
         }
-        if (ImGui::MenuItem("Trigger",
-                this->hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem("Trigger", this->hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
             this->gui_state.screenshot_triggered = true;
         }
         ImGui::EndMenu();
@@ -1256,8 +1262,7 @@ void GUIManager::draw_menu() {
                                         rem_module_ptr->SetGraphEntryName("");
                                         Graph::QueueData queue_data;
                                         queue_data.name_id = rem_module_ptr->FullName();
-                                        graph_ptr->PushSyncQueue(
-                                            Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+                                        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                                     }
                                 }
                                 // Add new graph entry
@@ -1293,15 +1298,18 @@ void GUIManager::draw_menu() {
 
         if (ImGui::BeginMenu("Style")) {
 
-            if (ImGui::MenuItem("ImGui Dark Colors", nullptr, (this->gui_state.style == GUIManager::Styles::DarkColors))) {
+            if (ImGui::MenuItem(
+                    "ImGui Dark Colors", nullptr, (this->gui_state.style == GUIManager::Styles::DarkColors))) {
                 this->gui_state.style = GUIManager::Styles::DarkColors;
                 this->gui_state.style_changed = true;
             }
-            if (ImGui::MenuItem("ImGui LightColors", nullptr, (this->gui_state.style == GUIManager::Styles::LightColors))) {
+            if (ImGui::MenuItem(
+                    "ImGui LightColors", nullptr, (this->gui_state.style == GUIManager::Styles::LightColors))) {
                 this->gui_state.style = GUIManager::Styles::LightColors;
                 this->gui_state.style_changed = true;
             }
-            if (ImGui::MenuItem("Corporate Gray", nullptr, (this->gui_state.style == GUIManager::Styles::CorporateGray))) {
+            if (ImGui::MenuItem(
+                    "Corporate Gray", nullptr, (this->gui_state.style == GUIManager::Styles::CorporateGray))) {
                 this->gui_state.style = GUIManager::Styles::CorporateGray;
                 this->gui_state.style_changed = true;
             }
@@ -1421,8 +1429,7 @@ void megamol::gui::GUIManager::draw_popups() {
     this->win_collection.PopUps();
 
     // Externally registered pop-ups
-    auto popup_flags =
-        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
+    auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
     for (auto& popup_map : this->popup_collection) {
         if ((*popup_map.second.first)) {
             ImGui::OpenPopup(popup_map.first.c_str());
@@ -1543,7 +1550,8 @@ void megamol::gui::GUIManager::draw_popups() {
             if (save_gui_state.IsTrue()) {
                 state_str = this->project_to_lua_string(true);
             }
-            popup_failed |= !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(graph_ptr->UID(), filename, state_str);
+            popup_failed |= !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(
+                graph_ptr->UID(), filename, state_str);
         }
         PopUps::Minimal(
             "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
@@ -1560,8 +1568,7 @@ void megamol::gui::GUIManager::draw_popups() {
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
     }
-    PopUps::Minimal(
-        "Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
+    PopUps::Minimal("Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
     this->gui_state.open_popup_load = false;
     this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed = false;
 
@@ -1707,12 +1714,14 @@ bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
         for (auto& header_item : state_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUI) {
                 auto state_str = header_item.value();
-                megamol::core::utility::get_json_value<bool>(state_str, {"menu_visible"}, &this->gui_state.menu_visible);
+                megamol::core::utility::get_json_value<bool>(
+                    state_str, {"menu_visible"}, &this->gui_state.menu_visible);
                 int style = 0;
                 megamol::core::utility::get_json_value<int>(state_str, {"style"}, &style);
                 this->gui_state.style = static_cast<GUIManager::Styles>(style);
                 this->gui_state.style_changed = true;
-                megamol::core::utility::get_json_value<std::string>(state_str, {"font_file_name"}, &this->gui_state.font_file_name);
+                megamol::core::utility::get_json_value<std::string>(
+                    state_str, {"font_file_name"}, &this->gui_state.font_file_name);
                 megamol::core::utility::get_json_value<int>(state_str, {"font_size"}, &this->gui_state.font_size);
                 this->gui_state.font_apply = true;
                 std::string imgui_settings;
@@ -1771,7 +1780,6 @@ bool megamol::gui::GUIManager::state_to_string(std::string& out_state) {
 }
 
 
-
 bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& inout_filepath) {
 
     // Check for existing file
@@ -1797,7 +1805,8 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
                                      std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
                 }
             } else {
-                inout_filepath = filename + id_separator + std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
+                inout_filepath =
+                    filename + id_separator + std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
             }
         }
         created_filepath = true;
@@ -1813,13 +1822,14 @@ void GUIManager::RegisterWindow(
 }
 
 
-void GUIManager::RegisterPopUp(const std::string& name, bool& open, const std::function<void()> &callback) {
+void GUIManager::RegisterPopUp(const std::string& name, bool& open, const std::function<void()>& callback) {
 
-    this->popup_collection[name] = std::pair<bool*, std::function<void()>>(&open, const_cast<std::function<void()>&>(callback));
+    this->popup_collection[name] =
+        std::pair<bool*, std::function<void()>>(&open, const_cast<std::function<void()>&>(callback));
 }
 
 
-void GUIManager::RegisterNotification(const std::string &name, bool &open, const std::string &message) {
+void GUIManager::RegisterNotification(const std::string& name, bool& open, const std::string& message) {
 
     this->notification_collection[name] = std::tuple<bool*, bool, std::string>(&open, false, message);
 }

@@ -8,10 +8,10 @@
 
 #include "WindowCollection.h"
 #include "Configurator.h"
-#include "TransferFunctionEditor.h"
 #include "LogConsole.h"
-#include "PerformanceMonitor.h"
 #include "ParameterList.h"
+#include "PerformanceMonitor.h"
+#include "TransferFunctionEditor.h"
 
 
 using namespace megamol;
@@ -34,13 +34,13 @@ WindowCollection::WindowCollection() {
     this->windows.emplace_back(win_perfmonitor);
 
     win_configurator->SetData(win_tfeditor);
-    win_paramlist->SetData(win_configurator, win_tfeditor, [&](const std::string &window_name) {
-        this->AddWindow<ParameterList>(window_name);
-    });
+    win_paramlist->SetData(win_configurator, win_tfeditor,
+        [&](const std::string& window_name) { this->AddWindow<ParameterList>(window_name); });
 }
 
 
-bool WindowCollection::AddWindow(const std::string &window_name, const std::function<void(AbstractWindow::BasicConfig &)>& callback) {
+bool WindowCollection::AddWindow(
+    const std::string& window_name, const std::function<void(AbstractWindow::BasicConfig&)>& callback) {
 
     if (window_name.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -56,9 +56,9 @@ bool WindowCollection::AddWindow(const std::string &window_name, const std::func
                 continue;
             }
         }
-    }
-    else {
-        this->windows.push_back(std::make_shared<AbstractWindow>(window_name, const_cast<std::function<void(AbstractWindow::BasicConfig &)> &>(callback)));
+    } else {
+        this->windows.push_back(std::make_shared<AbstractWindow>(
+            window_name, const_cast<std::function<void(AbstractWindow::BasicConfig&)>&>(callback)));
     }
     return true;
 }
@@ -73,7 +73,7 @@ void WindowCollection::Update() {
 
 
 void WindowCollection::Draw(bool menu_visible) {
-    
+
     const auto func = [&](AbstractWindow& wc) {
         if (wc.Config().show) {
             ImGui::SetNextWindowBgAlpha(1.0f);
@@ -125,12 +125,12 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
     try {
         if (!in_json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
         // First, search for not predefined window configurations and create additional windows
-        for (auto &header_item : in_json.items()) {
+        for (auto& header_item : in_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
                 for (auto& config_item : header_item.value().items()) {
                     auto window_name = config_item.key();
@@ -138,18 +138,20 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                     if (!this->WindowExists(win_hash)) {
 
                         int tmp_win_config_id = 0;
-                        megamol::core::utility::get_json_value<int>(config_item.value(), {"win_callback"}, /// TODO rename to "win_config_id"
+                        megamol::core::utility::get_json_value<int>(config_item.value(),
+                            {"win_callback"}, /// TODO rename to "win_config_id"
                             &tmp_win_config_id);
                         auto win_config_id = static_cast<AbstractWindow::WindowConfigID>(tmp_win_config_id);
 
                         if (win_config_id == AbstractWindow::WINDOW_ID_VOLATILE) {
-                            this->AddWindow(window_name, std::function<void(AbstractWindow::BasicConfig &)>());
+                            this->AddWindow(window_name, std::function<void(AbstractWindow::BasicConfig&)>());
                         } else if (win_config_id == AbstractWindow::WINDOW_ID_PARAMETERS) {
                             this->AddWindow<ParameterList>(window_name);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "[GUI] Only additional volatile and custom parameter windows can be loaded from state file. [%s, %s, line %d]\n",
-                                    __FILE__, __FUNCTION__, __LINE__);
+                                "[GUI] Only additional volatile and custom parameter windows can be loaded from state "
+                                "file. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
                         }
                     }
                 }
@@ -168,7 +170,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
 
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
@@ -181,7 +183,8 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
         // Append to given json
         for (auto& window : this->windows) {
 
-            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window->Name()]["win_callback"] = static_cast<int>(window->WindowID()); /// TODO rename to "win_config_id"
+            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window->Name()]["win_callback"] =
+                static_cast<int>(window->WindowID()); /// TODO rename to "win_config_id"
 
             window->StateToJSON(inout_json);
             window->SpecificStateToJSON(inout_json);
@@ -192,7 +195,7 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
 
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
@@ -203,13 +206,14 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
 
     for (auto iter = this->windows.begin(); iter != this->windows.end(); iter++) {
         if (((*iter)->Hash() == win_hash_id)) {
-            if (((*iter)->WindowID() == AbstractWindow::WINDOW_ID_VOLATILE) || ((*iter)->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS)) {
+            if (((*iter)->WindowID() == AbstractWindow::WINDOW_ID_VOLATILE) ||
+                ((*iter)->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS)) {
                 this->windows.erase(iter);
                 return true;
-            }
-            else {
+            } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Only volatile and custom parameter windows can be deleted. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    "[GUI] Only volatile and custom parameter windows can be deleted. [%s, %s, line %d]\n", __FILE__,
+                    __FUNCTION__, __LINE__);
                 return false;
             }
         }
