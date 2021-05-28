@@ -58,7 +58,7 @@ namespace gui {
         explicit Graph(const std::string& graph_name);
         ~Graph();
 
-        ModulePtr_t AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name);
+        ModulePtr_t AddModule(const ModuleStockVector_t& stock_ms, const std::string& class_name);
         ModulePtr_t AddModule(const std::string& class_name, const std::string& description,
             const std::string& plugin_name, bool is_view);
         bool DeleteModule(ImGuiID module_uid);
@@ -215,21 +215,19 @@ namespace gui {
         void draw_canvas(float child_width, GraphState_t& state);
         void draw_parameters(float child_width);
 
-        void draw_canvas_grid();
+        void draw_canvas_grid() const;
         void draw_canvas_dragged_call();
         void draw_canvas_multiselection();
 
         void layout_graph();
-        void layout(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, ImVec2 init_position);
+        void layout(const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, ImVec2 init_position);
 
-        bool connected_callslot(
-            const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, const CallSlotPtr_t& callslot_ptr);
-        bool connected_interfaceslot(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups,
-            const InterfaceSlotPtr_t& interfaceslot_ptr);
-        bool contains_callslot(const ModulePtrVector_t& modules, ImGuiID callslot_uid);
-        bool contains_interfaceslot(const GroupPtrVector_t& groups, ImGuiID interfaceslot_uid);
-        bool contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid);
-        bool contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid);
+        bool connected_callslot(const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, const CallSlotPtr_t& callslot_ptr) const;
+        bool connected_interfaceslot(const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, const InterfaceSlotPtr_t& interfaceslot_ptr) const;
+        bool contains_callslot(const ModulePtrVector_t& ms, ImGuiID callslot_uid) const;
+        bool contains_interfaceslot(const GroupPtrVector_t& gs, ImGuiID interfaceslot_uid) const;
+        bool contains_module(const ModulePtrVector_t& ms, ImGuiID module_uid) const;
+        bool contains_group(const GroupPtrVector_t& gs, ImGuiID group_uid) const;
 
         std::string generate_unique_group_name() const;
         std::string generate_unique_module_name(const std::string& name) const;

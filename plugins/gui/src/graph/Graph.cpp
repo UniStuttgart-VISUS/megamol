@@ -1354,8 +1354,8 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
         }
         ImGuiIO& io = ImGui::GetIO();
 
-        ImGuiID graph_uid = this->uid;
-        ImGui::PushID(graph_uid);
+        auto graph_uid = static_cast<int>(this->uid);
+        ImGui::PushID(static_cast<int>(graph_uid));
 
         bool popup_rename = false;
 
@@ -1414,7 +1414,6 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             }
             if (slot_uid != GUI_INVALID_ID) {
                 for (auto& module_ptr : this->Modules()) {
-                    CallSlotPtr_t callslot_ptr;
                     if (auto callslot_ptr = module_ptr->CallSlotPtr(slot_uid)) {
                         this->gui_graph_state.interact.callslot_compat_ptr = callslot_ptr;
                     }
@@ -1430,7 +1429,6 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 }
                 if (slot_uid != GUI_INVALID_ID) {
                     for (auto& group_ptr : this->GetGroups()) {
-                        InterfaceSlotPtr_t interfaceslot_ptr;
                         if (auto interfaceslot_ptr = group_ptr->InterfaceSlotPtr(slot_uid)) {
                             this->gui_graph_state.interact.interfaceslot_compat_ptr = interfaceslot_ptr;
                         }
@@ -1519,7 +1517,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                     Graph::QueueData queue_data;
                     if (this->gui_graph_state.interact.module_graphentry_changed == vislib::math::Ternary::TRI_TRUE) {
                         // Remove all graph entries
-                        for (auto module_ptr : this->Modules()) {
+                        for (auto& module_ptr : this->Modules()) {
                             if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
                                 module_ptr->SetGraphEntryName("");
                                 queue_data.name_id = module_ptr->FullName();
@@ -1713,7 +1711,6 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 }
                 if (this->gui_graph_state.interact.interfaceslot_selected_uid != GUI_INVALID_ID) {
                     for (auto& group_ptr : this->GetGroups()) {
-                        InterfaceSlotPtr_t interfaceslot_ptr;
                         if (auto interfaceslot_ptr = group_ptr->InterfaceSlotPtr(
                                 this->gui_graph_state.interact.interfaceslot_selected_uid)) {
                             // Delete all calls connected
@@ -1836,7 +1833,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             ModulePtr_t selected_mod_ptr;
             if (this->gui_graph_state.interact.modules_selected_uids.size() == 1) {
                 for (auto& mod : this->Modules()) {
-                    if ((this->gui_graph_state.interact.modules_selected_uids.front() == mod->UID())) {
+                    if (this->gui_graph_state.interact.modules_selected_uids.front() == mod->UID()) {
                         selected_mod_ptr = mod;
                     }
                 }
@@ -1975,7 +1972,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
             Graph::QueueData queue_data;
             if (is_graph_entry) {
                 // Remove all graph entries
-                for (auto module_ptr : this->Modules()) {
+                for (auto& module_ptr : this->Modules()) {
                     if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
                         module_ptr->SetGraphEntryName("");
                         queue_data.name_id = module_ptr->FullName();
@@ -2102,14 +2099,14 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
     // Load font for canvas
     ImFont* gui_font_ptr = io.FontDefault;
     ImFont* graph_font_ptr = nullptr;
-    unsigned int scalings_count = static_cast<unsigned int>(state.graph_zoom_font_scalings.size());
+    auto scalings_count = static_cast<int>(state.graph_zoom_font_scalings.size());
     if (scalings_count == 0) {
         throw std::invalid_argument("Bug: Array for graph fonts is empty.");
     } else if (scalings_count == 1) {
         graph_font_ptr = io.Fonts->Fonts[0];
         this->gui_current_font_scaling = state.graph_zoom_font_scalings[0];
     } else {
-        for (unsigned int i = 0; i < scalings_count; i++) {
+        for (int i = 0; i < scalings_count; i++) {
             bool apply = false;
             if (i == 0) {
                 if (this->gui_graph_state.canvas.zooming <= state.graph_zoom_font_scalings[i]) {
@@ -2196,7 +2193,7 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
         //  - Update button states of all graph elements
         /// Phase 2: Rendering -----------------------------------------------------
         //  - Draw all graph elements
-        PresentPhase phase = static_cast<PresentPhase>(p);
+        auto phase = static_cast<PresentPhase>(p);
 
         // 1] GROUPS and INTERFACE SLOTS --------------------------------------
         for (auto& group_ptr : this->GetGroups()) {
@@ -2410,7 +2407,6 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
         // Get module groups
         std::map<std::string, std::vector<ModulePtr_t>> group_map;
         for (auto& module_uid : this->gui_graph_state.interact.modules_selected_uids) {
-            ModulePtr_t module_ptr;
             // Get pointer to currently selected module(s)
             if (auto module_ptr = this->GetModule(module_uid)) {
                 auto group_name = module_ptr->GroupName();
@@ -2433,7 +2429,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
             }
             if (group_header_open) {
                 for (auto& module_ptr : group.second) {
-                    ImGui::PushID(module_ptr->UID());
+                    ImGui::PushID(static_cast<int>(module_ptr->UID()));
                     std::string module_label = module_ptr->FullName();
 
                     // Draw module header
@@ -2464,7 +2460,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
 }
 
 
-void megamol::gui::Graph::draw_canvas_grid() {
+void megamol::gui::Graph::draw_canvas_grid() const {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -2493,7 +2489,7 @@ void megamol::gui::Graph::draw_canvas_dragged_call() {
 
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
-            ImGuiID* selected_slot_uid_ptr = (ImGuiID*) payload->Data;
+            auto* selected_slot_uid_ptr = (ImGuiID*) payload->Data;
             if (selected_slot_uid_ptr == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Pointer to drag and drop payload data is nullptr. [%s, %s, line %d]\n", __FILE__,
@@ -2522,7 +2518,6 @@ void megamol::gui::Graph::draw_canvas_dragged_call() {
 
                 CallSlotPtr_t selected_callslot_ptr;
                 for (auto& module_ptr : this->Modules()) {
-                    CallSlotPtr_t callslot_ptr;
                     if (auto callslot_ptr = module_ptr->CallSlotPtr((*selected_slot_uid_ptr))) {
                         selected_callslot_ptr = callslot_ptr;
                     }
@@ -2534,7 +2529,6 @@ void megamol::gui::Graph::draw_canvas_dragged_call() {
                 if (!found_valid_slot) {
                     InterfaceSlotPtr_t selected_interfaceslot_ptr;
                     for (auto& group_ptr : this->GetGroups()) {
-                        InterfaceSlotPtr_t interfaceslot_ptr;
                         if (auto interfaceslot_ptr = group_ptr->InterfaceSlotPtr((*selected_slot_uid_ptr))) {
                             selected_interfaceslot_ptr = interfaceslot_ptr;
                         }
@@ -2645,14 +2639,14 @@ void megamol::gui::Graph::layout_graph() {
 
 
 void megamol::gui::Graph::layout(
-    const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, ImVec2 init_position) {
+    const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, ImVec2 init_position) {
 
     struct LayoutItem {
         ModulePtr_t module_ptr;
         GroupPtr_t group_ptr;
         bool considered;
         LayoutItem() : module_ptr(nullptr), group_ptr(nullptr), considered(false) {}
-        ~LayoutItem() {}
+        ~LayoutItem() = default;
     };
 
     std::vector<std::vector<LayoutItem>> layers;
@@ -2660,10 +2654,10 @@ void megamol::gui::Graph::layout(
 
     // Fill first layer with graph elements having no connected callee slots
     layers.emplace_back();
-    for (auto& group_ptr : groups) {
+    for (auto& group_ptr : gs) {
         bool any_connected_callee = false;
         for (auto& interfaceslot_ptr : group_ptr->InterfaceSlots(CallSlotType::CALLEE)) {
-            if (this->connected_interfaceslot(modules, groups, interfaceslot_ptr)) {
+            if (this->connected_interfaceslot(ms, gs, interfaceslot_ptr)) {
                 any_connected_callee = true;
             }
         }
@@ -2674,10 +2668,10 @@ void megamol::gui::Graph::layout(
             layers.back().emplace_back(layout_item);
         }
     }
-    for (auto& module_ptr : modules) {
+    for (auto& module_ptr : ms) {
         bool any_connected_callee = false;
         for (auto& calleeslot_ptr : module_ptr->CallSlots(CallSlotType::CALLEE)) {
-            if (this->connected_callslot(modules, groups, calleeslot_ptr)) {
+            if (this->connected_callslot(ms, gs, calleeslot_ptr)) {
                 any_connected_callee = true;
             }
         }
@@ -2700,14 +2694,14 @@ void megamol::gui::Graph::layout(
             CallSlotPtrVector_t callerslots;
             if (layer_item.module_ptr != nullptr) {
                 for (auto& callerslot_ptr : layer_item.module_ptr->CallSlots(CallSlotType::CALLER)) {
-                    if (this->connected_callslot(modules, groups, callerslot_ptr)) {
+                    if (this->connected_callslot(ms, gs, callerslot_ptr)) {
                         callerslots.emplace_back(callerslot_ptr);
                     }
                 }
             } else if (layer_item.group_ptr != nullptr) {
                 for (auto& interfaceslot_slot : layer_item.group_ptr->InterfaceSlots(CallSlotType::CALLER)) {
                     for (auto& callerslot_ptr : interfaceslot_slot->CallSlots()) {
-                        if (this->connected_callslot(modules, groups, callerslot_ptr)) {
+                        if (this->connected_callslot(ms, gs, callerslot_ptr)) {
                             callerslots.emplace_back(callerslot_ptr);
                         }
                     }
@@ -2719,7 +2713,7 @@ void megamol::gui::Graph::layout(
                         if (call_ptr->CallSlotPtr(CallSlotType::CALLEE)->IsParentModuleConnected()) {
 
                             auto add_module_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLEE)->GetParentModule();
-                            if (this->contains_module(modules, add_module_ptr->UID())) {
+                            if (this->contains_module(ms, add_module_ptr->UID())) {
                                 // Add module only if not already  Prevents cyclic dependency
                                 bool module_already_added = false;
                                 for (auto& previous_layer : layers) {
@@ -2740,9 +2734,9 @@ void megamol::gui::Graph::layout(
                                 }
                             } else if (add_module_ptr->GroupUID() != GUI_INVALID_ID) {
                                 ImGuiID group_uid = add_module_ptr->GroupUID(); // != GUI_INVALID_ID
-                                if (this->contains_group(groups, group_uid)) {
+                                if (this->contains_group(gs, group_uid)) {
                                     GroupPtr_t add_group_ptr;
-                                    for (auto& group_ptr : groups) {
+                                    for (auto& group_ptr : gs) {
                                         if (group_ptr->UID() == group_uid) {
                                             add_group_ptr = group_ptr;
                                         }
@@ -2877,7 +2871,7 @@ void megamol::gui::Graph::layout(
                 if (this->gui_graph_state.interact.call_show_label) {
                     for (auto& callerslot_ptr : layer_item.module_ptr->CallSlots(CallSlotType::CALLER)) {
                         if (callerslot_ptr->CallsConnected() &&
-                            this->connected_callslot(modules, groups, callerslot_ptr)) {
+                            this->connected_callslot(ms, gs, callerslot_ptr)) {
                             for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                 auto call_name_length = ImGui::CalcTextSize(call_ptr->ClassName().c_str()).x;
                                 max_call_width = std::max(call_name_length, max_call_width);
@@ -2888,7 +2882,7 @@ void megamol::gui::Graph::layout(
                 if (this->gui_graph_state.interact.call_show_slots_label) {
                     for (auto& callerslot_ptr : layer_item.module_ptr->CallSlots(CallSlotType::CALLER)) {
                         if (callerslot_ptr->CallsConnected() &&
-                            this->connected_callslot(modules, groups, callerslot_ptr)) {
+                            this->connected_callslot(ms, gs, callerslot_ptr)) {
                             for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                 auto call_name_length = ImGui::CalcTextSize(call_ptr->SlotsLabel().c_str()).x;
                                 max_call_width = std::max(call_name_length, max_call_width);
@@ -2907,7 +2901,7 @@ void megamol::gui::Graph::layout(
                     for (auto& interfaceslot_slot : layer_item.group_ptr->InterfaceSlots(CallSlotType::CALLER)) {
                         for (auto& callerslot_ptr : interfaceslot_slot->CallSlots()) {
                             if (callerslot_ptr->CallsConnected() &&
-                                this->connected_callslot(modules, groups, callerslot_ptr)) {
+                                this->connected_callslot(ms, gs, callerslot_ptr)) {
                                 for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                     auto call_name_length = ImGui::CalcTextSize(call_ptr->ClassName().c_str()).x;
                                     max_call_width = std::max(call_name_length, max_call_width);
@@ -2920,7 +2914,7 @@ void megamol::gui::Graph::layout(
                     for (auto& interfaceslot_slot : layer_item.group_ptr->InterfaceSlots(CallSlotType::CALLER)) {
                         for (auto& callerslot_ptr : interfaceslot_slot->CallSlots()) {
                             if (callerslot_ptr->CallsConnected() &&
-                                this->connected_callslot(modules, groups, callerslot_ptr)) {
+                                this->connected_callslot(ms, gs, callerslot_ptr)) {
                                 for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                     auto call_name_length = ImGui::CalcTextSize(call_ptr->SlotsLabel().c_str()).x;
                                     max_call_width = std::max(call_name_length, max_call_width);
@@ -2944,7 +2938,7 @@ void megamol::gui::Graph::layout(
 
 
 bool megamol::gui::Graph::connected_callslot(
-    const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, const CallSlotPtr_t& callslot_ptr) {
+    const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, const CallSlotPtr_t& callslot_ptr) const {
 
     bool retval = false;
     for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
@@ -2952,12 +2946,12 @@ bool megamol::gui::Graph::connected_callslot(
             (callslot_ptr->Type() == CallSlotType::CALLER) ? (CallSlotType::CALLEE) : (CallSlotType::CALLER);
         auto connected_callslot_ptr = call_ptr->CallSlotPtr(type);
         if (connected_callslot_ptr != nullptr) {
-            if (this->contains_callslot(modules, connected_callslot_ptr->UID())) {
+            if (this->contains_callslot(ms, connected_callslot_ptr->UID())) {
                 retval = true;
                 break;
             }
             if (connected_callslot_ptr->InterfaceSlotPtr() != nullptr) {
-                if (this->contains_interfaceslot(groups, connected_callslot_ptr->InterfaceSlotPtr()->UID())) {
+                if (this->contains_interfaceslot(gs, connected_callslot_ptr->InterfaceSlotPtr()->UID())) {
                     retval = true;
                     break;
                 }
@@ -2969,7 +2963,7 @@ bool megamol::gui::Graph::connected_callslot(
 
 
 bool megamol::gui::Graph::connected_interfaceslot(
-    const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, const InterfaceSlotPtr_t& interfaceslot_ptr) {
+    const ModulePtrVector_t& ms, const GroupPtrVector_t& gs, const InterfaceSlotPtr_t& interfaceslot_ptr) const {
 
     bool retval = false;
     for (auto& callslot_ptr : interfaceslot_ptr->CallSlots()) {
@@ -2978,12 +2972,12 @@ bool megamol::gui::Graph::connected_interfaceslot(
                 (callslot_ptr->Type() == CallSlotType::CALLER) ? (CallSlotType::CALLEE) : (CallSlotType::CALLER);
             auto connected_callslot_ptr = call_ptr->CallSlotPtr(type);
             if (connected_callslot_ptr != nullptr) {
-                if (this->contains_callslot(modules, connected_callslot_ptr->UID())) {
+                if (this->contains_callslot(ms, connected_callslot_ptr->UID())) {
                     retval = true;
                     break;
                 }
                 if (connected_callslot_ptr->InterfaceSlotPtr() != nullptr) {
-                    if (this->contains_interfaceslot(groups, connected_callslot_ptr->InterfaceSlotPtr()->UID())) {
+                    if (this->contains_interfaceslot(gs, connected_callslot_ptr->InterfaceSlotPtr()->UID())) {
                         retval = true;
                         break;
                     }
@@ -2995,9 +2989,9 @@ bool megamol::gui::Graph::connected_interfaceslot(
 }
 
 
-bool megamol::gui::Graph::contains_callslot(const ModulePtrVector_t& modules, ImGuiID callslot_uid) {
+bool megamol::gui::Graph::contains_callslot(const ModulePtrVector_t& ms, ImGuiID callslot_uid) const {
 
-    for (auto& module_ptr : modules) {
+    for (auto& module_ptr : ms) {
         for (auto& callslots_map : module_ptr->CallSlots()) {
             for (auto& callslot_ptr : callslots_map.second) {
                 if (callslot_ptr->UID() == callslot_uid) {
@@ -3010,9 +3004,9 @@ bool megamol::gui::Graph::contains_callslot(const ModulePtrVector_t& modules, Im
 }
 
 
-bool megamol::gui::Graph::contains_interfaceslot(const GroupPtrVector_t& groups, ImGuiID interfaceslot_uid) {
+bool megamol::gui::Graph::contains_interfaceslot(const GroupPtrVector_t& gs, ImGuiID interfaceslot_uid) const {
 
-    for (auto& group_ptr : groups) {
+    for (auto& group_ptr : gs) {
         for (auto& interfaceslots_map : group_ptr->InterfaceSlots()) {
             for (auto& interfaceslot_ptr : interfaceslots_map.second) {
                 if (interfaceslot_ptr->UID() == interfaceslot_uid) {
@@ -3025,9 +3019,9 @@ bool megamol::gui::Graph::contains_interfaceslot(const GroupPtrVector_t& groups,
 }
 
 
-bool megamol::gui::Graph::contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid) {
+bool megamol::gui::Graph::contains_module(const ModulePtrVector_t& ms, ImGuiID module_uid) const {
 
-    for (auto& module_ptr : modules) {
+    for (auto& module_ptr : ms) {
         if (module_ptr->UID() == module_uid) {
             return true;
         }
@@ -3036,9 +3030,9 @@ bool megamol::gui::Graph::contains_module(const ModulePtrVector_t& modules, ImGu
 }
 
 
-bool megamol::gui::Graph::contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid) {
+bool megamol::gui::Graph::contains_group(const GroupPtrVector_t& gs, ImGuiID group_uid) const {
 
-    for (auto& group_ptr : groups) {
+    for (auto& group_ptr : gs) {
         if (group_ptr->UID() == group_uid) {
             return true;
         }

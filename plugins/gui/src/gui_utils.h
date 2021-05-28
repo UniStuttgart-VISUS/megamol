@@ -396,7 +396,7 @@ namespace gui {
 
             // Determine header state and change color depending on active parameter search
             auto headerId = ImGui::GetID(name.c_str());
-            auto headerState = static_cast<int>(override_header_state);
+            auto headerState = override_header_state;
             if (headerState == GUI_INVALID_ID) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
@@ -430,7 +430,7 @@ namespace gui {
                     inout_search.clear();
                 }
             }
-            ImGui::GetStateStorage()->SetInt(headerId, headerState);
+            ImGui::GetStateStorage()->SetInt(headerId, static_cast<int>(headerState));
             bool header_open = ImGui::CollapsingHeader(name.c_str(), nullptr);
             ImGui::PopStyleColor(pop_style_color_number);
 

@@ -35,7 +35,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , uid(uid)
         , type(type)
         , param_name(param_name)
-        , parent_module_name("")
+        , parent_module_name()
         , description(description)
         , core_param_ptr(nullptr)
         , minval(minv)
@@ -47,8 +47,8 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , value_dirty(false)
         , gui_extended(false)
         , gui_float_format("%.7f")
-        , gui_help("")
-        , gui_tooltip_text("")
+        , gui_help()
+        , gui_tooltip_text()
         , gui_widget_store()
         , gui_set_focus(0)
         , gui_state_dirty(false)
@@ -354,10 +354,10 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector2fParam>()) {
         out_param.type = ParamType_t::VECTOR2F;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-        auto minval = p_ptr->MinValue();
-        out_param.minval = glm::vec2(minval.X(), minval.Y());
-        auto maxval = p_ptr->MaxValue();
-        out_param.maxval = glm::vec2(maxval.X(), maxval.Y());
+        auto minv = p_ptr->MinValue();
+        out_param.minval = glm::vec2(minv.X(), minv.Y());
+        auto maxv = p_ptr->MaxValue();
+        out_param.maxval = glm::vec2(maxv.X(), maxv.Y());
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector3fParam>()) {
         out_param.type = ParamType_t::VECTOR3F;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
@@ -931,18 +931,18 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
         case (Present_t::Basic): {
             // BOOL ------------------------------------------------
             if constexpr (std::is_same_v<T, bool>) {
-                auto value = arg;
-                if (this->widget_bool(scope, param_label, value)) {
-                    this->SetValue(value);
+                auto val = arg;
+                if (this->widget_bool(scope, param_label, val)) {
+                    this->SetValue(val);
                     retval = true;
                 }
                 error = false;
             }
             // FLOAT -----------------------------------------------
             else if constexpr (std::is_same_v<T, float>) {
-                auto value = arg;
-                if (this->widget_float(scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                    this->SetValue(value);
+                auto val = arg;
+                if (this->widget_float(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                    this->SetValue(val);
                     retval = true;
                 }
                 error = false;
@@ -950,18 +950,18 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 switch (this->type) {
                     // INT ---------------------------------------------
                 case (ParamType_t::INT): {
-                    auto value = arg;
-                    if (this->widget_int(scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                        this->SetValue(value);
+                    auto val = arg;
+                    if (this->widget_int(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
                 } break;
                     // ENUM --------------------------------------------
                 case (ParamType_t::ENUM): {
-                    auto value = arg;
-                    if (this->widget_enum(scope, param_label, value, this->GetStorage<EnumStorage_t>())) {
-                        this->SetValue(value);
+                    auto val = arg;
+                    if (this->widget_enum(scope, param_label, val, this->GetStorage<EnumStorage_t>())) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
@@ -973,37 +973,37 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 switch (this->type) {
                     // STRING ------------------------------------------
                 case (ParamType_t::STRING): {
-                    auto value = arg;
-                    if (this->widget_string(scope, param_label, value)) {
-                        this->SetValue(value);
+                    auto val = arg;
+                    if (this->widget_string(scope, param_label, val)) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
                 } break;
                     // TRANSFER FUNCTION -------------------------------
                 case (ParamType_t::TRANSFERFUNCTION): {
-                    auto value = arg;
-                    if (this->widget_string(scope, param_label, value)) {
-                        this->SetValue(value);
+                    auto val = arg;
+                    if (this->widget_string(scope, param_label, val)) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
                 } break;
                     // FILE PATH ---------------------------------------
                 case (ParamType_t::FILEPATH): {
-                    auto value = arg;
-                    if (this->widget_string(scope, param_label, value)) {
-                        this->SetValue(value);
+                    auto val = arg;
+                    if (this->widget_string(scope, param_label, val)) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
                 } break;
                     // FLEX ENUM ---------------------------------------
                 case (ParamType_t::FLEXENUM): {
-                    auto value = arg;
-                    if (this->widget_flexenum(scope, param_label, value,
+                    auto val = arg;
+                    if (this->widget_flexenum(scope, param_label, val,
                             this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>())) {
-                        this->SetValue(value);
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
@@ -1014,27 +1014,27 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             }
             // TERNARY ---------------------------------------------
             else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
-                auto value = arg;
-                if (this->widget_ternary(scope, param_label, value)) {
-                    this->SetValue(value);
+                auto val = arg;
+                if (this->widget_ternary(scope, param_label, val)) {
+                    this->SetValue(val);
                     retval = true;
                 }
                 error = false;
             }
             // VECTOR 2 --------------------------------------------
             else if constexpr (std::is_same_v<T, glm::vec2>) {
-                auto value = arg;
-                if (this->widget_vector2f(scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                    this->SetValue(value);
+                auto val = arg;
+                if (this->widget_vector2f(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                    this->SetValue(val);
                     retval = true;
                 }
                 error = false;
             }
             // VECTOR 3 --------------------------------------------
             else if constexpr (std::is_same_v<T, glm::vec3>) {
-                auto value = arg;
-                if (this->widget_vector3f(scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                    this->SetValue(value);
+                auto val = arg;
+                if (this->widget_vector3f(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                    this->SetValue(val);
                     retval = true;
                 }
                 error = false;
@@ -1042,19 +1042,19 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 switch (this->type) {
                     // VECTOR 4 ----------------------------------------
                 case (ParamType_t::VECTOR4F): {
-                    auto value = arg;
+                    auto val = arg;
                     if (this->widget_vector4f(
-                            scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                        this->SetValue(value);
+                            scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
                 } break;
                     // COLOR -------------------------------------------
                 case (ParamType_t::COLOR): {
-                    auto value = arg;
-                    if (this->widget_vector4f(scope, param_label, value, glm::vec4(0.0f), glm::vec4(1.0f))) {
-                        this->SetValue(value);
+                    auto val = arg;
+                    if (this->widget_vector4f(scope, param_label, val, glm::vec4(0.0f), glm::vec4(1.0f))) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
@@ -1079,9 +1079,9 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
         } break;
             // STRING //////////////////////////////////////////////////
         case (Present_t::String): {
-            auto value = this->GetValueString();
-            if (this->widget_string(scope, param_label, value)) {
-                this->SetValueString(value);
+            auto val = this->GetValueString();
+            if (this->widget_string(scope, param_label, val)) {
+                this->SetValueString(val);
                 retval = true;
             }
             error = false;
@@ -1092,18 +1092,18 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 switch (this->type) {
                     // VECTOR 4 ----------------------------------------
                 case (ParamType_t::VECTOR4F): {
-                    auto value = arg;
-                    if (this->widget_color(scope, param_label, value)) {
-                        this->SetValue(value);
+                    auto val = arg;
+                    if (this->widget_color(scope, param_label, val)) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
                 } break;
                     // COLOR -------------------------------------------
                 case (ParamType_t::COLOR): {
-                    auto value = arg;
-                    if (this->widget_color(scope, param_label, value)) {
-                        this->SetValue(value);
+                    auto val = arg;
+                    if (this->widget_color(scope, param_label, val)) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
@@ -1119,9 +1119,9 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 switch (this->type) {
                     // FILE PATH ---------------------------------------
                 case (ParamType_t::FILEPATH): {
-                    auto value = arg;
-                    if (this->widget_filepath(scope, param_label, value)) {
-                        this->SetValue(value);
+                    auto val = arg;
+                    if (this->widget_filepath(scope, param_label, val)) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
@@ -1137,7 +1137,7 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 switch (this->type) {
                     // TRANSFER FUNCTION -------------------------------
                 case (ParamType_t::TRANSFERFUNCTION): {
-                    auto value = arg;
+                    auto val = arg;
                     if (this->widget_transfer_function_editor(scope)) {
                         retval = true;
                     }
@@ -1190,9 +1190,9 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
         case (Present_t::Knob): {
             // FLOAT -----------------------------------------------
             if constexpr (std::is_same_v<T, float>) {
-                auto value = arg;
-                if (this->widget_knob(scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                    this->SetValue(value);
+                auto val = arg;
+                if (this->widget_knob(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                    this->SetValue(val);
                     retval = true;
                 }
                 error = false;
@@ -1204,9 +1204,9 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
         case (Present_t::Drag): {
             // FLOAT -----------------------------------------------
             if constexpr (std::is_same_v<T, float>) {
-                auto value = arg;
-                if (this->widget_float(scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                    this->SetValue(value);
+                auto val = arg;
+                if (this->widget_float(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                    this->SetValue(val);
                     retval = true;
                 }
                 error = false;
@@ -1214,9 +1214,9 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 switch (this->type) {
                     // INT ---------------------------------------------
                 case (ParamType_t::INT): {
-                    auto value = arg;
-                    if (this->widget_int(scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                        this->SetValue(value);
+                    auto val = arg;
+                    if (this->widget_int(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
@@ -1227,18 +1227,18 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             }
             // VECTOR 2 --------------------------------------------
             else if constexpr (std::is_same_v<T, glm::vec2>) {
-                auto value = arg;
-                if (this->widget_vector2f(scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                    this->SetValue(value);
+                auto val = arg;
+                if (this->widget_vector2f(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                    this->SetValue(val);
                     retval = true;
                 }
                 error = false;
             }
             // VECTOR 3 --------------------------------------------
             else if constexpr (std::is_same_v<T, glm::vec3>) {
-                auto value = arg;
-                if (this->widget_vector3f(scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                    this->SetValue(value);
+                auto val = arg;
+                if (this->widget_vector3f(scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                    this->SetValue(val);
                     retval = true;
                 }
                 error = false;
@@ -1246,10 +1246,10 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 switch (this->type) {
                     // VECTOR 4 ----------------------------------------
                 case (ParamType_t::VECTOR4F): {
-                    auto value = arg;
+                    auto val = arg;
                     if (this->widget_vector4f(
-                            scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                        this->SetValue(value);
+                            scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
@@ -1266,10 +1266,10 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 switch (this->type) {
                     // VECTOR 4 ----------------------------------------
                 case (ParamType_t::VECTOR4F): {
-                    auto value = arg;
+                    auto val = arg;
                     if (this->widget_rotation_axes(
-                            scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                        this->SetValue(value);
+                            scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
@@ -1286,10 +1286,10 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                 switch (this->type) {
                     // VECTOR 3 ----------------------------------------
                 case (ParamType_t::VECTOR3F): {
-                    auto value = arg;
+                    auto val = arg;
                     if (this->widget_rotation_direction(
-                            scope, param_label, value, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
-                        this->SetValue(value);
+                            scope, param_label, val, this->GetMinValue<T>(), this->GetMaxValue<T>())) {
+                        this->SetValue(val);
                         retval = true;
                     }
                     error = false;
@@ -1303,9 +1303,9 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
         case (Present_t::Checkbox): {
             // BOOL ------------------------------------------------
             if constexpr (std::is_same_v<T, bool>) {
-                auto value = arg;
-                if (this->widget_bool(scope, param_label, value)) {
-                    this->SetValue(value);
+                auto val = arg;
+                if (this->widget_bool(scope, param_label, val)) {
+                    this->SetValue(val);
                     retval = true;
                 }
                 error = false;
@@ -1347,7 +1347,7 @@ bool megamol::gui::Parameter::widget_button(
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         std::string button_hotkey = keycode.ToString();
-        std::string hotkey("");
+        std::string hotkey;
         std::string edit_label = label;
 
         bool hotkey_in_tooltip = false;
@@ -1373,7 +1373,7 @@ bool megamol::gui::Parameter::widget_button(
 
 
 bool megamol::gui::Parameter::widget_bool(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, bool& value) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, bool& val) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1381,9 +1381,9 @@ bool megamol::gui::Parameter::widget_bool(
         auto p = this->GetGUIPresentation();
 
         if (p == Present_t::Checkbox) {
-            retval = ImGui::Checkbox(label.c_str(), &value);
+            retval = ImGui::Checkbox(label.c_str(), &val);
         } else { // Present_t::Basic
-            retval = megamol::gui::ButtonWidgets::ToggleButton(label, value);
+            retval = megamol::gui::ButtonWidgets::ToggleButton(label, val);
         }
     }
     return retval;
@@ -1391,7 +1391,7 @@ bool megamol::gui::Parameter::widget_bool(
 
 
 bool megamol::gui::Parameter::widget_string(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, std::string& value) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, std::string& val) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1399,7 +1399,7 @@ bool megamol::gui::Parameter::widget_string(
         ImGui::BeginGroup();
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
-            std::string utf8Str = value;
+            std::string utf8Str = val;
             gui_utils::Utf8Encode(utf8Str);
             this->gui_widget_store = utf8Str;
         }
@@ -1416,10 +1416,10 @@ bool megamol::gui::Parameter::widget_string(
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             std::string utf8Str = std::get<std::string>(this->gui_widget_store);
             gui_utils::Utf8Decode(utf8Str);
-            value = utf8Str;
+            val = utf8Str;
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            std::string utf8Str = value;
+            std::string utf8Str = val;
             gui_utils::Utf8Encode(utf8Str);
             this->gui_widget_store = utf8Str;
         }
@@ -1435,13 +1435,13 @@ bool megamol::gui::Parameter::widget_string(
 
 
 bool megamol::gui::Parameter::widget_color(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, glm::vec4& value) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, glm::vec4& val) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
-        retval = ImGui::ColorEdit4(label.c_str(), glm::value_ptr(value), color_flags);
+        retval = ImGui::ColorEdit4(label.c_str(), glm::value_ptr(val), color_flags);
 
         this->gui_help = "[Left Click] on the colored square to open a color picker.\n"
                          "[CTRL + Left Click] on individual component to input value.\n"
@@ -1452,22 +1452,22 @@ bool megamol::gui::Parameter::widget_color(
 
 
 bool megamol::gui::Parameter::widget_enum(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, int& value, EnumStorage_t storage) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, int& val, EnumStorage_t store) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        std::string utf8Str = storage[value];
+        std::string utf8Str = store[val];
         gui_utils::Utf8Encode(utf8Str);
         auto combo_flags = ImGuiComboFlags_HeightRegular;
         if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str(), combo_flags)) {
-            for (auto& pair : storage) {
-                bool isSelected = (pair.first == value);
+            for (auto& pair : store) {
+                bool isSelected = (pair.first == val);
                 utf8Str = pair.second;
                 gui_utils::Utf8Encode(utf8Str);
                 if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
-                    value = pair.first;
+                    val = pair.first;
                     retval = true;
                 }
             }
@@ -1479,7 +1479,7 @@ bool megamol::gui::Parameter::widget_enum(
 
 
 bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
-    std::string& value, megamol::core::param::FlexEnumParam::Storage_t storage) {
+    std::string& val, megamol::core::param::FlexEnumParam::Storage_t store) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1488,18 +1488,18 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
             this->gui_widget_store = std::string();
         }
-        std::string utf8Str = value;
+        std::string utf8Str = val;
         gui_utils::Utf8Encode(utf8Str);
         auto combo_flags = ImGuiComboFlags_HeightRegular;
         if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str(), combo_flags)) {
             bool one_present = false;
-            for (auto& valueOption : storage) {
-                bool isSelected = (valueOption == value);
+            for (auto& valueOption : store) {
+                bool isSelected = (valueOption == val);
                 utf8Str = valueOption;
                 gui_utils::Utf8Encode(utf8Str);
                 if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
                     gui_utils::Utf8Decode(utf8Str);
-                    value = utf8Str;
+                    val = utf8Str;
                     retval = true;
                 }
                 if (isSelected) {
@@ -1523,7 +1523,7 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 if (!std::get<std::string>(this->gui_widget_store).empty()) {
                     gui_utils::Utf8Decode(std::get<std::string>(this->gui_widget_store));
-                    value = std::get<std::string>(this->gui_widget_store);
+                    val = std::get<std::string>(this->gui_widget_store);
                     retval = true;
                     std::get<std::string>(this->gui_widget_store) = std::string();
                 }
@@ -1540,7 +1540,7 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
 
 
 bool megamol::gui::Parameter::widget_filepath(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, std::string& value) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, std::string& val) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1548,7 +1548,7 @@ bool megamol::gui::Parameter::widget_filepath(
         ImGui::BeginGroup();
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
-            std::string utf8Str = value;
+            std::string utf8Str = val;
             gui_utils::Utf8Encode(utf8Str);
             this->gui_widget_store = utf8Str;
         }
@@ -1566,10 +1566,10 @@ bool megamol::gui::Parameter::widget_filepath(
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
             gui_utils::Utf8Decode(std::get<std::string>(this->gui_widget_store));
-            value = std::get<std::string>(this->gui_widget_store);
+            val = std::get<std::string>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            std::string utf8Str = value;
+            std::string utf8Str = val;
             gui_utils::Utf8Encode(utf8Str);
             this->gui_widget_store = utf8Str;
         }
@@ -1581,24 +1581,24 @@ bool megamol::gui::Parameter::widget_filepath(
 
 
 bool megamol::gui::Parameter::widget_ternary(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, vislib::math::Ternary& value) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, vislib::math::Ternary& val) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         ImGui::BeginGroup();
-        if (ImGui::RadioButton("True", value.IsTrue())) {
-            value = vislib::math::Ternary::TRI_TRUE;
+        if (ImGui::RadioButton("True", val.IsTrue())) {
+            val = vislib::math::Ternary::TRI_TRUE;
             retval = true;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("False", value.IsFalse())) {
-            value = vislib::math::Ternary::TRI_FALSE;
+        if (ImGui::RadioButton("False", val.IsFalse())) {
+            val = vislib::math::Ternary::TRI_FALSE;
             retval = true;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Unknown", value.IsUnknown())) {
-            value = vislib::math::Ternary::TRI_UNKNOWN;
+        if (ImGui::RadioButton("Unknown", val.IsUnknown())) {
+            val = vislib::math::Ternary::TRI_UNKNOWN;
             retval = true;
         }
         ImGui::SameLine();
@@ -1612,13 +1612,13 @@ bool megamol::gui::Parameter::widget_ternary(
 
 
 bool megamol::gui::Parameter::widget_int(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, int& value, int minval, int maxval) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, int& val, int minv, int maxv) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         if (!std::holds_alternative<int>(this->gui_widget_store)) {
-            this->gui_widget_store = value;
+            this->gui_widget_store = val;
         }
         auto p = this->GetGUIPresentation();
 
@@ -1633,37 +1633,37 @@ bool megamol::gui::Parameter::widget_int(
         // Relative step size
         int min_step_size = 1;
         int max_step_size = 10;
-        if ((minval > INT_MIN) && (maxval < INT_MAX)) {
-            min_step_size = static_cast<int>(static_cast<float>(maxval - minval) * 0.003f); // 0.3%
-            max_step_size = static_cast<int>(static_cast<float>(maxval - minval) * 0.03f);  // 3%
+        if ((minv > INT_MIN) && (maxv < INT_MAX)) {
+            min_step_size = static_cast<int>(static_cast<float>(maxv - minv) * 0.003f); // 0.3%
+            max_step_size = static_cast<int>(static_cast<float>(maxv - minv) * 0.03f);  // 3%
         }
 
         // Value
         if (p == Present_t::Slider) {
             const int offset = 2;
-            auto slider_min = (minval > INT_MIN) ? (minval) : ((value == 0) ? (-offset) : (value - (offset * value)));
-            auto slider_max = (maxval < INT_MAX) ? (maxval) : ((value == 0) ? (offset) : (value + (offset * value)));
+            auto slider_min = (minv > INT_MIN) ? (minv) : ((val == 0) ? (-offset) : (val - (offset * val)));
+            auto slider_max = (maxv < INT_MAX) ? (maxv) : ((val == 0) ? (offset) : (val + (offset * val)));
             ImGui::SliderInt(label.c_str(), &std::get<int>(this->gui_widget_store), slider_min, slider_max);
             this->gui_help = "[Ctrl + Click] to turn slider into an input box.";
         } else if (p == Present_t::Drag) {
-            ImGui::DragInt(label.c_str(), &std::get<int>(this->gui_widget_store), min_step_size, minval, maxval);
+            ImGui::DragInt(label.c_str(), &std::get<int>(this->gui_widget_store), static_cast<float>(min_step_size), minv, maxv);
             this->gui_help = "[Ctrl + Click] to turn slider into an input box.";
         } else { // Present_t::Basic
             ImGui::InputInt(label.c_str(), &std::get<int>(this->gui_widget_store), min_step_size, max_step_size,
                 ImGuiInputTextFlags_None);
         }
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            this->gui_widget_store = std::max(minval, std::min(std::get<int>(this->gui_widget_store), maxval));
-            value = std::get<int>(this->gui_widget_store);
+            this->gui_widget_store = std::max(minv, std::min(std::get<int>(this->gui_widget_store), maxv));
+            val = std::get<int>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            this->gui_widget_store = value;
+            this->gui_widget_store = val;
         }
         if (this->gui_show_minmax) {
             gui_utils::ReadOnlyWigetStyle(true);
-            auto min_value = minval;
+            auto min_value = minv;
             ImGui::InputInt("Min Value", &min_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
-            auto max_value = maxval;
+            auto max_value = maxv;
             ImGui::InputInt("Max Value", &max_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
             gui_utils::ReadOnlyWigetStyle(false);
         }
@@ -1674,13 +1674,13 @@ bool megamol::gui::Parameter::widget_int(
 
 
 bool megamol::gui::Parameter::widget_float(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, float& value, float minval, float maxval) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, float& val, float minv, float maxv) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         if (!std::holds_alternative<float>(this->gui_widget_store)) {
-            this->gui_widget_store = value;
+            this->gui_widget_store = val;
         }
 
         auto p = this->GetGUIPresentation();
@@ -1698,43 +1698,43 @@ bool megamol::gui::Parameter::widget_float(
         // Relative step size
         float min_step_size = 1.0f;
         float max_step_size = 10.0f;
-        if ((minval > -FLT_MAX) && (maxval < FLT_MAX)) {
-            min_step_size = (maxval - minval) * 0.003f; // 0.3%
-            max_step_size = (maxval - minval) * 0.03f;  // 3%
+        if ((minv > -FLT_MAX) && (maxv < FLT_MAX)) {
+            min_step_size = (maxv - minv) * 0.003f; // 0.3%
+            max_step_size = (maxv - minv) * 0.03f;  // 3%
         }
 
         // Value
         if (p == Present_t::Slider) {
             const float offset = 2.0f;
             auto slider_min =
-                (minval > -FLT_MAX) ? (minval) : ((value == 0.0f) ? (-offset) : (value - (offset * value)));
-            auto slider_max = (maxval < FLT_MAX) ? (maxval) : ((value == 0.0f) ? (offset) : (value + (offset * value)));
+                (minv > -FLT_MAX) ? (minv) : ((val == 0.0f) ? (-offset) : (val - (offset * val)));
+            auto slider_max = (maxv < FLT_MAX) ? (maxv) : ((val == 0.0f) ? (offset) : (val + (offset * val)));
             ImGui::SliderFloat(label.c_str(), &std::get<float>(this->gui_widget_store), slider_min, slider_max,
                 this->gui_float_format.c_str());
             this->gui_help = "[Ctrl + Click] to turn slider into an input box.";
         } else if (p == Present_t::Drag) {
-            ImGui::DragFloat(label.c_str(), &std::get<float>(this->gui_widget_store), min_step_size, minval, maxval);
+            ImGui::DragFloat(label.c_str(), &std::get<float>(this->gui_widget_store), min_step_size, minv, maxv);
             this->gui_help = "[Ctrl + Click] to turn slider into an input box.";
         } else { // Present_t::Basic
             ImGui::InputFloat(label.c_str(), &std::get<float>(this->gui_widget_store), min_step_size, max_step_size,
                 this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
         }
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            this->gui_widget_store = std::max(minval, std::min(std::get<float>(this->gui_widget_store), maxval));
-            value = std::get<float>(this->gui_widget_store);
+            this->gui_widget_store = std::max(minv, std::min(std::get<float>(this->gui_widget_store), maxv));
+            val = std::get<float>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            this->gui_widget_store = value;
+            this->gui_widget_store = val;
         }
 
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
                 gui_utils::ReadOnlyWigetStyle(true);
-                auto min_value = minval;
+                auto min_value = minv;
                 ImGui::InputFloat("Min Value", &min_value, min_step_size, max_step_size, this->gui_float_format.c_str(),
                     ImGuiInputTextFlags_None);
-                auto max_value = maxval;
+                auto max_value = maxv;
                 ImGui::InputFloat("Max Value", &max_value, min_step_size, max_step_size, this->gui_float_format.c_str(),
                     ImGuiInputTextFlags_None);
                 gui_utils::ReadOnlyWigetStyle(false);
@@ -1747,13 +1747,13 @@ bool megamol::gui::Parameter::widget_float(
 
 
 bool megamol::gui::Parameter::widget_vector2f(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
-    glm::vec2& value, glm::vec2 minval, glm::vec2 maxval) {
+    glm::vec2& val, glm::vec2 minv, glm::vec2 maxv) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         if (!std::holds_alternative<glm::vec2>(this->gui_widget_store)) {
-            this->gui_widget_store = value;
+            this->gui_widget_store = val;
         }
 
         auto p = this->GetGUIPresentation();
@@ -1767,14 +1767,14 @@ bool megamol::gui::Parameter::widget_vector2f(megamol::gui::Parameter::WidgetSco
             this->gui_tooltip.ToolTip("Min/Max Values");
             ImGui::SameLine();
         }
-        float vec_min = std::max(minval.x, minval.y);
-        float vec_max = std::min(maxval.x, maxval.y);
+        float vec_min = std::max(minv.x, minv.y);
+        float vec_max = std::min(maxv.x, maxv.y);
 
         // Value
         if (p == Present_t::Slider) {
             const float offset = 2.0f;
-            float value_min = std::min(value.x, value.y);
-            float value_max = std::max(value.x, value.y);
+            float value_min = std::min(val.x, val.y);
+            float value_max = std::max(val.x, val.y);
             auto slider_min =
                 std::max(vec_min, ((value_min == 0.0f) ? (-offset) : (value_min - (offset * fabsf(value_min)))));
             auto slider_max =
@@ -1796,23 +1796,23 @@ bool megamol::gui::Parameter::widget_vector2f(megamol::gui::Parameter::WidgetSco
                 this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
         }
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            auto x = std::max(minval.x, std::min(std::get<glm::vec2>(this->gui_widget_store).x, maxval.x));
-            auto y = std::max(minval.y, std::min(std::get<glm::vec2>(this->gui_widget_store).y, maxval.y));
+            auto x = std::max(minv.x, std::min(std::get<glm::vec2>(this->gui_widget_store).x, maxv.x));
+            auto y = std::max(minv.y, std::min(std::get<glm::vec2>(this->gui_widget_store).y, maxv.y));
             this->gui_widget_store = glm::vec2(x, y);
-            value = std::get<glm::vec2>(this->gui_widget_store);
+            val = std::get<glm::vec2>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            this->gui_widget_store = value;
+            this->gui_widget_store = val;
         }
 
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
                 gui_utils::ReadOnlyWigetStyle(true);
-                auto min_value = minval;
+                auto min_value = minv;
                 ImGui::InputFloat2(
                     "Min Value", glm::value_ptr(min_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
-                auto max_value = maxval;
+                auto max_value = maxv;
                 ImGui::InputFloat2(
                     "Max Value", glm::value_ptr(max_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
                 gui_utils::ReadOnlyWigetStyle(false);
@@ -1825,13 +1825,13 @@ bool megamol::gui::Parameter::widget_vector2f(megamol::gui::Parameter::WidgetSco
 
 
 bool megamol::gui::Parameter::widget_vector3f(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
-    glm::vec3& value, glm::vec3 minval, glm::vec3 maxval) {
+    glm::vec3& val, glm::vec3 minv, glm::vec3 maxv) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         if (!std::holds_alternative<glm::vec3>(this->gui_widget_store)) {
-            this->gui_widget_store = value;
+            this->gui_widget_store = val;
         }
 
         auto p = this->GetGUIPresentation();
@@ -1846,14 +1846,14 @@ bool megamol::gui::Parameter::widget_vector3f(megamol::gui::Parameter::WidgetSco
             ImGui::SameLine();
         }
 
-        float vec_min = std::max(minval.x, std::max(minval.y, minval.z));
-        float vec_max = std::min(maxval.x, std::min(maxval.y, maxval.z));
+        float vec_min = std::max(minv.x, std::max(minv.y, minv.z));
+        float vec_max = std::min(maxv.x, std::min(maxv.y, maxv.z));
 
         // Value
         if (p == Present_t::Slider) {
             const float offset = 2.0f;
-            float value_min = std::min(value.x, std::min(value.y, value.z));
-            float value_max = std::max(value.x, std::max(value.y, value.z));
+            float value_min = std::min(val.x, std::min(val.y, val.z));
+            float value_max = std::max(val.x, std::max(val.y, val.z));
             auto slider_min =
                 std::max(vec_min, ((value_min == 0.0f) ? (-offset) : (value_min - (offset * fabsf(value_min)))));
             auto slider_max =
@@ -1875,24 +1875,24 @@ bool megamol::gui::Parameter::widget_vector3f(megamol::gui::Parameter::WidgetSco
                 this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
         }
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            auto x = std::max(minval.x, std::min(std::get<glm::vec3>(this->gui_widget_store).x, maxval.x));
-            auto y = std::max(minval.y, std::min(std::get<glm::vec3>(this->gui_widget_store).y, maxval.y));
-            auto z = std::max(minval.z, std::min(std::get<glm::vec3>(this->gui_widget_store).z, maxval.z));
+            auto x = std::max(minv.x, std::min(std::get<glm::vec3>(this->gui_widget_store).x, maxv.x));
+            auto y = std::max(minv.y, std::min(std::get<glm::vec3>(this->gui_widget_store).y, maxv.y));
+            auto z = std::max(minv.z, std::min(std::get<glm::vec3>(this->gui_widget_store).z, maxv.z));
             this->gui_widget_store = glm::vec3(x, y, z);
-            value = std::get<glm::vec3>(this->gui_widget_store);
+            val = std::get<glm::vec3>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            this->gui_widget_store = value;
+            this->gui_widget_store = val;
         }
 
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
                 gui_utils::ReadOnlyWigetStyle(true);
-                auto min_value = minval;
+                auto min_value = minv;
                 ImGui::InputFloat3(
                     "Min Value", glm::value_ptr(min_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
-                auto max_value = maxval;
+                auto max_value = maxv;
                 ImGui::InputFloat3(
                     "Max Value", glm::value_ptr(max_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
                 gui_utils::ReadOnlyWigetStyle(false);
@@ -1905,13 +1905,13 @@ bool megamol::gui::Parameter::widget_vector3f(megamol::gui::Parameter::WidgetSco
 
 
 bool megamol::gui::Parameter::widget_vector4f(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
-    glm::vec4& value, glm::vec4 minval, glm::vec4 maxval) {
+    glm::vec4& val, glm::vec4 minv, glm::vec4 maxv) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         if (!std::holds_alternative<glm::vec4>(this->gui_widget_store)) {
-            this->gui_widget_store = value;
+            this->gui_widget_store = val;
         }
 
         auto p = this->GetGUIPresentation();
@@ -1925,14 +1925,14 @@ bool megamol::gui::Parameter::widget_vector4f(megamol::gui::Parameter::WidgetSco
             this->gui_tooltip.ToolTip("Min/Max Values");
             ImGui::SameLine();
         }
-        float vec_min = std::max(minval.x, std::max(minval.y, std::max(minval.z, minval.w)));
-        float vec_max = std::min(maxval.x, std::min(maxval.y, std::min(maxval.z, maxval.w)));
+        float vec_min = std::max(minv.x, std::max(minv.y, std::max(minv.z, minv.w)));
+        float vec_max = std::min(maxv.x, std::min(maxv.y, std::min(maxv.z, maxv.w)));
 
         // Value
         if (p == Present_t::Slider) {
             const float offset = 2.0f;
-            float value_min = std::min(value.x, std::min(value.y, std::min(value.z, value.w)));
-            float value_max = std::max(value.x, std::max(value.y, std::max(value.z, value.w)));
+            float value_min = std::min(val.x, std::min(val.y, std::min(val.z, val.w)));
+            float value_max = std::max(val.x, std::max(val.y, std::max(val.z, val.w)));
             auto slider_min =
                 std::max(vec_min, ((value_min == 0.0f) ? (-offset) : (value_min - (offset * fabsf(value_min)))));
             auto slider_max =
@@ -1954,25 +1954,25 @@ bool megamol::gui::Parameter::widget_vector4f(megamol::gui::Parameter::WidgetSco
                 this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
         }
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            auto x = std::max(minval.x, std::min(std::get<glm::vec4>(this->gui_widget_store).x, maxval.x));
-            auto y = std::max(minval.y, std::min(std::get<glm::vec4>(this->gui_widget_store).y, maxval.y));
-            auto z = std::max(minval.z, std::min(std::get<glm::vec4>(this->gui_widget_store).z, maxval.z));
-            auto w = std::max(minval.w, std::min(std::get<glm::vec4>(this->gui_widget_store).w, maxval.w));
+            auto x = std::max(minv.x, std::min(std::get<glm::vec4>(this->gui_widget_store).x, maxv.x));
+            auto y = std::max(minv.y, std::min(std::get<glm::vec4>(this->gui_widget_store).y, maxv.y));
+            auto z = std::max(minv.z, std::min(std::get<glm::vec4>(this->gui_widget_store).z, maxv.z));
+            auto w = std::max(minv.w, std::min(std::get<glm::vec4>(this->gui_widget_store).w, maxv.w));
             this->gui_widget_store = glm::vec4(x, y, z, w);
-            value = std::get<glm::vec4>(this->gui_widget_store);
+            val = std::get<glm::vec4>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            this->gui_widget_store = value;
+            this->gui_widget_store = val;
         }
 
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
                 gui_utils::ReadOnlyWigetStyle(true);
-                auto min_value = minval;
+                auto min_value = minv;
                 ImGui::InputFloat4(
                     "Min Value", glm::value_ptr(min_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
-                auto max_value = maxval;
+                auto max_value = maxv;
                 ImGui::InputFloat4(
                     "Max Value", glm::value_ptr(max_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
                 gui_utils::ReadOnlyWigetStyle(false);
@@ -1985,7 +1985,7 @@ bool megamol::gui::Parameter::widget_vector4f(megamol::gui::Parameter::WidgetSco
 
 
 bool megamol::gui::Parameter::widget_pinvaluetomouse(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, const std::string& value) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, const std::string& val) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -2003,7 +2003,7 @@ bool megamol::gui::Parameter::widget_pinvaluetomouse(
             ImGui::BeginTooltip();
             ImGui::TextDisabled(label.c_str());
             ImGui::SameLine();
-            ImGui::TextUnformatted(value.c_str());
+            ImGui::TextUnformatted(val.c_str());
             ImGui::EndTooltip();
         }
     }
@@ -2017,7 +2017,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
     bool retval = false;
     bool isActive = false;
     bool updateEditor = false;
-    auto value = std::get<std::string>(this->GetValue());
+    auto val = std::get<std::string>(this->GetValue());
     std::string label = this->Name();
 
     ImGuiStyle& style = ImGui::GetStyle();
@@ -2035,7 +2035,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
         if (this->tf_use_external_editor) {
 
             // Reduced display of value and editor state.
-            if (value.empty()) {
+            if (val.empty()) {
                 ImGui::TextDisabled("{    (empty)    }");
                 ImGui::SameLine();
             } else {
@@ -2099,7 +2099,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
             ImGui::SameLine();
 
             // Indicate unset transfer function state
-            if (value.empty()) {
+            if (val.empty()) {
                 ImGui::TextDisabled(" { empty } ");
             }
             ImGui::SameLine();
@@ -2110,20 +2110,20 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
 
         // Copy
         if (ImGui::Button("Copy")) {
-            ImGui::SetClipboardText(value.c_str());
+            ImGui::SetClipboardText(val.c_str());
         }
         ImGui::SameLine();
 
         // Paste
         if (ImGui::Button("Paste")) {
             this->SetValue(std::string(ImGui::GetClipboardText()));
-            value = std::get<std::string>(this->GetValue());
+            val = std::get<std::string>(this->GetValue());
             if (this->tf_use_external_editor) {
                 if (this->tf_editor_external_ptr != nullptr) {
-                    this->tf_editor_external_ptr->SetTransferFunction(value, true);
+                    this->tf_editor_external_ptr->SetTransferFunction(val, true);
                 }
             } else {
-                this->tf_editor_inplace.SetTransferFunction(value, false);
+                this->tf_editor_inplace.SetTransferFunction(val, false);
             }
         }
 
@@ -2134,14 +2134,14 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
             }
             // Propagate the transfer function to the editor.
             if (updateEditor) {
-                this->tf_editor_inplace.SetTransferFunction(value, false);
+                this->tf_editor_inplace.SetTransferFunction(val, false);
             }
             // Draw transfer function editor
             if (this->tf_show_editor) {
                 if (this->tf_editor_inplace.Draw()) {
-                    std::string value;
-                    if (this->tf_editor_inplace.GetTransferFunction(value)) {
-                        this->SetValue(value);
+                    std::string val_str;
+                    if (this->tf_editor_inplace.GetTransferFunction(val_str)) {
+                        this->SetValue(val_str);
                         retval = false; /// (Returning true opens external editor)
                     }
                 }
@@ -2166,7 +2166,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
             }
             // Propagate the transfer function to the editor.
             if (isActive && updateEditor) {
-                this->tf_editor_external_ptr->SetTransferFunction(value, true);
+                this->tf_editor_external_ptr->SetTransferFunction(val, true);
                 retval = true;
             }
             this->tf_editor_hash = this->GetTransferFunctionHash();
@@ -2178,7 +2178,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
 
 
 bool megamol::gui::Parameter::widget_knob(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, float& value, float minval, float maxval) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, float& val, float minv, float maxv) {
     bool retval = false;
 
     ImGuiStyle& style = ImGui::GetStyle();
@@ -2188,7 +2188,7 @@ bool megamol::gui::Parameter::widget_knob(
 
         // Draw knob
         const float knob_size = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetFrameHeightWithSpacing();
-        if (ButtonWidgets::KnobButton("param_knob", knob_size, value, minval, maxval)) {
+        if (ButtonWidgets::KnobButton("param_knob", knob_size, val, minv, maxv)) {
             retval = true;
         }
 
@@ -2200,23 +2200,23 @@ bool megamol::gui::Parameter::widget_knob(
         ImVec2 pos = ImGui::GetCursorPos();
         ImGui::PushItemWidth(ImGui::CalcItemWidth() - left_widget_x_offset);
 
-        if (this->widget_float(scope, label, value, minval, maxval)) {
+        if (this->widget_float(scope, label, val, minv, maxv)) {
             retval = true;
         }
         ImGui::PopItemWidth();
 
         // Draw min max
         ImGui::SetCursorPos(pos + ImVec2(0.0f, ImGui::GetFrameHeightWithSpacing()));
-        if (minval > -FLT_MAX) {
+        if (minv > -FLT_MAX) {
             value_label = "Min: " + this->gui_float_format;
-            ImGui::Text(value_label.c_str(), minval);
+            ImGui::Text(value_label.c_str(), minv);
         } else {
             ImGui::TextUnformatted("Min: -inf");
         }
         ImGui::SameLine();
-        if (maxval < FLT_MAX) {
+        if (maxv < FLT_MAX) {
             value_label = "Max: " + this->gui_float_format;
-            ImGui::Text(value_label.c_str(), maxval);
+            ImGui::Text(value_label.c_str(), maxv);
         } else {
             ImGui::TextUnformatted("Max: inf");
         }
@@ -2232,16 +2232,16 @@ bool megamol::gui::Parameter::widget_knob(
 
 
 bool megamol::gui::Parameter::widget_rotation_axes(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
-    glm::vec4& value, glm::vec4 minval, glm::vec4 maxval) {
+    glm::vec4& val, glm::vec4 minv, glm::vec4 maxv) {
 
     bool retval = false;
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
 
         auto x_cursor_pos = ImGui::GetCursorPosX();
-        retval = this->widget_vector4f(scope, label, value, minval, maxval);
+        retval = this->widget_vector4f(scope, label, val, minv, maxv);
         ImGui::SetCursorPosX(x_cursor_pos);
-        retval |= this->gui_rotation_widget.gizmo3D_rotation_axes(value);
+        retval |= this->gui_rotation_widget.gizmo3D_rotation_axes(val);
         // ImGui::SameLine();
         // ImGui::TextUnformatted(label.c_str());
     }
@@ -2256,16 +2256,16 @@ bool megamol::gui::Parameter::widget_rotation_axes(megamol::gui::Parameter::Widg
 
 
 bool megamol::gui::Parameter::widget_rotation_direction(megamol::gui::Parameter::WidgetScope scope,
-    const std::string& label, glm::vec3& value, glm::vec3 minval, glm::vec3 maxval) {
+    const std::string& label, glm::vec3& val, glm::vec3 minv, glm::vec3 maxv) {
 
     bool retval = false;
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
 
         auto x_cursor_pos = ImGui::GetCursorPosX();
-        retval = this->widget_vector3f(scope, label, value, minval, maxval);
+        retval = this->widget_vector3f(scope, label, val, minv, maxv);
         ImGui::SetCursorPosX(x_cursor_pos);
-        retval |= this->gui_rotation_widget.gizmo3D_rotation_direction(value);
+        retval |= this->gui_rotation_widget.gizmo3D_rotation_direction(val);
         // ImGui::SameLine();
         // ImGui::TextUnformatted(label.c_str());
 

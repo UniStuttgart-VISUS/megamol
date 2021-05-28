@@ -379,29 +379,29 @@ namespace gui {
         bool draw_parameter(WidgetScope scope);
 
         bool widget_button(WidgetScope scope, const std::string& label, const megamol::core::view::KeyCode& keycode);
-        bool widget_bool(WidgetScope scope, const std::string& label, bool& value);
-        bool widget_string(WidgetScope scope, const std::string& label, std::string& value);
-        bool widget_color(WidgetScope scope, const std::string& label, glm::vec4& value);
-        bool widget_enum(WidgetScope scope, const std::string& label, int& value, EnumStorage_t storage);
-        bool widget_flexenum(WidgetScope scope, const std::string& label, std::string& value,
-            megamol::core::param::FlexEnumParam::Storage_t storage);
-        bool widget_filepath(WidgetScope scope, const std::string& label, std::string& value);
-        bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& value);
-        bool widget_int(WidgetScope scope, const std::string& label, int& value, int minval, int maxval);
-        bool widget_float(WidgetScope scope, const std::string& label, float& value, float minval, float maxval);
+        bool widget_bool(WidgetScope scope, const std::string& label, bool& val);
+        bool widget_string(WidgetScope scope, const std::string& label, std::string& val);
+        bool widget_color(WidgetScope scope, const std::string& label, glm::vec4& val);
+        bool widget_enum(WidgetScope scope, const std::string& label, int& val, EnumStorage_t store);
+        bool widget_flexenum(WidgetScope scope, const std::string& label, std::string& val,
+            megamol::core::param::FlexEnumParam::Storage_t store);
+        bool widget_filepath(WidgetScope scope, const std::string& label, std::string& val);
+        bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& val);
+        bool widget_int(WidgetScope scope, const std::string& label, int& val, int minv, int maxv);
+        bool widget_float(WidgetScope scope, const std::string& label, float& val, float minv, float maxv);
         bool widget_vector2f(
-            WidgetScope scope, const std::string& label, glm::vec2& value, glm::vec2 minval, glm::vec2 maxval);
+            WidgetScope scope, const std::string& label, glm::vec2& val, glm::vec2 minv, glm::vec2 maxv);
         bool widget_vector3f(
-            WidgetScope scope, const std::string& label, glm::vec3& value, glm::vec3 minval, glm::vec3 maxval);
+            WidgetScope scope, const std::string& label, glm::vec3& val, glm::vec3 minv, glm::vec3 maxv);
         bool widget_vector4f(
-            WidgetScope scope, const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval);
-        bool widget_pinvaluetomouse(WidgetScope scope, const std::string& label, const std::string& value);
+            WidgetScope scope, const std::string& label, glm::vec4& val, glm::vec4 minv, glm::vec4 maxv);
+        bool widget_pinvaluetomouse(WidgetScope scope, const std::string& label, const std::string& val);
         bool widget_transfer_function_editor(WidgetScope scope);
-        bool widget_knob(WidgetScope scope, const std::string& label, float& value, float minval, float maxval);
+        bool widget_knob(WidgetScope scope, const std::string& label, float& val, float minv, float maxv);
         bool widget_rotation_axes(
-            WidgetScope scope, const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval);
+            WidgetScope scope, const std::string& label, glm::vec4& val, glm::vec4 minv, glm::vec4 maxv);
         bool widget_rotation_direction(
-            WidgetScope scope, const std::string& label, glm::vec3& value, glm::vec3 minval, glm::vec3 maxval);
+            WidgetScope scope, const std::string& label, glm::vec3& val, glm::vec3 minv, glm::vec3 maxv);
     };
 
 
