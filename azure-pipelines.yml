@@ -5,6 +5,9 @@ trigger:
 pr:
 - master
 
+variables:
+  enablePlugins: '-DBUILD_PLUGIN_ADIOS_PLUGIN=ON -DBUILD_PLUGIN_ASTRO=ON -DBUILD_PLUGIN_IMAGEVIEWER2=ON -DBUILD_PLUGIN_MEGAMOL101=ON -DBUILD_PLUGIN_MMVTKM=ON -DBUILD_PLUGIN_REMOTE=ON'
+
 jobs:
 - job: Windows
   strategy:
@@ -41,7 +44,7 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64"'
+      cmakeArgs: '.. -G"$(generator)" -A"x64" $(enablePlugins)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
@@ -84,7 +87,7 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration)'
+      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration) $(enablePlugins)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
