@@ -40,13 +40,11 @@ namespace gui {
          *
          * @return True on success, false otherwise.
          */
-        bool PopUp(std::string& inout_filename, FileBrowserFlag flag, const std::string& label, bool open_popup,
-            const std::string& extension, vislib::math::Ternary& inout_save_gui_state);
+        bool PopUp(FileBrowserFlag flag, const std::string& label, const std::string& extension, const std::string& id, bool& inout_open_popup, std::string& inout_filename, vislib::math::Ternary& inout_save_gui_state);
 
-        bool PopUp(std::string& inout_filename, FileBrowserFlag flag, const std::string& label, bool open_popup,
-            const std::string& extension) {
+        bool PopUp(FileBrowserFlag flag, const std::string& label, const std::string& extension, const std::string& id, bool& inout_open_popup, std::string& inout_filename) {
             vislib::math::Ternary tmp_save_gui_state(vislib::math::Ternary::TRI_UNKNOWN);
-            return this->PopUp(inout_filename, flag, label, open_popup, extension, tmp_save_gui_state);
+            return this->PopUp(flag, label, extension, id, inout_open_popup, inout_filename, tmp_save_gui_state);
         }
 
         /**

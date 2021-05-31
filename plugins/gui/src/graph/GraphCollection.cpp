@@ -1635,7 +1635,6 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
 
         // Save selected graph in configurator --------------------------------
         this->save_graph_dialog(state.graph_selected_uid, state.configurator_graph_save);
-        state.configurator_graph_save = false;
 
         // Delete selected graph when tab is closed and unsaved changes should be discarded
         bool confirmed = false;
@@ -1666,7 +1665,7 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
 }
 
 
-bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool open_dialog) {
+bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& open_dialog) {
 
     bool confirmed, aborted;
     bool popup_failed = false;
@@ -1678,8 +1677,7 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool op
     }
     // Default for option asking for saving gui state
     vislib::math::Ternary save_gui_state(vislib::math::Ternary::TRI_FALSE);
-    if (this->gui_file_browser.PopUp(project_filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
-            open_dialog, "lua", save_gui_state)) {
+    if (this->gui_file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project", "lua", "fbw_sp_gc",  open_dialog, project_filename, save_gui_state)) {
 
         std::string gui_state;
         if (save_gui_state.IsTrue()) {

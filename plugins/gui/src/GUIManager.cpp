@@ -73,7 +73,6 @@ void megamol::gui::GUIManager::init_state() {
     this->gui_state.gui_restore_hidden_windows.clear();
     this->gui_state.gui_hide_next_frame = 0;
     this->gui_state.style = GUIManager::Styles::DarkColors;
-    this->gui_state.rescale_windows = false;
     this->gui_state.style_changed = true;
     this->gui_state.new_gui_state = "";
     this->gui_state.project_script_paths.clear();
@@ -416,6 +415,9 @@ bool GUIManager::PostDraw() {
         hotkey.second.is_pressed = false;
     }
 
+    // Apply new gui scale -----------------------------------------------------
+    megamol::gui::gui_scaling.ConsumePendingChange();
+
     // Hide GUI if it is currently shown --------------------------------------
     if (this->gui_state.gui_visible) {
         if (this->gui_state.gui_hide_next_frame == 2) {
@@ -436,28 +438,6 @@ bool GUIManager::PostDraw() {
             this->gui_state.gui_hide_next_frame = 0;
             this->gui_state.gui_visible = false;
         }
-    }
-
-    // Apply new gui scale -----------------------------------------------------
-    if (megamol::gui::gui_scaling.ConsumePendingChange()) {
-
-        // Reload ImGui style options
-        this->gui_state.style_changed = true;
-
-        // Scale all windows
-        if (this->gui_state.rescale_windows) {
-            // Do not adjust window scale after loading from project file (window size is already fine)
-            const auto size_func = [&](AbstractWindow& wc) {
-                wc.Config().reset_size *= megamol::gui::gui_scaling.TransitionFactor();
-                wc.Config().size *= megamol::gui::gui_scaling.TransitionFactor();
-                wc.Config().reset_pos_size = true;
-            };
-            this->win_collection.EnumWindows(size_func);
-            this->gui_state.rescale_windows = false;
-        }
-
-        // Reload and scale all fonts
-        this->gui_state.load_fonts = true;
     }
 
     // Loading new font -------------------------------------------------------
@@ -657,6 +637,7 @@ bool GUIManager::OnChar(unsigned int codePoint) {
 
 
 bool GUIManager::OnMouseMove(double x, double y) {
+
     ImGui::SetCurrentContext(this->context);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -700,6 +681,7 @@ bool GUIManager::OnMouseButton(
 
 
 bool GUIManager::OnMouseScroll(double dx, double dy) {
+
     ImGui::SetCurrentContext(this->context);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -716,15 +698,25 @@ bool GUIManager::OnMouseScroll(double dx, double dy) {
 
 
 void megamol::gui::GUIManager::SetScale(float scale) {
+
     megamol::gui::gui_scaling.Set(scale);
     if (megamol::gui::gui_scaling.PendingChange()) {
         // Additionally trigger reload of currently used font
         this->gui_state.font_apply = true;
         this->gui_state.font_size = static_cast<int>(
             static_cast<float>(this->gui_state.font_size) * (megamol::gui::gui_scaling.TransitionFactor()));
-        // Additionally resize all windows
-        this->gui_state.rescale_windows = true;
+        // Reload ImGui style options
+        this->gui_state.style_changed = true;
+        // Reload and scale all fonts
+        this->gui_state.load_fonts = true;
     }
+    // Scale all windows
+    const auto size_func = [&](AbstractWindow& wc) {
+        wc.Config().reset_size *= megamol::gui::gui_scaling.TransitionFactor();
+        wc.Config().size *= megamol::gui::gui_scaling.TransitionFactor();
+        wc.Config().reset_pos_size = true;
+    };
+    this->win_collection.EnumWindows(size_func);
 }
 
 
@@ -1535,49 +1527,39 @@ void megamol::gui::GUIManager::draw_popups() {
     }
 
     // Save project pop-up
-    this->gui_state.open_popup_save |= this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].is_pressed;
-    bool confirmed, aborted;
-    bool popup_failed = false;
-    std::string filename;
     if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-        filename = graph_ptr->GetFilename();
-        vislib::math::Ternary save_gui_state(
-            vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
+        this->gui_state.open_popup_save |= this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].is_pressed;
         this->gui_state.open_popup_save |= this->win_configurator_ptr->ConsumeTriggeredGlobalProjectSave();
-        if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
-                this->gui_state.open_popup_save, "lua", save_gui_state)) {
+
+        std::string filename = graph_ptr->GetFilename();
+        vislib::math::Ternary save_gui_state(vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
+
+        bool popup_failed = false;
+        if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project","lua", "fbw_sp_guim", this->gui_state.open_popup_save, filename, save_gui_state)) {
             std::string state_str;
             if (save_gui_state.IsTrue()) {
                 state_str = this->project_to_lua_string(true);
             }
-            popup_failed |= !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(
-                graph_ptr->UID(), filename, state_str);
+            popup_failed = !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(graph_ptr->UID(), filename, state_str);
         }
-        PopUps::Minimal(
-            "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
+        PopUps::Minimal("Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
     }
-    this->gui_state.open_popup_save = false;
     this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].is_pressed = false;
 
     // Load project pop-up
-    popup_failed = false;
+    std::string filename;
     this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project",
-            this->gui_state.open_popup_load, "lua")) {
+    if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", "lua", "fbw_lp_guim", this->gui_state.open_popup_load, filename)) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
     }
-    PopUps::Minimal("Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
-    this->gui_state.open_popup_load = false;
     this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed = false;
 
     // File name for screenshot pop-up
-    if (this->file_browser.PopUp(this->gui_state.screenshot_filepath, FileBrowserWidget::FileBrowserFlag::SAVE,
-            "Select Filename for Screenshot", this->gui_state.open_popup_screenshot, "png")) {
+    if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Select Filename for Screenshot", "png", "fbw_ss_guim", this->gui_state.open_popup_screenshot, this->gui_state.screenshot_filepath)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
-    this->gui_state.open_popup_screenshot = false;
 }
 
 

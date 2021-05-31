@@ -147,13 +147,6 @@ void AbstractWindow::WindowContextMenu(bool menu_visible, bool& out_collapsing_c
             this->win_config.reset_pos_size = true;
         }
     }
-
-    // Apply window position and size
-    if (this->win_config.reset_pos_size ||
-        (menu_visible && ImGui::IsMouseReleased(0) && ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))) {
-        this->ApplyWindowSizePosition(menu_visible);
-        this->win_config.reset_pos_size = false;
-    }
 }
 
 
@@ -208,13 +201,9 @@ void AbstractWindow::StateToJSON(nlohmann::json& inout_json) {
         static_cast<int>(this->win_config.hotkey.key), this->win_config.hotkey.mods.toInt()};
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_position"] = {
         this->win_config.position.x, this->win_config.position.y};
-    auto rescale_win_size = this->win_config.size;
-    rescale_win_size /= megamol::gui::gui_scaling.Get();
-    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_size"] = {rescale_win_size.x, rescale_win_size.y};
-    auto rescale_win_reset_size = this->win_config.reset_size;
-    rescale_win_reset_size /= megamol::gui::gui_scaling.Get();
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_size"] = {this->win_config.size.x, this->win_config.size.y};
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_reset_size"] = {
-        rescale_win_reset_size.x, rescale_win_reset_size.y};
+            this->win_config.reset_size.x, this->win_config.reset_size.y};
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_reset_position"] = {
         this->win_config.reset_position.x, this->win_config.reset_position.y};
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["win_collapsed"] = this->win_config.collapsed;

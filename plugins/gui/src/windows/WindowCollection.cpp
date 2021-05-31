@@ -85,7 +85,6 @@ void WindowCollection::Draw(bool menu_visible) {
                 ImGui::End(); // early ending
                 return;
             }
-
             // Context menu of window
             bool collapsing_changed = false;
             wc.WindowContextMenu(menu_visible, collapsing_changed);
@@ -93,12 +92,14 @@ void WindowCollection::Draw(bool menu_visible) {
             // Draw window content
             wc.Draw();
 
-            // Omit updating size and position of window from imgui for current frame when reset
-            bool update_window_pos_size = !wc.Config().reset_pos_size;
-            if (update_window_pos_size) {
+            // Reset or store window position and size
+            if (wc.Config().reset_pos_size || (menu_visible && ImGui::IsMouseReleased(0) && ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))) {
+                wc.ApplyWindowSizePosition(menu_visible);
+                wc.Config().reset_pos_size = false;
+            }
+            else {
                 wc.Config().position = ImGui::GetWindowPos();
                 wc.Config().size = ImGui::GetWindowSize();
-
                 if (!collapsing_changed) {
                     wc.Config().collapsed = ImGui::IsWindowCollapsed();
                 }

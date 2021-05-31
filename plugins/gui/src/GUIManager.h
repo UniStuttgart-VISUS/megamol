@@ -259,7 +259,6 @@ namespace gui {
                 gui_restore_hidden_windows; // List of all visible window IDs for restore when GUI is visible again
             unsigned int
                 gui_hide_next_frame; // Hiding all GUI windows properly needs two frames for ImGui to apply right state
-            bool rescale_windows;    // Indicates resizing of windows for new gui zoom
             Styles style;            // Predefined GUI style
             bool style_changed;      // Flag indicating changed style
             std::string new_gui_state; // If set, new gui state is applied in next graph synchronisation step

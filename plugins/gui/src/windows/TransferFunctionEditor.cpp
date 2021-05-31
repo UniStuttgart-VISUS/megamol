@@ -328,7 +328,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
     ImGui::BeginGroup();
     ImGui::PushID("TransferFunctionEditor");
 
-    if (this->non_window_mode && (this->IsParameterConnected())) {
+    if (!this->non_window_mode && (!this->IsParameterConnected())) {
         const char* message = "Changes have no effect.\n"
                               "No transfer function parameter connected for edit.\n";
         ImGui::TextColored(GUI_COLOR_TEXT_ERROR, message);

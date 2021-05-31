@@ -30,9 +30,8 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
         , tooltip() {}
 
 
-bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
-    megamol::gui::FileBrowserWidget::FileBrowserFlag flag, const std::string& label, bool open_popup,
-    const std::string& extension, vislib::math::Ternary& inout_save_gui_state) {
+bool megamol::gui::FileBrowserWidget::PopUp(FileBrowserFlag flag, const std::string& label, const std::string& extension,
+                                            const std::string& id, bool& inout_open_popup, std::string& inout_filename, vislib::math::Ternary& inout_save_gui_state) {
 
     bool retval = false;
 
@@ -41,10 +40,9 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
         if (!extension.empty()) {
             label_id.append(" (." + extension + ")");
         }
+        label_id.append("###" + id);
 
-        ImGui::PushID(label_id.c_str());
-
-        if (open_popup) {
+        if (inout_open_popup) {
             // Check given file name path
             this->validate_split_path(inout_filename, this->file_path_str, this->file_name_str);
             this->validate_directory(this->file_path_str);
@@ -59,6 +57,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
             // Set initial window size of pop up
             ImGui::SetNextWindowSize(
                 ImVec2((400.0f * megamol::gui::gui_scaling.Get()), (500.0f * megamol::gui::gui_scaling.Get())));
+            inout_open_popup = false;
         }
 
         bool open = true;
@@ -297,8 +296,6 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
             ImGui::EndPopup();
         }
 
-        ImGui::PopID();
-
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -348,7 +345,7 @@ bool megamol::gui::FileBrowserWidget::Button(
     draw_list->AddRectFilled(upper_left, lower_right, ImGui::ColorConvertFloat4ToU32(color_front), 1.0f);
 
     ImVec2 rect = ImVec2(edge_length, edge_length);
-    bool popup_select_file = ImGui::InvisibleButton("special_button", rect);
+    bool open_popup_select_file = ImGui::InvisibleButton("special_button", rect);
 
     ImGui::EndChild();
     ImGui::PopStyleColor();
@@ -365,12 +362,8 @@ bool megamol::gui::FileBrowserWidget::Button(
         label = "Save File";
         break;
     }
-    if (!extension.empty()) {
-        label.append(" (." + extension + ")");
-    }
-    bool retval = this->PopUp(inout_filename, flag, label, popup_select_file, extension);
 
-    return retval;
+    return this->PopUp(flag, label, extension, "fbw_btn_" + std::to_string(ImGui::GetItemID()), open_popup_select_file, inout_filename);;
 }
 
 
