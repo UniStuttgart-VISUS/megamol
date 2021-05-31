@@ -37,7 +37,7 @@ namespace megamol {
 namespace imageviewer2 {
 
 /**
- * Mesh-based renderer for bézier curve tubes
+ * Mesh-based renderer for bÃ©zier curve tubes
  */
 class ImageRenderer : public view::Renderer3DModuleGL {
 public:

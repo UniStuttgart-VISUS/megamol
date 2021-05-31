@@ -7,13 +7,11 @@
 
 #ifndef MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
 #define MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
-#include "widgets/HoverToolTip.h"
-
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/RenderUtils.h"
+#include "widgets/HoverToolTip.h"
 
 
 namespace megamol {

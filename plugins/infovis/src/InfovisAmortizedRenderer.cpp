@@ -101,7 +101,7 @@ std::vector<glm::fvec3> InfovisAmortizedRenderer::calculateHammersley(int until,
 }
 
 bool InfovisAmortizedRenderer::makeShaders() {
-    auto const shader_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
     try {
         amort_reconstruction_shdr_array[0] = core::utility::make_glowl_shader("amort_reconstruction0", shader_options,

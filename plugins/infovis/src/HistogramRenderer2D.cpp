@@ -65,7 +65,7 @@ bool HistogramRenderer2D::create() {
         return false;
     this->font.SetBatchDrawMode(true);
 
-    auto const shader_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
     try {
         calcHistogramProgram =

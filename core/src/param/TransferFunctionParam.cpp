@@ -20,7 +20,7 @@ TransferFunctionParam::TransferFunctionParam(const std::string& initVal)
         this->hash = std::hash<std::string>()(this->val);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "No valid parameter value for constructor given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "Invalid parameter value for constructor. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
@@ -34,7 +34,7 @@ TransferFunctionParam::TransferFunctionParam(const char* initVal)
         this->hash = std::hash<std::string>()(this->val);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "No valid parameter value for constructor given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "Invalid parameter value for constructor. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
@@ -48,7 +48,7 @@ TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal)
         this->hash = std::hash<std::string>()(this->val);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "No valid parameter value for constructor given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "Invalid parameter value for constructor. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }

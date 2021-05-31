@@ -25,7 +25,7 @@ namespace megamol {
 namespace protein {
 
     /**
-     * Mesh-based renderer for bézier curve tubes
+     * Mesh-based renderer for bÃ©zier curve tubes
      */
     class MolecularBezierData : public core::Module {
     public:

@@ -46,7 +46,7 @@ include(ClangFormat)
 # External
 include("externals/CMakeExternals.cmake")
 
-# Frontend Resources, Input Events interfaces 
+# Frontend Resources, Input Events interfaces
 add_subdirectory(${MEGAMOL_DIR}/frontend/resources)
 
 # Frontend Services (e.g. OpenGL_GLFW provider)
@@ -105,6 +105,12 @@ endfunction(megamol_register_plugin)
 
 # Plugins
 add_subdirectory(plugins)
+if (BUILD_CONSOLE)
+  target_link_libraries(mmconsole PRIVATE plugins)
+endif()
+if (BUILD_FRONTEND)
+  target_link_libraries(megamol PRIVATE plugins)
+endif()
 
 # Utils
 add_subdirectory(utils)

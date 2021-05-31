@@ -7,10 +7,10 @@
 
 #ifndef MEGAMOL_GUI_PARAMETERGROUPANIMATIONWIDGET_INCLUDED
 #define MEGAMOL_GUI_PARAMETERGROUPANIMATIONWIDGET_INCLUDED
+#pragma once
 
 
 #include "AbstractParameterGroupWidget.h"
-#include "ImageWidget_gl.h"
 
 
 namespace megamol {

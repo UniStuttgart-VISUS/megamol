@@ -1,82 +1,28 @@
+# MegaMol
+# Copyright (c) 2021, MegaMol Dev Team
+# All rights reserved.
 #
-# MegaMol™ adios_plugin Plugin
-# Copyright 2017, by MegaMol Team
-# Alle Rechte vorbehalten. All rights reserved.
-#
-string(TOUPPER adios_plugin EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build adios_plugin" OFF)
 
-if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(adios_plugin)
+megamol_plugin(adios_plugin
+  BUILD_DEFAULT OFF
+  DEPENDS_PLUGINS
+    mmstd_datatools)
 
-  # Check option dependencies: First list item is always the current build option,
-  # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
-
+if (adios_plugin_PLUGIN_ENABLED)
   option(USE_EXTERNAL_ADIOS "Option to use external ADIOS2" OFF)
+
   if (USE_EXTERNAL_ADIOS)
     find_package(ADIOS2 REQUIRED)
-  else()
-    require_external(adios2)
-  endif()
+    target_link_libraries(adios_plugin PRIVATE adios2::adios2)
 
-  # Collect source files
-  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-
-  # Target definition
-  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
-  target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools)
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-
-  if(USE_EXTERNAL_ADIOS)
-    target_link_libraries(${PROJECT_NAME} PRIVATE adios2::adios2)
-  else()
-    target_link_libraries(${PROJECT_NAME} PRIVATE adios2)
-  endif()
-
-  if(MPI_C_FOUND)
-    target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
-  endif()
-
-  # Installation rules for generated files
-  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  if(USE_EXTERNAL_ADIOS)
     include(GNUInstallDirs)
     install(DIRECTORY ${ADIOS2_DIR}/../../ DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  endif()
-  
-  if(WIN32)
-    #install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-    #install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-  else()
-    #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
-  endif()
+  else ()
+    require_external(adios2)
+    target_link_libraries(adios_plugin PRIVATE adios2)
+  endif ()
 
-  # Grouping in Visual Studio
-  foreach(FILE_NAME ${source_files})
-    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
-    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
-    string(REGEX REPLACE "^src" "Source Files" GROUP_NAME ${GROUP_NAME})
-    source_group(${GROUP_NAME} FILES ${FILE_NAME})
-  endforeach()
-  foreach(FILE_NAME ${header_files})
-    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
-    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
-    string(REGEX REPLACE "^src" "Header Files" GROUP_NAME ${GROUP_NAME})
-    source_group(${GROUP_NAME} FILES ${FILE_NAME})
-  endforeach()
-  foreach(FILE_NAME ${public_header_files})
-    get_filename_component(FILE_PATH ${FILE_NAME} PATH)
-    string(REPLACE "/" "\\" GROUP_NAME ${FILE_PATH})
-    string(REGEX REPLACE "^include\\\\adios_plugin" "Public Header Files" GROUP_NAME ${GROUP_NAME})
-    source_group(${GROUP_NAME} FILES ${FILE_NAME})
-  endforeach()
-
-  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
-
-  # Register plugin
-  megamol_register_plugin(${PROJECT_NAME})
-endif(BUILD_${EXPORT_NAME}_PLUGIN)
+  if (MPI_C_FOUND)
+    target_link_libraries(adios_plugin PRIVATE MPI::MPI_C)
+  endif ()
+endif ()

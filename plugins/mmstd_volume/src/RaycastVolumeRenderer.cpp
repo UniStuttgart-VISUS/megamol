@@ -117,7 +117,7 @@ RaycastVolumeRenderer::~RaycastVolumeRenderer() {
 bool RaycastVolumeRenderer::create() {
     try {
         // create shader program
-        auto const shdr_cp_options = shaderfactory::compiler_options(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_cp_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
         rvc_dvr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Compute", shdr_cp_options,
             std::filesystem::path("RaycastVolumeRenderer-Compute.comp.glsl"));

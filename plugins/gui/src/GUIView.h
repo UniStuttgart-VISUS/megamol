@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_GUIVIEW_H_INCLUDED
 #define MEGAMOL_GUI_GUIVIEW_H_INCLUDED
+#pragma once
 
 
 #include "GUIWindows.h"

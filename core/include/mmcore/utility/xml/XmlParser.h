@@ -24,7 +24,7 @@ namespace utility {
 namespace xml {
 
     /**
-     * Base class for MegaMol™ xml parsers.
+     * Base class for MegaMol xml parsers.
      */
     class XmlParser {
     public:
