@@ -17,8 +17,8 @@ template <class T> void megamol::core::thecam::rotate_manipulator<T>::pitch(cons
     if (this->enabled()) {
         auto cam_pose = this->camera()->get<megamol::core::view::Camera::Pose>();
         auto right = glm::cross(cam_pose.direction, cam_pose.up);
-        cam_pose.direction = glm::rotate(cam_pose.direction,math::angle_deg2rad(angle), right);
-        cam_pose.up = glm::rotate(cam_pose.up, math::angle_deg2rad(angle), right);
+        cam_pose.direction = glm::rotate(cam_pose.direction, glm::radians(angle), right);
+        cam_pose.up = glm::rotate(cam_pose.up, glm::radians(angle), right);
         this->camera()->setPose(cam_pose);
     }
 }
@@ -30,8 +30,8 @@ template <class T> void megamol::core::thecam::rotate_manipulator<T>::yaw(const 
     if (this->enabled()) {
         auto cam_pose = this->camera()->get<core::view::Camera::Pose>();
         auto up = fixToWorldUp ? vector_type(0.0f, 1.0f, 0.0f, 0.0f) : cam_pose.up;
-        cam_pose.direction = glm::rotate(cam_pose.direction, math::angle_deg2rad(angle), up);
-        cam_pose.up = glm::rotate(cam_pose.up, math::angle_deg2rad(angle), up);
+        cam_pose.direction = glm::rotate(cam_pose.direction, glm::radians(angle), up);
+        cam_pose.up = glm::rotate(cam_pose.up, glm::radians(angle), up);
         this->camera()->setPose(cam_pose);
     }
 }
@@ -42,7 +42,7 @@ template <class T> void megamol::core::thecam::rotate_manipulator<T>::yaw(const 
 template <class T> void megamol::core::thecam::rotate_manipulator<T>::roll(const world_type angle) {
     if (this->enabled()) {
         auto cam_pose = this->camera()->get<core::view::Camera::Pose>();
-        cam_pose.up = glm::rotate(cam_pose.up, math::angle_deg2rad(angle), cam_pose.direction);
+        cam_pose.up = glm::rotate(cam_pose.up, glm::radians(angle), cam_pose.direction);
         this->camera()->setPose(cam_pose);
     }
 }

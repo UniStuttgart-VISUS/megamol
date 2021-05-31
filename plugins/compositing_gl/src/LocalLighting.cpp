@@ -313,8 +313,7 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                         m_phong_k_exp.Param<core::param::FloatParam>()->Value());
 
                     // Cameraposition
-                    glm::vec3 camPos(snapshot.position.x(), snapshot.position.y(), snapshot.position.z());
-                    glUniform3fv(m_phong_prgm->ParameterLocation("camPos"), 1, glm::value_ptr(camPos));
+                    glUniform3fv(m_phong_prgm->ParameterLocation("camPos"), 1, glm::value_ptr(cam_pose.position));
 
                     m_point_lights_buffer->bind(1);
                     glUniform1i(
