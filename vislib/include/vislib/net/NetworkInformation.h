@@ -1,7 +1,7 @@
 /*
  * NetworkInformation.h
  *
- * Copyright (C) 2009 by Christoph M¸lller. Alle Rechte vorbehalten.
+ * Copyright (C) 2009 by Christoph M√ºlller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
@@ -1230,7 +1230,7 @@ namespace net {
          * @param outAdapter     Receives the guessed adapter.
          * @param str            The string that should identify an adapter.
          * @param invertWildness Return (1.0 - wildness) instead of the 
-         *                       wildness. Note that this is not chefm‰ﬂig!
+         *                       wildness. Note that this is not chefm√§√üig!
          * 
          * @return The wildness, which is a value within [0, 1] indicating "how
          *         wild" the guess was. If the value is 0, the result can be
@@ -1277,7 +1277,7 @@ namespace net {
          * @param outAdapter     Receives the guessed adapter.
          * @param str            The string that should identify an adapter.
          * @param invertWildness Return (1.0 - wildness) instead of the 
-         *                       wildness. Note that this is not chefm‰ﬂig!
+         *                       wildness. Note that this is not chefm√§√üig!
          * 
          * @return The wildness, which is a value within [0, 1] indicating "how
          *         wild" the guess was. If the value is 0, the result can be

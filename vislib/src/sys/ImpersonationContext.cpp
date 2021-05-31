@@ -2,7 +2,7 @@
  * ImpersonationContext.cpp
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
- * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
+ * Copyright (C) 2008 by Christoph MÃ¼ller. Alle Rechte vorbehalten.
  */
 
 #include "vislib/sys/ImpersonationContext.h"

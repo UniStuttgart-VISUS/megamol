@@ -27,7 +27,7 @@ namespace misc {
 
 
     /**
-     * Data loader module for 3+1 dim cubic bézier data
+     * Data loader module for 3+1 dim cubic bÃ©zier data
      */
     class SiffCSplineFitter : public Module {
     public:

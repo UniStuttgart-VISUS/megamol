@@ -7,9 +7,9 @@
 
 #ifndef MEGAMOL_GUI_ABSTARCTPARAMETERGROUPWIDGET_INCLUDED
 #define MEGAMOL_GUI_ABSTARCTPARAMETERGROUPWIDGET_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
 #include "WidgetPicking_gl.h"
 #include "graph/Parameter.h"
 

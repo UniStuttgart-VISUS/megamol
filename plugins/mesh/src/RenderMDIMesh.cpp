@@ -21,7 +21,7 @@ using namespace megamol::mesh;
 RenderMDIMesh::RenderMDIMesh()
 	: Renderer3DModuleGL()
     , m_render_task_callerSlot("renderTasks", "Connects the renderer with a render task data source")
-    , m_framebuffer_slot("framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module") 
+    , m_framebuffer_slot("framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module")
 {
 	this->m_render_task_callerSlot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
 	this->MakeSlotAvailable(&this->m_render_task_callerSlot);
@@ -100,7 +100,7 @@ bool RenderMDIMesh::create()
 		draw_command_data.data[i].base_vertex = 0;
 		draw_command_data.data[i].base_instance = 0;
 
-		
+
 		vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
 		GLfloat scale = distr(generator);
 		object_transform.SetAt(0, 0, scale);
@@ -115,9 +115,9 @@ bool RenderMDIMesh::create()
 	}
 
 	mtl_shader_params.elements_cnt = 0;
-	
+
 	addRenderBatch(shader_prgm_data, mesh_data, draw_command_data, obj_shader_params, mtl_shader_params);
-	
+
 	//TODO delete stuff again
 	*/
 
@@ -136,7 +136,7 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3DGL& call) {
 		return false;
 
 	CallGPURenderTaskData* rtc = this->m_render_task_callerSlot.CallAs<CallGPURenderTaskData>();
-	
+
 	if (rtc == NULL)
 		return false;
 
@@ -156,10 +156,10 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3DGL& call) {
 }
 
 bool RenderMDIMesh::Render(core::view::CallRender3DGL& call) {
-	
+
 	megamol::core::view::CallRender3DGL* cr = &call; //dynamic_cast<core::view::CallRender3DGL*>(&call);
 	if (cr == NULL) return false;
-	
+
     // obtain camera information
     core::view::Camera_2 cam(cr->GetCamera());
     cam_type::snapshot_type snapshot;
@@ -167,76 +167,80 @@ bool RenderMDIMesh::Render(core::view::CallRender3DGL& call) {
     cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
     glm::mat4 view_mx = view_tmp;
     glm::mat4 proj_mx = proj_tmp;
-	
+
 	CallGPURenderTaskData* task_call = this->m_render_task_callerSlot.CallAs<CallGPURenderTaskData>();
-	
+
 	if (task_call == NULL)
 		return false;
-	
+
 	if ((!(*task_call)(0)) )
 		return false;
-	
+
 	//megamol::core::utility::log::Log::DefaultLog.WriteError("Hey listen!");
-	
-	// Set GL state (otherwise bounding box or view cube rendering state is used)
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
-    glDisable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
 
 	auto const& gpu_render_tasks = task_call->getData();
 
     for (auto const& rt_collection : gpu_render_tasks) {
-            auto const& per_frame_buffers = rt_collection->getPerFrameBuffers();
+        auto const& per_frame_buffers = rt_collection->getPerFrameBuffers();
 
-            for (auto const& buffer : per_frame_buffers) {
-                std::get<0>(buffer)->bind(std::get<1>(buffer));
+        for (auto const& buffer : per_frame_buffers) {
+            std::get<0>(buffer)->bind(std::get<1>(buffer));
+        }
+
+        // loop through "registered" render batches
+        for (auto const& render_task : rt_collection->getRenderTasks())
+	    {
+            // Set GL states (otherwise bounding box or view cube rendering state is used)
+		    render_task->set_states();
+
+            render_task->shader_program->use();
+
+		    // TODO introduce per frame "global" data buffer to store information like camera matrices?
+            render_task->shader_program->setUniform("view_mx", view_mx);
+            render_task->shader_program->setUniform("proj_mx", proj_mx);
+
+		    render_task->per_draw_data->bind(0);
+
+		    render_task->draw_commands->bind();
+		    render_task->mesh->bindVertexArray();
+
+            if (render_task->mesh->getPrimitiveType() == GL_PATCHES) {
+                glPatchParameteri(GL_PATCH_VERTICES, 4);
+                //TODO add generic patch vertex count to render tasks....
             }
 
-            // loop through "registered" render batches
-            for (auto const& render_task : rt_collection->getRenderTasks()) {
-                render_task->shader_program->use();
+		    glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(),
+			    render_task->mesh->getIndexType(),
+			    (GLvoid*)0,
+			    render_task->draw_cnt,
+			    0);
 
-                // TODO introduce per frame "global" data buffer to store information like camera matrices?
-                render_task->shader_program->setUniform("view_mx", view_mx);
-                render_task->shader_program->setUniform("proj_mx", proj_mx);
+		    //CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand command_buffer;
+		    //command_buffer.cnt = 3;
+		    //command_buffer.instance_cnt = 1;
+		    //command_buffer.first_idx = 0;
+		    //command_buffer.base_vertex = 0;
+		    //command_buffer.base_instance = 0;
 
-                render_task->per_draw_data->bind(0);
+		    //glowl::DrawElementsCommand command_buffer;
+		    //command_buffer.cnt = 3;
+		    //command_buffer.instance_cnt = 1;
+		    //command_buffer.first_idx = 0;
+		    //command_buffer.base_vertex = 0;
+		    //command_buffer.base_instance = 0;
+		    //
+		    //glDrawElementsIndirect(render_batch.mesh->getPrimitiveType(),
+		    //	render_batch.mesh->getIndicesType(),
+		    //	&command_buffer);
 
-                render_task->draw_commands->bind();
-                render_task->mesh->bindVertexArray();
+		    //GLenum err = glGetError();
+		    //std::cout << "Error: " << err << std::endl;
 
-                if (render_task->mesh->getPrimitiveType() == GL_PATCHES) {
-                    glPatchParameteri(GL_PATCH_VERTICES, 4);
-                    // TODO add generic patch vertex count to render tasks....
-                }
 
-                glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(), render_task->mesh->getIndexType(),
-                    (GLvoid*) 0, render_task->draw_cnt, 0);
-
-                // CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand command_buffer;
-                // command_buffer.cnt = 3;
-                // command_buffer.instance_cnt = 1;
-                // command_buffer.first_idx = 0;
-                // command_buffer.base_vertex = 0;
-                // command_buffer.base_instance = 0;
-
-                // glowl::DrawElementsCommand command_buffer;
-                // command_buffer.cnt = 3;
-                // command_buffer.instance_cnt = 1;
-                // command_buffer.first_idx = 0;
-                // command_buffer.base_vertex = 0;
-                // command_buffer.base_instance = 0;
-                //
-                // glDrawElementsIndirect(render_batch.mesh->getPrimitiveType(),
-                //	render_batch.mesh->getIndicesType(),
-                //	&command_buffer);
-
-                // GLenum err = glGetError();
-                // std::cout << "Error: " << err << std::endl;
-            }
-    }
+		    // Reset previously set GLStates
+		    render_task->reset_states();
+	    }
+	}
 
 	// Clear the way for his ancient majesty, the mighty immediate mode...
 	glUseProgram(0);
@@ -245,6 +249,6 @@ bool RenderMDIMesh::Render(core::view::CallRender3DGL& call) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-	
+
 	return true;
 }

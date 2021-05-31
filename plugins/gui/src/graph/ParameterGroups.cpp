@@ -5,8 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "ParameterGroups.h"
+#include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol;
@@ -221,7 +222,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
     } else {
         /// LOCAL
 
-        auto param_fullname = inout_param.FullName();
+        auto param_fullname = inout_param.FullNameProject();
         bool param_searched = true;
         if (in_scope == Parameter::WidgetScope::LOCAL) {
             param_searched = GUIUtils::FindCaseInsensitiveSubstring(param_fullname, in_search);

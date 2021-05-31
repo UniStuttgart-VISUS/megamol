@@ -16,6 +16,12 @@
 namespace megamol {
 namespace adios {
 
+struct adios2Params {
+    std::string name;
+    adios2::Params params;
+    bool isAttribute = false;
+};
+
 class adiosDataSource : public core::Module {
 public:
     /**
@@ -103,11 +109,13 @@ private:
     std::shared_ptr<adios2::ADIOS> adiosInst;
     std::shared_ptr<adios2::IO> io;
     std::shared_ptr<adios2::Engine> reader;
-    std::map<std::string, adios2::Params> variables;
+    std::vector<adios2Params> variables;
+    std::vector<adios2Params> attributes;
     adiosDataMap dataMap;
 
     std::vector<std::size_t> timesteps;
     std::vector<std::string> availVars;
+    std::vector<std::string> availAttribs;
 };
 } /* end namespace adios */
 } /* end namespace megamol */

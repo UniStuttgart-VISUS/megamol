@@ -5,43 +5,26 @@
  * Alle Rechte vorbehalten.
  */
 
+
 #ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
+#pragma once
 
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui.h"
-#include "imgui_impl_opengl3.h"
 #include "imgui_internal.h"
-#include "imgui_stdlib.h"
-
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
-#include <algorithm> // search
-#include <array>
-#include <cctype> // toupper
-#include <cmath>  // fmodf
-#include <list>
-#include <map>
-#include <memory>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
 
 #include "mmcore/param/AbstractParamPresentation.h"
-#include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
-
 #include "vislib/UTF8Encoder.h"
 #include "vislib/math/Ternary.h"
 
 
 /// #define GUI_VERBOSE
+
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f * megamol::gui::gui_scaling.Get())
@@ -97,7 +80,7 @@
 namespace megamol {
 namespace gui {
 
-    /********** Additional Global ImGui Operators ********************************/
+    /********** Additional Global ImGui Operators ****************************/
 
     namespace {
 
@@ -114,6 +97,7 @@ namespace gui {
 
     /********** Global Unique ID *********************************************/
 
+    /// ! Do not directly change
     extern ImGuiID gui_generated_uid;
 
     inline ImGuiID GenerateUniqueID(void) {
@@ -336,7 +320,6 @@ namespace gui {
 
         /** Decode string from UTF-8. */
         static bool Utf8Decode(std::string& str) {
-
             vislib::StringA dec_tmp;
             if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
                 str = std::string(dec_tmp.PeekBuffer());
@@ -347,7 +330,6 @@ namespace gui {
 
         /** Encode string into UTF-8. */
         static bool Utf8Encode(std::string& str) {
-
             vislib::StringA dec_tmp;
             if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
                 str = std::string(dec_tmp.PeekBuffer());
@@ -360,7 +342,6 @@ namespace gui {
          * Enable/Disable read only widget style.
          */
         static void ReadOnlyWigetStyle(bool set) {
-
             if (set) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);

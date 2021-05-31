@@ -1,7 +1,7 @@
 /*
  * DifferenceVolume.inl
  *
- * Copyright (C) 2019 by Visualisierungsinstitut der Universit‰t Stuttgart.
+ * Copyright (C) 2019 by Visualisierungsinstitut der Universit√§t Stuttgart.
  * Alle Rechte vorbehalten.
  */
 

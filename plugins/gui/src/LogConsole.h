@@ -7,16 +7,13 @@
 
 #ifndef MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
 #define MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
 #include "WindowCollection.h"
+#include "mmcore/utility/log/StreamTarget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
-
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/log/OfflineTarget.h"
-#include "mmcore/utility/log/StreamTarget.h"
 
 
 namespace megamol {
@@ -54,9 +51,9 @@ namespace gui {
         LogConsole();
         ~LogConsole();
 
-        void Update(WindowCollection::WindowConfiguration& wc);
+        void Update(WindowConfiguration& wc);
 
-        bool Draw(WindowCollection::WindowConfiguration& wc);
+        bool Draw(WindowConfiguration& wc);
 
         void PopUps(void);
 
