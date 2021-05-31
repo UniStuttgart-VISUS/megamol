@@ -99,11 +99,31 @@ private:
     std::vector<T> calcAtomPos(T com_x, T com_y, T com_z, K a_x, K a_y, K a_z, K qw, K qx, K qy, K qz) {
         
         std::vector<T> result(3);
-        result[0] = a_x + com_x;
-        result[1] = a_y + com_y;
-        result[2] = a_z + com_z;
+        std::vector<T> tmp_d(3);
+        tmp_d[0] = a_x + com_x;
+        tmp_d[1] = a_y + com_y;
+        tmp_d[2] = a_z + com_z;
 
         // TODO: apply quaternion
+
+        // https://github.com/ls1mardyn/ls1-mardyn
+        // ls1-mardyn src/molecules/Quaternion.cpp, line 43 ... 
+        auto const ww = qw * qw;
+        auto const xx = qx * qx;
+        auto const yy = qy * qy;
+        auto const zz = qz * qz;
+        auto const wx = qw * qx;
+        auto const wy = qw * qy;
+        auto const wz = qw * qz;
+        auto const xy = qx * qy;
+        auto const xz = qx * qz;
+        auto const yz = qy * qz;
+        //          1-2*(yy+zz)
+        result[0] = (ww + xx - yy - zz) * tmp_d[0] + static_cast<T>(2.) * (xy - wz) * tmp_d[1] + static_cast<T>(2.) * (wy + xz) * tmp_d[2];
+        //                            1-2*(xx+zz)
+        result[1] = static_cast<T>(2.) * (wz + xy) * tmp_d[0] + (ww - xx + yy - zz) * tmp_d[1] + static_cast<T>(2.) * (yz - wx) * tmp_d[2];
+        //                                              1-2*(xx+yy)
+        result[2] = static_cast<T>(2.) * (xz - wy) * tmp_d[0] + static_cast<T>(2.) * (wx + yz) * tmp_d[1] + (ww - xx - yy + zz) * tmp_d[2];
 
         return result;
     }
