@@ -75,7 +75,7 @@ bool ImagePresentation_Service::init(const Config& config) {
           "FrontendResources" // std::vector<FrontendResource>
         , "WindowManipulation"
         , "FramebufferEvents"
-        , "GUIResource"
+        , "GUIState"
     };
 
     log("initialized successfully");
