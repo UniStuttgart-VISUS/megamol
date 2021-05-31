@@ -195,8 +195,8 @@ void InfovisAmortizedRenderer::setupBuffers() {
 }
 
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel) {
-    int w = ow / this->amortLevel.Param<core::param::IntParam>()->Value();
-    int h = oh / this->amortLevel.Param<core::param::IntParam>()->Value();
+    int w = ceil(float(ow) / float(this->amortLevel.Param<core::param::IntParam>()->Value()));
+    int h = ceil(float(oh) / float(this->amortLevel.Param<core::param::IntParam>()->Value()));
 
     glm::mat4 pm;
     for (int i = 0; i < 4; i++) {
