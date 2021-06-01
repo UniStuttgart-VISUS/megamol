@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 // jobs
@@ -84,9 +83,6 @@
 #include "SolventCounter.h"
 #include "MSMSCavityFinder.h"
 #include "TunnelCutter.h"
-
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
 #include "vislib/Trace.h"
 #include "mmcore/utility/log/Log.h"
