@@ -2,18 +2,22 @@
 # Copyright (c) 2020, MegaMol Dev Team
 # All rights reserved.
 #
-
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+# Policies
 cmake_policy(SET CMP0054 NEW)
 cmake_policy(SET CMP0079 NEW) # Needed for static build, requires CMake 3.13!
 if (POLICY CMP0104)
   cmake_policy(SET CMP0104 NEW)
 endif()
 
-project(megamol)
+# Disable in source build
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+# Project
+project(megamol
+  VERSION 1.3.0)
 
 # Default to install to source directory
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

@@ -49,7 +49,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include "mmcore/utility/sys/SystemInformation.h"
-#include "vislib/vislibversion.h"
 
 #include "factories/CallClassRegistry.h"
 #include "factories/ModuleClassRegistry.h"
