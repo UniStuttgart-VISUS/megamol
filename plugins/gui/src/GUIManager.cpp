@@ -1770,7 +1770,7 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
     // Check for existing file
     bool created_filepath = false;
     if (!inout_filepath.empty()) {
-        while (megamol::core::utility::FileUtils::FileExists<std::string>(inout_filepath)) {
+        do {
             // Create new filename with iterating suffix
             std::string filename = megamol::core::utility::FileUtils::GetFilenameStem<std::string>(inout_filepath);
             std::string id_separator = "_";
@@ -1793,7 +1793,7 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
                 inout_filepath =
                     filename + id_separator + std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
             }
-        }
+        } while (megamol::core::utility::FileUtils::FileExists<std::string>(inout_filepath));
         created_filepath = true;
     }
     return created_filepath;

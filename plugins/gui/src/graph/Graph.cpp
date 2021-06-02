@@ -1112,35 +1112,25 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
 
                         megamol::core::utility::get_json_value<float>(
                             graph_state, {"parameter_sidebar_width"}, &this->gui_parameter_sidebar_width);
-
                         megamol::core::utility::get_json_value<bool>(graph_state, {"show_grid"}, &this->gui_show_grid);
-
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"show_call_label"}, &this->gui_graph_state.interact.call_show_label);
-
                         megamol::core::utility::get_json_value<bool>(graph_state, {"show_call_slots_label"},
                             &this->gui_graph_state.interact.call_show_slots_label);
-
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"show_module_label"}, &this->gui_graph_state.interact.module_show_label);
-
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"show_slot_label"}, &this->gui_graph_state.interact.callslot_show_label);
-
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"params_visible"}, &this->gui_params_visible);
-
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"params_readonly"}, &this->gui_params_readonly);
-
                         megamol::core::utility::get_json_value<bool>(graph_state, {"param_extended_mode"},
                             &this->gui_graph_state.interact.parameters_extended_mode);
-
                         std::array<float, 2> canvas_scrolling = {0.0f, 0.0f};
                         megamol::core::utility::get_json_value<float>(
                             graph_state, {"canvas_scrolling"}, canvas_scrolling.data(), canvas_scrolling.size());
                         this->gui_graph_state.canvas.scrolling = ImVec2(canvas_scrolling[0], canvas_scrolling[1]);
-
                         if (megamol::core::utility::get_json_value<float>(
                                 graph_state, {"canvas_zooming"}, &this->gui_graph_state.canvas.zooming)) {
                             this->gui_reset_zooming = false;
@@ -1282,8 +1272,7 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
         gui_utils::Utf8Decode(this->name);
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_parameter_sidebar"] =
             this->gui_show_parameter_sidebar;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["parameter_sidebar_width"] =
-            this->gui_parameter_sidebar_width;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["parameter_sidebar_width"] = this->gui_parameter_sidebar_width;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_grid"] = this->gui_show_grid;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_label"] =
             this->gui_graph_state.interact.call_show_label;
@@ -1469,10 +1458,8 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             // Draw -----------------------------
             this->draw_menu(state);
 
-            if (megamol::gui::gui_scaling.PendingChange()) {
-                this->gui_parameter_sidebar_width *= megamol::gui::gui_scaling.TransitionFactor();
-            }
             float graph_width_auto = 0.0f;
+            this->gui_parameter_sidebar_width *= megamol::gui::gui_scaling.Get();
             if (this->gui_show_parameter_sidebar) {
                 this->gui_splitter_widget.Widget(
                     SplitterWidget::FixedSplitterSide::RIGHT, graph_width_auto, this->gui_parameter_sidebar_width);
@@ -1486,6 +1473,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             }
 
             state.graph_selected_uid = this->uid;
+            this->gui_parameter_sidebar_width /= megamol::gui::gui_scaling.Get();
 
             // State processing ---------------------
             this->ResetStatePointers();

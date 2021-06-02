@@ -396,10 +396,12 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
 
                 // Check for desired path format
                 if (opt_relabspath) {
+// stdfs::relative requires non-experimental filesystem support
+#if defined(_HAS_CXX17) || (__cplusplus >= 201703L) || ((defined(_MSC_VER) && (_MSC_VER > 1916)))
                     if (this->return_path == PATHMODE_RELATIVE_PROJECT) {
                         if (!project_path.empty()) {
                             auto relative_project_dir = stdfs::path(project_path);
-                            tmp_file_path = stdfs::relative(tmp_file_path, relative_project_dir); /// XXX requires non-experimental filesystem support
+                            tmp_file_path = stdfs::relative(tmp_file_path, relative_project_dir);
                         }
                     } else if (this->return_path == PATHMODE_RELATIVE_WORKING) {
                         tmp_file_path = stdfs::relative(tmp_file_path, stdfs::current_path()); /// XXX requires non-experimental filesystem support
@@ -410,6 +412,7 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                         tmp_file_path = static_cast<stdfs::path>(this->file_path_str) /
                                         static_cast<stdfs::path>(this->file_name_str);
                     }
+#endif
                 }
 
                 inout_filename = tmp_file_path.generic_u8string();

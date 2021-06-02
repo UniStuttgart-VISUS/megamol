@@ -609,9 +609,11 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
             this->pending_changes ? GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT : style.Colors[ImGuiCol_ButtonHovered]);
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
+
         if (ImGui::Button("Apply Pending Changes")) {
             apply_changes = true;
         }
+
         ImGui::PopStyleColor(3);
         if (!this->pending_changes) {
             gui_utils::ReadOnlyWigetStyle(false);
@@ -625,10 +627,6 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
 
         if (this->immediate_mode && this->pending_changes) {
             apply_changes = true;
-        }
-
-        if (apply_changes) {
-            this->pending_changes = false;
         }
 
         if (this->windowed_mode) {
@@ -645,6 +643,10 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
                 }
             }
         }
+    }
+
+    if (apply_changes) {
+        this->pending_changes = false;
     }
 
     ImGui::PopItemWidth();

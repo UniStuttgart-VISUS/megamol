@@ -133,16 +133,16 @@ bool megamol::gui::Configurator::Draw() {
     this->draw_window_menu();
 
     // Splitter
-    if (megamol::gui::gui_scaling.PendingChange()) {
-        this->module_list_sidebar_width *= megamol::gui::gui_scaling.TransitionFactor();
-    }
     this->graph_state.graph_width = 0.0f;
     if (this->show_module_list_sidebar) {
+        this->module_list_sidebar_width *= megamol::gui::gui_scaling.Get();
         this->splitter_widget.Widget(
             SplitterWidget::FixedSplitterSide::LEFT, this->module_list_sidebar_width, this->graph_state.graph_width);
 
         // Module List
         this->draw_window_module_list(this->module_list_sidebar_width, 0.0f, !this->show_module_list_popup);
+
+        this->module_list_sidebar_width /= megamol::gui::gui_scaling.Get();
         ImGui::SameLine();
     }
     // Graphs
@@ -212,16 +212,16 @@ void megamol::gui::Configurator::PopUps() {
         if (!ImGui::IsPopupOpen(pop_up_id.c_str())) {
             ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
 
-            float diff_width = (ImGui::GetWindowPos().x + ImGui::GetWindowSize().x - this->module_list_popup_pos.x);
-            float diff_height = (ImGui::GetWindowPos().y + ImGui::GetWindowSize().y - this->module_list_popup_pos.y);
+            float diff_width = (this->win_config.position.x + this->win_config.size.x - this->module_list_popup_pos.x);
+            float diff_height = (this->win_config.position.y + this->win_config.size.y - this->module_list_popup_pos.y);
             if (diff_width < popup_width) {
                 this->module_list_popup_pos.x -= ((popup_width - diff_width) + offset_x);
             }
-            this->module_list_popup_pos.x = std::max(this->module_list_popup_pos.x, ImGui::GetWindowPos().x);
+            this->module_list_popup_pos.x = std::max(this->module_list_popup_pos.x, this->win_config.position.x);
             if (diff_height < popup_height) {
                 this->module_list_popup_pos.y -= ((popup_height - diff_height) + offset_y);
             }
-            this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, ImGui::GetWindowPos().y);
+            this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, this->win_config.position.y);
             ImGui::SetNextWindowPos(this->module_list_popup_pos);
             ImGui::SetNextWindowSize(ImVec2(10.0f, 10.0f));
         }
@@ -239,7 +239,7 @@ void megamol::gui::Configurator::PopUps() {
                 (ImGui::GetMousePos().y <= (this->module_list_popup_pos.y + popup_height))) {
                 module_list_popup_hovered = true;
             }
-            if ((ImGui::IsMouseClicked(0) && !module_list_popup_hovered) ||
+            if (((ImGui::IsMouseClicked(0) && !module_list_popup_hovered)) ||
                 ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 this->show_module_list_popup = false;
                 ImGui::CloseCurrentPopup();
