@@ -93,11 +93,11 @@ void WindowCollection::Draw(bool menu_visible) {
             wc.Draw();
 
             // Reset or store window position and size
-            if (wc.Config().reset_pos_size || (menu_visible && ImGui::IsMouseReleased(0) && ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))) {
+            if (wc.Config().reset_pos_size ||
+                (menu_visible && ImGui::IsMouseReleased(0) && ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))) {
                 wc.ApplyWindowSizePosition(menu_visible);
                 wc.Config().reset_pos_size = false;
-            }
-            else {
+            } else {
                 wc.Config().position = ImGui::GetWindowPos();
                 wc.Config().size = ImGui::GetWindowSize();
                 if (!collapsing_changed) {

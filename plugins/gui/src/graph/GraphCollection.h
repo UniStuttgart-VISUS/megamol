@@ -73,7 +73,7 @@ namespace gui {
          */
         bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::MegaMolGraph& megamol_graph);
 
-        ImGuiID LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
+        bool LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 
         bool SaveProjectToFile(
             ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json);

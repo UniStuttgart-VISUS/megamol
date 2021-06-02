@@ -1349,8 +1349,7 @@ void GUIManager::draw_menu() {
             ImGui::BeginGroup();
             float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
             ImGui::PushItemWidth(widget_width);
-            this->file_browser.Button(
-                this->gui_state.font_file_name, megamol::gui::FileBrowserWidget::FileBrowserFlag::LOAD, "ttf");
+            this->file_browser.Button_Select("ttf", this->gui_state.font_file_name, true);
             ImGui::SameLine();
             gui_utils::Utf8Encode(this->gui_state.font_file_name);
             ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_file_name, ImGuiInputTextFlags_None);
@@ -1531,25 +1530,27 @@ void megamol::gui::GUIManager::draw_popups() {
         this->gui_state.open_popup_save |= this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].is_pressed;
         this->gui_state.open_popup_save |= this->win_configurator_ptr->ConsumeTriggeredGlobalProjectSave();
 
-        std::string filename = graph_ptr->GetFilename();
-        vislib::math::Ternary save_gui_state(vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
-
+        auto filename = graph_ptr->GetFilename();
+        auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
         bool popup_failed = false;
-        if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project","lua", "fbw_sp_guim", this->gui_state.open_popup_save, filename, save_gui_state)) {
+        if (this->file_browser.PopUp_Save(
+                "Save Project", "lua", this->gui_state.open_popup_save, filename, save_gui_state)) {
             std::string state_str;
             if (save_gui_state.IsTrue()) {
                 state_str = this->project_to_lua_string(true);
             }
-            popup_failed = !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(graph_ptr->UID(), filename, state_str);
+            popup_failed = !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(
+                graph_ptr->UID(), filename, state_str);
         }
-        PopUps::Minimal("Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
+        PopUps::Minimal(
+            "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
     }
     this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].is_pressed = false;
 
     // Load project pop-up
     std::string filename;
     this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", "lua", "fbw_lp_guim", this->gui_state.open_popup_load, filename)) {
+    if (this->file_browser.PopUp_Load("Load Project", "lua", this->gui_state.open_popup_load, filename)) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
@@ -1557,7 +1558,9 @@ void megamol::gui::GUIManager::draw_popups() {
     this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed = false;
 
     // File name for screenshot pop-up
-    if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Select Filename for Screenshot", "png", "fbw_ss_guim", this->gui_state.open_popup_screenshot, this->gui_state.screenshot_filepath)) {
+    auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
+    if (this->file_browser.PopUp_Save("Filename for Screenshot", "png", this->gui_state.open_popup_screenshot,
+            this->gui_state.screenshot_filepath, tmp_flag)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
 }

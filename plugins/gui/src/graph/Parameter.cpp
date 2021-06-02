@@ -1559,8 +1559,9 @@ bool megamol::gui::Parameter::widget_filepath(
         widget_width = std::max(widget_width, text_width);
 
         ImGui::PushItemWidth(widget_width);
-        bool button_edit = this->gui_file_browser.Button(std::get<std::string>(this->gui_widget_store),
-            megamol::gui::FileBrowserWidget::FileBrowserFlag::SELECT, "");
+        /// TODO Provide path to file name of parent graph/project
+        bool button_edit =
+            this->gui_file_browser.Button_Select("", std::get<std::string>(this->gui_widget_store), false, "C:\\");
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
