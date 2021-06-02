@@ -394,10 +394,10 @@ bool GUIManager::PostDraw() {
     this->draw_popups();
 
     // Draw global parameter widgets -------------------------------------------
-    /// ! Only enabled in second frame if interaction objects are added during first frame !
     if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+        /// ! Only enabled in second frame if interaction objects are added during first frame !
         this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
-        graph_ptr->DrawGlobalParameterWidgets(this->picking_buffer);
+        graph_ptr->DrawGlobalParameterWidgets(this->picking_buffer, this->win_collection.GetWindow<TransferFunctionEditor>());
         this->picking_buffer.DisableInteraction();
     }
 
