@@ -8,7 +8,7 @@
 
 class Connection {
 public:
-    Connection(zmq::socket_t& socket);
+    Connection(zmq::socket_t& socket, const int timeOut);
     ~Connection();
 
     inline zmq::socket_t& Socket() { return socket; }
@@ -38,7 +38,7 @@ public:
 
         size_t counter = 0;
         bool have_something = false;
-        while (!(have_something = socket.recv(&reply, ZMQ_DONTWAIT)) && counter < 100) {
+        while (!(have_something = socket.recv(&reply, ZMQ_DONTWAIT)) && counter < timeOut * 100) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             ++counter;
         }
@@ -64,5 +64,6 @@ public:
 private:
     zmq::socket_t& socket;
     std::string activeHost;
+    int timeOut = 0;
 };
 
