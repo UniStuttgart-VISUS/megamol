@@ -32,7 +32,7 @@ namespace gui {
      */
     class TransferFunctionEditor : public AbstractWindow {
     public:
-        TransferFunctionEditor(const std::string& window_name, bool non_window_mode);
+        TransferFunctionEditor(const std::string& window_name, bool windowed);
         ~TransferFunctionEditor() = default;
 
         bool Update() override;
@@ -49,7 +49,7 @@ namespace gui {
          *
          * @return True if string was successfully converted into transfer function data, false otherwise.
          */
-        void SetTransferFunction(const std::string& tfs, bool connected_parameter_mode);
+        void SetTransferFunction(const std::string& tfs, bool connected_parameter_mode, bool full_init);
 
         /**
          * Get current transfer function data.
@@ -113,7 +113,7 @@ namespace gui {
 
         // VARIABLES -----------------------------------------------------------
 
-        const bool non_window_mode;
+        const bool windowed_mode;
         /** The currently active parameter whose transfer function is currently loaded into this editor. */
         Parameter* connected_parameter_ptr;
         TransferFunctionParam::NodeVector_t nodes;

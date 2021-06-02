@@ -164,9 +164,9 @@ std::array<std::tuple<std::string, PresetGenerator>, 21> PRESETS = {
 
 // ----------------------------------------------------------------------------
 
-TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, bool non_window_mode)
+TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, bool windowed)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION)
-        , non_window_mode(non_window_mode)
+        , windowed_mode(windowed)
         , connected_parameter_ptr(nullptr)
         , nodes()
         , range({0.0f, 1.0f})
@@ -211,13 +211,16 @@ TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, b
 }
 
 
-void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode) {
+void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode, bool full_init) {
 
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Missing active parameter to edit");
         return;
     }
 
+    if (full_init) {
+        this->check_once_force_set_overwrite_range = true;
+    }
     this->selected_node_index = GUI_INVALID_ID;
     this->selected_channel_index = GUI_INVALID_ID;
     this->selected_node_drag_delta = ImVec2(0.0f, 0.0f);
@@ -288,8 +291,7 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
         if (param_ptr->Type() == ParamType_t::TRANSFERFUNCTION) {
             this->connected_parameter_ptr = param_ptr;
             this->win_connected_param_name = param_full_name;
-            this->check_once_force_set_overwrite_range = true;
-            this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true);
+            this->SetTransferFunction(std::get<std::string>(this->connected_parameter_ptr->GetValue()), true, true);
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -328,7 +330,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
     ImGui::BeginGroup();
     ImGui::PushID("TransferFunctionEditor");
 
-    if (!this->non_window_mode && (!this->IsParameterConnected())) {
+    if (this->windowed_mode && (!this->IsParameterConnected())) {
         const char* message = "Changes have no effect.\n"
                               "No transfer function parameter connected for edit.\n";
         ImGui::TextColored(GUI_COLOR_TEXT_ERROR, message);
@@ -629,7 +631,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
             this->pending_changes = false;
         }
 
-        if (this->non_window_mode) {
+        if (this->windowed_mode) {
             if (apply_changes) {
                 if (this->IsParameterConnected()) {
                     std::string tf;

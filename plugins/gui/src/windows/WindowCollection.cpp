@@ -23,7 +23,7 @@ WindowCollection::WindowCollection() {
     auto win_configurator = std::make_shared<Configurator>("Configurator");
     auto win_logconsole = std::make_shared<LogConsole>("Log Console");
     auto win_paramlist = std::make_shared<ParameterList>("Parameters");
-    auto win_tfeditor = std::make_shared<TransferFunctionEditor>("Transfer Function Editor", false);
+    auto win_tfeditor = std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true);
     auto win_perfmonitor = std::make_shared<PerformanceMonitor>("Performance Metrics");
 
     // Windows are sorted depending on hotkey

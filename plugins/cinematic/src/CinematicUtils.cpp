@@ -182,7 +182,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
         auto column_flags = ImGuiTableColumnFlags_WidthStretch;
 
         if (ImGui::Begin("[Cinematic] HOTKEYS", &inout_show, window_flags)) {
-            if (ImGui::CollapsingHeader("  GLOBAL###cinematic_global_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  GLOBAL##cinematic_global_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_global_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + A", "Apply current settings to selected/new keyframe.");
@@ -194,7 +194,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     ImGui::EndTable();
                 }
             }
-            if (ImGui::CollapsingHeader("  TRACKING SHOT###cinematic_tracking_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  TRACKING SHOT##cinematic_tracking_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_tracking_shot_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + Q", "Toggle different manipulators for the selected keyframe.");
@@ -203,7 +203,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     ImGui::EndTable();
                 }
             }
-            if (ImGui::CollapsingHeader("  CINEMATIC###cinematic_cineamtic_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  CINEMATIC##cinematic_cineamtic_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_cinematic_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + R", "Start/Stop rendering complete animation.");
@@ -211,7 +211,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     ImGui::EndTable();
                 }
             }
-            if (ImGui::CollapsingHeader("  TIMELINE###cinematic_timeline_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  TIMELINE##cinematic_timeline_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_timeline_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + RIGHT/LEFT Arrow", "Move selected keyframe on animation time axis.");

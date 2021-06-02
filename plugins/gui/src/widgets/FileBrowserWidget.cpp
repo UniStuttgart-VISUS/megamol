@@ -399,10 +399,10 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                     if (this->return_path == PATHMODE_RELATIVE_PROJECT) {
                         if (!project_path.empty()) {
                             auto relative_project_dir = stdfs::path(project_path);
-                            tmp_file_path = stdfs::relative(tmp_file_path, relative_project_dir);
+                            tmp_file_path = stdfs::relative(tmp_file_path, relative_project_dir); /// XXX requires non-experimental filesystem support
                         }
                     } else if (this->return_path == PATHMODE_RELATIVE_WORKING) {
-                        tmp_file_path = stdfs::relative(tmp_file_path, stdfs::current_path());
+                        tmp_file_path = stdfs::relative(tmp_file_path, stdfs::current_path()); /// XXX requires non-experimental filesystem support
                     } else {
                         tmp_file_path = stdfs::absolute(tmp_file_path);
                     }

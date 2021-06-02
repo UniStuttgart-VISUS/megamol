@@ -128,7 +128,7 @@ namespace gui {
 
         virtual void SpecificStateToJSON(nlohmann::json& inout_json) {}
 
-        virtual void SpecificStateFromJSON(const nlohmann::json& in_json){};
+        virtual void SpecificStateFromJSON(const nlohmann::json& in_json) {};
 
     protected:
         BasicConfig win_config;

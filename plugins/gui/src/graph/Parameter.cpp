@@ -59,7 +59,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , gui_rotation_widget()
         , tf_string_hash(0)
         , tf_editor_external_ptr(nullptr)
-        , tf_editor_inplace(std::string("inplace_tfeditor_parameter_" + std::to_string(uid)), true)
+        , tf_editor_inplace(std::string("inplace_tfeditor_parameter_" + std::to_string(uid)), false)
         , tf_use_external_editor(false)
         , tf_show_editor(false)
         , tf_editor_hash(0) {
@@ -123,6 +123,7 @@ megamol::gui::Parameter::~Parameter() {
 
     if (this->tf_editor_external_ptr != nullptr) {
         this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
+        this->tf_editor_external_ptr = nullptr;
     }
 }
 
@@ -2015,8 +2016,8 @@ bool megamol::gui::Parameter::widget_pinvaluetomouse(
 bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Parameter::WidgetScope scope) {
 
     bool retval = false;
-    bool isActive = false;
-    bool updateEditor = false;
+    bool param_externally_connected = false;
+    bool update_editor = false;
     auto val = std::get<std::string>(this->GetValue());
     std::string label = this->Name();
 
@@ -2024,7 +2025,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
 
     if (this->tf_use_external_editor) {
         if (this->tf_editor_external_ptr != nullptr) {
-            isActive = this->tf_editor_external_ptr->IsParameterConnected();
+            param_externally_connected = this->tf_editor_external_ptr->IsParameterConnected();
         }
     }
 
@@ -2032,27 +2033,24 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         ImGui::BeginGroup();
 
-        if (this->tf_use_external_editor) {
-
-            // Reduced display of value and editor state.
-            if (val.empty()) {
-                ImGui::TextDisabled("{    (empty)    }");
-                ImGui::SameLine();
+        // Reduced display of value and editor state.
+        if (val.empty()) {
+            ImGui::TextDisabled("{    (empty)    }");
+            ImGui::SameLine();
+        } else {
+            // Draw texture
+            if (this->gui_image_widget.IsLoaded()) {
+                this->gui_image_widget.Widget(ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()));
+                ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
             } else {
-                // Draw texture
-                if (this->gui_image_widget.IsLoaded()) {
-                    this->gui_image_widget.Widget(ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight()));
-                    ImGui::SameLine(ImGui::CalcItemWidth() + style.ItemInnerSpacing.x);
-                } else {
-                    ImGui::TextUnformatted("{ ............. }");
-                    ImGui::SameLine();
-                }
+                ImGui::TextUnformatted("{ ............. }");
+                ImGui::SameLine();
             }
-
-            // Label
-            ImGui::AlignTextToFramePadding();
-            ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
         }
+
+        // Label
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
 
         // Toggle inplace and external editor, if available
         if (this->tf_editor_external_ptr == nullptr) {
@@ -2065,47 +2063,35 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
         if (this->tf_editor_external_ptr == nullptr) {
             gui_utils::ReadOnlyWigetStyle(false);
         }
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Inplace", !this->tf_use_external_editor)) {
+        if (this->tf_use_external_editor) {
+            ImGui::SameLine();
+            if (param_externally_connected || (this->tf_editor_external_ptr == nullptr)) {
+                gui_utils::ReadOnlyWigetStyle(true);
+            }
+            if (ImGui::Button("Connect")) {
+                this->tf_editor_external_ptr->SetConnectedParameter(this, this->FullNameProject());
+                this->tf_editor_external_ptr->Config().show = true;
+                retval = true;
+            }
+            if (param_externally_connected || (this->tf_editor_external_ptr == nullptr)) {
+                gui_utils::ReadOnlyWigetStyle(false);
+            }
+        }
+
+        if (ImGui::RadioButton("Inplace Editor", !this->tf_use_external_editor)) {
             this->tf_use_external_editor = false;
             if (this->tf_editor_external_ptr != nullptr) {
                 this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
             }
         }
-        ImGui::SameLine();
-
-        if (this->tf_use_external_editor) {
-
-            // Editor
-            if (isActive || (this->tf_editor_external_ptr == nullptr)) {
-                gui_utils::ReadOnlyWigetStyle(true);
-            }
-            if (ImGui::Button("Connect")) {
-                retval = true;
-            }
-            if (isActive || (this->tf_editor_external_ptr == nullptr)) {
-                gui_utils::ReadOnlyWigetStyle(false);
-            }
-
-        } else { // Inplace Editor
-
-            // Editor
-            if (ImGui::Checkbox("Editor ", &this->tf_show_editor)) {
-                // Set once
+        if (!this->tf_use_external_editor) {
+            ImGui::SameLine();
+            if (megamol::gui::ButtonWidgets::ToggleButton(((this->tf_show_editor)?("Hide"):("Show")), this->tf_show_editor)) {
                 if (this->tf_show_editor) {
-                    updateEditor = true;
+                    update_editor = true;
+                    retval = true;
                 }
             }
-            ImGui::SameLine();
-
-            // Indicate unset transfer function state
-            if (val.empty()) {
-                ImGui::TextDisabled(" { empty } ");
-            }
-            ImGui::SameLine();
-
-            // Label
-            ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
         }
 
         // Copy
@@ -2120,29 +2106,30 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
             val = std::get<std::string>(this->GetValue());
             if (this->tf_use_external_editor) {
                 if (this->tf_editor_external_ptr != nullptr) {
-                    this->tf_editor_external_ptr->SetTransferFunction(val, true);
+                    this->tf_editor_external_ptr->SetTransferFunction(val, true, true);
                 }
             } else {
-                this->tf_editor_inplace.SetTransferFunction(val, false);
+                this->tf_editor_inplace.SetTransferFunction(val, false, true);
             }
         }
+        ImGui::Separator();
 
         if (!this->tf_use_external_editor) { // Internal Editor
 
             if (this->tf_editor_hash != this->GetTransferFunctionHash()) {
-                updateEditor = true;
+                update_editor = true;
             }
             // Propagate the transfer function to the editor.
-            if (updateEditor) {
-                this->tf_editor_inplace.SetTransferFunction(val, false);
+            if (update_editor) {
+                this->tf_editor_inplace.SetTransferFunction(val, false, true);
             }
-            // Draw transfer function editor
+            // Draw inplace transfer function editor
             if (this->tf_show_editor) {
                 if (this->tf_editor_inplace.Draw()) {
                     std::string val_str;
                     if (this->tf_editor_inplace.GetTransferFunction(val_str)) {
                         this->SetValue(val_str);
-                        retval = false; /// (Returning true opens external editor)
+                        retval = true;
                     }
                 }
             }
@@ -2157,16 +2144,15 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
     else if (scope == megamol::gui::Parameter::WidgetScope::GLOBAL) {
 
         if (this->tf_use_external_editor) {
-
             // Check for changed parameter value which should be forced to the editor once.
-            if (isActive) {
+            if (param_externally_connected) {
                 if (this->tf_editor_hash != this->GetTransferFunctionHash()) {
-                    updateEditor = true;
+                    update_editor = true;
                 }
             }
             // Propagate the transfer function to the editor.
-            if (isActive && updateEditor) {
-                this->tf_editor_external_ptr->SetTransferFunction(val, true);
+            if (param_externally_connected && update_editor) {
+                this->tf_editor_external_ptr->SetTransferFunction(val, true, false);
                 retval = true;
             }
             this->tf_editor_hash = this->GetTransferFunctionHash();

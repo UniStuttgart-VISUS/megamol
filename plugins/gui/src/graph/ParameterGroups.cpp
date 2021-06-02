@@ -79,7 +79,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                     if (in_extended.IsTrue()) {
                         // Visibility
                         bool visible = group_widget_data->IsGUIVisible();
-                        if (ImGui::RadioButton("###visibile", visible)) {
+                        if (ImGui::RadioButton("##visibile", visible)) {
                             group_widget_data->SetGUIVisible(!visible);
                         }
                         this->tooltip.ToolTip("Visibility", ImGui::GetItemID(), 0.5f);
@@ -87,7 +87,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
 
                         // Read-only option
                         bool readonly = group_widget_data->IsGUIReadOnly();
-                        if (ImGui::Checkbox("###readonly", &readonly)) {
+                        if (ImGui::Checkbox("##readonly", &readonly)) {
                             group_widget_data->SetGUIReadOnly(readonly);
                         }
                         this->tooltip.ToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
@@ -220,14 +220,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
         bool visible = (inout_param.IsGUIVisible() || inout_param.IsExtended()) && param_searched;
 
         if (visible) {
-            if (inout_param.Draw(in_scope)) {
-
-                // Open window calling the transfer function editor callback
-                if ((inout_param.Type() == ParamType_t::TRANSFERFUNCTION) && (tfeditor_ptr != nullptr)) {
-                    tfeditor_ptr->SetConnectedParameter(&inout_param, param_fullname);
-                    tfeditor_ptr->Config().show = true;
-                }
-            }
+            inout_param.Draw(in_scope);
         }
     }
 }

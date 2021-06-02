@@ -8,7 +8,7 @@
 #ifndef MEGAMOL_GUI_FILEUTILS_INCLUDED
 #define MEGAMOL_GUI_FILEUTILS_INCLUDED
 
-#if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
+#if defined(_HAS_CXX17) || (__cplusplus >= 201703L) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
 #include <filesystem>
 namespace stdfs = std::filesystem;
 #else
@@ -23,14 +23,16 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 #endif
 
+
+#include "mmcore/utility/log/Log.h"
+
 #include <fstream>
 #include <istream>
 #include <iostream>
 #include <codecvt>
 #include <locale>
 #include <string>
-
-#include "mmcore/utility/log/Log.h"
+#include <vector>
 
 
 namespace megamol {
