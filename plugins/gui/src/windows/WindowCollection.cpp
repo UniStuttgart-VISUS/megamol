@@ -140,7 +140,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
 
                         int tmp_win_config_id = 0;
                         megamol::core::utility::get_json_value<int>(config_item.value(),
-                            {"win_callback"}, /// TODO rename to "win_config_id"
+                            {"win_callback"}, /// XXX rename to "win_config_id"
                             &tmp_win_config_id);
                         auto win_config_id = static_cast<AbstractWindow::WindowConfigID>(tmp_win_config_id);
 
@@ -185,7 +185,7 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
         for (auto& window : this->windows) {
 
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window->Name()]["win_callback"] =
-                static_cast<int>(window->WindowID()); /// TODO rename to "win_config_id"
+                static_cast<int>(window->WindowID()); /// XXX rename to "win_config_id"
 
             window->StateToJSON(inout_json);
             window->SpecificStateToJSON(inout_json);

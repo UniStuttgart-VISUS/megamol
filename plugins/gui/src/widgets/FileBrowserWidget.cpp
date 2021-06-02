@@ -140,7 +140,7 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
         if (ImGui::BeginPopupModal(popup_label.c_str(), &open, ImGuiWindowFlags_None)) {
 
             bool apply = false;
-            bool opt_relabspath = (!force_absolute_path && (mode == DIALOGMODE_SELECT));
+            bool opt_relabspath = false; /// XXX (!force_absolute_path && (mode == DIALOGMODE_SELECT));
 
             // Path ---------------------------------------------------
             auto last_file_path_str = this->file_path_str;
@@ -181,9 +181,9 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                 ImGui::GetFrameHeightWithSpacing() * ((inout_save_gui_state.IsUnknown())
                                                              ? (2.0f)
                                                              : (3.0f)) + // 1x save gui state line + 2x line for button
-                (ImGui::GetTextLineHeightWithSpacing() * 4.0f);          // 2x max log lines
+                (ImGui::GetTextLineHeightWithSpacing() * 2.0f);          // 2x max log lines
             if (opt_relabspath) {
-                footer_height += ImGui::GetTextLineHeightWithSpacing() * ((project_path.empty()) ? (2.5f) : (4.0f));
+                footer_height += ImGui::GetTextLineHeightWithSpacing() * ((project_path.empty()) ? (4.5f) : (6.0f));
             }
             float child_select_height = (ImGui::GetContentRegionAvail().y - footer_height);
             ImGui::BeginChild(
