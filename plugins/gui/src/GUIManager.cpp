@@ -439,7 +439,9 @@ bool GUIManager::PostDraw() {
 
     // Loading new font -------------------------------------------------------
     // (after first imgui frame for default fonts being available)
-    if (this->gui_state.font_load == 1) {
+    if (this->gui_state.font_load > 1) {
+        this->gui_state.font_load--;
+    } else if (this->gui_state.font_load == 1) {
         bool load_success = false;
         if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
                 this->gui_state.font_load_filename, std::string("ttf"))) {
@@ -449,7 +451,7 @@ bool GUIManager::PostDraw() {
             config.GlyphRanges = this->gui_state.font_utf8_ranges.data();
             gui_utils::Utf8Encode(this->gui_state.font_load_filename);
             if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_filename.c_str(),
-                                             static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
+                    static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
                 bool font_api_load_success = false;
                 switch (this->initialized_api) {
                 case (GUIImGuiAPI::OPEN_GL): {
@@ -479,15 +481,13 @@ bool GUIManager::PostDraw() {
                 }
             }
         }
-        if (!load_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
-                "loaded with predefined size 13). [%s, %s, line %d]\n",
-                this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__, __LINE__);
-        }
+        //if (!load_success) {
+        //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        //        "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
+        //        "loaded with predefined size 13). [%s, %s, line %d]\n",
+        //        this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__, __LINE__);
+        //}
         this->gui_state.font_load = 0;
-    } else if (this->gui_state.font_load > 1) {
-        this->gui_state.font_load--;
     }
 
     // Assume pending changes in scaling as applied  --------------------------
@@ -709,14 +709,10 @@ void megamol::gui::GUIManager::SetScale(float scale) {
         this->gui_state.load_default_fonts = true;
 
         // Additionally trigger reload of currently used default font
-        this->gui_state.font_load_filename.clear();
-        if (ImGui::GetIO().FontDefault != nullptr) {
-            /// Need to wait 1 frame for scaled font being available!
-            this->gui_state.font_load = 2;
-            this->gui_state.font_load_size = static_cast<int>(
-                    static_cast<float>(this->gui_state.font_load_size) * (megamol::gui::gui_scaling.TransitionFactor()));
-            this->gui_state.font_load_filename = this->extract_fontname(ImGui::GetIO().FontDefault->GetDebugName());
-        }
+        /// Need to wait 1 additional frame for scaled font being available!
+        this->gui_state.font_load = 2;
+        this->gui_state.font_load_size = static_cast<int>(
+                static_cast<float>(this->gui_state.font_load_size) * (megamol::gui::gui_scaling.TransitionFactor()));
     }
     // Scale all windows
     const auto size_func = [&](AbstractWindow& wc) {
@@ -1088,7 +1084,6 @@ void megamol::gui::GUIManager::load_default_fonts() {
     std::vector<std::string> font_paths;
     std::string configurator_font_path;
     std::string default_font_path;
-
     auto get_preset_font_path = [&](const std::string& directory) {
         std::string font_path =
             megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_ROBOTOSANS);
@@ -1102,7 +1097,6 @@ void megamol::gui::GUIManager::load_default_fonts() {
             font_paths.emplace_back(font_path);
         }
     };
-
     for (auto& resource_directory : megamol::gui::gui_resource_paths) {
         get_preset_font_path(resource_directory);
     }
@@ -1129,6 +1123,12 @@ void megamol::gui::GUIManager::load_default_fonts() {
         if (default_font_path == font_path) {
             io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
         }
+    }
+
+    // Set default if there is no pending font load request otherwise
+    if (this->gui_state.font_load == 0) {
+        this->gui_state.font_load_filename = default_font_path;
+        this->gui_state.font_load_size = static_cast<int>(default_font_size);
     }
 
     switch (this->initialized_api) {
@@ -1330,7 +1330,6 @@ void GUIManager::draw_menu() {
                 for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < io.Fonts->Fonts.Size; n++) {
                     if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current))) {
                         io.FontDefault = io.Fonts->Fonts[n];
-                        // Saving font to window configuration (Remove font size from font name)
                         this->gui_state.font_load_filename = this->extract_fontname(io.FontDefault->GetDebugName());
                         this->gui_state.font_load_size = static_cast<int>(io.FontDefault->FontSize);
                     }
@@ -1714,7 +1713,7 @@ bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
                 megamol::core::utility::get_json_value<std::string>(
                     state_str, {"font_file_name"}, &this->gui_state.font_load_filename);
                 megamol::core::utility::get_json_value<int>(state_str, {"font_size"}, &this->gui_state.font_load_size);
-                this->gui_state.font_load = 1;
+                this->gui_state.font_load = 2;
                 std::string imgui_settings;
                 megamol::core::utility::get_json_value<std::string>(state_str, {"imgui_settings"}, &imgui_settings);
                 this->load_imgui_settings_from_string(imgui_settings);
