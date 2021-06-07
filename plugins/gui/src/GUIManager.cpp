@@ -77,7 +77,7 @@ void megamol::gui::GUIManager::init_state() {
     this->gui_state.new_gui_state = "";
     this->gui_state.project_script_paths.clear();
     this->gui_state.font_utf8_ranges.clear();
-    this->gui_state.load_fonts = false;
+    this->gui_state.load_default_fonts = false;
     this->gui_state.win_delete_hash_id = 0;
     this->gui_state.last_instance_time = 0.0;
     this->gui_state.open_popup_about = false;
@@ -91,13 +91,13 @@ void megamol::gui::GUIManager::init_state() {
     this->gui_state.screenshot_filepath = "megamol_screenshot.png";
     this->create_unique_screenshot_filename(this->gui_state.screenshot_filepath);
     this->gui_state.screenshot_filepath_id = 0;
-    this->gui_state.font_apply = false;
-    this->gui_state.font_file_name = "";
+    this->gui_state.font_load = 0;
+    this->gui_state.font_load_filename = "";
+    this->gui_state.font_load_size = 12;
     this->gui_state.request_load_projet_file = "";
     this->gui_state.stat_averaged_fps = 0.0f;
     this->gui_state.stat_averaged_ms = 0.0f;
     this->gui_state.stat_frame_count = 0;
-    this->gui_state.font_size = 13;
     this->gui_state.load_docking_preset = true;
 }
 
@@ -252,10 +252,10 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         }
     }
 
-    // Delayed font loading for being resource directories available via resource in frontend
-    if (this->gui_state.load_fonts) {
+    // Delayed font loading for resource directories being available via resource in frontend
+    if (this->gui_state.load_default_fonts) {
         this->load_default_fonts();
-        this->gui_state.load_fonts = false;
+        this->gui_state.load_default_fonts = false;
     }
 
     // Required to prevent change in gui drawing between pre and post draw
@@ -415,9 +415,6 @@ bool GUIManager::PostDraw() {
         hotkey.second.is_pressed = false;
     }
 
-    // Apply new gui scale -----------------------------------------------------
-    megamol::gui::gui_scaling.ConsumePendingChange();
-
     // Hide GUI if it is currently shown --------------------------------------
     if (this->gui_state.gui_visible) {
         if (this->gui_state.gui_hide_next_frame == 2) {
@@ -442,18 +439,17 @@ bool GUIManager::PostDraw() {
 
     // Loading new font -------------------------------------------------------
     // (after first imgui frame for default fonts being available)
-    if (this->gui_state.font_apply) {
+    if (this->gui_state.font_load == 1) {
         bool load_success = false;
         if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
-                this->gui_state.font_file_name, std::string("ttf"))) {
+                this->gui_state.font_load_filename, std::string("ttf"))) {
             ImFontConfig config;
             config.OversampleH = 4;
             config.OversampleV = 4;
             config.GlyphRanges = this->gui_state.font_utf8_ranges.data();
-            gui_utils::Utf8Encode(this->gui_state.font_file_name);
-            if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_file_name.c_str(),
-                    static_cast<float>(this->gui_state.font_size), &config) != nullptr) {
-
+            gui_utils::Utf8Encode(this->gui_state.font_load_filename);
+            if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_filename.c_str(),
+                                             static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
                 bool font_api_load_success = false;
                 switch (this->initialized_api) {
                 case (GUIImGuiAPI::OPEN_GL): {
@@ -470,10 +466,10 @@ bool GUIManager::PostDraw() {
                     load_success = true;
                 }
             }
-            gui_utils::Utf8Decode(this->gui_state.font_file_name);
-        } else if (this->gui_state.font_file_name != "<unknown>") {
+            gui_utils::Utf8Decode(this->gui_state.font_load_filename);
+        } else if ((!this->gui_state.font_load_filename.empty()) && (this->gui_state.font_load_filename != "<unknown>")) {
             std::string imgui_font_string =
-                this->gui_state.font_file_name + ", " + std::to_string(this->gui_state.font_size) + "px";
+                    this->gui_state.font_load_filename + ", " + std::to_string(this->gui_state.font_load_size) + "px";
             for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < (io.Fonts->Fonts.Size); n++) {
                 std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
                 gui_utils::Utf8Decode(font_name);
@@ -483,14 +479,19 @@ bool GUIManager::PostDraw() {
                 }
             }
         }
-        // if (!load_success) {
-        //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        //        "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
-        //        "loaded with predefined size 13). [%s, %s, line %d]\n",
-        //        this->gui_state.font_file_name.c_str(), this->gui_state.font_size, __FILE__, __FUNCTION__, __LINE__);
-        //}
-        this->gui_state.font_apply = false;
+        if (!load_success) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
+                "loaded with predefined size 13). [%s, %s, line %d]\n",
+                this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__, __LINE__);
+        }
+        this->gui_state.font_load = 0;
+    } else if (this->gui_state.font_load > 1) {
+        this->gui_state.font_load--;
     }
+
+    // Assume pending changes in scaling as applied  --------------------------
+    megamol::gui::gui_scaling.ConsumePendingChange();
 
     return true;
 }
@@ -701,14 +702,21 @@ void megamol::gui::GUIManager::SetScale(float scale) {
 
     megamol::gui::gui_scaling.Set(scale);
     if (megamol::gui::gui_scaling.PendingChange()) {
-        // Additionally trigger reload of currently used font
-        this->gui_state.font_apply = true;
-        this->gui_state.font_size = static_cast<int>(
-            static_cast<float>(this->gui_state.font_size) * (megamol::gui::gui_scaling.TransitionFactor()));
+
         // Reload ImGui style options
         this->gui_state.style_changed = true;
         // Reload and scale all fonts
-        this->gui_state.load_fonts = true;
+        this->gui_state.load_default_fonts = true;
+
+        // Additionally trigger reload of currently used default font
+        this->gui_state.font_load_filename.clear();
+        if (ImGui::GetIO().FontDefault != nullptr) {
+            /// Need to wait 1 frame for scaled font being available!
+            this->gui_state.font_load = 2;
+            this->gui_state.font_load_size = static_cast<int>(
+                    static_cast<float>(this->gui_state.font_load_size) * (megamol::gui::gui_scaling.TransitionFactor()));
+            this->gui_state.font_load_filename = this->extract_fontname(ImGui::GetIO().FontDefault->GetDebugName());
+        }
     }
     // Scale all windows
     const auto size_func = [&](AbstractWindow& wc) {
@@ -1023,7 +1031,7 @@ bool GUIManager::create_context() {
         }
 
     } else {
-        this->gui_state.load_fonts = true;
+        this->gui_state.load_default_fonts = true;
     }
 
     return true;
@@ -1323,10 +1331,8 @@ void GUIManager::draw_menu() {
                     if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current))) {
                         io.FontDefault = io.Fonts->Fonts[n];
                         // Saving font to window configuration (Remove font size from font name)
-                        this->gui_state.font_file_name = std::string(io.FontDefault->GetDebugName());
-                        auto sep_index = this->gui_state.font_file_name.find(',');
-                        this->gui_state.font_file_name = this->gui_state.font_file_name.substr(0, sep_index);
-                        this->gui_state.font_size = static_cast<int>(io.FontDefault->FontSize);
+                        this->gui_state.font_load_filename = this->extract_fontname(io.FontDefault->GetDebugName());
+                        this->gui_state.font_load_size = static_cast<int>(io.FontDefault->FontSize);
                     }
                 }
                 ImGui::EndCombo();
@@ -1340,30 +1346,30 @@ void GUIManager::draw_menu() {
             this->tooltip.Marker(help);
 
             std::string label("Font Size");
-            ImGui::InputInt(label.c_str(), &this->gui_state.font_size, 1, 10, ImGuiInputTextFlags_None);
+            ImGui::InputInt(label.c_str(), &this->gui_state.font_load_size, 1, 10, ImGuiInputTextFlags_None);
             // Validate font size
-            if (this->gui_state.font_size <= 5) {
-                this->gui_state.font_size = 5; // minimum valid font size
+            if (this->gui_state.font_load_size <= 5) {
+                this->gui_state.font_load_size = 5; // minimum valid font size
             }
 
             ImGui::BeginGroup();
             float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
             ImGui::PushItemWidth(widget_width);
-            this->file_browser.Button_Select("ttf", this->gui_state.font_file_name, true);
+            this->file_browser.Button_Select("ttf", this->gui_state.font_load_filename, true);
             ImGui::SameLine();
-            gui_utils::Utf8Encode(this->gui_state.font_file_name);
-            ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_file_name, ImGuiInputTextFlags_None);
-            gui_utils::Utf8Decode(this->gui_state.font_file_name);
+            gui_utils::Utf8Encode(this->gui_state.font_load_filename);
+            ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_load_filename, ImGuiInputTextFlags_None);
+            gui_utils::Utf8Decode(this->gui_state.font_load_filename);
             ImGui::PopItemWidth();
             // Validate font file before offering load button
             bool valid_file = megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
-                this->gui_state.font_file_name, std::string("ttf"));
+                    this->gui_state.font_load_filename, std::string("ttf"));
             if (!valid_file) {
                 megamol::gui::gui_utils::ReadOnlyWigetStyle(true);
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             if (ImGui::Button("Add Font")) {
-                this->gui_state.font_apply = true;
+                this->gui_state.font_load = 1;
             }
             if (!valid_file) {
                 ImGui::PopItemFlag();
@@ -1706,9 +1712,9 @@ bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
                 this->gui_state.style = static_cast<GUIManager::Styles>(style);
                 this->gui_state.style_changed = true;
                 megamol::core::utility::get_json_value<std::string>(
-                    state_str, {"font_file_name"}, &this->gui_state.font_file_name);
-                megamol::core::utility::get_json_value<int>(state_str, {"font_size"}, &this->gui_state.font_size);
-                this->gui_state.font_apply = true;
+                    state_str, {"font_file_name"}, &this->gui_state.font_load_filename);
+                megamol::core::utility::get_json_value<int>(state_str, {"font_size"}, &this->gui_state.font_load_size);
+                this->gui_state.font_load = 1;
                 std::string imgui_settings;
                 megamol::core::utility::get_json_value<std::string>(state_str, {"imgui_settings"}, &imgui_settings);
                 this->load_imgui_settings_from_string(imgui_settings);
@@ -1740,10 +1746,10 @@ bool megamol::gui::GUIManager::state_to_string(std::string& out_state) {
         // Write GUI state
         json_state[GUI_JSON_TAG_GUI]["menu_visible"] = this->gui_state.menu_visible;
         json_state[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->gui_state.style);
-        gui_utils::Utf8Encode(this->gui_state.font_file_name);
-        json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->gui_state.font_file_name;
-        gui_utils::Utf8Decode(this->gui_state.font_file_name);
-        json_state[GUI_JSON_TAG_GUI]["font_size"] = this->gui_state.font_size;
+        gui_utils::Utf8Encode(this->gui_state.font_load_filename);
+        json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->gui_state.font_load_filename;
+        gui_utils::Utf8Decode(this->gui_state.font_load_filename);
+        json_state[GUI_JSON_TAG_GUI]["font_size"] = this->gui_state.font_load_size;
         json_state[GUI_JSON_TAG_GUI]["imgui_settings"] = this->save_imgui_settings_to_string();
 
         // Write window configurations
@@ -1817,4 +1823,13 @@ void GUIManager::RegisterPopUp(const std::string& name, bool& open, const std::f
 void GUIManager::RegisterNotification(const std::string& name, bool& open, const std::string& message) {
 
     this->notification_collection[name] = std::tuple<bool*, bool, std::string>(&open, false, message);
+}
+
+
+std::string GUIManager::extract_fontname(const std::string &imgui_fontname) const {
+
+    auto return_fontname = std::string(imgui_fontname);
+    auto sep_index = return_fontname.find(',');
+    return_fontname = return_fontname.substr(0, sep_index);
+    return return_fontname;
 }

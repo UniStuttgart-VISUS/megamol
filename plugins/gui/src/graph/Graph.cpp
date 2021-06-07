@@ -1352,9 +1352,9 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
         }
 
-        std::string graph_label = "    " + this->name + "  ###graph" + std::to_string(graph_uid);
+        std::string graph_label = " " + this->name + " ##graph" + std::to_string(graph_uid);
         if (this->IsRunning()) {
-            graph_label = "    [RUNNING]  " + graph_label;
+            graph_label = " [RUNNING] " + graph_label;
         }
 
         bool open_value = true;
