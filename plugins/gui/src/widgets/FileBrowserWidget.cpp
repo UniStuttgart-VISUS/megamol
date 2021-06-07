@@ -7,6 +7,7 @@
 
 
 #include "FileBrowserWidget.h"
+#include "widgets/ButtonWidgets.h"
 #include "gui_utils.h"
 #include "imgui_stdlib.h"
 
@@ -327,7 +328,7 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
             // Optional save GUI state option ------------
             if (!inout_save_gui_state.IsUnknown()) {
                 bool check = this->save_gui_state.IsTrue();
-                ImGui::Checkbox("Save GUI state", &check);
+                megamol::gui::ButtonWidgets::ToggleButton("Save GUI state", check);
                 this->save_gui_state =
                     ((check) ? (vislib::math::Ternary::TRI_TRUE) : (vislib::math::Ternary::TRI_FALSE));
                 this->tooltip.Marker("Check this option to also save all settings affecting the GUI.");

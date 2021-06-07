@@ -7,6 +7,7 @@
 
 
 #include "LogConsole.h"
+#include "widgets/ButtonWidgets.h"
 #include "mmcore/utility/log/OfflineTarget.h"
 
 
@@ -158,7 +159,7 @@ bool megamol::gui::LogConsole::Draw() {
     if (ImGui::BeginMenuBar()) {
 
         // Force Open on Warnings and Errors
-        ImGui::Checkbox("Force Open", &this->win_log_force_open);
+        megamol::gui::ButtonWidgets::ToggleButton("Force Open", this->win_log_force_open);
         this->tooltip.Marker("Force open log console window on warnings and errors.");
         ImGui::Separator();
 

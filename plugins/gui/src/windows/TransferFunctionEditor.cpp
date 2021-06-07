@@ -621,7 +621,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
 
         ImGui::SameLine();
 
-        if (ImGui::Checkbox("Auto-apply", &this->immediate_mode)) {
+        if (megamol::gui::ButtonWidgets::ToggleButton("Auto-apply", this->immediate_mode)) {
             apply_changes = this->immediate_mode;
         }
 

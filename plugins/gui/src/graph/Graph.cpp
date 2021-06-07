@@ -1949,12 +1949,12 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
         gui_utils::ReadOnlyWigetStyle(true);
         bool is_graph_entry = false;
         this->gui_current_graph_entry_name.clear();
-        ImGui::Checkbox("Graph Entry", &is_graph_entry);
+        megamol::gui::ButtonWidgets::ToggleButton("Graph Entry", is_graph_entry);
         // ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
         gui_utils::ReadOnlyWigetStyle(false);
     } else {
         bool is_graph_entry = selected_mod_ptr->IsGraphEntry();
-        if (ImGui::Checkbox("Graph Entry", &is_graph_entry)) {
+        if (megamol::gui::ButtonWidgets::ToggleButton("Graph Entry", is_graph_entry)) {
             Graph::QueueData queue_data;
             if (is_graph_entry) {
                 // Remove all graph entries
@@ -2025,7 +2025,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     ImGui::Separator();
 
     // GRID
-    ImGui::Checkbox("Grid", &this->gui_show_grid);
+    megamol::gui::ButtonWidgets::ToggleButton("Grid", this->gui_show_grid);
 
     ImGui::Separator();
 
@@ -2351,20 +2351,22 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
         ImGui::SameLine();
 
         // Visibility
-        if (ImGui::Checkbox("Visibility", &this->gui_params_visible)) {
+        if (megamol::gui::ButtonWidgets::ToggleButton("Visibility", this->gui_params_visible)) {
             for (auto& module_ptr : this->Modules()) {
                 for (auto& parameter : module_ptr->Parameters()) {
                     parameter.SetGUIVisible(this->gui_params_visible);
+                    parameter.ForceSetGUIStateDirty();
                 }
             }
         }
         ImGui::SameLine();
 
         // Read-only option
-        if (ImGui::Checkbox("Read-Only", &this->gui_params_readonly)) {
+        if (megamol::gui::ButtonWidgets::ToggleButton("Read-Only", this->gui_params_readonly)) {
             for (auto& module_ptr : this->Modules()) {
                 for (auto& parameter : module_ptr->Parameters()) {
                     parameter.SetGUIReadOnly(this->gui_params_readonly);
+                    parameter.ForceSetGUIStateDirty();
                 }
             }
         }

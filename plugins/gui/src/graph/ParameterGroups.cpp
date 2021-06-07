@@ -79,7 +79,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                     if (in_extended.IsTrue()) {
                         // Visibility
                         bool visible = group_widget_data->IsGUIVisible();
-                        if (ImGui::RadioButton("##visibile", visible)) {
+                        if (ImGui::RadioButton("###visibile", visible)) {
                             group_widget_data->SetGUIVisible(!visible);
                         }
                         this->tooltip.ToolTip("Visibility", ImGui::GetItemID(), 0.5f);
@@ -87,7 +87,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
 
                         // Read-only option
                         bool readonly = group_widget_data->IsGUIReadOnly();
-                        if (ImGui::Checkbox("##readonly", &readonly)) {
+                        if (ImGui::Checkbox("###readonly", &readonly)) {
                             group_widget_data->SetGUIReadOnly(readonly);
                         }
                         this->tooltip.ToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
