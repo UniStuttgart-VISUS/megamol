@@ -3,30 +3,17 @@
 
 #include <cxxopts.hpp>
 
-// Filesystem
-#if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
 #include <filesystem>
-namespace stdfs = std::filesystem;
-#else
-// WINDOWS
-#ifdef _WIN32
-#include <filesystem>
-namespace stdfs = std::experimental::filesystem;
-#else
-// LINUX
-#include <experimental/filesystem>
-namespace stdfs = std::experimental::filesystem;
-#endif
-#endif
 
 // find user home
 #include <stdlib.h>
 #include <stdio.h>
-static std::string getHomeDir() {
+static
+std::filesystem::path getHomeDir() {
 #ifdef _WIN32
-    return std::string(getenv("HOMEDRIVE")) + std::string(getenv("HOMEPATH"));
+    return std::filesystem::absolute(std::string(getenv("HOMEDRIVE")) + std::string(getenv("HOMEPATH")));
 #else // LINUX
-    return std::string(getenv("HOME"));
+    return std::filesystem::absolute(std::string(getenv("HOME")));
 #endif
 }
 
@@ -101,7 +88,7 @@ static std::string help_option          = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
     for (const auto& file : vec) {
-        if (!stdfs::exists(file)) {
+        if (!std::filesystem::exists(file)) {
             exit(type + " \"" + file + "\" does not exist!");
         }
     }
@@ -395,8 +382,8 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
         std::vector<std::string> config_files;
 
-        auto personal_config = stdfs::path(getHomeDir()) / stdfs::path(".megamol_config.lua");
-        if (stdfs::exists(personal_config)) {
+        auto personal_config = std::filesystem::path(getHomeDir()) / std::filesystem::path(".megamol_config.lua");
+        if (std::filesystem::exists(personal_config)) {
             config_files.push_back(personal_config.string());
         }
 
@@ -445,7 +432,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
                     return Error{"Value \"" + s + "\" is empty, has space or ="};
 
     #define file_exists(f) \
-                if (!stdfs::exists(f)) \
+                if (!std::filesystem::exists(f)) \
                     return Error{"File does not exist: " + f};
 
     #define add_cli(o,v) \
