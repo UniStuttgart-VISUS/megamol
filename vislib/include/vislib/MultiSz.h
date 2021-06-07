@@ -589,8 +589,8 @@ namespace vislib {
                 cursor = this->data;
 
                 while (*cursor != 0) {
-                    // TODO: Das könnte man mit einer one-pass-Lösung noch
-                    // chefmäßiger machen.
+                    // TODO: Das kÃ¶nnte man mit einer one-pass-LÃ¶sung noch
+                    // chefmÃ¤ÃŸiger machen.
                     s = str;
                     strStart = cursor;
                     while ((*s == *cursor) && (*cursor != 0)) {

@@ -5,9 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
-#include "CallSlot.h"
 
+#include "CallSlot.h"
 #include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"
@@ -470,7 +469,6 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 tmpcol.w *= brightness;
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_SLOT_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
 
                 // Draw Slot
                 ImU32 slot_border_color = COLOR_SLOT_BORDER;

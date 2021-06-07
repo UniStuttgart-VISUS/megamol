@@ -28,7 +28,7 @@ namespace utility {
     class ShaderSourceFactory;
 
     /**
-     * Class for the MegaMol™ baschtel-together-file xml parser.
+     * Class for the MegaMol baschtel-together-file xml parser.
      *
      * See documentation for specification of BTF xml. Note that forward
      * references are not possible.
@@ -454,7 +454,7 @@ namespace utility {
              xml::XmlReader::ParserState state);
 
         /**
-         * Checks whether the xml file is a 'config', '1.0' MegaMol™ xml file.
+         * Checks whether the xml file is a 'config', '1.0' MegaMol xml file.
          *
          * @param reader The current xml reader.
          *

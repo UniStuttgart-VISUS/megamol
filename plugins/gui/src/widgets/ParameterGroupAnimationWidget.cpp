@@ -5,9 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "widgets/ParameterGroupAnimationWidget.h"
 #include "graph/ParameterGroups.h"
+#include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol;
@@ -45,8 +46,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
 }
 
 
-bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_module_fullname,
-    const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
+bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_search,
+    megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -82,7 +83,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         if (in_scope == Parameter::WidgetScope::LOCAL) {
 
             ParameterGroups::DrawGroupedParameters(
-                this->name, params, in_module_fullname, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
+                this->name, params, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
             return true;
 
@@ -108,16 +109,16 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
 
         // Load button textures (once) --------------------------------------------
         if (!this->image_buttons.play.IsLoaded()) {
-            this->image_buttons.play.LoadTextureFromFile("../share/resources/transport_ctrl_play.png");
+            this->image_buttons.play.LoadTextureFromFile(GUI_TRANSPORT_ICON_PLAY);
         }
         if (!this->image_buttons.pause.IsLoaded()) {
-            this->image_buttons.pause.LoadTextureFromFile("../share/resources/transport_ctrl_pause.png");
+            this->image_buttons.pause.LoadTextureFromFile(GUI_TRANSPORT_ICON_PAUSE);
         }
         if (!this->image_buttons.fastforward.IsLoaded()) {
-            this->image_buttons.fastforward.LoadTextureFromFile("../share/resources/transport_ctrl_fast-forward.png");
+            this->image_buttons.fastforward.LoadTextureFromFile(GUI_TRANSPORT_ICON_FAST_FORWARD);
         }
         if (!this->image_buttons.fastrewind.IsLoaded()) {
-            this->image_buttons.fastrewind.LoadTextureFromFile("../share/resources/transport_ctrl_fast-rewind.png");
+            this->image_buttons.fastrewind.LoadTextureFromFile(GUI_TRANSPORT_ICON_FAST_REWIND);
         }
         if ((!this->image_buttons.play.IsLoaded()) || (!this->image_buttons.pause.IsLoaded()) ||
             (!this->image_buttons.fastforward.IsLoaded()) || (!this->image_buttons.fastrewind.IsLoaded())) {

@@ -7,14 +7,13 @@
 
 #ifndef MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
+#pragma once
 
-
-#include "GUIUtils.h"
-#include "widgets/RenamePopUp.h"
 
 #include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"
+#include "widgets/PopUps.h"
 
 
 namespace megamol {
@@ -104,7 +103,7 @@ namespace gui {
         bool gui_allow_context;
         bool gui_update;
 
-        RenamePopUp gui_rename_popup;
+        PopUps gui_rename_popup;
 
         // FUNCTIONS --------------------------------------------------------------
 

@@ -686,7 +686,7 @@ VIMDataSource::parseTypeLine(vislib::StringA &line, int &outType) {
         0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
         0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
         0xFF404040, 0xFF404040, 0xFF404040, 0xFF404040,
-        0xFFFFC080, // 42 MegaMol™-blue
+        0xFFFFC080, // 42 MegaMol-blue
         0xFF404040 // default gray
     };
 

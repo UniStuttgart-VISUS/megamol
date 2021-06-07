@@ -125,7 +125,7 @@ namespace view {
         /** The value range */
         std::array<float, 2> range;
 
-        bool check_ignore_project_range;
+        /** Flag indicates whether to use range given in project file or propagated from module. */
         bool ignore_project_range;
 
         /** Version of texture */

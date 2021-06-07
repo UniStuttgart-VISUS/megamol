@@ -31,11 +31,13 @@
 
 #include "optix/Context.h"
 
+#include "CallRender3DCUDA.h"
+
 namespace megamol::optix_hpg {
-class Renderer : public core::view::Renderer3DModuleGL {
+class Renderer : public core::view::RendererModule<CallRender3DCUDA> {
 public:
     std::vector<std::string> requested_lifetime_resources() override {
-        auto res = Renderer3DModuleGL::requested_lifetime_resources();
+        auto res = core::view::RendererModule<CallRender3DCUDA>::requested_lifetime_resources();
         res.push_back(frontend_resources::CUDA_Context_Req_Name);
         return res;
     }
@@ -56,9 +58,9 @@ public:
 
     virtual ~Renderer();
 
-    bool Render(core::view::CallRender3DGL& call) override;
+    bool Render(CallRender3DCUDA& call) override;
 
-    bool GetExtents(core::view::CallRender3DGL& call) override;
+    bool GetExtents(CallRender3DCUDA& call) override;
 
 protected:
     bool create() override;
@@ -69,13 +71,15 @@ private:
     void setup();
 
     bool is_dirty() {
-        return spp_slot_.IsDirty() || max_bounces_slot_.IsDirty() || accumulate_slot_.IsDirty();
+        return spp_slot_.IsDirty() || max_bounces_slot_.IsDirty() || accumulate_slot_.IsDirty() ||
+               intensity_slot_.IsDirty();
     }
 
     void reset_dirty() {
         spp_slot_.ResetDirty();
         max_bounces_slot_.ResetDirty();
         accumulate_slot_.ResetDirty();
+        intensity_slot_.ResetDirty();
     }
 
     core::CallerSlot _in_geo_slot;
@@ -85,6 +89,8 @@ private:
     core::param::ParamSlot max_bounces_slot_;
 
     core::param::ParamSlot accumulate_slot_;
+
+    core::param::ParamSlot intensity_slot_;
 
     SBTRecord<device::RayGenData> _sbt_raygen_record;
 
@@ -105,14 +111,6 @@ private:
     device::FrameState _frame_state;
 
     vislib::math::Rectangle<int> _current_fb_size;
-
-    GLuint _fb_texture = 0;
-
-    GLuint _fbo_pbo = 0;
-
-    CUdeviceptr _old_pbo_ptr = 0;
-
-    CUgraphicsResource _fbo_res = nullptr;
 
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 

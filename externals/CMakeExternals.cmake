@@ -14,7 +14,7 @@ include("${CMAKE_BINARY_DIR}/script-externals/cmake/External.cmake")
 # Centralized function to require externals to add them once by invoking
 # require_external(<EXTERNAL_TARGET>).
 #
-# Think of this function as a big switch, testing for the name and presence 
+# Think of this function as a big switch, testing for the name and presence
 # of the external target to guard against duplicated targets.
 #
 function(require_external NAME)
@@ -22,8 +22,18 @@ function(require_external NAME)
 
   # Header-only libraries #####################################################
 
+  # asmjit
+  if(NAME STREQUAL "asmjit")
+    if(TARGET asmjit)
+      return()
+    endif()
+
+    add_external_headeronly_project(asmjit INTERFACE
+      GIT_REPOSITORY https://github.com/asmjit/asmjit.git
+      GIT_TAG "8474400e82c3ea65bd828761539e5d9b25f6bd83" )
+
   # Delaunator
-  if(NAME STREQUAL "Delaunator")
+  elseif(NAME STREQUAL "Delaunator")
     if(TARGET Delaunator)
       return()
     endif()
@@ -61,7 +71,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "v0.4e"
+      GIT_TAG "v0.4f"
       INCLUDE_DIR "include")
 
   # json
@@ -145,9 +155,9 @@ function(require_external NAME)
 
     add_external_project(adios2 STATIC
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-      GIT_TAG "v2.4.0"
+      GIT_TAG "v2.5.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
-      CMAKE_ARGS 
+      CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_TESTING=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON
@@ -185,7 +195,6 @@ function(require_external NAME)
         GIT_TAG "v2.1.0"
         INCLUDE_DIR "include")
 
-
   # bhtsne
   elseif(NAME STREQUAL "bhtsne")
     if(TARGET bhtsne)
@@ -208,6 +217,64 @@ function(require_external NAME)
 
     add_external_library(bhtsne
       LIBRARY ${BHTSNE_LIB})
+
+  # blend2d
+  elseif(NAME STREQUAL "blend2d")
+    if(TARGET blend2d)
+      return()
+    endif()
+
+    if(WIN32)
+      set(BLEND2D_LIB "lib/blend2d.lib")
+    else()
+      set(BLEND2D_LIB "lib/libblend2d.a")
+    endif()
+
+    require_external(asmjit)
+    external_get_property(asmjit SOURCE_DIR)
+
+    add_external_project(blend2d STATIC
+      GIT_REPOSITORY https://github.com/blend2d/blend2d.git
+      GIT_TAG "8aeac6cb34b00898ae725bd76eb3bb2c7cffcf86"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
+      CMAKE_ARGS
+        -DASMJIT_DIR=${SOURCE_DIR})
+
+    add_external_library(blend2d
+      DEPENDS asmjit
+      INCLUDE_DIR "include"
+      LIBRARY ${BLEND2D_LIB})
+
+  # expat
+  elseif(NAME STREQUAL "expat")
+    if(TARGET expat)
+      return()
+    endif()
+
+    if(WIN32)
+      set(EXPAT_LIB "lib/expat<SUFFIX>.lib")
+    else()
+      set(EXPAT_LIB "lib/libexpat.a")
+    endif()
+
+    # Files in core were originally at 64f3cf982a156a62c1fdb44d864144ee5871159e
+    # This seems to be master at 07.06.2017, somewhere between 2.2.0 and 2.2.1
+    add_external_project(expat STATIC
+      GIT_REPOSITORY https://github.com/libexpat/libexpat
+      GIT_TAG "R_2_2_1"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${EXPAT_LIB}"
+      SOURCE_SUBDIR "expat"
+      DEBUG_SUFFIX "d"
+      CMAKE_ARGS
+        -DBUILD_doc=OFF
+        -DBUILD_examples=OFF
+        -DBUILD_shared=OFF
+        -DBUILD_tests=OFF
+        -DBUILD_tools=OFF)
+
+    add_external_library(expat
+      LIBRARY ${EXPAT_LIB}
+      DEBUG_SUFFIX "d")
 
   # fmt
   elseif(NAME STREQUAL "fmt")
@@ -237,7 +304,7 @@ function(require_external NAME)
       LIBRARY ${FMT_LIB}
       DEBUG_SUFFIX "d")
 
-  #glad 
+  # glad
   elseif(NAME STREQUAL "glad")
     if(TARGET glad)
       return()
@@ -259,9 +326,9 @@ function(require_external NAME)
       PROJECT glad
       LIBRARY ${GLAD_LIB})
 
-  # glfw3
-  elseif(NAME STREQUAL "glfw3")
-    if(TARGET glfw3)
+  # glfw
+  elseif(NAME STREQUAL "glfw")
+    if(TARGET glfw)
       return()
     endif()
 
@@ -283,7 +350,7 @@ function(require_external NAME)
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF)
 
-    add_external_library(glfw3
+    add_external_library(glfw
       PROJECT glfw
       LIBRARY ${GLFW_LIB})
 
@@ -303,7 +370,7 @@ function(require_external NAME)
       set(ICET_GL_LIB "lib/libIceTGL.a")
       set(ICET_MPI_LIB "lib/libIceTMPI.a")
     endif()
-    
+
     add_external_project(IceT STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
@@ -326,36 +393,34 @@ function(require_external NAME)
 
   # imgui
   elseif(NAME STREQUAL "imgui")
-    if(NOT TARGET imgui)
-      if(WIN32)
-        set(IMGUI_LIB "lib/imgui.lib")
-      else()
-        set(IMGUI_LIB "lib/libimgui.a")
-      endif()
-
-      add_external_project(imgui STATIC
-        GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG 085cff2fe58077a4a0bf1f9e9284814769141801 # docking branch > version "1.82"
-        BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
-        PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-          "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
-          "<SOURCE_DIR>/CMakeLists.txt")
-
-      add_external_library(imgui
-        LIBRARY ${IMGUI_LIB})
+    if(TARGET imgui)
+      return()
     endif()
 
-    external_get_property(imgui SOURCE_DIR)
+    require_external(glfw)
+    external_get_property(glfw INSTALL_DIR)
 
-    target_include_directories(imgui INTERFACE "${SOURCE_DIR}/backends" "${SOURCE_DIR}/misc/cpp")
+    if(WIN32)
+      set(IMGUI_LIB "lib/imgui.lib")
+    else()
+      set(IMGUI_LIB "lib/libimgui.a")
+    endif()
 
-    set(imgui_files
-      "${SOURCE_DIR}/imgui_tables.cpp"
-      "${SOURCE_DIR}/backends/imgui_impl_opengl3.cpp"
-      "${SOURCE_DIR}/backends/imgui_impl_opengl3.h"
-      "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
-      "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h"
-      PARENT_SCOPE)
+    add_external_project(imgui STATIC
+      GIT_REPOSITORY https://github.com/ocornut/imgui.git
+      GIT_TAG 085cff2fe58077a4a0bf1f9e9284814769141801 # docking branch > version "1.82"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
+        "<SOURCE_DIR>/CMakeLists.txt"
+      DEPENDS
+        glfw
+      CMAKE_ARGS
+        -DGLAD_INCLUDE_DIR:PATH=${CMAKE_SOURCE_DIR}/externals/glad/include
+        -DGLFW_INCLUDE_DIR:PATH=${INSTALL_DIR}/include)
+
+    add_external_library(imgui
+      LIBRARY ${IMGUI_LIB})
 
   # imguizmoquat
   elseif(NAME STREQUAL "imguizmoquat")
@@ -364,6 +429,7 @@ function(require_external NAME)
     endif()
 
     require_external(imgui)
+    external_get_property(imgui INSTALL_DIR)
 
     if(WIN32)
       set(IMGUIZMOQUAT_LIB "lib/imguizmoquat.lib")
@@ -371,33 +437,19 @@ function(require_external NAME)
       set(IMGUIZMOQUAT_LIB "lib/libimguizmoquat.a")
     endif()
 
-    if(WIN32)
-      set(IMGUI_LIB "lib/imgui.lib")
-    else()
-      set(IMGUI_LIB "lib/libimgui.a")
-    endif()
-
-    external_get_property(imgui INSTALL_DIR)
-
     add_external_project(imguizmoquat STATIC
       GIT_REPOSITORY https://github.com/braunms/imGuIZMO.quat.git
       GIT_TAG "v3.0a"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUIZMOQUAT_LIB}"
       DEPENDS imgui
       CMAKE_ARGS
-        -DIMGUI_LIBRARY:PATH=${INSTALL_DIR}/${IMGUI_LIB}
         -DIMGUI_INCLUDE_DIR:PATH=${INSTALL_DIR}/include
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-          "${CMAKE_SOURCE_DIR}/externals/imguizmoquat/CMakeLists.txt"
-          "<SOURCE_DIR>/CMakeLists.txt")
+        "${CMAKE_SOURCE_DIR}/externals/imguizmoquat/CMakeLists.txt"
+        "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(imguizmoquat
         LIBRARY ${IMGUIZMOQUAT_LIB})
-
-    external_get_property(imguizmoquat SOURCE_DIR)
-    target_include_directories(imguizmoquat INTERFACE "${SOURCE_DIR}/imGuIZMO.quat")
 
   # libpng
   elseif(NAME STREQUAL "libpng")
@@ -527,6 +579,59 @@ function(require_external NAME)
 
     add_external_library(lua
       LIBRARY ${LUA_LIB})
+
+  # megamol-shader-factory
+  elseif(NAME STREQUAL "megamol-shader-factory")
+      if(TARGET megamol-shader-factory)
+        return()
+      endif()
+
+      require_external(glad)
+
+      if(WIN32)
+        set(MEGAMOL_SHADER_FACTORY_LIB "lib/msf_combined.lib")
+      else()
+        set(MEGAMOL_SHADER_FACTORY_LIB "lib/libmsf_combined.a")
+      endif()
+
+      add_external_project(megamol-shader-factory STATIC
+        GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
+        GIT_TAG "v0.4"
+        BUILD_BYPRODUCTS
+        "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
+        DEPENDS glad)
+
+      add_external_library(megamol-shader-factory
+        LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB}
+        INTERFACE_LIBRARIES glad)
+      if(UNIX)
+        target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
+      endif()
+      target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD)
+
+  # qhull
+  elseif(NAME STREQUAL "qhull")
+    if(TARGET qhull)
+      return()
+    endif()
+
+    if(WIN32)
+      set(QHULL_LIB "lib/qhull.lib")
+    else()
+      set(QUHULL_LIB "lib/libqhull.a")
+    endif()
+
+    add_external_project(qhull STATIC
+      GIT_REPOSITORY https://github.com/qhull/qhull.git
+      GIT_TAG "v7.3.2"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_LIB}"
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/qhull/CMakeLists.txt"
+        "<SOURCE_DIR>/CMakeLists.txt")
+
+    add_external_library(qhull
+      INCLUDE_DIR "include"
+      LIBRARY ${QHULL_LIB})
 
   # quickhull
   elseif(NAME STREQUAL "quickhull")
@@ -772,52 +877,50 @@ function(require_external NAME)
     endif()
 
     set(VTKM_VER 1.4)
+    set(LIB_VER 1)
 
     if(WIN32)
-      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
-      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
-      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
-      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
-      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
-      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
+      set(VTKM_CONT_LIB "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_RENDERER_LIB "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_WORKLET_LIB "lib/vtkm_worklet-${VTKM_VER}.lib")
     else()
       include(GNUInstallDirs)
-      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.a")
-      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.a")
-      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
-      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
-      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
-      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
+      set(VTKM_CONT_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_cont-${VTKM_VER}.a")
+      set(VTKM_RENDERER_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_rendering-${VTKM_VER}.a")
+      set(VTKM_WORKLET_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_worklet-${VTKM_VER}.a")
     endif()
 
-    option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
-    
-    add_external_project(vtkm
+    add_external_project(vtkm STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
-      GIT_TAG "v1.4.0"
+      GIT_TAG "v${VTKM_VER}.0"
+      BUILD_BYPRODUCTS
+        "<INSTALL_DIR>/${VTKM_CONT_LIB}"
+	    "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
+	    "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS:BOOL=OFF
-        -DVTKm_ENABLE_TESTING:BOOL=OFF
-        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
         -DBUILD_TESTING:BOOL=OFF
-        -VTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
-        -DCMAKE_BUILD_TYPE=Release
+        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
+        -DVTKm_ENABLE_TESTING:BOOL=OFF
+        -DVTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
+        -DVTKm_ENABLE_EXAMPLES:BOOL=OFF
+        -DVTKm_INSTALL_ONLY_LIBRARIES:BOOL=ON
+        -DVTKm_USE_64BIT_IDS:BOOL=OFF
+        #-DCMAKE_BUILD_TYPE=Release
         )
 
-    add_external_library(vtkm_cont STATIC
+    add_external_library(vtkm
       PROJECT vtkm
-      LIBRARY_RELEASE "${VTKM_LIB_CONT}"
-      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_CONT}")
+      LIBRARY ${VTKM_CONT_LIB})
 
-    add_external_library(vtkm_renderer STATIC
+    add_external_library(vtkm_renderer
       PROJECT vtkm
-      LIBRARY_RELEASE "${VTKM_LIB_RENDERER}"
-      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_RENDERER}")
+      LIBRARY ${VTKM_RENDERER_LIB})
 
-    add_external_library(vtkm_worklet STATIC
+    add_external_library(vtkm_worklet
       PROJECT vtkm
-      LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
-      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
+      LIBRARY ${VTKM_WORKLET_LIB})
+
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()

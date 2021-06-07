@@ -455,7 +455,7 @@ void FrodockLoader::loadFile( const vislib::TString& filename) {
 	}
 
 	fscanf( f, "%*[^\n]\n");//#SEARCH PARAMETERS
-	fscanf( f, "%*[^\n]\n");//#Bandwitdh in spherical harmonic representation. Define rotational stepsize (default: 32. Rotational stepsize ~11บ)
+	fscanf( f, "%*[^\n]\n");//#Bandwitdh in spherical harmonic representation. Define rotational stepsize (default: 32. Rotational stepsize ~11ยบ)
 	fscanf( f, "%d\n", &(frodockInput.bw));
 	fscanf( f, "%*[^\n]\n");//#External Mask reduction ratio (default: 0.25).
 	fscanf( f, "%f\n", &(frodockInput.lmax));

@@ -46,7 +46,7 @@ void TestTrayIcon(void) {
     MyTrayIcon myTrayIcon;
     vislib::sys::TrayIcon trayIcon;
 
-    trayIcon.Create(NULL, WM_APP + 1, 42, ::GetModuleHandle(NULL), "ANSI-VISlib™",
+    trayIcon.Create(NULL, WM_APP + 1, 42, ::GetModuleHandle(NULL), "ANSI-VISlibâ„¢",
         101, true); 
     std::cout << "Tray icon becomes visible in two seconds." << std::endl;
     vislib::sys::Thread::Sleep(2000);
@@ -120,12 +120,12 @@ void TestTrayIcon(void) {
 
 	trayIcon.Destroy();
 
-    myTrayIcon.Create(NULL, WM_APP + 1, 43, ::GetModuleHandle(NULL), L"VISlib™", 
-        101, false, L"Die VISlib kann schon richtig nerven. Man könnte fast "
-        L"meinen, man mache sich zum Horst für VIS ... oder für VISUS. Jetzt "
-        L"wollen wir doch mal sehen, ob wir nicht die Grenze für die maximale "
-        L"Länge einer Balloon-Help erreichen können. Oder zumindest fast.",
-        L"Die VISlib™ kann schon richtig nerven ...", NIIF_ERROR); 
+    myTrayIcon.Create(NULL, WM_APP + 1, 43, ::GetModuleHandle(NULL), L"VISlibâ„¢", 
+        101, false, L"Die VISlib kann schon richtig nerven. Man kÃ¶nnte fast "
+        L"meinen, man mache sich zum Horst fÃ¼r VIS ... oder fÃ¼r VISUS. Jetzt "
+        L"wollen wir doch mal sehen, ob wir nicht die Grenze fÃ¼r die maximale "
+        L"LÃ¤nge einer Balloon-Help erreichen kÃ¶nnen. Oder zumindest fast.",
+        L"Die VISlibâ„¢ kann schon richtig nerven ...", NIIF_ERROR); 
 
     // Sleep to see the balloon help.
     for (int i = 5; i > 0; i--) {

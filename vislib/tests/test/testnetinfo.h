@@ -1,7 +1,7 @@
 /*
  * testnetinfo.h
  *
- * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
+ * Copyright (C) 2009 by Christoph MÃ¼ller. Alle Rechte vorbehalten.
  */
 
 

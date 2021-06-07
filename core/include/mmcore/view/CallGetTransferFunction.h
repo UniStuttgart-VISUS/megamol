@@ -11,13 +11,18 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <array>
+#include <memory>
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include "glowl/glowl.h"
+
 #include "mmcore/Call.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include <array>
 
 namespace megamol {
 namespace core {
@@ -92,6 +97,8 @@ public:
      */
     void BindConvenience(vislib::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform);
 
+    void BindConvenience(std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform);
+
     /**
      * Unbinds convenience.
      */
@@ -138,7 +145,7 @@ public:
      * @param colorSize The size of the color in bytes.
      */
     inline void CopyColor(size_t index, float* color, size_t colorSize) {
-        assert(index > 0 && index < this->texSize && "Invalid index");
+        assert(index >= 0 && index < this->texSize && "Invalid index");
         assert((colorSize == 3 * sizeof(float) || colorSize == 4 * sizeof(float)) && "Not a RGB(A) color");
         memcpy(color, &this->texData[index * 4], colorSize);
     }
@@ -221,7 +228,7 @@ public:
         this->availableTFVersion = version;
     }
 
-    /** 
+    /**
      * Check for updated range value and consume triggered update
      */
     bool ConsumeRangeUpdate(void) {

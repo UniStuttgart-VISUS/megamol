@@ -7,9 +7,9 @@
 
 #ifndef MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
 #include "mmcore/AbstractCallSlotPresentation.h"
 #include "widgets/HoverToolTip.h"
 

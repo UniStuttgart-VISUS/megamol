@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "OverlayRenderer.h"
 
 
@@ -282,15 +282,8 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
 
     // Check megamol graph for available parameter:
     megamol::core::param::AbstractParam* param_ptr = nullptr;
-    const megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
-    auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
-        [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
-    if (megamolgraph_it != this->frontend_resources.end()) {
-        megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>();
-    }
-    if (megamolgraph_ptr != nullptr) {
-        param_ptr = megamolgraph_ptr->FindParameter(std::string(parameter_name.PeekBuffer()));
-    }
+    auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+    param_ptr = megamolgraph.FindParameter(std::string(parameter_name.PeekBuffer()));
     // Alternatively, check core instance graph for available parameter:
     if (param_ptr == nullptr) {
         auto core_parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);

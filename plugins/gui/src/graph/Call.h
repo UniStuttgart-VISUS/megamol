@@ -7,9 +7,9 @@
 
 #ifndef MEGAMOL_GUI_GRAPH_CALL_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_CALL_H_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
 #include "widgets/HoverToolTip.h"
 
 

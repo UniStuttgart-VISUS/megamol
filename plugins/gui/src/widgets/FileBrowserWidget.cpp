@@ -5,8 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "FileBrowserWidget.h"
+#include "imgui_stdlib.h"
 
 
 using namespace megamol;
@@ -178,7 +179,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                     bool showSearchedParameter = true;
                     if (!currentSearchString.empty()) {
                         showSearchedParameter =
-                            megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(select_label, currentSearchString);
+                            GUIUtils::FindCaseInsensitiveSubstring(select_label, currentSearchString);
                     }
                     if (showSearchedParameter) {
                         // Different color for directories

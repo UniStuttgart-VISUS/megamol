@@ -25,6 +25,19 @@ jobs:
     - megamol_build_enabled
 
   steps:
+  - task: PowerShell@2
+    displayName: 'Install Python'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $pythonUrl = "https://www.python.org/ftp/python/3.9.4/python-3.9.4-embed-amd64.zip"
+        $python_path = Join-Path (Get-Item .).FullName "python_tmp"
+        $tmp = New-TemporaryFile
+        $tmp = Rename-Item -Path $tmp -NewName "$tmp.zip" -PassThru
+        Invoke-WebRequest -OutFile $tmp $pythonUrl
+        Expand-Archive -Path $tmp -DestinationPath python_tmp -Force
+        $tmp | Remove-Item
+        echo "##vso[task.prependpath]$python_path"
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
@@ -76,3 +89,16 @@ jobs:
     displayName: 'CMake Build'
     inputs:
       cmakeArgs: '--build . --parallel $(numberOfCpuCores)'
+
+# The file check runs on Linux. Windows clients probably uses git autocrlf, making it hard to detect wrong line endings in the repo.
+- job: FileChecks
+  displayName: 'File Checks'
+  pool:
+    name: 'default'
+    demands:
+    - Agent.OS -equals Linux
+  steps:
+  - task: Bash@3
+    displayName: 'Run File Checks'
+    inputs:
+      filePath: '.ci/check_files.sh'

@@ -5,8 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "Graph.h"
+#include "imgui_stdlib.h"
+#include "vislib/math/Ternary.h"
+#include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol;
@@ -153,13 +156,14 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                 mod_ptr->SetGraphEntryName("");
 
                 for (auto& p : mod.parameters) {
-                    Parameter param_slot(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
-                        p.full_name, p.description);
-                    param_slot.SetValueString(p.default_value, true, true);
-                    param_slot.SetGUIVisible(p.gui_visibility);
-                    param_slot.SetGUIReadOnly(p.gui_read_only);
-                    param_slot.SetGUIPresentation(p.gui_presentation);
-                    mod_ptr->Parameters().emplace_back(param_slot);
+                    Parameter parameter(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
+                        p.param_name, p.description);
+                    parameter.SetParentModuleName(mod_ptr->FullName());
+                    parameter.SetValueString(p.default_value, true, true);
+                    parameter.SetGUIVisible(p.gui_visibility);
+                    parameter.SetGUIReadOnly(p.gui_read_only);
+                    parameter.SetGUIPresentation(p.gui_presentation);
+                    mod_ptr->Parameters().emplace_back(parameter);
                 }
 
                 for (auto& callslots_type : mod.callslots) {
@@ -1823,7 +1827,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             state.hotkeys = this->gui_graph_state.hotkeys;
 
             // Rename pop-up ------------------------------------------------------
-            if (this->gui_rename_popup.PopUp("Rename Project", popup_rename, this->name)) {
+            if (this->gui_rename_popup.Rename("Rename Project", popup_rename, this->name)) {
                 this->ForceSetDirty();
             }
 
@@ -1846,7 +1850,6 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
 
                     if (!ImGui::IsPopupOpen(pop_up_id.c_str())) {
                         ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
-                        this->gui_graph_state.interact.module_param_child_position.x += ImGui::GetFrameHeight();
                         ImGui::SetNextWindowPos(this->gui_graph_state.interact.module_param_child_position);
                         ImGui::SetNextWindowSize(ImVec2(10.0f, 10.0f));
                     }
@@ -1855,9 +1858,9 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
                     if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
                         // Draw parameters
-                        selected_mod_ptr->GUIParameterGroups().Draw(selected_mod_ptr->Parameters(),
-                            selected_mod_ptr->FullName(), "", vislib::math::Ternary::TRI_UNKNOWN, false,
-                            Parameter::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID, nullptr);
+                        selected_mod_ptr->GUIParameterGroups().Draw(selected_mod_ptr->Parameters(), "",
+                            vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::LOCAL, nullptr, nullptr,
+                            GUI_INVALID_ID, nullptr);
 
                         ImVec2 popup_pos = ImGui::GetWindowPos();
                         ImVec2 popup_size = ImGui::GetWindowSize();
@@ -2448,8 +2451,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
 
                     // Draw parameters
                     if (module_header_open) {
-                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_ptr->FullName(),
-                            search_string,
+                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
                             vislib::math::Ternary(this->gui_graph_state.interact.parameters_extended_mode), true,
                             Parameter::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID, nullptr);
                     }

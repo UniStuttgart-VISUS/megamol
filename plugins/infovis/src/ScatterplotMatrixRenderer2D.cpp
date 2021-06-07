@@ -11,6 +11,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/utility/ShaderFactory.h"
 #include "vislib/math/ShallowMatrix.h"
 
 #include <sstream>
@@ -290,25 +291,31 @@ ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() {
 }
 
 bool ScatterplotMatrixRenderer2D::create() {
-    if (!makeProgram("::splom::minimalisticAxis", this->minimalisticAxisShader))
-        return false;
-    if (!makeProgram("::splom::scientificAxis", this->scientificAxisShader))
-        return false;
-    if (!makeProgram("::splom::point", this->pointShader))
-        return false;
-    if (!makeProgram("::splom::line", this->lineShader))
-        return false;
-    if (!makeProgram("::splom::triangle", this->triangleShader))
-        return false;
-    if (!makeProgram("::splom::pickIndicator", this->pickIndicatorShader))
-        return false;
-    if (!makeProgram("::splom::screen", this->screenShader))
-        return false;
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
-    if (!makeProgram("::splom::pick", this->pickProgram))
+    try {
+        minimalisticAxisShader = core::utility::make_glowl_shader("splom_axis_minimalistic", shader_options,
+            "infovis/splom_axis_minimalistic.vert.glsl", "infovis/splom_axis_minimalistic.frag.glsl");
+        scientificAxisShader = core::utility::make_glowl_shader("splom_axis_scientific", shader_options,
+            "infovis/splom_axis_scientific.vert.glsl", "infovis/splom_axis_scientific.frag.glsl");
+        pointShader = core::utility::make_glowl_shader(
+            "splom_point", shader_options, "infovis/splom.vert.glsl", "infovis/splom_point.frag.glsl");
+        lineShader = core::utility::make_glowl_shader("splom_line", shader_options, "infovis/splom.vert.glsl",
+            "infovis/splom_line.geom.glsl", "infovis/splom_line.frag.glsl");
+        triangleShader = core::utility::make_glowl_shader(
+            "splom_triangle", shader_options, "infovis/splom_triangle.vert.glsl", "infovis/splom_triangle.frag.glsl");
+        pickIndicatorShader = core::utility::make_glowl_shader("splom_pick_indicator", shader_options,
+            "infovis/splom_pick_indicator.vert.glsl", "infovis/splom_pick_indicator.frag.glsl");
+        screenShader = core::utility::make_glowl_shader(
+            "splom_screen", shader_options, "infovis/splom_screen.vert.glsl", "infovis/splom_screen.frag.glsl");
+        pickProgram = core::utility::make_glowl_shader("splom_pick", shader_options, "infovis/splom_pick.comp.glsl");
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            ("ScatterplotMatrixRenderer2D: " + std::string(e.what())).c_str());
         return false;
+    }
 
-    glGetProgramiv(this->pickProgram, GL_COMPUTE_WORK_GROUP_SIZE, pickWorkgroupSize);
+    glGetProgramiv(pickProgram->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, pickWorkgroupSize);
 
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount[0]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
@@ -579,26 +586,26 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
     const float yLabelMargin = this->outerYLabelMarginParam.Param<core::param::FloatParam>()->Value();
     const float totalSize = columnCount * (size + margin) - margin;
 
-    this->minimalisticAxisShader.Enable();
+    this->minimalisticAxisShader->use();
 
     // Transformation uniform.
-    glUniformMatrix4fv(this->minimalisticAxisShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+    glUniformMatrix4fv(this->minimalisticAxisShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE,
         getModelViewProjection().PeekComponents());
 
     // Other uniforms.
-    glUniform4fv(this->minimalisticAxisShader.ParameterLocation("axisColor"), 1,
+    glUniform4fv(this->minimalisticAxisShader->getUniformLocation("axisColor"), 1,
         this->axisColorParam.Param<core::param::ColorParam>()->Value().data());
-    glUniform1ui(this->minimalisticAxisShader.ParameterLocation("numTicks"), numTicks);
-    glUniform1f(this->minimalisticAxisShader.ParameterLocation("tickLength"), tickLength);
-    glUniform1i(this->minimalisticAxisShader.ParameterLocation("redundantTicks"),
+    glUniform1ui(this->minimalisticAxisShader->getUniformLocation("numTicks"), numTicks);
+    glUniform1f(this->minimalisticAxisShader->getUniformLocation("tickLength"), tickLength);
+    glUniform1i(this->minimalisticAxisShader->getUniformLocation("redundantTicks"),
         this->axisTicksRedundantParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
-    glUniform1i(this->minimalisticAxisShader.ParameterLocation("drawOuter"),
+    glUniform1i(this->minimalisticAxisShader->getUniformLocation("drawOuter"),
         this->drawOuterLabelsParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
-    glUniform1i(this->minimalisticAxisShader.ParameterLocation("drawDiagonal"),
+    glUniform1i(this->minimalisticAxisShader->getUniformLocation("drawDiagonal"),
         this->drawDiagonalLabelsParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
-    glUniform1i(this->minimalisticAxisShader.ParameterLocation("invertY"),
+    glUniform1i(this->minimalisticAxisShader->getUniformLocation("invertY"),
         this->cellInvertYParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
-    glUniform1i(this->minimalisticAxisShader.ParameterLocation("columnCount"), columnCount);
+    glUniform1i(this->minimalisticAxisShader->getUniformLocation("columnCount"), columnCount);
 
     // Line width.
     auto axisWidth = this->axisWidthParam.Param<core::param::FloatParam>()->Value();
@@ -613,7 +620,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(glm::mat4 ortho) {
     glDrawArraysInstanced(GL_LINES, 0, numItems, this->plots.size());
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    this->minimalisticAxisShader.Disable();
+    glUseProgram(0);
 
     this->axisFont.ClearBatchDrawCache();
 
@@ -720,7 +727,7 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
         recursiveDepth = 1;
     }
 
-    this->scientificAxisShader.Enable();
+    this->scientificAxisShader->use();
 
     // Blending.
     glEnable(GL_BLEND);
@@ -729,11 +736,11 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
 
     // Transformation uniform.
     glUniformMatrix4fv(
-        this->scientificAxisShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
+        this->scientificAxisShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
 
     // Other uniforms.
-    glUniform1ui(this->scientificAxisShader.ParameterLocation("depth"), recursiveDepth);
-    glUniform4fv(this->scientificAxisShader.ParameterLocation("axisColor"), 1,
+    glUniform1ui(this->scientificAxisShader->getUniformLocation("depth"), recursiveDepth);
+    glUniform4fv(this->scientificAxisShader->getUniformLocation("axisColor"), 1,
         this->axisColorParam.Param<core::param::ColorParam>()->Value().data());
 
     // Render all plots at once.
@@ -742,7 +749,7 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
     glDrawArraysInstanced(GL_QUADS, 0, 4, this->plots.size());
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    this->scientificAxisShader.Disable();
+    glUseProgram(0);
 
     glDisable(GL_TEXTURE_1D);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -793,23 +800,23 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
     debugPop();
 }
 
-void ScatterplotMatrixRenderer2D::bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader) {
+void ScatterplotMatrixRenderer2D::bindMappingUniforms(std::unique_ptr<glowl::GLSLProgram>& shader) {
     auto valueMapping = this->valueMappingParam.Param<core::param::EnumParam>()->Value();
-    glUniform1i(shader.ParameterLocation("valueMapping"), valueMapping);
+    glUniform1i(shader->getUniformLocation("valueMapping"), valueMapping);
 
     auto columnInfos = this->floatTable->GetColumnsInfos();
     if (map.valueIdx.has_value()) {
         GLfloat valueColumnMinMax[] = {
             columnInfos[map.valueIdx.value()].MinimumValue(), columnInfos[map.valueIdx.value()].MaximumValue()};
-        glUniform1i(shader.ParameterLocation("valueColumn"), map.valueIdx.value());
-        glUniform2fv(shader.ParameterLocation("valueColumnMinMax"), 1, valueColumnMinMax);
+        glUniform1i(shader->getUniformLocation("valueColumn"), map.valueIdx.value());
+        glUniform2fv(shader->getUniformLocation("valueColumnMinMax"), 1, valueColumnMinMax);
     } else {
-        glUniform1i(shader.ParameterLocation("valueColumn"), -1);
-        glUniform2f(shader.ParameterLocation("valueColumnMinMax"), 0.f, 1.f);
+        glUniform1i(shader->getUniformLocation("valueColumn"), -1);
+        glUniform2f(shader->getUniformLocation("valueColumnMinMax"), 0.f, 1.f);
     }
     glUniform1f(
-        shader.ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
-    glUniform4fv(shader.ParameterLocation("pickColor"), 1,
+        shader->getUniformLocation("alphaScaling"), this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
+    glUniform4fv(shader->getUniformLocation("pickColor"), 1,
         this->pickColorParam.Param<core::param::ColorParam>()->Value().data());
 
     this->transferFunction->BindConvenience(shader, GL_TEXTURE0, 0);
@@ -839,23 +846,23 @@ void ScatterplotMatrixRenderer2D::drawPoints() {
     glEnable(GL_POINT_SPRITE);
     glPointSize(std::max(viewport[2], viewport[3]));
 
-    this->pointShader.Enable();
+    this->pointShader->use();
     this->bindAndClearScreen();
     this->bindMappingUniforms(this->pointShader);
 
     // Transformation uniforms.
-    glUniform4fv(this->pointShader.ParameterLocation("viewport"), 1, viewport);
-    glUniformMatrix4fv(this->pointShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+    glUniform4fv(this->pointShader->getUniformLocation("viewport"), 1, viewport);
+    glUniformMatrix4fv(this->pointShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE,
         getModelViewProjection().PeekComponents());
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
-    glUniform1i(this->pointShader.ParameterLocation("rowStride"), columnCount);
-    glUniform1f(this->pointShader.ParameterLocation("kernelWidth"),
+    glUniform1i(this->pointShader->getUniformLocation("rowStride"), columnCount);
+    glUniform1f(this->pointShader->getUniformLocation("kernelWidth"),
         this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
-    glUniform1i(this->pointShader.ParameterLocation("kernelType"),
+    glUniform1i(this->pointShader->getUniformLocation("kernelType"),
         this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
-    glUniform1i(this->pointShader.ParameterLocation("attenuateSubpixel"),
+    glUniform1i(this->pointShader->getUniformLocation("attenuateSubpixel"),
         this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
     this->bindFlagsAttribute();
@@ -877,7 +884,7 @@ void ScatterplotMatrixRenderer2D::drawPoints() {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_1D, 0);
     this->unbindScreen();
-    this->pointShader.Disable();
+    glUseProgram(0);
 
     glPointSize(1);
     glDisable(GL_TEXTURE_1D);
@@ -897,23 +904,23 @@ void ScatterplotMatrixRenderer2D::drawLines() {
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
 
-    this->lineShader.Enable();
+    this->lineShader->use();
     this->bindAndClearScreen();
     this->bindMappingUniforms(this->lineShader);
 
     // Transformation uniforms.
-    glUniform4fv(this->lineShader.ParameterLocation("viewport"), 1, viewport);
-    glUniformMatrix4fv(this->lineShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+    glUniform4fv(this->lineShader->getUniformLocation("viewport"), 1, viewport);
+    glUniformMatrix4fv(this->lineShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE,
         getModelViewProjection().PeekComponents());
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
-    glUniform1i(this->lineShader.ParameterLocation("rowStride"), columnCount);
-    glUniform1f(this->lineShader.ParameterLocation("kernelWidth"),
+    glUniform1i(this->lineShader->getUniformLocation("rowStride"), columnCount);
+    glUniform1f(this->lineShader->getUniformLocation("kernelWidth"),
         this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
-    glUniform1i(this->lineShader.ParameterLocation("kernelType"),
+    glUniform1i(this->lineShader->getUniformLocation("kernelType"),
         this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
-    glUniform1i(this->lineShader.ParameterLocation("attenuateSubpixel"),
+    glUniform1i(this->lineShader->getUniformLocation("attenuateSubpixel"),
         this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
     this->bindFlagsAttribute();
@@ -935,7 +942,7 @@ void ScatterplotMatrixRenderer2D::drawLines() {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_1D, 0);
     this->unbindScreen();
-    this->lineShader.Disable();
+    glUseProgram(0);
 
     glDisable(GL_TEXTURE_1D);
 
@@ -1051,7 +1058,7 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
 
     this->validateTriangulation();
 
-    this->triangleShader.Enable();
+    this->triangleShader->use();
     this->bindAndClearScreen();
     this->bindMappingUniforms(this->triangleShader);
 
@@ -1067,12 +1074,12 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
     // Set uniforms.
     auto mvpMatrix = getModelViewProjection();
     glUniformMatrix4fv(
-        this->triangleShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
+        this->triangleShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
 
     // Emit draw call.
     glDrawElements(GL_TRIANGLES, triangleVertexCount, GL_UNSIGNED_INT, nullptr);
     this->unbindScreen();
-    this->triangleShader.Disable();
+    glUseProgram(0);
 
     debugPop();
 }
@@ -1123,19 +1130,19 @@ void ScatterplotMatrixRenderer2D::drawText(glm::mat4 ortho) {
 void ScatterplotMatrixRenderer2D::drawPickIndicator() {
     debugPush(15, "drawPickIndicator");
 
-    this->pickIndicatorShader.Enable();
+    this->pickIndicatorShader->use();
 
     float color[] = {0.0, 1.0, 1.0, 1.0};
-    glUniformMatrix4fv(this->pickIndicatorShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
+    glUniformMatrix4fv(this->pickIndicatorShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE,
         getModelViewProjection().PeekComponents());
-    glUniform2f(this->pickIndicatorShader.ParameterLocation("mouse"), this->mouse.x, this->mouse.y);
-    glUniform1f(this->pickIndicatorShader.ParameterLocation("pickRadius"),
+    glUniform2f(this->pickIndicatorShader->getUniformLocation("mouse"), this->mouse.x, this->mouse.y);
+    glUniform1f(this->pickIndicatorShader->getUniformLocation("pickRadius"),
         this->pickRadiusParam.Param<core::param::FloatParam>()->Value());
-    glUniform4fv(this->pickIndicatorShader.ParameterLocation("indicatorColor"), 1, color);
+    glUniform4fv(this->pickIndicatorShader->getUniformLocation("indicatorColor"), 1, color);
     glDisable(GL_DEPTH_TEST);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glEnable(GL_DEPTH_TEST);
-    this->pickIndicatorShader.Disable();
+    glUseProgram(0);
 
     debugPop();
 }
@@ -1265,7 +1272,7 @@ void ScatterplotMatrixRenderer2D::drawScreen() {
     debugPush(20, "drawScreen");
 
     // Enable shader.
-    this->screenShader.Enable();
+    this->screenShader->use();
     this->bindMappingUniforms(this->screenShader);
 
     glEnable(GL_BLEND);
@@ -1276,7 +1283,7 @@ void ScatterplotMatrixRenderer2D::drawScreen() {
     // Screen texture.
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE1);
-    glUniform1i(this->screenShader.ParameterLocation("screenTexture"), 1);
+    glUniform1i(this->screenShader->getUniformLocation("screenTexture"), 1);
     this->screenFBO->bindColorbuffer(0);
 
     // Other uniforms.
@@ -1284,10 +1291,10 @@ void ScatterplotMatrixRenderer2D::drawScreen() {
     const float contourSize = 0.5;                                                       // TODO: param
     const float contourIsoValues[] = {0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // TODO: param
     const int contourIsoValueCount = 1;                                                  // TODO: infer
-    glUniform4fv(this->screenShader.ParameterLocation("contourColor"), 1, contourColor);
-    glUniform1f(this->screenShader.ParameterLocation("contourSize"), contourSize);
-    glUniform1fv(this->screenShader.ParameterLocation("contourIsoValues"), 10, contourIsoValues);
-    glUniform1i(this->screenShader.ParameterLocation("contourIsoValueCount"), contourIsoValueCount);
+    glUniform4fv(this->screenShader->getUniformLocation("contourColor"), 1, contourColor);
+    glUniform1f(this->screenShader->getUniformLocation("contourSize"), contourSize);
+    glUniform1fv(this->screenShader->getUniformLocation("contourIsoValues"), 10, contourIsoValues);
+    glUniform1i(this->screenShader->getUniformLocation("contourIsoValueCount"), contourIsoValueCount);
 
     // Emit draw call.
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -1299,7 +1306,7 @@ void ScatterplotMatrixRenderer2D::drawScreen() {
     // glEnable(GL_DEPTH_TEST);
 
     this->transferFunction->UnbindConvenience(); // bound in bindMappingUniforms()
-    this->screenShader.Disable();
+    glUseProgram(0);
 
     debugPop();
 }
@@ -1307,18 +1314,18 @@ void ScatterplotMatrixRenderer2D::drawScreen() {
 void ScatterplotMatrixRenderer2D::updateSelection() {
     this->debugPush(42, "splom::picking");
 
-    this->pickProgram.Enable();
+    this->pickProgram->use();
 
-    glUniform2f(pickProgram.ParameterLocation("mouse"), this->mouse.x, this->mouse.y);
-    glUniform1i(pickProgram.ParameterLocation("numPlots"), this->plots.size());
-    glUniform1ui(pickProgram.ParameterLocation("itemCount"), this->floatTable->GetRowsCount());
-    glUniform1i(pickProgram.ParameterLocation("rowStride"), this->floatTable->GetColumnsCount());
+    glUniform2f(pickProgram->getUniformLocation("mouse"), this->mouse.x, this->mouse.y);
+    glUniform1i(pickProgram->getUniformLocation("numPlots"), this->plots.size());
+    glUniform1ui(pickProgram->getUniformLocation("itemCount"), this->floatTable->GetRowsCount());
+    glUniform1i(pickProgram->getUniformLocation("rowStride"), this->floatTable->GetColumnsCount());
+    glUniform1f(pickProgram->getUniformLocation("kernelWidth"),
+        this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
     glUniform1f(
-        pickProgram.ParameterLocation("kernelWidth"), this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
-    glUniform1f(
-        pickProgram.ParameterLocation("pickRadius"), this->pickRadiusParam.Param<core::param::FloatParam>()->Value());
-    glUniform1i(pickProgram.ParameterLocation("selector"), static_cast<int>(this->mouse.selector));
-    glUniform1i(pickProgram.ParameterLocation("reset"), static_cast<int>(this->selectionNeedsReset));
+        pickProgram->getUniformLocation("pickRadius"), this->pickRadiusParam.Param<core::param::FloatParam>()->Value());
+    glUniform1i(pickProgram->getUniformLocation("selector"), static_cast<int>(this->mouse.selector));
+    glUniform1i(pickProgram->getUniformLocation("reset"), static_cast<int>(this->selectionNeedsReset));
     this->selectionNeedsReset = false;
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(0));
@@ -1328,10 +1335,10 @@ void ScatterplotMatrixRenderer2D::updateSelection() {
     GLuint groupCounts[3];
     computeDispatchSizes(this->floatTable->GetRowsCount(), pickWorkgroupSize, maxWorkgroupCount, groupCounts);
 
-    pickProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+    glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    pickProgram.Disable();
+    glUseProgram(0);
 
     this->flagsBufferVersion++;
 

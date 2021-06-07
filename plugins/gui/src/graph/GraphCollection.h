@@ -7,23 +7,15 @@
 
 #ifndef MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
+#pragma once
 
-
-#include "GUIUtils.h"
 
 #include "Graph.h"
-
-#include "widgets/FileBrowserWidget.h"
-#include "widgets/MinimalPopUp.h"
-
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-
-#include "utility/plugins/PluginManager.h"
+#include "widgets/FileBrowserWidget.h"
 
 
 namespace megamol {
@@ -139,13 +131,6 @@ namespace gui {
 
         std::vector<size_t> get_compatible_callee_idxs(const megamol::core::CalleeSlot* callee_slot);
         std::vector<size_t> get_compatible_caller_idxs(const megamol::core::CallerSlot* caller_slot);
-
-        bool case_insensitive_str_comp(std::string const& str1, std::string const& str2) {
-            return ((str1.size() == str2.size()) &&
-                    std::equal(str1.begin(), str1.end(), str2.begin(), [](char const& c1, char const& c2) {
-                        return (c1 == c2 || std::toupper(c1) == std::toupper(c2));
-                    }));
-        }
 
         bool load_state_from_file(const std::string& filename, ImGuiID graph_id);
 

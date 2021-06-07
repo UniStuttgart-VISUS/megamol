@@ -7,9 +7,10 @@
 
 #ifndef MEGAMOL_GUI_BUTTONWIDGETS_INCLUDED
 #define MEGAMOL_GUI_BUTTONWIDGETS_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
+#include <string>
 
 
 namespace megamol {
@@ -33,11 +34,11 @@ namespace gui {
         static bool ExtendedModeButton(const std::string& id, bool& inout_extended_mode);
 
         /** Lua parameter command copy button. */
-        static bool LuaButton(const std::string& id, const megamol::gui::Parameter& param,
-            const std::string& param_fullname, const std::string& module_fullname);
+        static bool LuaButton(
+            const std::string& id, const megamol::gui::Parameter& param, const std::string& param_fullname);
 
         /** Toggle Button */
-        // https://github.com/ocornut/imgui/issues/1537#issuecomment-780262461
+        // https://github.com/ocornut/imgui/issues/1537#issuecomment-355569554
         static bool ToggleButton(const std::string& id, bool& inout_bool);
 
     private:

@@ -64,7 +64,8 @@ public:
         Rotation = 1 << 10,             // Widget for rotation of vec4
         PinMouse = 1 << 11,             // Pin parameter value to mouse position
         Group_Animation = 1 << 12,      // Animation widget group
-        Group_3D_Cube = 1 << 13         // 3D cube widget group
+        Group_3D_Cube = 1 << 13,        // 3D cube widget group
+        Checkbox = 1 << 14,             // Check box for bool
     };
 
     /**

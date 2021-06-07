@@ -4,6 +4,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/utility/ShaderFactory.h"
 
 using namespace megamol;
 using namespace megamol::infovis;
@@ -64,14 +65,22 @@ bool HistogramRenderer2D::create() {
         return false;
     this->font.SetBatchDrawMode(true);
 
-    if (!makeProgram("::histo::calc", this->calcHistogramProgram))
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+
+    try {
+        calcHistogramProgram =
+            core::utility::make_glowl_shader("histo_calc", shader_options, "infovis/histo_calc.comp.glsl");
+        selectionProgram =
+            core::utility::make_glowl_shader("histo_select", shader_options, "infovis/histo_select.comp.glsl");
+        histogramProgram = core::utility::make_glowl_shader(
+            "histo_draw", shader_options, "infovis/histo_draw.vert.glsl", "infovis/histo_draw.frag.glsl");
+        axesProgram = core::utility::make_glowl_shader(
+            "histo_axes", shader_options, "infovis/histo_axes.vert.glsl", "infovis/histo_axes.frag.glsl");
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, ("HistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
-    if (!makeProgram("::histo::select", this->selectionProgram))
-        return false;
-    if (!makeProgram("::histo::draw", this->histogramProgram))
-        return false;
-    if (!makeProgram("::histo::axes", this->axesProgram))
-        return false;
+    }
 
     glGenBuffers(1, &this->floatDataBuffer);
     glGenBuffers(1, &this->minBuffer);
@@ -80,7 +89,7 @@ bool HistogramRenderer2D::create() {
     glGenBuffers(1, &this->selectedHistogramBuffer);
     glGenBuffers(1, &this->maxBinValueBuffer);
 
-    glGetProgramiv(selectionProgram, GL_COMPUTE_WORK_GROUP_SIZE, selectionWorkgroupSize);
+    glGetProgramiv(selectionProgram->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectionWorkgroupSize);
 
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount[0]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
@@ -90,11 +99,6 @@ bool HistogramRenderer2D::create() {
 }
 
 void HistogramRenderer2D::release() {
-    this->calcHistogramProgram.Release();
-    this->selectionProgram.Release();
-    this->histogramProgram.Release();
-    this->axesProgram.Release();
-
     glDeleteBuffers(1, &this->floatDataBuffer);
     glDeleteBuffers(1, &this->minBuffer);
     glDeleteBuffers(1, &this->maxBuffer);
@@ -130,26 +134,26 @@ bool HistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
         auto readFlagsCall = flagStorageReadCallerSlot.CallAs<core::FlagCallRead_GL>();
         auto writeFlagsCall = flagStorageWriteCallerSlot.CallAs<core::FlagCallWrite_GL>();
         if (readFlagsCall != nullptr && writeFlagsCall != nullptr) {
-            selectionProgram.Enable();
+            selectionProgram->use();
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->floatDataBuffer);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->minBuffer);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, this->maxBuffer);
             readFlagsCall->getData()->flags->bind(3);
 
-            glUniform1ui(selectionProgram.ParameterLocation("binCount"), this->bins);
-            glUniform1ui(selectionProgram.ParameterLocation("colCount"), this->colCount);
-            glUniform1ui(selectionProgram.ParameterLocation("rowCount"), this->rowCount);
-            glUniform1i(selectionProgram.ParameterLocation("selectionMode"), selectionMode);
-            glUniform1i(selectionProgram.ParameterLocation("selectedCol"), selectedCol);
-            glUniform1i(selectionProgram.ParameterLocation("selectedBin"), selectedBin);
+            selectionProgram->setUniform("binCount", static_cast<GLuint>(this->bins));
+            selectionProgram->setUniform("colCount", static_cast<GLuint>(this->colCount));
+            selectionProgram->setUniform("rowCount", static_cast<GLuint>(this->rowCount));
+            selectionProgram->setUniform("selectionMode", selectionMode);
+            selectionProgram->setUniform("selectedCol", selectedCol);
+            selectionProgram->setUniform("selectedBin", selectedBin);
 
             GLuint groupCounts[3];
             computeDispatchSizes(rowCount, selectionWorkgroupSize, maxWorkgroupCount, groupCounts);
 
-            selectionProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+            glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-            selectionProgram.Disable();
+            glUseProgram(0);
 
             writeFlagsCall->setData(readFlagsCall->getData(), readFlagsCall->version() + 1);
             (*writeFlagsCall)(core::FlagCallWrite_GL::CallGetData);
@@ -163,49 +167,49 @@ bool HistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     // end suck
 
-    this->histogramProgram.Enable();
-    glUniformMatrix4fv(this->histogramProgram.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(this->histogramProgram.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    histogramProgram->use();
+    glUniformMatrix4fv(histogramProgram->getUniformLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
+    glUniformMatrix4fv(histogramProgram->getUniformLocation("projection"), 1, GL_FALSE, projMatrix_column);
 
-    tfCall->BindConvenience(this->histogramProgram, GL_TEXTURE0, 0);
+    tfCall->BindConvenience(histogramProgram, GL_TEXTURE0, 0);
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->histogramBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->selectedHistogramBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, this->maxBinValueBuffer);
 
-    glUniform1i(this->histogramProgram.ParameterLocation("binCount"), this->bins);
-    glUniform1i(this->histogramProgram.ParameterLocation("colCount"), this->colCount);
-    glUniform1i(this->histogramProgram.ParameterLocation("logPlot"),
-        static_cast<int>(this->logPlotParam.Param<core::param::BoolParam>()->Value()));
-    glUniform4fv(this->histogramProgram.ParameterLocation("selectionColor"), 1,
-        this->selectionColorParam.Param<core::param::ColorParam>()->Value().data());
+    histogramProgram->setUniform("binCount", static_cast<GLuint>(this->bins));
+    histogramProgram->setUniform("colCount", static_cast<GLuint>(this->colCount));
+    histogramProgram->setUniform(
+        "logPlot", static_cast<int>(this->logPlotParam.Param<core::param::BoolParam>()->Value()));
+    glUniform4fv(histogramProgram->getUniformLocation("selectionColor"), 1,
+        selectionColorParam.Param<core::param::ColorParam>()->Value().data());
 
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, this->bins * this->colCount);
 
     tfCall->UnbindConvenience();
     glBindVertexArray(0);
-    this->histogramProgram.Disable();
+    glUseProgram(0);
 
-    this->axesProgram.Enable();
-    glUniformMatrix4fv(this->axesProgram.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(this->axesProgram.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
-    glUniform2f(this->axesProgram.ParameterLocation("colTotalSize"), 12.0f, 14.0f);
-    glUniform2f(this->axesProgram.ParameterLocation("colDrawSize"), 10.0f, 10.0f);
-    glUniform2f(this->axesProgram.ParameterLocation("colDrawOffset"), 1.0f, 2.0f);
+    axesProgram->use();
+    glUniformMatrix4fv(axesProgram->getUniformLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
+    glUniformMatrix4fv(axesProgram->getUniformLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    axesProgram->setUniform("colTotalSize", 12.0f, 14.0f);
+    axesProgram->setUniform("colDrawSize", 10.0f, 10.0f);
+    axesProgram->setUniform("colDrawOffset", 1.0f, 2.0f);
 
-    glUniform1i(this->axesProgram.ParameterLocation("mode"), 0);
+    axesProgram->setUniform("mode", 0);
     glDrawArraysInstanced(GL_LINES, 0, 2, this->colCount);
 
-    glUniform1i(this->axesProgram.ParameterLocation("mode"), 1);
+    axesProgram->setUniform("mode", 1);
     glDrawArrays(GL_LINES, 0, 2);
 
-    this->axesProgram.Disable();
+    glUseProgram(0);
 
     this->font.ClearBatchDrawCache();
 
     float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
-    glm::mat4 ortho = glm::make_mat4(projMatrix_column);
+    glm::mat4 ortho = glm::make_mat4(projMatrix_column) * glm::make_mat4(modelViewMatrix_column);
 
     for (size_t c = 0; c < this->colCount; ++c) {
         float posX = 12.0f * c + 6.0f;
@@ -305,7 +309,7 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
 
         readFlagsCall->getData()->validateFlagCount(floatTableCall->GetRowsCount());
 
-        this->calcHistogramProgram.Enable();
+        calcHistogramProgram->use();
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->floatDataBuffer);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->minBuffer);
@@ -315,13 +319,13 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, this->selectedHistogramBuffer);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, this->maxBinValueBuffer);
 
-        glUniform1ui(this->calcHistogramProgram.ParameterLocation("binCount"), this->bins);
-        glUniform1ui(this->calcHistogramProgram.ParameterLocation("colCount"), this->colCount);
-        glUniform1ui(this->calcHistogramProgram.ParameterLocation("rowCount"), this->rowCount);
+        calcHistogramProgram->setUniform("binCount", static_cast<GLuint>(this->bins));
+        calcHistogramProgram->setUniform("colCount", static_cast<GLuint>(this->colCount));
+        calcHistogramProgram->setUniform("rowCount", static_cast<GLuint>(this->rowCount));
 
-        this->calcHistogramProgram.Dispatch(1, 1, 1);
+        glDispatchCompute(1, 1, 1);
 
-        this->calcHistogramProgram.Disable();
+        glUseProgram(0);
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
