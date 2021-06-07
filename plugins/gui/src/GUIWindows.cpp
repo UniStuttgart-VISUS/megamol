@@ -540,7 +540,8 @@ bool GUIWindows::PostDraw(void) {
 
     glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
     ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    draw_data = ImGui::GetDrawData();
+    DrawUiToScreen();
 
     // Reset hotkeys ----------------------------------------------------------
     for (auto& h : this->hotkeys) {
@@ -1131,6 +1132,17 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
     return sync_success;
 }
 
+// this function is (1) used by PostDraw() to render the UI directly
+// and (2) used by the frontend to trigger a render of the UI when needed
+void GUIWindows::DrawUiToScreen() {
+    if (!draw_data)
+        return;
+
+    // draw_data is filled in PostDraw() and should have a valid value here
+    ImGuiIO& io = ImGui::GetIO();
+    glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
+    ImGui_ImplOpenGL3_RenderDrawData(draw_data);
+}
 
 bool GUIWindows::createContext(void) {
 
