@@ -190,8 +190,6 @@ namespace gui {
         bool gui_update;
         bool gui_show_grid;
         bool gui_show_parameter_sidebar;
-        bool gui_params_visible;
-        bool gui_params_readonly;
         bool gui_change_show_parameter_sidebar;
         unsigned int gui_graph_layout;
         float gui_parameter_sidebar_width;

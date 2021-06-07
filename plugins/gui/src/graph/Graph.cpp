@@ -30,8 +30,6 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , gui_update(true)
         , gui_show_grid(false)
         , gui_show_parameter_sidebar(true)
-        , gui_params_visible(true)
-        , gui_params_readonly(false)
         , gui_change_show_parameter_sidebar(true)
         , gui_graph_layout(0)
         , gui_parameter_sidebar_width(300.0f)
@@ -1121,10 +1119,6 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                             graph_state, {"show_module_label"}, &this->gui_graph_state.interact.module_show_label);
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"show_slot_label"}, &this->gui_graph_state.interact.callslot_show_label);
-                        megamol::core::utility::get_json_value<bool>(
-                            graph_state, {"params_visible"}, &this->gui_params_visible);
-                        megamol::core::utility::get_json_value<bool>(
-                            graph_state, {"params_readonly"}, &this->gui_params_readonly);
                         megamol::core::utility::get_json_value<bool>(graph_state, {"param_extended_mode"},
                             &this->gui_graph_state.interact.parameters_extended_mode);
                         std::array<float, 2> canvas_scrolling = {0.0f, 0.0f};
@@ -1282,8 +1276,6 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
             this->gui_graph_state.interact.callslot_show_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_label"] =
             this->gui_graph_state.interact.module_show_label;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["params_visible"] = this->gui_params_visible;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["params_readonly"] = this->gui_params_readonly;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["param_extended_mode"] =
             this->gui_graph_state.interact.parameters_extended_mode;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["canvas_scrolling"] = {
@@ -2346,31 +2338,6 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
     // Mode
     megamol::gui::ButtonWidgets::ExtendedModeButton(
         "parameter_search_child", this->gui_graph_state.interact.parameters_extended_mode);
-
-    if (this->gui_graph_state.interact.parameters_extended_mode) {
-        ImGui::SameLine();
-
-        // Visibility
-        if (megamol::gui::ButtonWidgets::ToggleButton("Visibility", this->gui_params_visible)) {
-            for (auto& module_ptr : this->Modules()) {
-                for (auto& parameter : module_ptr->Parameters()) {
-                    parameter.SetGUIVisible(this->gui_params_visible);
-                    parameter.ForceSetGUIStateDirty();
-                }
-            }
-        }
-        ImGui::SameLine();
-
-        // Read-only option
-        if (megamol::gui::ButtonWidgets::ToggleButton("Read-Only", this->gui_params_readonly)) {
-            for (auto& module_ptr : this->Modules()) {
-                for (auto& parameter : module_ptr->Parameters()) {
-                    parameter.SetGUIReadOnly(this->gui_params_readonly);
-                    parameter.ForceSetGUIStateDirty();
-                }
-            }
-        }
-    }
 
     // Parameter Search
     if (this->gui_graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].is_pressed) {
