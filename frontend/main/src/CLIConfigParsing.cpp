@@ -17,6 +17,30 @@ std::filesystem::path getHomeDir() {
 #endif
 }
 
+// find megamol executable path
+static
+std::filesystem::path getExecutableDirectory() {
+    std::filesystem::path path;
+#ifdef WIN32
+    std::vector<wchar_t> filename;
+    DWORD length;
+    do {
+        filename.resize(filename.size() + 1024);
+        length = GetModuleFileNameW(NULL, filename.data(), static_cast<DWORD>(filename.size()));
+    } while (length >= filename.size());
+    filename.resize(length);
+    path = {std::wstring(filename.begin(), filename.end())};
+#else
+    std::filesystem::path p("/proc/self/exe");
+    if (!std::filesystem::exists(p) || !std::filesystem::is_symlink(p)) {
+        throw std::runtime_error("Cannot read process name!");
+    }
+    path = std::filesystem::read_symlink(p);
+#endif
+    // path points to exeutable. remove executable filename and return directory.
+    return std::filesystem::absolute(path).remove_filename();
+}
+
 using megamol::frontend_resources::RuntimeConfig;
 using megamol::frontend_resources::GlobalValueStore;
 
@@ -380,20 +404,23 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
         auto _argv = const_cast<char**>(argv);
         auto parsed_options = options.parse(_argc, _argv);
 
-        std::vector<std::string> config_files;
-
-        auto personal_config = std::filesystem::path(getHomeDir()) / std::filesystem::path(".megamol_config.lua");
-        if (std::filesystem::exists(personal_config)) {
-            config_files.push_back(personal_config.string());
-        }
+        std::string config_file_name = "megamol_config.lua";
+        auto user_dir_config = getHomeDir() / ("." + config_file_name);
+        auto executable_dir_config = getExecutableDirectory() / config_file_name;
+        //auto current_dir_config = std::filesystem::absolute(std::filesystem::path(".")) / config_file_name;
 
         // the personal config should be loaded after the default config to overwrite it
-        // but before configs passed via CLI to be overwritten by them
+        auto default_paths = {executable_dir_config, user_dir_config};
+
+        std::vector<std::string> config_files;
+
         if (parsed_options.count(loong(config_option)) == 0) {
-            // no config files given
-            // use defaults
-            RuntimeConfig config;
-            config_files.insert(config_files.begin(), config.configuration_files.begin(), config.configuration_files.end());
+            // no config options given, look at default config paths
+            for (auto config_path : default_paths) {
+                if (std::filesystem::exists(config_path)) {
+                    config_files.push_back(config_path.string());
+                }
+            }
         } else {
             auto cli_config_files = parsed_options[loong(config_option)].as<std::vector<std::string>>();
             config_files.insert(config_files.end(), cli_config_files.begin(), cli_config_files.end());
@@ -404,6 +431,10 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
         // check remaining files exist
         files_exist(config_files, "Config file");
+
+        if (config_files.empty()) {
+            std::cout << "WARNING: starting MegaMol without config files! Some MegaMol modules may fail due to missing resource paths." << std::endl;
+        }
 
         return config_files;
 
