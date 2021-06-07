@@ -27,13 +27,9 @@ namespace gui {
      */
     class Configurator : public AbstractWindow {
     public:
-        explicit Configurator(const std::string& window_name);
+        explicit Configurator(const std::string& window_name, std::shared_ptr<TransferFunctionEditor> win_tfe_ptr);
         ~Configurator() = default;
 
-        // Call once
-        void SetData(std::shared_ptr<TransferFunctionEditor>& win_tfe_ptr) {
-            this->win_tfeditor_ptr = win_tfe_ptr;
-        }
         bool Update() override;
         bool Draw() override;
         void PopUps() override;

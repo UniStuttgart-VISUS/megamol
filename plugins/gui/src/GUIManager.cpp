@@ -383,22 +383,28 @@ bool GUIManager::PostDraw() {
     ImGuiStyle& style = ImGui::GetStyle();
 
     ////////// DRAW GUI ///////////////////////////////////////////////////////
+    try {
 
-    // Main HOTKEY_GUI_MENU ---------------------------------------------------------------
-    this->draw_menu();
+        // Main HOTKEY_GUI_MENU ---------------------------------------------------------------
+        this->draw_menu();
 
-    // Draw Windows ------------------------------------------------------------
-    this->win_collection.Draw(this->gui_state.menu_visible);
+        // Draw Windows ------------------------------------------------------------
+        this->win_collection.Draw(this->gui_state.menu_visible);
 
-    // Draw Pop-ups ------------------------------------------------------------
-    this->draw_popups();
+        // Draw Pop-ups ------------------------------------------------------------
+        this->draw_popups();
 
-    // Draw global parameter widgets -------------------------------------------
-    if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-        /// ! Only enabled in second frame if interaction objects are added during first frame !
-        this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
-        graph_ptr->DrawGlobalParameterWidgets(this->picking_buffer, this->win_collection.GetWindow<TransferFunctionEditor>());
-        this->picking_buffer.DisableInteraction();
+        // Draw global parameter widgets -------------------------------------------
+        if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+            /// ! Only enabled in second frame if interaction objects are added during first frame !
+            this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
+            graph_ptr->DrawGlobalParameterWidgets(this->picking_buffer,
+                                                  this->win_collection.GetWindow<TransferFunctionEditor>());
+            this->picking_buffer.DisableInteraction();
+        }
+
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unknown Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -414,6 +420,9 @@ bool GUIManager::PostDraw() {
     for (auto& hotkey : this->hotkeys) {
         hotkey.second.is_pressed = false;
     }
+
+    // Assume pending changes in scaling as applied  --------------------------
+    megamol::gui::gui_scaling.ConsumePendingChange();
 
     // Hide GUI if it is currently shown --------------------------------------
     if (this->gui_state.gui_visible) {
@@ -489,9 +498,6 @@ bool GUIManager::PostDraw() {
         //}
         this->gui_state.font_load = 0;
     }
-
-    // Assume pending changes in scaling as applied  --------------------------
-    megamol::gui::gui_scaling.ConsumePendingChange();
 
     return true;
 }
@@ -1364,7 +1370,7 @@ void GUIManager::draw_menu() {
             bool valid_file = megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
                     this->gui_state.font_load_filename, std::string("ttf"));
             if (!valid_file) {
-                megamol::gui::gui_utils::ReadOnlyWigetStyle(true);
+                megamol::gui::gui_utils::PushReadOnly();
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             if (ImGui::Button("Add Font")) {
@@ -1372,7 +1378,7 @@ void GUIManager::draw_menu() {
             }
             if (!valid_file) {
                 ImGui::PopItemFlag();
-                megamol::gui::gui_utils::ReadOnlyWigetStyle(false);
+                megamol::gui::gui_utils::PopReadOnly();
                 ImGui::SameLine();
                 ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font file name.");
             }
@@ -1613,9 +1619,9 @@ void megamol::gui::GUIManager::load_preset_window_docking(ImGuiID global_docking
         case (AbstractWindow::WINDOW_ID_MAIN_PARAMETERS): {
             ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_prop);
         } break;
-        case (AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION): {
-            ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_prop);
-        } break;
+        //case (AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION): {
+        //    ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_prop);
+        //} break;
         case (AbstractWindow::WINDOW_ID_CONFIGURATOR): {
             ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_main);
         } break;

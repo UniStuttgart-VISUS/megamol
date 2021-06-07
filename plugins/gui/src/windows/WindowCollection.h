@@ -41,9 +41,6 @@ namespace gui {
         bool AddWindow(
             const std::string& window_name, const std::function<void(AbstractWindow::BasicConfig&)>& callback);
 
-        template<typename T>
-        bool AddWindow(const std::string& window_name);
-
         inline void EnumWindows(const std::function<void(AbstractWindow&)>& cb) {
             // Needs fixed size if window is added while looping
             auto window_count = this->windows.size();
@@ -75,26 +72,11 @@ namespace gui {
         // VARIABLES ------------------------------------------------------
 
         std::vector<std::shared_ptr<AbstractWindow>> windows;
+
+        // FUNCTIONS ------------------------------------------------------
+
+        void add_parameter_window(const std::string& window_name, AbstractWindow::WindowConfigID win_id, const std::string& initial_module = "");
     };
-
-    template<typename T>
-    bool WindowCollection::AddWindow(const std::string& window_name) {
-
-        if (window_name.empty()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Invalid window name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        auto win_hash = std::hash<std::string>()(window_name);
-        if (this->WindowExists(win_hash)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Found already existing window with name '%s'. Window names must be unique. [%s, %s, line %d]\n",
-                window_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        this->windows.push_back(std::make_shared<T>(window_name));
-        return true;
-    }
 
 } // namespace gui
 } // namespace megamol

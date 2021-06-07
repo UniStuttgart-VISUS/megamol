@@ -14,24 +14,35 @@
 using namespace megamol::gui;
 
 
-ParameterList::ParameterList(const std::string& window_name)
-        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_MAIN_PARAMETERS)
-        , win_show_param_hotkeys(false)
+ParameterList::ParameterList(const std::string& window_name, AbstractWindow::WindowConfigID win_id, const std::string& initial_module, std::shared_ptr<Configurator> win_configurator,
+                             std::shared_ptr<TransferFunctionEditor> win_tfeditor, const RequestParamWindowCallback_t& add_parameter_window)
+        : AbstractWindow(window_name, win_id)
+        , win_configurator_ptr(win_configurator)
+        , win_tfeditor_ptr(win_tfeditor)
+        , request_new_parameter_window_func(add_parameter_window)
         , win_modules_list()
         , win_extended_mode(false)
         , search_widget()
         , tooltip() {
 
-    this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = {
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
+    assert((this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) || (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS));
 
     // Configure PARAMETER LIST Window
     this->win_config.show = true;
     this->win_config.size = ImVec2(400.0f * megamol::gui::gui_scaling.Get(), 500.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
     this->win_config.flags = ImGuiWindowFlags_NoScrollbar;
-    this->win_config.hotkey =
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F10, core::view::Modifier::NONE);
+
+    if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
+        if (!initial_module.empty()) {
+            this->win_modules_list.emplace_back(ModuleIDPair_t(initial_module, GUI_INVALID_ID));
+        }
+    } else if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
+        this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = {
+                megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
+        this->win_config.hotkey =
+                megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F10, core::view::Modifier::NONE);
+    }
 }
 
 
@@ -86,8 +97,8 @@ bool ParameterList::Draw() {
 
     ImGui::Separator();
 
-    // Create child window for sepearte scroll bar and keeping header always visible on top of parameter list
-    ImGui::BeginChild("###ParameterList", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
+    // Create child window for separate scroll bar and keeping header always visible on top of parameter list
+    ImGui::BeginChild("###parameter_child", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     // Listing modules and their parameters
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
@@ -96,6 +107,14 @@ bool ParameterList::Draw() {
         // Get module groups
         std::map<std::string, std::vector<ModulePtr_t>> group_map;
         for (auto& module_ptr : graph_ptr->Modules()) {
+            std::string module_label = module_ptr->FullName();
+            // Consider always all modules for main parameter window
+            if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
+                // Check if module should be considered.
+                if (std::find(this->win_modules_list.begin(), this->win_modules_list.end(), module_label) == this->win_modules_list.end()) {
+                    continue;
+                }
+            }
             auto group_name = module_ptr->GroupName();
             if (!group_name.empty()) {
                 group_map["::" + group_name].emplace_back(module_ptr);
@@ -116,12 +135,6 @@ bool ParameterList::Draw() {
             if (group_header_open) {
                 for (auto& module_ptr : group.second) {
                     std::string module_label = module_ptr->FullName();
-                    ImGui::PushID(static_cast<int>(module_ptr->UID()));
-
-                    // Check if module should be considered.
-                    if (!this->consider_module(module_label, this->win_modules_list)) {
-                        continue;
-                    }
 
                     // Draw module header
                     bool module_header_open = gui_utils::GroupHeader(
@@ -134,15 +147,13 @@ bool ParameterList::Draw() {
                         if (ImGui::MenuItem("Copy to new Window")) {
                             std::srand(std::time(nullptr));
                             std::string window_name = "Parameters###parameters_" + std::to_string(std::rand());
-                            this->win_modules_list.emplace_back(module_label);
-                            this->add_window_func(window_name);
+                            this->request_new_parameter_window_func(window_name, AbstractWindow::WINDOW_ID_PARAMETERS, module_label);
                         }
 
                         // Deleting module's parameters is not available in main parameter window.
-                        if (this->WindowID() != AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
+                        if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
                             if (ImGui::MenuItem("Delete from List")) {
-                                auto find_iter = std::find(
-                                    this->win_modules_list.begin(), this->win_modules_list.end(), module_label);
+                                auto find_iter = std::find(this->win_modules_list.begin(), this->win_modules_list.end(), module_label);
                                 // Break if module name is not contained in list
                                 if (find_iter != this->win_modules_list.end()) {
                                     this->win_modules_list.erase(find_iter);
@@ -167,8 +178,6 @@ bool ParameterList::Draw() {
                             vislib::math::Ternary(this->win_extended_mode), true, Parameter::WidgetScope::LOCAL,
                             this->win_tfeditor_ptr, override_header_state, nullptr);
                     }
-
-                    ImGui::PopID();
                 }
             }
             if (indent) {
@@ -186,8 +195,8 @@ bool ParameterList::Draw() {
             std::string payload_id = (const char*) payload->Data;
 
             // Insert dragged module name only if not contained in list
-            if (!this->consider_module(payload_id, this->win_modules_list)) {
-                this->win_modules_list.emplace_back(payload_id);
+            if (std::find(this->win_modules_list.begin(), this->win_modules_list.end(), payload_id) == this->win_modules_list.end()) {
+                this->win_modules_list.emplace_back(ModuleIDPair_t(payload_id));
             }
         }
         ImGui::EndDragDropTarget();
@@ -213,8 +222,6 @@ void ParameterList::SpecificStateFromJSON(const nlohmann::json& in_json) {
                 if (config_item.key() == this->Name()) {
                     auto config_values = config_item.value();
 
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"param_show_hotkeys"}, &this->win_show_param_hotkeys);
                     this->win_modules_list.clear();
                     if (config_values.at("param_modules_list").is_array()) {
                         size_t tmp_size = config_values.at("param_modules_list").size();
@@ -229,6 +236,7 @@ void ParameterList::SpecificStateFromJSON(const nlohmann::json& in_json) {
                             "[GUI] JSON state: Failed to read 'param_modules_list' as array. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                     }
+
                     megamol::core::utility::get_json_value<bool>(
                         config_values, {"param_extended_mode"}, &this->win_extended_mode);
                 }
@@ -240,7 +248,6 @@ void ParameterList::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
 void ParameterList::SpecificStateToJSON(nlohmann::json& inout_json) {
 
-    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_show_hotkeys"] = this->win_show_param_hotkeys;
     for (auto& pm : this->win_modules_list) {
         gui_utils::Utf8Encode(pm);
     }
@@ -249,17 +256,4 @@ void ParameterList::SpecificStateToJSON(nlohmann::json& inout_json) {
         gui_utils::Utf8Decode(pm);
     }
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_extended_mode"] = this->win_extended_mode;
-}
-
-
-bool ParameterList::consider_module(const std::string& modname, std::vector<std::string>& modules_list) const {
-
-    bool retval = false;
-    // Empty module list means that all modules should be considered.
-    if (modules_list.empty()) {
-        retval = true;
-    } else {
-        retval = (std::find(modules_list.begin(), modules_list.end(), modname) != modules_list.end());
-    }
-    return retval;
 }

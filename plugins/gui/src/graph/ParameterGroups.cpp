@@ -113,23 +113,14 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
 
                     // Call group widget draw function
                     if (group_widget_data->IsGUIVisible() || in_extended.IsTrue()) {
-                        if (group_widget_data->IsGUIReadOnly()) {
-                            gui_utils::ReadOnlyWigetStyle(true);
-                        }
-
+                        gui_utils::PushReadOnly(group_widget_data->IsGUIReadOnly());
                         if (!group_widget_data->Draw(group.second, in_search, in_scope, inout_picking_buffer)) {
-
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] No LOCAL widget presentation '%s' available for group widget '%s'. [%s, %s, "
-                                "line "
-                                "%d]\n",
+                                "[GUI] No LOCAL widget presentation '%s' available for group widget '%s'. [%s, %s, line %d]\n",
                                 group_widget_data->GetPresentationName(group_widget_data->GetGUIPresentation()).c_str(),
                                 group_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                         }
-
-                        if (group_widget_data->IsGUIReadOnly()) {
-                            gui_utils::ReadOnlyWigetStyle(false);
-                        }
+                        gui_utils::PopReadOnly(group_widget_data->IsGUIReadOnly());
                     }
                 } else {
                     // GLOBAL

@@ -311,6 +311,7 @@ namespace gui {
         /** Extract string enclosed in predefined tags. */
         static std::string ExtractTaggedString(
             const std::string& str, const std::string& start_tag, const std::string& end_tag) {
+
             std::string return_str;
             auto start_idx = str.find(start_tag);
             if (start_idx != std::string::npos) {
@@ -325,6 +326,7 @@ namespace gui {
 
         /** Decode string from UTF-8. */
         static bool Utf8Decode(std::string& str) {
+
             vislib::StringA dec_tmp;
             if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
                 str = std::string(dec_tmp.PeekBuffer());
@@ -335,6 +337,7 @@ namespace gui {
 
         /** Encode string into UTF-8. */
         static bool Utf8Encode(std::string& str) {
+
             vislib::StringA dec_tmp;
             if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
                 str = std::string(dec_tmp.PeekBuffer());
@@ -346,11 +349,16 @@ namespace gui {
         /**
          * Enable/Disable read only widget style.
          */
-        static void ReadOnlyWigetStyle(bool set) {
+        static void PushReadOnly(bool set = true) {
+
             if (set) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-            } else {
+            }
+        }
+        static void PopReadOnly(bool set = true) {
+
+            if (set) {
                 ImGui::PopItemFlag();
                 ImGui::PopStyleVar();
             }
@@ -363,6 +371,7 @@ namespace gui {
          * @param search   The string to search for in the source.
          */
         static bool FindCaseInsensitiveSubstring(const std::string& source, const std::string& search) {
+
             if (search.empty())
                 return true;
             auto it = std::search(source.begin(), source.end(), search.begin(), search.end(),
@@ -377,6 +386,7 @@ namespace gui {
          * @param search   Second string.
          */
         static bool CaseInsensitiveStringCompare(std::string const& str1, std::string const& str2) {
+
             return ((str1.size() == str2.size()) &&
                     std::equal(str1.begin(), str1.end(), str2.begin(), [](char const& c1, char const& c2) {
                         return (c1 == c2 || std::toupper(c1) == std::toupper(c2));
@@ -388,6 +398,7 @@ namespace gui {
          */
         static bool GroupHeader(megamol::gui::HeaderType type, const std::string& name, std::string& inout_search,
             ImGuiID override_header_state = GUI_INVALID_ID) {
+
             if (ImGui::GetCurrentContext() == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -445,6 +456,7 @@ namespace gui {
          * Convert given string to lower case.
          */
         static void StringToLowerCase(std::string& str) {
+
             for (auto& c : str) {
                 c = static_cast<char>(std::tolower(c));
             }
@@ -454,12 +466,14 @@ namespace gui {
          * Convert given string to upper case.
          */
         static void StringToUpperCase(std::string& str) {
+
             for (auto& c : str) {
                 c = static_cast<char>(std::toupper(c));
             }
         }
 
     private:
+
         gui_utils() = default;
         ~gui_utils() = default;
     };

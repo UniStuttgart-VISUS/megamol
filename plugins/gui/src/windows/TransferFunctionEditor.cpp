@@ -387,9 +387,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
 
         // Interval range -----------------------------------------------------
         ImGui::PushItemWidth(tfw_item_width * 0.5f - style.ItemSpacing.x);
-        if (!this->range_overwrite) {
-            gui_utils::ReadOnlyWigetStyle(true);
-        }
+        gui_utils::PushReadOnly(!this->range_overwrite);
         ImGui::InputFloat("###min", &this->widget_buffer.left_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->range[0] = this->widget_buffer.left_range;
@@ -401,9 +399,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
             this->range[1] = this->widget_buffer.right_range;
             this->reload_texture = true;
         }
-        if (!this->range_overwrite) {
-            gui_utils::ReadOnlyWigetStyle(false);
-        }
+        gui_utils::PopReadOnly(!this->range_overwrite);
         ImGui::PopItemWidth();
         ImGui::SameLine(0.0f, (style.ItemSpacing.x + style.ItemInnerSpacing.x));
         ImGui::TextUnformatted("Value Range");
@@ -434,9 +430,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
         // START selected NODE options ----------------------------------------
         bool node_selected =
             ((this->selected_node_index != GUI_INVALID_ID) && (this->selected_node_index < this->nodes.size()));
-        if (!node_selected) {
-            megamol::gui::gui_utils::ReadOnlyWigetStyle(true);
-        }
+        megamol::gui::gui_utils::PushReadOnly(!node_selected);
 
         // Sigma slider -------------------------------------------------------
         if (this->interpolation_mode == TransferFunctionParam::InterpolationMode::GAUSS) {
@@ -489,9 +483,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
         this->tooltip.Marker(help);
 
         // END selected NODE options ------------------------------------------
-        if (!node_selected) {
-            megamol::gui::gui_utils::ReadOnlyWigetStyle(false);
-        }
+        megamol::gui::gui_utils::PopReadOnly(!node_selected);
 
         // Plot ---------------------------------------------------------------
         ImVec2 canvas_size = ImVec2(tfw_item_width, tfw_item_width / 2.0f);
@@ -524,18 +516,14 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
             this->reload_texture = true;
         }
         ImGui::SameLine();
-        if (!node_selected) {
-            megamol::gui::gui_utils::ReadOnlyWigetStyle(true);
-        }
+        megamol::gui::gui_utils::PushReadOnly(!node_selected);
         if (ImGui::Button("Selected Node")) {
             for (int i = 0; i < 4; i++) {
                 this->nodes[this->selected_node_index][i] = 1.0f - this->nodes[this->selected_node_index][i];
             }
             this->reload_texture = true;
         }
-        if (!node_selected) {
-            megamol::gui::gui_utils::ReadOnlyWigetStyle(false);
-        }
+        megamol::gui::gui_utils::PopReadOnly(!node_selected);
         ImGui::SameLine();
         ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
         ImGui::TextUnformatted("Invert Colors");
@@ -601,9 +589,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
     if (this->show_options) {
 
         // Return true for current changes being applied
-        if (!this->pending_changes) {
-            gui_utils::ReadOnlyWigetStyle(true);
-        }
+        gui_utils::PushReadOnly(!this->pending_changes);
         ImGui::PushStyleColor(
             ImGuiCol_Button, this->pending_changes ? GUI_COLOR_BUTTON_MODIFIED : style.Colors[ImGuiCol_Button]);
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
@@ -615,9 +601,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
         }
 
         ImGui::PopStyleColor(3);
-        if (!this->pending_changes) {
-            gui_utils::ReadOnlyWigetStyle(false);
-        }
+        gui_utils::PopReadOnly(!this->pending_changes);
 
         ImGui::SameLine();
 

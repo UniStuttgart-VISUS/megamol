@@ -1344,14 +1344,10 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
         }
 
-        std::string graph_label = " " + this->name + " ##graph" + std::to_string(graph_uid);
-        if (this->IsRunning()) {
-            graph_label = " [RUNNING] " + graph_label;
-        }
-
         bool open_value = true;
         // Hide close button of running project tab
         bool* tab_open = ((this->IsRunning()) ? (nullptr) : (&open_value));
+        std::string graph_label = " " + this->name + " ##graph" + std::to_string(graph_uid);
 
         // Tab showing this graph
         if (ImGui::BeginTabItem(graph_label.c_str(), tab_open, tab_flags)) {
@@ -1910,14 +1906,9 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     // RUNNING
     ImGui::BeginGroup();
     bool button = megamol::gui::ButtonWidgets::OptionButton("graph_running_button", "", this->IsRunning());
-    bool readonly = this->IsRunning();
-    if (readonly) {
-        gui::gui_utils::ReadOnlyWigetStyle(true);
-    }
+    gui::gui_utils::PushReadOnly(this->IsRunning());
     button |= ImGui::Button(((this->IsRunning()) ? ("Running") : ("Run")));
-    if (readonly) {
-        gui::gui_utils::ReadOnlyWigetStyle(false);
-    }
+    gui::gui_utils::PopReadOnly(this->IsRunning());
     if (button && !this->IsRunning()) {
         state.new_running_graph_uid = this->uid;
     }
@@ -1938,12 +1929,12 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     // Graph Entry Checkbox
     const float min_text_width = 3.0f * ImGui::GetFrameHeightWithSpacing();
     if (selected_mod_ptr == nullptr) {
-        gui_utils::ReadOnlyWigetStyle(true);
+        gui_utils::PushReadOnly();
         bool is_graph_entry = false;
         this->gui_current_graph_entry_name.clear();
         megamol::gui::ButtonWidgets::ToggleButton("Graph Entry", is_graph_entry);
         // ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
-        gui_utils::ReadOnlyWigetStyle(false);
+        gui_utils::PopReadOnly();
     } else {
         bool is_graph_entry = selected_mod_ptr->IsGraphEntry();
         if (megamol::gui::ButtonWidgets::ToggleButton("Graph Entry", is_graph_entry)) {

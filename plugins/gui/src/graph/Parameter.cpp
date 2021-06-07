@@ -921,9 +921,7 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             float widget_width = ImGui::GetContentRegionAvail().x * 0.65f;
             ImGui::PushItemWidth(widget_width);
             // Set read only
-            if (this->IsGUIReadOnly()) {
-                gui_utils::ReadOnlyWigetStyle(true);
-            }
+            gui_utils::PushReadOnly(this->IsGUIReadOnly());
         }
 
         switch (this->GetGUIPresentation()) {
@@ -1318,9 +1316,7 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
         // LOCAL -----------------------------------------------------------
         if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
             // Reset read only
-            if (this->IsGUIReadOnly()) {
-                gui_utils::ReadOnlyWigetStyle(false);
-            }
+            gui_utils::PopReadOnly(this->IsGUIReadOnly());
             // Reset item width
             ImGui::PopItemWidth();
         }
@@ -1662,12 +1658,12 @@ bool megamol::gui::Parameter::widget_int(
             this->gui_widget_store = val;
         }
         if (this->gui_show_minmax) {
-            gui_utils::ReadOnlyWigetStyle(true);
+            gui_utils::PushReadOnly();
             auto min_value = minv;
             ImGui::InputInt("Min Value", &min_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
             auto max_value = maxv;
             ImGui::InputInt("Max Value", &max_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
-            gui_utils::ReadOnlyWigetStyle(false);
+            gui_utils::PopReadOnly();
         }
         ImGui::EndGroup();
     }
@@ -1731,14 +1727,14 @@ bool megamol::gui::Parameter::widget_float(
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
-                gui_utils::ReadOnlyWigetStyle(true);
+                gui_utils::PushReadOnly();
                 auto min_value = minv;
                 ImGui::InputFloat("Min Value", &min_value, min_step_size, max_step_size, this->gui_float_format.c_str(),
                     ImGuiInputTextFlags_None);
                 auto max_value = maxv;
                 ImGui::InputFloat("Max Value", &max_value, min_step_size, max_step_size, this->gui_float_format.c_str(),
                     ImGuiInputTextFlags_None);
-                gui_utils::ReadOnlyWigetStyle(false);
+                gui_utils::PopReadOnly();
             }
         }
         ImGui::EndGroup();
@@ -1809,14 +1805,14 @@ bool megamol::gui::Parameter::widget_vector2f(megamol::gui::Parameter::WidgetSco
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
-                gui_utils::ReadOnlyWigetStyle(true);
+                gui_utils::PushReadOnly();
                 auto min_value = minv;
                 ImGui::InputFloat2(
                     "Min Value", glm::value_ptr(min_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
                 auto max_value = maxv;
                 ImGui::InputFloat2(
                     "Max Value", glm::value_ptr(max_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
-                gui_utils::ReadOnlyWigetStyle(false);
+                gui_utils::PopReadOnly();
             }
         }
         ImGui::EndGroup();
@@ -1889,14 +1885,14 @@ bool megamol::gui::Parameter::widget_vector3f(megamol::gui::Parameter::WidgetSco
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
-                gui_utils::ReadOnlyWigetStyle(true);
+                gui_utils::PushReadOnly();
                 auto min_value = minv;
                 ImGui::InputFloat3(
                     "Min Value", glm::value_ptr(min_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
                 auto max_value = maxv;
                 ImGui::InputFloat3(
                     "Max Value", glm::value_ptr(max_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
-                gui_utils::ReadOnlyWigetStyle(false);
+                gui_utils::PopReadOnly();
             }
         }
         ImGui::EndGroup();
@@ -1969,14 +1965,14 @@ bool megamol::gui::Parameter::widget_vector4f(megamol::gui::Parameter::WidgetSco
         // Min Max Values
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->gui_show_minmax) {
-                gui_utils::ReadOnlyWigetStyle(true);
+                gui_utils::PushReadOnly();
                 auto min_value = minv;
                 ImGui::InputFloat4(
                     "Min Value", glm::value_ptr(min_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
                 auto max_value = maxv;
                 ImGui::InputFloat4(
                     "Max Value", glm::value_ptr(max_value), this->gui_float_format.c_str(), ImGuiInputTextFlags_None);
-                gui_utils::ReadOnlyWigetStyle(false);
+                gui_utils::PopReadOnly();
             }
         }
         ImGui::EndGroup();
@@ -2053,29 +2049,28 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
         ImGui::TextUnformatted(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
 
         // Toggle inplace and external editor, if available
-        if (this->tf_editor_external_ptr == nullptr) {
-            gui_utils::ReadOnlyWigetStyle(true);
-        }
+        gui_utils::PushReadOnly((this->tf_editor_external_ptr == nullptr));
         if (ImGui::RadioButton("External Editor", this->tf_use_external_editor)) {
             this->tf_use_external_editor = true;
             this->tf_show_editor = false;
         }
-        if (this->tf_editor_external_ptr == nullptr) {
-            gui_utils::ReadOnlyWigetStyle(false);
-        }
-        if (this->tf_use_external_editor) {
+        gui_utils::PopReadOnly((this->tf_editor_external_ptr == nullptr));
+        if (this->tf_use_external_editor && (this->tf_editor_external_ptr != nullptr)) {
             ImGui::SameLine();
-            if (param_externally_connected || (this->tf_editor_external_ptr == nullptr)) {
-                gui_utils::ReadOnlyWigetStyle(true);
-            }
+            gui_utils::PushReadOnly(param_externally_connected);
             if (ImGui::Button("Connect")) {
                 this->tf_editor_external_ptr->SetConnectedParameter(this, this->FullNameProject());
                 this->tf_editor_external_ptr->Config().show = true;
                 retval = true;
             }
-            if (param_externally_connected || (this->tf_editor_external_ptr == nullptr)) {
-                gui_utils::ReadOnlyWigetStyle(false);
+            gui_utils::PopReadOnly(param_externally_connected);
+            ImGui::SameLine();
+            bool readonly = this->tf_editor_external_ptr->Config().show;
+            gui_utils::PushReadOnly(readonly);
+            if (ImGui::Button("Open")) {
+                this->tf_editor_external_ptr->Config().show = true;
             }
+            gui_utils::PopReadOnly(readonly);
         }
 
         if (ImGui::RadioButton("Inplace Editor", !this->tf_use_external_editor)) {

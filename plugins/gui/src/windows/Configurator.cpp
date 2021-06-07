@@ -13,11 +13,11 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::Configurator::Configurator(const std::string& window_name)
+megamol::gui::Configurator::Configurator(const std::string& window_name, std::shared_ptr<TransferFunctionEditor> win_tfe_ptr)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_CONFIGURATOR)
         , graph_state()
         , graph_collection()
-        , win_tfeditor_ptr(nullptr)
+        , win_tfeditor_ptr(win_tfe_ptr)
         , module_list_sidebar_width(250.0f)
         , selected_list_module_uid(GUI_INVALID_ID)
         , add_project_graph_uid(GUI_INVALID_ID)

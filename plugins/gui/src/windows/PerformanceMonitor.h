@@ -33,6 +33,7 @@ namespace gui {
             this->averaged_ms = current_averaged_ms;
             this->frame_id = current_frame_id;
         }
+
         bool Update() override;
         bool Draw() override;
         void PopUps() override;

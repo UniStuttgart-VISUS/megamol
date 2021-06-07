@@ -18,24 +18,20 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-WindowCollection::WindowCollection() {
+WindowCollection::WindowCollection() : windows() {
 
-    auto win_configurator = std::make_shared<Configurator>("Configurator");
-    auto win_logconsole = std::make_shared<LogConsole>("Log Console");
-    auto win_paramlist = std::make_shared<ParameterList>("Parameters");
-    auto win_tfeditor = std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true);
-    auto win_perfmonitor = std::make_shared<PerformanceMonitor>("Performance Metrics");
+
+    this->windows.emplace_back(std::make_shared<LogConsole>("Log Console"));
+    this->windows.emplace_back(std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true));
+    this->windows.emplace_back(std::make_shared<PerformanceMonitor>("Performance Metrics"));
+    this->windows.emplace_back(std::make_shared<Configurator>("Configurator", this->GetWindow<TransferFunctionEditor>()));
+    // Requires Configurator and TFEditor to be added before
+    this->add_parameter_window("Parameters", AbstractWindow::WINDOW_ID_MAIN_PARAMETERS);
 
     // Windows are sorted depending on hotkey
-    this->windows.emplace_back(win_configurator);
-    this->windows.emplace_back(win_paramlist);
-    this->windows.emplace_back(win_logconsole);
-    this->windows.emplace_back(win_tfeditor);
-    this->windows.emplace_back(win_perfmonitor);
-
-    win_configurator->SetData(win_tfeditor);
-    win_paramlist->SetData(win_configurator, win_tfeditor,
-        [&](const std::string& window_name) { this->AddWindow<ParameterList>(window_name); });
+    std::sort(this->windows.begin(), this->windows.end(), [&](std::shared_ptr<AbstractWindow> const& a, std::shared_ptr<AbstractWindow> const& b) {
+        return (a->Config().hotkey.key < b->Config().hotkey.key);
+    });
 }
 
 
@@ -66,6 +62,7 @@ bool WindowCollection::AddWindow(
 
 void WindowCollection::Update() {
 
+    // Call window update functions
     for (auto& win : this->windows) {
         win->Update();
     }
@@ -90,7 +87,9 @@ void WindowCollection::Draw(bool menu_visible) {
             wc.WindowContextMenu(menu_visible, collapsing_changed);
 
             // Draw window content
+            ///ImGui::PushID(static_cast<int>(wc.Hash()));
             wc.Draw();
+            ///ImGui::PopID();
 
             // Reset or store window position and size
             if (wc.Config().reset_pos_size ||
@@ -147,7 +146,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                         if (win_config_id == AbstractWindow::WINDOW_ID_VOLATILE) {
                             this->AddWindow(window_name, std::function<void(AbstractWindow::BasicConfig&)>());
                         } else if (win_config_id == AbstractWindow::WINDOW_ID_PARAMETERS) {
-                            this->AddWindow<ParameterList>(window_name);
+                            this->add_parameter_window(window_name, AbstractWindow::WINDOW_ID_PARAMETERS);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "[GUI] Only additional volatile and custom parameter windows can be loaded from state "
@@ -220,4 +219,15 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
         }
     }
     return false;
+}
+
+
+void WindowCollection::add_parameter_window(const std::string& window_name, AbstractWindow::WindowConfigID win_id, const std::string& initial_module) {
+
+    if ((win_id == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) || (win_id == AbstractWindow::WINDOW_ID_PARAMETERS)) {
+        auto win_paramlist = std::make_shared<ParameterList>(window_name, win_id, initial_module, this->GetWindow<Configurator>(), this->GetWindow<TransferFunctionEditor>(), [&](const std::string& window_name, AbstractWindow::WindowConfigID win_id, const std::string& first_module) {
+            this->add_parameter_window(window_name, win_id, first_module);
+        });
+        this->windows.emplace_back(win_paramlist);
+    }
 }
