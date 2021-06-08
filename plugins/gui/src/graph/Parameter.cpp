@@ -1509,7 +1509,7 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
             ImGui::AlignTextToFramePadding();
             ImGui::TextUnformatted("Add");
             ImGui::SameLine();
-            /// Keyboard focus needs to be set in/untill second frame
+            /// Keyboard focus needs to be set in/until second frame
             if (this->gui_set_focus < 2) {
                 ImGui::SetKeyboardFocusHere();
                 this->gui_set_focus++;

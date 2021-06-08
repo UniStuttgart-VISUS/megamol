@@ -85,7 +85,7 @@ bool ParameterList::Draw() {
     // Parameter substring name filtering (only for main parameter view)
     if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
         if (this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed) {
-            this->search_widget.SetSearchFocus(true);
+            this->search_widget.SetSearchFocus();
             this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed = false;
         }
         std::string help_test = "[" + this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].keycode.ToString() +

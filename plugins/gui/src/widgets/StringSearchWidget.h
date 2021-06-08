@@ -25,10 +25,10 @@ namespace gui {
         StringSearchWidget();
         ~StringSearchWidget() = default;
 
-        bool Widget(const std::string& label, const std::string& help, bool apply_focus = true);
+        bool Widget(const std::string& label, const std::string& help, bool omit_focus = false);
 
-        inline void SetSearchFocus(bool focus) {
-            this->search_focus = focus;
+        inline void SetSearchFocus() {
+            this->search_focus = 2;
         }
 
         inline std::string GetSearchString() const {
@@ -42,7 +42,7 @@ namespace gui {
     private:
         // VARIABLES --------------------------------------------------------------
 
-        bool search_focus;
+        unsigned int search_focus;
         std::string search_string;
         HoverToolTip tooltip;
     };

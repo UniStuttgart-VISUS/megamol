@@ -1347,7 +1347,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
         bool open_value = true;
         // Hide close button of running project tab
         bool* tab_open = ((this->IsRunning()) ? (nullptr) : (&open_value));
-        std::string graph_label = " " + this->name + " ##graph" + std::to_string(graph_uid);
+        std::string graph_label = "  " + this->name + "  ##graph" + std::to_string(graph_uid);
 
         // Tab showing this graph
         if (ImGui::BeginTabItem(graph_label.c_str(), tab_open, tab_flags)) {
@@ -2332,7 +2332,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
 
     // Parameter Search
     if (this->gui_graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].is_pressed) {
-        this->gui_search_widget.SetSearchFocus(true);
+        this->gui_search_widget.SetSearchFocus();
     }
     std::string help_text = "[" +
                             this->gui_graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].keycode.ToString() +

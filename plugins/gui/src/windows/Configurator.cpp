@@ -122,8 +122,7 @@ bool megamol::gui::Configurator::Draw() {
     }
     /// HOTKEY_CONFIGURATOR_MODULE_SEARCH
     if (this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].is_pressed) {
-
-        this->search_widget.SetSearchFocus(true);
+        this->search_widget.SetSearchFocus();
         this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].is_pressed = false;
     }
 
@@ -136,11 +135,10 @@ bool megamol::gui::Configurator::Draw() {
     this->graph_state.graph_width = 0.0f;
     if (this->show_module_list_sidebar) {
         this->module_list_sidebar_width *= megamol::gui::gui_scaling.Get();
+
         this->splitter_widget.Widget(
             SplitterWidget::FixedSplitterSide::LEFT, this->module_list_sidebar_width, this->graph_state.graph_width);
-
-        // Module List
-        this->draw_window_module_list(this->module_list_sidebar_width, 0.0f, !this->show_module_list_popup);
+        this->draw_window_module_list(this->module_list_sidebar_width, 0.0f, this->show_module_list_popup);
 
         this->module_list_sidebar_width /= megamol::gui::gui_scaling.Get();
         ImGui::SameLine();
@@ -211,6 +209,7 @@ void megamol::gui::Configurator::PopUps() {
         std::string pop_up_id = "module_list_child";
         if (!ImGui::IsPopupOpen(pop_up_id.c_str())) {
             ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
+            this->search_widget.SetSearchFocus();
 
             float diff_width = (this->win_config.position.x + this->win_config.size.x - this->module_list_popup_pos.x);
             float diff_height = (this->win_config.position.y + this->win_config.size.y - this->module_list_popup_pos.y);
@@ -230,7 +229,7 @@ void megamol::gui::Configurator::PopUps() {
         if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
 
             this->draw_window_module_list(
-                std::max(0.0f, (popup_width - offset_x)), std::max(0.0f, (popup_height - offset_y)), true);
+                std::max(0.0f, (popup_width - offset_x)), std::max(0.0f, (popup_height - offset_y)), false);
 
             bool module_list_popup_hovered = false;
             if ((ImGui::GetMousePos().x >= this->module_list_popup_pos.x) &&
@@ -308,7 +307,7 @@ void megamol::gui::Configurator::draw_window_menu() {
 }
 
 
-void megamol::gui::Configurator::draw_window_module_list(float width, float height, bool apply_focus) {
+void megamol::gui::Configurator::draw_window_module_list(float width, float height, bool omit_focus) {
 
     ImGui::BeginGroup();
 
@@ -322,7 +321,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
     std::string help_text = "[" + this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].keycode.ToString() +
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in module names.";
-    this->search_widget.Widget("configurator_module_search", help_text, apply_focus);
+    this->search_widget.Widget("configurator_module_search", help_text, omit_focus);
     auto search_string = this->search_widget.GetSearchString();
 
     ImGui::EndChild();

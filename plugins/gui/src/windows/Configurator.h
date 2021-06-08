@@ -89,7 +89,7 @@ namespace gui {
 
         void draw_window_menu();
 
-        void draw_window_module_list(float width, float height, bool apply_focus);
+        void draw_window_module_list(float width, float height, bool omit_focus);
     };
 
 
