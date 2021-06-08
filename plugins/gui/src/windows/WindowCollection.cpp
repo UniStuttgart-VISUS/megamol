@@ -222,12 +222,13 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
 }
 
 
-void WindowCollection::add_parameter_window(const std::string& window_name, AbstractWindow::WindowConfigID win_id, const std::string& initial_module) {
+void WindowCollection::add_parameter_window(const std::string& window_name, AbstractWindow::WindowConfigID win_id, ImGuiID initial_module_uid) {
 
     if ((win_id == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) || (win_id == AbstractWindow::WINDOW_ID_PARAMETERS)) {
-        auto win_paramlist = std::make_shared<ParameterList>(window_name, win_id, initial_module, this->GetWindow<Configurator>(), this->GetWindow<TransferFunctionEditor>(), [&](const std::string& window_name, AbstractWindow::WindowConfigID win_id, const std::string& first_module) {
-            this->add_parameter_window(window_name, win_id, first_module);
-        });
+        auto win_paramlist = std::make_shared<ParameterList>(window_name, win_id, initial_module_uid, this->GetWindow<Configurator>(), this->GetWindow<TransferFunctionEditor>(),
+                [&](const std::string& windowname, AbstractWindow::WindowConfigID winid, ImGuiID initialmoduleuid) {
+                    this->add_parameter_window(windowname, winid, initialmoduleuid);
+                });
         this->windows.emplace_back(win_paramlist);
     }
 }

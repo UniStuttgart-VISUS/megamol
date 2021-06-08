@@ -14,7 +14,7 @@
 using namespace megamol::gui;
 
 
-ParameterList::ParameterList(const std::string& window_name, AbstractWindow::WindowConfigID win_id, const std::string& initial_module, std::shared_ptr<Configurator> win_configurator,
+ParameterList::ParameterList(const std::string& window_name, AbstractWindow::WindowConfigID win_id, ImGuiID initial_module_uid, std::shared_ptr<Configurator> win_configurator,
                              std::shared_ptr<TransferFunctionEditor> win_tfeditor, const RequestParamWindowCallback_t& add_parameter_window)
         : AbstractWindow(window_name, win_id)
         , win_configurator_ptr(win_configurator)
@@ -34,8 +34,8 @@ ParameterList::ParameterList(const std::string& window_name, AbstractWindow::Win
     this->win_config.flags = ImGuiWindowFlags_NoScrollbar;
 
     if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
-        if (!initial_module.empty()) {
-            this->win_modules_list.emplace_back(ModuleIDPair_t(initial_module, GUI_INVALID_ID));
+        if (initial_module_uid != GUI_INVALID_ID) {
+            this->win_modules_list.emplace_back(initial_module_uid);
         }
     } else if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
         this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = {
@@ -101,7 +101,7 @@ bool ParameterList::Draw() {
     ImGui::BeginChild("###parameter_child", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     // Listing modules and their parameters
-    const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
+    const size_t dnd_size = 16 * sizeof(char); // Set same max number of module uid decimal digits for drag and drop.
     if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
 
         // Get module groups
@@ -111,7 +111,7 @@ bool ParameterList::Draw() {
             // Consider always all modules for main parameter window
             if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
                 // Check if module should be considered.
-                if (std::find(this->win_modules_list.begin(), this->win_modules_list.end(), module_label) == this->win_modules_list.end()) {
+                if (std::find(this->win_modules_list.begin(), this->win_modules_list.end(), module_ptr->UID()) == this->win_modules_list.end()) {
                     continue;
                 }
             }
@@ -147,13 +147,13 @@ bool ParameterList::Draw() {
                         if (ImGui::MenuItem("Copy to new Window")) {
                             std::srand(std::time(nullptr));
                             std::string window_name = "Parameters###parameters_" + std::to_string(std::rand());
-                            this->request_new_parameter_window_func(window_name, AbstractWindow::WINDOW_ID_PARAMETERS, module_label);
+                            this->request_new_parameter_window_func(window_name, AbstractWindow::WINDOW_ID_PARAMETERS, module_ptr->UID());
                         }
 
                         // Deleting module's parameters is not available in main parameter window.
                         if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
                             if (ImGui::MenuItem("Delete from List")) {
-                                auto find_iter = std::find(this->win_modules_list.begin(), this->win_modules_list.end(), module_label);
+                                auto find_iter = std::find(this->win_modules_list.begin(), this->win_modules_list.end(), module_ptr->UID());
                                 // Break if module name is not contained in list
                                 if (find_iter != this->win_modules_list.end()) {
                                     this->win_modules_list.erase(find_iter);
@@ -164,11 +164,12 @@ bool ParameterList::Draw() {
                     }
 
                     // Drag source
-                    module_label.resize(dnd_size);
                     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-                        ImGui::SetDragDropPayload(
-                            "DND_COPY_MODULE_PARAMETERS", module_label.c_str(), (module_label.size() * sizeof(char)));
-                        ImGui::TextUnformatted(module_label.c_str());
+                        auto payload = std::to_string(module_ptr->UID());
+                        assert((payload.size() * sizeof(char)) <= dnd_size);
+                        ImGui::SetDragDropPayload("DND_COPY_MODULE_PARAMETERS", payload.c_str(), dnd_size);
+                        auto drag_info = std::string("Module: ") + module_label;
+                        ImGui::TextUnformatted(drag_info.c_str());
                         ImGui::EndDragDropSource();
                     }
 
@@ -190,13 +191,23 @@ bool ParameterList::Draw() {
     ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFontSize()));
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
-
-            IM_ASSERT(payload->DataSize == (dnd_size * sizeof(char)));
+            assert(payload->DataSize == (dnd_size * sizeof(char)));
             std::string payload_id = (const char*) payload->Data;
-
-            // Insert dragged module name only if not contained in list
-            if (std::find(this->win_modules_list.begin(), this->win_modules_list.end(), payload_id) == this->win_modules_list.end()) {
-                this->win_modules_list.emplace_back(ModuleIDPair_t(payload_id));
+            try {
+                auto module_uid_payload = static_cast<ImGuiID>(std::strtol(payload_id.c_str(), nullptr, 10));
+                if (errno == ERANGE) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Failed to read dragged payload: '%s'. [%s, %s, line %d]\n", std::strerror(errno),
+                            __FILE__, __FUNCTION__, __LINE__);
+                } else {
+                    // Insert dragged module name only if not contained in list
+                    if (std::find(this->win_modules_list.begin(), this->win_modules_list.end(), module_uid_payload) ==
+                        this->win_modules_list.end()) {
+                        this->win_modules_list.emplace_back(module_uid_payload);
+                    }
+                }
+            } catch (...) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Failed to drop module in parameter window. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
         }
         ImGui::EndDragDropTarget();
@@ -221,7 +232,6 @@ void ParameterList::SpecificStateFromJSON(const nlohmann::json& in_json) {
             for (auto& config_item : header_item.value().items()) {
                 if (config_item.key() == this->Name()) {
                     auto config_values = config_item.value();
-
                     this->win_modules_list.clear();
                     if (config_values.at("param_modules_list").is_array()) {
                         size_t tmp_size = config_values.at("param_modules_list").size();
@@ -229,7 +239,22 @@ void ParameterList::SpecificStateFromJSON(const nlohmann::json& in_json) {
                             std::string value;
                             megamol::core::utility::get_json_value<std::string>(
                                 config_values.at("param_modules_list")[i], {}, &value);
-                            this->win_modules_list.emplace_back(value);
+                            // Search for module name and store uid
+                            bool found = false;
+                            for (auto& graph_ptr : this->win_configurator_ptr->GetGraphCollection().GetGraphs()) {
+                                for (auto& module_ptr : graph_ptr->Modules()) {
+                                    if (value == module_ptr->FullName()) {
+                                        this->win_modules_list.emplace_back(module_ptr->UID());
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!found) {
+                                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                        "[GUI] JSON state: Failed to find existing module '%s' for parameter window list. [%s, %s, line %d]\n",
+                                        value.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                            }
                         }
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -248,12 +273,19 @@ void ParameterList::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
 void ParameterList::SpecificStateToJSON(nlohmann::json& inout_json) {
 
-    for (auto& pm : this->win_modules_list) {
-        gui_utils::Utf8Encode(pm);
+    std::vector<std::string> module_names;
+    for (auto& module_uid : this->win_modules_list) {
+        // Search for module name and store uid
+        for (auto& graph_ptr : this->win_configurator_ptr->GetGraphCollection().GetGraphs()) {
+            for (auto& module_ptr : graph_ptr->Modules()) {
+                if (module_uid == module_ptr->UID()) {
+                    auto module_name = module_ptr->FullName();
+                    gui_utils::Utf8Encode(module_name);
+                    module_names.emplace_back(module_name);
+                }
+            }
+        }
     }
-    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_modules_list"] = this->win_modules_list;
-    for (auto& pm : this->win_modules_list) {
-        gui_utils::Utf8Decode(pm);
-    }
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_modules_list"] = module_names;
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["param_extended_mode"] = this->win_extended_mode;
 }
