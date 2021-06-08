@@ -23,6 +23,7 @@
 #include "PointInterfaceClassification.h"
 #include "AccumulateInterfacePresence.h"
 #include "PrepareSurfaceEvents.h"
+#include "PointSurfaceElementsDistance.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -64,6 +65,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PointInterfaceClassification>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::AccumulateInterfacePresence>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PrepareSurfaceEvents>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PointSurfaceElementsDistance>();
         //
         // TODO: Register your plugin's modules here
         // like:

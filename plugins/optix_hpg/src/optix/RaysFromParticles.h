@@ -21,7 +21,7 @@ inline std::vector<std::vector<RayH>> rays_from_particles(
         call.SetFrameID(base_frame_id, true);
         got_0 = call(1);
         got_0 = got_0 && call(0);
-    } while (call.FrameID() != base_frame_id && !got_0);
+    } while (call.FrameID() != base_frame_id && !got_0 && (call.Unlock(), true));
 
     auto const a_pl_count = call.GetParticleListCount();
 
@@ -59,7 +59,7 @@ inline std::vector<std::vector<RayH>> rays_from_particles(
         call.SetFrameID(base_frame_id + 1, true);
         got_1 = call(1);
         got_1 = got_1 && call(0);
-    } while (call.FrameID() != base_frame_id + 1 && !got_1);
+    } while (call.FrameID() != base_frame_id + 1 && !got_1 && (call.Unlock(), true));
 
     auto const b_pl_count = call.GetParticleListCount();
     if (b_pl_count != a_pl_count) {
@@ -107,12 +107,87 @@ inline std::vector<std::vector<RayH>> rays_from_particles(
                 continue;*/
 
             auto const& dir = dest - origin;
+            //auto dir = glm::vec3(0.f, 0.f, 1.f);
             auto const tMax = glm::length(dir);
             if (tMax != 0.0f) {
                 // ray_vec.emplace_back(origin, dir, 0.f, std::numeric_limits<float>::max());
-                ray_vec.emplace_back(origin, glm::normalize(dir), 0.f, std::numeric_limits<float>::max());
+                ray_vec.emplace_back(
+                    origin, glm::normalize(dir), std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
             } else {
-                ray_vec.emplace_back(origin, glm::normalize(dir), 0.f, 0.0f);
+                ray_vec.emplace_back(
+                    origin, glm::normalize(dir), std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
+            }
+        }
+    }
+
+    return rays;
+}
+
+inline std::vector<std::vector<RayH>> rays_from_particles_rng(
+    core::moldyn::MultiParticleDataCall& call, unsigned int base_frame_id) {
+    std::vector<std::vector<RayH>> rays;
+    std::vector<std::vector<std::pair<glm::vec3, glm::vec3>>> origins;
+    std::vector<std::unordered_map<std::uint64_t, std::uint64_t>> idx_map;
+
+    bool got_0 = false;
+    do {
+        call.SetFrameID(base_frame_id, true);
+        got_0 = call(1);
+        got_0 = got_0 && call(0);
+    } while (call.FrameID() != base_frame_id && !got_0 && (call.Unlock(), true));
+
+    auto const a_pl_count = call.GetParticleListCount();
+
+    rays.resize(a_pl_count);
+    origins.resize(a_pl_count);
+
+    for (unsigned int plIdx = 0; plIdx < a_pl_count; ++plIdx) {
+        auto const& part_a = call.AccessParticles(plIdx);
+        auto const a_pCount = part_a.GetCount();
+
+        auto& orgs = origins[plIdx];
+
+        orgs.resize(a_pCount);
+        std::fill(orgs.begin(), orgs.end(),
+            std::make_pair<glm::vec3, glm::vec3>(
+                glm::vec3(std::numeric_limits<float>::lowest()), glm::vec3(std::numeric_limits<float>::lowest())));
+
+        auto a_xAcc = part_a.GetParticleStore().GetXAcc();
+        auto a_yAcc = part_a.GetParticleStore().GetYAcc();
+        auto a_zAcc = part_a.GetParticleStore().GetZAcc();
+        auto a_idAcc = part_a.GetParticleStore().GetIDAcc();
+
+        for (std::size_t pIdx = 0; pIdx < a_pCount; ++pIdx) {
+            orgs[pIdx] = std::make_pair(glm::vec3(a_xAcc->Get_f(pIdx), a_yAcc->Get_f(pIdx), a_zAcc->Get_f(pIdx)),
+                glm::vec3(std::numeric_limits<float>::lowest()));
+        }
+    }
+
+    for (unsigned int plIdx = 0; plIdx < a_pl_count; ++plIdx) {
+        auto const& part_b = call.AccessParticles(plIdx);
+
+        auto& orgs = origins[plIdx];
+
+        auto& ray_vec = rays[plIdx];
+        ray_vec.reserve(origins.size());
+
+        for (auto const& el : orgs) {
+            auto const& origin = el.first;
+
+            /*if (std::isnan(origin.x) || std::isnan(origin.y) || std::isnan(origin.z) || std::isnan(dest.x) ||
+                std::isnan(dest.y) || std::isnan(dest.z))
+                continue;*/
+
+            // auto const& dir = dest - origin;
+            auto dir = glm::vec3(0.f, 0.f, 1.f);
+            auto const tMax = glm::length(dir);
+            if (tMax != 0.0f) {
+                // ray_vec.emplace_back(origin, dir, 0.f, std::numeric_limits<float>::max());
+                ray_vec.emplace_back(
+                    origin, glm::normalize(dir), std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
+            } else {
+                ray_vec.emplace_back(
+                    origin, glm::normalize(dir), std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
             }
         }
     }
