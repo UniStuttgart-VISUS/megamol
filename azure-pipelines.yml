@@ -17,12 +17,11 @@ jobs:
         generator: 'Visual Studio 16 2019'
 
   pool:
-    name: 'default'
+    name: 'hardware'
     demands:
     - Agent.OS -equals Windows_NT
     - cmake
     - VisualStudio_16.0
-    - megamol_build_enabled
 
   steps:
   - task: PowerShell@2
