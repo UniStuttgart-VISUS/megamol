@@ -1,5 +1,6 @@
 #include "mesh/MeshDataAccessor.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include "mmcore/utility/log/Log.h"
