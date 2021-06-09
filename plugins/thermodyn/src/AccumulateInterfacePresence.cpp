@@ -143,30 +143,55 @@ bool megamol::thermodyn::AccumulateInterfacePresence::assert_data(core::moldyn::
                     e_fid = -1;
                     s_pos = {-1, -1, -1};
                     e_pos = {-1, -1, -1};
-                    // not yet created
-                    if (val == 0.f) {
-                        state = 1;
-                    } else {
-                        state = 2;
+                }
+
+                if (val == 3) {
+                    if (state != 3) {
+                        state = 3;
                         s_fid = fid;
                         s_pos = {x_pos, y_pos, z_pos};
                     }
-                } else if (state == 1) {
-                    if (val == 1.f) {
-                        state = 2;
-                        s_fid = fid;
-                        s_pos = {x_pos, y_pos, z_pos};
-                    }
-                } else if (state == 2) {
-                    if (val == 0.f) {
+                } else if (val == 1) {
+                    if (state == 4) {
                         state = 1;
                         e_fid = fid;
                         e_pos = {x_pos, y_pos, z_pos};
                         states_.push_back({id, s_fid, e_fid, s_pos, e_pos});
-                        s_fid = -1;
-                        e_fid = -1;
+                    }
+                    if (state == 3) {
+                        state = 4;
                     }
                 }
+
+                //if (state == 0) {
+                //    s_fid = -1;
+                //    e_fid = -1;
+                //    s_pos = {-1, -1, -1};
+                //    e_pos = {-1, -1, -1};
+                //    // not yet created
+                //    if (val == 0.f) {
+                //        state = 1;
+                //    } else {
+                //        state = 2;
+                //        s_fid = fid;
+                //        s_pos = {x_pos, y_pos, z_pos};
+                //    }
+                //} else if (state == 1) {
+                //    if (val == 1.f) {
+                //        state = 2;
+                //        s_fid = fid;
+                //        s_pos = {x_pos, y_pos, z_pos};
+                //    }
+                //} else if (state == 2) {
+                //    if (val == 0.f) {
+                //        state = 1;
+                //        e_fid = fid;
+                //        e_pos = {x_pos, y_pos, z_pos};
+                //        states_.push_back({id, s_fid, e_fid, s_pos, e_pos});
+                //        s_fid = -1;
+                //        e_fid = -1;
+                //    }
+                //}
             }
         }
     }
