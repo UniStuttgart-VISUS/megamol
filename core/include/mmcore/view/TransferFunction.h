@@ -104,7 +104,7 @@ namespace view {
         /** The callee slot called on request of a transfer function */
         CalleeSlot getTFSlot;
 
-        /** Parameter continaing the transfer function data serialized into JSON string */
+        /** Parameter containing the transfer function data serialized into JSON string */
         param::ParamSlot tfParam;
 
         /** The OpenGL texture object id */
@@ -124,9 +124,6 @@ namespace view {
 
         /** The value range */
         std::array<float, 2> range;
-
-        /** Flag indicates whether to use range given in project file or propagated from module. */
-        bool ignore_project_range;
 
         /** Version of texture */
         uint32_t version;
