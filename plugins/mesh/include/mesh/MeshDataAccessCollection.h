@@ -10,6 +10,10 @@
 #define MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
 
 #include <vector>
+#include <string>
+#include <unordered_map>
+
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace mesh {
