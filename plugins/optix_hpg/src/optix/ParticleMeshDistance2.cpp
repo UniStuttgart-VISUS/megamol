@@ -329,6 +329,7 @@ bool megamol::optix_hpg::ParticleMeshDistance2::assertData(mesh::CallMesh& part_
         auto const zAcc = parts.GetParticleStore().GetZAcc();
 
         auto& pos = positions_[plIdx];
+        pos.clear();
         pos.reserve(parts.GetCount() * 3);
 
         for (uint64_t pidx = 0; pidx < parts.GetCount(); ++pidx) {
@@ -391,8 +392,8 @@ bool megamol::optix_hpg::ParticleMeshDistance2::get_data_cb(core::Call& c) {
 
     static bool first = true;
     // if (/*in_data->hasUpdate()*/ meta.m_frame_ID != frame_id_ /*|| meta.m_data_hash != _data_hash*/) {
-    /*if (in_part_mesh->hasUpdate() || in_inter_mesh->hasUpdate() || in_data->DataHash() != in_data_hash_ ||
-        in_data->FrameID() != frame_id_)*/if(first) {
+    if (in_part_mesh->hasUpdate() || in_inter_mesh->hasUpdate() || in_data->DataHash() != in_data_hash_ ||
+        in_data->FrameID() != frame_id_)/*if(first)*/ {
         if (!assertData(*in_part_mesh, *in_inter_mesh, *in_data, in_data->FrameID()))
             return false;
         frame_id_ = in_data->FrameID();
