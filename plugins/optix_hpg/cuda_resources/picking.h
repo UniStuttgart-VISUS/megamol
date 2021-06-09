@@ -3,23 +3,22 @@
 #include "optix.h"
 
 #include "framestate.h"
-#include "perraydata.h"
 
 #include "glm/glm.hpp"
-
-#include "cuda.h"
 
 namespace megamol {
 namespace optix_hpg {
     namespace device {
-        struct RayGenData {
+        struct PickState {
+            glm::uvec2 mouseCoord;
+            int primID;
+        };
+
+        struct PickingData {
             OptixTraversableHandle world;
-            int rec_depth;
             glm::uvec2 fbSize;
             FrameState* frameStateBuffer;
-            CUsurfObject col_surf;
-            CUsurfObject depth_surf;
-            int* picking_buffer;
+            PickState* pickStateBuffer;
         };
     } // namespace device
 } // namespace optix_hpg

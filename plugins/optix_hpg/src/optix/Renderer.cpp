@@ -1,8 +1,8 @@
 #include "Renderer.h"
 
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/view/Camera_2.h"
 
 #include "raygen.h"
@@ -17,18 +17,28 @@
 
 namespace megamol::optix_hpg {
 extern "C" const char embedded_raygen_programs[];
+extern "C" const char embedded_picking_programs[];
 extern "C" const char embedded_miss_programs[];
 } // namespace megamol::optix_hpg
 
 
 megamol::optix_hpg::Renderer::Renderer()
         : _in_geo_slot("inGeo", "")
+        , flags_write_slot_("flagsWrite", "")
+        , flags_read_slot_("flagsRead", "")
         , spp_slot_("spp", "")
         , max_bounces_slot_("max bounces", "")
         , accumulate_slot_("accumulate", "")
-        , intensity_slot_("intensity", "") {
+        , intensity_slot_("intensity", "")
+        , enable_picking_slot_("picking::enable", "") {
     _in_geo_slot.SetCompatibleCall<CallGeometryDescription>();
     MakeSlotAvailable(&_in_geo_slot);
+
+    flags_write_slot_.SetCompatibleCall<core::FlagCallWrite_CPUDescription>();
+    MakeSlotAvailable(&flags_write_slot_);
+
+    flags_read_slot_.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
+    MakeSlotAvailable(&flags_read_slot_);
 
     spp_slot_ << new core::param::IntParam(1, 1);
     MakeSlotAvailable(&spp_slot_);
@@ -41,6 +51,9 @@ megamol::optix_hpg::Renderer::Renderer()
 
     intensity_slot_ << new core::param::FloatParam(1.0f, std::numeric_limits<float>::min());
     MakeSlotAvailable(&intensity_slot_);
+
+    enable_picking_slot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&enable_picking_slot_);
 
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
@@ -60,6 +73,10 @@ void megamol::optix_hpg::Renderer::setup() {
         &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
         MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_RAYGEN,
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_GENERIC, "raygen_program"}});
+    picking_module_ = MMOptixModule(embedded_picking_programs, optix_ctx_->GetOptiXContext(),
+        &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
+        MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_RAYGEN,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_GENERIC, "picking_program"}});
     miss_module_ = MMOptixModule(embedded_miss_programs, optix_ctx_->GetOptiXContext(),
         &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
         MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_MISS,
@@ -70,12 +87,62 @@ void megamol::optix_hpg::Renderer::setup() {
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_GENERIC, "miss_program_occlusion"}});
 
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(raygen_module_, &_sbt_raygen_record));
+    OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(picking_module_, &sbt_picking_record_));
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_module_, &sbt_miss_records_[0]));
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_occlusion_module_, &sbt_miss_records_[1]));
 
     CUDA_CHECK_ERROR(cuMemAlloc(&_frame_state_buffer, sizeof(device::FrameState)));
+    CUDA_CHECK_ERROR(cuMemAlloc(&pick_state_buffer_, sizeof(device::PickState)));
 
     _sbt_raygen_record.data.frameStateBuffer = (device::FrameState*) _frame_state_buffer;
+    sbt_picking_record_.data.frameStateBuffer = (device::FrameState*) _frame_state_buffer;
+    sbt_picking_record_.data.pickStateBuffer = (device::PickState*) pick_state_buffer_;
+
+    pick_state_.primID = -1;
+}
+
+
+bool megamol::optix_hpg::Renderer::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+    if (mods.test(core::view::Modifier::SHIFT) && action == core::view::MouseButtonAction::PRESS &&
+        enable_picking_slot_.Param<core::param::BoolParam>()->Value()) {
+        /*auto const screenX = mouse_x_ / _current_fb_size.Width();
+        auto const screenY = 1.f - (mouse_y_ / _current_fb_size.Height());*/
+        auto const screenX = mouse_x_;
+        auto const screenY = _current_fb_size.Height() - mouse_y_;
+        //auto const screenY = mouse_y_;
+
+        std::vector<int> tmp_pick_buf(_current_fb_size.Area());
+        CUDA_CHECK_ERROR(cuMemcpyDtoHAsync(tmp_pick_buf.data(), picking_pixel_buffer_,
+            sizeof(int32_t) * _current_fb_size.Area(), optix_ctx_->GetExecStream()));
+
+        pick_state_.primID = tmp_pick_buf[screenX + screenY * _current_fb_size.Width()];
+
+
+        /*pick_state_.mouseCoord = glm::uvec2(screenX, screenY);
+        pick_state_.primID = -1;
+
+        CUDA_CHECK_ERROR(
+            cuMemcpyHtoDAsync(pick_state_buffer_, &pick_state_, sizeof(pick_state_), optix_ctx_->GetExecStream()));
+
+        OPTIX_CHECK_ERROR(optixLaunch(_pipeline, optix_ctx_->GetExecStream(), 0, 0, picking_sbt_, 1, 1, 1));
+
+        CUDA_CHECK_ERROR(
+            cuMemcpyDtoHAsync(&pick_state_, pick_state_buffer_, sizeof(pick_state_), optix_ctx_->GetExecStream()));*/
+
+        core::utility::log::Log::DefaultLog.WriteInfo("[OptiXRenderer]: Picking result -> %d", pick_state_.primID);
+
+        return true;
+    }
+
+    return false;
+}
+
+
+bool megamol::optix_hpg::Renderer::OnMouseMove(double x, double y) {
+    this->mouse_x_ = static_cast<float>(x);
+    this->mouse_y_ = static_cast<float>(y);
+    return false;
 }
 
 
@@ -92,9 +159,18 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
         _sbt_raygen_record.data.fbSize = glm::uvec2(viewport.Width(), viewport.Height());
         _sbt_raygen_record.data.col_surf = call.GetFramebuffer()->colorBuffer;
         _sbt_raygen_record.data.depth_surf = call.GetFramebuffer()->depthBuffer;
+
+        sbt_picking_record_.data.fbSize = glm::uvec2(viewport.Width(), viewport.Height());
+
         call.GetFramebuffer()->data.exec_stream = optix_ctx_->GetExecStream();
 
         _current_fb_size = viewport;
+        if (picking_pixel_buffer_ != 0) {
+            CUDA_CHECK_ERROR(cuMemFree(picking_pixel_buffer_));
+        }
+        CUDA_CHECK_ERROR(cuMemAlloc(&picking_pixel_buffer_, sizeof(int32_t) * viewport.Width() * viewport.Height()));
+        CUDA_CHECK_ERROR(cuMemsetD32Async(picking_pixel_buffer_, -1, viewport.Area(), optix_ctx_->GetExecStream()));
+        _sbt_raygen_record.data.picking_buffer = (int*) picking_pixel_buffer_;
 
         not_init = false;
     }
@@ -115,9 +191,17 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
         _sbt_raygen_record.data.depth_surf = call.GetFramebuffer()->depthBuffer;
         _frame_state.frameIdx = 0;
 
+        sbt_picking_record_.data.fbSize = glm::uvec2(viewport.Width(), viewport.Height());
+
         rebuild_sbt = true;
 
         _current_fb_size = viewport;
+        if (picking_pixel_buffer_ != 0) {
+            CUDA_CHECK_ERROR(cuMemFree(picking_pixel_buffer_));
+        }
+        CUDA_CHECK_ERROR(cuMemAlloc(&picking_pixel_buffer_, sizeof(int32_t) * viewport.Width() * viewport.Height()));
+        CUDA_CHECK_ERROR(cuMemsetD32Async(picking_pixel_buffer_, -1, viewport.Area(), optix_ctx_->GetExecStream()));
+        _sbt_raygen_record.data.picking_buffer = (int*)picking_pixel_buffer_;
     }
 
     // Camera
@@ -182,6 +266,7 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
 
     if (in_geo->FrameID() != _frame_id || in_geo->DataHash() != _in_data_hash) {
         _sbt_raygen_record.data.world = *in_geo->get_handle();
+        sbt_picking_record_.data.world = *in_geo->get_handle();
         _frame_state.frameIdx = 0;
 
         rebuild_sbt = true;
@@ -190,6 +275,7 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
         std::vector<OptixProgramGroup> groups;
         groups.reserve(num_groups);
         groups.push_back(raygen_module_);
+        groups.push_back(picking_module_);
         groups.push_back(miss_module_);
         std::for_each(in_geo->get_program_groups(), in_geo->get_program_groups() + in_geo->get_num_programs(),
             [&groups](OptixProgramGroup const el) { groups.push_back(el); });
@@ -210,10 +296,36 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
         sbt_.SetSBT(&_sbt_raygen_record, sizeof(_sbt_raygen_record), nullptr, 0, sbt_miss_records_.data(),
             sizeof(SBTRecord<device::MissData>), sbt_miss_records_.size(), in_geo->get_record(),
             in_geo->get_record_stride(), in_geo->get_num_records(), nullptr, 0, 0, optix_ctx_->GetExecStream());
+        picking_sbt_.SetSBT(&sbt_picking_record_, sizeof(sbt_picking_record_), nullptr, 0, sbt_miss_records_.data(),
+            sizeof(SBTRecord<device::MissData>), sbt_miss_records_.size(), in_geo->get_record(),
+            in_geo->get_record_stride(), in_geo->get_num_records(), nullptr, 0, 0, optix_ctx_->GetExecStream());
     }
 
     OPTIX_CHECK_ERROR(
         optixLaunch(_pipeline, optix_ctx_->GetExecStream(), 0, 0, sbt_, viewport.Width(), viewport.Height(), 1));
+
+    if (enable_picking_slot_.Param<core::param::BoolParam>()->Value()) {
+        auto fcr = flags_read_slot_.CallAs<core::FlagCallRead_CPU>();
+        auto fcw = flags_write_slot_.CallAs<core::FlagCallWrite_CPU>();
+        if (fcr != nullptr && fcw != nullptr && pick_state_.primID != -1) {
+            if ((*fcr)(0)) {
+                auto flags = fcr->getData();
+                auto version = fcr->version();
+                try {
+                    auto& flag = flags->flags->at(pick_state_.primID);
+                    if (flag == core::FlagStorage::SELECTED) {
+                        flag = core::FlagStorage::ENABLED;
+                    } else {
+                        flag = core::FlagStorage::SELECTED;
+                    }
+                    fcw->setData(flags, version + 1);
+                    fcr->setData(flags, version + 1);
+                    (*fcw)(0);
+                    pick_state_.primID = -1;
+                } catch (...) { return true; }
+            }
+        }
+    }
 
     return true;
 }

@@ -34,6 +34,8 @@ namespace optix_hpg {
 
             float intensity;
 
+            int primID;
+
             OptixTraversableHandle world;
         };
     } // namespace device
