@@ -724,6 +724,7 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
 
         if (call.DataHash() != _in_data_hash || call.FrameID() != _frame_id || is_dirty() ||
             (cgtf != nullptr && (tf_changed = cgtf->IsDirty())) || data_flag_change) {
+            total_tri_count_ = 0;
             for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
                 auto& vertices = _vertices[pl_idx];
                 auto& normals = _normals[pl_idx];
@@ -732,6 +733,8 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
 
                 std::vector<mesh::MeshDataAccessCollection::VertexAttribute> mesh_attributes;
                 mesh::MeshDataAccessCollection::IndexData mesh_indices;
+
+                total_tri_count_ += indices.size() / 3;
 
                 mesh_indices.byte_size = indices.size() * sizeof(uint32_t);
                 mesh_indices.data = reinterpret_cast<uint8_t*>(indices.data());
@@ -755,6 +758,13 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                 _mesh_access_collection->addMesh(identifier, mesh_attributes, mesh_indices);
             }
             ++_out_data_hash;
+        }
+        if (fcr != nullptr) {
+            if ((*fcr)(0)) {
+                auto data = fcr->getData();
+                data->validateFlagCount(total_tri_count_);
+            }
+            // flags_changed = fcr->version() != _fcr_version;
         }
     }
 
@@ -787,6 +797,10 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
     // bool flags_changed = false;
     if (fcr != nullptr) {
         (*fcr)(0);
+        /*if ((*fcr)(0)) {
+            auto data = fcr->getData();
+            data->validateFlagCount(total_tri_count_);
+        }*/
         // flags_changed = fcr->version() != _fcr_version;
     }
 

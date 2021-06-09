@@ -157,5 +157,7 @@ private:
     std::vector<std::tuple<size_t, size_t>> _sel;
 
     std::size_t increment = 0;
+
+    uint64_t total_tri_count_;
 };
 } // namespace megamol::thermodyn
