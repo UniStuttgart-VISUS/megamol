@@ -1,7 +1,13 @@
 #include "stdafx.h"
 #include "MeshGeometry.h"
 
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+
 #include "optix/CallGeometry.h"
+
+#include "thermodyn/CallEvents.h"
 
 
 namespace megamol::optix_hpg {
@@ -9,13 +15,35 @@ extern "C" const char embedded_mesh_programs[];
 }
 
 
-megamol::optix_hpg::MeshGeometry::MeshGeometry() : _out_geo_slot("outGeo", ""), _in_data_slot("inData", "") {
+megamol::optix_hpg::MeshGeometry::MeshGeometry()
+        : _out_geo_slot("outGeo", "")
+        , _in_data_slot("inData", "")
+        , in_events_slot_("inEvents", "")
+        , radius_slot_("radius", "")
+        , thickness_slot_("thickness", "")
+        , test_rad_slot_("test::rad", "")
+        , time_slice_slot_("test::time_slice", "") {
     _out_geo_slot.SetCallback(CallGeometry::ClassName(), CallGeometry::FunctionName(0), &MeshGeometry::get_data_cb);
     _out_geo_slot.SetCallback(CallGeometry::ClassName(), CallGeometry::FunctionName(1), &MeshGeometry::get_extents_cb);
     MakeSlotAvailable(&_out_geo_slot);
 
     _in_data_slot.SetCompatibleCall<mesh::CallMeshDescription>();
     MakeSlotAvailable(&_in_data_slot);
+
+    in_events_slot_.SetCompatibleCall<thermodyn::CallEventsDescription>();
+    MakeSlotAvailable(&in_events_slot_);
+
+    radius_slot_ << new core::param::FloatParam(10.f, std::numeric_limits<float>::min());
+    MakeSlotAvailable(&radius_slot_);
+
+    thickness_slot_ << new core::param::FloatParam(1.f, std::numeric_limits<float>::min());
+    MakeSlotAvailable(&thickness_slot_);
+
+    test_rad_slot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&test_rad_slot_);
+
+    time_slice_slot_ << new core::param::IntParam(0, 0);
+    MakeSlotAvailable(&time_slice_slot_);
 }
 
 
@@ -49,10 +77,16 @@ void megamol::optix_hpg::MeshGeometry::init(Context const& ctx) {
         MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP, triangle_intersector_,
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "mesh_intersect"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "mesh_closesthit_occlusion"}});
+    mesh_picking_module_ = MMOptixModule(embedded_mesh_programs, ctx.GetOptiXContext(), &ctx.GetModuleCompileOptions(),
+        &ctx.GetPipelineCompileOptions(), MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP,
+        triangle_intersector_,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "mesh_intersect"},
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "mesh_closesthit_picking"}});
 }
 
 
-bool megamol::optix_hpg::MeshGeometry::assertData(mesh::CallMesh& call, Context const& ctx) {
+bool megamol::optix_hpg::MeshGeometry::assertData(
+    mesh::CallMesh& call, Context const& ctx, thermodyn::CallEvents* in_events) {
     auto mesh_collection = call.getData();
 
     auto const& meshes = mesh_collection->accessMeshes();
@@ -65,7 +99,17 @@ bool megamol::optix_hpg::MeshGeometry::assertData(mesh::CallMesh& call, Context 
         CUDA_CHECK_ERROR(cuMemFree(el));
     }
     mesh_pos_data_.clear();
+    for (auto const& el : mesh_col_data_) {
+        CUDA_CHECK_ERROR(cuMemFree(el));
+    }
+    mesh_col_data_.clear();
+    for (auto const& el : mesh_event_data_) {
+        CUDA_CHECK_ERROR(cuMemFree(el));
+    }
+    mesh_event_data_.clear();
     sbt_records_.clear();
+
+    std::vector<glm::vec4> test_events = {glm::vec4(0.f)};
 
     std::vector<OptixBuildInput> build_inputs;
 
@@ -120,6 +164,44 @@ bool megamol::optix_hpg::MeshGeometry::assertData(mesh::CallMesh& call, Context 
         CUDA_CHECK_ERROR(cuMemcpyHtoDAsync(
             mesh_pos_data_.back(), tmp_data.data(), tmp_data.size() * sizeof(float), ctx.GetExecStream()));
 
+        /*test_events[0].x = tmp_data[0];
+        test_events[0].y = tmp_data[1];
+        test_events[0].z = tmp_data[2];
+        test_events[0].w = 0;*/
+
+        tmp_data.clear();
+        tmp_data.reserve(num_vertices * 4);
+        bool got_color = false;
+        for (auto const& attr : attributes) {
+            if (attr.semantic != mesh::MeshDataAccessCollection::AttributeSemanticType::COLOR)
+                continue;
+            if (attr.component_type != mesh::MeshDataAccessCollection::ValueType::FLOAT && attr.component_cnt != 4)
+                continue;
+
+            auto col_ptr = reinterpret_cast<float*>(attr.data);
+            for (std::size_t idx = 0; idx < 4 * num_vertices; ++idx) {
+                tmp_data.push_back(col_ptr[idx]);
+            }
+            got_color = true;
+        }
+
+        mesh_col_data_.push_back(0);
+        if (got_color) {
+            CUDA_CHECK_ERROR(cuMemAlloc(&mesh_col_data_.back(), tmp_data.size() * sizeof(float)));
+            CUDA_CHECK_ERROR(cuMemcpyHtoDAsync(
+                mesh_col_data_.back(), tmp_data.data(), tmp_data.size() * sizeof(float), ctx.GetExecStream()));
+        }
+
+        uint64_t num_events = 0;
+        if (in_events != nullptr) {
+            auto const event_data = in_events->getData();
+            num_events = event_data->size();
+            mesh_event_data_.push_back(0);
+            CUDA_CHECK_ERROR(cuMemAlloc(&mesh_event_data_.back(), event_data->size() * sizeof(glm::vec4)));
+            CUDA_CHECK_ERROR(cuMemcpyHtoDAsync(mesh_event_data_.back(), event_data->data(),
+                event_data->size() * sizeof(glm::vec4), ctx.GetExecStream()));
+        }
+
         build_inputs.emplace_back();
         unsigned int geo_flag = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT;
         auto& build_input = build_inputs.back();
@@ -150,6 +232,21 @@ bool megamol::optix_hpg::MeshGeometry::assertData(mesh::CallMesh& call, Context 
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(mesh_module_, &sbt_record));
         sbt_record.data.index_buffer = (glm::uvec3*) mesh_idx_data_.back();
         sbt_record.data.vertex_buffer = (glm::vec3*) mesh_pos_data_.back();
+        sbt_record.data.color_buffer = (glm::vec4*) mesh_col_data_.back();
+        sbt_record.data.got_color = got_color;
+
+        sbt_record.data.event_buffer = 0;
+        if (in_events != nullptr) {
+            sbt_record.data.event_buffer = (glm::vec4*) mesh_event_data_.back();
+        }
+        sbt_record.data.num_events = num_events;
+        core::utility::log::Log::DefaultLog.WriteInfo("[ParticleSurface]: Number of events %d", num_events);
+        sbt_record.data.max_rad = radius_slot_.Param<core::param::FloatParam>()->Value();
+        sbt_record.data.thickness = thickness_slot_.Param<core::param::FloatParam>()->Value();
+        sbt_record.data.time_slice = time_slice_slot_.Param<core::param::IntParam>()->Value();
+        sbt_record.data.test_rad_func = test_rad_slot_.Param<core::param::BoolParam>()->Value();
+
+        sbt_record.data.frame_id = _frame_id;
 
         sbt_records_.push_back(sbt_record);
 
@@ -158,6 +255,12 @@ bool megamol::optix_hpg::MeshGeometry::assertData(mesh::CallMesh& call, Context 
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(mesh_occlusion_module_, &sbt_record_occlusion));
         sbt_record_occlusion.data = sbt_record.data;
         sbt_records_.push_back(sbt_record_occlusion);
+
+        // picking stuff
+        SBTRecord<device::MeshGeoData> sbt_record_picking;
+        OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(mesh_picking_module_, &sbt_record_picking));
+        sbt_record_picking.data = sbt_record.data;
+        sbt_records_.push_back(sbt_record_picking);
     }
 
     OptixAccelBuildOptions accelOptions = {};
@@ -192,6 +295,7 @@ bool megamol::optix_hpg::MeshGeometry::get_data_cb(core::Call& c) {
     auto in_data = _in_data_slot.CallAs<mesh::CallMesh>();
     if (in_data == nullptr)
         return false;
+    auto in_events = in_events_slot_.CallAs<thermodyn::CallEvents>();
 
     auto const ctx = out_geo->get_ctx();
 
@@ -212,22 +316,36 @@ bool megamol::optix_hpg::MeshGeometry::get_data_cb(core::Call& c) {
         return false;
     meta = in_data->getMetaData();
 
-    if (in_data->hasUpdate() || meta.m_frame_ID != _frame_id /*|| meta.m_data_hash != _data_hash*/) {
-        if (!assertData(*in_data, *ctx))
+    if (in_events != nullptr) {
+        auto events_meta = in_events->getMetaData();
+        events_meta.m_frame_ID = out_geo->FrameID();
+        in_events->setMetaData(events_meta);
+        if (!(*in_events)(1))
+            return false;
+        if (!(*in_events)(0))
+            return false;
+    }
+
+    if (in_data->hasUpdate() || meta.m_frame_ID != _frame_id || is_dirty() /*|| meta.m_data_hash != _data_hash*/) {
+        if (!assertData(*in_data, *ctx, in_events))
             return false;
         _frame_id = meta.m_frame_ID;
         //_data_hash = meta.m_data_hash;
+        reset_dirty();
+        ++out_data_hash_;
     }
 
     program_groups_[0] = mesh_module_;
     program_groups_[1] = mesh_occlusion_module_;
+    program_groups_[2] = mesh_picking_module_;
 
     out_geo->set_handle(&_geo_handle);
     out_geo->set_program_groups(program_groups_.data());
-    out_geo->set_num_programs(2);
+    out_geo->set_num_programs(3);
     out_geo->set_record(sbt_records_.data());
     out_geo->set_record_stride(sizeof(SBTRecord<device::MeshGeoData>));
     out_geo->set_num_records(sbt_records_.size());
+    out_geo->SetDataHash(out_data_hash_);
 
     return true;
 }
