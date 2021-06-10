@@ -94,6 +94,22 @@ private:
 
     bool assert_data(core::moldyn::MultiParticleDataCall& call);
 
+    struct particle_data {
+        uint64_t idx;
+        uint32_t id;
+        float x, y, z;
+        float i;
+        float dx, dy, dz;
+    };
+
+    std::tuple<std::vector<float> /*vertices*/, std::vector<float> /*normals*/, std::vector<unsigned int> /*indices*/,
+        std::vector<particle_data> /*point data*/>
+    compute_alpha_shape(float alpha, core::moldyn::SimpleSphericalParticles const& parts);
+
+    std::tuple<std::vector<float> /*vertices*/, std::vector<float> /*normals*/, std::vector<unsigned int> /*indices*/,
+        std::vector<particle_data> /*point data*/>
+    compute_alpha_shape(float alpha, std::list<std::pair<Point_3, std::size_t>> const& points, core::moldyn::SimpleSphericalParticles const& parts);
+
     bool get_data_cb(core::Call& c);
 
     bool get_extent_cb(core::Call& c);
@@ -144,13 +160,13 @@ private:
 
     std::size_t _out_data_hash = 0;
 
-    std::vector<std::shared_ptr<Alpha_shape_3>> _alpha_shapes;
+    //std::vector<std::shared_ptr<Alpha_shape_3>> _alpha_shapes;
 
-    std::vector<std::list<Facet>> _facets;
+    //std::vector<std::list<Facet>> _facets;
 
-    std::vector<std::list<Vertex>> _as_vertices;
+    //std::vector<std::list<Vertex>> _as_vertices;
 
-    std::vector<std::vector<float>> _part_data;
+    std::vector<std::vector<particle_data>> _part_data;
 
     int _fcr_version = -1;
 
