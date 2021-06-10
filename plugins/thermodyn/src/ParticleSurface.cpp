@@ -153,13 +153,8 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
 
         _vertices.resize(pl_count);
         _normals.resize(pl_count);
-        //_colors.resize(pl_count);
         _indices.resize(pl_count);
-        /*_facets.resize(pl_count);
-        _as_vertices.resize(pl_count);*/
         _part_data.resize(pl_count);
-
-        //_alpha_shapes.clear();
 
         auto const alpha = _alpha_slot.Param<core::param::FloatParam>()->Value();
         auto const squared_alpha = alpha * alpha;
@@ -175,188 +170,12 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
         for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
             auto const& parts = call.AccessParticles(pl_idx);
 
-
             auto const& [vertices, normals, indices, part_data] = compute_alpha_shape(alpha, parts);
-
 
             _vertices[pl_idx] = vertices;
             _normals[pl_idx] = normals;
             _indices[pl_idx] = indices;
             _part_data[pl_idx] = part_data;
-
-            // auto& vertices = _vertices[pl_idx];
-            // auto& normals = _normals[pl_idx];
-            //// auto& colors = _colors[pl_idx];
-            // auto& indices = _indices[pl_idx];
-
-            // auto& part_data = _part_data[pl_idx];
-
-            // auto& facets = _facets[pl_idx];
-            // auto& as_vertices = _as_vertices[pl_idx];
-
-            // auto const p_count = parts.GetCount();
-
-            // auto const xAcc = parts.GetParticleStore().GetXAcc();
-            // auto const yAcc = parts.GetParticleStore().GetYAcc();
-            // auto const zAcc = parts.GetParticleStore().GetZAcc();
-
-            // auto const iAcc = parts.GetParticleStore().GetCRAcc();
-
-            // auto const dxAcc = parts.GetParticleStore().GetDXAcc();
-            // auto const dyAcc = parts.GetParticleStore().GetDYAcc();
-            // auto const dzAcc = parts.GetParticleStore().GetDZAcc();
-
-            // std::vector<std::pair<Point_3, std::size_t>> points;
-            // points.reserve(p_count);
-
-            // for (std::remove_const_t<decltype(p_count)> pidx = 0; pidx < p_count; ++pidx) {
-            //    points.emplace_back(
-            //        std::make_pair(Point_3(xAcc->Get_f(pidx), yAcc->Get_f(pidx), zAcc->Get_f(pidx)), pidx));
-            //}
-
-            // if (type == surface_type::alpha_shape) {
-            //    Triangulation_3 tri = Triangulation_3(points.begin(), points.end());
-
-            //    _alpha_shapes.push_back(std::make_shared<Alpha_shape_3>(tri, alpha));
-            //    auto& as = _alpha_shapes.back();
-
-            //    facets.clear();
-            //    as->get_alpha_shape_facets(std::back_inserter(facets), Alpha_shape_3::REGULAR);
-            //    as_vertices.clear();
-            //    as->get_alpha_shape_vertices(std::back_inserter(as_vertices), vert_type);
-            //    core::utility::log::Log::DefaultLog.WriteInfo(
-            //        "[ParticleSurface]: Extracted %d vertices", as_vertices.size());
-
-            //    vertices.clear();
-            //    vertices.reserve(facets.size() * 9);
-            //    normals.clear();
-            //    normals.reserve(facets.size() * 9);
-            //    /*colors.clear();
-            //    colors.reserve(facets.size() * 12);*/
-            //    indices.clear();
-            //    indices.reserve(facets.size() * 3);
-
-            //    part_data.clear();
-            //    part_data.reserve(as_vertices.size() * 7);
-
-            //    /*for (auto& vert : as_vertices) {
-            //        part_data.push_back(vert->point().x());
-            //        part_data.push_back(vert->point().y());
-            //        part_data.push_back(vert->point().z());
-            //        part_data.push_back(iAcc->Get_f(vert->info()));
-            //        part_data.push_back(dxAcc->Get_f(vert->info()));
-            //        part_data.push_back(dyAcc->Get_f(vert->info()));
-            //        part_data.push_back(dzAcc->Get_f(vert->info()));
-            //    }*/
-
-            //    auto const thickness = [](float T, float T_c) -> float {
-            //        return -1.720f * std::powf((T_c - T) / T_c, 1.89f) + 1.103f * std::powf((T_c - T) / T_c, -0.62f);
-            //    };
-
-            //    auto const toggle_interface = toggle_interface_slot_.Param<core::param::BoolParam>()->Value();
-
-            //    std::list<std::pair<Point_3, std::size_t>> interface_points;
-
-            //    // https://stackoverflow.com/questions/15905833/saving-cgal-alpha-shape-surface-mesh
-            //    std::size_t ih = 0;
-            //    for (auto& face : facets) {
-            //        if (as->classify(face.first) != Alpha_shape_3::EXTERIOR)
-            //            face = as->mirror_facet(face);
-            //        // CGAL_assertion(as.classify(facets[i].first) == Alpha_shape_3::EXTERIOR);
-
-            //        int idx[3] = {
-            //            (face.second + 1) % 4,
-            //            (face.second + 2) % 4,
-            //            (face.second + 3) % 4,
-            //        };
-
-            //        if (face.second % 2 == 0)
-            //            std::swap(idx[0], idx[1]);
-
-
-            //        auto const& a = (face.first->vertex(idx[0])->point());
-            //        auto const& b = (face.first->vertex(idx[1])->point());
-            //        auto const& c = (face.first->vertex(idx[2])->point());
-
-            //        auto normal = CGAL::normal(a, b, c);
-            //        auto const length = std::sqrtf(normal.squared_length());
-            //        normal /= length;
-
-            //        decltype(normal) offset_a = decltype(normal)(0, 0, 0);
-            //        decltype(normal) offset_b = decltype(normal)(0, 0, 0);
-            //        decltype(normal) offset_c = decltype(normal)(0, 0, 0);
-
-            //        if (toggle_interface) {
-            //            auto const a_thick = thickness(iAcc->Get_f((face.first->vertex(idx[0])->info())), 1.7f);
-            //            auto const b_thick = thickness(iAcc->Get_f((face.first->vertex(idx[1])->info())), 1.7f);
-            //            auto const c_thick = thickness(iAcc->Get_f((face.first->vertex(idx[2])->info())), 1.7f);
-            //            offset_a = a_thick * normal;
-            //            offset_b = b_thick * normal;
-            //            offset_c = c_thick * normal;
-            //        }
-
-            //        part_data.push_back((a.x()) + offset_a.x());
-            //        part_data.push_back((a.y()) + offset_a.y());
-            //        part_data.push_back((a.z()) + offset_a.z());
-            //        part_data.push_back(iAcc->Get_f((face.first->vertex(idx[0])->info())));
-            //        part_data.push_back(dxAcc->Get_f((face.first->vertex(idx[0])->info())));
-            //        part_data.push_back(dyAcc->Get_f((face.first->vertex(idx[0])->info())));
-            //        part_data.push_back(dzAcc->Get_f((face.first->vertex(idx[0])->info())));
-
-
-            //        part_data.push_back((b.x()) + offset_b.x());
-            //        part_data.push_back((b.y()) + offset_b.y());
-            //        part_data.push_back((b.z()) + offset_b.z());
-            //        part_data.push_back(iAcc->Get_f((face.first->vertex(idx[1])->info())));
-            //        part_data.push_back(dxAcc->Get_f((face.first->vertex(idx[1])->info())));
-            //        part_data.push_back(dyAcc->Get_f((face.first->vertex(idx[1])->info())));
-            //        part_data.push_back(dzAcc->Get_f((face.first->vertex(idx[1])->info())));
-
-
-            //        part_data.push_back((c.x()) + offset_c.x());
-            //        part_data.push_back((c.y()) + offset_c.y());
-            //        part_data.push_back((c.z()) + offset_c.z());
-            //        part_data.push_back(iAcc->Get_f((face.first->vertex(idx[2])->info())));
-            //        part_data.push_back(dxAcc->Get_f((face.first->vertex(idx[2])->info())));
-            //        part_data.push_back(dyAcc->Get_f((face.first->vertex(idx[2])->info())));
-            //        part_data.push_back(dzAcc->Get_f((face.first->vertex(idx[2])->info())));
-
-
-            //        interface_points.push_back(std::make_pair(a + offset_a, (face.first->vertex(idx[0])->info())));
-            //        interface_points.push_back(std::make_pair(b + offset_b, (face.first->vertex(idx[1])->info())));
-            //        interface_points.push_back(std::make_pair(c + offset_c, (face.first->vertex(idx[2])->info())));
-
-
-            //        vertices.push_back(a.x() + offset_a.x());
-            //        vertices.push_back(a.y() + offset_a.y());
-            //        vertices.push_back(a.z() + offset_a.z());
-
-            //        vertices.push_back(b.x() + offset_b.x());
-            //        vertices.push_back(b.y() + offset_b.y());
-            //        vertices.push_back(b.z() + offset_b.z());
-
-            //        vertices.push_back(c.x() + offset_c.x());
-            //        vertices.push_back(c.y() + offset_c.y());
-            //        vertices.push_back(c.z() + offset_c.z());
-
-            //        /*auto normal = CGAL::normal(a, b, c);
-            //        auto const length = std::sqrtf(normal.squared_length());
-            //        normal /= length;*/
-            //        normals.push_back(normal.x());
-            //        normals.push_back(normal.y());
-            //        normals.push_back(normal.z());
-            //        normals.push_back(normal.x());
-            //        normals.push_back(normal.y());
-            //        normals.push_back(normal.z());
-            //        normals.push_back(normal.x());
-            //        normals.push_back(normal.y());
-            //        normals.push_back(normal.z());
-
-            //        indices.push_back(3 * ih);
-            //        indices.push_back(3 * ih + 1);
-            //        indices.push_back(3 * ih + 2);
-            //        ++ih;
-            //    }
 
             auto const thickness = [](float T, float T_c) -> float {
                 return -1.720f * std::powf((T_c - T) / T_c, 1.89f) + 1.103f * std::powf((T_c - T) / T_c, -0.62f);
@@ -376,171 +195,14 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
             }
 
             if (toggle_interface) {
-
                 auto const& [inter_vertices, inter_normals, inter_indices, inter_part_data] =
                     compute_alpha_shape(2.f * alpha, interface_points, parts);
 
                 _vertices[pl_idx] = inter_vertices;
                 _normals[pl_idx] = inter_normals;
                 _indices[pl_idx] = inter_indices;
-
-
-                // Triangulation_3 tri = Triangulation_3(interface_points.begin(), interface_points.end());
-
-                // as = std::make_shared<Alpha_shape_3>(tri, 2.f * alpha);
-
-                // facets.clear();
-                // as->get_alpha_shape_facets(std::back_inserter(facets), Alpha_shape_3::REGULAR);
-
-                // vertices.clear();
-                // vertices.reserve(facets.size() * 9);
-                // normals.clear();
-                // normals.reserve(facets.size() * 9);
-                ///*colors.clear();
-                // colors.reserve(facets.size() * 12);*/
-                // indices.clear();
-                // indices.reserve(facets.size() * 3);
-
-                //// https://stackoverflow.com/questions/15905833/saving-cgal-alpha-shape-surface-mesh
-                // std::size_t ih = 0;
-                // for (auto& face : facets) {
-                //    if (as->classify(face.first) != Alpha_shape_3::EXTERIOR)
-                //        face = as->mirror_facet(face);
-                //    // CGAL_assertion(as.classify(facets[i].first) == Alpha_shape_3::EXTERIOR);
-
-                //    int idx[3] = {
-                //        (face.second + 1) % 4,
-                //        (face.second + 2) % 4,
-                //        (face.second + 3) % 4,
-                //    };
-
-                //    if (face.second % 2 == 0)
-                //        std::swap(idx[0], idx[1]);
-
-
-                //    auto const& a = (face.first->vertex(idx[0])->point());
-                //    auto const& b = (face.first->vertex(idx[1])->point());
-                //    auto const& c = (face.first->vertex(idx[2])->point());
-
-                //    auto normal = CGAL::normal(a, b, c);
-                //    auto const length = std::sqrtf(normal.squared_length());
-                //    normal /= length;
-
-                //    vertices.push_back(a.x());
-                //    vertices.push_back(a.y());
-                //    vertices.push_back(a.z());
-
-                //    vertices.push_back(b.x());
-                //    vertices.push_back(b.y());
-                //    vertices.push_back(b.z());
-
-                //    vertices.push_back(c.x());
-                //    vertices.push_back(c.y());
-                //    vertices.push_back(c.z());
-
-                //    /*auto normal = CGAL::normal(a, b, c);
-                //    auto const length = std::sqrtf(normal.squared_length());
-                //    normal /= length;*/
-                //    normals.push_back(normal.x());
-                //    normals.push_back(normal.y());
-                //    normals.push_back(normal.z());
-                //    normals.push_back(normal.x());
-                //    normals.push_back(normal.y());
-                //    normals.push_back(normal.z());
-                //    normals.push_back(normal.x());
-                //    normals.push_back(normal.y());
-                //    normals.push_back(normal.z());
-
-                //    indices.push_back(3 * ih);
-                //    indices.push_back(3 * ih + 1);
-                //    indices.push_back(3 * ih + 2);
-                //    ++ih;
-                //}
             }
         }
-        //} else {
-        //    Delaunay tri = Delaunay(points.cbegin(), points.cend());
-
-        //    std::list<Delaunay::Cell> cells;
-
-        //    auto first_cell = tri.cells_begin();
-        //    auto center = first_cell->circumcenter();
-        //    auto first_point = first_cell->vertex(0)->point();
-        //    auto first_length = (center - first_point).squared_length();
-
-        //    DFacet test_facet = DFacet(first_cell, 0);
-
-
-        //    /*std::copy_if(tri.cells_begin(), tri.cells_end(), std::back_inserter(cells),
-        //        [squared_alpha](Delaunay::Cell const& cell) {
-        //            auto center = cell.circumcenter();
-        //            auto squared_radius = (cell.vertex(0)->point() - center).squared_length();
-        //            return squared_radius <= squared_alpha;
-        //        });*/
-        //    std::copy_if(
-        //        tri.cells_begin(), tri.cells_end(), std::back_inserter(cells), [alpha](Delaunay::Cell const&
-        //        cell)
-        //        {
-        //            auto const& a = cell.vertex(0)->point();
-        //            auto const& b = cell.vertex(1)->point();
-        //            auto const& c = cell.vertex(2)->point();
-        //            auto const& d = cell.vertex(3)->point();
-
-        //            float radius = 0.0f;
-        //            auto res = compute_touchingsphere_radius(a, 0.5f, b, 0.5f, c, 0.5f, d, 0.5f, radius);
-        //            return res && (radius <= alpha);
-        //        });
-
-        //    vertices.clear();
-        //    vertices.reserve(cells.size() * 12);
-        //    normals.clear();
-        //    normals.reserve(cells.size() * 12);
-        //    indices.reserve(cells.size() * 12);
-
-        //    std::size_t idx = 0;
-        //    for (auto const& cell : cells) {
-        //        auto const base_idx = idx * 4;
-
-        //        auto const& a = cell.vertex(0)->point();
-        //        auto const& b = cell.vertex(1)->point();
-        //        auto const& c = cell.vertex(2)->point();
-        //        auto const& d = cell.vertex(3)->point();
-
-        //        vertices.push_back(a.x());
-        //        vertices.push_back(a.y());
-        //        vertices.push_back(a.z());
-
-        //        vertices.push_back(b.x());
-        //        vertices.push_back(b.y());
-        //        vertices.push_back(b.z());
-
-        //        vertices.push_back(c.x());
-        //        vertices.push_back(c.y());
-        //        vertices.push_back(c.z());
-
-        //        vertices.push_back(d.x());
-        //        vertices.push_back(d.y());
-        //        vertices.push_back(d.z());
-
-        //        indices.push_back(base_idx + 0);
-        //        indices.push_back(base_idx + 1);
-        //        indices.push_back(base_idx + 2);
-
-        //        indices.push_back(base_idx + 0);
-        //        indices.push_back(base_idx + 1);
-        //        indices.push_back(base_idx + 3);
-
-        //        indices.push_back(base_idx + 1);
-        //        indices.push_back(base_idx + 2);
-        //        indices.push_back(base_idx + 3);
-
-        //        indices.push_back(base_idx + 2);
-        //        indices.push_back(base_idx + 0);
-        //        indices.push_back(base_idx + 3);
-
-        //        ++idx;
-        //    }
-        //}
     }
 
     if (call.DataHash() != _in_data_hash || call.FrameID() != _frame_id || is_dirty() ||
@@ -576,9 +238,6 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
         auto const def_color = glm::vec4(1.0f);
 
         for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
-            auto const iAcc = call.AccessParticles(pl_idx).GetParticleStore().GetCRAcc();
-            // auto& as = _alpha_shapes[pl_idx];
-
             auto const min_i = range[0];
             auto const max_i = range[1];
             auto const fac_i = 1.0f / (max_i - min_i + 1e-8f);
@@ -595,7 +254,7 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                 auto col_c = def_color;
 
                 if (color_tf != nullptr) {
-                    auto const val_a = (iAcc->Get_f(el.i) - min_i) * fac_i * static_cast<float>(color_tf_size);
+                    auto const val_a = (el.i - min_i) * fac_i * static_cast<float>(color_tf_size);
                     std::remove_const_t<decltype(val_a)> main_a = 0;
                     auto rest_a = std::modf(val_a, &main_a);
                     rest_a = static_cast<int>(main_a) >= 0 && static_cast<int>(main_a) < color_tf_size ? rest_a : 0.0f;
@@ -608,57 +267,6 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                 colors.push_back(col_a.b);
                 colors.push_back(col_a.a);
             }
-
-            /*auto& facets = _facets[pl_idx];
-            colors.clear();
-            colors.reserve(facets.size() * 12);
-
-            for (auto& face : facets) {
-                auto const& vert_a = face.first->vertex(as->vertex_triple_index(face.second, 0));
-                auto const& vert_b = face.first->vertex(as->vertex_triple_index(face.second, as->ccw(0)));
-                auto const& vert_c = face.first->vertex(as->vertex_triple_index(face.second, as->cw(0)));
-
-                auto col_a = def_color;
-                auto col_b = def_color;
-                auto col_c = def_color;
-
-                if (color_tf != nullptr) {
-                    auto const val_a =
-                        (iAcc->Get_f(vert_a->info()) - min_i) * fac_i * static_cast<float>(color_tf_size);
-                    auto const val_b =
-                        (iAcc->Get_f(vert_b->info()) - min_i) * fac_i * static_cast<float>(color_tf_size);
-                    auto const val_c =
-                        (iAcc->Get_f(vert_c->info()) - min_i) * fac_i * static_cast<float>(color_tf_size);
-                    std::remove_const_t<decltype(val_a)> main_a = 0;
-                    auto rest_a = std::modf(val_a, &main_a);
-                    rest_a = static_cast<int>(main_a) >= 0 && static_cast<int>(main_a) < color_tf_size ? rest_a : 0.0f;
-                    std::remove_const_t<decltype(val_b)> main_b = 0;
-                    auto rest_b = std::modf(val_b, &main_b);
-                    rest_b = static_cast<int>(main_b) >= 0 && static_cast<int>(main_b) < color_tf_size ? rest_b : 0.0f;
-                    std::remove_const_t<decltype(val_c)> main_c = 0;
-                    auto rest_c = std::modf(val_c, &main_c);
-                    rest_c = static_cast<int>(main_c) >= 0 && static_cast<int>(main_c) < color_tf_size ? rest_c : 0.0f;
-                    main_a = std::clamp(static_cast<int>(main_a), 0, color_tf_size - 1);
-                    main_b = std::clamp(static_cast<int>(main_b), 0, color_tf_size - 1);
-                    main_c = std::clamp(static_cast<int>(main_c), 0, color_tf_size - 1);
-                    col_a = stdplugin::datatools::sample_tf(color_tf, color_tf_size, static_cast<int>(main_a), rest_a);
-                    col_b = stdplugin::datatools::sample_tf(color_tf, color_tf_size, static_cast<int>(main_b), rest_b);
-                    col_c = stdplugin::datatools::sample_tf(color_tf, color_tf_size, static_cast<int>(main_c), rest_c);
-                }
-
-                colors.push_back(col_a.r);
-                colors.push_back(col_a.g);
-                colors.push_back(col_a.b);
-                colors.push_back(col_a.a);
-                colors.push_back(col_b.r);
-                colors.push_back(col_b.g);
-                colors.push_back(col_b.b);
-                colors.push_back(col_b.a);
-                colors.push_back(col_c.r);
-                colors.push_back(col_c.g);
-                colors.push_back(col_c.b);
-                colors.push_back(col_c.a);
-            }*/
         }
 
         _unsel_colors = _colors;
@@ -708,55 +316,10 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                         ++pl_idx;
                     }
                 }
-                /*auto& colors = _colors[pl_idx];
-                auto const i0 = _indices[pl_idx][sel * 3];
-                auto const i1 = _indices[pl_idx][sel * 3 + 1];
-                auto const i2 = _indices[pl_idx][sel * 3 + 2];*/
-                tmp_sel.push_back(std::make_tuple(pl_idx, sel/*,
-                    glm::vec4(colors[i0 * 4], colors[i0 * 4 + 1], colors[i0 * 4 + 2], colors[i0 * 4 + 3]),
-                    glm::vec4(colors[i1 * 4], colors[i1 * 4 + 1], colors[i1 * 4 + 2], colors[i1 * 4 + 3]),
-                    glm::vec4(colors[i2 * 4], colors[i2 * 4 + 1], colors[i2 * 4 + 2], colors[i2 * 4 + 3])*/));
-
-
-                /*auto fit = std::find_if(_sel.begin(), _sel.end(),
-                    [pl_idx, sel](auto const& el) { return std::get<0>(el) == pl_idx && std::get<1>(el) == sel; });
-                if (fit != _sel.end()) {
-                    unsel.push_back(*fit);
-                    _sel.erase(fit);
-                } else {
-                    auto& colors = _colors[pl_idx];
-                    _sel.push_back(std::make_tuple(pl_idx, sel,
-                        glm::vec4(colors[sel * 4], colors[sel * 4 + 1], colors[sel * 4 + 2], colors[sel * 4 + 3])));
-                }*/
+                tmp_sel.push_back(std::make_tuple(pl_idx, sel));
             }
 
-            /*for (auto const& el : _sel) {
-                auto fit = std::find_if(tmp_sel.begin(), tmp_sel.end(),
-                    [&el](auto const& val) { return std::get<0>(val) == std::get<0>(el) && std::get<1>(val) ==
-            std::get<1>(el); }); if (fit == tmp_sel.end()) { unsel.push_back(el);
-                }
-            }*/
             _sel = tmp_sel;
-
-            /*for (auto const& el : unsel) {
-                auto const i0 = _indices[std::get<0>(el)][std::get<1>(el) * 3];
-                auto const i1 = _indices[std::get<0>(el)][std::get<1>(el) * 3 + 1];
-                auto const i2 = _indices[std::get<0>(el)][std::get<1>(el) * 3 + 2];
-                _colors[std::get<0>(el)][i0 * 4 + 0] = std::get<2>(el).r;
-                _colors[std::get<0>(el)][i0 * 4 + 1] = std::get<2>(el).g;
-                _colors[std::get<0>(el)][i0 * 4 + 2] = std::get<2>(el).b;
-                _colors[std::get<0>(el)][i0 * 4 + 3] = std::get<2>(el).a;
-                _colors[std::get<0>(el)][i1 * 4 + 0] = std::get<3>(el).r;
-                _colors[std::get<0>(el)][i1 * 4 + 1] = std::get<3>(el).g;
-                _colors[std::get<0>(el)][i1 * 4 + 2] = std::get<3>(el).b;
-                _colors[std::get<0>(el)][i1 * 4 + 3] = std::get<3>(el).a;
-                _colors[std::get<0>(el)][i2 * 4 + 0] = std::get<4>(el).r;
-                _colors[std::get<0>(el)][i2 * 4 + 1] = std::get<4>(el).g;
-                _colors[std::get<0>(el)][i2 * 4 + 2] = std::get<4>(el).b;
-                _colors[std::get<0>(el)][i2 * 4 + 3] = std::get<4>(el).a;
-                core::utility::log::Log::DefaultLog.WriteInfo("[ParticleSurface] Reverting %d", std::get<1>(el));
-                data_flag_change = true;
-            }*/
 
             for (auto const& el : _sel) {
                 auto const pl_i = std::get<0>(el);
@@ -922,14 +485,6 @@ megamol::thermodyn::ParticleSurface::compute_alpha_shape(float alpha,
             static_cast<float>(a.y()), static_cast<float>(a.z()), iAcc->Get_f((face.first->vertex(idx[0])->info())),
             dxAcc->Get_f((face.first->vertex(idx[0])->info())), dyAcc->Get_f((face.first->vertex(idx[0])->info())),
             dzAcc->Get_f((face.first->vertex(idx[0])->info()))});
-        /*part_data.push_back(*reinterpret_cast<float const*>(&id_a));
-        part_data.push_back(a.x());
-        part_data.push_back(a.y());
-        part_data.push_back(a.z());
-        part_data.push_back(iAcc->Get_f((face.first->vertex(idx[0])->info())));
-        part_data.push_back(dxAcc->Get_f((face.first->vertex(idx[0])->info())));
-        part_data.push_back(dyAcc->Get_f((face.first->vertex(idx[0])->info())));
-        part_data.push_back(dzAcc->Get_f((face.first->vertex(idx[0])->info())));*/
 
 
         auto const id_b = idAcc->Get_u32((face.first->vertex(idx[1])->info()));
@@ -937,14 +492,6 @@ megamol::thermodyn::ParticleSurface::compute_alpha_shape(float alpha,
             static_cast<float>(b.y()), static_cast<float>(b.z()), iAcc->Get_f((face.first->vertex(idx[1])->info())),
             dxAcc->Get_f((face.first->vertex(idx[1])->info())), dyAcc->Get_f((face.first->vertex(idx[1])->info())),
             dzAcc->Get_f((face.first->vertex(idx[1])->info()))});
-        /*part_data.push_back(*reinterpret_cast<float const*>(&id_b));
-        part_data.push_back(b.x());
-        part_data.push_back(b.y());
-        part_data.push_back(b.z());
-        part_data.push_back(iAcc->Get_f((face.first->vertex(idx[1])->info())));
-        part_data.push_back(dxAcc->Get_f((face.first->vertex(idx[1])->info())));
-        part_data.push_back(dyAcc->Get_f((face.first->vertex(idx[1])->info())));
-        part_data.push_back(dzAcc->Get_f((face.first->vertex(idx[1])->info())));*/
 
 
         auto const id_c = idAcc->Get_u32((face.first->vertex(idx[2])->info()));
@@ -952,14 +499,6 @@ megamol::thermodyn::ParticleSurface::compute_alpha_shape(float alpha,
             static_cast<float>(c.y()), static_cast<float>(c.z()), iAcc->Get_f((face.first->vertex(idx[2])->info())),
             dxAcc->Get_f((face.first->vertex(idx[2])->info())), dyAcc->Get_f((face.first->vertex(idx[2])->info())),
             dzAcc->Get_f((face.first->vertex(idx[2])->info()))});
-        /*part_data.push_back(*reinterpret_cast<float const*>(&id_c));
-        part_data.push_back(c.x());
-        part_data.push_back(c.y());
-        part_data.push_back(c.z());
-        part_data.push_back(iAcc->Get_f((face.first->vertex(idx[2])->info())));
-        part_data.push_back(dxAcc->Get_f((face.first->vertex(idx[2])->info())));
-        part_data.push_back(dyAcc->Get_f((face.first->vertex(idx[2])->info())));
-        part_data.push_back(dzAcc->Get_f((face.first->vertex(idx[2])->info())));*/
 
 
         vertices.push_back(a.x());

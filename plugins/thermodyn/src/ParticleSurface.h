@@ -48,36 +48,12 @@ public:
 
     virtual ~ParticleSurface();
 
-    // using Gt = CGAL::Exact_predicates_inexact_constructions_kernel;
-    //// using Gt = CGAL::Exact_predicates_exact_constructions_kernel;
-
-    // using Vbt = CGAL::Triangulation_vertex_base_with_info_3<std::size_t, Gt>;
-    // using Vb = CGAL::Fixed_alpha_shape_vertex_base_3<Gt, Vbt>;
-    // using Fb = CGAL::Fixed_alpha_shape_cell_base_3<Gt>;
-    // using Tds = CGAL::Triangulation_data_structure_3<Vb, Fb>;
-    // using Triangulation_3 = CGAL::Delaunay_triangulation_3<Gt, Tds>;
-    // using Alpha_shape_3 = CGAL::Fixed_alpha_shape_3<Triangulation_3>;
-
-    // using Delaunay = CGAL::Delaunay_triangulation_3<Gt>;
-    // using DFacet = Delaunay::Facet;
-
-    //// using Point_3 = Gt::Point_3;
-    // using Point_3 = Alpha_shape_3::Point;
-
-    //// using Triangle = Alpha_shape_3::Triangle;
-    // using Triangle = Triangulation_3::Triangle;
-    // using Facet = Alpha_shape_3::Facet;
-    // using Vertex = Alpha_shape_3::Vertex_handle;
-
 protected:
     bool create() override;
 
     void release() override;
 
 private:
-    /*using Traits = CGAL::Min_sphere_of_points_d_traits_d<Gt, Point_3::FT, 3>;
-    using Min_sphere = CGAL::Min_sphere_d<Traits>;*/
-
     enum class surface_type : std::uint8_t { alpha_shape, gtim };
 
     bool is_dirty() {
@@ -108,7 +84,8 @@ private:
 
     std::tuple<std::vector<float> /*vertices*/, std::vector<float> /*normals*/, std::vector<unsigned int> /*indices*/,
         std::vector<particle_data> /*point data*/>
-    compute_alpha_shape(float alpha, std::list<std::pair<Point_3, std::size_t>> const& points, core::moldyn::SimpleSphericalParticles const& parts);
+    compute_alpha_shape(float alpha, std::list<std::pair<Point_3, std::size_t>> const& points,
+        core::moldyn::SimpleSphericalParticles const& parts);
 
     bool get_data_cb(core::Call& c);
 
@@ -159,12 +136,6 @@ private:
     std::size_t _in_data_hash = std::numeric_limits<std::size_t>::max();
 
     std::size_t _out_data_hash = 0;
-
-    //std::vector<std::shared_ptr<Alpha_shape_3>> _alpha_shapes;
-
-    //std::vector<std::list<Facet>> _facets;
-
-    //std::vector<std::list<Vertex>> _as_vertices;
 
     std::vector<std::vector<particle_data>> _part_data;
 
