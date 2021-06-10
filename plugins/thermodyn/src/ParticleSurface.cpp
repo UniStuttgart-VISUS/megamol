@@ -214,7 +214,7 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
         std::array<float, 2> range = {0.f, 0.f};
 
         if (call.DataHash() != _in_data_hash || call.FrameID() != _frame_id) {
-            for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
+            for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
                 auto const& parts = call.AccessParticles(pl_idx);
 
                 range[0] = std::min(parts.GetMinColourIndexValue(), range[0]);
@@ -237,7 +237,7 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
 
         auto const def_color = glm::vec4(1.0f);
 
-        for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
+        for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
             auto const min_i = range[0];
             auto const max_i = range[1];
             auto const fac_i = 1.0f / (max_i - min_i + 1e-8f);
@@ -254,12 +254,7 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                 auto col_c = def_color;
 
                 if (color_tf != nullptr) {
-                    auto const val_a = (el.i - min_i) * fac_i * static_cast<float>(color_tf_size);
-                    std::remove_const_t<decltype(val_a)> main_a = 0;
-                    auto rest_a = std::modf(val_a, &main_a);
-                    rest_a = static_cast<int>(main_a) >= 0 && static_cast<int>(main_a) < color_tf_size ? rest_a : 0.0f;
-                    main_a = std::clamp(static_cast<int>(main_a), 0, color_tf_size - 1);
-                    col_a = stdplugin::datatools::sample_tf(color_tf, color_tf_size, static_cast<int>(main_a), rest_a);
+                    col_a = stdplugin::datatools::get_sample_from_tf(color_tf, color_tf_size, el.i, min_i, fac_i);
                 }
 
                 colors.push_back(col_a.r);
