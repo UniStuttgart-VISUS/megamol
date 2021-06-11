@@ -31,20 +31,11 @@ void main() {
     vec2 moveP = (moveM * p).xy;
     ivec2 movedICoord = ivec2((moveP.x / 2 + 0.5) * w, (moveP.y / 2 + 0.5) * h);
     int i = (amortLevel * line + col);
-    vec4 scaleOffsets[5];
-    scaleOffsets[0] = vec4(0, 0, 0, 0);
-    scaleOffsets[1] = vec4(0.125/w, 0.125/h, 0, 0);
-    scaleOffsets[2] = vec4(-0.125/w, 0.125/h, 0, 0);
-    scaleOffsets[3] = vec4(-0.125/w, -0.125/h, 0, 0);
-    scaleOffsets[4] = vec4(0.125/w, -0.125/h, 0, 0);
 
     if (parity == 0){
         vec4 tempColor = vec4(0, 0, 0, 0);
-        for (int q = 0; q < 5; q++){
-            vec2 moveP = (moveM * (p + scaleOffsets[q])).xy;
-            ivec2 movedICoord = ivec2((moveP.x / 2 + 0.5) * w, (moveP.y / 2 + 0.5) * h);
-            tempColor += 0.2 * imageLoad(StoreB, movedICoord);
-        }
+        ivec2 movedICoord = ivec2((moveP.x / 2 + 0.5) * w, (moveP.y / 2 + 0.5) * h);
+        tempColor = imageLoad(StoreB, movedICoord);
         imageStore(StoreA, iCoord, tempColor);
         if (frametype == i){
             imageStore(StoreA, iCoord, texelFetch(src_tex2D, iCoord /amortLevel, 0));
@@ -53,7 +44,7 @@ void main() {
     } else {
         vec4 tempColor = vec4(0, 0, 0, 0);
         for (int q = 0; q < 5; q++){
-            vec2 moveP = (moveM * (p + scaleOffsets[q])).xy;
+            vec2 moveP = (moveM * p).xy;
             ivec2 movedICoord = ivec2((moveP.x / 2 + 0.5) * w, (moveP.y / 2 + 0.5) * h);
             tempColor += 0.2 * imageLoad(StoreA, movedICoord);
         }
