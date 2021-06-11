@@ -24,7 +24,7 @@
     // dependent on the sphere radius
     //if (delta > outlineWidth) discard;
 
-    if (length(gl_FragCoord.xy - centerFragment) < (fragmentRadius - outlineWidth)) {
+    if (length(gl_FragCoord.xy - sphere_frag_center) < sphere_frag_radius) {
         discard;
     }
 
