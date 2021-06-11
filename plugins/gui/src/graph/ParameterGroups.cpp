@@ -24,7 +24,7 @@ megamol::gui::ParameterGroups::ParameterGroups() : tooltip(), cube_widget_group(
 
 
 bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search,
-    vislib::math::Ternary in_extended, bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
+    bool in_extended, bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
     std::shared_ptr<TransferFunctionEditor> tfeditor_ptr, ImGuiID in_override_header_state,
     PickingBuffer* inout_picking_buffer) {
 
@@ -46,9 +46,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
     ParamGroup_t group_map;
     for (auto& param : inout_params) {
         auto param_namespace = param.NameSpace();
-        if (!in_extended.IsUnknown()) {
-            param.SetExtended(in_extended.IsTrue());
-        }
+        param.SetExtended(in_extended);
 
         if (!param_namespace.empty()) {
             // Sort parameters with namespace to group
@@ -76,7 +74,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                 if (in_scope == Parameter::WidgetScope::LOCAL) {
                     // LOCAL
 
-                    if (in_extended.IsTrue()) {
+                    if (in_extended) {
                         // Visibility
                         bool visible = group_widget_data->IsGUIVisible();
                         if (ImGui::RadioButton("###visibile", visible)) {
@@ -112,7 +110,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                     }
 
                     // Call group widget draw function
-                    if (group_widget_data->IsGUIVisible() || in_extended.IsTrue()) {
+                    if (group_widget_data->IsGUIVisible() || in_extended) {
                         gui_utils::PushReadOnly(group_widget_data->IsGUIReadOnly());
                         if (!group_widget_data->Draw(group.second, in_search, in_scope, inout_picking_buffer)) {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(

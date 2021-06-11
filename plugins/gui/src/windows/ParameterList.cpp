@@ -107,19 +107,33 @@ bool ParameterList::Draw() {
         // Get module groups
         std::map<std::string, std::vector<ModulePtr_t>> group_map;
         for (auto& module_ptr : graph_ptr->Modules()) {
+            bool skip = false;
             std::string module_label = module_ptr->FullName();
             // Consider always all modules for main parameter window
             if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
                 // Check if module should be considered.
                 if (std::find(this->win_modules_list.begin(), this->win_modules_list.end(), module_ptr->UID()) == this->win_modules_list.end()) {
-                    continue;
+                    skip = true;
                 }
             }
-            auto group_name = module_ptr->GroupName();
-            if (!group_name.empty()) {
-                group_map["::" + group_name].emplace_back(module_ptr);
-            } else {
-                group_map[""].emplace_back(module_ptr);
+            if (!skip && !this->win_extended_mode) {
+                // Check if at least one parameter is visible in basic mode.
+                bool param_visible = false;
+                for (auto &param : module_ptr->Parameters()) {
+                    if (param.IsGUIVisible()) {
+                        param_visible = true;
+                        break;
+                    }
+                }
+                skip = !param_visible;
+            }
+            if (!skip) {
+                auto group_name = module_ptr->GroupName();
+                if (!group_name.empty()) {
+                    group_map["::" + group_name].emplace_back(module_ptr);
+                } else {
+                    group_map[""].emplace_back(module_ptr);
+                }
             }
         }
         for (auto& group : group_map) {
@@ -176,7 +190,7 @@ bool ParameterList::Draw() {
                     // Draw parameters
                     if (module_header_open) {
                         module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
-                            vislib::math::Ternary(this->win_extended_mode), true, Parameter::WidgetScope::LOCAL,
+                            this->win_extended_mode, true, Parameter::WidgetScope::LOCAL,
                             this->win_tfeditor_ptr, override_header_state, nullptr);
                     }
                 }

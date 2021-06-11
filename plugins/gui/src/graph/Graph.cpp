@@ -1347,7 +1347,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
         bool open_value = true;
         // Hide close button of running project tab
         bool* tab_open = ((this->IsRunning()) ? (nullptr) : (&open_value));
-        std::string graph_label = "  " + this->name + "  ##graph" + std::to_string(graph_uid);
+        std::string graph_label = "  " + this->name + "  ###graph" + std::to_string(graph_uid);
 
         // Tab showing this graph
         if (ImGui::BeginTabItem(graph_label.c_str(), tab_open, tab_flags)) {
@@ -1831,7 +1831,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                     if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
                         // Draw parameters
                         selected_mod_ptr->GUIParameterGroups().Draw(selected_mod_ptr->Parameters(), "",
-                            vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::LOCAL, nullptr,
+                            false, false, Parameter::WidgetScope::LOCAL, nullptr,
                             GUI_INVALID_ID, nullptr);
 
                         ImVec2 popup_pos = ImGui::GetWindowPos();
@@ -1886,7 +1886,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
 void Graph::DrawGlobalParameterWidgets(PickingBuffer& picking_buffer, std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr) {
 
     for (auto& module_ptr : this->Modules()) {
-        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), "", vislib::math::Ternary::TRI_UNKNOWN,
+        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), "", false,
               false, Parameter::WidgetScope::GLOBAL, win_tfeditor_ptr, GUI_INVALID_ID, &picking_buffer);
     }
 }
@@ -2388,7 +2388,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
                     // Draw parameters
                     if (module_header_open) {
                         module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
-                            vislib::math::Ternary(this->gui_graph_state.interact.parameters_extended_mode), true,
+                            this->gui_graph_state.interact.parameters_extended_mode, true,
                             Parameter::WidgetScope::LOCAL, nullptr, GUI_INVALID_ID, nullptr);
                     }
 
