@@ -137,9 +137,10 @@ void AbstractOSPRayStructure::processClippingPlane() {
         this->structureContainer.clippingPlane.isValid = true;
         glm::vec3 normal = {ccp->GetPlane().Normal().GetX(), ccp->GetPlane().Normal().GetY(),
             ccp->GetPlane().Normal().GetZ()};
-        glm::vec3 point = {
-            ccp->GetPlane().Point().GetX(), ccp->GetPlane().Point().GetY(), ccp->GetPlane().Point().GetZ()};
-        float d = glm::dot(point, normal);
+        float d = ccp->GetPlane().D();
+        //glm::vec3 point = {
+        //    ccp->GetPlane().Point().GetX(), ccp->GetPlane().Point().GetY(), ccp->GetPlane().Point().GetZ()};
+        //float d = glm::dot(point, normal);
         ClippingPlane& cp = this->structureContainer.clippingPlane;
         if (cp.coeff[0] != normal.x || cp.coeff[1] != normal.y || cp.coeff[2] != normal.z || cp.coeff[3] != d) {
             this->structureContainer.clippingPlaneChanged = true;

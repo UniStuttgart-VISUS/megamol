@@ -65,9 +65,10 @@ protected:
     core::CalleeSlot _probe_positions_slot;
 
     core::param::ParamSlot _method_slot;
-
     core::param::ParamSlot _probes_per_unit_slot;
- 
+    core::param::ParamSlot _scale_probe_begin_slot;
+
+
 private:
     bool getData(core::Call& call);
 
@@ -76,7 +77,7 @@ private:
     void dartSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices, mesh::MeshDataAccessCollection::IndexData indexData,
         float distanceIndicator);
     void forceDirectedSampling(
-        const const mesh::MeshDataAccessCollection::Mesh& mesh);
+        const mesh::MeshDataAccessCollection::Mesh& mesh);
     void vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices);
     void vertexNormalSampling(
         mesh::MeshDataAccessCollection::VertexAttribute& vertices,
@@ -93,6 +94,7 @@ private:
     bool getADIOSData(core::Call &call);
     bool getADIOSMetaData(core::Call &call);
     bool loadFromFile();
+    bool parameterChanged(core::param::ParamSlot& p);
 
     uint32_t _longest_edge_index;
 
@@ -110,7 +112,7 @@ private:
     std::vector<std::array<float, 4>> _probePositions;
     std::vector<uint64_t> _probeVertices;
     adios::adiosDataMap dataMap;
-
+    bool _recalc;
 };
 
 

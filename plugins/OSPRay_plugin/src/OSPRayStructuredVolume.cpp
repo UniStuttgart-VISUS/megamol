@@ -160,6 +160,8 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     // get color transfer function
     std::vector<float> rgb;
     std::vector<float> a;
+    std::array<float,2> minmax = {metadata->MinValues[0], metadata->MaxValues[0]};
+    cgtf->SetRange(minmax);
     if ((*cgtf)(0)) {
         if (cgtf->OpenGLTextureFormat() ==
             megamol::core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
