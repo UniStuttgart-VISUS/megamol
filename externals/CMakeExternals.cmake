@@ -83,6 +83,9 @@ function(require_external NAME)
     add_external_headeronly_project(json
       GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
       GIT_TAG "v3.5.0")
+    if(MSVC)
+      target_sources(json INTERFACE "${CMAKE_SOURCE_DIR}/externals/json/nlohmann_json.natvis")
+    endif()
 
   # libcxxopts
   elseif(NAME STREQUAL "libcxxopts")
