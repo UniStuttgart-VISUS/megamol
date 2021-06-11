@@ -7,11 +7,11 @@
 
 #include "stdafx.h"
 #include "volumetrics/IsoSurface.h"
+
 #include <cfloat>
 #include <climits>
 #include <cmath>
-#include "geometry_calls/CallTriMeshData.h"
-#include "mmcore/CallVolumeData.h"
+
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
@@ -38,7 +38,6 @@ const unsigned int IsoSurface::tets[6][4] = {
 IsoSurface::IsoSurface(void)
         : inDataSlot("inData", "The slot for requesting input data")
         , outDataSlot("outData", "Gets the data")
-        , attributeSlot("attr", "The attribute to show")
         , isoValueSlot("isoval", "The iso value")
         , dataHash(0)
         , frameIdx(0)
@@ -47,15 +46,14 @@ IsoSurface::IsoSurface(void)
         , normal()
         , mesh() {
 
-    this->inDataSlot.SetCompatibleCall<core::CallVolumeDataDescription>();
+    this->inDataSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
-    this->outDataSlot.SetCallback("CallTriMeshData", "GetData", &IsoSurface::outDataCallback);
-    this->outDataSlot.SetCallback("CallTriMeshData", "GetExtent", &IsoSurface::outExtentCallback);
+    this->outDataSlot.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &IsoSurface::outDataCallback);
+    this->outDataSlot.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &IsoSurface::outExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
-
-    this->attributeSlot << new core::param::StringParam("0");
-    this->MakeSlotAvailable(&this->attributeSlot);
 
     this->isoValueSlot << new core::param::FloatParam(0.5f);
     this->MakeSlotAvailable(&this->isoValueSlot);
@@ -93,11 +91,11 @@ void IsoSurface::release(void) {
  * IsoSurface::outDataCallback
  */
 bool IsoSurface::outDataCallback(core::Call& caller) {
-    megamol::geocalls::CallTriMeshData* tmd = dynamic_cast<megamol::geocalls::CallTriMeshData*>(&caller);
+    auto tmd = dynamic_cast<mesh::CallMesh*>(&caller);
     if (tmd == NULL)
         return false;
 
-    core::CallVolumeData* cvd = this->inDataSlot.CallAs<core::CallVolumeData>();
+    auto cvd = this->inDataSlot.CallAs<core::misc::VolumetricDataCall>();
     if (cvd != NULL) {
 
         bool recalc = false;
@@ -107,13 +105,11 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
             recalc = true;
         }
 
-        if (this->attributeSlot.IsDirty()) {
-            this->attributeSlot.ResetDirty();
-            recalc = true;
-        }
-
-        cvd->SetFrameID(tmd->FrameID(), tmd->IsFrameForced());
-        if (!(*cvd)(0)) {
+        auto mesh_meta = tmd->getMetaData();
+        cvd->SetFrameID(mesh_meta.m_frame_ID);
+        if (!(*cvd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS) ||
+            !(*cvd)(core::misc::VolumetricDataCall::IDX_GET_METADATA) ||
+            !(*cvd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
             recalc = false;
         } else {
             if ((this->dataHash != cvd->DataHash()) || (this->frameIdx != cvd->FrameID())) {
@@ -121,7 +117,7 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
             }
         }
 
-        unsigned int attrIdx = UINT_MAX;
+        /*unsigned int attrIdx = UINT_MAX;
         if (recalc) {
             vislib::StringA attrName(this->attributeSlot.Param<core::param::StringParam>()->Value());
             attrIdx = cvd->FindAttribute(attrName);
@@ -136,10 +132,23 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Only float volumes are supported ATM");
                 recalc = false;
             }
-        }
+        }*/
 
         if (recalc) {
             float isoVal = this->isoValueSlot.Param<core::param::FloatParam>()->Value();
+
+            auto const metadata = cvd->GetMetadata();
+
+            if (metadata->ScalarType != core::misc::FLOATING_POINT) {
+                core::utility::log::Log::DefaultLog.WriteError("[IsoSurface] Only floating point data allowed");
+                return false;
+            }
+
+            auto const data = reinterpret_cast<float const*>(cvd->GetData());
+
+            auto const x_res = metadata->Resolution[0];
+            auto const y_res = metadata->Resolution[1];
+            auto const z_res = metadata->Resolution[2];
 
             this->index.EnforceSize(0);
             this->vertex.EnforceSize(0);
@@ -166,7 +175,7 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
 #ifdef WITH_COLOUR_DATA
                 c,
 #endif /* WITH_COLOUR_DATA */
-                n, isoVal, cvd->Attribute(attrIdx).Floats(), cvd->XSize(), cvd->YSize(), cvd->ZSize());
+                n, isoVal, data, x_res, y_res, z_res);
 
             this->index.EnforceSize(i.End(), true);
             this->vertex.EnforceSize(v.End(), true);
@@ -175,27 +184,31 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
 #endif /* WITH_COLOUR_DATA */
             this->normal.EnforceSize(n.End(), true);
 
-            this->mesh.SetMaterial(NULL);
-            this->mesh.SetVertexData(static_cast<unsigned int>(this->vertex.GetSize() / (3 * sizeof(float))),
-                this->vertex.As<float>(), this->normal.As<float>(),
-#ifdef WITH_COLOUR_DATA
-                this->colour.As<float>(),
-#else  /* WITH_COLOUR_DATA */
-                NULL,
-#endif /* WITH_COLOUR_DATA */
-                NULL, false);
-            this->mesh.SetTriangleData(static_cast<unsigned int>(this->index.GetSize() / (3 * sizeof(unsigned int))),
-                this->index.As<unsigned int>(), false);
+            mesh = std::make_shared<mesh::MeshDataAccessCollection>();
+            mesh::MeshDataAccessCollection::IndexData index_data;
+            index_data.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+            index_data.byte_size = index.GetSize();
+            index_data.data = index.AsAt<uint8_t>(0);
+
+            std::vector<mesh::MeshDataAccessCollection::VertexAttribute> attributes;
+            attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{vertex.AsAt<uint8_t>(0),
+                vertex.GetSize(), 3, mesh::MeshDataAccessCollection::ValueType::FLOAT, 3 * sizeof(float), 0,
+                mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION});
+            attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{normal.AsAt<uint8_t>(0),
+                normal.GetSize(), 3, mesh::MeshDataAccessCollection::ValueType::FLOAT, 3 * sizeof(float), 0,
+                mesh::MeshDataAccessCollection::AttributeSemanticType::NORMAL});
+
+            mesh->addMesh("isosurface", attributes, index_data);
 
             this->dataHash = cvd->DataHash();
             this->frameIdx = cvd->FrameID();
         }
     }
 
-    tmd->SetDataHash(this->dataHash);
-    tmd->SetFrameID(this->frameIdx);
-    tmd->SetObjects(1, &this->mesh);
-    tmd->SetUnlocker(NULL);
+    tmd->setData(mesh, dataHash);
+    auto mesh_meta = tmd->getMetaData();
+    mesh_meta.m_frame_ID = frameIdx;
+    tmd->setMetaData(mesh_meta);
 
     return true;
 }
@@ -205,25 +218,26 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
  * IsoSurface::outExtentCallback
  */
 bool IsoSurface::outExtentCallback(megamol::core::Call& caller) {
-    megamol::geocalls::CallTriMeshData* tmd = dynamic_cast<megamol::geocalls::CallTriMeshData*>(&caller);
+    auto tmd = dynamic_cast<mesh::CallMesh*>(&caller);
     if (tmd == NULL)
         return false;
 
-    tmd->AccessBoundingBoxes().Clear();
-    core::CallVolumeData* cvd = this->inDataSlot.CallAs<core::CallVolumeData>();
-    cvd->SetFrameID(tmd->FrameID(), tmd->IsFrameForced());
-    if ((cvd == NULL) || (!(*cvd)(1))) {
+    auto mesh_meta = tmd->getMetaData();
+    auto cvd = this->inDataSlot.CallAs<core::misc::VolumetricDataCall>();
+    cvd->SetFrameID(mesh_meta.m_frame_ID);
+    if ((cvd == NULL) || (!(*cvd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))) {
         // no input data
-        tmd->SetDataHash(0);
-        tmd->SetFrameCount(1);
+        mesh_meta.m_frame_cnt = 1;
+        tmd->setMetaData(mesh_meta);
 
     } else {
         // input data in cvd
-        tmd->SetDataHash(cvd->DataHash());
-        tmd->SetExtent(cvd->FrameCount(), cvd->AccessBoundingBoxes());
+        mesh_meta.m_frame_cnt = cvd->FrameCount();
+        mesh_meta.m_bboxs.SetBoundingBox(cvd->AccessBoundingBoxes().ObjectSpaceBBox());
+        mesh_meta.m_bboxs.SetClipBox(cvd->AccessBoundingBoxes().ClipBox());
+        tmd->setMetaData(mesh_meta);
         this->osbb = cvd->AccessBoundingBoxes().ObjectSpaceBBox();
     }
-    tmd->SetUnlocker(NULL);
 
     return true;
 }
@@ -244,6 +258,8 @@ void IsoSurface::buildMesh(vislib::RawStorageWriter& i, vislib::RawStorageWriter
     const float cellSizeX = this->osbb.Width() / static_cast<float>(sx);
     const float cellSizeY = this->osbb.Height() / static_cast<float>(sy);
     const float cellSizeZ = this->osbb.Depth() / static_cast<float>(sz);
+
+    unsigned int baseIdx = 0;
 
     for (unsigned int z = 0; z < sz - 1; z++) {
         vislib::math::Point<float, 3> p(0.0f, 0.0f, (static_cast<float>(z) + 0.5f) / static_cast<float>(sz));
@@ -300,7 +316,7 @@ void IsoSurface::buildMesh(vislib::RawStorageWriter& i, vislib::RawStorageWriter
                             p.Y() + static_cast<float>(MarchingCubeTables::a2fVertexOffset[j][1]) * cellSizeY,
                             p.Z() + static_cast<float>(MarchingCubeTables::a2fVertexOffset[j][2]) * cellSizeZ);
                     }
-                    this->makeTet(triIdx, tetIdx, pts, cubeValues, val, i, v, n);
+                    this->makeTet(triIdx, tetIdx, pts, cubeValues, val, i, v, n, baseIdx);
 #endif
                 }
             }
@@ -466,7 +482,7 @@ vislib::math::Point<float, 3> IsoSurface::interpolate(
  */
 void IsoSurface::makeTet(unsigned int triIdx, vislib::math::Point<float, 3>* pts, float v0, float v1, float v2,
     float v3, float val, vislib::RawStorageWriter& idxWrtr, vislib::RawStorageWriter& vrtWrtr,
-    vislib::RawStorageWriter& nrlWrtr) {
+    vislib::RawStorageWriter& nrlWrtr, unsigned int& baseIdx) {
     vislib::math::Point<float, 3> tri[3];
     vislib::math::Point<float, 3> tri2[3];
     vislib::math::Point<float, 3>& p0 = pts[0];
@@ -571,6 +587,7 @@ void IsoSurface::makeTet(unsigned int triIdx, vislib::math::Point<float, 3>* pts
         for (int j = 0; j < 3; j++) {
             vrtWrtr.Write(tri[i][j]);
         }
+        idxWrtr.Write(baseIdx++);
     }
     norm = (tri[1] - tri[0]).Cross(tri[2] - tri[0]);
     norm.Normalise();
@@ -585,6 +602,7 @@ void IsoSurface::makeTet(unsigned int triIdx, vislib::math::Point<float, 3>* pts
         for (int j = 0; j < 3; j++) {
             vrtWrtr.Write(tri2[i][j]);
         }
+        idxWrtr.Write(baseIdx++);
     }
     norm = (tri2[1] - tri2[0]).Cross(tri2[2] - tri2[0]);
     norm.Normalise();
@@ -600,8 +618,8 @@ void IsoSurface::makeTet(unsigned int triIdx, vislib::math::Point<float, 3>* pts
  * IsoSurface::makeTet
  */
 void IsoSurface::makeTet(unsigned int triIdx, unsigned int tetIdx, vislib::math::Point<float, 3>* pts, float* cv,
-    float val, vislib::RawStorageWriter& idxWrtr, vislib::RawStorageWriter& vrtWrtr,
-    vislib::RawStorageWriter& nrlWrtr) {
+    float val, vislib::RawStorageWriter& idxWrtr, vislib::RawStorageWriter& vrtWrtr, vislib::RawStorageWriter& nrlWrtr,
+    unsigned int& baseIdx) {
     vislib::math::Point<float, 3> tri[3];
     vislib::math::Point<float, 3> tri2[3];
     vislib::math::Point<float, 3>& p0 = pts[tets[tetIdx][0]];
@@ -706,6 +724,7 @@ void IsoSurface::makeTet(unsigned int triIdx, unsigned int tetIdx, vislib::math:
         for (int j = 0; j < 3; j++) {
             vrtWrtr.Write(tri[i][j]);
         }
+        idxWrtr.Write(baseIdx++);
     }
     norm = (tri[1] - tri[0]).Cross(tri[2] - tri[0]);
     norm.Normalise();
@@ -720,6 +739,7 @@ void IsoSurface::makeTet(unsigned int triIdx, unsigned int tetIdx, vislib::math:
         for (int j = 0; j < 3; j++) {
             vrtWrtr.Write(tri2[i][j]);
         }
+        idxWrtr.Write(baseIdx++);
     }
     norm = (tri2[1] - tri2[0]).Cross(tri2[2] - tri2[0]);
     norm.Normalise();

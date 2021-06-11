@@ -11,7 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "geometry_calls/CallTriMeshData.h"
+#include <memory>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -19,6 +20,9 @@
 #include "vislib/RawStorage.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Point.h"
+
+#include "mesh/MeshCalls.h"
+#include "mmcore/misc/VolumetricDataCall.h"
 
 
 // #define WITH_COLOUR_DATA
@@ -144,7 +148,7 @@ namespace trisoup {
              */
             void makeTet(unsigned int triIdx, vislib::math::Point<float, 3>* pts, float v0, float v1, float v2,
                 float v3, float val, vislib::RawStorageWriter& idxWrtr, vislib::RawStorageWriter& vrtWrtr,
-                vislib::RawStorageWriter& nrlWrtr);
+                vislib::RawStorageWriter& nrlWrtr, unsigned int& baseIdx);
 
             /**
              * Magic Method #13
@@ -155,16 +159,13 @@ namespace trisoup {
              */
             void makeTet(unsigned int triIdx, unsigned int tetIdx, vislib::math::Point<float, 3>* pts, float* cv,
                 float val, vislib::RawStorageWriter& idxWrtr, vislib::RawStorageWriter& vrtWrtr,
-                vislib::RawStorageWriter& nrlWrtr);
+                vislib::RawStorageWriter& nrlWrtr, unsigned int& baseIdx);
 
             /** The slot for requesting input data */
             core::CallerSlot inDataSlot;
 
             /** The slot for requesting output data */
             core::CalleeSlot outDataSlot;
-
-            /** The attribute to show */
-            core::param::ParamSlot attributeSlot;
 
             /** The iso value*/
             core::param::ParamSlot isoValueSlot;
@@ -193,7 +194,7 @@ namespace trisoup {
             vislib::RawStorage normal;
 
             /** My mesh */
-            megamol::geocalls::CallTriMeshData::Mesh mesh;
+            std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
         };
 
 
