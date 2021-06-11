@@ -923,6 +923,14 @@ function(require_external NAME)
       PROJECT vtkm
       LIBRARY ${VTKM_WORKLET_LIB})
 
+  elseif (NAME STREQUAL "obj-io")
+    if(TARGET obj-io)
+      return()
+    endif()
+
+    add_external_headeronly_project(obj-io INTERFACE
+      GIT_REPOSITORY https://github.com/thinks/obj-io.git
+      INCLUDE_DIR "include/thinks")
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()
