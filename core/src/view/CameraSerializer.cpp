@@ -94,7 +94,53 @@ void CameraSerializer::setPrettyMode(bool prettyMode) { this->prettyMode = prett
  * CameraSerializer::addCamToJsonObject
  */
 void CameraSerializer::addCamToJsonObject(nlohmann::json& outObj, Camera const& cam) const {
-    // TODO
+
+    // Identify projection type and serialize accordingly
+    auto cam_type = cam.get<Camera::ProjectionType>();
+
+    outObj["projection_type"] = cam_type;
+
+    // If projection type is not unknown and camera is not serialized as matrix only do first block
+    if (cam_type == Camera::PERSPECTIVE || cam_type == Camera::ORTHOGRAPHIC) {
+        // Serialize pose
+        auto cam_pose = cam.get<Camera::Pose>();
+        outObj["position"] = std::array<float, 3>{cam_pose.position.x, cam_pose.position.y, cam_pose.position.z};
+        outObj["direction"] = std::array<float, 3>{cam_pose.direction.x, cam_pose.direction.y, cam_pose.direction.z};
+        outObj["up"] = std::array<float, 3>{cam_pose.up.x, cam_pose.up.y, cam_pose.up.z};
+        outObj["right"] = std::array<float, 3>{cam_pose.right.x, cam_pose.right.y, cam_pose.right.z};
+
+        // Serialize intrinsics
+        if (cam_type == Camera::PERSPECTIVE) {
+            auto cam_intrinsics = cam.get<Camera::PerspectiveParameters>();
+            outObj["fovy"] = cam_intrinsics.fovy;
+            outObj["aspect"] = cam_intrinsics.aspect.value();
+            outObj["near_plane"] = cam_intrinsics.near_plane.value();
+            outObj["far_plane"] = cam_intrinsics.far_plane.value();
+            outObj["image_plane_tile_start"] = std::array<float, 2>{
+                cam_intrinsics.image_plane_tile.tile_start.x, cam_intrinsics.image_plane_tile.tile_start.y};
+            outObj["image_plane_tile_end"] = std::array<float, 2>{
+                cam_intrinsics.image_plane_tile.tile_end.x, cam_intrinsics.image_plane_tile.tile_end.y};
+
+        } else if (cam_type == Camera::ORTHOGRAPHIC) {
+            auto cam_intrinsics = cam.get<Camera::OrthographicParameters>();
+
+            outObj["frustrum_height"] = cam_intrinsics.frustrum_height;
+            outObj["aspect"] = cam_intrinsics.aspect.value();
+            outObj["near_plane"] = cam_intrinsics.near_plane.value();
+            outObj["far_plane"] = cam_intrinsics.far_plane.value();
+            outObj["image_plane_tile_start"] = std::array<float, 2>{
+                cam_intrinsics.image_plane_tile.tile_start.x, cam_intrinsics.image_plane_tile.tile_start.y};
+            outObj["image_plane_tile_end"] = std::array<float, 2>{
+                cam_intrinsics.image_plane_tile.tile_end.x, cam_intrinsics.image_plane_tile.tile_end.y};
+        }
+
+    } else { //Camera::UNKNOWN
+        auto view_mx = cam.getViewMatrix();
+        auto proj_mx = cam.getProjectionMatrix();
+
+        //TODO write matrix entries?
+    }
+
     //  outObj["centre_offset"] = cam.centre_offset;
     //  outObj["convergence_plane"] = cam.convergence_plane;
     //  outObj["eye"] = cam.eye;
@@ -115,6 +161,139 @@ void CameraSerializer::addCamToJsonObject(nlohmann::json& outObj, Camera const& 
  * CameraSerializer::getCamFromJsonObject
  */
 bool CameraSerializer::getCamFromJsonObject(Camera& cam, nlohmann::json::value_type const& val) const {
+
+    try {
+        if(!val.is_object()) return false;
+
+        Camera::ProjectionType cam_type;
+
+        if (val.at("projection_type").is_number_integer()) {
+            val.at("projection_type").get_to(cam_type);
+        } else {
+            return false;
+        }
+
+        if (cam_type == Camera::PERSPECTIVE || cam_type == Camera::ORTHOGRAPHIC) {
+
+            // Get camera pose
+            Camera::Pose cam_pose;
+            std::array<float, 3> position;
+            std::array<float, 3> direction;
+            std::array<float, 3> up;
+            std::array<float, 3> right;
+
+            if (val.at("position").is_array() && val.at("position").size() == position.size()) {
+                val.at("position").get_to(position);
+            } else {
+                return false;
+            }
+            if (val.at("direction").is_array() && val.at("direction").size() == direction.size()) {
+                val.at("direction").get_to(direction);
+            } else {
+                return false;
+            }
+            if (val.at("up").is_array() && val.at("up").size() == up.size()) {
+                val.at("up").get_to(up);
+            } else {
+                return false;
+            }
+            if (val.at("right").is_array() && val.at("right").size() == right.size()) {
+                val.at("right").get_to(right);
+            } else {
+                return false;
+            }
+
+            cam_pose.position = glm::vec3( std::get<0>(position),std::get<1>(position),std::get<2>(position));
+            cam_pose.direction = glm::vec3(std::get<0>(direction), std::get<1>(direction), std::get<2>(direction));
+            cam_pose.up = glm::vec3(std::get<0>(up), std::get<1>(up), std::get<2>(up));
+            cam_pose.right = glm::vec3(std::get<0>(right), std::get<1>(right), std::get<2>(right));
+
+            // get camera intrinsics (starting with common intrinsics)
+            float aspect;
+            float near_plane;
+            float far_plane;
+            std::array<float, 2> image_plane_tile_start;
+            std::array<float, 2> image_plane_tile_end;
+
+            if (val.at("aspect").is_number_float()) {
+                val.at("aspect").get_to(aspect);
+            } else {
+                return false;
+            }
+            if (val.at("near_plane").is_number_float()) {
+                val.at("near_plane").get_to(near_plane);
+            } else {
+                return false;
+            }
+            if (val.at("far_plane").is_number_float()) {
+                val.at("far_plane").get_to(far_plane);
+            } else {
+                return false;
+            }
+            if (val.at("image_plane_tile_start").is_array() &&
+                val.at("image_plane_tile_start").size() == image_plane_tile_start.size()) {
+                val.at("image_plane_tile_start").get_to(image_plane_tile_start);
+            } else {
+                return false;
+            }
+            if (val.at("image_plane_tile_end").is_array() &&
+                val.at("image_plane_tile_end").size() == image_plane_tile_end.size()) {
+                val.at("image_plane_tile_end").get_to(image_plane_tile_end);
+            } else {
+                return false;
+            }
+            
+
+            if (cam_type == Camera::PERSPECTIVE) {
+                Camera::PerspectiveParameters cam_intrinsics;
+
+                float fovy;
+                if (val.at("fovy").is_number_float()) {
+                    val.at("fovy").get_to(fovy);
+                } else {
+                    return false;
+                }
+
+                cam_intrinsics.fovy = fovy;
+                cam_intrinsics.aspect = aspect;
+                cam_intrinsics.near_plane = near_plane;
+                cam_intrinsics.far_plane = far_plane;
+                cam_intrinsics.image_plane_tile.tile_start =
+                    glm::vec2(std::get<0>(image_plane_tile_start), std::get<1>(image_plane_tile_start));
+                cam_intrinsics.image_plane_tile.tile_end =
+                    glm::vec2(std::get<0>(image_plane_tile_end), std::get<1>(image_plane_tile_end));
+
+                cam = Camera(cam_pose, cam_intrinsics);
+
+            } else if (cam_type == Camera::ORTHOGRAPHIC) {
+                Camera::OrthographicParameters cam_intrinsics;
+
+                float frustrum_height;
+                if (val.at("frustrum_height").is_number_float()) {
+                    val.at("frustrum_height").get_to(frustrum_height);
+                } else {
+                    return false;
+                }
+
+                cam_intrinsics.frustrum_height = frustrum_height;
+                cam_intrinsics.aspect = aspect;
+                cam_intrinsics.near_plane = near_plane;
+                cam_intrinsics.far_plane = far_plane;
+                cam_intrinsics.image_plane_tile.tile_start =
+                    glm::vec2(std::get<0>(image_plane_tile_start), std::get<1>(image_plane_tile_start));
+                cam_intrinsics.image_plane_tile.tile_end =
+                    glm::vec2(std::get<0>(image_plane_tile_end), std::get<1>(image_plane_tile_end));
+
+                cam = Camera(cam_pose, cam_intrinsics);
+            }
+
+        } else {
+            //TODO
+        }
+
+    } catch (...) {
+        return false;
+    }
 
     // TODO
     //  try {
