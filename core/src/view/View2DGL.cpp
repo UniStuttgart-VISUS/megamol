@@ -128,7 +128,7 @@ void megamol::core::view::View2DGL::Resize(unsigned int width, unsigned int heig
     bool create_fbo = false;
     if (_fbo == nullptr) {
         create_fbo = true;
-    } else if ((_fbo->getWidth() != width) || (_fbo->getHeight() != height)) {
+    } else if ( ((_fbo->getWidth() != width) || (_fbo->getHeight() != height)) && width != 0 && height != 0) {
         create_fbo = true;
     }
 
