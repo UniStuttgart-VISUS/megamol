@@ -68,8 +68,8 @@ namespace ospray {
 
     private:
         // data objects
-        std::vector<float> cd_rgba;
-        std::vector<float> vd;
+        std::shared_ptr<std::vector<float>> cd_rgba;
+        std::shared_ptr<std::vector<float>> vd;
     };
 
 } // namespace ospray

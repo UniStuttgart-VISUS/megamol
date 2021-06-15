@@ -63,6 +63,9 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
     if (!(*cd)(0))
         return false;
 
+    auto fcw = writeFlagsSlot.CallAs<core::FlagCallWrite_CPU>();
+    auto fcr = readFlagsSlot.CallAs<core::FlagCallRead_CPU>();
+
     if (this->datahash != cd->DataHash() || this->time != cd->FrameID() || this->InterfaceIsDirty()) {
         if (cd->GetParticleListCount() == 0)
             return false;
@@ -77,8 +80,8 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
         auto const partCount = parts.GetCount();
         auto const globalRadius = parts.GetGlobalRadius();
 
-        vd.resize(partCount * 3ul);
-        cd_rgba.resize(partCount * 4ul);
+        vd->resize(partCount * 3ul);
+        cd_rgba->resize(partCount * 4ul);
 
         auto const xAcc = parts.GetParticleStore().GetXAcc();
         auto const yAcc = parts.GetParticleStore().GetYAcc();
@@ -92,14 +95,14 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
             auto const caAcc = parts.GetParticleStore().GetCAAcc();
 
             for (std::size_t pidx = 0; pidx < partCount; ++pidx) {
-                vd[pidx * 3 + 0] = xAcc->Get_f(pidx);
-                vd[pidx * 3 + 1] = yAcc->Get_f(pidx);
-                vd[pidx * 3 + 2] = zAcc->Get_f(pidx);
+                (*vd)[pidx * 3 + 0] = xAcc->Get_f(pidx);
+                (*vd)[pidx * 3 + 1] = yAcc->Get_f(pidx);
+                (*vd)[pidx * 3 + 2] = zAcc->Get_f(pidx);
 
-                cd_rgba[pidx * 4 + 0] = crAcc->Get_f(pidx);
-                cd_rgba[pidx * 4 + 1] = cgAcc->Get_f(pidx);
-                cd_rgba[pidx * 4 + 2] = cbAcc->Get_f(pidx);
-                cd_rgba[pidx * 4 + 3] = caAcc->Get_f(pidx);
+                (*cd_rgba)[pidx * 4 + 0] = crAcc->Get_f(pidx);
+                (*cd_rgba)[pidx * 4 + 1] = cgAcc->Get_f(pidx);
+                (*cd_rgba)[pidx * 4 + 2] = cbAcc->Get_f(pidx);
+                (*cd_rgba)[pidx * 4 + 3] = caAcc->Get_f(pidx);
             }
         } else {
             core::utility::log::Log::DefaultLog.WriteWarn(
@@ -108,21 +111,21 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
             auto const g_color = parts.GetGlobalColour();
 
             for (std::size_t pidx = 0; pidx < partCount; ++pidx) {
-                vd[pidx * 3 + 0] = xAcc->Get_f(pidx);
-                vd[pidx * 3 + 1] = yAcc->Get_f(pidx);
-                vd[pidx * 3 + 2] = zAcc->Get_f(pidx);
+                (*vd)[pidx * 3 + 0] = xAcc->Get_f(pidx);
+                (*vd)[pidx * 3 + 1] = yAcc->Get_f(pidx);
+                (*vd)[pidx * 3 + 2] = zAcc->Get_f(pidx);
 
-                cd_rgba[pidx * 4 + 0] = g_color[0] / 255.0f;
-                cd_rgba[pidx * 4 + 1] = g_color[1] / 255.0f;
-                cd_rgba[pidx * 4 + 2] = g_color[2] / 255.0f;
-                cd_rgba[pidx * 4 + 3] = g_color[3] / 255.0f;
+                (*cd_rgba)[pidx * 4 + 0] = g_color[0] / 255.0f;
+                (*cd_rgba)[pidx * 4 + 1] = g_color[1] / 255.0f;
+                (*cd_rgba)[pidx * 4 + 2] = g_color[2] / 255.0f;
+                (*cd_rgba)[pidx * 4 + 3] = g_color[3] / 255.0f;
             }
         }
 
         sphereStructure ss;
 
-        ss.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
-        ss.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
+        ss.vertexData = vd;
+        ss.colorData = cd_rgba;
         ss.vertexLength = 3;
         ss.colorLength = 4;
         ss.partCount = partCount;
@@ -137,17 +140,79 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
         this->structureContainer.dataChanged = false;
     }
 
+    if (fcw != nullptr && fcr != nullptr) {
+        if (cd->GetParticleListCount() == 0)
+            return false;
+
+        if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
+            this->particleList.Param<core::param::IntParam>()->SetValue(0);
+        }
+
+        core::moldyn::MultiParticleDataCall::Particles& parts =
+            cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
+
+        auto const partCount = parts.GetCount();
+
+        auto const crAcc = parts.GetParticleStore().GetCRAcc();
+        auto const cgAcc = parts.GetParticleStore().GetCGAcc();
+        auto const cbAcc = parts.GetParticleStore().GetCBAcc();
+        auto const caAcc = parts.GetParticleStore().GetCAAcc();
+
+        auto const [stuff, idx] = os->getPickResult();
+
+        if ((*fcr)(core::FlagCallWrite_CPU::CallGetData)) {
+            auto data = fcr->getData();
+            auto version = fcr->version();
+            data->validateFlagCount(partCount);
+
+            if (idx >= 0 && idx <= partCount) {
+                auto const cur_sel = data->flags->operator[](idx);
+
+                if (cur_sel == core::FlagStorage::SELECTED) {
+                    data->flags->operator[](idx) = core::FlagStorage::ENABLED;
+                    if (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I &&
+                        parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I) {
+                        (*cd_rgba)[idx * 4 + 0] = crAcc->Get_f(idx);
+                        (*cd_rgba)[idx * 4 + 1] = cgAcc->Get_f(idx);
+                        (*cd_rgba)[idx * 4 + 2] = cbAcc->Get_f(idx);
+                        (*cd_rgba)[idx * 4 + 3] = caAcc->Get_f(idx);
+                    } else {
+                        auto const g_color = parts.GetGlobalColour();
+                        (*cd_rgba)[idx * 4 + 0] = g_color[0] / 255.0f;
+                        (*cd_rgba)[idx * 4 + 1] = g_color[1] / 255.0f;
+                        (*cd_rgba)[idx * 4 + 2] = g_color[2] / 255.0f;
+                        (*cd_rgba)[idx * 4 + 3] = g_color[3] / 255.0f;
+                    }
+                    this->structureContainer.dataChanged = true;
+                }
+
+                if (cur_sel == core::FlagStorage::ENABLED) {
+                    data->flags->operator[](idx) = core::FlagStorage::SELECTED;
+                    (*cd_rgba)[idx * 4 + 0] = 0.0f;
+                    (*cd_rgba)[idx * 4 + 1] = 1.0f;
+                    (*cd_rgba)[idx * 4 + 2] = 0.0f;
+                    (*cd_rgba)[idx * 4 + 3] = 1.0f;
+                    this->structureContainer.dataChanged = true;
+                }
+
+                fcw->setData(data, version + 1);
+                (*fcw)(core::FlagCallWrite_CPU::CallGetData);
+                os->setPickResult(-1, -1);
+            }
+        }
+    }
+
     // clipPlane setup
-    std::array<float,4> clipDat;
-    std::array<float,4> clipCol;
+    std::array<float, 4> clipDat;
+    std::array<float, 4> clipCol;
     this->getClipData(clipDat.data(), clipCol.data());
 
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::SPHERES;
-    //this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
-    //this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
+    // this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
+    // this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
 
     return true;
 }
@@ -159,6 +224,9 @@ OSPRaySphereGeometry::~OSPRaySphereGeometry() {
 
 
 bool OSPRaySphereGeometry::create() {
+    vd = std::make_shared<std::vector<float>>();
+    cd_rgba = std::make_shared<std::vector<float>>();
+
     return true;
 }
 
