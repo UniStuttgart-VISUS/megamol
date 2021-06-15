@@ -203,6 +203,9 @@ bool megamol::stdplugin::datatools::ParticlesToNumberdensity::assert_data(core::
 
     auto const resolution = glm::vec3(grid_x_res, grid_y_res, grid_z_res) - glm::vec3(1.f);
 
+    auto const cell_size = dimension / glm::vec3(grid_x_res, grid_y_res, grid_z_res);
+    auto const cell_volume = cell_size.x * cell_size.y * cell_size.z;
+
     auto const pl_count = parts.GetParticleListCount();
 
     for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
@@ -225,10 +228,14 @@ bool megamol::stdplugin::datatools::ParticlesToNumberdensity::assert_data(core::
         }
     }
 
+    std::for_each(vol_data_.begin(), vol_data_.end(), [&cell_volume](auto& el) { el /= cell_volume; });
+
     auto const minmax = std::minmax_element(vol_data_.begin(), vol_data_.end());
 
     min_dens_ = *minmax.first;
     max_dens_ = *minmax.second;
+
+    core::utility::log::Log::DefaultLog.WriteInfo("[ParticlesToNumberdensity] min %f / max %f", min_dens_, max_dens_);
 
     return true;
 }
