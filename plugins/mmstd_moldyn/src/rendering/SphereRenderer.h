@@ -289,6 +289,7 @@ namespace rendering {
 
         // --------------------------------------------------------------------
 
+        bool                                     init_resources;
         RenderMode                               renderMode;
         GLuint                                   greyTF;
         std::array<float, 2>                     range;

@@ -47,6 +47,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
 , curMVP()
 , curMVPinv()
 , curMVPtransp()
+, init_resources(true)
 , renderMode(RenderMode::SIMPLE)
 , greyTF(0)
 , range()
@@ -280,10 +281,6 @@ bool SphereRenderer::create(void) {
         this->renderMode = RenderMode::SIMPLE;
     }
 
-    // Create resources for initial render mode
-    if (!this->createResources()) {
-        return false;
-    }
 
     // timer.SetNumRegions(4);
     // const char *regions[4] = {"Upload1", "Upload2", "Upload3", "Rendering"};megamol::
@@ -1044,8 +1041,9 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
 
     // Checking for changed render mode
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
-    if (currentRenderMode != this->renderMode) {
+    if (this->init_resources || (currentRenderMode != this->renderMode)) {
         this->renderMode = currentRenderMode;
+        init_resources = false;
         if (!this->createResources()) {
             return false;
         }
