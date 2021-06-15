@@ -8,6 +8,7 @@
 #include "OSPRaySphereGeometry.h"
 #include "mmcore/Call.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -26,7 +27,8 @@ OSPRaySphereGeometry::OSPRaySphereGeometry(void)
         : AbstractOSPRayStructure()
         , getDataSlot("getdata", "Connects to the data source")
         , getClipPlaneSlot("getclipplane", "Connects to a clipping plane module")
-        , particleList("ParticleList", "Switches between particle lists") {
+        , particleList("ParticleList", "Switches between particle lists")
+        , picking_color_slot_("PickingColor", "Color of picked spheres") {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -36,6 +38,9 @@ OSPRaySphereGeometry::OSPRaySphereGeometry(void)
 
     this->particleList << new core::param::IntParam(0);
     this->MakeSlotAvailable(&this->particleList);
+
+    picking_color_slot_ << new core::param::ColorParam(0.f, 1.f, 0.f, 1.f);
+    MakeSlotAvailable(&picking_color_slot_);
 }
 
 
@@ -168,6 +173,8 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
             if (idx >= 0 && idx <= partCount) {
                 auto const cur_sel = data->flags->operator[](idx);
 
+                auto const picking_color = picking_color_slot_.Param<core::param::ColorParam>()->Value();
+
                 if (cur_sel == core::FlagStorage::SELECTED) {
                     data->flags->operator[](idx) = core::FlagStorage::ENABLED;
                     if (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I &&
@@ -188,10 +195,11 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
 
                 if (cur_sel == core::FlagStorage::ENABLED) {
                     data->flags->operator[](idx) = core::FlagStorage::SELECTED;
-                    (*cd_rgba)[idx * 4 + 0] = 0.0f;
-                    (*cd_rgba)[idx * 4 + 1] = 1.0f;
-                    (*cd_rgba)[idx * 4 + 2] = 0.0f;
-                    (*cd_rgba)[idx * 4 + 3] = 1.0f;
+                    (*cd_rgba)[idx * 4 + 0] = picking_color[0];
+                    (*cd_rgba)[idx * 4 + 1] = picking_color[1];
+                    (*cd_rgba)[idx * 4 + 2] = picking_color[2];
+                    (*cd_rgba)[idx * 4 + 3] = picking_color[3];
+
                     this->structureContainer.dataChanged = true;
                 }
 

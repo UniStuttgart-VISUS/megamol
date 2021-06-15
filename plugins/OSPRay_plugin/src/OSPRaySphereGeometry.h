@@ -70,6 +70,8 @@ namespace ospray {
         // data objects
         std::shared_ptr<std::vector<float>> cd_rgba;
         std::shared_ptr<std::vector<float>> vd;
+
+        core::param::ParamSlot picking_color_slot_;
     };
 
 } // namespace ospray
