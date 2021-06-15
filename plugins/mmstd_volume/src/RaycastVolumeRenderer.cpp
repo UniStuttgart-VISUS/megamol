@@ -567,6 +567,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     else
         glDisable(GL_DEPTH_TEST);
 
+    glUseProgram(0);
+
     return true;
 }
 
