@@ -8,7 +8,7 @@
 #ifndef MEGAMOLCORE_CAMERASERIALIZER_H_INCLUDED
 #define MEGAMOLCORE_CAMERASERIALIZER_H_INCLUDED
 
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "mmcore/view/Camera_2.h"
 #include "mmcore/utility/log/Log.h"
 
