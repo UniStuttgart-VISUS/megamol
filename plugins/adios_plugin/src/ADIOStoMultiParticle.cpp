@@ -56,55 +56,55 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
         try {
             auto availVars = cad->getAvailableVars();
             if (cad->isInVars("xyz")) {
-                cad->inquire("xyz");
+                cad->inquireVar("xyz");
             } else if (cad->isInVars("x") && cad->isInVars("y") && cad->isInVars("z")) {
-                cad->inquire("x");
-                cad->inquire("y");
-                cad->inquire("z");
+                cad->inquireVar("x");
+                cad->inquireVar("y");
+                cad->inquireVar("z");
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "ADIOStoMultiParticle: No particle positions found");
                 return false;
             }
 
-            cad->inquire("global_box");
-            cad->inquire("count");
+            cad->inquireVar("global_box");
+            cad->inquireVar("count");
             // Radius
             if (cad->isInVars("radius")) {
-                cad->inquire("radius");
+                cad->inquireVar("radius");
             } else if (cad->isInVars("global_radius")) {
-                cad->inquire("global_radius");
+                cad->inquireVar("global_radius");
             }
             // Colors
             if (cad->isInVars("r")) {
-                cad->inquire("r");
-                cad->inquire("g");
-                cad->inquire("b");
-                cad->inquire("a");
+                cad->inquireVar("r");
+                cad->inquireVar("g");
+                cad->inquireVar("b");
+                cad->inquireVar("a");
             } else if (cad->isInVars("global_r")) {
-                cad->inquire("global_r");
-                cad->inquire("global_g");
-                cad->inquire("global_b");
-                cad->inquire("global_a");
+                cad->inquireVar("global_r");
+                cad->inquireVar("global_g");
+                cad->inquireVar("global_b");
+                cad->inquireVar("global_a");
             }
             // Intensity
             else if (cad->isInVars("i")) {
-                cad->inquire("i");
+                cad->inquireVar("i");
             }
             // ID
             if (cad->isInVars("id")) {
-                cad->inquire("id");
+                cad->inquireVar("id");
             }
             // list_offset
             if (cad->isInVars("list_offset")) {
-                cad->inquire("list_offset");
+                cad->inquireVar("list_offset");
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Expected list_offset variable to be set");
                 return false;
             }
             // list_box
             if (cad->isInVars("list_box")) {
-                cad->inquire("list_box");
+                cad->inquireVar("list_box");
             }
 
 

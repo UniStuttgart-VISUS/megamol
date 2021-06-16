@@ -82,7 +82,7 @@ void TestMD5(void) {
     AssertEqualCaseInsensitive("MD5 string equal to reference", hash.ToStringA(), "57edf4a22be3c955ac49da2e2107b67a");
 
 
-    // strange code™
+    // strange codeâ„¢
     MD5HashProvider hash2;
     hashSize = hash2.GetHashSize();
     BYTE *hashVal = new BYTE[hashSize];
@@ -138,7 +138,7 @@ void TestSHA1(void) {
         AssertEqualCaseInsensitive("SHA-1 string equal to reference", hash.ToStringA(), resultarray[j]);
     }
 
-    // strange code™
+    // strange codeâ„¢
     SHA1HashProvider hash2;
     hashSize = hash2.GetHashSize();
     BYTE *hashVal = new BYTE[hashSize];

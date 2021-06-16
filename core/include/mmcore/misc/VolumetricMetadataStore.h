@@ -1,7 +1,7 @@
 /*
  * VolumetricMetadataStore.h
  *
- * Copyright (C) 2019 by Visualisierungsinstitut der Universit‰t Stuttgart.
+ * Copyright (C) 2019 by Visualisierungsinstitut der Universit√§t Stuttgart.
  * Alle rechte vorbehalten.
  */
 

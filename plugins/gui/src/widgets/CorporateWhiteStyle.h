@@ -7,8 +7,9 @@
 
 #ifndef MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED
 #define MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED
+#pragma once
 
-#include <imgui.h>
+
 #include "DefaultStyle.h"
 
 
@@ -54,9 +55,10 @@ inline void CorporateWhiteStyle(int is3D = 0) {
     ImVec4 header = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
     ImVec4 active = ImVec4(0.00f, 0.47f, 0.84f, 1.00f);
     ImVec4 hover = ImVec4(0.00f, 0.47f, 0.84f, 0.20f);
+    ImVec4 gray = ImVec4(0.75f, 0.75f, 0.75f, 0.20f);
 
     colors[ImGuiCol_Text] = text;
-    colors[ImGuiCol_TextDisabled] = text;
+    colors[ImGuiCol_TextDisabled] = gray;
     colors[ImGuiCol_WindowBg] = background;
     colors[ImGuiCol_ChildBg] = background;
     colors[ImGuiCol_PopupBg] = white;

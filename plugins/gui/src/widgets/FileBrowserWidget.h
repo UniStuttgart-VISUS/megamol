@@ -7,12 +7,11 @@
 
 #ifndef MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
 #define MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
 #include "HoverToolTip.h"
 #include "StringSearchWidget.h"
-
 #include "mmcore/utility/FileUtils.h"
 
 

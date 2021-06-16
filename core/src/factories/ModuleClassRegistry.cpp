@@ -8,7 +8,6 @@
 #include "factories/ModuleClassRegistry.h"
 
 #include "mmcore/factories/ModuleDescriptionManager.h"
-#include "mmcore/factories/LoaderADModuleAutoDescription.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "mmcore/factories/ModuleDescription.h"
 
@@ -38,7 +37,6 @@
 #include "mmcore/job/JobThread.h"
 #include "mmcore/moldyn/AddClusterColours.h"
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
-#include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/utility/LuaHostSettingsModule.h"
 #include "mmcore/view/light/AmbientLight.h"
 #include "mmcore/view/light/DistantLight.h"
@@ -94,7 +92,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<job::JobThread>();
     instance.RegisterAutoDescription<moldyn::AddClusterColours>();
     instance.RegisterAutoDescription<moldyn::DynDensityGradientEstimator>();
-    instance.RegisterAutoDescription<job::PluginsStateFileGeneratorJob>();
     instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
     instance.RegisterAutoDescription<core::job::TickSwitch>();
     instance.RegisterAutoDescription<core::FileStreamProvider>();

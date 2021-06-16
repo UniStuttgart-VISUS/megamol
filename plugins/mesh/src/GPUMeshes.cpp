@@ -13,7 +13,6 @@ megamol::mesh::GPUMeshes::~GPUMeshes() {
 }
 
 bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
-
     CallGPUMeshData* lhs_mesh_call = dynamic_cast<CallGPUMeshData*>(&caller);
     CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
 
@@ -52,10 +51,33 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             for (auto& mesh : meshes) {
 
                 // check if primtives type
-                GLenum primtive_type = GL_TRIANGLES;
-                if (mesh.second.primitive_type == MeshDataAccessCollection::QUADS) {
-                    primtive_type = GL_PATCHES;
+                GLenum primitive_type = GL_NONE;
+                switch (mesh.second.primitive_type) {
+                case 0:
+                    primitive_type = GL_TRIANGLES;
+                    break;
+                case 1:
+                    primitive_type = GL_PATCHES;
+                    break;
+                case 2:
+                    primitive_type = GL_LINES;
+                    break;
+                case 3:
+                    primitive_type = GL_LINE_STRIP;
+                    break;
+                case 4:
+                    primitive_type = GL_TRIANGLE_FAN;
+                    break;
+                default:
+                    core::utility::log::Log::DefaultLog.WriteError("There was no matching primitive type found!");
+                    return false;
                 }
+
+                // check if primtives type
+                // GLenum primtive_type = GL_TRIANGLES;
+                // if (mesh.second.primitive_type == MeshDataAccessCollection::QUADS) {
+                //     primtive_type = GL_PATCHES;
+                // }
 
                 std::vector<glowl::VertexLayout> vb_layouts;
                 std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
@@ -83,9 +105,13 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 }
 
                 try {
+                    bool store_separate = false;
+                    if (mesh.first == "ghostplane")
+                        store_separate = true;
+
                     m_mesh_collection.first->addMesh(mesh.first, vb_layouts, vb_iterators, ib_iterators,
                         MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW,
-                        primtive_type);
+                        primitive_type, true);
                     m_mesh_collection.second.push_back(mesh.first);
                 } catch (glowl::MeshException const& exc) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -97,7 +123,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                         "Failed to add GPU mesh \"%s\": %s. [%s, %s, line %d]\n", mesh.first.c_str(), exc.what(),
                         __FILE__, __FUNCTION__, __LINE__);
                 }
-                
+
             }
         }
 

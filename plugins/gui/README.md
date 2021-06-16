@@ -23,10 +23,11 @@ This is the plugin that provides the GUI for MegaMol.
     - [OverlayRenderer](#overlayrenderer) 
         - [Parameters](#parameters) 
 - [Information for Developers](#information-for-developers) 
-    - [Using ImGui in Modules](#using-imgui-in-modules) 
+    - [Using ImGui in Modules](#using-imgui-in-modules)
     - [New Parameter Widgets](#new-parameter-widgets) 
         - [How to add a new parameter widget](#how-to-add-a-new-parameter-widget) 
         - [How to add a new parameter group widget](#how-to-add-a-new-parameter-group-widget) 
+    - [GUI Window/PopUp/Notification for Frontend Service](#gui-windowpopupnotification-for-frontend-service)
     - [Default GUI State ](#default-gui-state) 
     - [Graph Data Structure](#graph-data-structure) 
     - [Class Dependencies](#class-dependencies) 
@@ -298,6 +299,71 @@ The function should be named like: `void draw_group_widget_<NEW_WIDGET_NAME>(...
 The function should be named like: `bool check_group_widget_<NEW_WIDGET_NAME>(..)`. See existing functions for the required signature.
 * Add a new group widget data set of the type `GroupWidgetData` in the ctor and register above functions as callbacks. 
 * Identification of parameter widget groups. Currently by name of namespace and name and type of expected parameters.
+
+## GUI Window/PopUp/Notification for Frontend Service
+
+In order to register a GUI window, popup or notification within a frontend service, the following steps are required:
+
+- In the **frontend service source file (.cpp)** add the following header:
+
+        #include "GUIRegisterWindow.h"
+
+-  In the **init()** function add `"GUIRegisterWindow"` to `m_requestedResourcesNames` array.
+
+### GUI Window
+- (Optional) In the **frontend service header file (.h)** add a variable for one time window setup:
+
+        bool m_setup_window_once = true;
+
+- Since the registration of a GUI window is only required once, add the following code to the **setRequestedResources()** function. 
+    *Adjust the index in `resources`!*
+
+        auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+        gui_window_request_resource.register_window("TEST Window", [&](megamol::gui::WindowConfiguration::Basic &win_config) {
+            if (m_setup_window_once) {
+                win_config.flags = ImGuiWindowFlags_None;
+                win_config.size = ImVec2(300.0f, 300.0f);
+                win_config.reset_pos_size = true;
+
+                m_setup_window_once = false;
+            }
+
+            // Put your window content here ...
+            ImGui::TextUnformatted("Hello World ...");
+        });
+
+### GUI PopUp
+
+- In the **frontend service header file (.h)** add a variable for opening the popup. If this variable is set to `true`, the popup is opened.
+
+        bool m_open_popup = true;
+
+- Since the registration of a GUI popup is only required once, add the following code to the **setRequestedResources()** function. 
+    *Adjust the index in `resources`!*
+
+        auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+        gui_window_request_resource.register_popup("TEST PopUp", m_open_popup, [&]() {
+
+            // Put your popup content here ...
+            ImGui::TextUnformatted("Hello World ...");
+            if (ImGui::Button("Cancel")) {
+                ImGui::CloseCurrentPopup();
+            }            
+        });
+
+### GUI Notification
+
+- In the **frontend service header file (.h)** add a variable for opening the popup. If this variable is set to `true`, the popup is opened.
+
+        bool m_open_popup = true;
+
+- Since the registration of a GUI notification is only required once, add the following code to the **setRequestedResources()** function. 
+    *Adjust the index in `resources`!*
+
+        auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+        gui_window_request_resource.register_notification("TEST Notification", m_open_popup, "This is the notification ...");
+    
+  **NOTE:** The notification is also printed to the console. If the GUI resource is not available, there will be no console output of this message!
 
 ### Default GUI State 
 

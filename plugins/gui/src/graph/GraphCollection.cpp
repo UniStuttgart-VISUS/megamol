@@ -5,9 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "GraphCollection.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/view/AbstractView.h"
+#include "utility/plugins/PluginManager.h"
 
 
 using namespace megamol;
@@ -520,7 +522,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
 
                     if (use_stock) {
                         for (auto& parameter : new_module_ptr->Parameters()) {
-                            if (GUIUtils::CaseInsensitiveStringCompare(parameter.FullName(), param_full_name)) {
+                            if (GUIUtils::CaseInsensitiveStringCompare(parameter.FullNameCore(), param_full_name)) {
                                 megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                     (*param_slot), parameter, true, false, false);
                             }
@@ -528,7 +530,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
                     } else {
                         std::shared_ptr<Parameter> param_ptr;
                         megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(
-                            (*param_slot), param_ptr, false, false, true);
+                            (*param_slot), param_ptr, false, false, true, new_module_ptr->FullName());
                         new_module_ptr->Parameters().emplace_back((*param_ptr));
                     }
                 }
@@ -1132,14 +1134,12 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 /// DEBUG
                 /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] >>>> '%s'\n", value_str.c_str());
 
-                /// XXX
-                param_slot_full_name = "::" + param_slot_full_name;
-                /// XXX
                 // Searching for parameter
                 if (graph_ptr != nullptr) {
                     for (auto& module_ptr : graph_ptr->Modules()) {
                         for (auto& parameter : module_ptr->Parameters()) {
-                            if (GUIUtils::CaseInsensitiveStringCompare(parameter.FullName(), param_slot_full_name)) {
+                            if (GUIUtils::CaseInsensitiveStringCompare(
+                                    parameter.FullNameProject(), param_slot_full_name)) {
                                 parameter.SetValueString(value_str);
                             }
                         }
@@ -1215,15 +1215,9 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                             (parameter.Type() != ParamType_t::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
-                            /// XXX
-                            auto param_fullname = parameter.FullName();
-                            if (param_fullname.find("::::") != std::string::npos) {
-                                param_fullname = param_fullname.substr(2);
-                            }
-                            /// XXX
                             vislib::UTF8Encoder::Encode(
                                 valueString, vislib::StringA(parameter.GetValueString().c_str()));
-                            confParams << "mmSetParamValue(\"" << param_fullname << "\",[=["
+                            confParams << "mmSetParamValue(\"" << parameter.FullNameProject() << "\",[=["
                                        << std::string(valueString.PeekBuffer()) << "]=])\n";
                         }
                     }
@@ -1675,7 +1669,7 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
             module_ptr->GUIParameterGroups().StateToJSON(state_json, module_full_name);
             // Parameters
             for (auto& param : module_ptr->Parameters()) {
-                param.StateToJSON(state_json, param.FullName());
+                param.StateToJSON(state_json, param.FullNameProject());
             }
         }
         state_str = state_json.dump(); // No line feed
@@ -1713,7 +1707,7 @@ bool megamol::gui::GraphCollection::load_state_from_file(const std::string& file
                 module_ptr->GUIParameterGroups().StateFromJSON(json, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->Parameters()) {
-                    param.StateFromJSON(json, param.FullName());
+                    param.StateFromJSON(json, param.FullNameProject());
                     param.ForceSetGUIStateDirty();
                 }
             }

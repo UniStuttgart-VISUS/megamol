@@ -7,9 +7,7 @@
 
 #ifndef MEGAMOL_GUI_SPLITTERWIDGET_INCLUDED
 #define MEGAMOL_GUI_SPLITTERWIDGET_INCLUDED
-
-
-#include "GUIUtils.h"
+#pragma once
 
 
 namespace megamol {

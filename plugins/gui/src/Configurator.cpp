@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "Configurator.h"
 
 
@@ -55,7 +55,7 @@ megamol::gui::Configurator::Configurator()
 Configurator::~Configurator() {}
 
 
-bool megamol::gui::Configurator::Draw(WindowCollection::WindowConfiguration& wc) {
+bool megamol::gui::Configurator::Draw(WindowConfiguration& wc) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -282,8 +282,9 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
             }
             bool add_module = false;
             // Left mouse button double click action
-            if ((ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) ||
-                (ImGui::IsItemFocused() && ImGui::IsItemActivated())) {
+            if ((ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) || // Mouse Double Click
+                (!ImGui::IsMouseClicked(0) && ImGui::IsItemFocused() &&
+                    ImGui::IsItemActivated())) { // Selection via key ('Space')
                 add_module = true;
             }
             // Context menu

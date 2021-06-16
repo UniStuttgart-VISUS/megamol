@@ -5,10 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
-#include "Call.h"
 
-#include "CallSlot.h"
+#include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"
 
@@ -147,9 +145,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
                 if (callerslot_ptr->GetParentModule()->GroupUID() == calleeslot_ptr->GetParentModule()->GroupUID()) {
                     connect_interface_slot = false;
+                    hidden = callerslot_ptr->GetParentModule()->IsHidden();
                 }
-                hidden =
-                    (callerslot_ptr->GetParentModule()->IsHidden() && calleeslot_ptr->GetParentModule()->IsHidden());
             }
             if (!hidden) {
 

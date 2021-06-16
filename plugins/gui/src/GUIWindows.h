@@ -7,50 +7,26 @@
 
 #ifndef MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 #define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
+#pragma once
 
-
-#ifdef _WIN32
-#ifdef GUI_EXPORTS
-#define GUI_API __declspec(dllexport)
-#else
-#define GUI_API __declspec(dllimport)
-#endif
-#else // _WIN32
-#define GUI_API
-#endif // _WIN32
 
 #include "Configurator.h"
 #include "LogConsole.h"
+#include "TransferFunctionEditor.h"
 #include "WindowCollection.h"
-#include "widgets/CorporateGreyStyle.h"
-#include "widgets/CorporateWhiteStyle.h"
-#include "widgets/DefaultStyle.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 #include "widgets/StringSearchWidget.h"
-#include "widgets/TransferFunctionEditor.h"
 #include "widgets/WidgetPicking_gl.h"
-
-#include "mmcore/CoreInstance.h"
-#include "mmcore/MegaMolGraph.h"
-#include "mmcore/ViewDescription.h"
-#include "mmcore/utility/FileUtils.h"
-#include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/utility/graphics/ScreenShotComments.h"
-#include "mmcore/versioninfo.h"
-
-#include "vislib/math/Rectangle.h"
-
-#include <ctime>
-#include <iomanip>
-#include <sstream>
 
 
 namespace megamol {
 namespace gui {
 
-    class GUI_API GUIWindows {
+    class GUIWindows {
     public:
         /**
          * CTOR.
@@ -119,14 +95,14 @@ namespace gui {
          * @param as_lua   If true, GUI state, scale and visibility are returned wrapped into respective LUA commands.
          *                 If false, only GUI state JSON string is returned.
          */
-        std::string GetState(bool as_lua) {
+        inline std::string GetState(bool as_lua) {
             return this->project_to_lua_string(as_lua);
         }
 
         /**
          * Pass current GUI visibility.
          */
-        bool GetVisibility(void) const {
+        inline bool GetVisibility(void) const {
             return this->state.gui_visible;
         }
 
@@ -152,7 +128,7 @@ namespace gui {
         bool GetTriggeredScreenshot(void);
 
         // Valid filename is only ensured after screenshot was triggered.
-        inline const std::string GetScreenshotFileName(void) const {
+        inline std::string GetScreenshotFileName(void) const {
             return this->state.screenshot_filepath;
         }
 
@@ -207,8 +183,8 @@ namespace gui {
          * Set current frame statistics.
          */
         void SetFrameStatistics(double last_averaged_fps, double last_averaged_ms, size_t frame_count) {
-            this->state.stat_averaged_fps = last_averaged_fps;
-            this->state.stat_averaged_ms = last_averaged_ms;
+            this->state.stat_averaged_fps = static_cast<float>(last_averaged_fps);
+            this->state.stat_averaged_ms = static_cast<float>(last_averaged_ms);
             this->state.stat_frame_count = frame_count;
         }
 
@@ -216,7 +192,7 @@ namespace gui {
          * Set resource directories.
          */
         void SetResourceDirectories(const std::vector<std::string>& resource_directories) {
-            this->state.resource_directories = resource_directories;
+            megamol::gui::gui_resource_paths = resource_directories;
         }
 
         /**
@@ -224,6 +200,19 @@ namespace gui {
          */
         void SetClipboardFunc(const char* (*get_clipboard_func)(void* user_data),
             void (*set_clipboard_func)(void* user_data, const char* string), void* user_data);
+
+        /**
+         * Register GUI window/pop-up/notification for external window callback function containing ImGui content.
+         *
+         * @param window_name   The unique window name
+         * @param callback      The window callback function containing the GUI content of the window
+         */
+        void RegisterWindow(
+            const std::string& window_name, std::function<void(WindowConfiguration::Basic&)> const& callback);
+
+        void RegisterPopUp(const std::string& name, bool& open, std::function<void(void)> const& callback);
+
+        void RegisterNotification(const std::string& name, bool& open, const std::string& message);
 
         /**
          * Synchronise changes between core graph <-> gui graph.
@@ -257,8 +246,8 @@ namespace gui {
         struct StateBuffer {
             bool gui_visible;      // Flag indicating whether GUI is completely disabled
             bool gui_visible_post; // Required to prevent changes to 'gui_enabled' between pre and post drawing
-            std::vector<WindowCollection::DrawCallbacks>
-                gui_visible_buffer; // List of all visible window IDs for restore when GUI is visible again
+            std::vector<std::string>
+                gui_restore_hidden_windows; // List of all visible window IDs for restore when GUI is visible again
             unsigned int
                 gui_hide_next_frame; // Hiding all GUI windows properly needs two frames for ImGui to apply right state
             bool rescale_windows;    // Indicates resizing of windows for new gui zoom
@@ -268,7 +257,7 @@ namespace gui {
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
             bool load_fonts;                               // Flag indicating font loading
-            std::string win_delete;                        // Name of the window to delete.
+            size_t win_delete_hash_id;                     // Hash id of the window to delete.
             double last_instance_time;                     // Last instance time.
             bool open_popup_about;                         // Flag for opening about pop-up
             bool open_popup_save;                          // Flag for opening save pop-up
@@ -285,12 +274,11 @@ namespace gui {
             std::string font_file_name;                    // Font imgui name or font file name.
             int font_size;                                 // Font size (only used whe font file name is given)
             std::string request_load_projet_file; // Project file name which should be loaded by fronted service
-            double stat_averaged_fps;             // current average fps value
-            double stat_averaged_ms;              // current average fps value
+            float stat_averaged_fps;              // current average fps value
+            float stat_averaged_ms;               // current average fps value
             size_t stat_frame_count;              // current fame count
-            std::vector<std::string> resource_directories; // the global resource directories
-            bool load_docking_preset;                      // Flag indicating docking preset loading
-            bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
+            bool load_docking_preset;             // Flag indicating docking preset loading
+            bool hotkeys_check_once;              // WORKAROUND: Check multiple hotkey assignments once
         };
 
         /** The GUI hotkey array index mapping. */
@@ -332,6 +320,10 @@ namespace gui {
         /** The current local state of the gui. */
         StateBuffer state;
 
+        /** List of externally registered pop-up/notifications */
+        std::map<std::string, std::pair<bool*, std::function<void(void)>>> external_popup_registry;
+        std::map<std::string, std::tuple<bool*, bool, std::string>> external_notification_registry;
+
         // Widgets
         FileBrowserWidget file_browser;
         StringSearchWidget search_widget;
@@ -346,16 +338,16 @@ namespace gui {
 
         void load_default_fonts(void);
 
-        void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);
-        void drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc);
-        void drawTransferFunctionWindowCallback(WindowCollection::WindowConfiguration& wc);
-        void drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc);
+        void drawParamWindowCallback(WindowConfiguration& wc);
+        void drawFpsWindowCallback(WindowConfiguration& wc);
+        void drawTransferFunctionWindowCallback(WindowConfiguration& wc);
+        void drawConfiguratorWindowCallback(WindowConfiguration& wc);
 
         void drawMenu(void);
         void drawPopUps(void);
 
         // Only call after ImGui::Begin() and before next ImGui::End()
-        void window_sizing_and_positioning(WindowCollection::WindowConfiguration& wc, bool& out_collapsing_changed);
+        void window_sizing_and_positioning(WindowConfiguration& wc, bool& out_collapsing_changed);
 
         bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
         void checkMultipleHotkeyAssignment(void);
@@ -365,7 +357,7 @@ namespace gui {
         void load_preset_window_docking(ImGuiID global_docking_id);
 
         // Required to save/load docking
-        void load_imgui_settings_from_string(std::string imgui_settings);
+        void load_imgui_settings_from_string(const std::string& imgui_settings);
         std::string save_imgui_settings_to_string(void);
 
         std::string project_to_lua_string(bool as_lua);
@@ -374,11 +366,11 @@ namespace gui {
 
         void init_state(void);
 
-        void update_frame_statistics(WindowCollection::WindowConfiguration& wc);
+        void update_frame_statistics(WindowConfiguration& wc);
 
         bool create_not_existing_png_filepath(std::string& inout_filepath);
 
-        std::string full_window_title(WindowCollection::WindowConfiguration& wc) const;
+        std::string full_window_title(WindowConfiguration& wc) const;
     };
 
 } // namespace gui

@@ -5,9 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
-#include "Module.h"
 
+#include "Module.h"
 #include "Call.h"
 #include "CallSlot.h"
 #include "InterfaceSlot.h"
@@ -491,7 +490,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
 
                         // Param Button
                         if (parameter_button) {
-                            ImVec2 param_button_pos = ImGui::GetCursorScreenPos();
+                            ImVec2 param_popup_pos = ImGui::GetCursorScreenPos();
                             if (this->gui_selected) {
                                 this->gui_param_child_show = ((state.interact.module_param_child_position.x > 0.0f) &&
                                                               (state.interact.module_param_child_position.y > 0.0f));
@@ -503,7 +502,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                                 hovered) {
                                 this->gui_param_child_show = !this->gui_param_child_show;
                                 if (this->gui_param_child_show) {
-                                    state.interact.module_param_child_position = param_button_pos;
+                                    state.interact.module_param_child_position = param_popup_pos;
+                                    state.interact.module_param_child_position.x += ImGui::GetFrameHeight();
                                 } else {
                                     state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
                                 }
@@ -601,5 +601,23 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
         for (auto& slot : slot_pair.second) {
             slot->Update(state);
         }
+    }
+}
+
+
+void megamol::gui::Module::SetName(const std::string& mod_name) {
+
+    this->name = mod_name;
+    for (auto& p : this->parameters) {
+        p.SetParentModuleName(this->FullName());
+    }
+}
+
+
+void megamol::gui::Module::SetGroupName(const std::string& gr_name) {
+
+    this->group_name = gr_name;
+    for (auto& p : this->parameters) {
+        p.SetParentModuleName(this->FullName());
     }
 }

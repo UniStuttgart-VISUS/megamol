@@ -83,8 +83,8 @@ if(BUILD_FRONTEND_SERVICES)
 
   # GLFW
   if(USE_GLFW)
-    require_external(glfw3)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
+    require_external(glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service vislib glad core gui)

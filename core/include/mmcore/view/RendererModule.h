@@ -32,7 +32,7 @@ public:
     /** Ctor. */
     RendererModule()
         : Module()
-        , chainRenderSlot("chainRendering", "Connects the renderer to and additional renderer")
+        , chainRenderSlot("chainRendering", "Connects the renderer to an additional renderer")
         , renderSlot("rendering", "Connects the Renderer to a calling renderer or view") {
 
         // OutputCall

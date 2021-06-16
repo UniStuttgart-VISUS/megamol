@@ -104,36 +104,36 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         const std::string z_str = std::string(this->flexZSlot.Param<core::param::FlexEnumParam>()->ValueString());
 
         if (pos_str != "undef") {
-            if (!cad->inquire(pos_str)) {
+            if (!cad->inquireVar(pos_str)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", pos_str.c_str());
             }
         }
         if (col_str != "undef") {
-            if (!cad->inquire(col_str)) {
+            if (!cad->inquireVar(col_str)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", col_str.c_str());
             }
         }
         if (box_str != "undef") {
-            if (!cad->inquire(box_str)) {
+            if (!cad->inquireVar(box_str)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", box_str.c_str());
             }
         }
 
         if (x_str != "undef" || y_str != "undef" || z_str != "undef") {
-            if (!cad->inquire(x_str)) {
+            if (!cad->inquireVar(x_str)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", x_str.c_str());
             }
 
-            if (!cad->inquire(y_str)) {
+            if (!cad->inquireVar(y_str)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", y_str.c_str());
             }
 
-            if (!cad->inquire(z_str)) {
+            if (!cad->inquireVar(z_str)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", z_str.c_str());
             }

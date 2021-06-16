@@ -7,14 +7,13 @@
 
 #ifndef MEGAMOL_GUI_GRAPH_MODULE_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_MODULE_H_INCLUDED
+#pragma once
 
-
-#include "GUIUtils.h"
-#include "widgets/HoverToolTip.h"
-#include "widgets/PopUps.h"
 
 #include "CallSlot.h"
 #include "ParameterGroups.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/PopUps.h"
 
 
 namespace megamol {
@@ -123,9 +122,10 @@ namespace gui {
 
         // SET ----------------------------------------------------------------
 
-        inline void SetName(const std::string& module_name) {
-            this->name = module_name;
-        }
+        void SetName(const std::string& mod_name);
+
+        void SetGroupName(const std::string& gr_name);
+
         inline void SetGraphEntryName(const std::string& graph_entry) {
             this->graph_entry_name = graph_entry;
         }
@@ -135,9 +135,7 @@ namespace gui {
         inline void SetHidden(bool hidden) {
             this->gui_hidden = hidden;
         }
-        inline void SetGroupName(const std::string& name) {
-            this->group_name = name;
-        }
+
         inline void SetPosition(ImVec2 pos) {
             this->gui_position = pos;
         }

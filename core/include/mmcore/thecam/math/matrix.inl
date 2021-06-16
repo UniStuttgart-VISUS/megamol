@@ -187,7 +187,7 @@ bool megamol::core::thecam::math::invert(matrix<V, D, D, L, T>& matrix) {
         }
     }
 
-    /* Gauﬂ elimination. */
+    /* Gau√ü elimination. */
     s = 0;
     do {
         // Pivotising avoids unnecessary cancelling if a zero is in the

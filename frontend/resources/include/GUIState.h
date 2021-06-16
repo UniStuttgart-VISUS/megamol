@@ -25,7 +25,7 @@ struct GUIState {
 
     // Provide GUI state as JSON string from argument of lua command
     /// (e.g. Lua_Service_Wrapper loads project providing GUI state via mmSetGUIState)
-    std::function<void(std::string)> provide_gui_state;
+    std::function<void(const std::string&)> provide_gui_state;
 
     // Provide GUI visibility from argument of lua command
     /// (e.g. Lua_Service_Wrapper loads project providing GUI visibility via mmSetShowGUI)
