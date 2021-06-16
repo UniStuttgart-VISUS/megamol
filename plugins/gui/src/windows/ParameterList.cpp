@@ -58,7 +58,6 @@ bool ParameterList::Draw() {
 
     // Mode
     megamol::gui::ButtonWidgets::ExtendedModeButton("draw_param_window_callback", this->win_extended_mode);
-    this->tooltip.Marker("Expert mode enables options for additional parameter presentation options.");
     ImGui::SameLine();
 
     // Options
@@ -74,10 +73,10 @@ bool ParameterList::Draw() {
 
     // Info
     std::string help_marker = "[INFO]";
-    std::string param_help = "[Hover] Show Parameter Description Tooltip\n"
-                             "[Right Click] Context Menu\n"
-                             "[Drag & Drop] Move Module to other Parameter Window\n"
-                             "[Enter], [Tab], [Left Click outside Widget] Confirm input changes";
+    std::string param_help = "[Hover] Show description tooltip\n"
+                             "[Right Click] Context menu\n"
+                             "[Drag & Drop Module Header] Move module to other parameter window\n"
+                             "[Enter], [Tab], [Left Click outside Widget] Confirm text input changes";
     ImGui::AlignTextToFramePadding();
     ImGui::TextDisabled(help_marker.c_str());
     this->tooltip.ToolTip(param_help);
@@ -90,8 +89,7 @@ bool ParameterList::Draw() {
         }
         std::string help_test = "[" + this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].keycode.ToString() +
                                 "] Set keyboard focus to search input field.\n"
-                                "Case insensitive substring search in module and parameter names.\nSearches globally "
-                                "in all parameter windows.\n";
+                                "Case insensitive substring search in module and parameter names.";
         this->search_widget.Widget("guiwindow_parameter_earch", help_test);
     }
 
@@ -137,22 +135,23 @@ bool ParameterList::Draw() {
             }
         }
         for (auto& group : group_map) {
-            std::string search_string = this->search_widget.GetSearchString();
+            std::string group_search_string = this->search_widget.GetSearchString();
             bool indent = false;
             bool group_header_open = group.first.empty();
             if (!group_header_open) {
                 group_header_open = gui_utils::GroupHeader(
-                    megamol::gui::HeaderType::MODULE_GROUP, group.first, search_string, override_header_state);
+                    megamol::gui::HeaderType::MODULE_GROUP, group.first, group_search_string, override_header_state);
                 indent = true;
                 ImGui::Indent();
             }
             if (group_header_open) {
                 for (auto& module_ptr : group.second) {
+                    std::string module_search_string = group_search_string;
                     std::string module_label = module_ptr->FullName();
 
                     // Draw module header
                     bool module_header_open = gui_utils::GroupHeader(
-                        megamol::gui::HeaderType::MODULE, module_label, search_string, override_header_state);
+                        megamol::gui::HeaderType::MODULE, module_label, module_search_string, override_header_state);
                     // Module description as hover tooltip
                     this->tooltip.ToolTip(module_ptr->Description(), ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
 
@@ -189,7 +188,7 @@ bool ParameterList::Draw() {
 
                     // Draw parameters
                     if (module_header_open) {
-                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
+                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_search_string,
                             this->win_extended_mode, true, Parameter::WidgetScope::LOCAL,
                             this->win_tfeditor_ptr, override_header_state, nullptr);
                     }

@@ -1169,6 +1169,7 @@ void GUIManager::draw_menu() {
         if (ImGui::MenuItem("Load Project", this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].keycode.ToString().c_str())) {
             this->gui_state.open_popup_load = true;
         }
+        this->tooltip.ToolTip("Loaded project will not replace current project but will be added!");
         if (ImGui::MenuItem("Save Project", this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].keycode.ToString().c_str())) {
             this->gui_state.open_popup_save = true;
         }
@@ -1240,24 +1241,19 @@ void GUIManager::draw_menu() {
     // RENDER -----------------------------------------------------------------
     if (ImGui::BeginMenu("Projects")) {
         for (auto& graph_ptr : this->win_configurator_ptr->GetGraphCollection().GetGraphs()) {
-            bool running = graph_ptr->IsRunning();
-            std::string button_label = "graph_running_button" + std::to_string(graph_ptr->UID());
-            if (megamol::gui::ButtonWidgets::OptionButton(button_label, "", running)) {
-                if (!running) {
-                    this->win_configurator_ptr->GetGraphCollection().RequestNewRunningGraph(graph_ptr->UID());
-                }
-            }
-            std::string tooltip_str = "Click to run project";
-            if (running) {
-                tooltip_str = "Project is running";
-            }
-            this->tooltip.ToolTip(tooltip_str);
-            ImGui::SameLine();
-            ImGui::AlignTextToFramePadding();
 
-            if (ImGui::BeginMenu(graph_ptr->Name().c_str(), running)) {
-                ImGui::TextDisabled("Graph Entry");
+            if (ImGui::BeginMenu(graph_ptr->Name().c_str())) {
+
+                bool running = graph_ptr->IsRunning();
+                std::string button_label = "graph_running_button" + std::to_string(graph_ptr->UID());
+                if (megamol::gui::ButtonWidgets::OptionButton( button_label, ((running) ? ("Running") : ("Run")), running, running)) {
+                    if (!running) {
+                        this->win_configurator_ptr->GetGraphCollection().RequestNewRunningGraph(graph_ptr->UID());
+                    }
+                }
                 ImGui::Separator();
+
+                ImGui::TextDisabled("Graph Entries:");
                 for (auto& module_ptr : graph_ptr->Modules()) {
                     if (module_ptr->IsView()) {
                         if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
@@ -1285,8 +1281,6 @@ void GUIManager::draw_menu() {
                         }
                     }
                 }
-
-                ImGui::Separator();
                 if (ImGui::MenuItem("Toggle Graph Entry",
                         this->hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].keycode.ToString().c_str())) {
                     this->hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].is_pressed = true;
@@ -1294,6 +1288,7 @@ void GUIManager::draw_menu() {
 
                 ImGui::EndMenu();
             }
+            ImGui::AlignTextToFramePadding();
         }
         ImGui::EndMenu();
     }

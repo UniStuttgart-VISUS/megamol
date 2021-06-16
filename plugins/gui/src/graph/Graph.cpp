@@ -1904,18 +1904,12 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     ImGui::BeginMenuBar();
 
     // RUNNING
-    ImGui::BeginGroup();
-    bool button = megamol::gui::ButtonWidgets::OptionButton("graph_running_button", "", this->IsRunning());
-    gui::gui_utils::PushReadOnly(this->IsRunning());
-    button |= ImGui::Button(((this->IsRunning()) ? ("Running") : ("Run")));
-    gui::gui_utils::PopReadOnly(this->IsRunning());
-    if (button && !this->IsRunning()) {
-        state.new_running_graph_uid = this->uid;
+    if (megamol::gui::ButtonWidgets::OptionButton("graph_running_button", ((this->running) ? ("Running") : ("Run")), this->running, this->running)) {
+        if (!this->running) {
+            state.new_running_graph_uid = this->uid;
+        }
     }
-    ImGui::EndGroup();
-
     ImGui::Separator();
-
 
     // Choose single selected view module
     ModulePtr_t selected_mod_ptr;
@@ -1959,19 +1953,23 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
             }
         }
 
-        this->gui_current_graph_entry_name = selected_mod_ptr->GraphEntryName();
-        float input_text_width = std::max(min_text_width,
-            (ImGui::CalcTextSize(this->gui_current_graph_entry_name.c_str()).x + 2.0f * style.ItemSpacing.x));
-        ImGui::PushItemWidth(input_text_width);
-        gui_utils::Utf8Encode(this->gui_current_graph_entry_name);
-        ImGui::InputText("###current_graph_entry_name", &this->gui_current_graph_entry_name, ImGuiInputTextFlags_None);
-        gui_utils::Utf8Decode(this->gui_current_graph_entry_name);
-        if (ImGui::IsItemDeactivatedAfterEdit()) {
-            selected_mod_ptr->SetGraphEntryName(this->gui_current_graph_entry_name);
-        } else {
+        if (is_graph_entry) {
             this->gui_current_graph_entry_name = selected_mod_ptr->GraphEntryName();
+            float input_text_width = std::max(min_text_width,
+                                              (ImGui::CalcTextSize(this->gui_current_graph_entry_name.c_str()).x +
+                                               2.0f * style.ItemSpacing.x));
+            ImGui::PushItemWidth(input_text_width);
+            gui_utils::Utf8Encode(this->gui_current_graph_entry_name);
+            ImGui::InputText("###current_graph_entry_name", &this->gui_current_graph_entry_name,
+                             ImGuiInputTextFlags_None);
+            gui_utils::Utf8Decode(this->gui_current_graph_entry_name);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                selected_mod_ptr->SetGraphEntryName(this->gui_current_graph_entry_name);
+            } else {
+                this->gui_current_graph_entry_name = selected_mod_ptr->GraphEntryName();
+            }
+            ImGui::PopItemWidth();
         }
-        ImGui::PopItemWidth();
     }
 
     ImGui::Separator();
@@ -2268,6 +2266,7 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
             const float zoom_fac = 1.1f; // = 10%
             if (this->gui_reset_zooming) {
                 this->gui_graph_state.canvas.zooming = 1.0f;
+                last_zooming = 1.0f;
                 this->gui_reset_zooming = false;
             } else {
                 if (io.MouseWheel != 0) {

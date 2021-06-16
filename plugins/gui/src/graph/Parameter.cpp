@@ -813,7 +813,7 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                         this->SetGUIVisible(!this->IsGUIVisible());
                         this->ForceSetGUIStateDirty();
                     }
-                    this->gui_tooltip.ToolTip("Visibility", ImGui::GetItemID(), 1.0f, 3.0f);
+                    this->gui_tooltip.ToolTip("Visibility (Basic Mode)");
 
                     ImGui::SameLine();
 
@@ -823,14 +823,14 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                         this->SetGUIReadOnly(read_only);
                         this->ForceSetGUIStateDirty();
                     }
-                    this->gui_tooltip.ToolTip("Read-Only", ImGui::GetItemID(), 1.0f, 3.0f);
+                    this->gui_tooltip.ToolTip("Read-Only");
 
                     ImGui::SameLine();
 
                     // Presentation
                     ButtonWidgets::OptionButton(
-                        "param_present_button", "", (this->GetGUIPresentation() != Present_t::Basic));
-                    if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
+                        "param_present_button", "", (this->GetGUIPresentation() != Present_t::Basic), false);
+                    if (ImGui::BeginPopupContextItem("param_present_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
                         for (auto& present_name_pair : this->GetPresentationNameMap()) {
                             if (this->IsPresentationCompatible(present_name_pair.first)) {
                                 if (ImGui::MenuItem(present_name_pair.second.c_str(), nullptr,
@@ -842,13 +842,13 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                         }
                         ImGui::EndPopup();
                     }
-                    this->gui_tooltip.ToolTip("Presentation", ImGui::GetItemID(), 1.0f, 3.0f);
+                    this->gui_tooltip.ToolTip("Presentation");
 
                     ImGui::SameLine();
 
                     // Lua
                     ButtonWidgets::LuaButton("param_lua_button", (*this), this->FullNameProject());
-                    this->gui_tooltip.ToolTip("Copy lua command to clipboard.", ImGui::GetItemID(), 1.0f, 3.0f);
+                    this->gui_tooltip.ToolTip("Copy lua command to clipboard.");
 
                     ImGui::SameLine();
                 }

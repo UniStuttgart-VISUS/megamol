@@ -359,8 +359,8 @@ namespace gui {
         static void PopReadOnly(bool set = true) {
 
             if (set) {
-                ImGui::PopItemFlag();
                 ImGui::PopStyleVar();
+                ImGui::PopItemFlag();
             }
         }
 

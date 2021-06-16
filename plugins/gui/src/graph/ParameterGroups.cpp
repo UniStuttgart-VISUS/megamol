@@ -80,7 +80,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                         if (ImGui::RadioButton("###visibile", visible)) {
                             group_widget_data->SetGUIVisible(!visible);
                         }
-                        this->tooltip.ToolTip("Visibility", ImGui::GetItemID(), 0.5f);
+                        this->tooltip.ToolTip("Visibility (Basic Mode)");
                         ImGui::SameLine();
 
                         // Read-only option
@@ -88,13 +88,13 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                         if (ImGui::Checkbox("###readonly", &readonly)) {
                             group_widget_data->SetGUIReadOnly(readonly);
                         }
-                        this->tooltip.ToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
+                        this->tooltip.ToolTip("Read-Only");
                         ImGui::SameLine();
 
                         // Presentation option
                         ButtonWidgets::OptionButton(
-                            "param_groups", "", (group_widget_data->GetGUIPresentation() != Present_t::Basic));
-                        if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
+                            "param_groups", "", (group_widget_data->GetGUIPresentation() != Present_t::Basic), false);
+                        if (ImGui::BeginPopupContextItem("param_present_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
                             for (auto& present_name_pair : group_widget_data->GetPresentationNameMap()) {
                                 if (group_widget_data->IsPresentationCompatible(present_name_pair.first)) {
                                     if (ImGui::MenuItem(present_name_pair.second.c_str(), nullptr,
@@ -105,7 +105,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                             }
                             ImGui::EndPopup();
                         }
-                        this->tooltip.ToolTip("Presentation", ImGui::GetItemID(), 0.5f);
+                        this->tooltip.ToolTip("Presentation");
                         ImGui::SameLine();
                     }
 
