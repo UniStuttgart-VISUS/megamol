@@ -11,6 +11,8 @@
 
 #include "mmstd_datatools/table/TableDataCall.h"
 
+#include "glm/glm.hpp"
+
 namespace megamol::thermodyn {
 
 class AccumulateInterfacePresence : public core::Module {
@@ -38,12 +40,14 @@ protected:
 
 private:
     bool is_dirty() const {
-        return frame_count_slot_.IsDirty() || toggle_all_frames_slot_.IsDirty();
+        return frame_count_slot_.IsDirty() || toggle_all_frames_slot_.IsDirty() ||
+               track_distance_threshold_slot_.IsDirty();
     }
 
     void reset_dirty() {
         frame_count_slot_.ResetDirty();
         toggle_all_frames_slot_.ResetDirty();
+        track_distance_threshold_slot_.ResetDirty();
     }
 
     bool get_data_cb(core::Call& c);
@@ -60,6 +64,10 @@ private:
 
     core::param::ParamSlot toggle_all_frames_slot_;
 
+    core::param::ParamSlot track_distance_threshold_slot_;
+
+    core::param::ParamSlot toggle_track_distance_limit_slot_;
+
     size_t in_data_hash_ = std::numeric_limits<size_t>::max();
 
     size_t out_data_hash_ = std::numeric_limits<size_t>::max();
@@ -69,7 +77,8 @@ private:
     int frame_count_ = 0;
 
     std::unordered_map<uint64_t, std::tuple<int /* state */, int /* start frame id*/, int /* end frame id */,
-                                     std::array<float, 3> /* start pos */, std::array<float, 3> /* end pos */>>
+                                     std::array<float, 3> /* start pos */, std::array<float, 3> /* end pos */,
+                                     glm::vec3 /* last position */, float /* track miles */>>
         state_cache_;
 
     std::vector<std::tuple<uint64_t /* id */, int /* start frame id */, int /* end frame id */,

@@ -1,6 +1,7 @@
 #include "AccumulateInterfacePresence.h"
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
 
@@ -8,7 +9,9 @@ megamol::thermodyn::AccumulateInterfacePresence::AccumulateInterfacePresence()
         : data_in_slot_("dataIn", "")
         , data_out_slot_("dataOut", "")
         , frame_count_slot_("frame count", "")
-        , toggle_all_frames_slot_("toggle all frames", "") {
+        , toggle_all_frames_slot_("toggle all frames", "")
+        , track_distance_threshold_slot_("track distance threshold", "")
+        , toggle_track_distance_limit_slot_("toggle track limit", "") {
     data_in_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
 
@@ -23,6 +26,12 @@ megamol::thermodyn::AccumulateInterfacePresence::AccumulateInterfacePresence()
 
     toggle_all_frames_slot_ << new core::param::BoolParam(false);
     MakeSlotAvailable(&toggle_all_frames_slot_);
+
+    track_distance_threshold_slot_ << new core::param::FloatParam(1.0f, std::numeric_limits<float>::min());
+    MakeSlotAvailable(&track_distance_threshold_slot_);
+
+    toggle_track_distance_limit_slot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&toggle_track_distance_limit_slot_);
 }
 
 
@@ -65,7 +74,11 @@ bool megamol::thermodyn::AccumulateInterfacePresence::get_data_cb(core::Call& c)
     }
 
     // set outdata
-    out_data->Set(infos_.size(), data_.size() / infos_.size(), infos_.data(), data_.data());
+    if (data_.size() != 0 && infos_.size() != 0) {
+        out_data->Set(infos_.size(), data_.size() / infos_.size(), infos_.data(), data_.data());
+    } else {
+        out_data->Set(0, 0, nullptr, nullptr);
+    }
     out_data->SetDataHash(out_data_hash_);
     out_data->SetFrameCount(1);
     out_data->SetFrameID(1);
@@ -105,6 +118,10 @@ bool megamol::thermodyn::AccumulateInterfacePresence::assert_data(core::moldyn::
 
     auto const total_frame_count = points.FrameCount();
 
+    auto const toggle_track_limit = toggle_track_distance_limit_slot_.Param<core::param::BoolParam>()->Value();
+
+    auto const track_distance_threshold = track_distance_threshold_slot_.Param<core::param::FloatParam>()->Value();
+
     // auto current_frame_id = start_frame_id;
 
     for (auto fid = start_frame_id; fid < end_frame_id && fid < total_frame_count; ++fid) {
@@ -136,13 +153,14 @@ bool megamol::thermodyn::AccumulateInterfacePresence::assert_data(core::moldyn::
                 auto const y_pos = yAcc->Get_f(p_idx);
                 auto const z_pos = zAcc->Get_f(p_idx);
 
-                auto& [state, s_fid, e_fid, s_pos, e_pos] = state_cache_[id];
+                auto& [state, s_fid, e_fid, s_pos, e_pos, l_pos, track_miles] = state_cache_[id];
 
                 if (state == 0) {
                     s_fid = -1;
                     e_fid = -1;
                     s_pos = {-1, -1, -1};
                     e_pos = {-1, -1, -1};
+                    track_miles = 0.f;
                 }
 
                 if (val == 3) {
@@ -150,20 +168,27 @@ bool megamol::thermodyn::AccumulateInterfacePresence::assert_data(core::moldyn::
                         state = 3;
                         s_fid = fid;
                         s_pos = {x_pos, y_pos, z_pos};
+                        l_pos = {x_pos, y_pos, z_pos};
                     }
-                } else if (val == 1) {
+                    track_miles += glm::distance(l_pos, glm::vec3(x_pos, y_pos, z_pos));
+                    l_pos = glm::vec3(x_pos, y_pos, z_pos);
                     if (state == 4) {
                         state = 1;
                         e_fid = fid;
                         e_pos = {x_pos, y_pos, z_pos};
-                        states_.push_back({id, s_fid, e_fid, s_pos, e_pos});
+                        if (!toggle_track_limit || (track_miles < track_distance_threshold)) {
+                            states_.push_back({id, s_fid, e_fid, s_pos, e_pos});
+                        }
                     }
+                } else if (val == 1) {
+                    track_miles += glm::distance(l_pos, glm::vec3(x_pos, y_pos, z_pos));
+                    l_pos = glm::vec3(x_pos, y_pos, z_pos);
                     if (state == 3) {
                         state = 4;
                     }
                 }
 
-                //if (state == 0) {
+                // if (state == 0) {
                 //    s_fid = -1;
                 //    e_fid = -1;
                 //    s_pos = {-1, -1, -1};
@@ -227,6 +252,9 @@ bool megamol::thermodyn::AccumulateInterfacePresence::assert_data(core::moldyn::
 
     auto const column_count = 9;
     auto const row_count = states_.size();
+
+    if (row_count == 0)
+        return true;
 
     data_.clear();
     data_.reserve(column_count * row_count);
