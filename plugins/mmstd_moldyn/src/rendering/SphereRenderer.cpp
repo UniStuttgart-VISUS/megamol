@@ -281,7 +281,6 @@ bool SphereRenderer::create(void) {
         this->renderMode = RenderMode::SIMPLE;
     }
 
-
     // timer.SetNumRegions(4);
     // const char *regions[4] = {"Upload1", "Upload2", "Upload3", "Rendering"};megamol::
     // timer.SetRegionNames(4, regions);
