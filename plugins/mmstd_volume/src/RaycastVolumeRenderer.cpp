@@ -350,18 +350,15 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     compute_shdr->setUniform("light", curlight.direction[0], curlight.direction[1], curlight.direction[2]);
     compute_shdr->setUniform("ambient_col", this->m_ambient_color.Param<core::param::ColorParam>()->Value()[0],
         this->m_ambient_color.Param<core::param::ColorParam>()->Value()[1],
-        this->m_ambient_color.Param<core::param::ColorParam>()->Value()[2],
-        this->m_ambient_color.Param<core::param::ColorParam>()->Value()[3]);
+        this->m_ambient_color.Param<core::param::ColorParam>()->Value()[2]);
     compute_shdr->setUniform("specular_col", this->m_specular_color.Param<core::param::ColorParam>()->Value()[0],
         this->m_specular_color.Param<core::param::ColorParam>()->Value()[1],
-        this->m_specular_color.Param<core::param::ColorParam>()->Value()[2],
-        this->m_specular_color.Param<core::param::ColorParam>()->Value()[3]);
+        this->m_specular_color.Param<core::param::ColorParam>()->Value()[2]);
     compute_shdr->setUniform(
-        "light_col", curlight.colour[0], curlight.colour[1], curlight.colour[2], curlight.colour[3]);
+        "light_col", curlight.colour[0], curlight.colour[1], curlight.colour[2]);
     compute_shdr->setUniform("material_col", this->m_material_color.Param<core::param::ColorParam>()->Value()[0],
         this->m_material_color.Param<core::param::ColorParam>()->Value()[1],
-        this->m_material_color.Param<core::param::ColorParam>()->Value()[2],
-        this->m_material_color.Param<core::param::ColorParam>()->Value()[3]);
+        this->m_material_color.Param<core::param::ColorParam>()->Value()[2]);
 
     /*    auto const arv = std::dynamic_pointer_cast<core::view::AbstractView const>(cr.PeekCallerSlot()->Parent());
     std::array<float, 4> bkgndCol = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -569,6 +566,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
         glEnable(GL_DEPTH_TEST);
     else
         glDisable(GL_DEPTH_TEST);
+
+    glUseProgram(0);
 
     return true;
 }
