@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/view/AbstractView3D.h"
 #ifdef _WIN32
-#    include <windows.h>
+#include <windows.h>
 #endif /* _WIN32 */
 #include <chrono>
 #include <fstream>
@@ -21,12 +21,12 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/view/CallRenderView.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Vector.h"
 #include "vislib/sys/KeyCode.h"
 #include "vislib/sys/sysfunctions.h"
-#include "mmcore/view/CallRenderView.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -39,40 +39,41 @@ using namespace megamol::core::view;
  */
 AbstractView3D::AbstractView3D(void)
         : AbstractView()
-    , _showLookAt("showLookAt", "Flag showing the look at point")
-    , _stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection")
-    , _stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection")
-    , _viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates")
-    , _viewKeyRunFactorSlot("viewKey::RunFactor", "The factor for step size multiplication when running (shift)")
-    , _viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
-    , _viewKeyFixToWorldUpSlot("viewKey::FixToWorldUp","Fix rotation manipulator to world up vector")
-    , _mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
-    , _viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
-    , _enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
-    , _hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical")
-    , _cameraSetViewChooserParam("view::defaultView", "Choose a default view to look from")
-    , _cameraSetOrientationChooserParam("view::defaultOrientation", "Choose a default orientation to look from")
-    , _cameraViewOrientationParam("view::cubeOrientation", "Current camera orientation used for view cube orientation.")
-    , _showViewCubeParam("view::showViewCube", "Shows view cube.")
-    , _cameraPositionParam("cam::position", "")
-    , _cameraOrientationParam("cam::orientation", "")
-    , _cameraProjectionTypeParam("cam::projectiontype", "")
-    , _cameraNearPlaneParam("cam::nearplane", "")
-    , _cameraFarPlaneParam("cam::farplane", "")
-    , _cameraConvergencePlaneParam("cam::convergenceplane", "")
-    , _cameraEyeParam("cam::eye", "")
-    , _cameraGateScalingParam("cam::gatescaling", "")
-    , _cameraFilmGateParam("cam::filmgate", "")
-    , _cameraResolutionXParam("cam::resgate::x", "")
-    , _cameraResolutionYParam("cam::resgate::y", "")
-    , _cameraCenterOffsetParam("cam::centeroffset", "")
-    , _cameraHalfApertureDegreesParam("cam::halfaperturedegrees", "")
-    , _cameraHalfDisparityParam("cam::halfdisparity", "")
-    , _cameraOvrUpParam("cam::ovr::up", "")
-    , _cameraOvrLookatParam("cam::ovr::lookat", "")
-    , _cameraOvrParam("cam::ovr::override", "")
-    , _valuesFromOutside(false)
-    , _cameraControlOverrideActive(false) {
+        , _showLookAt("showLookAt", "Flag showing the look at point")
+        , _stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection")
+        , _stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection")
+        , _viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates")
+        , _viewKeyRunFactorSlot("viewKey::RunFactor", "The factor for step size multiplication when running (shift)")
+        , _viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
+        , _viewKeyFixToWorldUpSlot("viewKey::FixToWorldUp", "Fix rotation manipulator to world up vector")
+        , _mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
+        , _viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
+        , _enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
+        , _hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical")
+        , _cameraSetViewChooserParam("view::defaultView", "Choose a default view to look from")
+        , _cameraSetOrientationChooserParam("view::defaultOrientation", "Choose a default orientation to look from")
+        , _cameraViewOrientationParam(
+              "view::cubeOrientation", "Current camera orientation used for view cube orientation.")
+        , _showViewCubeParam("view::showViewCube", "Shows view cube.")
+        , _cameraPositionParam("cam::position", "")
+        , _cameraOrientationParam("cam::orientation", "")
+        , _cameraProjectionTypeParam("cam::projectiontype", "")
+        , _cameraNearPlaneParam("cam::nearplane", "")
+        , _cameraFarPlaneParam("cam::farplane", "")
+        , _cameraConvergencePlaneParam("cam::convergenceplane", "")
+        , _cameraEyeParam("cam::eye", "")
+        , _cameraGateScalingParam("cam::gatescaling", "")
+        , _cameraFilmGateParam("cam::filmgate", "")
+        , _cameraResolutionXParam("cam::resgate::x", "")
+        , _cameraResolutionYParam("cam::resgate::y", "")
+        , _cameraCenterOffsetParam("cam::centeroffset", "")
+        , _cameraHalfApertureDegreesParam("cam::halfaperturedegrees", "")
+        , _cameraHalfDisparityParam("cam::halfdisparity", "")
+        , _cameraOvrUpParam("cam::ovr::up", "")
+        , _cameraOvrLookatParam("cam::ovr::lookat", "")
+        , _cameraOvrParam("cam::ovr::override", "")
+        , _valuesFromOutside(false)
+        , _cameraControlOverrideActive(false) {
 
     using vislib::sys::KeyCode;
 
@@ -181,35 +182,35 @@ AbstractView3D::AbstractView3D(void)
     this->_orbitAltitudeManipulator.enable();
 
     auto defaultViewParam = new param::EnumParam(0);
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_FRONT,               "FACE - Front");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_BACK,                "FACE - Back");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_RIGHT,               "FACE - Right");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_LEFT,                "FACE - Left");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_TOP,                 "FACE - Top");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_BOTTOM,              "FACE - Bottom");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_LEFT_FRONT,    "CORNER - Top Left Front");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT,   "CORNER - Top Right Front");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_LEFT_BACK ,    "CORNER - Top Left Back");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_RIGHT_BACK ,   "CORNER - Top Right Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_FRONT, "FACE - Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_BACK, "FACE - Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_RIGHT, "FACE - Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_LEFT, "FACE - Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_TOP, "FACE - Top");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_FACE_BOTTOM, "FACE - Bottom");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_LEFT_FRONT, "CORNER - Top Left Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT, "CORNER - Top Right Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_LEFT_BACK, "CORNER - Top Left Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_TOP_RIGHT_BACK, "CORNER - Top Right Back");
     defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT, "CORNER - Bottom Left Front");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT,"CORNER - Bottom Right Front");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK,  "CORNER - Bottom Left Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT, "CORNER - Bottom Right Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK, "CORNER - Bottom Left Back");
     defaultViewParam->SetTypePair(DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK, "CORNER - Bottom Right Back");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_FRONT,           "EDGE - Top Front");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_LEFT,            "EDGE - Top Left");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_RIGHT,           "EDGE - Top Right");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_BACK,            "EDGE - Top Back");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_FRONT,        "EDGE - Bottom Front");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_LEFT,         "EDGE - Bottom Left");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_RIGHT,        "EDGE - Bottom Right");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_BACK,         "EDGE - Bottom Back");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_FRONT_LEFT,          "EDGE - Front Left");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_FRONT_RIGHT ,        "EDGE - Front Right");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BACK_LEFT,           "EDGE - Back Left");
-    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BACK_RIGHT,          "EDGE - Back Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_FRONT, "EDGE - Top Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_LEFT, "EDGE - Top Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_RIGHT, "EDGE - Top Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_TOP_BACK, "EDGE - Top Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_FRONT, "EDGE - Bottom Front");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_LEFT, "EDGE - Bottom Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_RIGHT, "EDGE - Bottom Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BOTTOM_BACK, "EDGE - Bottom Back");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_FRONT_LEFT, "EDGE - Front Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_FRONT_RIGHT, "EDGE - Front Right");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BACK_LEFT, "EDGE - Back Left");
+    defaultViewParam->SetTypePair(DEFAULTVIEW_EDGE_BACK_RIGHT, "EDGE - Back Right");
     defaultViewParam->SetGUIVisible(camparamvisibility);
     this->_cameraSetViewChooserParam.SetParameter(defaultViewParam),
-    this->_cameraSetViewChooserParam.SetUpdateCallback(&AbstractView::OnResetView);
+        this->_cameraSetViewChooserParam.SetUpdateCallback(&AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_cameraSetViewChooserParam);
 
     auto defaultOrientationParam = new param::EnumParam(0);
@@ -219,7 +220,7 @@ AbstractView3D::AbstractView3D(void)
     defaultOrientationParam->SetTypePair(DEFAULTORIENTATION_LEFT, "Left");
     defaultOrientationParam->SetGUIVisible(camparamvisibility);
     this->_cameraSetOrientationChooserParam.SetParameter(defaultOrientationParam),
-    this->MakeSlotAvailable(&this->_cameraSetOrientationChooserParam);
+        this->MakeSlotAvailable(&this->_cameraSetOrientationChooserParam);
     this->_cameraSetOrientationChooserParam.SetUpdateCallback(&AbstractView::OnResetView);
 
     this->_cameraViewOrientationParam.SetParameter(
@@ -269,21 +270,21 @@ void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
 
     // camera settings
     if (this->_stereoEyeDistSlot.IsDirty()) {
-       
+
         param::FloatParam* fp = this->_stereoEyeDistSlot.Param<param::FloatParam>();
         // this->camParams->SetStereoDisparity(fp->Value());
         // fp->SetValue(this->camParams->StereoDisparity());
         this->_stereoEyeDistSlot.ResetDirty();
     }
     if (this->_stereoFocusDistSlot.IsDirty()) {
-       
+
         param::FloatParam* fp = this->_stereoFocusDistSlot.Param<param::FloatParam>();
         // this->camParams->SetFocalDistance(fp->Value());
         // fp->SetValue(this->camParams->FocalDistance(false));
         this->_stereoFocusDistSlot.ResetDirty();
     }
 
-    // set current camera orientation for view cube 
+    // set current camera orientation for view cube
     auto cam_orientation = static_cast<glm::quat>(this->_camera.orientation());
     this->_cameraViewOrientationParam.Param<param::Vector4fParam>()->SetValue(
         vislib::math::Vector<float, 4>(cam_orientation.x, cam_orientation.y, cam_orientation.z, cam_orientation.w));
@@ -333,11 +334,13 @@ void AbstractView3D::ResetView(void) {
  * AbstractView3D::OnRenderView
  */
 bool AbstractView3D::OnRenderView(Call& call) {
-    /*AbstractCallRenderView* crv = dynamic_cast<AbstractCallRenderView*>(&call);
-    if (crv == nullptr) return false;
+    AbstractCallRenderView* crv = dynamic_cast<AbstractCallRenderView*>(&call);
+    if (crv == nullptr)
+        return false;
 
     float time = crv->Time();
-    if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
+    if (time < 0.0f)
+        time = this->DefaultTime(crv->InstanceTime());
     mmcRenderViewContext context;
     ::ZeroMemory(&context, sizeof(context));
     context.Time = time;
@@ -351,9 +354,7 @@ bool AbstractView3D::OnRenderView(Call& call) {
 
     this->Render(context, &call);
 
-    return true;*/
-
-    return AbstractView::OnRenderView(call);
+    return true;
 }
 
 /*
@@ -412,10 +413,9 @@ bool AbstractView3D::OnKey(Key key, KeyAction action, Modifiers mods) {
     }
 
     if (action == KeyAction::PRESS && (key >= Key::KEY_0 && key <= Key::KEY_9)) {
-        int index =
-            static_cast<int>(key) - static_cast<int>(Key::KEY_0); // ugly hack, maybe this can be done better
-        index = (index - 1) % 10;                                       // put key '1' at index 0
-        index = index < 0 ? index + 10 : index;                         // wrap key '0' to a positive index '9'
+        int index = static_cast<int>(key) - static_cast<int>(Key::KEY_0); // ugly hack, maybe this can be done better
+        index = (index - 1) % 10;                                         // put key '1' at index 0
+        index = index < 0 ? index + 10 : index;                           // wrap key '0' to a positive index '9'
 
         if (mods.test(Modifier::CTRL)) {
             this->_savedCameras[index].first = this->_camera.get_minimal_state(this->_savedCameras[index].first);
@@ -428,7 +428,7 @@ bool AbstractView3D::OnKey(Key key, KeyAction action, Modifiers mods) {
                 // As a change of camera position should not change the display resolution, we actively save and restore
                 // the old value of the resolution
                 auto oldResolution = this->_camera.resolution_gate; // save old resolution
-                this->_camera = this->_savedCameras[index].first;    // override current camera
+                this->_camera = this->_savedCameras[index].first;   // override current camera
                 this->_camera.resolution_gate = oldResolution;      // restore old resolution
             }
         }
@@ -442,7 +442,8 @@ bool AbstractView3D::OnKey(Key key, KeyAction action, Modifiers mods) {
  */
 bool AbstractView3D::OnChar(unsigned int codePoint) {
     auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     InputEvent evt;
     evt.tag = InputEvent::Tag::Char;
@@ -457,19 +458,21 @@ bool AbstractView3D::OnChar(unsigned int codePoint) {
 /*
  * AbstractView3D::release
  */
-void AbstractView3D::release(void) { }
+void AbstractView3D::release(void) {}
 
 /*
  * AbstractView3D::mouseSensitivityChanged
  */
-bool AbstractView3D::mouseSensitivityChanged(param::ParamSlot& p) { return true; }
+bool AbstractView3D::mouseSensitivityChanged(param::ParamSlot& p) {
+    return true;
+}
 
 /*
  * AbstractView3D::OnMouseButton
  */
- bool AbstractView3D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
-     return true;
- }
+bool AbstractView3D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+    return true;
+}
 
 /*
  * AbstractView3D::OnMouseMove
@@ -498,7 +501,8 @@ bool AbstractView3D::create(void) {
 
     if (!this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
         // new frontend has global key-value resource
-        auto maybe = this->frontend_resources.get<megamol::frontend_resources::GlobalValueStore>().maybe_get(arcball_key);
+        auto maybe =
+            this->frontend_resources.get<megamol::frontend_resources::GlobalValueStore>().maybe_get(arcball_key);
         if (maybe.has_value()) {
             this->_arcballDefault = vislib::CharTraitsA::ParseBool(maybe.value().c_str());
         }
@@ -618,7 +622,8 @@ void AbstractView3D::setCameraValues(const Camera_2& cam) {
         vislib::math::Vector<float, 4>(orient.x, orient.y, orient.z, orient.w), makeDirty);
     this->_cameraOrientationParam.QueueUpdateNotification();
 
-    this->_cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.projection_type()), makeDirty);
+    this->_cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(
+        static_cast<int>(cam.projection_type()), makeDirty);
     this->_cameraProjectionTypeParam.QueueUpdateNotification();
 
     this->_cameraConvergencePlaneParam.Param<param::FloatParam>()->SetValue(cam.convergence_plane(), makeDirty);
@@ -771,12 +776,14 @@ glm::vec4 AbstractView3D::get_default_camera_position(glm::quat camera_orientati
     glm::vec4 default_position = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     auto dv = static_cast<DefaultView>(this->_cameraSetViewChooserParam.Param<param::EnumParam>()->Value());
 
-    // Calculate pseudo width and pseudo height by projecting all eight corners on plane orthogonal to camera position delta and lying in the center.
-    glm::vec4 view_vec  = glm::normalize(camera_orientation * glm::vec4(0.0, 0.0f, 1.0f, 0.0f));
-    glm::vec4 up_vec    = glm::normalize(camera_orientation * glm::vec4(0.0, 1.0f, 0.0f, 0.0f));
+    // Calculate pseudo width and pseudo height by projecting all eight corners on plane orthogonal to camera position
+    // delta and lying in the center.
+    glm::vec4 view_vec = glm::normalize(camera_orientation * glm::vec4(0.0, 0.0f, 1.0f, 0.0f));
+    glm::vec4 up_vec = glm::normalize(camera_orientation * glm::vec4(0.0, 1.0f, 0.0f, 0.0f));
     glm::vec4 right_vec = glm::normalize(camera_orientation * glm::vec4(1.0, 0.0f, 0.0f, 0.0f));
     std::vector<glm::vec4> corners;
-    auto tmp_corner = glm::vec4(this->_bboxs.BoundingBox().Width()/2.0f, this->_bboxs.BoundingBox().Height()/2.0f, this->_bboxs.BoundingBox().Depth()/2.0f, 0.0f);
+    auto tmp_corner = glm::vec4(this->_bboxs.BoundingBox().Width() / 2.0f, this->_bboxs.BoundingBox().Height() / 2.0f,
+        this->_bboxs.BoundingBox().Depth() / 2.0f, 0.0f);
     corners.push_back(glm::vec4(tmp_corner.x, tmp_corner.y, tmp_corner.z, 0.0f));
     corners.push_back(glm::vec4(tmp_corner.x, -tmp_corner.y, tmp_corner.z, 0.0f));
     corners.push_back(glm::vec4(tmp_corner.x, -tmp_corner.y, -tmp_corner.z, 0.0f));
@@ -791,7 +798,7 @@ glm::vec4 AbstractView3D::get_default_camera_position(glm::quat camera_orientati
     float delta_y_max = -FLT_MAX;
     float delta_z_min = FLT_MAX;
     float delta_z_max = -FLT_MAX;
-    for (auto& corner : corners)  {
+    for (auto& corner : corners) {
         float delta_x = glm::dot(corner, right_vec);
         float delta_y = glm::dot(corner, up_vec);
         float delta_z = glm::dot(corner, view_vec);
@@ -802,9 +809,9 @@ glm::vec4 AbstractView3D::get_default_camera_position(glm::quat camera_orientati
         delta_z_min = std::min(delta_z_min, delta_z);
         delta_z_max = std::max(delta_z_max, delta_z);
     }
-    auto pseudoWidth  = static_cast<double>(delta_x_max - delta_x_min);
+    auto pseudoWidth = static_cast<double>(delta_x_max - delta_x_min);
     auto pseudoHeight = static_cast<double>(delta_y_max - delta_y_min);
-    auto pseudoDepth  = static_cast<double>(delta_z_max - delta_z_min);
+    auto pseudoDepth = static_cast<double>(delta_z_max - delta_z_min);
 
     // New camera Position
     auto dim = this->_camera.resolution_gate();
@@ -816,92 +823,93 @@ glm::vec4 AbstractView3D::get_default_camera_position(glm::quat camera_orientati
     double distX = (pseudoWidth / (2.0 * tan(halfFovX)));
     auto face_dist = static_cast<float>((distX > distY) ? distX : distY);
     face_dist = face_dist + (pseudoDepth / 2.0f);
-    float edge_dist   = face_dist / sqrt(2.0f);
+    float edge_dist = face_dist / sqrt(2.0f);
     float corner_dist = edge_dist / sqrt(2.0f);
 
     switch (dv) {
-        // FACES ----------------------------------------------------------------------------------
-        case DEFAULTVIEW_FACE_FRONT:
-            default_position = bbcglm + glm::vec4(0.0f, 0.0f, face_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_FACE_BACK:
-            default_position = bbcglm + glm::vec4(0.0f, 0.0f, -face_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_FACE_RIGHT:
-            default_position = bbcglm + glm::vec4(face_dist, 0.0f, 0.0f, 0.0f);
-            break;
-        case DEFAULTVIEW_FACE_LEFT:
-            default_position = bbcglm + glm::vec4(-face_dist, 0.0f, 0.0f, 0.0f);
-            break;
-        case DEFAULTVIEW_FACE_TOP:
-            default_position = bbcglm + glm::vec4(0.0f, face_dist, 0.0f, 0.0f);
-            break;
-        case DEFAULTVIEW_FACE_BOTTOM:
-            default_position = bbcglm + glm::vec4(0.0f, -face_dist, 0.0f, 0.0f);
-            break;
-            // CORNERS --------------------------------------------------------------------------------
-        case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
-            default_position = bbcglm + glm::vec4(-corner_dist, edge_dist, corner_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
-            default_position = bbcglm + glm::vec4(corner_dist, edge_dist, corner_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
-            default_position = bbcglm + glm::vec4(-corner_dist, edge_dist, -corner_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
-            default_position = bbcglm + glm::vec4(corner_dist, edge_dist, -corner_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
-            default_position = bbcglm + glm::vec4(-corner_dist, -edge_dist, corner_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
-            default_position = bbcglm + glm::vec4(corner_dist, -edge_dist, corner_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
-            default_position = bbcglm + glm::vec4(-corner_dist, -edge_dist, -corner_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
-            default_position = bbcglm + glm::vec4(corner_dist, -edge_dist, -corner_dist, 0.0f);
-            break;
-            // EDGES ----------------------------------------------------------------------------------
-        case DEFAULTVIEW_EDGE_TOP_FRONT:
-            default_position = bbcglm + glm::vec4(0.0f, edge_dist, edge_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_TOP_LEFT:
-            default_position = bbcglm + glm::vec4(-edge_dist, edge_dist, 0.0f, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_TOP_RIGHT :
-            default_position = bbcglm + glm::vec4(edge_dist, edge_dist, 0.0f, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_TOP_BACK:
-            default_position = bbcglm + glm::vec4(0.0f, edge_dist, -edge_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_FRONT:
-            default_position = bbcglm + glm::vec4(0.0f, -edge_dist, edge_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_LEFT:
-            default_position = bbcglm + glm::vec4(-edge_dist, -edge_dist, 0.0f, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_RIGHT :
-            default_position = bbcglm + glm::vec4(edge_dist, -edge_dist, 0.0f, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_BOTTOM_BACK:
-            default_position = bbcglm + glm::vec4(0.0f, -edge_dist, -edge_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_FRONT_LEFT:
-            default_position = bbcglm + glm::vec4(-edge_dist, 0.0f, edge_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_FRONT_RIGHT:
-            default_position = bbcglm + glm::vec4(edge_dist, 0.0f, edge_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_BACK_LEFT:
-            default_position = bbcglm + glm::vec4(-edge_dist, 0.0f, -edge_dist, 0.0f);
-            break;
-        case DEFAULTVIEW_EDGE_BACK_RIGHT:
-            default_position = bbcglm + glm::vec4(edge_dist, 0.0f, -edge_dist, 0.0f);
-            break;
-        default: break;
+    // FACES ----------------------------------------------------------------------------------
+    case DEFAULTVIEW_FACE_FRONT:
+        default_position = bbcglm + glm::vec4(0.0f, 0.0f, face_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_FACE_BACK:
+        default_position = bbcglm + glm::vec4(0.0f, 0.0f, -face_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_FACE_RIGHT:
+        default_position = bbcglm + glm::vec4(face_dist, 0.0f, 0.0f, 0.0f);
+        break;
+    case DEFAULTVIEW_FACE_LEFT:
+        default_position = bbcglm + glm::vec4(-face_dist, 0.0f, 0.0f, 0.0f);
+        break;
+    case DEFAULTVIEW_FACE_TOP:
+        default_position = bbcglm + glm::vec4(0.0f, face_dist, 0.0f, 0.0f);
+        break;
+    case DEFAULTVIEW_FACE_BOTTOM:
+        default_position = bbcglm + glm::vec4(0.0f, -face_dist, 0.0f, 0.0f);
+        break;
+        // CORNERS --------------------------------------------------------------------------------
+    case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
+        default_position = bbcglm + glm::vec4(-corner_dist, edge_dist, corner_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
+        default_position = bbcglm + glm::vec4(corner_dist, edge_dist, corner_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
+        default_position = bbcglm + glm::vec4(-corner_dist, edge_dist, -corner_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
+        default_position = bbcglm + glm::vec4(corner_dist, edge_dist, -corner_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
+        default_position = bbcglm + glm::vec4(-corner_dist, -edge_dist, corner_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
+        default_position = bbcglm + glm::vec4(corner_dist, -edge_dist, corner_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
+        default_position = bbcglm + glm::vec4(-corner_dist, -edge_dist, -corner_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
+        default_position = bbcglm + glm::vec4(corner_dist, -edge_dist, -corner_dist, 0.0f);
+        break;
+        // EDGES ----------------------------------------------------------------------------------
+    case DEFAULTVIEW_EDGE_TOP_FRONT:
+        default_position = bbcglm + glm::vec4(0.0f, edge_dist, edge_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_TOP_LEFT:
+        default_position = bbcglm + glm::vec4(-edge_dist, edge_dist, 0.0f, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_TOP_RIGHT:
+        default_position = bbcglm + glm::vec4(edge_dist, edge_dist, 0.0f, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_TOP_BACK:
+        default_position = bbcglm + glm::vec4(0.0f, edge_dist, -edge_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_BOTTOM_FRONT:
+        default_position = bbcglm + glm::vec4(0.0f, -edge_dist, edge_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_BOTTOM_LEFT:
+        default_position = bbcglm + glm::vec4(-edge_dist, -edge_dist, 0.0f, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_BOTTOM_RIGHT:
+        default_position = bbcglm + glm::vec4(edge_dist, -edge_dist, 0.0f, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_BOTTOM_BACK:
+        default_position = bbcglm + glm::vec4(0.0f, -edge_dist, -edge_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_FRONT_LEFT:
+        default_position = bbcglm + glm::vec4(-edge_dist, 0.0f, edge_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_FRONT_RIGHT:
+        default_position = bbcglm + glm::vec4(edge_dist, 0.0f, edge_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_BACK_LEFT:
+        default_position = bbcglm + glm::vec4(-edge_dist, 0.0f, -edge_dist, 0.0f);
+        break;
+    case DEFAULTVIEW_EDGE_BACK_RIGHT:
+        default_position = bbcglm + glm::vec4(edge_dist, 0.0f, -edge_dist, 0.0f);
+        break;
+    default:
+        break;
     }
     return default_position;
 }
@@ -913,14 +921,15 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
 
     glm::quat default_orientation = cam_type::quaternion_type::create_identity();
     auto dv = static_cast<DefaultView>(this->_cameraSetViewChooserParam.Param<param::EnumParam>()->Value());
-    auto dor = static_cast<DefaultOrientation>(this->_cameraSetOrientationChooserParam.Param<param::EnumParam>()->Value());
+    auto dor =
+        static_cast<DefaultOrientation>(this->_cameraSetOrientationChooserParam.Param<param::EnumParam>()->Value());
 
     // New camera orientation
     /// quat rot(theta) around axis(x,y,z) -> q = (sin(theta/2)*x, sin(theta/2)*y, sin(theta/2)*z, cos(theta/2))
     const float cos45 = sqrt(2.0f) / 2.0f;
     const float sin45 = cos45;
-    const float cos22_5 = cos(M_PI/8.0f);
-    const float sin22_5 = sin(M_PI/8.0f);
+    const float cos22_5 = cos(M_PI / 8.0f);
+    const float sin22_5 = sin(M_PI / 8.0f);
 
     auto qx_p45 = cam_type::quaternion_type(sin22_5, 0.0, 0.0, cos22_5);
     auto qx_n45 = cam_type::quaternion_type(-sin22_5, 0.0, 0.0, cos22_5);
@@ -932,7 +941,7 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
     auto qx_p90 = cam_type::quaternion_type(sin45, 0.0, 0.0, cos45);
     auto qx_n90 = cam_type::quaternion_type(-sin45, 0.0, 0.0, cos45);
     auto qy_p90 = cam_type::quaternion_type(0.0, sin45, 0.0, cos45);
-    auto qy_n90 = cam_type::quaternion_type(0.0, -sin45, 0.0, cos45);    
+    auto qy_n90 = cam_type::quaternion_type(0.0, -sin45, 0.0, cos45);
     auto qz_p90 = cam_type::quaternion_type(0.0, 0.0, sin45, cos45);
     auto qz_n90 = cam_type::quaternion_type(0.0, 0.0, -sin45, cos45);
 
@@ -941,452 +950,479 @@ glm::quat AbstractView3D::get_default_camera_orientation() {
     auto qz_p180 = cam_type::quaternion_type(0.0, 0.0, 1.0, 0.0);
 
     switch (dv) {
-        // FACES ----------------------------------------------------------------------------------
-        case DEFAULTVIEW_FACE_FRONT:
-            switch (dor) {
-            case DEFAULTORIENTATION_TOP:
-                default_orientation = cam_type::quaternion_type::create_identity();
-                break;
-            case DEFAULTORIENTATION_RIGHT:
-                default_orientation = qz_n90;
-                break;
-            case DEFAULTORIENTATION_BOTTOM:
-                default_orientation = qz_p180;
-                break;
-            case DEFAULTORIENTATION_LEFT:
-                default_orientation = qz_p90;
-                break;
-            default: break;
-            }
+    // FACES ----------------------------------------------------------------------------------
+    case DEFAULTVIEW_FACE_FRONT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = cam_type::quaternion_type::create_identity();
             break;
-        case DEFAULTVIEW_FACE_BACK: // 180 deg around y axis
-            switch (dor) {
-            case DEFAULTORIENTATION_TOP:
-                default_orientation = qy_p180;
-                break;
-            case DEFAULTORIENTATION_RIGHT:
-                default_orientation = qy_p180 * qz_n90;
-                break;
-            case DEFAULTORIENTATION_BOTTOM:
-                default_orientation = qy_p180 * qz_p180;
-                break;
-            case DEFAULTORIENTATION_LEFT:
-                default_orientation = qy_p180 * qz_p90;
-                break;
-            default: break;
-            }
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qz_n90;
             break;
-        case DEFAULTVIEW_FACE_RIGHT: // 90 deg around y axis
-            switch (dor) {
-            case DEFAULTORIENTATION_TOP:
-                default_orientation = qy_p90;
-                break;
-            case DEFAULTORIENTATION_RIGHT:
-                default_orientation = qy_p90 * qz_n90;
-                break;
-            case DEFAULTORIENTATION_BOTTOM:
-                default_orientation = qy_p90 * qz_p180;
-                break;
-            case DEFAULTORIENTATION_LEFT:
-                default_orientation = qy_p90 * qz_p90;
-                break;
-            default: break;
-            }
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qz_p180;
             break;
-        case DEFAULTVIEW_FACE_LEFT: // 90 deg reverse around y axis
-            switch (dor) {
-            case DEFAULTORIENTATION_TOP:
-                default_orientation = qy_n90;
-                break;
-            case DEFAULTORIENTATION_RIGHT:
-                default_orientation = qy_n90 * qz_n90;
-                break;
-            case DEFAULTORIENTATION_BOTTOM:
-                default_orientation = qy_n90 * qz_p180;
-                break;
-            case DEFAULTORIENTATION_LEFT:
-                default_orientation = qy_n90 * qz_p90;
-                break;
-            default: break;
-            }
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qz_p90;
             break;
-        case DEFAULTVIEW_FACE_TOP: // 90 deg around x axis
-            switch (dor) {
-            case DEFAULTORIENTATION_TOP:
-                default_orientation = qx_n90;
-                break;
-            case DEFAULTORIENTATION_RIGHT:
-                default_orientation = qx_n90 * qz_n90;
-                break;
-            case DEFAULTORIENTATION_BOTTOM:
-                default_orientation = qx_n90 * qz_p180;
-                break;
-            case DEFAULTORIENTATION_LEFT:
-                default_orientation = qx_n90 * qz_p90;
-                break;
-            default: break;
-            }
+        default:
             break;
-        case DEFAULTVIEW_FACE_BOTTOM: // 90 deg reverse around x axis
-            switch (dor) {
-            case DEFAULTORIENTATION_TOP:
-                default_orientation = qx_p90;
-                break;
-            case DEFAULTORIENTATION_RIGHT:
-                default_orientation = qx_p90 * qz_n90;
-                break;
-            case DEFAULTORIENTATION_BOTTOM:
-                default_orientation = qx_p90 * qz_p180;
-                break;
-            case DEFAULTORIENTATION_LEFT:
-                default_orientation = qx_p90 * qz_p90;
-                break;
-            default: break;
-            }
+        }
+        break;
+    case DEFAULTVIEW_FACE_BACK: // 180 deg around y axis
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180;
             break;
-        // CORNERS --------------------------------------------------------------------------------
-        case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_n45 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation =  qy_n45 * qx_n45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_n45 * qx_n45 * qz_p180;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_n45 * qx_n45 * qz_p90;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qz_n90;
             break;
-        case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p45 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p45 * qx_n45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p45 * qx_n45 * qz_p180;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p45 * qx_n45 * qz_p90;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p180 * qz_p180;
             break;
-        case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qy_p45 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qy_p45 * qx_n45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qy_p45 * qx_n45 * qz_p180;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qy_p45 * qx_n45 * qz_p90;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p180 * qz_p90;
             break;
-        case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qy_n45 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qy_n45 * qx_n45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qy_n45 * qx_n45 * qz_p180;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qy_n45 * qx_n45 * qz_p90;
-                    break;
-                default: break;
-            }
+        default:
             break;
-        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_n45 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_n45 * qx_p45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_n45 * qx_p45 * qz_p180;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_n45 * qx_p45 * qz_p90;
-                    break;
-                default: break;
-            }
+        }
+        break;
+    case DEFAULTVIEW_FACE_RIGHT: // 90 deg around y axis
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p90;
             break;
-        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p45 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p45 * qx_p45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p45 * qx_p45 * qz_p180;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p45 * qx_p45 * qz_p90;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p90 * qz_n90;
             break;
-        case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qy_p45 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qy_p45 * qx_p45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qy_p45 * qx_p45 * qz_p180;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qy_p45 * qx_p45 * qz_p90;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p90 * qz_p180;
             break;
-        case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qy_n45 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qy_n45 * qx_p45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qy_n45 * qx_p45 * qz_p180;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qy_n45 * qx_p45 * qz_p90;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p90 * qz_p90;
             break;
-        // EDGES ----------------------------------------------------------------------------------
-        case DEFAULTVIEW_EDGE_TOP_FRONT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qx_n45 * qz_p90;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qx_n45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qx_n45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qz_p180 * qx_p45;
-                    break;
-                default: break;
-            }
+        default:
             break;
-        case DEFAULTVIEW_EDGE_TOP_LEFT: // TODO
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qx_n90 * qy_n45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qy_p90 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qx_n90 * qy_p45;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qx_p180 * qy_n90 * qx_p45;
-                    break;
-                default: break;
-            }
+        }
+        break;
+    case DEFAULTVIEW_FACE_LEFT: // 90 deg reverse around y axis
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_n90;
             break;
-        case DEFAULTVIEW_EDGE_TOP_RIGHT: // TODO
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qx_n90 * qy_n45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qy_n90 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qx_n90 * qy_p45;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qx_p180 * qy_p90 * qx_p45;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_n90 * qz_n90;
             break;
-        case DEFAULTVIEW_EDGE_TOP_BACK:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qx_n45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qz_p180 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qx_n45 * qz_p90;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qx_n45;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_n90 * qz_p180;
             break;
-        case DEFAULTVIEW_EDGE_BOTTOM_FRONT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qx_p45 * qz_p90;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qx_p45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qx_p45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qz_p180 * qx_n45;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_n90 * qz_p90;
             break;
-        case DEFAULTVIEW_EDGE_BOTTOM_LEFT: // TODO
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qx_p90 * qy_p45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_n90 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qx_p90 * qy_n45;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qz_p180 * qy_p90 * qx_n45;
-                    break;
-                default: break;
-            }
+        default:
             break;
-        case DEFAULTVIEW_EDGE_BOTTOM_RIGHT: // TODO
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qx_p90 * qy_p45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p90 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qx_p90 * qy_n45;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qz_p180 * qy_n90 * qx_n45;
-                    break;
-                default: break;
-            }
+        }
+        break;
+    case DEFAULTVIEW_FACE_TOP: // 90 deg around x axis
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qx_n90;
             break;
-        case DEFAULTVIEW_EDGE_BOTTOM_BACK:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qx_p45 * qz_p90;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qy_p180 * qx_p45 * qz_n90;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qz_p180 * qx_n45;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qx_n90 * qz_n90;
             break;
-        case DEFAULTVIEW_EDGE_FRONT_LEFT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_n45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qz_n90 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qz_p180 * qy_p45;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qz_p90 * qx_n45;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qx_n90 * qz_p180;
             break;
-        case DEFAULTVIEW_EDGE_FRONT_RIGHT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qz_n90 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qz_p180 * qy_n45;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qz_p90 * qx_p45;
-                    break;
-                default: break;
-            }
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qx_n90 * qz_p90;
             break;
-        case DEFAULTVIEW_EDGE_BACK_LEFT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qy_p45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qz_n90 * qx_n45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qx_p180 * qy_n45;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qz_p90 * qx_p45;
-                    break;
-                default: break;
-            }
+        default:
             break;
-        case DEFAULTVIEW_EDGE_BACK_RIGHT:
-            switch (dor) {
-                case DEFAULTORIENTATION_TOP:
-                    default_orientation = qy_p180 * qy_n45;
-                    break;
-                case DEFAULTORIENTATION_RIGHT:
-                    default_orientation = qy_p180 * qz_n90 * qx_p45;
-                    break;
-                case DEFAULTORIENTATION_BOTTOM:
-                    default_orientation = qx_p180 * qy_p45;
-                    break;
-                case DEFAULTORIENTATION_LEFT:
-                    default_orientation = qy_p180 * qz_p90 * qx_n45;
-                    break;
-                default: break;
-            }
+        }
+        break;
+    case DEFAULTVIEW_FACE_BOTTOM: // 90 deg reverse around x axis
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qx_p90;
             break;
-        default: break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qx_p90 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qx_p90 * qz_p180;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qx_p90 * qz_p90;
+            break;
+        default:
+            break;
+        }
+        break;
+    // CORNERS --------------------------------------------------------------------------------
+    case DEFAULTVIEW_CORNER_TOP_LEFT_FRONT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_n45 * qx_n45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_n45 * qx_n45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_n45 * qx_n45 * qz_p180;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_n45 * qx_n45 * qz_p90;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p45 * qx_n45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p45 * qx_n45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p45 * qx_n45 * qz_p180;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p45 * qx_n45 * qz_p90;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_CORNER_TOP_LEFT_BACK:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180 * qy_p45 * qx_n45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qy_p45 * qx_n45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p180 * qy_p45 * qx_n45 * qz_p180;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p180 * qy_p45 * qx_n45 * qz_p90;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_CORNER_TOP_RIGHT_BACK:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180 * qy_n45 * qx_n45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qy_n45 * qx_n45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p180 * qy_n45 * qx_n45 * qz_p180;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p180 * qy_n45 * qx_n45 * qz_p90;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_n45 * qx_p45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_n45 * qx_p45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_n45 * qx_p45 * qz_p180;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_n45 * qx_p45 * qz_p90;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p45 * qx_p45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p45 * qx_p45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p45 * qx_p45 * qz_p180;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p45 * qx_p45 * qz_p90;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180 * qy_p45 * qx_p45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qy_p45 * qx_p45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p180 * qy_p45 * qx_p45 * qz_p180;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p180 * qy_p45 * qx_p45 * qz_p90;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180 * qy_n45 * qx_p45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qy_n45 * qx_p45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p180 * qy_n45 * qx_p45 * qz_p180;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p180 * qy_n45 * qx_p45 * qz_p90;
+            break;
+        default:
+            break;
+        }
+        break;
+    // EDGES ----------------------------------------------------------------------------------
+    case DEFAULTVIEW_EDGE_TOP_FRONT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qx_n45 * qz_p90;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qx_n45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qx_n45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qz_p180 * qx_p45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_TOP_LEFT: // TODO
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qx_n90 * qy_n45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qy_p90 * qx_n45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p180 * qx_n90 * qy_p45;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qx_p180 * qy_n90 * qx_p45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_TOP_RIGHT: // TODO
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180 * qx_n90 * qy_n45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qy_n90 * qx_n45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qx_n90 * qy_p45;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qx_p180 * qy_p90 * qx_p45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_TOP_BACK:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180 * qx_n45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qz_p180 * qx_p45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p180 * qx_n45 * qz_p90;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p180 * qx_n45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_BOTTOM_FRONT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qx_p45 * qz_p90;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qx_p45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qx_p45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qz_p180 * qx_n45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_BOTTOM_LEFT: // TODO
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180 * qx_p90 * qy_p45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_n90 * qx_p45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qx_p90 * qy_n45;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qz_p180 * qy_p90 * qx_n45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_BOTTOM_RIGHT: // TODO
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qx_p90 * qy_p45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p90 * qx_p45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p180 * qx_p90 * qy_n45;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qz_p180 * qy_n90 * qx_n45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_BOTTOM_BACK:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180 * qx_p45 * qz_p90;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qx_p45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qy_p180 * qx_p45 * qz_n90;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p180 * qz_p180 * qx_n45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_FRONT_LEFT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_n45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qz_n90 * qx_p45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qz_p180 * qy_p45;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qz_p90 * qx_n45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_FRONT_RIGHT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qz_n90 * qx_n45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qz_p180 * qy_n45;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qz_p90 * qx_p45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_BACK_LEFT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180 * qy_p45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qz_n90 * qx_n45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qx_p180 * qy_n45;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p180 * qz_p90 * qx_p45;
+            break;
+        default:
+            break;
+        }
+        break;
+    case DEFAULTVIEW_EDGE_BACK_RIGHT:
+        switch (dor) {
+        case DEFAULTORIENTATION_TOP:
+            default_orientation = qy_p180 * qy_n45;
+            break;
+        case DEFAULTORIENTATION_RIGHT:
+            default_orientation = qy_p180 * qz_n90 * qx_p45;
+            break;
+        case DEFAULTORIENTATION_BOTTOM:
+            default_orientation = qx_p180 * qy_p45;
+            break;
+        case DEFAULTORIENTATION_LEFT:
+            default_orientation = qy_p180 * qz_p90 * qx_n45;
+            break;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
     }
     return default_orientation;
 }

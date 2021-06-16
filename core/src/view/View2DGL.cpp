@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 #include "mmcore/view/View2DGL.h"
-#include "nlohmann/json.hpp"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -17,6 +16,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
+#include "nlohmann/json.hpp"
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix4.h"
@@ -141,7 +141,7 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
         bool fbo_update_needed = (_fbo->GetWidth() != w) || (_fbo->GetHeight() != h) || (!_fbo->IsValid());
 
         std::pair<int, int> tgt_res = tgt_res_ok ? std::make_pair<int, int>(static_cast<int>(w), static_cast<int>(h))
-                       : std::make_pair<int, int>(1, 1);
+                                                 : std::make_pair<int, int>(1, 1);
 
         if (fbo_update_needed) {
             this->_fbo->Release();
@@ -240,21 +240,22 @@ void view::View2DGL::Resize(unsigned int width, unsigned int height) {
  * view::View2DGL::OnRenderView
  */
 bool view::View2DGL::OnRenderView(Call& call) {
-    //float overBC[3];
-    //view::CallRenderViewGL *crv = dynamic_cast<view::CallRenderViewGL*>(&call);
-    //if (crv == NULL) return false;
+    float overBC[3];
+    view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
+    if (crv == NULL)
+        return false;
 
-    //float time = crv->Time();
-    //if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
-    //mmcRenderViewContext context;
-    //::ZeroMemory(&context, sizeof(context));
-    //context.Time = time;
-    //context.InstanceTime = crv->InstanceTime();
-    //// TODO: Affinity
-    //this->Render(context, &call);
+    float time = crv->Time();
+    if (time < 0.0f)
+        time = this->DefaultTime(crv->InstanceTime());
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+    context.Time = time;
+    context.InstanceTime = crv->InstanceTime();
+    // TODO: Affinity
+    this->Render(context, &call);
 
-    //return true;
-    return AbstractView::OnRenderView(call);
+    return true;
 }
 
 

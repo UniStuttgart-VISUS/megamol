@@ -1,7 +1,7 @@
 /*
  * AbstractView.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -17,7 +17,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/CallRenderView.h"
-#include "mmcore/view/CallTime.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
 
@@ -33,7 +32,6 @@ view::AbstractView::AbstractView(void)
         , _firstImg(false)
         , _rhsRenderSlot("rendering", "Connects the view to a Renderer")
         , _lhsRenderSlot("render", "Connects modules requesting renderings")
-        , _in_time_slot("time", "Input time code. Overriding time code of view.")
         , _cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
         , _storeCameraSettingsSlot("camstore::storecam",
               "Triggers the storage of the camera settings. This only works for "
@@ -52,7 +50,8 @@ view::AbstractView::AbstractView(void)
               "When activated, the view will load the camera settings from disk at startup. "
               "This only works if you use .lua project files")
         , _resetViewSlot("view::resetView", "Triggers the reset of the view")
-        , _resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
+        , _resetViewOnBBoxChangeSlot(
+              "resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
         , _hooks()
         , _timeCtrl()
         , _bkgndColSlot("backCol", "The views background colour") {
@@ -61,12 +60,12 @@ view::AbstractView::AbstractView(void)
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
     this->_lhsRenderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &AbstractView::OnCharCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
-        &AbstractView::OnMouseButtonCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
-        &AbstractView::OnMouseMoveCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
-        &AbstractView::OnMouseScrollCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
     this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
@@ -80,9 +79,6 @@ view::AbstractView::AbstractView(void)
     this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::OnResetView);
     // this->MakeSlotAvailable(&this->renderSlot);
-
-    _in_time_slot.SetCompatibleCall<CallTimeDescription>();
-    MakeSlotAvailable(&_in_time_slot);
 
     this->_cameraSettingsSlot.SetParameter(new param::StringParam(""));
     this->MakeSlotAvailable(&this->_cameraSettingsSlot);
@@ -140,11 +136,12 @@ view::AbstractView::~AbstractView(void) {
 /*
  * view::AbstractView::IsParamRelevant
  */
-bool view::AbstractView::IsParamRelevant(
-        const vislib::SmartPtr<param::AbstractParam>& param) const {
+bool view::AbstractView::IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const {
     const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
-    if (ano == NULL) return false;
-    if (param.IsNull()) return false;
+    if (ano == NULL)
+        return false;
+    if (param.IsNull())
+        return false;
 
     vislib::SingleLinkedList<const AbstractNamedObject*> searched;
     return ano->IsParamRelevant(searched, param);
@@ -154,35 +151,36 @@ bool view::AbstractView::IsParamRelevant(
 /*
  * view::AbstractView::DesiredWindowPosition
  */
-bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
-        int *h, bool *nd) {
-    Module *tm = dynamic_cast<Module*>(this);
+bool view::AbstractView::DesiredWindowPosition(int* x, int* y, int* w, int* h, bool* nd) {
+    Module* tm = dynamic_cast<Module*>(this);
     if (tm != NULL) {
 
         // this is not working properly if the main module/view is placed at top namespace root
-        //vislib::StringA name(tm->Name());
-        //if (tm->Parent() != NULL) name = tm->Parent()->Name();
+        // vislib::StringA name(tm->Name());
+        // if (tm->Parent() != NULL) name = tm->Parent()->Name();
         vislib::StringA name(tm->GetDemiRootName());
 
         if (name.IsEmpty()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 1200,
-                "View does not seem to have a name. Odd.");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_INFO + 1200, "View does not seem to have a name. Odd.");
         } else {
             name.Append("-Window");
 
             if (tm->GetCoreInstance()->Configuration().IsConfigValueSet(name)) {
                 if (this->desiredWindowPosition(
-                        tm->GetCoreInstance()->Configuration().ConfigValue(name),
-                        x, y, w, h, nd)) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
+                        tm->GetCoreInstance()->Configuration().ConfigValue(name), x, y, w, h, nd)) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                        megamol::core::utility::log::Log::LEVEL_INFO + 200,
                         "Loaded desired window geometry from \"%s\"", name.PeekBuffer());
                     return true;
                 } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                        megamol::core::utility::log::Log::LEVEL_INFO + 200,
                         "Unable to load desired window geometry from \"%s\"", name.PeekBuffer());
                 }
             } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 1200,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_INFO + 1200,
                     "Unable to find window geometry settings \"%s\"", name.PeekBuffer());
             }
         }
@@ -190,14 +188,14 @@ bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
         name = "*-Window";
 
         if (tm->GetCoreInstance()->Configuration().IsConfigValueSet(name)) {
-            if (this->desiredWindowPosition(
-                    tm->GetCoreInstance()->Configuration().ConfigValue(name),
-                    x, y, w, h, nd)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
-                    "Loaded desired window geometry from \"%s\"", name.PeekBuffer());
+            if (this->desiredWindowPosition(tm->GetCoreInstance()->Configuration().ConfigValue(name), x, y, w, h, nd)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_INFO + 200, "Loaded desired window geometry from \"%s\"",
+                    name.PeekBuffer());
                 return true;
             } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                    megamol::core::utility::log::Log::LEVEL_INFO + 200,
                     "Unable to load desired window geometry from \"%s\"", name.PeekBuffer());
             }
         } else {
@@ -214,48 +212,32 @@ bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
  * view::AbstractView::OnRenderView
  */
 bool view::AbstractView::OnRenderView(Call& call) {
-    auto* crv = dynamic_cast<AbstractCallRenderView*>(&call);
-    if (crv == nullptr)
-        return false;
-
-    auto in_time = _in_time_slot.CallAs<CallTime>();
-
-    float time = crv->Time();
-    if (in_time != nullptr) {
-        if ((*in_time)(0)) {
-            time = static_cast<float>(in_time->getData());
-        }
-    }
-    if (time < 0.0f)
-        time = this->DefaultTime(crv->InstanceTime());
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
-    context.Time = time;
-    context.InstanceTime = crv->InstanceTime();
-
-    if (crv->IsTileSet()) {
-        this->_camera.resolution_gate(cam_type::screen_size_type(crv->VirtualWidth(), crv->VirtualHeight()));
-        this->_camera.image_tile(cam_type::screen_rectangle_type::from_bottom_left(
-            crv->TileX(), crv->TileY(), crv->TileWidth(), crv->TileHeight()));
-    }
-
-    return true;
+    throw vislib::UnsupportedOperationException("AbstractView::OnRenderView", __FILE__, __LINE__);
 }
 
 /*
  * view::AbstractView::desiredWindowPosition
  */
-bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
-        int *x, int *y, int *w, int *h, bool *nd) {
+bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str, int* x, int* y, int* w, int* h, bool* nd) {
     vislib::StringW v = str;
     int vi = -1;
     v.TrimSpaces();
 
-    if (x != NULL) { *x = INT_MIN; }
-    if (y != NULL) { *y = INT_MIN; }
-    if (w != NULL) { *w = INT_MIN; }
-    if (h != NULL) { *h = INT_MIN; }
-    if (nd != NULL) { *nd = false; }
+    if (x != NULL) {
+        *x = INT_MIN;
+    }
+    if (y != NULL) {
+        *y = INT_MIN;
+    }
+    if (w != NULL) {
+        *w = INT_MIN;
+    }
+    if (h != NULL) {
+        *h = INT_MIN;
+    }
+    if (nd != NULL) {
+        *nd = false;
+    }
 
     while (!v.IsEmpty()) {
         if ((v[0] == L'X') || (v[0] == L'x')) {
@@ -274,8 +256,7 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
             }
             vi = 4;
         } else {
-            Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_WARN,
+            Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "Unexpected character %s in window position definition.\n",
                 vislib::StringA(vislib::StringA(v)[0], 1).PeekBuffer());
             break;
@@ -283,52 +264,67 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
         v = v.Substring(1);
         v.TrimSpaces();
 
-        if (vi == 4) continue; // [n]d are not followed by a number
+        if (vi == 4)
+            continue; // [n]d are not followed by a number
 
         if (vi >= 0) {
             // now we want to parse a double :-/
             int cp = 0;
             int len = v.Length();
-            while ((cp < len) && (((v[cp] >= L'0') && (v[cp] <= L'9'))
-                    || (v[cp] == L'+') /*|| (v[cp] == L'.')
-                    || (v[cp] == L',') */|| (v[cp] == L'-')
-                    /*|| (v[cp] == L'e') || (v[cp] == L'E')*/)) {
+            while ((cp < len) && (((v[cp] >= L'0') && (v[cp] <= L'9')) || (v[cp] == L'+') /*|| (v[cp] == L'.')
+                                                                       || (v[cp] == L',') */
+                                     || (v[cp] == L'-')
+                                     /*|| (v[cp] == L'e') || (v[cp] == L'E')*/)) {
                 cp++;
             }
 
             try {
                 int i = vislib::CharTraitsW::ParseInt(v.Substring(0, cp));
                 switch (vi) {
-                    case 0 :
-                        if (x != NULL) { *x = i; }
-                        break;
-                    case 1 :
-                        if (y != NULL) { *y = i; }
-                        break;
-                    case 2 :
-                        if (w != NULL) { *w = i; }
-                        break;
-                    case 3 :
-                        if (h != NULL) { *h = i; }
-                        break;
+                case 0:
+                    if (x != NULL) {
+                        *x = i;
+                    }
+                    break;
+                case 1:
+                    if (y != NULL) {
+                        *y = i;
+                    }
+                    break;
+                case 2:
+                    if (w != NULL) {
+                        *w = i;
+                    }
+                    break;
+                case 3:
+                    if (h != NULL) {
+                        *h = i;
+                    }
+                    break;
                 }
-            } catch(...) {
-                const char *str = "unknown";
+            } catch (...) {
+                const char* str = "unknown";
                 switch (vi) {
-                    case 0 : str = "X"; break;
-                    case 1 : str = "Y"; break;
-                    case 2 : str = "W"; break;
-                    case 3 : str = "H"; break;
+                case 0:
+                    str = "X";
+                    break;
+                case 1:
+                    str = "Y";
+                    break;
+                case 2:
+                    str = "W";
+                    break;
+                case 3:
+                    str = "H";
+                    break;
                 }
                 vi = -1;
                 Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_WARN,
-                    "Unable to parse value for %s.\n", str);
+                    megamol::core::utility::log::Log::LEVEL_WARN, "Unable to parse value for %s.\n", str);
             }
 
             v = v.Substring(cp);
         }
-
     }
 
     return true;
@@ -351,14 +347,6 @@ void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext&
     float simulationTime = static_cast<float>(context.Time);
     float instTime = static_cast<float>(context.InstanceTime);
 
-    auto in_time = _in_time_slot.CallAs<CallTime>();
-
-    if (in_time != nullptr) {
-        if ((*in_time)(0)) {
-            simulationTime = static_cast<float>(in_time->getData());
-        }
-    }
-
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
@@ -374,7 +362,7 @@ void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext&
 
     cr->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
 
-    
+
     if ((*cr)(AbstractCallRender::FnGetExtents)) {
         if (!(cr->AccessBoundingBoxes() == this->_bboxs) && cr->AccessBoundingBoxes().IsAnyValid()) {
             this->_bboxs = cr->AccessBoundingBoxes();
@@ -408,12 +396,13 @@ void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext&
     // TODO!? cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
 
     auto currentTime = std::chrono::high_resolution_clock::now();
-    this->_lastFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - this->_lastFrameTime);
+    this->_lastFrameDuration =
+        std::chrono::duration_cast<std::chrono::microseconds>(currentTime - this->_lastFrameTime);
     this->_lastFrameTime = currentTime;
 
     cr->SetLastFrameTime(std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::time_point_cast<std::chrono::milliseconds>(this->_lastFrameTime).time_since_epoch())
-                               .count());
+                             .count());
 
     this->_camera.CalcClipping(this->_bboxs.ClipBox(), 0.1f);
 }
@@ -429,7 +418,7 @@ void megamol::core::view::AbstractView::afterRender(const mmcRenderViewContext& 
 /*
  * view::AbstractView::unpackMouseCoordinates
  */
-void view::AbstractView::unpackMouseCoordinates(float &x, float &y) {
+void view::AbstractView::unpackMouseCoordinates(float& x, float& y) {
     // intentionally empty
     // do something smart in the derived classes
 }
@@ -462,9 +451,7 @@ bool view::AbstractView::OnKeyCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
         return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
-    } catch (...) {
-        ASSERT("OnKeyCallback call cast failed\n");
-    }
+    } catch (...) { ASSERT("OnKeyCallback call cast failed\n"); }
     return false;
 }
 
@@ -474,9 +461,7 @@ bool view::AbstractView::OnCharCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
         return this->OnChar(evt.charData.codePoint);
-    } catch (...) {
-        ASSERT("OnCharCallback call cast failed\n");
-    }
+    } catch (...) { ASSERT("OnCharCallback call cast failed\n"); }
     return false;
 }
 
@@ -486,9 +471,7 @@ bool view::AbstractView::OnMouseButtonCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
         return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
-    } catch (...) {
-        ASSERT("OnMouseButtonCallback call cast failed\n");
-    }
+    } catch (...) { ASSERT("OnMouseButtonCallback call cast failed\n"); }
     return false;
 }
 
@@ -498,9 +481,7 @@ bool view::AbstractView::OnMouseMoveCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
         return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
-    } catch (...) {
-        ASSERT("OnMouseMoveCallback call cast failed\n");
-    }
+    } catch (...) { ASSERT("OnMouseMoveCallback call cast failed\n"); }
     return false;
 }
 
@@ -510,9 +491,7 @@ bool view::AbstractView::OnMouseScrollCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
         return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
-    } catch (...) {
-        ASSERT("OnMouseScrollCallback call cast failed\n");
-    }
+    } catch (...) { ASSERT("OnMouseScrollCallback call cast failed\n"); }
     return false;
 }
 
