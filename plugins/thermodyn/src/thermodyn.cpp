@@ -26,6 +26,7 @@
 #include "PointSurfaceElementsDistance.h"
 #include "AccumulateInterfacePresence2.h"
 #include "PrepareSurfaceEvents2.h"
+#include "SphereWidget.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -70,6 +71,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PointSurfaceElementsDistance>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::AccumulateInterfacePresence2>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PrepareSurfaceEvents2>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::SphereWidget>();
         //
         // TODO: Register your plugin's modules here
         // like:
