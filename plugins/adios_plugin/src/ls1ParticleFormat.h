@@ -72,6 +72,8 @@ protected:
 
 private:
 
+    std::vector<std::string> splitElementString(std::string&);
+
     core::CalleeSlot mpSlot;
     core::CallerSlot adiosSlot;
     core::CallerSlot transferfunctionSlot;
@@ -83,8 +85,11 @@ private:
     std::vector<float> bbox;
     int num_plists;
     std::vector<std::array<float,4>> list_colors;
+    std::vector<double> list_radii;
 
     size_t currentFrame = -1;
+    size_t version = 0;
+    size_t datahash;
 
     core::moldyn::SimpleSphericalParticles::ColourDataType colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
     core::moldyn::SimpleSphericalParticles::VertexDataType vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_NONE;
@@ -99,10 +104,6 @@ private:
     std::vector<T> calcAtomPos(T com_x, T com_y, T com_z, K a_x, K a_y, K a_z, K qw, K qx, K qy, K qz) {
         
         std::vector<T> result(3);
-        std::vector<T> tmp_d(3);
-        tmp_d[0] = a_x + com_x;
-        tmp_d[1] = a_y + com_y;
-        tmp_d[2] = a_z + com_z;
 
         // TODO: apply quaternion
 
@@ -119,11 +120,15 @@ private:
         auto const xz = qx * qz;
         auto const yz = qy * qz;
         //          1-2*(yy+zz)
-        result[0] = (ww + xx - yy - zz) * tmp_d[0] + static_cast<T>(2.) * (xy - wz) * tmp_d[1] + static_cast<T>(2.) * (wy + xz) * tmp_d[2];
+        result[0] = (ww + xx - yy - zz) * a_x + static_cast<T>(2.) * (xy - wz) * a_y + static_cast<T>(2.) * (wy + xz) * a_z;
         //                            1-2*(xx+zz)
-        result[1] = static_cast<T>(2.) * (wz + xy) * tmp_d[0] + (ww - xx + yy - zz) * tmp_d[1] + static_cast<T>(2.) * (yz - wx) * tmp_d[2];
+        result[1] = static_cast<T>(2.) * (wz + xy) * a_x + (ww - xx + yy - zz) * a_y + static_cast<T>(2.) * (yz - wx) * a_z;
         //                                              1-2*(xx+yy)
-        result[2] = static_cast<T>(2.) * (xz - wy) * tmp_d[0] + static_cast<T>(2.) * (wx + yz) * tmp_d[1] + (ww - xx - yy + zz) * tmp_d[2];
+        result[2] = static_cast<T>(2.) * (xz - wy) * a_x + static_cast<T>(2.) * (wx + yz) * a_y + (ww - xx - yy + zz) * a_z;
+
+        result[0] += com_x;
+        result[1] += com_y;
+        result[2] += com_z;
 
         return result;
     }

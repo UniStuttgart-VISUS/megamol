@@ -81,8 +81,9 @@ function(require_external NAME)
     endif()
 
     add_external_headeronly_project(json
-      GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
-      GIT_TAG "v3.5.0")
+      GIT_REPOSITORY https://github.com/nlohmann/json.git
+      GIT_TAG "v3.9.1"
+      INCLUDE_DIR "include")
     if(MSVC)
       target_sources(json INTERFACE "${CMAKE_SOURCE_DIR}/externals/json/nlohmann_json.natvis")
     endif()
@@ -130,7 +131,8 @@ function(require_external NAME)
 
     add_external_headeronly_project(tinygltf
       GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-      GIT_TAG "v2.2.0")
+      GIT_TAG "v2.5.0")
+    target_compile_definitions(tinygltf INTERFACE TINYGLTF_NO_INCLUDE_JSON)
 
   elseif(NAME STREQUAL "sim_sort")
     if(TARGET sim_sort)

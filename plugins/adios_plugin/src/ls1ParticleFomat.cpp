@@ -12,6 +12,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
+#include "MinSphereWrapper.h"
 #include <numeric>
 
 
@@ -66,7 +67,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[ls1ParticleFormat]: Error during GetHeader");
         return false;
     }
-    bool datahashChanged = (mpdc->DataHash() != cad->getDataHash());
+    bool datahashChanged = (datahash != cad->getDataHash());
     if ((mpdc->FrameID() != currentFrame) || datahashChanged || representationDirty) {
         representationDirty = false;
 
@@ -124,11 +125,15 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             auto num_components = cad->getData("num_components")->GetAsInt32()[0];
             std::vector<int> atoms_per_component(num_components);
             std::vector<int> component_offset(num_components);
-            std::vector<double> comp_sigmas(num_components);
+            std::vector<std::vector<double>> comp_sigmas(num_components);
             std::vector<std::vector<double>> comp_centers(num_components);
+            std::vector<std::vector<std::string>> comp_element_names(num_components);
             for (int n = 0; n < num_components; ++n) {
                 std::string sigma_string = std::string("component_") + std::to_string(n) + std::string("_sigma");
-                comp_sigmas[n] = cad->getData(sigma_string)->GetAsDouble()[0];
+                comp_sigmas[n] = cad->getData(sigma_string)->GetAsDouble();
+                std::string element_string = std::string("component_") + std::to_string(n) + std::string("_element_names");
+                auto element_name_data = cad->getData(element_string)->GetAsString()[0];
+                comp_element_names[n] = splitElementString(element_name_data);
 
                 std::string centers_string = std::string("component_") + std::to_string(n) + std::string("_centers");
                 comp_centers[n] = cad->getData(centers_string)->GetAsDouble();
@@ -142,7 +147,10 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             num_plists = 0;
             if (this->representationSlot.Param<core::param::EnumParam>()->Value() == 0) {
                 num_plists = num_components;
+                mix.clear();
                 mix.resize(num_plists);
+                list_radii.clear();
+                list_radii.resize(num_plists);
                 plist_count.resize(num_plists,0);
 
                 for (int i = 0; i < p_count; ++i) {
@@ -155,19 +163,44 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                     plist_count[comp_id[i]] += 1;
                 }
 
+                // calc circumsphere
+                for (int j = 0; j < num_components; ++j) {
+                    std::vector<double> spheres;
+                    spheres.reserve(comp_sigmas[j].size() * 4);
+                    for (int n = 0; n < comp_sigmas[j].size(); ++n) {
+                        spheres.push_back(comp_centers[j][3 * n + 0]);
+                        spheres.push_back(comp_centers[j][3 * n + 1]);
+                        spheres.push_back(comp_centers[j][3 * n + 2]);
+                        spheres.push_back(comp_sigmas[j][n]);
+                    }
+                    auto minSphere = getMinSphere(spheres);
+                    list_radii[j] = minSphere[3];
+                }
+
+
             } else {
                 num_plists = num_atoms_total;
+                mix.clear();
                 mix.resize(num_plists);
+                list_radii.clear();
+                list_radii.reserve(num_plists);
                 plist_count.resize(num_plists, 0);
+
+                for (int j = 0; j < comp_sigmas.size(); ++j) {
+                    for (int k = 0; k < comp_sigmas[j].size(); ++k) {
+                        list_radii.emplace_back(comp_sigmas[j][k] * 0.5);
+                    }
+                }
+
 
                 for (int i = 0; i < p_count; ++i) {
 
                     for (int j = 0; j < atoms_per_component[comp_id[i]]; ++j) {
 
                         if (pos_size  == sizeof(float)) {
-                            auto com_x = static_cast<float>(X[pos_size * i]);
-                            auto com_y = static_cast<float>(Y[pos_size * i]);
-                            auto com_z = static_cast<float>(Z[pos_size * i]);
+                            auto com_x = *reinterpret_cast<float*>(&X[pos_size * i]);
+                            auto com_y = *reinterpret_cast<float*>(&Y[pos_size * i]);
+                            auto com_z = *reinterpret_cast<float*>(&Z[pos_size * i]);
                             auto a_x = comp_centers[comp_id[i]][3 * j + 0];
                             auto a_y = comp_centers[comp_id[i]][3 * j + 1];
                             auto a_z = comp_centers[comp_id[i]][3 * j + 2];
@@ -175,10 +208,11 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                             auto pos = calcAtomPos(com_x, com_y, com_z, a_x, a_y, a_z, qw[i], qx[i], qy[i], qz[i]);
                             auto uchar_pos = reinterpret_cast<std::vector<unsigned char>&>(pos);
                             mix[component_offset[comp_id[i]] + j].insert(mix[component_offset[comp_id[i]] + j].end(), uchar_pos.begin(), uchar_pos.end());
+
                         } else {
-                            auto com_x = static_cast<double>(X[pos_size * i]);
-                            auto com_y = static_cast<double>(Y[pos_size * i]);
-                            auto com_z = static_cast<double>(Z[pos_size * i]);
+                            auto com_x = *reinterpret_cast<double*>(&X[pos_size * i]);
+                            auto com_y = *reinterpret_cast<double*>(&Y[pos_size * i]);
+                            auto com_z = *reinterpret_cast<double*>(&Z[pos_size * i]);
                             auto a_x = comp_centers[comp_id[i]][3 * j + 0];
                             auto a_y = comp_centers[comp_id[i]][3 * j + 1];
                             auto a_z = comp_centers[comp_id[i]][3 * j + 2];
@@ -195,6 +229,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[ls1ParticleFormat]: exception while trying to use data: %s", ex.what());
         }
+        version++;
     }
 
     // set number of particle lists
@@ -207,20 +242,23 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
     // transferfunction stuff
     core::view::CallGetTransferFunction* ctf = transferfunctionSlot.CallAs<core::view::CallGetTransferFunction>();
     if (ctf != nullptr) {
-        std::array<float, 2> range = {0, num_plists};
+        std::array<float, 2> range = {0, num_plists-1};
         ctf->SetRange(range);
         if (!(*ctf)()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[ls1ParticleFormat]: Error in transfer function callback." );
             return false;
         }
-        if (ctf->GetTextureData() != nullptr) {
+        auto tf_dirty = ctf->IsDirty();
+        if (tf_dirty && ctf->GetTextureData() != nullptr) {
             auto texture_size = ctf->TextureSize();
-            auto texture_step = (texture_size - 1) / (num_plists - 1);
+            auto texture_step = num_plists > 1 ? (texture_size - 1) / (num_plists - 1) : texture_size;
             list_colors.resize(num_plists);
             for (int i = 0; i < num_plists; ++i) {
                 ctf->CopyColor(i * texture_step, list_colors[i].data(), 4 * sizeof(float));
             }
+            version++;
+            ctf->ResetDirty();
         }
     }
 
@@ -236,6 +274,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
         mpdc->AccessParticles(k).SetCount(plist_count[k]);
 
         mpdc->AccessParticles(k).SetVertexData(vertType, mix[k].data(), stride);
+        mpdc->AccessParticles(k).SetGlobalRadius(list_radii[k]);
 
         // add id and velocity?
         //         mpdc->AccessParticles(k).SetColourData(
@@ -248,8 +287,9 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
     }
 
     mpdc->SetFrameCount(cad->getFrameCount());
-    mpdc->SetDataHash(cad->getDataHash());
+    mpdc->SetDataHash(version);
     currentFrame = mpdc->FrameID();
+    datahash = cad->getDataHash();
 
     return true;
 }
@@ -265,6 +305,17 @@ bool ls1ParticleFormat::getExtentCallback(core::Call& call) {
     if (!this->getDataCallback(call)) return false;
 
     return true;
+}
+
+std::vector<std::string> ls1ParticleFormat::splitElementString(std::string& elements) {
+    std::stringstream input;
+    input << elements;
+    std::string s;
+    std::vector<std::string> result;
+    while (std::getline(input, s, ',')) {
+        result.push_back(s);
+    }
+    return result;
 }
 
 bool ls1ParticleFormat::representationChanged(core::param::ParamSlot& p) {
