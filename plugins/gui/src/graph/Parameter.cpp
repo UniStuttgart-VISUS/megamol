@@ -5,8 +5,24 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "Parameter.h"
+#include "imgui_stdlib.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/TernaryParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
+#include "mmcore/param/Vector2fParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/Vector4fParam.h"
+#include "widgets/ButtonWidgets.h"
+#include "widgets/ImageWidget_gl.h"
 
 
 using namespace megamol;

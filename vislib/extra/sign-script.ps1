@@ -1,7 +1,7 @@
 #
 # sign-script.ps1
 #
-# Copyright (C) 2008 by Universit‰t Stuttgart (VISUS). Alle Rechte vorbehalten.
+# Copyright (C) 2008 by Universit√§t Stuttgart (VISUS). Alle Rechte vorbehalten.
 #
 
 if ($Args.Length -eq 2) {

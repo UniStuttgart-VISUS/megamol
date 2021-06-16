@@ -208,7 +208,7 @@ namespace math {
 
         /*
          * Create double precision row-major matrix copy as well-defined basis
-         * for Gauﬂ elimination. 
+         * for Gau√ü elimination. 
          */
         for (unsigned int r = 0; r < D; r++) {
             for (unsigned int c = 0; c < D; c++) {
@@ -217,7 +217,7 @@ namespace math {
             }
         }
 
-        /* Gauﬂ elimination. */
+        /* Gau√ü elimination. */
         s = 0;
         do {
 

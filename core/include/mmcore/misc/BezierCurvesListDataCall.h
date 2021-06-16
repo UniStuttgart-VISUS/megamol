@@ -23,7 +23,7 @@ namespace misc {
 
 
     /**
-     * Call for lists cubic bézier curve data.
+     * Call for lists cubic bÃ©zier curve data.
      * Each curve is specified by a data array of control points and an index
      * array of specifying the quadtruples of each curve.
      * Each curve is defined by four control points p0, p1, p2, and p3, where
@@ -455,19 +455,19 @@ namespace misc {
         virtual ~BezierCurvesListDataCall(void);
 
         /**
-         * Answer the number of bézier curves.
+         * Answer the number of bÃ©zier curves.
          *
-         * @return The number of bézier curves
+         * @return The number of bÃ©zier curves
          */
         inline size_t Count(void) const {
             return this->count;
         }
 
         /**
-         * Answer the bézier curves. Might be NULL! Do not delete the returned
+         * Answer the bÃ©zier curves. Might be NULL! Do not delete the returned
          * memory.
          *
-         * @return The bézier curves
+         * @return The bÃ©zier curves
          */
         inline const Curves * GetCurves(void) const {
             return this->curves;
@@ -493,7 +493,7 @@ namespace misc {
          * 'curves' points to. The caller is responsible for keeping the data
          * valid as long as it is used.
          *
-         * @param curves Pointer to a flat array of bézier curves.
+         * @param curves Pointer to a flat array of bÃ©zier curves.
          * @param count The number of objects stored in 'curves'
          * @param static_indices Indicates whether or not the data has static
          *                       index data

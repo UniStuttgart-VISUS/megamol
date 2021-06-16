@@ -186,7 +186,7 @@ void utility::ParamFileManager::Save() {
     }
 
     vislib::sys::WriteFormattedLineToFile(pfile, "#\n");
-    vislib::sys::WriteFormattedLineToFile(pfile, "# Parameter file created by MegaMol™ Console\n");
+    vislib::sys::WriteFormattedLineToFile(pfile, "# Parameter file created by MegaMol Console\n");
     vislib::sys::WriteFormattedLineToFile(pfile, "#\n");
     vislib::sys::WriteFormattedLineToFile(pfile, "\n");
 

@@ -1,7 +1,7 @@
 /*
  * D3D11SimpleSphereRenderer.h
  *
- * Copyright (C) 2012 by Visualisierungsinstitut der Universit‰t Stuttgart.
+ * Copyright (C) 2012 by Visualisierungsinstitut der Universit√§t Stuttgart.
  * Alle Rechte vorbehalten.
  */
 

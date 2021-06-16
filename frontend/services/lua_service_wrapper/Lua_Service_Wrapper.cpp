@@ -96,7 +96,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics", // for LastFrameTime
         "WindowManipulation", // for Framebuffer resize
-        "GUIResource", // propagate GUI state and visibility
+        "GUIState", // propagate GUI state and visibility
         "MegaMolGraph", // LuaAPI manipulates graph
         "RenderNextFrame", // LuaAPI can render one frame
         "GlobalValueStore" // LuaAPI can read and set global values

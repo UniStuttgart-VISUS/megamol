@@ -1,7 +1,7 @@
 /*
  * AbstractD3D11RenderObject.h
  *
- * Copyright (C) 2013 by Visualisierungsinstitut der Universit‰t Stuttgart.
+ * Copyright (C) 2013 by Visualisierungsinstitut der Universit√§t Stuttgart.
  * Alle Rechte vorbehalten.
  */
 

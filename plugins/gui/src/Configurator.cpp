@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "Configurator.h"
 
 
@@ -55,7 +55,7 @@ megamol::gui::Configurator::Configurator()
 Configurator::~Configurator() {}
 
 
-bool megamol::gui::Configurator::Draw(WindowCollection::WindowConfiguration& wc) {
+bool megamol::gui::Configurator::Draw(WindowConfiguration& wc) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

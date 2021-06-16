@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "HoverToolTip.h"
 
 
@@ -68,4 +68,10 @@ bool HoverToolTip::Marker(const std::string& text, std::string label) {
         return this->ToolTip(text);
     }
     return false;
+}
+
+
+void HoverToolTip::Reset(void) {
+    this->tooltip_time = 0.0f;
+    this->tooltip_id = GUI_INVALID_ID;
 }

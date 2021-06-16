@@ -7,9 +7,9 @@
 
 #ifndef MEGAMOL_GUI_STRINGSEARCHWIDGET_INCLUDED
 #define MEGAMOL_GUI_STRINGSEARCHWIDGET_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
 #include "HoverToolTip.h"
 
 

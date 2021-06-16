@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <limits>
 
 #if !defined(_MSC_VER)
 #    if (__cplusplus < 201703L)
