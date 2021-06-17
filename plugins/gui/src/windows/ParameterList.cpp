@@ -26,6 +26,8 @@ ParameterList::ParameterList(const std::string& window_name, AbstractWindow::Win
         , tooltip() {
 
     assert((this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) || (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS));
+    assert(this->win_configurator_ptr != nullptr);
+    assert(this->win_tfeditor_ptr != nullptr);
 
     // Configure PARAMETER LIST Window
     this->win_config.show = true;
