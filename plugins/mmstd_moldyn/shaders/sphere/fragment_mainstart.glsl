@@ -29,12 +29,11 @@ void main(void) {
     float delta = squarRad - dot(temp, temp);  // Raytracing Gem Magic (http://www.realtimerendering.com/raytracinggems/)
 
 #ifdef CLIP
-    bool clip = (outlineWidth > 0.0) ? (length(gl_FragCoord.xy - sphere_frag_center) > (sphere_frag_radius + outlineWidth)) : (delta < 0.0);
-    if (clip) {
+    if (delta < 0.0) {
 #ifdef DISCARD_COLOR_MARKER
         color = vec4(1.0, 0.0, 0.0, 1.0);       
 #else // DISCARD_COLOR_MARKER
-        discard;
+        discard; 
 #endif // DISCARD_COLOR_MARKER
     }
 #endif // CLIP
