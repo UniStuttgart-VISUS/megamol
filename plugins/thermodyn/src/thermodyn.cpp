@@ -27,6 +27,7 @@
 #include "AccumulateInterfacePresence2.h"
 #include "PrepareSurfaceEvents2.h"
 #include "SphereWidget.h"
+#include "MeshWidget.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -72,6 +73,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::AccumulateInterfacePresence2>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PrepareSurfaceEvents2>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::SphereWidget>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::MeshWidget>();
         //
         // TODO: Register your plugin's modules here
         // like:
