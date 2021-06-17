@@ -1,7 +1,7 @@
 
 in vec4 inPosition;
 
-void main()
-{
+void main() {
+
 	gl_Position = inPosition;
 }

@@ -1,3 +1,4 @@
+
     //gl_Position = vec4((mins + maxs) * 0.5, 0.0, /*1.0*/inPos.w);
     //gl_PointSize = max((maxs.x - mins.x) * winHalf.x, (maxs.y - mins.y) * winHalf.y) * 0.5;
     

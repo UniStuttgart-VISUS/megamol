@@ -35,8 +35,8 @@ uniform vec3 inBoundsSize;
 float evaluateAmbientOcclusion(const in vec3 objPos, const in vec3 objNormal);
 
 
-void main()
-{
+void main() {
+
 	ivec2 texelCoord = ivec2(gl_FragCoord.xy);
 	
 	float depth = texelFetch(inDepthTex, texelCoord, 0).r;

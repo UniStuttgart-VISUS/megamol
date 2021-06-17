@@ -401,8 +401,8 @@ namespace rendering {
 		bool renderOutline(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
 
         bool enableBufferData(const GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
-            GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr, bool createBufferData = false);
-        bool disableBufferData(const GLSLShader& shader);
+            GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr, bool createBufferData = false) const;
+        bool disableBufferData(const GLSLShader& shader) const;
 
         bool enableShaderData(GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
         bool disableShaderData();

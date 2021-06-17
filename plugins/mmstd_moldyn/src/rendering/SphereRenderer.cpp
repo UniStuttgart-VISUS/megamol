@@ -485,9 +485,9 @@ bool SphereRenderer::createResources() {
 
         case (RenderMode::GEOMETRY_SHADER): {
             this->geoShader = std::make_shared<ShaderSource>();
-            vertShaderName = "sphere_geo::vertex";
-            fragShaderName = "sphere_geo::fragment";
-            geoShaderName = "sphere_geo::geometry";
+            vertShaderName = "sphere_geometry::vertex";
+            fragShaderName = "sphere_geometry::fragment";
+            geoShaderName = "sphere_geometry::geometry";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
@@ -960,7 +960,7 @@ void SphereRenderer::checkFlagStorageAvailability(vislib::SmartPtr<ShaderSource:
     int major = -1;
     int minor = -1;
     this->getGLSLVersion(major, minor);
-    if (!((major == 4) && (minor >= 3) || (major > 4))) {
+    if (!(((major == 4) && (minor >= 3)) || (major > 4))) {
         warnstr += "[SphereRenderer] Flag Storage is not available. GLSL version greater or equal to 4.3 is required. \n";
         this->flags_available = false;
     }
@@ -1098,23 +1098,19 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
 
     // Lights
     this->curlightDir = {0.0f, 0.0f, 0.0f, 1.0f};
-
     auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
     if (call_light != nullptr) {
         if (!(*call_light)(0)) {
             return false;
         }
-
         auto lights = call_light->getData();
         auto distant_lights = lights.get<core::view::light::DistantLightType>();
-
         if (distant_lights.size() > 1) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
         } else if (distant_lights.empty()) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] No 'Distant Light' found");
         }
-
         for (auto const& light : distant_lights) {
             auto use_eyedir = light.eye_direction;
             if (use_eyedir) {
@@ -1129,13 +1125,7 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
                 if (lightDir.size() == 4) {
                     curlightDir[3] = lightDir[3];
                 }
-                /// View Space Lighting. Comment line to change to Object Space Lighting.
-                // this->curlightDir = this->curMVtransp * this->curlightDir;
             }
-            /// TODO Implement missing distant light parameters:
-            // light.second.dl_angularDiameter;
-            // light.second.lightColor;
-            // light.second.lightIntensity;
         }
     }
 
@@ -1521,7 +1511,7 @@ bool SphereRenderer::renderSplat(view::CallRender3DGL& call, MultiParticleDataCa
                 /// megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR ". [%s, %s, line %d]\n", vertsThisTime * vertStride, whence, mem, __FILE__, __FUNCTION__, __LINE__);
                 memcpy(mem, whence, vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRange(
-                    this->theSingleBuffer, bufSize * this->currBuf, vertsThisTime * vertStride);
+                    this->theSingleBuffer, static_cast<GLintptr>(bufSize * this->currBuf), static_cast<GLsizeiptr>(vertsThisTime * vertStride));
                 // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
                 // glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
                 glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
@@ -1609,7 +1599,7 @@ bool SphereRenderer::renderBufferArray(view::CallRender3DGL& call, MultiParticle
                 /// megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR ". [%s, %s, line %d]\n", vertsThisTime * vertStride, whence, mem, __FILE__, __FUNCTION__, __LINE__);
                 memcpy(mem, whence, vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRange(
-                    this->theSingleBuffer, numVerts * this->currBuf, vertsThisTime * vertStride);
+                    this->theSingleBuffer, static_cast<GLintptr>(numVerts * this->currBuf), static_cast<GLsizeiptr>(vertsThisTime * vertStride));
                 // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
                 this->setFlagStorageUniforms(this->sphereShader, (particle_offset - static_cast<GLuint>(numVerts * this->currBuf)));
@@ -1834,7 +1824,7 @@ bool SphereRenderer::renderOutline(view::CallRender3DGL& call, MultiParticleData
 
 
 bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
-    GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr, bool createBufferData) {
+    GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr, bool createBufferData) const {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocation(shader, "inColor");
@@ -1860,7 +1850,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
                 parts.GetColourData(), GL_STATIC_DRAW);
         }
         glEnableVertexAttribArray(colAttribLoc);
-        glVertexAttribPointer(colAttribLoc, 3, GL_UNSIGNED_BYTE, GL_TRUE, parts.GetColourDataStride(), colorPtr);
+        glVertexAttribPointer(colAttribLoc, 3, GL_UNSIGNED_BYTE, GL_TRUE, static_cast<GLsizei>(parts.GetColourDataStride()), colorPtr);
         break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
         if (createBufferData) {
@@ -1868,7 +1858,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
                 parts.GetColourData(), GL_STATIC_DRAW);
         }
         glEnableVertexAttribArray(colAttribLoc);
-        glVertexAttribPointer(colAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, parts.GetColourDataStride(), colorPtr);
+        glVertexAttribPointer(colAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, static_cast<GLsizei>(parts.GetColourDataStride()), colorPtr);
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
         if (createBufferData) {
@@ -1877,7 +1867,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
                 parts.GetColourData(), GL_STATIC_DRAW);
         }
         glEnableVertexAttribArray(colAttribLoc);
-        glVertexAttribPointer(colAttribLoc, 3, GL_FLOAT, GL_TRUE, parts.GetColourDataStride(), colorPtr);
+        glVertexAttribPointer(colAttribLoc, 3, GL_FLOAT, GL_TRUE, static_cast<GLsizei>(parts.GetColourDataStride()), colorPtr);
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
         if (createBufferData) {
@@ -1886,7 +1876,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
                 parts.GetColourData(), GL_STATIC_DRAW);
         }
         glEnableVertexAttribArray(colAttribLoc);
-        glVertexAttribPointer(colAttribLoc, 4, GL_FLOAT, GL_TRUE, parts.GetColourDataStride(), colorPtr);
+        glVertexAttribPointer(colAttribLoc, 4, GL_FLOAT, GL_TRUE, static_cast<GLsizei>(parts.GetColourDataStride()), colorPtr);
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
     case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
@@ -1897,10 +1887,10 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
         }
         glEnableVertexAttribArray(colIdxAttribLoc);
         if (parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-            glVertexAttribPointer(colIdxAttribLoc, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), colorPtr);
+            glVertexAttribPointer(colIdxAttribLoc, 1, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(parts.GetColourDataStride()), colorPtr);
         }
         else {
-            glVertexAttribPointer(colIdxAttribLoc, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), colorPtr);
+            glVertexAttribPointer(colIdxAttribLoc, 1, GL_DOUBLE, GL_FALSE, static_cast<GLsizei>(parts.GetColourDataStride()), colorPtr);
         }
     } break;
     case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA:
@@ -1911,7 +1901,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
                 parts.GetColourData(), GL_STATIC_DRAW);
         }
         glEnableVertexAttribArray(colAttribLoc);
-        glVertexAttribPointer(colAttribLoc, 4, GL_UNSIGNED_SHORT, GL_TRUE, parts.GetColourDataStride(), colorPtr);
+        glVertexAttribPointer(colAttribLoc, 4, GL_UNSIGNED_SHORT, GL_TRUE, static_cast<GLsizei>(parts.GetColourDataStride()), colorPtr);
         break;
     default:
         break;
@@ -1929,7 +1919,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
                 parts.GetVertexData(), GL_STATIC_DRAW);
         }
         glEnableVertexAttribArray(vertAttribLoc);
-        glVertexAttribPointer(vertAttribLoc, 3, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), vertexPtr);
+        glVertexAttribPointer(vertAttribLoc, 3, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(parts.GetVertexDataStride()), vertexPtr);
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
         if (createBufferData) {
@@ -1938,7 +1928,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
                 parts.GetVertexData(), GL_STATIC_DRAW);
         }
         glEnableVertexAttribArray(vertAttribLoc);
-        glVertexAttribPointer(vertAttribLoc, 4, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), vertexPtr);
+        glVertexAttribPointer(vertAttribLoc, 4, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(parts.GetVertexDataStride()), vertexPtr);
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
         if (createBufferData) {
@@ -1947,7 +1937,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
                 parts.GetVertexData(), GL_STATIC_DRAW);
         }
         glEnableVertexAttribArray(vertAttribLoc);
-        glVertexAttribPointer(vertAttribLoc, 3, GL_DOUBLE, GL_FALSE, parts.GetVertexDataStride(), vertexPtr);
+        glVertexAttribPointer(vertAttribLoc, 3, GL_DOUBLE, GL_FALSE, static_cast<GLsizei>(parts.GetVertexDataStride()), vertexPtr);
         break;
     case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
         if (createBufferData) {
@@ -1956,7 +1946,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
                 parts.GetVertexData(), GL_STATIC_DRAW);
         }
         glEnableVertexAttribArray(vertAttribLoc);
-        glVertexAttribPointer(vertAttribLoc, 3, GL_SHORT, GL_FALSE, parts.GetVertexDataStride(), vertexPtr);
+        glVertexAttribPointer(vertAttribLoc, 3, GL_SHORT, GL_FALSE, static_cast<GLsizei>(parts.GetVertexDataStride()), vertexPtr);
         break;
     default:
         break;
@@ -1966,7 +1956,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
 }
 
 
-bool SphereRenderer::disableBufferData(const vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::disableBufferData(const vislib::graphics::gl::GLSLShader& shader) const {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocation(shader, "inColor");

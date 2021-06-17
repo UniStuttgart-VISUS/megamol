@@ -3,7 +3,7 @@
     
     <include file="core_utils"/>
     <include file="bitflags"/>
-    <include file="sphere_flags"/>
+    <include file="sphere-flags"/>
 
     <!-- !!! If you add or remove snippets, change insertion indices of custom snippets here: SphereRenderer.cpp ~line 2407 and 2410 !!! -->
     <shader name="vertex">
@@ -14,9 +14,9 @@
         <snippet name="bitflags::main"/>
         <snippet name="core_utils::tflookup"/>
         <snippet name="core_utils::tfconvenience"/>
-        <snippet name="sphere_flags::vertex_attributes"/>                 
+        <snippet name="sphere-flags::vertex_attributes"/>
         <snippet name="MainStart"        type="file">sphere/stream_vertex_mainstart.glsl</snippet>
-        <snippet name="sphere_flags::vertex_getflag"/>         
+        <snippet name="sphere-flags::vertex_getflag"/>
         <snippet name="Main"             type="file">sphere/stream_vertex_main.glsl</snippet>
         <snippet name="Color"            type="file">sphere/vertex_color.glsl</snippet>         
         <snippet name="PosTrans"         type="file">sphere/vertex_postrans.glsl</snippet>

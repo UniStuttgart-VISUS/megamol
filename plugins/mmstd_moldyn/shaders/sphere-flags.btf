@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_flags">
+<btf type="MegaMolGLSLShader" version="1.0" namespace="sphere-flags">
  
 <!-- Vertex Shader Snippets -->
 

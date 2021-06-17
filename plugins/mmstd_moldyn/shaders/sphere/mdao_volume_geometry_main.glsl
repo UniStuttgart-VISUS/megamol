@@ -56,7 +56,6 @@ void emitHemisphere(int layer, int numSlices, float radius, float offset, int sl
 }
 
 
-
 void main() {
 
     // clipping

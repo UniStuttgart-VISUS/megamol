@@ -3,7 +3,7 @@
 
     <include file="core_utils"/>
     <include file="bitflags"/>
-    <include file="sphere_flags"/>
+    <include file="sphere-flags"/>
 
 
     <shader name="vertex">
@@ -14,9 +14,9 @@
         <snippet name="bitflags::main"/>
         <snippet name="core_utils::tflookup"/>
         <snippet name="core_utils::tfconvenience"/>
-        <snippet name="sphere_flags::vertex_attributes"/>        
+        <snippet name="sphere-flags::vertex_attributes"/>
         <snippet name="MainStart"                 type="file">sphere/mdao_vertex_mainstart.glsl</snippet>
-        <snippet name="sphere_flags::vertex_getflag"/>           
+        <snippet name="sphere-flags::vertex_getflag"/>
         <snippet name="Color"                     type="file">sphere/vertex_color.glsl</snippet>        
         <snippet name="SphereTouchPlane"          type="file">sphere/vertex_spheretouchplane.glsl</snippet>
         <snippet name="MainEnd"                   type="file">sphere/mdao_vertex_mainend.glsl</snippet>
@@ -37,11 +37,11 @@
             <snippet type="version">430</snippet>
             <snippet name="CommonDefines"         type="file">commondefines.glsl</snippet>         
             <snippet name="bitflags::main"/>            
-            <snippet name="sphere_flags::vertex_attributes"/>       
-            <snippet name="sphere_flags::vertex_attributes_geo"/>           
+            <snippet name="sphere-flags::vertex_attributes"/>
+            <snippet name="sphere-flags::vertex_attributes_geo"/>
             <snippet name="MainStart"             type="file">sphere/geometry_vertex_mainstart.glsl</snippet>
-            <snippet name="sphere_flags::vertex_getflag"/>
-            <snippet name="sphere_flags::vertex_getflag_geometry"/>                                  
+            <snippet name="sphere-flags::vertex_getflag"/>
+            <snippet name="sphere-flags::vertex_getflag_geometry"/>
             <snippet name="MainEnd"               type="file">sphere/simple_mainend.glsl</snippet>
         </shader>
 
@@ -52,9 +52,9 @@
             <snippet name="bitflags::main"/>            
             <snippet name="core_utils::tflookup"/>
             <snippet name="core_utils::tfconvenience" />
-            <snippet name="sphere_flags::geometry_attributes"/>           
+            <snippet name="sphere-flags::geometry_attributes"/>
             <snippet name="MainStart"        type="file">sphere/geometry_geometry_mainstart.glsl</snippet>
-            <snippet name="sphere_flags::geometry_getflag"/>
+            <snippet name="sphere-flags::geometry_getflag"/>
             <snippet name="PosTrans"         type="file">sphere/vertex_postrans.glsl</snippet>            
             <snippet name="Color"            type="file">sphere/vertex_color.glsl</snippet>         
             <snippet name="SphereTouchPlane" type="file">sphere/vertex_spheretouchplane.glsl</snippet>
