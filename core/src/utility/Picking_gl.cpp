@@ -1,16 +1,16 @@
 /*,
- * WidgetPicking_gl.cpp
+ * Picking_gl.cpp
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 
-#include "WidgetPicking_gl.h"
+#include "mmcore/utility/Picking_gl.h"
 
 
-using namespace megamol;
-using namespace megamol::gui;
+using namespace megamol::core;
+using namespace megamol::core::utility;
 
 
 #define GUI_INTERACTION_TUPLE_INIT \
@@ -25,7 +25,7 @@ using namespace megamol::gui;
     }
 
 
-megamol::gui::PickingBuffer::PickingBuffer()
+megamol::core::utility::PickingBuffer::PickingBuffer()
         : cursor_x(0.0)
         , cursor_y(0.0)
         , viewport_dim{0, 0}
@@ -38,13 +38,13 @@ megamol::gui::PickingBuffer::PickingBuffer()
         , enabled(false) {}
 
 
-megamol::gui::PickingBuffer::~PickingBuffer() {
+megamol::core::utility::PickingBuffer::~PickingBuffer() {
 
     this->fbo.reset();
 }
 
 
-bool megamol::gui::PickingBuffer::ProcessMouseMove(double x, double y) {
+bool megamol::core::utility::PickingBuffer::ProcessMouseMove(double x, double y) {
 
     double dx = x - this->cursor_x;
     double dy = y - this->cursor_y;
@@ -129,7 +129,7 @@ bool megamol::gui::PickingBuffer::ProcessMouseMove(double x, double y) {
 }
 
 
-bool megamol::gui::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseButton button,
+bool megamol::core::utility::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseButton button,
     megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
     // Enable/Disable cursor interaction
@@ -160,7 +160,7 @@ bool megamol::gui::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseBu
 }
 
 
-bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
+bool megamol::core::utility::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
 
     if (this->enabled) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -206,7 +206,7 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
 }
 
 
-bool megamol::gui::PickingBuffer::DisableInteraction() {
+bool megamol::core::utility::PickingBuffer::DisableInteraction() {
 
     if (!this->enabled) {
         // megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -248,7 +248,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction() {
                                    "    outFragColor = color; \n "
                                    "} ";
 
-        if (!megamol::core::view::RenderUtils::CreateShader(this->fbo_shader, vertex_src, fragment_src))
+        if (!megamol::core::utility::RenderUtils::CreateShader(this->fbo_shader, vertex_src, fragment_src))
             return false;
     }
 

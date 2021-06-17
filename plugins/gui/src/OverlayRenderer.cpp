@@ -16,7 +16,7 @@ using namespace megamol::gui;
 
 OverlayRenderer::OverlayRenderer()
         : view::RendererModule<view::CallRender3DGL>()
-        , megamol::core::view::RenderUtils()
+        , megamol::core::utility::RenderUtils()
         , paramMode("mode", "Overlay mode.")
         , paramAnchor("anchor", "Anchor of overlay.")
         , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")

@@ -29,7 +29,7 @@
 #include "mmcore/view/Camera_2.h"
 
 
-namespace megamol::core::view {
+namespace megamol::core::utility {
 
 // #### Utility vector conversion functions ############################ //
 
@@ -119,7 +119,7 @@ public:
      * Load textures.
      */
     static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename) {
-        return megamol::core::view::RenderUtils::LoadTextureFromFile(
+        return megamol::core::utility::RenderUtils::LoadTextureFromFile(
             out_texture_ptr, megamol::core::utility::to_string(filename));
     }
 

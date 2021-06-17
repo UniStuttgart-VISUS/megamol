@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "WidgetPicking_gl.h"
+#include "mmcore/utility/Picking_gl.h"
 #include "graph/Parameter.h"
 
 
@@ -29,7 +29,7 @@ namespace gui {
         virtual bool Check(bool only_check, ParamPtrVector_t& params) = 0;
 
         virtual bool Draw(ParamPtrVector_t params, const std::string& in_search,
-            megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) = 0;
+            megamol::gui::Parameter::WidgetScope in_scope, megamol::core::utility::PickingBuffer* inout_picking_buffer) = 0;
 
         bool IsActive() const {
             return this->active;

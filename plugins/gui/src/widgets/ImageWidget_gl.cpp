@@ -21,7 +21,7 @@ bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename)
         std::string filename_path =
             megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, filename);
         if (!filename_path.empty()) {
-            return megamol::core::view::RenderUtils::LoadTextureFromFile(this->tex_ptr, filename_path);
+            return megamol::core::utility::RenderUtils::LoadTextureFromFile(this->tex_ptr, filename_path);
         }
     }
     return false;

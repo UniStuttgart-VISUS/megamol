@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "mmcore/view/RenderUtils.h"
+#include "mmcore/utility/RenderUtils.h"
 #include "widgets/HoverToolTip.h"
 
 
@@ -33,7 +33,7 @@ namespace gui {
         }
 
         bool LoadTextureFromData(int width, int height, float* data) {
-            return megamol::core::view::RenderUtils::LoadTextureFromData(this->tex_ptr, width, height, data);
+            return megamol::core::utility::RenderUtils::LoadTextureFromData(this->tex_ptr, width, height, data);
         }
 
         bool LoadTextureFromFile(const std::string& filename);

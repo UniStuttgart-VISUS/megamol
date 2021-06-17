@@ -13,6 +13,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core::utility;
 using namespace megamol::gui;
 
 
@@ -46,7 +47,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
     megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
+        log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }

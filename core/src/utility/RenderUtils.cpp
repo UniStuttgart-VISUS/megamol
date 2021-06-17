@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/RenderUtils.h"
+#include "mmcore/utility/RenderUtils.h"
 
-namespace megamol::core::view {
+namespace megamol::core::utility {
 
 // STATIC functions -------------------------------------------------------
 

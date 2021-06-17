@@ -1,20 +1,21 @@
 /*
- * WidgetPicking_gl.h
+ * Picking_gl.h
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_WIDGETPICKING_GL_INCLUDED
-#define MEGAMOL_GUI_WIDGETPICKING_GL_INCLUDED
+#ifndef MEGAMOL_GUI_PICKING_GL_INCLUDED
+#define MEGAMOL_GUI_PICKING_GL_INCLUDED
 #pragma once
 
 
-#include "mmcore/view/RenderUtils.h"
+#include "mmcore/utility/RenderUtils.h"
 
 
 namespace megamol {
-namespace gui {
+namespace core {
+namespace utility {
 
 
     enum InteractionType {
@@ -51,28 +52,13 @@ namespace gui {
     typedef std::vector<Interaction> InteractVector_t;
     typedef std::vector<Manipulation> ManipVector_t;
 
-    class GUIManager;
-
     /** ************************************************************************
-     * OpenGL implementation of widget picking
+     * OpenGL implementation of picking
      *
      * (Code adapted from megamol::mesh::Render3DUI)
      */
     class PickingBuffer {
     public:
-        friend class GUIManager;
-
-        void AddInteractionObject(unsigned int obj_id, std::vector<Interaction> const& interactions) {
-            this->available_interactions.insert({obj_id, interactions});
-        }
-
-        ManipVector_t& GetPendingManipulations() {
-            return this->pending_manipulations;
-        }
-
-    protected:
-        // FUNCTIONS --------------------------------------------------------------
-        /// Should only be callable by friend class who owns the object
 
         PickingBuffer();
         ~PickingBuffer();
@@ -86,7 +72,15 @@ namespace gui {
         bool ProcessMouseMove(double x, double y);
 
         bool ProcessMouseClick(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
-            megamol::core::view::Modifiers mods);
+                               megamol::core::view::Modifiers mods);
+
+        void AddInteractionObject(unsigned int obj_id, std::vector<Interaction> const& interactions) {
+            this->available_interactions.insert({obj_id, interactions});
+        }
+
+        ManipVector_t& GetPendingManipulations() {
+            return this->pending_manipulations;
+        }
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -127,7 +121,8 @@ namespace gui {
         }
     };
 
-} // namespace gui
+} // namespace utility
+} // namespace core
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_WIDGETPICKING_GL_INCLUDED
+#endif // MEGAMOL_GUI_PICKING_GL_INCLUDED

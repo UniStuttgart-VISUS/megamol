@@ -12,7 +12,7 @@
 using namespace megamol::cinematic;
 
 
-CinematicUtils::CinematicUtils(void) : core::view::RenderUtils()
+CinematicUtils::CinematicUtils(void) : core::utility::RenderUtils()
     , font(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
     , init_once(false)
     , menu_font_size(20.0f)

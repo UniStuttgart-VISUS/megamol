@@ -29,7 +29,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/RenderUtils.h"
+#include "mmcore/utility/RenderUtils.h"
 #include "mmcore/view/RendererModule.h"
 
 #include <chrono>
@@ -45,7 +45,7 @@ namespace gui {
      * Renders various kinds of overlays
      */
     class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>,
-                            megamol::core::view::RenderUtils {
+                            megamol::core::utility::RenderUtils {
     public:
         virtual std::vector<std::string> requested_lifetime_resources() {
             return {"IOpenGL_Context", "MegaMolGraph"};

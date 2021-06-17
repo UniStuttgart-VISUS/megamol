@@ -1883,7 +1883,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
 }
 
 
-void Graph::DrawGlobalParameterWidgets(PickingBuffer& picking_buffer, std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr) {
+void Graph::DrawGlobalParameterWidgets(megamol::core::utility::PickingBuffer& picking_buffer, std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr) {
 
     for (auto& module_ptr : this->Modules()) {
         module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), "", false,

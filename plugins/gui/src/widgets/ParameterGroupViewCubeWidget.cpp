@@ -12,6 +12,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core::utility;
 using namespace megamol::gui;
 
 
@@ -349,7 +350,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
             "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
             "} ";
 
-        if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
+        if (!RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
             return false;
         }
     }
@@ -522,7 +523,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
             "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
             "} ";
 
-        if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
+        if (!RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
             return false;
         }
     }
@@ -649,7 +650,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
     megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
+        log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }

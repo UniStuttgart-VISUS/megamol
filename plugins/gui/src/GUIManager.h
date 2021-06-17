@@ -15,7 +15,7 @@
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
-#include "widgets/WidgetPicking_gl.h"
+#include "mmcore/utility/Picking_gl.h"
 #include "windows/Configurator.h"
 #include "windows/WindowCollection.h"
 
@@ -311,7 +311,7 @@ namespace gui {
         // Widgets
         FileBrowserWidget file_browser;
         HoverToolTip tooltip;
-        PickingBuffer picking_buffer;
+        megamol::core::utility::PickingBuffer picking_buffer;
 
         // FUNCTIONS --------------------------------------------------------------
 
