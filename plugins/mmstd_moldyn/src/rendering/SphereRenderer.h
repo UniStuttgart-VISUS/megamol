@@ -8,7 +8,6 @@
 #ifndef MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
 #define MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
 
-#include "misc/MDAOVolumeGenerator.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -33,6 +32,8 @@
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/utility/Picking_gl.h"
 
+#include "misc/MDAOVolumeGenerator.h"
+
 #include "vislib/types.h"
 #include "vislib/assert.h"
 #include "vislib/graphics/gl/ShaderSource.h"
@@ -44,7 +45,6 @@
 
 #define _USE_MATH_DEFINES
 #include <cmath>
-
 #include <map>
 #include <tuple>
 #include <utility>
@@ -53,17 +53,11 @@
 #include <chrono>
 #include <sstream>
 #include <iterator>
-
-#include <GL/glu.h>
 #include <algorithm>
 #include <vector>
 #include <string>
 #include <sstream>
-#include <deque>
 #include <fstream>
-#include <csignal>
-
-//#include "TimeMeasure.h"
 
 
 // Minimum GLSL version for all render modes
@@ -247,13 +241,14 @@ namespace rendering {
         megamol::core::CallerSlot getClipPlaneSlot;
         megamol::core::CallerSlot getTFSlot;
         megamol::core::CallerSlot readFlagsSlot;
+        megamol::core::CallerSlot writeFlagsSlot;
         megamol::core::CallerSlot getLightsSlot;
 
         /*********************************************************************/
         /* VARIABLES                                                         */
         /*********************************************************************/
 
-        enum RenderMode {              
+        enum RenderMode {
             SIMPLE            = 0,
             SIMPLE_CLUSTERED  = 1,
             GEOMETRY_SHADER   = 2,
@@ -299,13 +294,14 @@ namespace rendering {
 
         // --------------------------------------------------------------------
 
+        bool                                     init_resources;
         RenderMode                               renderMode;
         GLuint                                   greyTF;
         std::array<float, 2>                     range;
 
         megamol::core::utility::PickingBuffer    picking_buffer;
 
-        bool                                     flags_enabled; 
+        bool                                     flags_enabled;
         bool                                     flags_available;
 
         GLSLShader                               sphereShader;
@@ -388,15 +384,12 @@ namespace rendering {
         static std::string getRenderModeString(RenderMode rm);
         static bool isRenderModeAvailable(RenderMode rm, bool silent = false);
 
+        void getGLSLVersion(int &outMajor, int &outMinor) const;
 
         MultiParticleDataCall *getData(unsigned int t, float& outScaling);
-
         void getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol);
 
-        bool isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet);
-
         bool createResources();
-
         bool resetResources();
 
         bool renderSimple(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
@@ -409,33 +402,26 @@ namespace rendering {
 
         bool enableBufferData(const GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
             GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr, bool createBufferData = false);
-
         bool disableBufferData(const GLSLShader& shader);
 
         bool enableShaderData(GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
-
         bool disableShaderData();
 
         bool enableTransferFunctionTexture(GLSLShader& shader);
-
         bool disableTransferFunctionTexture();
 
-        bool enableFlagStorage(MultiParticleDataCall* mpdc);
-
-        bool disableFlagStorage();
+        void checkFlagStorageAvailability(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet);
+        void enableFlagStorage(MultiParticleDataCall* mpdc);
+        void disableFlagStorage();
+        void setFlagStorageUniforms(GLSLShader& shader, unsigned int particle_offset);
 
         void getBytesAndStride(const MultiParticleDataCall::Particles &parts, unsigned int &outColBytes, unsigned int &outVertBytes,
             unsigned int &outColStride, unsigned int &outVertStride, bool &outInterleaved);
 
         bool makeColorString(const MultiParticleDataCall::Particles &parts, std::string &outCode, std::string &outDeclaration, bool interleaved);
-
         bool makeVertexString(const MultiParticleDataCall::Particles &parts, std::string &outCode, std::string &outDeclaration, bool interleaved);
-
         std::shared_ptr<GLSLShader> makeShader(const std::shared_ptr<ShaderSource>& vert, const std::shared_ptr<ShaderSource>& frag);
-
         std::shared_ptr<GLSLShader> generateShader(const MultiParticleDataCall::Particles &parts);
-
-        void getGLSLVersion(int &outMajor, int &outMinor) const;
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
