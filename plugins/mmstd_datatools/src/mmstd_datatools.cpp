@@ -102,6 +102,8 @@
 #include "IColOperator.h"
 #include "ParticlesToNumberdensity.h"
 #include "ParticleIDDifference.h"
+#include "mmstd_datatools/StatisticsCall.h"
+#include "IColStatistics.h"
 
 namespace megamol::stdplugin::datatools {
 /** Implementing the instance class of this plugin */
@@ -216,12 +218,14 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColOperator>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticlesToNumberdensity>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIDDifference>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColStatistics>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleFilterMapDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::GraphDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiIndexListDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::StatisticsCall>();
     }
 };
 } // namespace megamol::stdplugin::datatools

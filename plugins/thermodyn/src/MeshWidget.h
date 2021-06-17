@@ -10,6 +10,8 @@
 
 #include "mesh/MeshCalls.h"
 
+#include "mmstd_datatools/StatisticsCall.h"
+
 #include "implot.h"
 
 namespace megamol::thermodyn {
@@ -45,19 +47,24 @@ private:
     bool GetExtents(core::view::CallRender3DGL& call) override;
 
     bool widget(float x, float y, std::size_t idx, mesh::MeshDataAccessCollection::Mesh const& mesh,
-        core::moldyn::SimpleSphericalParticles const* info);
+        core::moldyn::SimpleSphericalParticles const* info,
+        std::vector<stdplugin::datatools::StatisticsData> const& stats);
 
     bool widget(float x, float y,
         std::list<std::pair<std::size_t, mesh::MeshDataAccessCollection::Mesh const*>> const& selected,
-        core::moldyn::SimpleSphericalParticles const* info);
+        core::moldyn::SimpleSphericalParticles const* info,
+        std::vector<stdplugin::datatools::StatisticsData> const& stats);
 
-    bool parse_data(mesh::CallMesh& in_mesh, core::moldyn::MultiParticleDataCall* in_info, core::FlagCallRead_CPU& fcr);
+    bool parse_data(mesh::CallMesh& in_mesh, core::moldyn::MultiParticleDataCall* in_info,
+        stdplugin::datatools::StatisticsCall* in_stats, core::FlagCallRead_CPU& fcr);
 
     bool OnMouseMove(double x, double y) override;
 
     core::CallerSlot in_data_slot_;
 
     core::CallerSlot in_info_slot_;
+
+    core::CallerSlot in_stats_slot_;
 
     core::CallerSlot flags_read_slot_;
 
