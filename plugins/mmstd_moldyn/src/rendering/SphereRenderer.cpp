@@ -23,59 +23,61 @@ using namespace vislib::graphics::gl;
 #define SSBO_GENERATED_SHADER_INSTANCE "gl_VertexID" // or "gl_InstanceID"
 #define SSBO_GENERATED_SHADER_ALIGNMENT "std430"     // "std430"
 
-const GLuint SSBOflagsBindingPoint = 2;
+const GLuint SSBOflagsBindingPoint  = 2;
 const GLuint SSBOvertexBindingPoint = 3;
-const GLuint SSBOcolorBindingPoint = 4;
+const GLuint SSBOcolorBindingPoint  = 4;
 
-SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
-, getDataSlot("getdata", "Connects to the data source")
-, getTFSlot("gettransferfunction", "The slot for the transfer function module")
-, getClipPlaneSlot("getclipplane", "The slot for the clipping plane module")
-, readFlagsSlot("readFlags", "The slot for reading the selection flags")
-, getLightsSlot("lights", "Lights are retrieved over this slot.")
-, curViewAttrib()
-, curClipDat()
-, oldClipDat()
-, curClipCol()
-, curlightDir()
-, curVpWidth(-1)
-, curVpHeight(-1)
-, lastVpWidth(0)
-, lastVpHeight(0)
-, curMVinv()
-, curMVtransp()
-, curMVP()
-, curMVPinv()
-, curMVPtransp()
-, renderMode(RenderMode::SIMPLE)
-, greyTF(0)
-, range()
-, flags_enabled(false)
-, flags_available(false)
-, sphereShader()
-, sphereGeometryShader()
-, lightingShader()
-, vertShader(nullptr)
-, fragShader(nullptr)
-, geoShader(nullptr)
-, vertArray()
-, colType(SimpleSphericalParticles::ColourDataType::COLDATA_NONE)
-, vertType(SimpleSphericalParticles::VertexDataType::VERTDATA_NONE)
-, newShader(nullptr)
-, theShaders()
-, theSingleBuffer()
-, currBuf(0)
-, bufSize(32 * 1024 * 1024)
-, numBuffers(3)
-, theSingleMappedMem(nullptr)
-, gpuData()
-, gBuffer()
-, oldHash(-1)
-, oldFrameID(0)
-, ambConeConstants()
-, volGen(nullptr)
-, triggerRebuildGBuffer(false)
-// , timer()
+SphereRenderer::SphereRenderer() : view::Renderer3DModuleGL()
+    , getDataSlot("getdata", "Connects to the data source")
+    , getClipPlaneSlot("getclipplane", "The slot for the clipping plane module")
+    , getTFSlot("gettransferfunction", "The slot for the transfer function module")
+    , readFlagsSlot("readFlags", "The slot for reading the selection flags")
+    , getLightsSlot("lights", "Lights are retrieved over this slot.")
+    , curVpWidth(-1.0f)
+    , curVpHeight(-1.0f)
+    , lastVpWidth(0.0f)
+    , lastVpHeight(0.0f)
+    , curViewAttrib()
+    , curClipDat()
+    , oldClipDat()
+    , curClipCol()
+    , curlightDir()
+    , curMVinv()
+    , curMVtransp()
+    , curMVP()
+    , curMVPinv()
+    , curMVPtransp()
+    , renderMode(RenderMode::SIMPLE)
+    , greyTF(0)
+    , range()
+    , picking_buffer()
+    , flags_enabled(false)
+    , flags_available(false)
+    , sphereShader()
+    , sphereGeometryShader()
+    , lightingShader()
+    , vertShader(nullptr)
+    , fragShader(nullptr)
+    , geoShader(nullptr)
+    , vertArray()
+    , colType(SimpleSphericalParticles::ColourDataType::COLDATA_NONE)
+    , vertType(SimpleSphericalParticles::VertexDataType::VERTDATA_NONE)
+    , newShader(nullptr)
+    , theShaders()
+    , theSingleBuffer()
+    , currBuf(0)
+    , bufSize(32 * 1024 * 1024)
+    , numBuffers(3)
+    , theSingleMappedMem(nullptr)
+    , gpuData()
+    , gBuffer()
+    , oldHash(-1)
+    , oldFrameID(0)
+    , stateInvalid(false)
+    , ambConeConstants()
+    , volGen(nullptr)
+    , triggerRebuildGBuffer(false)
+    // , timer()
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
     /// This variant should not need the fence (?)
     // ,singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
@@ -129,15 +131,15 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
 
     // Initialising enum param with all possible modes (needed for configurator)
     // (Removing not available render modes later in create function)
-    param::EnumParam* rmp = new param::EnumParam(this->renderMode);
-    rmp->SetTypePair(RenderMode::SIMPLE, this->getRenderModeString(RenderMode::SIMPLE).c_str());
-    rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED, this->getRenderModeString(RenderMode::SIMPLE_CLUSTERED).c_str());
-    rmp->SetTypePair(RenderMode::GEOMETRY_SHADER, this->getRenderModeString(RenderMode::GEOMETRY_SHADER).c_str());
-    rmp->SetTypePair(RenderMode::SSBO_STREAM, this->getRenderModeString(RenderMode::SSBO_STREAM).c_str());
-    rmp->SetTypePair(RenderMode::BUFFER_ARRAY, this->getRenderModeString(RenderMode::BUFFER_ARRAY).c_str());
-    rmp->SetTypePair(RenderMode::SPLAT, this->getRenderModeString(RenderMode::SPLAT).c_str());
-    rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, this->getRenderModeString(RenderMode::AMBIENT_OCCLUSION).c_str());
-    rmp->SetTypePair(RenderMode::OUTLINE, this->getRenderModeString(RenderMode::OUTLINE).c_str());
+    auto* rmp = new param::EnumParam(this->renderMode);
+    rmp->SetTypePair(RenderMode::SIMPLE, getRenderModeString(RenderMode::SIMPLE).c_str());
+    rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED, getRenderModeString(RenderMode::SIMPLE_CLUSTERED).c_str());
+    rmp->SetTypePair(RenderMode::GEOMETRY_SHADER, getRenderModeString(RenderMode::GEOMETRY_SHADER).c_str());
+    rmp->SetTypePair(RenderMode::SSBO_STREAM, getRenderModeString(RenderMode::SSBO_STREAM).c_str());
+    rmp->SetTypePair(RenderMode::BUFFER_ARRAY, getRenderModeString(RenderMode::BUFFER_ARRAY).c_str());
+    rmp->SetTypePair(RenderMode::SPLAT, getRenderModeString(RenderMode::SPLAT).c_str());
+    rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, getRenderModeString(RenderMode::AMBIENT_OCCLUSION).c_str());
+    rmp->SetTypePair(RenderMode::OUTLINE, getRenderModeString(RenderMode::OUTLINE).c_str());
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
     rmp = nullptr;
@@ -195,7 +197,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
 }
 
 
-SphereRenderer::~SphereRenderer(void) { this->Release(); }
+SphereRenderer::~SphereRenderer() { this->Release(); }
 
 
 bool SphereRenderer::GetExtents(view::CallRender3DGL& call) {
@@ -203,7 +205,7 @@ bool SphereRenderer::GetExtents(view::CallRender3DGL& call) {
     auto cr = &call;
     if (cr == nullptr) return false;
 
-    MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    auto* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if ((c2 != nullptr)) {
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()), this->forceTimeSlot.Param<param::BoolParam>()->Value());
         if (!(*c2)(1)) return false;
@@ -237,45 +239,45 @@ bool SphereRenderer::GetExtents(view::CallRender3DGL& call) {
 }
 
 
-bool SphereRenderer::create(void) {
+bool SphereRenderer::create() {
 
     ASSERT(IsAvailable());
     // At least the simple render mode must be available
-    ASSERT(this->isRenderModeAvailable(RenderMode::SIMPLE));
+    ASSERT(isRenderModeAvailable(RenderMode::SIMPLE));
 
     // Reduce to available render modes
     this->SetSlotUnavailable(&this->renderModeParam);
     this->renderModeParam.Param<param::EnumParam>()->ClearTypePairs();
-    this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SIMPLE, this->getRenderModeString(RenderMode::SIMPLE).c_str());
-    if (this->isRenderModeAvailable(RenderMode::SIMPLE_CLUSTERED)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SIMPLE_CLUSTERED, this->getRenderModeString(RenderMode::SIMPLE_CLUSTERED).c_str());
+    this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SIMPLE, getRenderModeString(RenderMode::SIMPLE).c_str());
+    if (isRenderModeAvailable(RenderMode::SIMPLE_CLUSTERED)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SIMPLE_CLUSTERED, getRenderModeString(RenderMode::SIMPLE_CLUSTERED).c_str());
     }
-    if (this->isRenderModeAvailable(RenderMode::GEOMETRY_SHADER)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::GEOMETRY_SHADER, this->getRenderModeString(RenderMode::GEOMETRY_SHADER).c_str());
+    if (isRenderModeAvailable(RenderMode::GEOMETRY_SHADER)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::GEOMETRY_SHADER, getRenderModeString(RenderMode::GEOMETRY_SHADER).c_str());
     }
-    if (this->isRenderModeAvailable(RenderMode::SSBO_STREAM)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SSBO_STREAM, this->getRenderModeString(RenderMode::SSBO_STREAM).c_str());
+    if (isRenderModeAvailable(RenderMode::SSBO_STREAM)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SSBO_STREAM, getRenderModeString(RenderMode::SSBO_STREAM).c_str());
     }
-    if (this->isRenderModeAvailable(RenderMode::SPLAT)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SPLAT, this->getRenderModeString(RenderMode::SPLAT).c_str());
+    if (isRenderModeAvailable(RenderMode::SPLAT)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SPLAT, getRenderModeString(RenderMode::SPLAT).c_str());
     }
-    if (this->isRenderModeAvailable(RenderMode::BUFFER_ARRAY)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::BUFFER_ARRAY, this->getRenderModeString(RenderMode::BUFFER_ARRAY).c_str());
+    if (isRenderModeAvailable(RenderMode::BUFFER_ARRAY)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::BUFFER_ARRAY, getRenderModeString(RenderMode::BUFFER_ARRAY).c_str());
     }
-    if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION)) {
+    if (isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION)) {
         this->renderModeParam.Param<param::EnumParam>()->SetTypePair(
-            RenderMode::AMBIENT_OCCLUSION, this->getRenderModeString(RenderMode::AMBIENT_OCCLUSION).c_str());
+            RenderMode::AMBIENT_OCCLUSION, getRenderModeString(RenderMode::AMBIENT_OCCLUSION).c_str());
     }
-    if (this->isRenderModeAvailable(RenderMode::OUTLINE)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::OUTLINE, this->getRenderModeString(RenderMode::OUTLINE).c_str());
+    if (isRenderModeAvailable(RenderMode::OUTLINE)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::OUTLINE, getRenderModeString(RenderMode::OUTLINE).c_str());
     }
     this->MakeSlotAvailable(&this->renderModeParam);
 
     // Check initial render mode
-    if (!this->isRenderModeAvailable(this->renderMode)) {
+    if (!isRenderModeAvailable(this->renderMode)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "[SphereRenderer] Render mode '%s' is not available - falling back to render mode '%s'.",
-            (this->getRenderModeString(this->renderMode)).c_str(), (this->getRenderModeString(RenderMode::SIMPLE)).c_str());
+            (getRenderModeString(this->renderMode)).c_str(), (getRenderModeString(RenderMode::SIMPLE)).c_str());
         // Always available fallback render mode
         this->renderMode = RenderMode::SIMPLE;
     }
@@ -296,13 +298,13 @@ bool SphereRenderer::create(void) {
 }
 
 
-void SphereRenderer::release(void) {
+void SphereRenderer::release() {
 
     this->resetResources();
 }
 
 
-bool SphereRenderer::resetResources(void) {
+bool SphereRenderer::resetResources() {
 
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
@@ -362,9 +364,9 @@ bool SphereRenderer::resetResources(void) {
     this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
 
     // AMBIENT OCCLUSION
-    if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION, true)) {
-        for (unsigned int i = 0; i < this->gpuData.size(); i++) {
-            glDeleteVertexArrays(3, reinterpret_cast<GLuint*>(&(this->gpuData[i])));
+    if (isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION, true)) {
+        for (auto& gpudata : this->gpuData) {
+            glDeleteVertexArrays(3, reinterpret_cast<GLuint*>(&(gpudata)));
         }
         this->gpuData.clear();
 
@@ -385,8 +387,8 @@ bool SphereRenderer::resetResources(void) {
     }
 
     // SPLAT or BUFFER_ARRAY
-    if (this->isRenderModeAvailable(RenderMode::SPLAT, true) ||
-        this->isRenderModeAvailable(RenderMode::BUFFER_ARRAY, true)) {
+    if (isRenderModeAvailable(RenderMode::SPLAT, true) ||
+        isRenderModeAvailable(RenderMode::BUFFER_ARRAY, true)) {
 
         for (auto& x : fences) {
             if (x) {
@@ -404,8 +406,8 @@ bool SphereRenderer::resetResources(void) {
     }
 
     // SSBO or SPLAT or BUFFER_ARRAY
-    if (this->isRenderModeAvailable(RenderMode::SSBO_STREAM) || this->isRenderModeAvailable(RenderMode::SPLAT) ||
-        this->isRenderModeAvailable(RenderMode::BUFFER_ARRAY)) {
+    if (isRenderModeAvailable(RenderMode::SSBO_STREAM) || isRenderModeAvailable(RenderMode::SPLAT) ||
+        isRenderModeAvailable(RenderMode::BUFFER_ARRAY)) {
         glDeleteVertexArrays(1, &(this->vertArray));
     }
 
@@ -426,16 +428,16 @@ bool SphereRenderer::createResources() {
     vislib::StringA fragShaderName;
     vislib::StringA geoShaderName;
 
-    if (!this->isRenderModeAvailable(this->renderMode)) {
+    if (!isRenderModeAvailable(this->renderMode)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "[SphereRenderer] Render mode: '%s' is not available - falling back to render mode '%s'.",
-            (this->getRenderModeString(this->renderMode)).c_str(), (this->getRenderModeString(RenderMode::SIMPLE)).c_str());
+            (getRenderModeString(this->renderMode)).c_str(), (getRenderModeString(RenderMode::SIMPLE)).c_str());
         this->renderMode = RenderMode::SIMPLE; // Fallback render mode ...
         return false;
     }
     else {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "[SphereRenderer] Using render mode '%s'.",
-            (this->getRenderModeString(this->renderMode)).c_str());
+            (getRenderModeString(this->renderMode)).c_str());
     }
 
     // Fallback transfer function texture
@@ -688,8 +690,7 @@ bool SphereRenderer::createResources() {
             std::vector<glm::vec4> directions;
             this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
             std::string directionsCode = this->generateDirectionShaderArrayString(directions, "coneDirs");
-            vislib::graphics::gl::ShaderSource::StringSnippet* dirSnippet =
-                new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
+            auto* dirSnippet = new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
             this->fragShader->Append(dirSnippet);
             this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet(
                 "sphere_mdao::deferred::fragment::AmbientOcclusion"));
@@ -743,14 +744,14 @@ bool SphereRenderer::createResources() {
             return false;
         }
     }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException& ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s. [%s, %s, line %d]\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    catch (vislib::Exception e) {
+    catch (vislib::Exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -768,7 +769,7 @@ bool SphereRenderer::createResources() {
 
 MultiParticleDataCall *SphereRenderer::getData(unsigned int t, float& outScaling) {
 
-    MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    auto*c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     outScaling = 1.0f;
     if (c2 != nullptr) {
         c2->SetFrameID(t, this->forceTimeSlot.Param<param::BoolParam>()->Value());
@@ -808,7 +809,7 @@ MultiParticleDataCall *SphereRenderer::getData(unsigned int t, float& outScaling
 
 void SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol) {
 
-    view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
+    auto*ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     if ((ccp != nullptr) && (*ccp)()) {
         out_clipDat[0] = ccp->GetPlane().Normal().X();
         out_clipDat[1] = ccp->GetPlane().Normal().Y();
@@ -839,10 +840,6 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
     // Check additonal requirements for each render mode separatly
     switch (rm) {
     case (RenderMode::SIMPLE):
-        if (ogl_IsVersionGEQ(1, 4) == 0) {
-            warnstr += warnmode + "OpenGL version 1.4 or greater is required.\n";
-        }
-        break;
     case (RenderMode::SIMPLE_CLUSTERED):
         if (ogl_IsVersionGEQ(1, 4) == 0) {
             warnstr += warnmode + "OpenGL version 1.4 or greater is required.\n";
@@ -973,7 +970,7 @@ bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snipp
         this->flags_available = false;
     }
 
-    std::string flag_snippet_str = "";
+    std::string flag_snippet_str;
     if (this->flags_available) {
         flag_snippet_str = "#define FLAGS_AVAILABLE \n"
             "#extension GL_ARB_shader_storage_buffer_object : require \n"
@@ -1085,7 +1082,6 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     this->curCamView = snapshot.view_vector;
     this->curCamRight = snapshot.right_vector;
     this->curCamUp = snapshot.up_vector;
-    this->curCamNearClip = snapshot.frustum_near;
 
     glm::mat4 view = viewTemp;
     glm::mat4 proj = projTemp;
@@ -1160,11 +1156,11 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     glEnable(GL_CLIP_DISTANCE0);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
+    this->enableFlagStorage(mpdc);
+
     bool retval = false;
     switch (currentRenderMode) {
     case (RenderMode::SIMPLE):
-        retval = this->renderSimple(call, mpdc);
-        break;
     case (RenderMode::SIMPLE_CLUSTERED):
         retval = this->renderSimple(call, mpdc);
         break;
@@ -1188,6 +1184,8 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
         break;
     }
 
+    this->disableFlagStorage();
+
     // Reset default OpenGL state ---------------------------------------------
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glDisable(GL_CLIP_DISTANCE0);
@@ -1200,7 +1198,7 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     // Save some current data
     this->lastVpHeight = this->curVpHeight;
     this->lastVpWidth = this->curVpWidth;
-    for (size_t i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
         this->oldClipDat[i] = this->curClipDat[i];
     }
 
@@ -1213,7 +1211,6 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
 bool SphereRenderer::renderSimple(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
-    this->enableFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
@@ -1271,7 +1268,6 @@ bool SphereRenderer::renderSimple(view::CallRender3DGL& call, MultiParticleDataC
         flagPartsCount += parts.GetCount();
     }
 
-    this->disableFlagStorage(this->sphereShader);
     this->sphereShader.Disable();
 
     mpdc->Unlock();
@@ -1302,7 +1298,6 @@ bool SphereRenderer::renderSSBO(view::CallRender3DGL& call, MultiParticleDataCal
         if (this->newShader == nullptr) return false;
 
         this->newShader->Enable();
-        this->enableFlagStorage(*this->newShader, mpdc);
         if (!this->enableShaderData(*this->newShader, parts)) {
             continue;
         }
@@ -1341,7 +1336,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3DGL& call, MultiParticleDataCal
                 auto& bufA = this->bufArray[i];
                 if (this->stateInvalid || (bufA.GetNumChunks() == 0)) {
                     bufA.SetDataWithSize(parts.GetVertexData(), vertStride, vertStride, parts.GetCount(),
-                        (GLuint)(2 * 1024 * 1024 * 1024 - 1));
+                        (GLuint)(2u * 1024u * 1024u * 1024u - 1u));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
                 const GLuint numChunks = bufA.GetNumChunks();
@@ -1386,7 +1381,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3DGL& call, MultiParticleDataCal
                 auto& colA = this->colBufArray[i];
                 if (this->stateInvalid || (bufA.GetNumChunks() == 0)) {
                     bufA.SetDataWithSize(parts.GetVertexData(), vertStride, vertStride, parts.GetCount(),
-                        (GLuint)(2 * 1024 * 1024 * 1024 - 1));
+                        (GLuint)(2u * 1024u * 1024u * 1024u - 1u));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                     colA.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
                         bufA.GetMaxNumItemsPerChunk());
@@ -1439,7 +1434,6 @@ bool SphereRenderer::renderSSBO(view::CallRender3DGL& call, MultiParticleDataCal
         }
 
         this->disableShaderData();
-        this->disableFlagStorage(*this->newShader);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
         this->newShader->Disable();
@@ -1490,7 +1484,6 @@ bool SphereRenderer::renderSplat(view::CallRender3DGL& call, MultiParticleDataCa
         if (this->newShader == nullptr) return false;
 
         this->newShader->Enable();
-        this->enableFlagStorage(*this->newShader, mpdc);
         if (!this->enableShaderData(*this->newShader, parts)) {
             continue;
         }
@@ -1568,7 +1561,6 @@ bool SphereRenderer::renderSplat(view::CallRender3DGL& call, MultiParticleDataCa
         }
 
         this->disableShaderData();
-        this->disableFlagStorage(*this->newShader);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
         newShader->Disable();
@@ -1585,7 +1577,6 @@ bool SphereRenderer::renderSplat(view::CallRender3DGL& call, MultiParticleDataCa
 bool SphereRenderer::renderBufferArray(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
-    this->enableFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
@@ -1671,7 +1662,6 @@ bool SphereRenderer::renderBufferArray(view::CallRender3DGL& call, MultiParticle
         flagPartsCount += parts.GetCount();
     }
 
-    this->disableFlagStorage(this->sphereShader);
     this->sphereShader.Disable();
 
     mpdc->Unlock();
@@ -1693,7 +1683,6 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3DGL& call, MultiParti
     // glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
     this->sphereGeometryShader.Enable();
-    this->enableFlagStorage(this->sphereGeometryShader, mpdc);
 
     // Set shader variables
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
@@ -1736,7 +1725,6 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3DGL& call, MultiParti
         flagPartsCount += parts.GetCount();
     }
 
-    this->disableFlagStorage(this->sphereGeometryShader);
     this->sphereGeometryShader.Disable();
 
     // glDisable(GL_VERTEX_PROGRAM_TWO_SIDE);
@@ -1784,7 +1772,6 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3DGL& call, MultiPar
     glBindFragDataLocation(theShader.ProgramHandle(), 1, "outNormal");
 
     theShader.Enable();
-    this->enableFlagStorage(theShader, mpdc);
 
     glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
     glUniformMatrix4fv(theShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
@@ -1826,7 +1813,6 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3DGL& call, MultiPar
     }
 
     glBindVertexArray(0);
-    this->disableFlagStorage(theShader);
     theShader.Disable();
 
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
@@ -1841,7 +1827,6 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3DGL& call, MultiPar
 bool SphereRenderer::renderOutline(view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
-    this->enableFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
@@ -1883,7 +1868,6 @@ bool SphereRenderer::renderOutline(view::CallRender3DGL& call, MultiParticleData
         flagPartsCount += parts.GetCount();
     }
 
-    this->disableFlagStorage(this->sphereShader);
     this->sphereShader.Disable();
 
     mpdc->Unlock();
@@ -1906,7 +1890,7 @@ bool SphereRenderer::enableBufferData(const vislib::graphics::gl::GLSLShader& sh
         vertexPtr = nullptr;
     }
 
-    unsigned int partCount = static_cast<unsigned int>(parts.GetCount());
+    auto partCount = static_cast<unsigned int>(parts.GetCount());
 
     // colour
     glBindBuffer(GL_ARRAY_BUFFER, colBuf);
@@ -2092,7 +2076,7 @@ bool SphereRenderer::enableShaderData(vislib::graphics::gl::GLSLShader& shader, 
 }
 
 
-bool SphereRenderer::disableShaderData(void) {
+bool SphereRenderer::disableShaderData() {
 
     return this->disableTransferFunctionTexture();
 }
@@ -2100,7 +2084,7 @@ bool SphereRenderer::disableShaderData(void) {
 
 bool SphereRenderer::enableTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
 
-    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+    auto* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
         cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
     }
@@ -2115,9 +2099,9 @@ bool SphereRenderer::enableTransferFunctionTexture(vislib::graphics::gl::GLSLSha
 }
 
 
-bool SphereRenderer::disableTransferFunctionTexture(void) {
+bool SphereRenderer::disableTransferFunctionTexture() {
 
-    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+    auto* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if (cgtf != nullptr) {
         cgtf->UnbindConvenience();
     }
@@ -2129,7 +2113,7 @@ bool SphereRenderer::disableTransferFunctionTexture(void) {
 }
 
 
-bool SphereRenderer::enableFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::enableFlagStorage(MultiParticleDataCall* mpdc) {
 
     if (!this->flags_available) return false;
     if (mpdc == nullptr) return false;
@@ -2142,7 +2126,7 @@ bool SphereRenderer::enableFlagStorage(const vislib::graphics::gl::GLSLShader& s
     if ((*flagc)(core::FlagCallRead_GL::CallGetData)) {
         if (flagc->hasUpdate()) {
             uint32_t partsCount = 0;
-            uint32_t partlistcount = static_cast<uint32_t>(mpdc->GetParticleListCount());
+            auto partlistcount = static_cast<uint32_t>(mpdc->GetParticleListCount());
             for (uint32_t i = 0; i < partlistcount; i++) {
                 MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 partsCount += static_cast<uint32_t>(parts.GetCount());
@@ -2151,13 +2135,16 @@ bool SphereRenderer::enableFlagStorage(const vislib::graphics::gl::GLSLShader& s
         }
     }
     flagc->getData()->flags->bind(SSBOflagsBindingPoint);
+
+    this->picking_buffer.EnableInteraction(glm::vec2(static_cast<float>(this->curVpWidth), static_cast<float>(this->curVpHeight)));
+
     this->flags_enabled = true;
 
     return true;
 }
 
 
-bool SphereRenderer::disableFlagStorage(const vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::disableFlagStorage() {
 
     if (!this->flags_available) return false;
 
@@ -2341,7 +2328,7 @@ bool SphereRenderer::makeVertexString(
 }
 
 
-std::shared_ptr<GLSLShader> SphereRenderer::makeShader(std::shared_ptr<ShaderSource> vert, std::shared_ptr<ShaderSource> frag) {
+std::shared_ptr<GLSLShader> SphereRenderer::makeShader(const std::shared_ptr<ShaderSource>& vert, const std::shared_ptr<ShaderSource>& frag) {
 
     std::shared_ptr<GLSLShader> sh = std::make_shared<GLSLShader>(GLSLShader());
     try {
@@ -2351,14 +2338,14 @@ std::shared_ptr<GLSLShader> SphereRenderer::makeShader(std::shared_ptr<ShaderSou
             return nullptr;
         }
     }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException& ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s. [%s, %s, line %d]\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return nullptr;
     }
-    catch (vislib::Exception e) {
+    catch (vislib::Exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return nullptr;
@@ -2381,7 +2368,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> SphereRenderer::generateShader
     bool interleaved;
     this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
 
-    shaderMap::iterator i = this->theShaders.find(std::make_tuple(c, p, interleaved));
+    auto i = this->theShaders.find(std::make_tuple(c, p, interleaved));
     if (i == this->theShaders.end()) {
         std::shared_ptr<ShaderSource> v2 = std::make_shared<ShaderSource>(*this->vertShader);
         vislib::SmartPtr<ShaderSource::Snippet> codeSnip, declarationSnip;
@@ -2441,7 +2428,6 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> SphereRenderer::generateShader
         // insertion)
         v2->Insert(11, codeSnip);
 
-        std::shared_ptr<ShaderSource> vss(v2);
         this->theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, this->fragShader)));
         i = this->theShaders.find(std::make_tuple(c, p, interleaved));
     }
@@ -2472,7 +2458,7 @@ void SphereRenderer::getGLSLVersion(int &outMajor, int &outMinor) const {
     outMajor = -1;
     outMinor = -1;
     std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
-    std::size_t found = glslVerStr.find(".");
+    std::size_t found = glslVerStr.find('.');
     if (found != std::string::npos) {
         outMajor = std::atoi(glslVerStr.substr(0, 1).c_str());
         outMinor = std::atoi(glslVerStr.substr(found + 1, 1).c_str());
@@ -2498,7 +2484,7 @@ void SphereRenderer::lockSingle(GLsync& outSyncObj) {
 void SphereRenderer::waitSingle(const GLsync& syncObj) {
 
     if (syncObj) {
-        while (1) {
+        while (true) {
             GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
             if (wait == GL_ALREADY_SIGNALED || wait == GL_CONDITION_SATISFIED) {
                 return;
@@ -2577,8 +2563,8 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticl
         unsigned int partsCount = mpdc->GetParticleListCount();
 
         // Add buffers if neccessary
-        for (unsigned int i = static_cast<unsigned int>(this->gpuData.size()); i < partsCount; i++) {
-            gpuParticleDataType data;
+        for (auto i = static_cast<unsigned int>(this->gpuData.size()); i < partsCount; i++) {
+            gpuParticleDataType data = {0, 0, 0};
             glGenVertexArrays(1, &(data.vertexArray));
             glGenBuffers(1, &(data.vertexVBO));
             glGenBuffers(1, &(data.colorVBO));
@@ -2615,7 +2601,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticl
 
     // Recreate the volume if neccessary
     bool equalClipData = true;
-    for (size_t i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
         if (this->oldClipDat[i] != this->curClipDat[i]) {
             equalClipData = false;
             break;
@@ -2741,7 +2727,7 @@ void SphereRenderer::generate3ConeDirections(std::vector<glm::vec4>& directions,
 
         glm::vec3 center(cos(angle) * radius, height, sin(angle) * radius);
         center = glm::normalize(center);
-        directions.push_back(glm::vec4(center.x, center.y, center.z, edge_length));
+        directions.emplace_back(glm::vec4(center.x, center.y, center.z, edge_length));
     }
 }
 

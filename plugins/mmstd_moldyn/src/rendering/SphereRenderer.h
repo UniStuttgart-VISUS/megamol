@@ -31,6 +31,7 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/utility/Picking_gl.h"
 
 #include "vislib/types.h"
 #include "vislib/assert.h"
@@ -42,7 +43,7 @@
 #include "vislib/math/Cuboid.h"
 
 #define _USE_MATH_DEFINES
-#include <math.h>
+#include <cmath>
 
 #include <map>
 #include <tuple>
@@ -60,7 +61,7 @@
 #include <sstream>
 #include <deque>
 #include <fstream>
-#include <signal.h>
+#include <csignal>
 
 //#include "TimeMeasure.h"
 
@@ -112,7 +113,7 @@ namespace rendering {
          *
          * @return The name of this module.
          */
-        static const char *ClassName(void) {
+        static const char *ClassName() {
             return "SphereRenderer";
         }
 
@@ -121,7 +122,7 @@ namespace rendering {
          *
          * @return A human readable description of this module.
          */
-        static const char *Description(void) {
+        static const char *Description() {
             return "Renderer for sphere glyphs providing different modes using e.g. a bit of bleeding-edge features or a geometry shader.";
         }
 
@@ -130,7 +131,7 @@ namespace rendering {
          *
          * @return 'true' if the module is available, 'false' otherwise.
          */
-        static bool IsAvailable(void) {
+        static bool IsAvailable() {
 
 #ifdef _WIN32
 #if defined(DEBUG) || defined(_DEBUG)
@@ -164,7 +165,7 @@ namespace rendering {
                 retval = false;
             }
             std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
-            std::size_t found = glslVerStr.find(".");
+            std::size_t found = glslVerStr.find('.');
             int major = -1;
             int minor = -1;
             if (found != std::string::npos) {
@@ -205,13 +206,13 @@ namespace rendering {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
+        bool GetExtents(megamol::core::view::CallRender3DGL& call) override;
 
         /** Ctor. */
-        SphereRenderer(void);
+        SphereRenderer();
 
         /** Dtor. */
-        virtual ~SphereRenderer(void);
+        ~SphereRenderer() override;
 
     protected:
 
@@ -220,12 +221,12 @@ namespace rendering {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool create(void);
+        bool create() override;
 
         /**
          * Implementation of 'Release'.
          */
-        virtual void release(void);
+        void release() override;
 
         /**
          * The render callback.
@@ -234,9 +235,19 @@ namespace rendering {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3DGL& call);
+        bool Render(megamol::core::view::CallRender3DGL& call) override;
 
     private:
+
+        /*********************************************************************/
+        /* SLOTS                                                             */
+        /*********************************************************************/
+
+        megamol::core::CallerSlot getDataSlot;
+        megamol::core::CallerSlot getClipPlaneSlot;
+        megamol::core::CallerSlot getTFSlot;
+        megamol::core::CallerSlot readFlagsSlot;
+        megamol::core::CallerSlot getLightsSlot;
 
         /*********************************************************************/
         /* VARIABLES                                                         */
@@ -276,7 +287,6 @@ namespace rendering {
         glm::vec4                   curClipCol;
         glm::vec4                   curlightDir;
         glm::vec4                   curCamUp;
-        float                       curCamNearClip;
         glm::vec4                   curCamView;
         glm::vec4                   curCamRight;
         glm::vec4                   curCamPos;
@@ -292,6 +302,8 @@ namespace rendering {
         RenderMode                               renderMode;
         GLuint                                   greyTF;
         std::array<float, 2>                     range;
+
+        megamol::core::utility::PickingBuffer    picking_buffer;
 
         bool                                     flags_enabled; 
         bool                                     flags_available;
@@ -341,16 +353,6 @@ namespace rendering {
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
 
         /*********************************************************************/
-        /* SLOTS                                                             */
-        /*********************************************************************/
-
-        megamol::core::CallerSlot getDataSlot;
-        megamol::core::CallerSlot getClipPlaneSlot;
-        megamol::core::CallerSlot getTFSlot;
-        megamol::core::CallerSlot readFlagsSlot;
-        megamol::core::CallerSlot getLightsSlot;
-
-        /*********************************************************************/
         /* PARAMETERS                                                        */
         /*********************************************************************/
 
@@ -362,13 +364,11 @@ namespace rendering {
         megamol::core::param::ParamSlot softSelectColorParam;
 
         // Affects only Splat rendering ---------------------------------------
-
         core::param::ParamSlot alphaScalingParam;
         core::param::ParamSlot attenuateSubpixelParam;
         core::param::ParamSlot useStaticDataParam;
 
         // Affects only Ambient Occlusion rendering: --------------------------
-
         megamol::core::param::ParamSlot enableLightingSlot;
         megamol::core::param::ParamSlot enableGeometryShader;
         megamol::core::param::ParamSlot aoVolSizeSlot;
@@ -379,77 +379,26 @@ namespace rendering {
         megamol::core::param::ParamSlot useHPTexturesSlot;
 
 		// Affects only Outline rendering: --------------------------
-
 		megamol::core::param::ParamSlot outlineWidthSlot;
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */
         /*********************************************************************/
 
-        /**
-         * Return specified render mode as human readable string.
-         */
         static std::string getRenderModeString(RenderMode rm);
-
-        /**
-         * TODO: Document
-         *
-         * @param t           ...
-         * @param outScaling  ...
-         *
-         * @return Pointer to MultiParticleDataCall ...
-         */
-        MultiParticleDataCall *getData(unsigned int t, float& outScaling);
-
-        /**
-         * Return clipping information.
-         *
-         * @param clipDat  Points to four floats ...
-         * @param clipCol  Points to four floats ....
-         */
-        void getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol);
-
-        /**
-         * Check if specified render mode or all render mode are available.
-         *
-         * @param rm      ...
-         * @param silent  ...
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
         static bool isRenderModeAvailable(RenderMode rm, bool silent = false);
 
-        /**
-         * Check if specified render mode or all render mode are available.
-         *
-         * @param out_flag_snippet   The vertex shader snippet defining the usage of the flag storage depending on its availability.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
+
+        MultiParticleDataCall *getData(unsigned int t, float& outScaling);
+
+        void getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol);
+
         bool isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet);
 
-        /**
-         * Create shaders for given render mode.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
-        bool createResources(void);
+        bool createResources();
 
-        /**
-         * Reset all OpenGL resources.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
-        bool resetResources(void);
+        bool resetResources();
 
-        /**
-         * Render spheres in different render modes.
-         *
-         * @param cr3d       Pointer to the current calling render call.
-         * @param mpdc       Pointer to the current multi particle data call.
-         *
-         * @return           True if success, false otherwise.
-         */
         bool renderSimple(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
         bool renderGeometryShader(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
         bool renderSSBO(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
@@ -458,208 +407,48 @@ namespace rendering {
         bool renderAmbientOcclusion(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
 		bool renderOutline(view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
 
-        /**
-         * Set pointers to vertex and color buffers and corresponding shader variables.
-         *
-         * @param shader           The current shader.
-         * @param parts            The current particles of a list.
-         * @param vertBuf          ...
-         * @param vertPtr          ...
-         * @param vertAttribLoc    ...
-         * @param colBuf           ...
-         * @param colPtr           ...
-         * @param colAttribLoc     ...
-         * @param colIdxAttribLoc  ...
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
-        bool enableBufferData(const GLSLShader& shader, const MultiParticleDataCall::Particles &parts, 
+        bool enableBufferData(const GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
             GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr, bool createBufferData = false);
 
-        /**
-         * Unset pointers to vertex and color buffers.
-         *
-         * @param shader  The current shader.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
         bool disableBufferData(const GLSLShader& shader);
 
-        /**
-         * Set pointers to vertex and color buffers and corresponding shader variables.
-         *
-         * @param shader           The current shader.
-         * @param parts            The current particles of a list.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
         bool enableShaderData(GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
 
-        /**
-         * Unset pointers to vertex and color buffers.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
-        bool disableShaderData(void);
+        bool disableShaderData();
 
-        /**
-         * Enables the transfer function texture.
-         *
-         * @param shader    The current shader.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
         bool enableTransferFunctionTexture(GLSLShader& shader);
 
-        /**
-         * Disables the transfer function texture.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
-        bool disableTransferFunctionTexture(void);
+        bool disableTransferFunctionTexture();
 
-        /**
-         * Enable flag storage.
-         *
-         * @param shader           The current shader.
-         * @param parts            The current particles of a list.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
-        bool enableFlagStorage(const GLSLShader& shader, MultiParticleDataCall* mpdc);
+        bool enableFlagStorage(MultiParticleDataCall* mpdc);
 
-        /**
-         * Enable flag storage.
-         *
-         * @param shader           The current shader.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
-        bool disableFlagStorage(const GLSLShader& shader);
+        bool disableFlagStorage();
 
-        /**
-         * Get bytes and stride.
-         *
-         * @param parts        ...
-         * @param colBytes     ...
-         * @param vertBytes    ...
-         * @param colStride    ...
-         * @param vertStride   ...
-         * @param interleaved  ...
-         */
         void getBytesAndStride(const MultiParticleDataCall::Particles &parts, unsigned int &outColBytes, unsigned int &outVertBytes,
             unsigned int &outColStride, unsigned int &outVertStride, bool &outInterleaved);
 
-        /**
-         * Make SSBO vertex shader color string.
-         *
-         * @param parts        ...
-         * @param code         ...
-         * @param declaration  ...
-         * @param interleaved  ...
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
         bool makeColorString(const MultiParticleDataCall::Particles &parts, std::string &outCode, std::string &outDeclaration, bool interleaved);
 
-        /**
-         * Make SSBO vertex shader position string.
-         *
-         * @param parts        ...
-         * @param code         ...
-         * @param declaration  ...
-         * @param interleaved  ...
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
         bool makeVertexString(const MultiParticleDataCall::Particles &parts, std::string &outCode, std::string &outDeclaration, bool interleaved);
 
-        /**
-         * Make SSBO shaders.
-         *
-         * @param vert  ...
-         * @param frag  ...
-         *
-         * @return ...
-         */
-        std::shared_ptr<GLSLShader> makeShader(const std::shared_ptr<ShaderSource> vert, const std::shared_ptr<ShaderSource> frag);
+        std::shared_ptr<GLSLShader> makeShader(const std::shared_ptr<ShaderSource>& vert, const std::shared_ptr<ShaderSource>& frag);
 
-        /**
-         * Generate SSBO shaders.
-         *
-         * @param parts  ...
-         *
-         * @return ...
-         */
         std::shared_ptr<GLSLShader> generateShader(const MultiParticleDataCall::Particles &parts);
 
-        /**
-         * Returns GLSL minor and major version.
-         *
-         * @param major The major version of the currently available GLSL version.
-         * @param minor The minor version of the currently available GLSL version.
-         */
         void getGLSLVersion(int &outMajor, int &outMinor) const;
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
-        /**
-         * Lock single.
-         *
-         * @param syncObj  ...
-         */
         void lockSingle(GLsync& outSyncObj);
-
-        /**
-         * Wait single.
-         *
-         * @param syncObj  ...
-         */
         void waitSingle(const GLsync& syncObj);
 
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
         // ONLY used for Ambient Occlusion rendering: -------------------------
-
-        /**
-         * Rebuild the ambient occlusion gBuffer.
-         * 
-         * @return ...  
-         */
-        bool rebuildGBuffer(void);
-
-        /**
-         * Rebuild working data.
-         *
-         * @param cr3d    ...
-         * @param mpdc    ...
-         * @param shader  ...
-         */
+        bool rebuildGBuffer();
         void rebuildWorkingData(megamol::core::view::CallRender3DGL& cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const GLSLShader& shader);
-
-        /**
-         * Render deferred pass.
-         *
-         * @param cr3d  ...
-         */
         void renderDeferredPass(megamol::core::view::CallRender3DGL& cr3d);
-
-        /**
-         * Generate direction shader array string.
-         *
-         * @param directions      ...
-         * @param directionsName  ...
-         *
-         * @return ...  
-         */
         std::string generateDirectionShaderArrayString(const std::vector<glm::vec4>& directions, const std::string& directionsName);
-
-        /**
-         * Generate 3 cone directions.
-         *
-         * @param directions  ...
-         * @param apex        ...
-         */
         void generate3ConeDirections(std::vector<glm::vec4>& outDirections, float apex);
 
     };
