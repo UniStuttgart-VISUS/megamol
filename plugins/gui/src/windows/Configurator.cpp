@@ -32,6 +32,8 @@ megamol::gui::Configurator::Configurator(const std::string& window_name, std::sh
         , splitter_widget()
         , tooltip() {
 
+    assert(this->win_tfeditor_ptr != nullptr);
+
     // init hotkeys
     this->hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = {
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
