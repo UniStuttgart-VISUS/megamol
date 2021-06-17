@@ -13,6 +13,7 @@
 #include "HoverToolTip.h"
 #include "StringSearchWidget.h"
 #include "mmcore/utility/FileUtils.h"
+#include "mmcore/param/FilePathParam.h"
 
 
 namespace megamol {
