@@ -73,7 +73,7 @@ flat out uint flag_id;
         <![CDATA[
 
 flat in uint flag_id;
-layout(location = 1) out vec2 out_picking;
+layout(location = 1) out int out_picking;
 
         ]]>
     </snippet>
@@ -81,8 +81,8 @@ layout(location = 1) out vec2 out_picking;
     <snippet name="fragment_main_flags" type="string">
         <![CDATA[
 
-// XXX Incrementing index since buffer is cleared with zero as invalid value
-out_picking = vec2(float(flag_id + uint(1)), gl_FragDepth);
+// XXX Incrementing index since buffer is cleared with zero as invalid value.
+out_picking = int(flag_id + uint(1));
 
         ]]>
     </snippet>

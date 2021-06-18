@@ -172,7 +172,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
             "uniform int selected_face_id; \n"
             "uniform int hovered_face_id; \n"
             "layout(location = 0) out vec4 outFragColor; \n"
-            "layout(location = 1) out vec2 outFragInfo; \n"
+            "layout(location = 1) out int outFragInfo; \n"
             "\n"
             "float supersample(const in vec2 uv, const in float w) { \n"
             "    return smoothstep(0.5 - w, 0.5 + w, texture(tex, uv).a); \n"
@@ -347,7 +347,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
             "    int encoded_id = int((picking_id           << BIT_OFFSET_ID)   | \n"
             "                         (final_face_id        << BIT_OFFSET_FACE) | \n"
             "                         (final_orientation_id << BIT_OFFSET_ORIENTATION)); \n"
-            "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
+            "    outFragInfo = encoded_id; \n"
             "} ";
 
         if (!RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
@@ -496,7 +496,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
             "uniform sampler2D tex; \n"
             "uniform vec3 color; \n"
             "layout(location = 0) out vec4 outFragColor; \n"
-            "layout(location = 1) out vec2 outFragInfo; \n"
+            "layout(location = 1) out int outFragInfo; \n"
             "float supersample(in vec2 uv, float w, float alpha) { \n"
             "    return smoothstep(0.5 - w, 0.5 + w, alpha); \n"
             "} \n"
@@ -520,7 +520,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
             "    if (alpha <= 0.0) discard; \n"
             "    if (selected_face_id < 6) outFragColor = vec4(colors[selected_face_id] * 0.75, alpha); \n"
             "    else outFragColor = vec4(0.75, 0.75, 0.75, alpha); \n"
-            "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
+            "    outFragInfo  = encoded_id; \n"
             "} ";
 
         if (!RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {

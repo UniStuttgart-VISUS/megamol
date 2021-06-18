@@ -94,14 +94,14 @@ namespace utility {
          * Set to true if cursor is on interactable object during current frame with respective obj id as second value
          * Set to fale if cursor is on "background" during current frame with -1 as second value
          */
-        std::tuple<bool, unsigned int, float> cursor_on_interaction_obj;
+        std::tuple<bool, unsigned int> cursor_on_interaction_obj;
 
         /**
          * Set to true if cursor is on interactable object and mouse interaction (click, move) is ongoing with
          * respective obj id as second value Set to fale if cursor is on "background" during current frame with -1 as
          * second value
          */
-        std::tuple<bool, unsigned int, float> active_interaction_obj;
+        std::tuple<bool, unsigned int> active_interaction_obj;
 
         std::map<unsigned int, std::vector<Interaction>> available_interactions;
         ManipVector_t pending_manipulations;
