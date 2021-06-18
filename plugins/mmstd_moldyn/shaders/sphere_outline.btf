@@ -15,7 +15,7 @@
         <snippet name="core_utils::tfconvenience"/>
         <snippet name="sphere-flags::vertex_attributes"/>
         <snippet name="MainStart"        type="file">sphere/vertex_mainstart.glsl</snippet>
-        <snippet name="sphere-flags::vertex_getflag"/>
+        <snippet name="sphere-flags::vertex_main_flags"/>
         <snippet name="Color"            type="file">sphere/vertex_color.glsl</snippet>         
         <snippet name="PosTrans"         type="file">sphere/vertex_postrans.glsl</snippet>
         <snippet name="SphereTouchPlane" type="file">sphere/vertex_spheretouchplane.glsl</snippet>

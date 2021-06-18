@@ -202,6 +202,10 @@ namespace rendering {
          */
         bool GetExtents(megamol::core::view::CallRender3DGL& call) override;
 
+        /* Required for picking. */
+        bool OnMouseMove(double x, double y) override;
+        bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
+
         /** Ctor. */
         SphereRenderer();
 
@@ -358,6 +362,7 @@ namespace rendering {
         megamol::core::param::ParamSlot useLocalBBoxParam;
         megamol::core::param::ParamSlot selectColorParam;
         megamol::core::param::ParamSlot softSelectColorParam;
+        megamol::core::param::ParamSlot highlightedColorParam;
 
         // Affects only Splat rendering ---------------------------------------
         core::param::ParamSlot alphaScalingParam;

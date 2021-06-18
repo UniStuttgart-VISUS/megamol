@@ -16,7 +16,7 @@
         <snippet name="core_utils::tfconvenience"/>
         <snippet name="sphere-flags::vertex_attributes"/>
         <snippet name="MainStart"        type="file">sphere/stream_vertex_mainstart.glsl</snippet>
-        <snippet name="sphere-flags::vertex_getflag"/>
+        <snippet name="sphere-flags::vertex_main_flags"/>
         <snippet name="Main"             type="file">sphere/stream_vertex_main.glsl</snippet>
         <snippet name="Color"            type="file">sphere/vertex_color.glsl</snippet>         
         <snippet name="PosTrans"         type="file">sphere/vertex_postrans.glsl</snippet>

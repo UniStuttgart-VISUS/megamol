@@ -12,6 +12,7 @@
 
 
 using namespace megamol::core;
+using namespace megamol::core::utility;
 using namespace megamol::stdplugin::moldyn::rendering;
 
 
@@ -23,6 +24,8 @@ using namespace megamol::stdplugin::moldyn::rendering;
 const GLuint SSBOflagsBindingPoint  = 2;
 const GLuint SSBOvertexBindingPoint = 3;
 const GLuint SSBOcolorBindingPoint  = 4;
+
+const int InvalidPickingObjectID = -1;
 
 
 SphereRenderer::SphereRenderer() : view::Renderer3DModuleGL()
@@ -99,6 +102,7 @@ SphereRenderer::SphereRenderer() : view::Renderer3DModuleGL()
     , useLocalBBoxParam("useLocalBbox", "Enforce usage of local bbox for camera setup")
     , selectColorParam("flag storage::selectedColor", "Color for selected spheres in flag storage.")
     , softSelectColorParam("flag storage::softSelectedColor", "Color for soft selected spheres in flag storage.")
+    , highlightedColorParam("flag storage::highlightedColor", "Color for highlighted spheres hovered my the mouse.")
     , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
     , attenuateSubpixelParam(
         "splat::attenuateSubpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
@@ -162,6 +166,9 @@ SphereRenderer::SphereRenderer() : view::Renderer3DModuleGL()
     this->softSelectColorParam << new param::ColorParam(1.0f, 0.5f, 0.5f, 1.0f);
     this->MakeSlotAvailable(&this->softSelectColorParam);
 
+    this->highlightedColorParam << new param::ColorParam(1.0f, 1.0f, 0.5f, 1.0f);
+    this->MakeSlotAvailable(&this->highlightedColorParam);
+
     this->alphaScalingParam << new param::FloatParam(5.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
 
@@ -201,6 +208,22 @@ SphereRenderer::SphereRenderer() : view::Renderer3DModuleGL()
 
 
 SphereRenderer::~SphereRenderer() { this->Release(); }
+
+
+bool SphereRenderer::OnMouseMove(double x, double y) {
+
+    RendererModule::OnMouseMove(x, y);
+    this->picking_buffer.ProcessMouseMove(x, y);
+    return false;
+}
+
+
+bool SphereRenderer::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
+
+    RendererModule::OnMouseButton(button, action, mods);
+    this->picking_buffer.ProcessMouseClick(button, action, mods);
+    return false;
+}
 
 
 bool SphereRenderer::GetExtents(view::CallRender3DGL& call) {
@@ -306,6 +329,7 @@ bool SphereRenderer::resetResources() {
 
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
+    this->highlightedColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
 
     // Set all render mode dependent parameter to GUI invisible
     // SPLAT
@@ -951,6 +975,7 @@ void SphereRenderer::checkFlagStorageAvailability(vislib::SmartPtr<ShaderSource:
     // Update parameter visibility
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(flagc_connected);
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(flagc_connected);
+    this->highlightedColorParam.Param<param::ColorParam>()->SetGUIVisible(flagc_connected);
 
     this->flags_available = true;
     out_flag_snippet = nullptr;
@@ -1144,14 +1169,14 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
 
     // ------------------------------------------------------------------------
 
+    this->enableFlagStorage(mpdc);
+
     // Set OpenGL state ----------------------------------------------------
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS); // Necessary for early depth test in fragment shader (default)
     glEnable(GL_CLIP_DISTANCE0);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
-    this->enableFlagStorage(mpdc);
 
     bool retval = false;
     switch (currentRenderMode) {
@@ -1179,8 +1204,6 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
         break;
     }
 
-    this->disableFlagStorage();
-
     // Reset default OpenGL state ---------------------------------------------
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glDisable(GL_CLIP_DISTANCE0);
@@ -1189,6 +1212,8 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     glDisable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ZERO);
     glDisable(GL_POINT_SPRITE);
+
+    this->disableFlagStorage();
 
     // Save some current data
     this->lastVpHeight = this->curVpHeight;
@@ -2066,10 +2091,10 @@ void SphereRenderer::enableFlagStorage(MultiParticleDataCall* mpdc) {
     if (mpdc == nullptr) return;
     this->flags_enabled = false;
 
+    // Flag Storage
     auto rflagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
     auto wflagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
     if ((rflagc == nullptr) || (wflagc == nullptr)) return;
-
     if ((*rflagc)(core::FlagCallRead_GL::CallGetData)) {
         if (rflagc->hasUpdate()) {
             uint32_t partsCount = 0;
@@ -2082,7 +2107,12 @@ void SphereRenderer::enableFlagStorage(MultiParticleDataCall* mpdc) {
         }
     }
 
-    // TODO this->picking_buffer.EnableInteraction(glm::vec2(static_cast<float>(this->curVpWidth), static_cast<float>(this->curVpHeight)));
+    // Picking Buffer
+    this->picking_buffer.EnableInteraction(glm::vec2(static_cast<float>(this->curVpWidth), static_cast<float>(this->curVpHeight)));
+    InteractVector_t interactions;
+    interactions.emplace_back(Interaction({InteractionType::SELECT, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    this->picking_buffer.AddInteractionObject(0, interactions);
 
     this->flags_enabled = true;
 }
@@ -2093,14 +2123,18 @@ void SphereRenderer::disableFlagStorage() {
     if (!this->flags_available) return;
 
     if (this->flags_enabled) {
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-        /// TODO this->picking_buffer.DisableInteraction();
+
+        // Picking Buffer
+        this->picking_buffer.DisableInteraction();
+
+        // Flag Storage
         auto rflagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
         auto wflagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
         if ((wflagc != nullptr) && (rflagc != nullptr)) {
             wflagc->setData(rflagc->getData(), rflagc->version() + 1);
             (*wflagc)(core::FlagCallWrite_GL::CallGetData);
         }
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
     }
     this->flags_enabled = false;
 }
@@ -2110,13 +2144,35 @@ void SphereRenderer::setFlagStorageUniforms(GLSLShader& shader, unsigned int par
 
     glUniform1ui(shader.ParameterLocation("flags_enabled"), GLuint(this->flags_enabled));
     if (this->flags_enabled) {
+
+        // Flag Storage
         auto rflagc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
         if (rflagc != nullptr) {
             rflagc->getData()->flags->bind(SSBOflagsBindingPoint);
         }
         glUniform1ui(shader.ParameterLocation("flags_offset"), particle_offset);
-        glUniform4fv(shader.ParameterLocation("flag_selected_col"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
-        glUniform4fv(shader.ParameterLocation("flag_softselected_col"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+        glUniform4fv(shader.ParameterLocation("flag_selected_color"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+        glUniform4fv(shader.ParameterLocation("flag_softselected_color"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+        glUniform4fv(shader.ParameterLocation("flag_highlighted_color"), 1, this->highlightedColorParam.Param<param::ColorParam>()->Value().data());
+
+        // Picking
+        auto pending_manipulations = this->picking_buffer.GetPendingManipulations();
+        glUniform1i(shader.ParameterLocation("pick_set_selected_id"), InvalidPickingObjectID);
+        glUniform1i(shader.ParameterLocation("pick_highlighted_id"), InvalidPickingObjectID);
+
+        /// XXX TODO Only one sphere can be selected at once!
+
+        for (auto& manip : pending_manipulations) {
+            if (manip.obj_id != static_cast<unsigned int>(InvalidPickingObjectID)) {
+                if (manip.type == InteractionType::SELECT) {
+                    glUniform1ui(shader.ParameterLocation("pick_set_flag_selected_id"), manip.obj_id);
+                } else if (manip.type == InteractionType::HIGHLIGHT) {
+                    glUniform1ui(shader.ParameterLocation("pick_highlighted_id"), manip.obj_id);
+                }
+            }
+        }
+
+        /// XXX TODO Add ImGui information window with information on highlighted sphere ..
     }
 }
 

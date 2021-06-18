@@ -16,7 +16,7 @@
         <snippet name="core_utils::tfconvenience"/>
         <snippet name="sphere-flags::vertex_attributes"/>
         <snippet name="MainStart"                 type="file">sphere/mdao_vertex_mainstart.glsl</snippet>
-        <snippet name="sphere-flags::vertex_getflag"/>
+        <snippet name="sphere-flags::vertex_main_flags"/>
         <snippet name="Color"                     type="file">sphere/vertex_color.glsl</snippet>        
         <snippet name="SphereTouchPlane"          type="file">sphere/vertex_spheretouchplane.glsl</snippet>
         <snippet name="MainEnd"                   type="file">sphere/mdao_vertex_mainend.glsl</snippet>
@@ -38,10 +38,10 @@
             <snippet name="CommonDefines"         type="file">commondefines.glsl</snippet>         
             <snippet name="bitflags::main"/>            
             <snippet name="sphere-flags::vertex_attributes"/>
-            <snippet name="sphere-flags::vertex_attributes_geo"/>
+            <snippet name="sphere-flags::geometry_vertex_attributes"/>
             <snippet name="MainStart"             type="file">sphere/geometry_vertex_mainstart.glsl</snippet>
-            <snippet name="sphere-flags::vertex_getflag"/>
-            <snippet name="sphere-flags::vertex_getflag_geometry"/>
+            <snippet name="sphere-flags::vertex_main_flags"/>
+            <snippet name="sphere-flags::geometry_vertex_main_flags"/>
             <snippet name="MainEnd"               type="file">sphere/simple_mainend.glsl</snippet>
         </shader>
 
@@ -52,9 +52,9 @@
             <snippet name="bitflags::main"/>            
             <snippet name="core_utils::tflookup"/>
             <snippet name="core_utils::tfconvenience" />
-            <snippet name="sphere-flags::geometry_attributes"/>
+            <snippet name="sphere-flags::geometry_geometry_attributes"/>
             <snippet name="MainStart"        type="file">sphere/geometry_geometry_mainstart.glsl</snippet>
-            <snippet name="sphere-flags::geometry_getflag"/>
+            <snippet name="sphere-flags::geometry_geometry_main_flags"/>
             <snippet name="PosTrans"         type="file">sphere/vertex_postrans.glsl</snippet>            
             <snippet name="Color"            type="file">sphere/vertex_color.glsl</snippet>         
             <snippet name="SphereTouchPlane" type="file">sphere/vertex_spheretouchplane.glsl</snippet>

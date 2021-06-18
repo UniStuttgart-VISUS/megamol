@@ -69,11 +69,7 @@ namespace utility {
         // Call only once per frame
         bool DisableInteraction();
 
-        bool ProcessMouseMove(double x, double y);
-
-        bool ProcessMouseClick(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
-                               megamol::core::view::Modifiers mods);
-
+        // Call after EnableInteraction()
         void AddInteractionObject(unsigned int obj_id, std::vector<Interaction> const& interactions) {
             this->available_interactions.insert({obj_id, interactions});
         }
@@ -82,11 +78,17 @@ namespace utility {
             return this->pending_manipulations;
         }
 
+        bool ProcessMouseMove(double x, double y);
+
+        bool ProcessMouseClick(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
+                               megamol::core::view::Modifiers mods);
+
     private:
         // VARIABLES --------------------------------------------------------------
 
         double cursor_x, cursor_y;
         glm::ivec2 viewport_dim;
+        GLint previous_fbo;
 
         /**
          * Set to true if cursor is on interactable object during current frame with respective obj id as second value

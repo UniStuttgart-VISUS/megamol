@@ -8,14 +8,14 @@
         vertColor = tflookup(inColIdx);
     }
     // Overwrite color depending on flags
-    if (bool(flags_enabled)) {
-        if (bitflag_test(flag, FLAG_SELECTED, FLAG_SELECTED)) {
-            vertColor = flag_selected_col;
+    if (flag_visible) {
+        if (flag_selected) {
+            vertColor = flag_selected_color;
         }
-        if (bitflag_test(flag, FLAG_SOFTSELECTED, FLAG_SOFTSELECTED)) {
-            vertColor = flag_softselected_col;
+        if (flag_soft_selected) {
+            vertColor = flag_softselected_color;
         }
-        //if (!bitflag_isVisible(flag)) {
-        //    vertColor = vec4(0.0, 0.0, 0.0, 0.0);
-        //}
+        if (flag_highlighted) {
+            vertColor = flag_highlighted_color;
+        }
     }
