@@ -23,7 +23,7 @@ megamol::gui::PickableCube::PickableCube() : image_up_arrow(), shader(nullptr) {
 
 bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_selected_face_id,
     int& inout_selected_orientation_id, int& out_hovered_face_id, int& out_hovered_orientation_id,
-    const glm::vec4& cube_orientation, ManipVector_t& pending_manipulations) {
+    const glm::vec4& cube_orientation, const ManipVector_t& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -454,7 +454,7 @@ megamol::gui::PickableTexture::PickableTexture() : image_rotation_arrow(), shade
 
 
 bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_face_id, int& out_orientation_change,
-    int& out_hovered_arrow_id, ManipVector_t& pending_manipulations) {
+    int& out_hovered_arrow_id, const ManipVector_t& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;

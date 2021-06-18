@@ -4,4 +4,6 @@
 #
 
 megamol_plugin(mmstd_moldyn
-  BUILD_DEFAULT ON)
+  BUILD_DEFAULT ON
+  DEPENDS_EXTERNALS
+    imgui)

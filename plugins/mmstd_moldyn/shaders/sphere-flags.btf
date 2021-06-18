@@ -11,54 +11,55 @@ uniform vec4 flag_selected_color;
 uniform vec4 flag_softselected_color;
 uniform vec4 flag_highlighted_color;
 
-flat out int flagid;
-        
+flat out uint flag_id;
+
 #ifdef FLAGS_AVAILABLE
-        
-    uniform uint flags_enabled = uint(0);
-    uniform uint flags_offset;
-    uniform int pick_set_flag_selected_id;
-    uniform int pick_highlighted_id;
+
+    uniform uint flags_enabled             = uint(0);
+    uniform uint flags_offset              = uint(0);
+    uniform uint pick_set_flag_selected_id = uint(0);
+    uniform uint pick_highlighted_id       = uint(0);
 
     #define SSB_FLAGS_BINDING_POINT 2
-    
+
     layout(std430, binding = SSB_FLAGS_BINDING_POINT) buffer flags {
-        coherent uint inflags[];
+        coherent uint in_flags[];
     };
-#endif // FLAGS_AVAILABLE 
+#endif // FLAGS_AVAILABLE
 
         ]]>
     </snippet>
 
 
-    <snippet name="vertex_mainflags" type="string">
+    <snippet name="vertex_main_flags" type="string">
         <![CDATA[
-                
+
     bool flag_visible = true;
     bool flag_selected = false;
     bool flag_soft_selected = false;
     bool flag_highlighted = false;
 
-    flagid = -1;
-        
+    flag_id = uint(0);
+
 #ifdef FLAGS_AVAILABLE
     bool enabled = bool(flags_enabled);
     if (enabled) {
-        
+
         // Read current flag state for vertex
-        flagid = (int(flags_offset) + gl_VertexID);
-        uint flag = inflags[flagid];
+        flag_id = (int(flags_offset) + gl_VertexID);
+        uint flag = in_flags[flag_id];
 
         // Write result of picking to flags
-        if (pick_set_flag_selected_id > 0) {
-            bitflag_set(inflags[flagid], FLAG_SELECTED, (pick_set_flag_selected_id == flagid));
+        if (pick_set_flag_selected_id > uint(0)) {
+            bitflag_set(in_flags[flag_id], FLAG_SELECTED, ((pick_set_flag_selected_id - uint(1)) == flag_id));
         }
-        
+
         // Set variables for external use in other shader snippets
         flag_visible       = (!enabled || (enabled && bitflag_isVisible(flag)));
         flag_selected      = bitflag_test(flag, FLAG_SELECTED, FLAG_SELECTED);
         flag_soft_selected = bitflag_test(flag, FLAG_SOFTSELECTED, FLAG_SOFTSELECTED);
-        flag_highlighted   = (pick_highlighted_id == flagid);
+        // XXX Decrementing index since buffer is cleared with zero as invalid value
+        flag_highlighted   = (pick_highlighted_id > uint(0)) ? ((pick_highlighted_id - uint(1)) == flag_id) : (false);
     }
 #endif // FLAGS_AVAILABLE
 
@@ -71,16 +72,17 @@ flat out int flagid;
     <snippet name="fragment_attributes" type="string">
         <![CDATA[
 
-flat in int flagid;
+flat in uint flag_id;
 layout(location = 1) out vec2 out_picking;
 
         ]]>
     </snippet>
 
-    <snippet name="fragment_mainflags" type="string">
+    <snippet name="fragment_main_flags" type="string">
         <![CDATA[
 
-out_picking = vec2(float(flagid), gl_FragDepth);
+// XXX Incrementing index since buffer is cleared with zero as invalid value
+out_picking = vec2(float(flag_id + uint(1)), gl_FragDepth);
 
         ]]>
     </snippet>
@@ -90,7 +92,7 @@ out_picking = vec2(float(flagid), gl_FragDepth);
 
     <snippet name="geometry_vertex_attributes" type="string">
         <![CDATA[
-                
+
 flat out uint g_flag_visible;
 flat out uint g_flag_selected;
 flat out uint g_flag_soft_selected;
@@ -100,7 +102,7 @@ flat out uint g_flag_highlighted;
     </snippet>
 
 
-    <snippet name="geometry_vertex_mainflags" type="string">
+    <snippet name="geometry_vertex_main_flags" type="string">
         <![CDATA[
 
 g_flag_visible       = uint(flag_visible);
@@ -128,7 +130,7 @@ uniform vec4 flag_highlighted_color;
     </snippet>
 
 
-    <snippet name="geometry_geometry_mainflags" type="string">
+    <snippet name="geometry_geometry_main_flags" type="string">
         <![CDATA[
 
 bool flag_visible       = bool(g_flag_visible[0]);

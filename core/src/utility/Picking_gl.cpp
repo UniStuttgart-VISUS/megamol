@@ -13,10 +13,9 @@ using namespace megamol::core;
 using namespace megamol::core::utility;
 
 
-#define PICKING_INTERACTION_TUPLE_INIT \
-    { false, -1, FLT_MAX }
+#define PICKING_INVALID_INTERACTION { false, 0, FLT_MAX }
 
-#define PICKING_GL_CHECK_ERROR                                                                        \
+#define PICKING_GL_CHECK_ERROR                                                                    \
     {                                                                                             \
         auto err = glGetError();                                                                  \
         if (err != 0)                                                                             \
@@ -30,8 +29,8 @@ megamol::core::utility::PickingBuffer::PickingBuffer()
         , cursor_y(0.0)
         , viewport_dim{0, 0}
         , previous_fbo(0)
-        , cursor_on_interaction_obj(PICKING_INTERACTION_TUPLE_INIT)
-        , active_interaction_obj(PICKING_INTERACTION_TUPLE_INIT)
+        , cursor_on_interaction_obj(PICKING_INVALID_INTERACTION)
+        , active_interaction_obj(PICKING_INVALID_INTERACTION)
         , available_interactions()
         , pending_manipulations()
         , fbo(nullptr)
@@ -47,21 +46,19 @@ megamol::core::utility::PickingBuffer::~PickingBuffer() {
 
 bool megamol::core::utility::PickingBuffer::ProcessMouseMove(double x, double y) {
 
+    double dx = x - this->cursor_x;
+    double dy = y - this->cursor_y;
+    this->cursor_x = x;
+    this->cursor_y = y;
+    // double dx_fbo = x - this->cursor_x;
+    // double dy_fbo = y - this->cursor_y;
+    // if (this->fbo != nullptr) {
+    //     dx_fbo = dx / this->fbo->getWidth();
+    //     dy_fbo = -dy / this->fbo->getHeight();
+    // }
+
     auto is_interaction_active = std::get<0>(this->active_interaction_obj);
     if (is_interaction_active) {
-
-        double dx = x - this->cursor_x;
-        double dy = y - this->cursor_y;
-
-        this->cursor_x = x;
-        this->cursor_y = y;
-
-        // double dx_fbo = x - this->cursor_x;
-        // double dy_fbo = y - this->cursor_y;
-        // if (this->fbo != nullptr) {
-        //     dx_fbo = dx / this->fbo->getWidth();
-        //     dy_fbo = -dy / this->fbo->getHeight();
-        // }
 
         auto active_id = std::get<1>(this->active_interaction_obj);
         auto interactions = this->get_available_interactions(active_id);
@@ -139,12 +136,10 @@ bool megamol::core::utility::PickingBuffer::ProcessMouseClick(megamol::core::vie
 
         bool is_cursor_active = std::get<0>(this->cursor_on_interaction_obj);
         if (is_cursor_active) {
-
             this->active_interaction_obj = this->cursor_on_interaction_obj;
             auto active_id = std::get<1>(this->active_interaction_obj);
             this->pending_manipulations.emplace_back(
                     Manipulation{InteractionType::SELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
-
             // Consume when interaction is started
             return true;
         }
@@ -154,7 +149,7 @@ bool megamol::core::utility::PickingBuffer::ProcessMouseClick(megamol::core::vie
         auto active_id = std::get<1>(this->active_interaction_obj);
         this->pending_manipulations.emplace_back(
                 Manipulation{InteractionType::DESELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
-        this->active_interaction_obj = PICKING_INTERACTION_TUPLE_INIT;
+        this->active_interaction_obj = PICKING_INVALID_INTERACTION;
     }
 
     return false;
@@ -195,7 +190,9 @@ bool megamol::core::utility::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) 
         this->fbo->resize(this->viewport_dim.x, this->viewport_dim.y);
     }
 
+    // Save currently active FBO
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &this->previous_fbo);
+
     this->fbo->bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     GLint in[1] = {0};
@@ -223,27 +220,26 @@ bool megamol::core::utility::PickingBuffer::DisableInteraction() {
     this->pending_manipulations.clear();
 
     // Bind fbo to read buffer for retrieving pixel data
-    GLfloat pixel_data[2] = {-1.0f, FLT_MAX};
+    GLfloat pixel_data[2] = {0.0f, FLT_MAX};
     this->fbo->bindToRead(1);
     PICKING_GL_CHECK_ERROR
     // Get object id and depth at cursor location from framebuffer's second color attachment
     /// TODO Check if cursor position is within framebuffer pixel range -> ensured by GLFW?
-    glReadPixels(static_cast<GLint>(this->cursor_x), this->fbo->getHeight() - static_cast<GLint>(this->cursor_y), 1, 1,
-                 GL_RG, GL_FLOAT, pixel_data);
+    glReadPixels(static_cast<GLint>(this->cursor_x), this->fbo->getHeight() - static_cast<GLint>(this->cursor_y), 1, 1, GL_RG, GL_FLOAT, pixel_data);
     PICKING_GL_CHECK_ERROR
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    auto id = static_cast<int>(pixel_data[0]);
+    auto id = static_cast<unsigned int>(pixel_data[0]);
     auto depth = pixel_data[1];
-    if (id > 0) {
+    if (id > 0) { /// XXX Color buffer is cleared with zero as invalid value.
         this->cursor_on_interaction_obj = {true, id, depth};
-        this->pending_manipulations.emplace_back(Manipulation{InteractionType::HIGHLIGHT, static_cast<unsigned int>(id), 0.0f, 0.0f, 0.0f, 0.0f});
+        this->pending_manipulations.emplace_back(Manipulation{InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f});
         /// megamol::core::utility::log::Log::DefaultLog.WriteError("[[[DEBUG]]] ID = %i | Depth = %f", id, depth);
     } else {
-        this->cursor_on_interaction_obj = PICKING_INTERACTION_TUPLE_INIT;
+        this->cursor_on_interaction_obj = PICKING_INVALID_INTERACTION;
     }
 
-    // Create FBO shaders if required -----------------------------------------
+    // Lazy initialization of shader ------------------------------------------
     if (this->fbo_shader == nullptr) {
         std::string vertex_src = "#version 130 \n "
                                  "out vec2 uv_coord; \n "
@@ -277,12 +273,12 @@ bool megamol::core::utility::PickingBuffer::DisableInteraction() {
             return false;
     }
 
-    // Draw fbo color buffer as texture because blending is required
+    // Restore currently active FBO
     glBindFramebuffer(GL_FRAMEBUFFER, this->previous_fbo);
 
+    // Draw fbo color buffer as texture because blending is required
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     glEnable(GL_DEPTH_TEST);
 
     this->fbo_shader->use();
@@ -300,7 +296,6 @@ bool megamol::core::utility::PickingBuffer::DisableInteraction() {
 
     glUseProgram(0);
     glDisable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 

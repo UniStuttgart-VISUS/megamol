@@ -7,8 +7,23 @@
  */
 
 #include "stdafx.h"
+#include "imgui.h"
+#include "imgui_internal.h"
 #include "SphereRenderer.h"
 #include "mmcore/view/light/DistantLight.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/UniFlagStorage.h"
+#include "mmcore/UniFlagCalls.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 
 using namespace megamol::core;
@@ -24,8 +39,6 @@ using namespace megamol::stdplugin::moldyn::rendering;
 const GLuint SSBOflagsBindingPoint  = 2;
 const GLuint SSBOvertexBindingPoint = 3;
 const GLuint SSBOcolorBindingPoint  = 4;
-
-const int InvalidPickingObjectID = -1;
 
 
 SphereRenderer::SphereRenderer() : view::Renderer3DModuleGL()
@@ -54,6 +67,7 @@ SphereRenderer::SphereRenderer() : view::Renderer3DModuleGL()
     , greyTF(0)
     , range()
     , picking_buffer()
+    , hover_info_pos()
     , flags_enabled(false)
     , flags_available(false)
     , sphereShader()
@@ -103,6 +117,7 @@ SphereRenderer::SphereRenderer() : view::Renderer3DModuleGL()
     , selectColorParam("flag storage::selectedColor", "Color for selected spheres in flag storage.")
     , softSelectColorParam("flag storage::softSelectedColor", "Color for soft selected spheres in flag storage.")
     , highlightedColorParam("flag storage::highlightedColor", "Color for highlighted spheres hovered my the mouse.")
+    , showHoverInfoParam("flag storage::showHoverInfo", "Show information of hovered sphere.")
     , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
     , attenuateSubpixelParam(
         "splat::attenuateSubpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
@@ -169,6 +184,9 @@ SphereRenderer::SphereRenderer() : view::Renderer3DModuleGL()
     this->highlightedColorParam << new param::ColorParam(1.0f, 1.0f, 0.5f, 1.0f);
     this->MakeSlotAvailable(&this->highlightedColorParam);
 
+    this->showHoverInfoParam << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->showHoverInfoParam);
+
     this->alphaScalingParam << new param::FloatParam(5.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
 
@@ -212,6 +230,7 @@ SphereRenderer::~SphereRenderer() { this->Release(); }
 
 bool SphereRenderer::OnMouseMove(double x, double y) {
 
+    this->hover_info_pos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
     RendererModule::OnMouseMove(x, y);
     this->picking_buffer.ProcessMouseMove(x, y);
     return false;
@@ -2114,6 +2133,23 @@ void SphereRenderer::enableFlagStorage(MultiParticleDataCall* mpdc) {
     interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     this->picking_buffer.AddInteractionObject(0, interactions);
 
+    // Hover information
+    /* TODO
+    if (this->showHoverInfoParam.Param<param::BoolParam>()->Value()) {
+        bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
+        if (valid_imgui_scope) {
+            auto window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse;
+            ImGui::SetNextWindowPos(ImVec2(this->hover_info_pos.x, this->hover_info_pos.y));
+            if (ImGui::Begin("Sphere", nullptr, window_flags)) {
+
+
+                ImGui::End();
+            }
+
+        }
+    }
+    */
+
     this->flags_enabled = true;
 }
 
@@ -2157,22 +2193,16 @@ void SphereRenderer::setFlagStorageUniforms(GLSLShader& shader, unsigned int par
 
         // Picking
         auto pending_manipulations = this->picking_buffer.GetPendingManipulations();
-        glUniform1i(shader.ParameterLocation("pick_set_selected_id"), InvalidPickingObjectID);
-        glUniform1i(shader.ParameterLocation("pick_highlighted_id"), InvalidPickingObjectID);
-
-        /// XXX TODO Only one sphere can be selected at once!
-
+        glUniform1ui(shader.ParameterLocation("pick_set_flag_selected_id"), 0);
+        glUniform1ui(shader.ParameterLocation("pick_highlighted_id"), 0);
         for (auto& manip : pending_manipulations) {
-            if (manip.obj_id != static_cast<unsigned int>(InvalidPickingObjectID)) {
-                if (manip.type == InteractionType::SELECT) {
-                    glUniform1ui(shader.ParameterLocation("pick_set_flag_selected_id"), manip.obj_id);
-                } else if (manip.type == InteractionType::HIGHLIGHT) {
-                    glUniform1ui(shader.ParameterLocation("pick_highlighted_id"), manip.obj_id);
-                }
+            if (manip.type == InteractionType::SELECT) {
+                glUniform1ui(shader.ParameterLocation("pick_set_flag_selected_id"), manip.obj_id);
+            }
+            if (manip.type == InteractionType::HIGHLIGHT) {
+                glUniform1ui(shader.ParameterLocation("pick_highlighted_id"), manip.obj_id);
             }
         }
-
-        /// XXX TODO Add ImGui information window with information on highlighted sphere ..
     }
 }
 

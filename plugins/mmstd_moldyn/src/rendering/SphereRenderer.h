@@ -13,51 +13,18 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/UniFlagStorage.h"
-#include "mmcore/UniFlagCalls.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/ColorParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/Vector2fParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/SSBOStreamer.h"
 #include "mmcore/utility/SSBOBufferArray.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/utility/Picking_gl.h"
-
 #include "misc/MDAOVolumeGenerator.h"
-
-#include "vislib/types.h"
-#include "vislib/assert.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/math/mathfunctions.h"
 #include "vislib/math/Cuboid.h"
-
-#define _USE_MATH_DEFINES
-#include <cmath>
-#include <map>
-#include <tuple>
-#include <utility>
-#include <cmath>
-#include <cinttypes>
-#include <chrono>
-#include <sstream>
-#include <iterator>
-#include <algorithm>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <fstream>
 
 
 // Minimum GLSL version for all render modes
@@ -304,6 +271,7 @@ namespace rendering {
         std::array<float, 2>                     range;
 
         megamol::core::utility::PickingBuffer    picking_buffer;
+        glm::vec2                                hover_info_pos;
 
         bool                                     flags_enabled;
         bool                                     flags_available;
@@ -363,6 +331,7 @@ namespace rendering {
         megamol::core::param::ParamSlot selectColorParam;
         megamol::core::param::ParamSlot softSelectColorParam;
         megamol::core::param::ParamSlot highlightedColorParam;
+        megamol::core::param::ParamSlot showHoverInfoParam;
 
         // Affects only Splat rendering ---------------------------------------
         core::param::ParamSlot alphaScalingParam;
