@@ -67,7 +67,7 @@ SphereRenderer::SphereRenderer() : view::Renderer3DModuleGL()
     , greyTF(0)
     , range()
     , picking_buffer()
-    , hover_info_pos()
+    , hover_id(0)
     , flags_enabled(false)
     , flags_available(false)
     , sphereShader()
@@ -230,7 +230,6 @@ SphereRenderer::~SphereRenderer() { this->Release(); }
 
 bool SphereRenderer::OnMouseMove(double x, double y) {
 
-    this->hover_info_pos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
     RendererModule::OnMouseMove(x, y);
     this->picking_buffer.ProcessMouseMove(x, y);
     return false;
@@ -2134,21 +2133,14 @@ void SphereRenderer::enableFlagStorage(MultiParticleDataCall* mpdc) {
     this->picking_buffer.AddInteractionObject(0, interactions);
 
     // Hover information
-    /* TODO
-    if (this->showHoverInfoParam.Param<param::BoolParam>()->Value()) {
+    if ((this->hover_id > 0) && this->showHoverInfoParam.Param<param::BoolParam>()->Value()) {
         bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
         if (valid_imgui_scope) {
-            auto window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse;
-            ImGui::SetNextWindowPos(ImVec2(this->hover_info_pos.x, this->hover_info_pos.y));
-            if (ImGui::Begin("Sphere", nullptr, window_flags)) {
-
-
-                ImGui::End();
-            }
-
+            ImGui::BeginTooltip();
+            ImGui::Text("Sphere ID: %u", (this->hover_id - 1));
+            ImGui::EndTooltip();
         }
     }
-    */
 
     this->flags_enabled = true;
 }
@@ -2195,12 +2187,14 @@ void SphereRenderer::setFlagStorageUniforms(GLSLShader& shader, unsigned int par
         auto pending_manipulations = this->picking_buffer.GetPendingManipulations();
         glUniform1ui(shader.ParameterLocation("pick_set_flag_selected_id"), 0);
         glUniform1ui(shader.ParameterLocation("pick_highlighted_id"), 0);
+        this->hover_id = 0;
         for (auto& manip : pending_manipulations) {
             if (manip.type == InteractionType::SELECT) {
                 glUniform1ui(shader.ParameterLocation("pick_set_flag_selected_id"), manip.obj_id);
             }
             if (manip.type == InteractionType::HIGHLIGHT) {
                 glUniform1ui(shader.ParameterLocation("pick_highlighted_id"), manip.obj_id);
+                this->hover_id = manip.obj_id;
             }
         }
     }

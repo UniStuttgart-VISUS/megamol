@@ -271,7 +271,7 @@ namespace rendering {
         std::array<float, 2>                     range;
 
         megamol::core::utility::PickingBuffer    picking_buffer;
-        glm::vec2                                hover_info_pos;
+        unsigned int                             hover_id;
 
         bool                                     flags_enabled;
         bool                                     flags_available;

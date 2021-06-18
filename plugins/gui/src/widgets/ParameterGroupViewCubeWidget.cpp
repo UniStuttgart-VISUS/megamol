@@ -554,6 +554,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
     if (!culling) {
         glEnable(GL_CULL_FACE);
     }
+
     std::array<GLint, 4> viewport = {0, 0, 0, 0};
     glGetIntegerv(GL_VIEWPORT, viewport.data());
     int size = (2 * 100 * static_cast<int>(megamol::gui::gui_scaling.Get()));

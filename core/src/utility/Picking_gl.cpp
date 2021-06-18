@@ -176,7 +176,7 @@ bool megamol::core::utility::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) 
     if (this->fbo == nullptr) {
         try {
             this->fbo = std::make_unique<glowl::FramebufferObject>(
-                    this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
+                    this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::DEPTH32F);
         } catch (glowl::FramebufferObjectException& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GL Picking Buffer] Error during framebuffer object creation: '%s'. [%s, %s, line %d]\n ", e.what(), __FILE__,
@@ -258,18 +258,19 @@ bool megamol::core::utility::PickingBuffer::DisableInteraction() {
                                    "#extension GL_ARB_explicit_attrib_location : require \n "
                                    "in vec2 uv_coord; \n "
                                    "uniform sampler2D col_tex; \n "
-                                   "//uniform sampler2D depth_tex; \n "
+                                   "uniform sampler2D depth_tex; \n "
                                    "layout(location = 0) out vec4 outFragColor; \n "
                                    "void main() { \n "
                                    "    vec4 color = texture(col_tex, uv_coord).rgba; \n "
                                    "    if (color == vec4(0.0)) discard; \n "
-                                   "    //float depth = texture(depth_tex, uv_coord).g; \n "
+                                   "    float depth = texture(depth_tex, uv_coord).g; \n "
                                    "    //gl_FragDepth = depth; \n "
                                    "    outFragColor = color; \n "
                                    "} ";
 
-        if (!megamol::core::utility::RenderUtils::CreateShader(this->fbo_shader, vertex_src, fragment_src))
+        if (!megamol::core::utility::RenderUtils::CreateShader(this->fbo_shader, vertex_src, fragment_src)) {
             return false;
+        }
     }
 
     // Restore currently active FBO
@@ -278,18 +279,17 @@ bool megamol::core::utility::PickingBuffer::DisableInteraction() {
     // Draw fbo color buffer as texture because blending is required
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_DEPTH_TEST);
 
     this->fbo_shader->use();
 
     glActiveTexture(GL_TEXTURE0);
     this->fbo->bindColorbuffer(0);
 
-    //glActiveTexture(GL_TEXTURE1);
-    //this->fbo->bindDepthbuffer();
+    glActiveTexture(GL_TEXTURE1);
+    this->fbo->bindDepthbuffer();
 
     this->fbo_shader->setUniform("col_tex", 0);
-    //this->fbo_shader->setUniform("depth_tex", 1);
+    this->fbo_shader->setUniform("depth_tex", 1);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -298,5 +298,6 @@ bool megamol::core::utility::PickingBuffer::DisableInteraction() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    PICKING_GL_CHECK_ERROR
     return true;
 }
