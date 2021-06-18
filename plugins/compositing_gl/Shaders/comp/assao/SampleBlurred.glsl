@@ -10,9 +10,9 @@ vec2 SampleBlurred( vec4 inPos, vec2 coord )
     // fetch all ssaoValues around current pixel
     float ssaoValue     = valuesBL.y;   // center   e.g. (5,5)                                          vUR.x
     float ssaoValueL    = valuesBL.x;   // left     --> (4,5)                                   vBL.x   vBL.y   vUR.z
-    float ssaoValueT    = valuesUR.x;   // top      --> (5,4)                                           vBL.z
+    float ssaoValueT    = valuesUR.x;   // top      --> (5,6)                                           vBL.z
     float ssaoValueR    = valuesUR.z;   // right    valuesBR.z == (6,6) --> .z = (6,5)
-    float ssaoValueB    = valuesBL.z;   // bottom   --> (5,6)
+    float ssaoValueB    = valuesBL.z;   // bottom   --> (5,4)
 
     float sumWeight = 0.5f;
     float sum = ssaoValue * sumWeight;

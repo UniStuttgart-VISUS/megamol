@@ -59,6 +59,5 @@ void main()
 #endif
 
     //return vec4( ao.xxx, 1.0 );
-    // TODO: look into the host code: is this the correct sampler?
     imageStore(g_FinalOutput, ivec2(pixPos), vec4(ao.xxx, 1.f));
 }

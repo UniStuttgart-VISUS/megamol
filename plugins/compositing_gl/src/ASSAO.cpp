@@ -79,6 +79,8 @@
 #define SSAO_TEXTURE_SLOT4 4
 #define SSAO_LOAD_COUNTER_UAV_SLOT 4
 
+#define MEGAMOL_ASSAO_MANUAL_MIPS
+
 #define SSAO_MAX_TAPS 32
 #define SSAO_MAX_REF_TAPS 512
 #define SSAO_ADAPTIVE_TAP_BASE_COUNT 5
@@ -131,8 +133,8 @@ megamol::compositing::ASSAO::ASSAO()
         CallTexture2D::ClassName(), "GetMetaData", &ASSAO::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_output_tex_slot);
 
-    this->m_input_tex_slot.SetCompatibleCall<CallTexture2DDescription>();
-    this->MakeSlotAvailable(&this->m_input_tex_slot);
+    //this->m_input_tex_slot.SetCompatibleCall<CallTexture2DDescription>();
+    //this->MakeSlotAvailable(&this->m_input_tex_slot);
 
     this->m_normals_tex_slot.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_normals_tex_slot);
@@ -237,9 +239,7 @@ bool megamol::compositing::ASSAO::create() {
             for (int i = 0; i < 4; ++i) { 
                 std::cout << "Compiling: Compositing::assao::CSGenerateQ" << i << "\n";
                 std::string identifier = "Compositing::assao::CSGenerateQ" + std::to_string(i);
-                if (i < 4)
-                    identifier = "Compositing::assao::CSGenerateQ" + std::to_string(i);
-                else
+                if (i >= 4)
                     identifier = "Compositing::assao::CSGenerateQ3Base";
 
                 if (!instance()->ShaderSourceFactory().MakeShaderSource(identifier.c_str(), cs_generate[i]))
@@ -326,24 +326,28 @@ bool megamol::compositing::ASSAO::create() {
     m_halfDepths[1] = std::make_shared<glowl::Texture2D>("m_halfDepths1", m_depthBufferViewspaceLinearLayout, nullptr);
     m_halfDepths[2] = std::make_shared<glowl::Texture2D>("m_halfDepths2", m_depthBufferViewspaceLinearLayout, nullptr);
     m_halfDepths[3] = std::make_shared<glowl::Texture2D>("m_halfDepths3", m_depthBufferViewspaceLinearLayout, nullptr);
-    for (auto& tx : m_halfDepthsMipViews) {
-        for (int i = 0; i < tx.size(); ++i) {
-            tx[i] = std::make_shared<glowl::Texture2D>(
-                "m_halfDepthsMipViews" + i, m_depthBufferViewspaceLinearLayout, nullptr);
+    m_halfDepthsMipViews.resize(4);
+    for (int j = 0; j < 4; ++j) {
+        m_halfDepthsMipViews[j].resize(SSAO_DEPTH_MIP_LEVELS);
+        for (int i = 0; i < m_halfDepthsMipViews[j].size(); ++i) {
+            m_halfDepthsMipViews[j][i] =
+                std::make_shared<glowl::Texture2DView>(
+                "m_halfDepthsMipViews" + std::to_string(i), *m_halfDepths[j], m_depthBufferViewspaceLinearLayout, 0, 1, 0, 1);
         }
     }
+    // TODO: remake finaloutput
     m_finalOutput = std::make_shared<glowl::Texture2D>("m_finalOutput", m_depthBufferViewspaceLinearLayout, nullptr);
     m_pingPongHalfResultA = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultA", m_AOResultLayout, nullptr);
     m_pingPongHalfResultB = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultB", m_AOResultLayout, nullptr);
     m_finalResults = std::make_shared<glowl::Texture2DArray>("m_finalResults", m_AOResultLayout, nullptr);
-    m_finalResultsArrayViews[0] =
-        std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews0", m_AOResultLayout, nullptr);
-    m_finalResultsArrayViews[1] =
-        std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews1", m_AOResultLayout, nullptr);
-    m_finalResultsArrayViews[2] =
-        std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews2", m_AOResultLayout, nullptr);
-    m_finalResultsArrayViews[3] =
-        std::make_shared<glowl::Texture2D>("m_finalResultsArrayViews3", m_AOResultLayout, nullptr);
+    m_finalResultsArrayViews[0] = std::make_shared<glowl::Texture2DView>(
+        "m_finalResultsArrayViews0", *m_finalResults, m_AOResultLayout, 0, 1, 0, 1);
+    m_finalResultsArrayViews[1] = std::make_shared<glowl::Texture2DView>(
+        "m_finalResultsArrayViews1", *m_finalResults, m_AOResultLayout, 0, 1, 0, 1);
+    m_finalResultsArrayViews[2] = std::make_shared<glowl::Texture2DView>(
+        "m_finalResultsArrayViews2", *m_finalResults, m_AOResultLayout, 0, 1, 0, 1);
+    m_finalResultsArrayViews[3] = std::make_shared<glowl::Texture2DView>(
+        "m_finalResultsArrayViews3", *m_finalResults, m_AOResultLayout, 0, 1, 0, 1);
     //m_normals = std::make_shared<glowl::Texture2D>("m_normals", tx_layout, nullptr);
 
     m_inputs = std::make_shared<ASSAO_Inputs>();
@@ -383,26 +387,26 @@ void megamol::compositing::ASSAO::release() {}
 
 bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
-    auto call_input = m_input_tex_slot.CallAs<CallTexture2D>();
+    //auto call_input = m_input_tex_slot.CallAs<CallTexture2D>();
     auto call_normal = m_normals_tex_slot.CallAs<CallTexture2D>();
     auto call_depth = m_depth_tex_slot.CallAs<CallTexture2D>();
     auto call_camera = m_camera_slot.CallAs<CallCamera>();
 
     if (lhs_tc == NULL) return false;
     
-    if(call_input != NULL) { if (!(*call_input)(0)) return false; }
+    //if(call_input != NULL) { if (!(*call_input)(0)) return false; }
     if(call_normal != NULL) { if (!(*call_normal)(0)) return false; }
     if(call_depth != NULL) { if (!(*call_depth)(0)) return false; }
     if(call_camera != NULL) { if (!(*call_camera)(0)) return false; }
 
     // something has changed in the neath...
-    bool input_update = call_input->hasUpdate();
+    //bool input_update = call_input->hasUpdate();
     bool normal_update = call_normal->hasUpdate();
     bool depth_update = call_depth->hasUpdate();
     bool camera_update = call_camera->hasUpdate();
 
     bool something_has_changed =
-        (call_input != NULL ? input_update : false) || 
+        //(call_input != NULL ? input_update : false) || 
         (call_normal != NULL ? normal_update : false) || 
         (call_depth != NULL ? depth_update : false) || 
         (call_camera != NULL ? camera_update : false);
@@ -417,11 +421,29 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
         if (call_camera == NULL)
             return false;
 
-
         auto normal_tx2D = call_normal->getData();
         auto depth_tx2D = call_depth->getData();
         std::array<int, 2> tx_res_normal = {(int) normal_tx2D->getWidth(), (int) normal_tx2D->getHeight()};
         std::array<int, 2> tx_res_depth = {(int) depth_tx2D->getWidth(), (int) depth_tx2D->getHeight()};
+
+        {
+            glowl::TextureLayout finalLy = glowl::TextureLayout(
+                GL_RGBA16F,
+                tx_res_depth[0],
+                tx_res_depth[1],
+                1,
+                GL_RGBA,
+                GL_HALF_FLOAT,
+                1);
+            m_finalOutput->reload(finalLy, nullptr);
+        }
+
+        /*std::vector<float> depthdata(depth_tx2D->getWidth() * depth_tx2D->getHeight());
+        depth_tx2D->bindTexture();
+        glGetTexImage(GL_TEXTURE_2D, 0, depth_tx2D->getFormat(), depth_tx2D->getType(), depthdata.data());
+
+        auto minel = *std::min_element(depthdata.begin(), depthdata.end());
+        auto maxel = *std::max_element(depthdata.begin(), depthdata.end());*/
 
         // obtain camera information
         core::view::Camera_2 cam = call_camera->getData();
@@ -430,6 +452,14 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
         cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
         glm::mat4 view_mx = view_tmp;
         glm::mat4 proj_mx = proj_tmp;
+        
+        //float clipNear = cam.near_clipping_plane();
+        //float clipFar = cam.far_clipping_plane();
+        //float mul = (clipFar * clipNear) / (clipFar - clipNear);
+        //float add = clipFar / (clipFar - clipNear);
+
+        //float tanHalfFOVY = tanf( cam.aperture_angle_radians() * 1.7f * 0.5f );
+        //float tanHalfFOVX = tanHalfFOVY * cam.resolution_gate_aspect();
 
         if (normal_update || depth_update) {
 
@@ -447,6 +477,7 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             m_inputs->ScissorBottom = 0;
             m_inputs->ProjectionMatrix = proj_mx;
             m_inputs->ViewMatrix = view_mx;
+
 
             updateTextures(m_inputs);
 
@@ -472,8 +503,6 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
                 m_requiresClear = false;
             }*/
 
-            // TODO: Set effect samplers
-
             prepareDepths(m_settings, m_inputs);
 
             generateSSAO(m_settings, m_inputs, false);
@@ -496,16 +525,18 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             // Apply
             {
                 TextureArraySamplerTuple inputFinals =
-                    {m_finalResults, "g_finalSSAO", m_samplerStateLinearClamp};
+                    {m_finalResults, "g_FinalSSAO", m_samplerStateLinearClamp};
 
                 // TODO: blending states
 
                 if (m_settings.QualityLevel < 0)
-                    fullscreenPassDraw(m_non_smart_half_apply_prgm, {}, outputTextures, true, inputFinals);
+                    fullscreenPassDraw <TextureSamplerTuple, glowl::Texture2D>(m_non_smart_half_apply_prgm, {}, outputTextures, true, inputFinals);
                 else if (m_settings.QualityLevel == 0)
-                    fullscreenPassDraw(m_non_smart_apply_prgm, {}, outputTextures, true, inputFinals);
+                    fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                        m_non_smart_apply_prgm, {}, outputTextures, true, inputFinals);
                 else
-                    fullscreenPassDraw(m_apply_prgm, {}, outputTextures, true, inputFinals);
+                    fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                        m_apply_prgm, {}, outputTextures, true, inputFinals);
             }
 
             // TODO: presumably also unnecessary, see also a few lines above
@@ -522,54 +553,71 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
     return true;
 }
 
+std::shared_ptr<glowl::Texture2D> test;
+glowl::TextureLayout testly;
+
 void megamol::compositing::ASSAO::prepareDepths(
     const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs) {
     bool generateNormals = inputs->normalTexture == nullptr;
 
-    std::vector<TextureSamplerTuple> inputTextures = {
-        {inputs->depthTexture, (std::string) "g_DepthSource", m_samplerStatePointClamp}};
+    std::vector<TextureSamplerTuple> inputTextures(1);
+    inputTextures[0] = { inputs->depthTexture, (std::string) "g_DepthSource", nullptr /*m_samplerStatePointClamp*/ };
 
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputFourDepths = {
         {m_halfDepths[0], 0}, {m_halfDepths[1], 1}, {m_halfDepths[2], 2}, {m_halfDepths[3], 3}};
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTwoDepths = {
         {m_halfDepths[0], 0}, {m_halfDepths[3], 3}};
 
-
     if (!generateNormals) {
         if (settings.QualityLevel < 0) {
-            fullscreenPassDraw(m_prepare_depths_half_prgm, inputTextures, outputTwoDepths);
+            fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                m_prepare_depths_half_prgm, inputTextures, outputTwoDepths);
         } else {
-            fullscreenPassDraw(m_prepare_depths_prgm, inputTextures, outputFourDepths);
+            fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                m_prepare_depths_prgm, inputTextures, outputFourDepths);
         }
     } else {
         if (settings.QualityLevel < 0) {
+            // TODO: binding not up-to-date
             outputTwoDepths.push_back({inputs->normalTexture, 7});
-            fullscreenPassDraw(m_prepare_depths_and_normals_half_prgm, inputTextures, outputTwoDepths);
+            fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                m_prepare_depths_and_normals_half_prgm, inputTextures, outputTwoDepths);
         } else {
+            // TODO: binding not up-to-date
             outputFourDepths.push_back({inputs->normalTexture, 7});
-            fullscreenPassDraw(m_prepare_depths_and_normals_prgm, inputTextures, outputFourDepths);
+            fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                m_prepare_depths_and_normals_prgm, inputTextures, outputFourDepths);
         }
     }
 
     // only do mipmaps for higher quality levels (not beneficial on quality level 1, and detrimental on quality level 0)
     if (settings.QualityLevel > 1) {
 
+        #ifdef MEGAMOL_ASSAO_MANUAL_MIPS
         for (int i = 1; i < m_depthMipLevels; ++i) {
-            std::vector<TextureSamplerTuple> inputFourDepthMipsM1 = {
+            std::vector<TextureViewSamplerTuple> inputFourDepthMipsM1 = {
                 {m_halfDepthsMipViews[0][i - 1LL], (std::string) "g_ViewspaceDepthSource" , nullptr},
                 {m_halfDepthsMipViews[1][i - 1LL], (std::string) "g_ViewspaceDepthSource1", nullptr},
                 {m_halfDepthsMipViews[2][i - 1LL], (std::string) "g_ViewspaceDepthSource2", nullptr},
                 {m_halfDepthsMipViews[3][i - 1LL], (std::string) "g_ViewspaceDepthSource3", nullptr}};
-
-            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputFourDepthMips = {
+            
+            std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputFourDepthMips = {
                 {m_halfDepthsMipViews[0][i], 0}, {m_halfDepthsMipViews[1][i], 1}, {m_halfDepthsMipViews[2][i], 2},
                 {m_halfDepthsMipViews[3][i], 3}};
 
             // dx11Context->RSSetViewports( 1, &viewport ); --> TODO: problem if not set?
             // i dont think so, because we launch a compute shader specifically made for this case
 
-            fullscreenPassDraw(m_prepare_depth_mip_prgms[i - 1LL], inputFourDepthMipsM1, outputFourDepthMips);
+            //fullscreenPassDraw<TextureViewSamplerTuple, glowl::Texture2DView>(
+            //    m_prepare_depth_mip_prgms[i - 1LL], inputFourDepthMipsM1, outputFourDepthMips);
         }
+        #else
+        for (int i = 0; i < 4; ++i) {
+            m_halfDepths[i]->bindTexture();
+            m_halfDepths[i]->updateMipmaps();
+        }
+        glBindTexture(GL_TEXTURE_2D, 0);
+        #endif
     }
 }
 
@@ -612,18 +660,7 @@ void megamol::compositing::ASSAO::generateSSAO(
 
         // Generate
         {
-            std::shared_ptr<glowl::Texture2D> rts = m_pingPongHalfResultA;
-            GLuint binding = 4;
-            // no blur?
-            if (blurPasses == 0) {
-                rts = m_finalResultsArrayViews[pass];
-                // we always bind to pingPongHalfResultA since the layout is the same as finalResultsArrayViews
-                // --> no distinction required in shader code
-                //binding = pass; 
-            }
-
-            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                {rts, binding}}; // TODO: binding correct?
+            
 
             std::vector<TextureSamplerTuple> inputTextures(3);
             inputTextures[0] = {m_halfDepths[pass], "g_ViewSpaceDepthSource", m_samplerStatePointMirror};
@@ -638,9 +675,25 @@ void megamol::compositing::ASSAO::generateSSAO(
                 inputTextures[5] = {m_finalResults.SRV, "g_FinalSSAO"};
             }
 #endif
-
+            GLuint binding = 0;
             int shaderIndex = std::max(0, !adaptiveBasePass ? settings.QualityLevel : 4);
-            fullscreenPassDraw(m_generate_prgms[shaderIndex], inputTextures, outputTextures);
+
+            // no blur?
+            if (blurPasses == 0) {
+                std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputTextures = {
+                    {m_finalResultsArrayViews[pass], binding}};
+
+                fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
+                    m_generate_prgms[shaderIndex], inputTextures, outputTextures);
+            } else {
+                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
+                    {m_pingPongHalfResultA, binding}};
+
+                fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                    m_generate_prgms[shaderIndex], inputTextures, outputTextures);
+            }
+
+            
         }
 
         // Blur
@@ -648,89 +701,58 @@ void megamol::compositing::ASSAO::generateSSAO(
             int wideBlursRemaining = std::max(0, blurPasses - 2);
 
             for (int i = 0; i < blurPasses; ++i) {
-                std::shared_ptr<glowl::Texture2D> rts = m_pingPongHalfResultB;
-                GLuint binding = 5;
-                if (i == blurPasses - 1) {
-                    rts = m_finalResultsArrayViews[pass];
-                    // we always bind to pingPongHalfResultB since the layout is the same as finalResultsArrayViews
-                    // --> no distinction required in shader code
-                    // binding = pass; 
-                }
-
-                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                    {rts, binding}}; // TODO: binding correct?
+                GLuint binding = 0;
 
                 std::vector<TextureSamplerTuple> inputTextures = {
                     {m_pingPongHalfResultA, "g_BlurInput", m_samplerStatePointMirror}};
 
+                // TODO: re-do below code, ugly af
                 if (settings.QualityLevel > 0) {
                     if (wideBlursRemaining > 0) {
-                        fullscreenPassDraw(m_smart_blur_wide_prgm, inputTextures, outputTextures);
+                        if (i == blurPasses - 1) {
+                            std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputTextures = {
+                                {m_finalResultsArrayViews[pass], binding}};
+                            fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
+                                m_smart_blur_wide_prgm, inputTextures, outputTextures);
+                        } else {
+                            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
+                                {m_pingPongHalfResultB, binding}};
+                            fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                                m_smart_blur_wide_prgm, inputTextures, outputTextures);
+                        }
                         wideBlursRemaining--;
                     } else {
-                        fullscreenPassDraw(m_smart_blur_prgm, inputTextures, outputTextures);
+                        if (i == blurPasses - 1) {
+                            std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputTextures = {
+                                {m_finalResultsArrayViews[pass], binding}};
+                            fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
+                                m_smart_blur_prgm, inputTextures, outputTextures);
+                        } else {
+                            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
+                                {m_pingPongHalfResultB, binding}};
+                            fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                                m_smart_blur_prgm, inputTextures, outputTextures);
+                        }
                     }
                 } else {
                     std::get<2>(inputTextures[0]) = m_samplerStateLinearClamp;
-                    fullscreenPassDraw(m_non_smart_blur_prgm, inputTextures, outputTextures); // just for quality level 0 (and -1)
+                    if (i == blurPasses - 1) {
+                        std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputTextures = {
+                            {m_finalResultsArrayViews[pass], binding}};
+                        fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
+                            m_non_smart_blur_prgm, inputTextures, outputTextures);
+                    } else {
+                        std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
+                            {m_pingPongHalfResultB, binding}};
+                        fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                            m_non_smart_blur_prgm, inputTextures, outputTextures);
+                    } // just for quality level 0 (and -1)
                 }
 
                 std::swap(m_pingPongHalfResultA, m_pingPongHalfResultB);
             }
         }
     }
-}
-
-
-// TODO: intel originally uses some blending state parameter, but it isnt used here, so we omit this
-// but could easily be extended with glEnable(GL_BLEND) and a blendfunc
-void megamol::compositing::ASSAO::fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm,
-    const std::vector<TextureSamplerTuple>& input_textures,
-    std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>>& output_textures, bool add_constants,
-    const TextureArraySamplerTuple& finals) {
-    
-    prgm->Enable();
-
-    if (add_constants)
-        m_ssbo_constants->bind(0);
-
-    for (int i = 0; i < input_textures.size(); ++i) {
-        if (std::get<0>(input_textures[i]) != nullptr) {
-            glActiveTexture(GL_TEXTURE0 + i);
-
-            std::get<0>(input_textures[i])->bindTexture();
-
-            if (std::get<2>(input_textures[i]) != nullptr)
-                std::get<2>(input_textures[i])->bindSampler(i);
-
-            glUniform1i(prgm->ParameterLocation(std::get<1>(input_textures[i]).c_str()), i);
-        }
-    }
-
-    if (std::get<0>(finals) != nullptr) {
-        glActiveTexture(GL_TEXTURE0);
-        std::get<0>(finals)->bindTexture();
-        std::get<2>(finals)->bindSampler(0);
-        glUniform1i(prgm->ParameterLocation(std::get<1>(finals).c_str()), 0);
-    }
-
-    for (int i = 0; i < output_textures.size(); ++i) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        output_textures[i].first->bindTexture();
-        output_textures[i].first->bindImage(output_textures[i].second, GL_READ_WRITE);
-    }
-
-    // all textures in output_textures should have the same size, so we just use the first
-    // TODO: is size for dispatch correct?
-    prgm->Dispatch(static_cast<int>(std::ceil(output_textures[0].first->getWidth() / 8)),
-        static_cast<int>(std::ceil(output_textures[0].first->getHeight() / 8)), 1);
-
-    prgm->Disable();
-
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 bool megamol::compositing::ASSAO::getMetaDataCallback(core::Call& caller) { return true; }
@@ -788,25 +810,26 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
     m_depthMipLevels = SSAO_DEPTH_MIP_LEVELS;
 
     for (int i = 0; i < 4; i++) {
-        if (reCreateIfNeeded(m_halfDepths[i], m_halfSize, m_depthBufferViewspaceLinearLayout)) {
-            for (int j = 0; j < m_depthMipLevels; j++)
-                m_halfDepthsMipViews[i][j].reset();
+        if (reCreateIfNeeded(m_halfDepths[i], m_halfSize, m_depthBufferViewspaceLinearLayout, true)) {
+            // below not needed since texture is deleted anyway
+            //for (int j = 0; j < m_depthMipLevels; j++)
+            //    m_halfDepthsMipViews[i][j] = nullptr;
 
-            for (int j = 0; j < m_depthMipLevels; j++)
+            #ifdef MEGAMOL_ASSAO_MANUAL_MIPS
+            for (int j = 0; j < m_depthMipLevels; j++) {
+                std::cout << "mip run number: " << j << "\n";
                 reCreateMIPViewIfNeeded(m_halfDepthsMipViews[i][j], m_halfDepths[i], j);
+            }
+            #endif
         }
     }
 
-    // TODO: is the normal_layout correct?
-    // i think i need to use one of the sampler layouts at the beginning of the updateTextures
-    // need to investigate this more thoroughly
     reCreateIfNeeded(m_pingPongHalfResultA, m_halfSize, m_AOResultLayout);
     reCreateIfNeeded(m_pingPongHalfResultB, m_halfSize, m_AOResultLayout);
     reCreateIfNeeded(m_finalResults, m_halfSize, m_AOResultLayout);
 
     for (int i = 0; i < 4; ++i) {
-        // TODO: is this correct? intels technically uses ReCreateArrayViewIfNeeded but i think we wont need it
-        // since our handling is different
+        std::cout << "array run number: " << i << "\n";
         reCreateArrayIfNeeded(m_finalResultsArrayViews[i], m_finalResults, m_halfSize, m_AOResultLayout, i);
     }
 
@@ -821,145 +844,140 @@ void megamol::compositing::ASSAO::updateConstants(
     bool generateNormals = inputs->normalTexture == nullptr;
 
     // update constants
-    if ( m_ssbo_constants->getByteSize() != NULL ) {
-        assert(false);
-        return;
+    ASSAO_Constants& consts = m_constants;// = *((ASSAOConstants*) mappedResource.pData);
+
+    const glm::mat4& proj = inputs->ProjectionMatrix;
+
+    consts.ViewportPixelSize = glm::vec2(1.0f / (float) m_size.x, 1.0f / (float) m_size.y);
+    consts.HalfViewportPixelSize = glm::vec2(1.0f / (float) m_halfSize.x, 1.0f / (float) m_halfSize.y);
+
+    consts.Viewport2xPixelSize = glm::vec2(consts.ViewportPixelSize.x * 2.0f, consts.ViewportPixelSize.y * 2.0f);
+    consts.Viewport2xPixelSize_x_025 =
+        glm::vec2(consts.Viewport2xPixelSize.x * 0.25f, consts.Viewport2xPixelSize.y * 0.25f);
+
+    float depthLinearizeMul = -proj[3][2]; // float depthLinearizeMul = ( clipFar * clipNear ) / ( clipFar - clipNear );
+    float depthLinearizeAdd = proj[2][2];  // float depthLinearizeAdd = clipFar / ( clipFar - clipNear );
+    // correct the handedness issue. need to make sure this below is correct, but I think it is.
+    if (depthLinearizeMul * depthLinearizeAdd < 0)
+        depthLinearizeAdd = -depthLinearizeAdd;
+    consts.DepthUnpackConsts = glm::vec2(depthLinearizeMul, depthLinearizeAdd);
+
+    float tanHalfFOVY = 1.0f / proj[1][1]; // = tanf( drawContext.Camera.GetYFOV( ) * 0.5f );
+    float tanHalfFOVX = 1.0F / proj[0][0]; // = tanHalfFOVY * drawContext.Camera.GetAspect( );
+    consts.CameraTanHalfFOV = glm::vec2(tanHalfFOVX, tanHalfFOVY);
+
+    consts.NDCToViewMul = glm::vec2(consts.CameraTanHalfFOV.x * 2.0f, consts.CameraTanHalfFOV.y * -2.0f);
+    consts.NDCToViewAdd = glm::vec2(consts.CameraTanHalfFOV.x * -1.0f, consts.CameraTanHalfFOV.y * 1.0f);
+
+    consts.EffectRadius = std::clamp(settings.Radius, 0.0f, 100000.0f);
+    consts.EffectShadowStrength = std::clamp(settings.ShadowMultiplier * 4.3f, 0.0f, 10.0f);
+    consts.EffectShadowPow = std::clamp(settings.ShadowPower, 0.0f, 10.0f);
+    consts.EffectShadowClamp = std::clamp(settings.ShadowClamp, 0.0f, 1.0f);
+    consts.EffectFadeOutMul = -1.0f / (settings.FadeOutTo - settings.FadeOutFrom);
+    consts.EffectFadeOutAdd = settings.FadeOutFrom / (settings.FadeOutTo - settings.FadeOutFrom) + 1.0f;
+    consts.EffectHorizonAngleThreshold = std::clamp(settings.HorizonAngleThreshold, 0.0f, 1.0f);
+
+    // 1.2 seems to be around the best trade off - 1.0 means on-screen radius will stop/slow growing when the camera
+    // is at 1.0 distance, so, depending on FOV, basically filling up most of the screen This setting is
+    // viewspace-dependent and not screen size dependent intentionally, so that when you change FOV the effect stays
+    // (relatively) similar.
+    float effectSamplingRadiusNearLimit = (settings.Radius * 1.2f);
+
+    // if the depth precision is switched to 32bit float, this can be set to something closer to 1 (0.9999 is fine)
+    consts.DepthPrecisionOffsetMod = 0.9992f;
+
+    // consts.RadiusDistanceScalingFunctionPow     = 1.0f - Clamp( settings.RadiusDistanceScalingFunction,
+    // 0.0f, 1.0f );
+
+    int lastHalfDepthMipX = m_halfDepthsMipViews[0][SSAO_DEPTH_MIP_LEVELS - 1]->getWidth();
+    int lastHalfDepthMipY = m_halfDepthsMipViews[0][SSAO_DEPTH_MIP_LEVELS - 1]->getHeight();
+
+    // used to get average load per pixel; 9.0 is there to compensate for only doing every 9th InterlockedAdd in
+    // PSPostprocessImportanceMapB for performance reasons
+    consts.LoadCounterAvgDiv = 9.0f / (float) (m_quarterSize.x * m_quarterSize.y * 255.0);
+
+    // Special settings for lowest quality level - just nerf the effect a tiny bit
+    if (settings.QualityLevel <= 0) {
+        // consts.EffectShadowStrength     *= 0.9f;
+        effectSamplingRadiusNearLimit *= 1.50f;
+
+        if (settings.QualityLevel < 0)
+            consts.EffectRadius *= 0.8f;
+    }
+    effectSamplingRadiusNearLimit /= tanHalfFOVY; // to keep the effect same regardless of FOV
+
+    consts.EffectSamplingRadiusNearLimitRec = 1.0f / effectSamplingRadiusNearLimit;
+
+    consts.AdaptiveSampleCountLimit = settings.AdaptiveQualityLimit;
+
+    consts.NegRecEffectRadius = -1.0f / consts.EffectRadius;
+
+    consts.PerPassFullResCoordOffset = glm::ivec2(pass % 2, pass / 2);
+    consts.PerPassFullResUVOffset = glm::vec2(((pass % 2) - 0.0f) / m_size.x, ((pass / 2) - 0.0f) / m_size.y);
+
+    consts.InvSharpness = std::clamp(1.0f - settings.Sharpness, 0.0f, 1.0f);
+    consts.PassIndex = pass;
+    consts.QuarterResPixelSize = glm::vec2(1.0f / (float) m_quarterSize.x, 1.0f / (float) m_quarterSize.y);
+
+    float additionalAngleOffset =
+        settings.TemporalSupersamplingAngleOffset; // if using temporal supersampling approach (like "Progressive
+                                                    // Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
+    float additionalRadiusScale =
+        settings.TemporalSupersamplingRadiusOffset; // if using temporal supersampling approach (like "Progressive
+                                                    // Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
+    const int subPassCount = 5;
+    for (int subPass = 0; subPass < subPassCount; subPass++) {
+        int a = pass;
+        int b = subPass;
+
+        int spmap[5]{0, 1, 4, 3, 2};
+        b = spmap[subPass];
+
+        float ca, sa;
+        float angle0 = ((float) a + (float) b / (float) subPassCount) * (3.1415926535897932384626433832795f) * 0.5f;
+        angle0 += additionalAngleOffset;
+
+        ca = ::cosf(angle0);
+        sa = ::sinf(angle0);
+
+        float scale = 1.0f + (a - 1.5f + (b - (subPassCount - 1.0f) * 0.5f) / (float) subPassCount) * 0.07f;
+        scale *= additionalRadiusScale;
+
+        consts.PatternRotScaleMatrices[subPass] = glm::vec4(scale * ca, scale * -sa, -scale * sa, -scale * ca);
+    }
+
+    // TODO: check if good
+    if (!generateNormals) {
+        consts.NormalsUnpackMul = inputs->NormalsUnpackMul;
+        consts.NormalsUnpackAdd = inputs->NormalsUnpackAdd;
     } else {
-        ASSAO_Constants& consts = m_constants;// = *((ASSAOConstants*) mappedResource.pData);
-
-        const glm::mat4& proj = inputs->ProjectionMatrix;
-
-        consts.ViewportPixelSize = glm::vec2(1.0f / (float) m_size.x, 1.0f / (float) m_size.y);
-        consts.HalfViewportPixelSize = glm::vec2(1.0f / (float) m_halfSize.x, 1.0f / (float) m_halfSize.y);
-
-        consts.Viewport2xPixelSize = glm::vec2(consts.ViewportPixelSize.x * 2.0f, consts.ViewportPixelSize.y * 2.0f);
-        consts.Viewport2xPixelSize_x_025 =
-            glm::vec2(consts.Viewport2xPixelSize.x * 0.25f, consts.Viewport2xPixelSize.y * 0.25f);
-
-        // intel uses a rowmajororder check, but we use a fix column major order with glm, so we wont check for this option
-        float depthLinearizeMul = -proj[2][3]; // float depthLinearizeMul = ( clipFar * clipNear ) / ( clipFar - clipNear );
-        float depthLinearizeAdd = proj[2][2];  // float depthLinearizeAdd = clipFar / ( clipFar - clipNear );
-        // correct the handedness issue. need to make sure this below is correct, but I think it is.
-        if (depthLinearizeMul * depthLinearizeAdd < 0)
-            depthLinearizeAdd = -depthLinearizeAdd;
-        consts.DepthUnpackConsts = glm::vec2(depthLinearizeMul, depthLinearizeAdd);
-
-        float tanHalfFOVY = 1.0f / proj[1][1]; // = tanf( drawContext.Camera.GetYFOV( ) * 0.5f );
-        float tanHalfFOVX = 1.0F / proj[0][0]; // = tanHalfFOVY * drawContext.Camera.GetAspect( );
-        consts.CameraTanHalfFOV = glm::vec2(tanHalfFOVX, tanHalfFOVY);
-
-        consts.NDCToViewMul = glm::vec2(consts.CameraTanHalfFOV.x * 2.0f, consts.CameraTanHalfFOV.y * -2.0f);
-        consts.NDCToViewAdd = glm::vec2(consts.CameraTanHalfFOV.x * -1.0f, consts.CameraTanHalfFOV.y * 1.0f);
-
-        consts.EffectRadius = std::clamp(settings.Radius, 0.0f, 100000.0f);
-        consts.EffectShadowStrength = std::clamp(settings.ShadowMultiplier * 4.3f, 0.0f, 10.0f);
-        consts.EffectShadowPow = std::clamp(settings.ShadowPower, 0.0f, 10.0f);
-        consts.EffectShadowClamp = std::clamp(settings.ShadowClamp, 0.0f, 1.0f);
-        consts.EffectFadeOutMul = -1.0f / (settings.FadeOutTo - settings.FadeOutFrom);
-        consts.EffectFadeOutAdd = settings.FadeOutFrom / (settings.FadeOutTo - settings.FadeOutFrom) + 1.0f;
-        consts.EffectHorizonAngleThreshold = std::clamp(settings.HorizonAngleThreshold, 0.0f, 1.0f);
-
-        // 1.2 seems to be around the best trade off - 1.0 means on-screen radius will stop/slow growing when the camera
-        // is at 1.0 distance, so, depending on FOV, basically filling up most of the screen This setting is
-        // viewspace-dependent and not screen size dependent intentionally, so that when you change FOV the effect stays
-        // (relatively) similar.
-        float effectSamplingRadiusNearLimit = (settings.Radius * 1.2f);
-
-        // if the depth precision is switched to 32bit float, this can be set to something closer to 1 (0.9999 is fine)
-        consts.DepthPrecisionOffsetMod = 0.9992f;
-
-        // consts.RadiusDistanceScalingFunctionPow     = 1.0f - Clamp( settings.RadiusDistanceScalingFunction,
-        // 0.0f, 1.0f );
-
-        int lastHalfDepthMipX = m_halfDepthsMipViews[0][SSAO_DEPTH_MIP_LEVELS - 1]->getWidth();
-        int lastHalfDepthMipY = m_halfDepthsMipViews[0][SSAO_DEPTH_MIP_LEVELS - 1]->getHeight();
-
-        // used to get average load per pixel; 9.0 is there to compensate for only doing every 9th InterlockedAdd in
-        // PSPostprocessImportanceMapB for performance reasons
-        consts.LoadCounterAvgDiv = 9.0f / (float) (m_quarterSize.x * m_quarterSize.y * 255.0);
-
-        // Special settings for lowest quality level - just nerf the effect a tiny bit
-        if (settings.QualityLevel <= 0) {
-            // consts.EffectShadowStrength     *= 0.9f;
-            effectSamplingRadiusNearLimit *= 1.50f;
-
-            if (settings.QualityLevel < 0)
-                consts.EffectRadius *= 0.8f;
-        }
-        effectSamplingRadiusNearLimit /= tanHalfFOVY; // to keep the effect same regardless of FOV
-
-        consts.EffectSamplingRadiusNearLimitRec = 1.0f / effectSamplingRadiusNearLimit;
-
-        consts.AdaptiveSampleCountLimit = settings.AdaptiveQualityLimit;
-
-        consts.NegRecEffectRadius = -1.0f / consts.EffectRadius;
-
-        consts.PerPassFullResCoordOffset = glm::ivec2(pass % 2, pass / 2);
-        consts.PerPassFullResUVOffset = glm::vec2(((pass % 2) - 0.0f) / m_size.x, ((pass / 2) - 0.0f) / m_size.y);
-
-        consts.InvSharpness = std::clamp(1.0f - settings.Sharpness, 0.0f, 1.0f);
-        consts.PassIndex = pass;
-        consts.QuarterResPixelSize = glm::vec2(1.0f / (float) m_quarterSize.x, 1.0f / (float) m_quarterSize.y);
-
-        float additionalAngleOffset =
-            settings.TemporalSupersamplingAngleOffset; // if using temporal supersampling approach (like "Progressive
-                                                       // Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
-        float additionalRadiusScale =
-            settings.TemporalSupersamplingRadiusOffset; // if using temporal supersampling approach (like "Progressive
-                                                        // Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
-        const int subPassCount = 5;
-        for (int subPass = 0; subPass < subPassCount; subPass++) {
-            int a = pass;
-            int b = subPass;
-
-            int spmap[5]{0, 1, 4, 3, 2};
-            b = spmap[subPass];
-
-            float ca, sa;
-            float angle0 = ((float) a + (float) b / (float) subPassCount) * (3.1415926535897932384626433832795f) * 0.5f;
-            angle0 += additionalAngleOffset;
-
-            ca = ::cosf(angle0);
-            sa = ::sinf(angle0);
-
-            float scale = 1.0f + (a - 1.5f + (b - (subPassCount - 1.0f) * 0.5f) / (float) subPassCount) * 0.07f;
-            scale *= additionalRadiusScale;
-
-            consts.PatternRotScaleMatrices[subPass] = glm::vec4(scale * ca, scale * -sa, -scale * sa, -scale * ca);
-        }
-
-        if (!generateNormals) {
-            consts.NormalsUnpackMul = inputs->NormalsUnpackMul;
-            consts.NormalsUnpackAdd = inputs->NormalsUnpackAdd;
-        } else {
-            consts.NormalsUnpackMul = 2.0f;
-            consts.NormalsUnpackAdd = -1.0f;
-        }
-        consts.DetailAOStrength = settings.DetailShadowStrength;
-        consts.Dummy0 = 0.0f;
+        consts.NormalsUnpackMul = 2.0f;
+        consts.NormalsUnpackAdd = -1.0f;
+    }
+    consts.DetailAOStrength = settings.DetailShadowStrength;
+    consts.Dummy0 = 0.0f;
 
 #if SSAO_ENABLE_NORMAL_WORLD_TO_VIEW_CONVERSION
-        if (!generateNormals) {
-            consts.NormalsWorldToViewspaceMatrix = inputs->NormalsWorldToViewspaceMatrix;
-            if (!inputs->MatricesRowMajorOrder)
-                consts.NormalsWorldToViewspaceMatrix.Transpose();
-        } else {
-            consts.NormalsWorldToViewspaceMatrix.SetIdentity();
-        }
+    if (!generateNormals) {
+        consts.NormalsWorldToViewspaceMatrix = inputs->NormalsWorldToViewspaceMatrix;
+        if (!inputs->MatricesRowMajorOrder)
+            consts.NormalsWorldToViewspaceMatrix.Transpose();
+    } else {
+        consts.NormalsWorldToViewspaceMatrix.SetIdentity();
+    }
 #endif
 
-        // probably do something with the ssbo? but could also just be done at this point
-        m_ssbo_constants->bind();
-        m_ssbo_constants->rebuffer(&m_constants, sizeof(m_constants));
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    }
+    // probably do something with the ssbo? but could also just be done at this point
+    m_ssbo_constants->bind();
+    m_ssbo_constants->rebuffer(&m_constants, sizeof(m_constants));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 // only resets textures if needed
 bool megamol::compositing::ASSAO::reCreateIfNeeded(
-    std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly) {
+    std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly, bool generateMipMaps) {
     if ((size.x == 0) || (size.y == 0)) {
-        tex.reset();
+        // reset object
     } else {
         if (tex != nullptr) {
             glowl::TextureLayout desc = tex->getTextureLayout();
@@ -970,7 +988,12 @@ bool megamol::compositing::ASSAO::reCreateIfNeeded(
         glowl::TextureLayout desc = ly;
         desc.width = size.x;
         desc.height = size.y;
-        tex->reload(desc, nullptr);
+        if (generateMipMaps) {
+            desc.levels = SSAO_DEPTH_MIP_LEVELS;
+            tex->reload(desc, nullptr, true, true);
+        }
+        else
+            tex->reload(desc, nullptr);
     }
 
     return true;
@@ -979,7 +1002,7 @@ bool megamol::compositing::ASSAO::reCreateIfNeeded(
 bool megamol::compositing::ASSAO::reCreateIfNeeded(
     std::shared_ptr<glowl::Texture2DArray> tex, glm::ivec2 size, const glowl::TextureLayout& ly) {
     if ((size.x == 0) || (size.y == 0)) {
-        tex.reset();
+        // reset object
     } else {
         if (tex != nullptr) {
             glowl::TextureLayout desc = tex->getTextureLayout();
@@ -990,46 +1013,70 @@ bool megamol::compositing::ASSAO::reCreateIfNeeded(
         glowl::TextureLayout desc = ly;
         desc.width = size.x;
         desc.height = size.y;
-        //tex->reload(desc, nullptr);
-        // TODO: is this okay? Oo
-        tex->~Texture2DArray();
-        tex = std::make_shared<glowl::Texture2DArray>("m_finalResults", desc, nullptr);
-    }
-
-    return true;
-}
-
-bool megamol::compositing::ASSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2D> tex,
-    std::shared_ptr<glowl::Texture2DArray> original, glm::ivec2 size, const glowl::TextureLayout& ly, int arraySlice) {
-    if ((size.x == 0) || (size.y == 0)) {
-        tex.reset();
-    } else {
-        if (tex != nullptr) {
-            glowl::TextureLayout desc = tex->getTextureLayout();
-            if (equalLayoutsWithoutSize(desc, ly) && (desc.width == size.x) && (desc.height == size.y))
-                return false;
-        }
-
-        glowl::TextureLayout desc = ly;
-        desc.width = size.x;
-        desc.height = size.y;
+        desc.depth = 4;
         tex->reload(desc, nullptr);
     }
 
     return true;
 }
 
+// TODO: make checks for euqality in reCreateArrayIfNeeded
+bool megamol::compositing::ASSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2DView> tex,
+    std::shared_ptr<glowl::Texture2DArray> original, glm::ivec2 size, const glowl::TextureLayout& ly, int arraySlice) {
+    if ((size.x == 0) || (size.y == 0)) {
+        //tex->~Texture2D();
+    } else {
+        /*if (tex != nullptr) {
+            glowl::TextureLayout desc = tex->getTextureLayout();
+            if (equalLayoutsWithoutSize(desc, ly) && (desc.width == size.x) && (desc.height == size.y))
+                return false;
+        }*/
+
+        // not needed, glTextureView does this automatically
+        /*glowl::TextureLayout desc = ly;
+        desc.width = size.x;
+        desc.height = size.y;
+        tex->reload(desc, nullptr);*/
+
+        // make to one function "makeTextureView" for error handling in texture2d.hpp
+        tex->reload(*original, original->getTextureLayout(), 0, 1, arraySlice, 1);
+        /*glTextureView(
+            tex->getName(), GL_TEXTURE_2D, original->getName(), original->getInternalFormat(), 0, 1, arraySlice, 1);*/
+
+        // debug
+        /*tex->bindTexture();
+        int w, h;
+        int miplevel = 0;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_WIDTH, &w);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_HEIGHT, &h);
+
+        GLenum err = glGetError();
+        if (err != GL_NO_ERROR) {
+            std::cout << "gltextureview failed\n";
+        }*/
+    }
+
+    return true;
+}
+
+
+// TODO: make checks for euqality in reCreateMIPViewIfNeeded
+// this function needs to be re-done if used, i.e. if MEGAMOL_ASSAO_MANUAL_MIPS is set
 bool megamol::compositing::ASSAO::reCreateMIPViewIfNeeded(
-    std::shared_ptr<glowl::Texture2D> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice) {
-    if ( equalLayouts(current->getTextureLayout(), original->getTextureLayout()) )
-        return true;
-
-    current.reset();
-
-    glowl::TextureLayout current_layout = current->getTextureLayout();
+    std::shared_ptr<glowl::Texture2DView> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice) {
+    //glowl::TextureLayout current_layout = current->getTextureLayout();
     glowl::TextureLayout original_layout = original->getTextureLayout();
 
-    int new_width = original_layout.width;
+    // TODO: check if they are equal, i.e. if current is already textureview of original at mipviewslice
+    /*if (current == original)
+        return true;*/
+
+    current->reload(*original, original->getTextureLayout(), mipViewSlice, 1, 0, 1);
+    /*current = std::make_shared<glowl::Texture2DView>(
+        id, *original, original->getTextureLayout(), mipViewSlice, 1, 0, 1);*/
+
+    // not needed, glTextureView does this automatically
+    /*int new_width = original_layout.width;
     int new_height = original_layout.height;
 
     for (int i = 0; i < mipViewSlice; ++i) {
@@ -1040,23 +1087,48 @@ bool megamol::compositing::ASSAO::reCreateMIPViewIfNeeded(
     new_height = std::max( new_height, 1 );
 
     current_layout.width = new_width;
-    current_layout.height = new_height;
+    current_layout.height = new_height;*/
 
-    current->reload(current_layout, nullptr);
+    //current->reload(current_layout, nullptr);
+
+    // make to one function "makeTextureView" for error handling in texture2d.hpp
+    /*current->deleteTexture();
+    current->genTexture();
+    glTextureView(
+        current->getName(), GL_TEXTURE_2D, original->getName(), original->getInternalFormat(), mipViewSlice, 1, 0, 1);*/
+
+    /*std::vector<float> check(new_width * new_height);
+    for (int i = 0; i < check.size(); ++i) {
+        check[i] = i;
+    }
+    glTextureSubImage2D(current->getName(), 0, 0, 0, new_width, new_height, original->getFormat(),
+        original->getType(), check.data());*/
+
+    // debug
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        std::cout << "error after textureview\n";
+    }
+    /*
+    current->bindTexture();
+    int w, h;
+    int miplevel = 0;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_WIDTH, &w);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_HEIGHT, &h);*/
 
     return true;
 }
 
 bool megamol::compositing::ASSAO::equalLayoutsWithoutSize(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
-    bool depth = lhs.depth == rhs.depth;
+    bool depth            = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
-    bool format = lhs.format == rhs.format;
-    //bool height = lhs.height == rhs.height;
-    bool internal_format = lhs.internal_format == rhs.internal_format;
-    bool int_parameters = lhs.int_parameters == rhs.int_parameters;
-    bool levels = lhs.levels == rhs.levels;
-    bool type = lhs.type == rhs.type;
-    //bool width = lhs.width == rhs.width;
+    bool format           = lhs.format == rhs.format;
+    //bool height           = lhs.height == rhs.height;
+    bool internal_format  = lhs.internal_format == rhs.internal_format;
+    bool int_parameters   = lhs.int_parameters == rhs.int_parameters;
+    bool levels           = lhs.levels == rhs.levels;
+    bool type             = lhs.type == rhs.type;
+    //bool width            = lhs.width == rhs.width;
 
     return depth && float_parameters && format /*&& height*/ && internal_format && int_parameters && levels &&
            type /*&& width*/;
@@ -1064,15 +1136,15 @@ bool megamol::compositing::ASSAO::equalLayoutsWithoutSize(const glowl::TextureLa
 
 bool megamol::compositing::ASSAO::equalLayouts(
     const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
-    bool depth = lhs.depth == rhs.depth;
+    bool depth            = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
-    bool format = lhs.format == rhs.format;
-    bool height = lhs.height == rhs.height;
-    bool internal_format = lhs.internal_format == rhs.internal_format;
-    bool int_parameters = lhs.int_parameters == rhs.int_parameters;
-    bool levels = lhs.levels == rhs.levels;
-    bool type = lhs.type == rhs.type;
-    bool width = lhs.width == rhs.width;
+    bool format           = lhs.format == rhs.format;
+    bool height           = lhs.height == rhs.height;
+    bool internal_format  = lhs.internal_format == rhs.internal_format;
+    bool int_parameters   = lhs.int_parameters == rhs.int_parameters;
+    bool levels           = lhs.levels == rhs.levels;
+    bool type             = lhs.type == rhs.type;
+    bool width            = lhs.width == rhs.width;
 
     return depth && float_parameters && format && height && internal_format && int_parameters && levels &&
            type && width;

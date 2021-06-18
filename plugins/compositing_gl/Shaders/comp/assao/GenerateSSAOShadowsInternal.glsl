@@ -11,6 +11,7 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     vec4 valuesBL = textureGather(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize );
     vec4 valuesUR = textureGatherOffset(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize, ivec2( 1, 1 ) );
 
+    // TODO: is this correct?
     // get this pixel's viewspace depth
     pixZ = valuesBL.y; //float pixZ = g_ViewspaceDepthSource.SampleLevel( g_PointMirrorSampler, normalizedScreenPos, 0.0 ).x; // * g_ASSAOConsts.MaxViewspaceDepth;
 

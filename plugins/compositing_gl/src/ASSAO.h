@@ -20,6 +20,7 @@
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture2DArray.hpp"
+#include "compositing/Texture2DView.hpp"
 #include "compositing/Sampler.hpp"
 
 #include <glm/glm.hpp>
@@ -29,6 +30,8 @@ namespace compositing {
 
     typedef std::tuple<std::shared_ptr<glowl::Texture2D>, std::string, std::shared_ptr<glowl::Sampler>>
         TextureSamplerTuple;
+    typedef std::tuple<std::shared_ptr<glowl::Texture2DView>, std::string, std::shared_ptr<glowl::Sampler>>
+        TextureViewSamplerTuple;
     typedef std::tuple<std::shared_ptr<glowl::Texture2DArray>, std::string, std::shared_ptr<glowl::Sampler>>
         TextureArraySamplerTuple;
 
@@ -237,23 +240,27 @@ private:
 
     void prepareDepths(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs);
     void generateSSAO(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass);
-    void fullscreenPassDraw(const std::unique_ptr<GLSLComputeShader>& prgm,
-        const std::vector<TextureSamplerTuple>&
-            input_textures,
-        std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>>& output_textures, bool add_constants = true,
-        const TextureArraySamplerTuple& = {
-            nullptr, "", nullptr});
 
+    template<typename Tuple, typename Tex>
+    void fullscreenPassDraw(
+        const std::unique_ptr<GLSLComputeShader>& prgm,
+        const std::vector<Tuple>& input_textures,
+        std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& output_textures,
+        bool add_constants = true,
+        const TextureArraySamplerTuple& tast = {nullptr, "", nullptr}
+    );
+    
     bool equalLayouts(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
     bool equalLayoutsWithoutSize(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
     void updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs);
     void updateConstants(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, int pass);
-    bool reCreateIfNeeded(std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly);
+    bool reCreateIfNeeded(std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly, bool generateMipMaps = false);
     bool reCreateIfNeeded(std::shared_ptr<glowl::Texture2DArray> tex, glm::ivec2 size, const glowl::TextureLayout& ly);
-    bool reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2D> tex, std::shared_ptr<glowl::Texture2DArray> original,
+    bool reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2DView> tex,
+        std::shared_ptr<glowl::Texture2DArray> original,
         glm::ivec2 size, const glowl::TextureLayout& ly, int arraySlice);
-    bool reCreateMIPViewIfNeeded(
-        std::shared_ptr<glowl::Texture2D> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice);
+    bool reCreateMIPViewIfNeeded(std::shared_ptr<glowl::Texture2DView> current,
+        std::shared_ptr<glowl::Texture2D> original, int mipViewSlice);
 
 
     uint32_t m_version;
@@ -279,11 +286,11 @@ private:
     // TEXTURE BATTERY
     /////////////////////////////////////////////////////////////////////////
     std::array<std::shared_ptr<glowl::Texture2D>, 4> m_halfDepths;
-    std::vector<std::vector<std::shared_ptr<glowl::Texture2D>>> m_halfDepthsMipViews;
+    std::vector<std::vector<std::shared_ptr<glowl::Texture2DView>>> m_halfDepthsMipViews;
     std::shared_ptr<glowl::Texture2D> m_pingPongHalfResultA;
     std::shared_ptr<glowl::Texture2D> m_pingPongHalfResultB;
     std::shared_ptr<glowl::Texture2DArray> m_finalResults;
-    std::array<std::shared_ptr<glowl::Texture2D>, 4> m_finalResultsArrayViews;
+    std::array<std::shared_ptr<glowl::Texture2DView>, 4> m_finalResultsArrayViews;
     //std::shared_ptr<glowl::Texture2D> m_normals;
     std::shared_ptr<glowl::Texture2D> m_finalOutput;
 
@@ -339,6 +346,64 @@ private:
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot m_camera_slot;
 };
+
+
+// TODO: intel originally uses some blending state parameter, but it isnt used here, so we omit this
+// but could easily be extended with glEnable(GL_BLEND) and a blendfunc
+template<typename Tuple, typename Tex>
+void ASSAO::fullscreenPassDraw(
+    const std::unique_ptr<GLSLComputeShader>& prgm,
+    const std::vector<Tuple>& input_textures,
+    std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& output_textures,
+    bool add_constants,
+    const TextureArraySamplerTuple& finals)
+{
+    prgm->Enable();
+
+    if (add_constants)
+        m_ssbo_constants->bind(0);
+
+    int cnt = 0;
+
+    for (int i = 0; i < input_textures.size(); ++i) {
+        if (std::get<0>(input_textures[i]) != nullptr) {
+            glActiveTexture(GL_TEXTURE0 + cnt);
+
+            std::get<0>(input_textures[i])->bindTexture();
+
+            if (std::get<2>(input_textures[i]) != nullptr)
+                std::get<2>(input_textures[i])->bindSampler(cnt);
+
+            std::string name = std::get<1>(input_textures[i]);
+            glUniform1i(prgm->ParameterLocation(name.c_str()), cnt);
+
+            ++cnt;
+        }
+    }
+
+    if (std::get<0>(finals) != nullptr) {
+        glActiveTexture(GL_TEXTURE0 + cnt);
+        std::get<0>(finals)->bindTexture();
+        std::get<2>(finals)->bindSampler(cnt);
+        glUniform1i(prgm->ParameterLocation(std::get<1>(finals).c_str()), 0);
+    }
+
+    for (int i = 0; i < output_textures.size(); ++i) {
+        output_textures[i].first->bindImage(output_textures[i].second, GL_READ_WRITE);
+    }
+
+    // all textures in output_textures should have the same size, so we just use the first
+    // TODO: adjust dispatch size
+    prgm->Dispatch(static_cast<int>(std::ceil(output_textures[0].first->getWidth() / 8)),
+        static_cast<int>(std::ceil(output_textures[0].first->getHeight() / 8)), 1);
+
+    prgm->Disable();
+
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
 
 } // namespace compositing
 } // namespace megamol
