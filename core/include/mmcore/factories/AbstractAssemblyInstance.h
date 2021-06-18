@@ -1,22 +1,19 @@
-/*
- * AbstractAssemblyInstance.h
- * Copyright (C) 2015 by MegaMol Consortium
- * All rights reserved. Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2015-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #ifndef MEGAMOLCORE_FACTORIES_ABSTRACTASSEMBLYINSTANCE_H_INCLUDED
 #define MEGAMOLCORE_FACTORIES_ABSTRACTASSEMBLYINSTANCE_H_INCLUDED
 #pragma once
 
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/factories/CallDescriptionManager.h"
-#include "mmcore/factories/ModuleDescriptionManager.h"
 #include <string>
 
+#include "mmcore/factories/CallDescriptionManager.h"
+#include "mmcore/factories/ModuleDescriptionManager.h"
 
-namespace megamol {
-namespace core {
-namespace factories {
+namespace megamol::core::factories {
 
     /**
      * Abstract base class for all object descriptions.
@@ -24,8 +21,13 @@ namespace factories {
      * An object is described using a unique name. This name is compared case
      * insensitive!
      */
-    class MEGAMOLCORE_API AbstractAssemblyInstance {
+    class AbstractAssemblyInstance {
     public:
+        /** deleted copy ctor */
+        AbstractAssemblyInstance(const AbstractAssemblyInstance& src) = delete;
+
+        /** deleted assignment operatior */
+        AbstractAssemblyInstance& operator=(const AbstractAssemblyInstance& rhs) = delete;
 
         /**
          * Answer the (machine-readable) name of the assembly. This usually is
@@ -33,101 +35,40 @@ namespace factories {
          *
          * @return The (machine-readable) name of the assembly
          */
-        virtual const std::string& GetAssemblyName(void) const = 0;
+        virtual const std::string& GetAssemblyName() const = 0;
 
         /**
          * Answer the call description manager of the assembly.
          *
          * @return The call description manager of the assembly.
          */
-        virtual const CallDescriptionManager& GetCallDescriptionManager(void) const;
+        virtual const CallDescriptionManager& GetCallDescriptionManager() const {
+            return call_descriptions;
+        };
 
         /**
          * Answer the module description manager of the assembly.
          *
          * @return The module description manager of the assembly.
          */
-        virtual const ModuleDescriptionManager& GetModuleDescriptionManager(void) const;
-
-        /**
-         * Gets the assembly file name
-         *
-         * @return The assembly file name
-         */
-        inline std::string GetAssemblyFileNameA(void) const {
-            std::string s;
-            GetAssemblyFileName(s);
-            return s;
-        }
-
-        /**
-         * Gets the assembly file name
-         *
-         * @return The assembly file name
-         */
-        inline std::wstring GetAssemblyFileNameW(void) const {
-            std::wstring s;
-            GetAssemblyFileName(s);
-            return s;
-        }
-
-        /**
-         * Gets the assembly file name
-         *
-         * @param out_filename String variable to receive the file name
-         */
-        void GetAssemblyFileName(std::string& out_filename) const;
-
-        /**
-         * Gets the assembly file name
-         *
-         * @param out_filename String variable to receive the file name
-         */
-        void GetAssemblyFileName(std::wstring& out_filename) const;
-
-        /**
-         * Sets the assembly file name
-         *
-         * @param filename The assembly file name
-         */
-        void SetAssemblyFileName(const std::string& filename);
-
-        /**
-         * Sets the assembly file name
-         *
-         * @param filename The assembly file name
-         */
-        void SetAssemblyFileName(const std::wstring& filename);
+        virtual const ModuleDescriptionManager& GetModuleDescriptionManager() const {
+            return module_descriptions;
+        };
 
     protected:
-
         /** Ctor. */
-        AbstractAssemblyInstance(void);
+        AbstractAssemblyInstance() : call_descriptions(), module_descriptions(){};
 
         /** Dtor. */
-        virtual ~AbstractAssemblyInstance(void);
+        virtual ~AbstractAssemblyInstance() = default;
 
         /** The call description manager of the assembly. */
         CallDescriptionManager call_descriptions;
 
         /** The module description manager of the assembly. */
         ModuleDescriptionManager module_descriptions;
-
-    private:
-
-        /** deleted copy ctor */
-        AbstractAssemblyInstance(const AbstractAssemblyInstance& src) = delete;
-
-        /** deleted assignment operatior */
-        AbstractAssemblyInstance& operator=(const AbstractAssemblyInstance& rhs) = delete;
-
-        /** The assembly file name in utf8 */
-        char* filename;
-
     };
 
-} /* end namespace factories */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::factories
 
-#endif /* MEGAMOLCORE_FACTORIES_ABSTRACTASSEMBLYINSTANCE_H_INCLUDED */
+#endif // MEGAMOLCORE_FACTORIES_ABSTRACTASSEMBLYINSTANCE_H_INCLUDED

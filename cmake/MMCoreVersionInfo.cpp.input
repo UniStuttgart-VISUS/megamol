@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "mmcore/versioninfo.h"
 
-int const megamol::core::MEGAMOL_VERSION_MAJOR = @MEGAMOL_MAJOR@;
-int const megamol::core::MEGAMOL_VERSION_MINOR = @MEGAMOL_MINOR@;
+int const megamol::core::MEGAMOL_VERSION_MAJOR = @PROJECT_VERSION_MAJOR@;
+int const megamol::core::MEGAMOL_VERSION_MINOR = @PROJECT_VERSION_MINOR@;
 char const* megamol::core::MEGAMOL_GIT_HASH = "@GIT_HASH@";

@@ -7,9 +7,7 @@
 
 #include "stdafx.h"
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
 
 // jobs
 #include "DataWriter.h"
@@ -51,7 +49,6 @@
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
-#include "vislib/vislibversion.h"
 
 #include "vislib/Trace.h"
 

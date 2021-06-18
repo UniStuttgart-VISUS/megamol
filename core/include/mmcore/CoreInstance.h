@@ -74,12 +74,6 @@ namespace utility {
 /* forward declaration */
 class ServiceManager;
 
-namespace plugins {
-
-/* forward declaration */
-class PluginManager;
-
-} /* end namespace plugins */
 } /* end namespace utility */
 
 /**
@@ -746,7 +740,7 @@ public:
      *
      * @return The plugin manager
      */
-    inline const utility::plugins::PluginManager& Plugins() const { return *plugins; }
+    inline const std::vector<utility::plugins::AbstractPluginInstance::ptr_type>& GetPlugins() const { return plugins; }
 
     /**
      * Callback to delete service objects
@@ -1315,8 +1309,8 @@ private:
     /** Vector storing param updates per frame */
     param::ParamUpdateListener::param_updates_vec_t paramUpdates;
 
-    /** The manager of loaded plugins */
-    utility::plugins::PluginManager* plugins;
+    /** The loaded plugins */
+    std::vector<utility::plugins::AbstractPluginInstance::ptr_type> plugins;
 
     /** The manager of registered services */
     utility::ServiceManager* services;

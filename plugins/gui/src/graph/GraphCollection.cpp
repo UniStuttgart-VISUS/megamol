@@ -9,7 +9,6 @@
 #include "GraphCollection.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/view/AbstractView.h"
-#include "utility/plugins/PluginManager.h"
 
 
 using namespace megamol;
@@ -153,7 +152,7 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
             // Get plugin calls (get prior to core calls for being  able to find duplicates in core instance call desc.
             // manager)
             const std::vector<core::utility::plugins::AbstractPluginInstance::ptr_type>& plugins =
-                core_instance->Plugins().GetPlugins();
+                core_instance->GetPlugins();
             for (core::utility::plugins::AbstractPluginInstance::ptr_type plugin : plugins) {
                 plugin_name = plugin->GetAssemblyName();
                 for (auto& c_desc : plugin->GetCallDescriptionManager()) {
@@ -238,7 +237,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             // Get plugin modules (get prior to core modules for being  able to find duplicates in core instance module
             // desc. manager)
             const std::vector<core::utility::plugins::AbstractPluginInstance::ptr_type>& plugins =
-                core_instance->Plugins().GetPlugins();
+                core_instance->GetPlugins();
             for (core::utility::plugins::AbstractPluginInstance::ptr_type plugin : plugins) {
                 plugin_name = plugin->GetAssemblyName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {

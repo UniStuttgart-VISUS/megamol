@@ -4,11 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
 #include "optix/SphereGeometry.h"
 #include "optix/Renderer.h"
