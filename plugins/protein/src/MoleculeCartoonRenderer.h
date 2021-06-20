@@ -269,7 +269,7 @@ private:
     megamol::core::CallerSlot molColorCallerSlot;
 
     /** camera information */
-    core::view::Camera_2 cameraInfo;
+    core::view::Camera cameraInfo;
 
     megamol::core::param::ParamSlot renderingModeParam;
     /** parameter slot for coloring mode */

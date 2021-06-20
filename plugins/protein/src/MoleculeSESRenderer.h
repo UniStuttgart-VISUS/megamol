@@ -19,7 +19,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/Camera.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -276,11 +276,11 @@ namespace protein {
 
         /** camera information */
         // vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
-        core::view::Camera_2 cameraInfo;
+        core::view::Camera cameraInfo;
 
         // camera information
         // vislib::SmartPtr<vislib::graphics::CameraParameters> MoleculeSESRenderercameraInfo;
-        core::view::Camera_2 MoleculeSESRenderercameraInfo;
+        core::view::Camera MoleculeSESRenderercameraInfo;
 
         megamol::core::param::ParamSlot postprocessingParam;
         megamol::core::param::ParamSlot rendermodeParam;
