@@ -333,6 +333,8 @@ bool SphereRenderer::create() {
     // timer.SetSummaryFileName("summary.csv");
     // timer.SetMaximumFrames(20, 100);
 
+    this->resetResources();
+
     return true;
 }
 
@@ -345,9 +347,11 @@ void SphereRenderer::release() {
 
 bool SphereRenderer::resetResources() {
 
+    // Flag storage / picking
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
     this->highlightedColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
+    this->showHoverInfoParam.Param<param::BoolParam>()->SetGUIVisible(false);
 
     // Set all render mode dependent parameter to GUI invisible
     // SPLAT
@@ -994,6 +998,7 @@ void SphereRenderer::checkFlagStorageAvailability(vislib::SmartPtr<ShaderSource:
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(flagc_connected);
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(flagc_connected);
     this->highlightedColorParam.Param<param::ColorParam>()->SetGUIVisible(flagc_connected);
+    this->showHoverInfoParam.Param<param::BoolParam>()->SetGUIVisible(flagc_connected);
 
     this->flags_available = true;
     out_flag_snippet = nullptr;
@@ -2603,11 +2608,11 @@ bool SphereRenderer::rebuildGBuffer() {
 
 void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
 
-    // Upload new data if neccessary
+    // Upload new data if necessary
     if (this->stateInvalid) {
         unsigned int partsCount = mpdc->GetParticleListCount();
 
-        // Add buffers if neccessary
+        // Add buffers if necessary
         for (auto i = static_cast<unsigned int>(this->gpuData.size()); i < partsCount; i++) {
             gpuParticleDataType data = {0, 0, 0};
             glGenVertexArrays(1, &(data.vertexArray));
@@ -2616,7 +2621,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticl
             this->gpuData.push_back(data);
         }
 
-        // Remove buffers if neccessary
+        // Remove buffers if necessary
         while (this->gpuData.size() > partsCount) {
             gpuParticleDataType& data = this->gpuData.back();
             glDeleteVertexArrays(1, &(data.vertexArray));
@@ -2644,7 +2649,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3DGL& call, MultiParticl
         this->volGen->Init();
     }
 
-    // Recreate the volume if neccessary
+    // Recreate the volume if necessary
     bool equalClipData = true;
     for (int i = 0; i < 4; i++) {
         if (this->oldClipDat[i] != this->curClipDat[i]) {

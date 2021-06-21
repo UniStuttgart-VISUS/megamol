@@ -34,12 +34,12 @@ flat out uint flag_id;
     <snippet name="vertex_main_flags" type="string">
         <![CDATA[
 
-    bool flag_visible = true;
-    bool flag_selected = false;
-    bool flag_soft_selected = false;
-    bool flag_highlighted = false;
+bool flag_visible = true;
+bool flag_selected = false;
+bool flag_soft_selected = false;
+bool flag_highlighted = false;
 
-    flag_id = uint(0);
+flag_id = uint(0);
 
 #ifdef FLAGS_AVAILABLE
     bool enabled = bool(flags_enabled);
@@ -49,9 +49,10 @@ flat out uint flag_id;
         flag_id = (int(flags_offset) + gl_VertexID);
         uint flag = in_flags[flag_id];
 
-        // Write result of picking to flags
-        if (pick_set_flag_selected_id > uint(0)) {
-            bitflag_set(in_flags[flag_id], FLAG_SELECTED, ((pick_set_flag_selected_id - uint(1)) == flag_id));
+        // Toggle selection of clicked sphere
+        if ((pick_set_flag_selected_id - uint(1)) == flag_id) {
+            bitflag_flip(in_flags[flag_id], FLAG_SELECTED);
+            //bitflag_set(in_flags[flag_id], FLAG_SELECTED, ((pick_set_flag_selected_id - uint(1)) == flag_id));
         }
 
         // Set variables for external use in other shader snippets
@@ -88,7 +89,7 @@ out_picking = int(flag_id + uint(1));
     </snippet>
 
 
-<!-- Geometry Shader Snippets ############################################# -->
+<!-- GEOMETRY SHADER Snippets ############################################# -->
 
     <snippet name="geometry_vertex_attributes" type="string">
         <![CDATA[
@@ -117,6 +118,7 @@ g_flag_highlighted   = uint(flag_highlighted);
     <snippet name="geometry_geometry_attributes" type="string">
         <![CDATA[
 
+flat in uint flag_id[1];
 flat in uint g_flag_visible[1];
 flat in uint g_flag_selected[1];
 flat in uint g_flag_soft_selected[1];
@@ -126,6 +128,8 @@ uniform vec4 flag_selected_color;
 uniform vec4 flag_softselected_color;
 uniform vec4 flag_highlighted_color;
 
+flat out uint g_flag_id;
+
         ]]>
     </snippet>
 
@@ -133,10 +137,29 @@ uniform vec4 flag_highlighted_color;
     <snippet name="geometry_geometry_main_flags" type="string">
         <![CDATA[
 
+g_flag_id               = flag_id[0];
 bool flag_visible       = bool(g_flag_visible[0]);
 bool flag_selected      = bool(g_flag_selected[0]);
 bool flag_soft_selected = bool(g_flag_soft_selected[0]);
 bool flag_highlighted   = bool(g_flag_highlighted[0]);
+
+        ]]>
+    </snippet>
+
+    <snippet name="geometry_fragment_attributes" type="string">
+        <![CDATA[
+
+flat in uint g_flag_id;
+layout(location = 1) out int out_picking;
+
+        ]]>
+    </snippet>
+
+    <snippet name="geometry_fragment_main_flags" type="string">
+        <![CDATA[
+
+// XXX Incrementing index since buffer is cleared with zero as invalid value.
+out_picking = int(g_flag_id + uint(1));
 
         ]]>
     </snippet>
