@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "ParameterOrbitalWidget.h"
 
 

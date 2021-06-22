@@ -25,7 +25,7 @@ namespace utility {
 namespace xml {
 
     /**
-     * Class for the MegaMol™ configuration xml parser.
+     * Class for the MegaMol configuration xml parser.
      */
     class ConfigurationParser : public ConditionalParser {
     public:
@@ -73,7 +73,7 @@ namespace xml {
     protected:
 
         /**
-         * Checks whether the xml file is a 'config', '1.0' MegaMol™ xml file.
+         * Checks whether the xml file is a 'config', '1.0' MegaMol xml file.
          *
          * @param reader The current xml reader.
          *

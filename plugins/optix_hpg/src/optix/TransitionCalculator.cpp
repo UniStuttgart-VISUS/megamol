@@ -35,14 +35,12 @@ megamol::optix_hpg::TransitionCalculator::~TransitionCalculator() {
 
 
 bool megamol::optix_hpg::TransitionCalculator::create() {
-    auto const fit = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
-        [](auto const& el) { return el.getIdentifier() == frontend_resources::CUDA_Context_Req_Name; });
-
-    if (fit == this->frontend_resources.end())
+    auto& cuda_res = frontend_resources.get<frontend_resources::CUDA_Context>();
+    if (cuda_res.ctx_ != nullptr) {
+        optix_ctx_ = std::make_unique<Context>(cuda_res);
+    } else {
         return false;
-
-    optix_ctx_ = std::make_unique<Context>(fit->getResource<frontend_resources::CUDA_Context>());
-
+    }
     return true;
 }
 
@@ -59,15 +57,19 @@ bool megamol::optix_hpg::TransitionCalculator::init() {
 
     mesh_module_ = MMOptixModule(embedded_transitioncalculator_programs, optix_ctx_->GetOptiXContext(),
         &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
-        OPTIX_PROGRAM_GROUP_KIND_HITGROUP, builtin_triangle_intersector_, {"tc_intersect", "tc_closesthit"});
+        MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP, builtin_triangle_intersector_,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "tc_intersect"},
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "tc_closesthit"}});
 
     raygen_module_ = MMOptixModule(embedded_transitioncalculator_programs, optix_ctx_->GetOptiXContext(),
         &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
-        OPTIX_PROGRAM_GROUP_KIND_RAYGEN, {"tc_raygen_program"});
+        MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_RAYGEN,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_GENERIC, "tc_raygen_program"}});
 
     miss_module_ = MMOptixModule(embedded_transitioncalculator_programs, optix_ctx_->GetOptiXContext(),
-        &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_MISS,
-        {"tc_miss_program"});
+        &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
+        MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_MISS,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_GENERIC, "tc_miss_program"}});
 
     std::array<OptixProgramGroup, 3> groups = {raygen_module_, miss_module_, mesh_module_};
 

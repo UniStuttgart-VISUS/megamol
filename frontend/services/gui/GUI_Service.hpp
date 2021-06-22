@@ -9,17 +9,15 @@
 #define MEGAMOL_GUI_SERVICE_HPP_INCLUDED
 #pragma once
 
+
 #include "AbstractFrontendService.hpp"
-
 #include "gui-wrapper.h"
-
-#include "IOpenGL_Context.h"
-#include "GUI_Resource.h"
-
+#include "GUIRegisterWindow.h"
+#include "GUIState.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
-#include <glm/glm.hpp>
+
 
 namespace megamol {
 namespace frontend {
@@ -36,12 +34,14 @@ public:
     struct Config {
         ImGuiAPI imgui_api = GUI_Service::ImGuiAPI::OPEN_GL;
         megamol::core::CoreInstance* core_instance = nullptr;
+        bool gui_show = true;
+        float gui_scale = 1.0f;
     };
 
     std::string serviceName() const override { return "GUI_Service"; }
 
     GUI_Service() = default;
-    ~GUI_Service() override;
+    ~GUI_Service() override = default;
     // TODO: delete copy/move/assign?
 
     // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
@@ -73,19 +73,26 @@ private:
     glm::vec2 m_framebuffer_size;
     glm::vec2 m_window_size;
     megamol::core::MegaMolGraph* m_megamol_graph;
-    megamol::frontend_resources::IOpenGL_Context const* m_opengl_context_ptr;
     std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;
     std::vector<std::string> m_queuedProjectFiles;
 
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<FrontendResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
-    megamol::frontend_resources::GUIResource m_providedResource;
 
-    std::string resource_request_gui_state(void);
+    megamol::frontend_resources::GUIState m_providedStateResource;
+    megamol::frontend_resources::GUIRegisterWindow m_providedRegisterWindowResource;
+
+    std::string resource_request_gui_state(bool as_lua);
+    bool resource_request_gui_visibility(void);
+    float resource_request_gui_scale(void);
     void resource_provide_gui_state(const std::string& json_state);
     void resource_provide_gui_visibility(bool show);
     void resource_provide_gui_scale(float scale);
+
+    void resource_register_window(const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func);
+    void resource_register_popup(const std::string& name, bool& open, std::function<void(void)>& func);
+    void resource_register_notification(const std::string& name, bool& open, const std::string& message);
 };
 
 } // namespace frontend

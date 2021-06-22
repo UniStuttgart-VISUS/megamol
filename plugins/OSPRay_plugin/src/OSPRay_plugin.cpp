@@ -13,6 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "OSPRayRenderer.h"
+#include "OSPRayToGL.h"
 
 #include "CallOSPRayTransformation.h"
 #include "OSPRayAPIStructure.h"
@@ -66,6 +67,7 @@ public:
         // register modules here:
 
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayToGL>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayNHSphereGeometry>();

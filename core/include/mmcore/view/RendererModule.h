@@ -32,7 +32,7 @@ public:
     /** Ctor. */
     RendererModule()
         : Module()
-        , chainRenderSlot("chainRendering", "Connects the renderer to and additional renderer")
+        , chainRenderSlot("chainRendering", "Connects the renderer to an additional renderer")
         , renderSlot("rendering", "Connects the Renderer to a calling renderer or view") {
 
         // OutputCall
@@ -56,6 +56,8 @@ public:
         this->renderSlot.SetCallback(C::ClassName(), AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents),
             &RendererModule::GetExtentsChainCallback);
         // Do not make it available yet (extensibility).
+
+        this->renderSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
     }
 
     /** Dtor. */

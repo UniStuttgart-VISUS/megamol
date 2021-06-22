@@ -954,7 +954,7 @@ vislib::StringA vislib::sys::Path::Resolve(StringA path, StringA basepath) {
     // way, so we use the same manual approach for Windows and Linux.
 
 #ifdef _WIN32
-    /* Replace unchefm‰ﬂige path separators. */
+    /* Replace unchefm√§√üige path separators. */
     basepath.Replace('/', SEPARATOR_A);
     path.Replace('/', SEPARATOR_A);
 #endif /* _WIN32 */
@@ -1004,7 +1004,7 @@ vislib::StringW vislib::sys::Path::Resolve(StringW path, StringW basepath) {
     // way, so we use the same manual approach for Windows and Linux.
 
 #ifdef _WIN32
-    /* Replace unchefm‰ﬂige path separators. */
+    /* Replace unchefm√§√üige path separators. */
     basepath.Replace(L'/', SEPARATOR_W);
     path.Replace(L'/', SEPARATOR_W);
 #endif /* _WIN32 */

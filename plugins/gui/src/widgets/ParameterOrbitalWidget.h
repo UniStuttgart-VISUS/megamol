@@ -7,11 +7,11 @@
 
 #ifndef MEGAMOL_GUI_PARAMETERORBITALWIDGET_INCLUDED
 #define MEGAMOL_GUI_PARAMETERORBITALWIDGET_INCLUDED
+#pragma once
 
-
-#include "GUIUtils.h"
 
 #define IMGUIZMO_IMGUI_FOLDER
+#include "glm/glm.hpp"
 #include "imGuIZMOquat.h"
 
 

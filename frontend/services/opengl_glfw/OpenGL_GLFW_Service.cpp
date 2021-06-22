@@ -32,20 +32,32 @@
 #    endif
 #endif
 
-#include "mmcore/utility/log/Log.h"
-
 #include <functional>
 #include <iostream>
 
+#include "mmcore/utility/log/Log.h"
+
+static const std::string service_name = "OpenGL_GLFW_Service: ";
 static void log(std::string const& text) {
-    const std::string msg = "OpenGL_GLFW_Service: " + text;
+    const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
 static void log_error(std::string const& text) {
-    const std::string msg = "OpenGL_GLFW_Service: " + text;
+    const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
 }
+
+static void log_warning(std::string const& text) {
+    const std::string msg = service_name + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
+}
+
+static void glfw_error_callback(int error, const char* description)
+{
+    log_error("[GLFW Error] " + std::to_string(error) + ": " + description);
+}
+
 
 // See: https://github.com/glfw/glfw/issues/1630
 static int fixGlfwKeyboardMods(int mods, int key, int action) {
@@ -298,6 +310,7 @@ struct OpenGL_GLFW_Service::PimplData {
     std::string fullWindowTitle;
     std::chrono::system_clock::time_point last_time;
     megamol::frontend_resources::FrameStatistics* frame_statistics{nullptr};
+    std::array<GLFWcursor*, 9> mouse_cursors;
 };
 
 OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {
@@ -316,6 +329,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         return false;
     }
     m_pimpl->config = config;
+
+    glfwSetErrorCallback(glfw_error_callback);
 
     bool success_glfw = glfwInit();
     if (!success_glfw) {
@@ -398,11 +413,25 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         m_pimpl->config.windowPlacement.y = mon_y;
     }
 
-    // TODO: OpenGL context hints? version? core profile?
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, m_pimpl->config.versionMajor);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, m_pimpl->config.versionMinor);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, m_pimpl->config.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, m_pimpl->config.enableKHRDebug ? GLFW_TRUE : GLFW_FALSE);
+    // context profiles available since 3.2
+    bool has_profiles = m_pimpl->config.versionMajor > 3 || m_pimpl->config.versionMajor == 3 && m_pimpl->config.versionMinor >= 2;
+    if (has_profiles)
+        glfwWindowHint(GLFW_OPENGL_PROFILE, m_pimpl->config.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
+
+    std::string profile_name =
+        has_profiles
+            ? ((m_pimpl->config.glContextCoreProfile ? "Core" : "Compatibility") + std::string(" Profile"))
+            : "";
+
+    log("Requesting OpenGL "
+        + std::to_string(m_pimpl->config.versionMajor) + "."
+        + std::to_string(m_pimpl->config.versionMinor) + " "
+        + profile_name
+        + (m_pimpl->config.enableKHRDebug ? ", Debug Context" : "" )
+    );
 
     auto& window_ptr = m_pimpl->glfwContextWindowPtr;
     window_ptr = ::glfwCreateWindow(initial_width, initial_height,
@@ -439,6 +468,13 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     XCloseDisplay(display);
 #endif
 
+    log(std::string("OpenGL Context Info")
+        + "\n\tVersion:  " + reinterpret_cast<const char*>(glGetString(GL_VERSION))
+        + "\n\tVendor:   " + reinterpret_cast<const char*>(glGetString(GL_VENDOR))
+        + "\n\tRenderer: " + reinterpret_cast<const char*>(glGetString(GL_RENDERER))
+        + "\n\tGLSL:     " + reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION))
+    );
+
     if (m_pimpl->config.enableKHRDebug) {
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -455,6 +491,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     if (config.windowPlacement.noCursor) {
         ::glfwSetInputMode(window_ptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    } else {
+        create_glfw_mouse_cursors();
     }
 
     // note the m_data window position got overwritten with monitor position for fullscreen mode
@@ -481,6 +519,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     m_windowManipulation.window_ptr = window_ptr;
 
+    m_windowManipulation.set_mouse_cursor = [&](const int cursor_id) -> void {
+        update_glfw_mouse_cursors(cursor_id);
+    };
+
     // make the events and resources managed/provided by this service available to the outside world
     m_renderResourceReferences = {
         {"KeyboardEvents", m_keyboardEvents},
@@ -489,6 +531,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {"FramebufferEvents", m_framebufferEvents},
         {"IOpenGL_Context", *m_opengl_context},
         {"WindowManipulation", m_windowManipulation}
+    };
+
+    m_requestedResourcesNames = {
+          "FrameStatistics"
     };
 
     m_pimpl->last_time = std::chrono::system_clock::now();
@@ -631,6 +677,11 @@ void OpenGL_GLFW_Service::close() {
 
     ::glfwMakeContextCurrent(m_pimpl->glfwContextWindowPtr);
 
+    for (auto& mouse_cursor_ptr : m_pimpl->mouse_cursors) {
+        ::glfwDestroyCursor(mouse_cursor_ptr);
+        mouse_cursor_ptr = nullptr;
+    }
+
     // GL context and destruction of all other things happens in destructors of pimpl data members
     if (m_pimpl->glfwContextWindowPtr) ::glfwDestroyWindow(m_pimpl->glfwContextWindowPtr);
     m_pimpl->glfwContextWindowPtr = nullptr;
@@ -697,10 +748,12 @@ std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {
 }
 
 const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() const {
-    return {"FrameStatistics"};
+    return m_requestedResourcesNames;
 }
 
 void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> resources) {
+    m_requestedResourceReferences = resources;
+
     m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
 }
 
@@ -792,6 +845,51 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
     this->m_windowEvents.dropped_path_events.push_back(paths_);
 }
 
+void OpenGL_GLFW_Service::create_glfw_mouse_cursors(void) {
+    // See imgui_impl_glfw.cpp for reference
+    for (auto& mouse_cursor_ptr : m_pimpl->mouse_cursors) {
+        mouse_cursor_ptr = nullptr;
+    }
+    if (m_pimpl->mouse_cursors.size() != 9) {
+        return;
+    }
+    // See imgui.h: enum ImGuiMouseCursor_ 
+    GLFWerrorfun prev_error_callback = ::glfwSetErrorCallback(nullptr);
+    m_pimpl->mouse_cursors[0] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_Arrow
+    m_pimpl->mouse_cursors[1] = ::glfwCreateStandardCursor(GLFW_IBEAM_CURSOR); // ImGuiMouseCursor_TextInput
+    m_pimpl->mouse_cursors[3] = ::glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR); // ImGuiMouseCursor_ResizeNS
+    m_pimpl->mouse_cursors[4] = ::glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR); // ImGuiMouseCursor_ResizeEW
+    m_pimpl->mouse_cursors[7] = ::glfwCreateStandardCursor(GLFW_HAND_CURSOR);    // ImGuiMouseCursor_Hand
+#if ((GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100) >= 3400) // glfw 3.4+
+    m_pimpl->mouse_cursors[2] = ::glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR); // ImGuiMouseCursor_ResizeAll
+    m_pimpl->mouse_cursors[5] = ::glfwCreateStandardCursor(GLFW_RESIZE_NESW_CURSOR); // ImGuiMouseCursor_ResizeNESW
+    m_pimpl->mouse_cursors[6] = ::glfwCreateStandardCursor(GLFW_RESIZE_NWSE_CURSOR); // ImGuiMouseCursor_ResizeNWSE
+    m_pimpl->mouse_cursors[8] = ::glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR); // ImGuiMouseCursor_NotAllowed
+#else
+    m_pimpl->mouse_cursors[2] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_ResizeAll
+    m_pimpl->mouse_cursors[5] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_ResizeNESW
+    m_pimpl->mouse_cursors[6] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_ResizeNWSE
+    m_pimpl->mouse_cursors[8] = ::glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // ImGuiMouseCursor_NotAllowed
+#endif
+    ::glfwSetErrorCallback(prev_error_callback);
+}
+
+void OpenGL_GLFW_Service::update_glfw_mouse_cursors(const int cursor_id) {
+    if (m_pimpl->config.windowPlacement.noCursor) {
+        ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        return;
+    }
+
+    if ((cursor_id >= 0) && (cursor_id < m_pimpl->mouse_cursors.size())) {
+        ::glfwSetCursor(m_pimpl->glfwContextWindowPtr,
+            m_pimpl->mouse_cursors[cursor_id] ? m_pimpl->mouse_cursors[cursor_id]
+                                              : m_pimpl->mouse_cursors[static_cast<int>(GLFW_ARROW_CURSOR)]);
+        ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    } else {
+        ::glfwSetInputMode(m_pimpl->glfwContextWindowPtr, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    }
+}
+
 // { glfw calls used somewhere by imgui but not covered by this class
 // glfwGetWin32Window(g_Window);
 //
@@ -799,12 +897,7 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
 // glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
 // glfwSetCursorPos(g_Window, (double)mouse_pos_backup.x, (double)mouse_pos_backup.y);
 //
-// glfwSetCursor(g_Window, g_MouseCursors);
 // glfwGetInputMode(g_Window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
-// glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-// glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-// glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
-// glfwDestroyCursor(g_MouseCursors[cursor_n]);
 // }
 
 } // namespace frontend

@@ -47,6 +47,9 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
     // fill transformation container
     this->processTransformation();
 
+    // fill clipping plane container
+    this->processClippingPlane();
+
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::MultiParticleDataCall* cd =
@@ -82,7 +85,8 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
         auto const zAcc = parts.GetParticleStore().GetZAcc();
 
         if (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I &&
-            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I) {
+            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I &&
+            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
             auto const crAcc = parts.GetParticleStore().GetCRAcc();
             auto const cgAcc = parts.GetParticleStore().GetCGAcc();
             auto const cbAcc = parts.GetParticleStore().GetCBAcc();

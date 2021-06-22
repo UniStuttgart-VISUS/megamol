@@ -1,6 +1,7 @@
 /*
- * MegaMolPlugin.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
+ * mmvtkm.cpp
+ *
+ * Copyright (C) 2019-2021 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
@@ -13,56 +14,49 @@
 #include "vislib/vislibversion.h"
 
 #include "mmvtkm/mmvtkmDataSource.h"
-#include "mmvtkm/mmvtkmRenderer.h"
+#include "mmvtkm/mmvtkmFileLoader.h"
+#include "mmvtkm/mmvtkmMeshRenderTasks.h"
+//#include "mmvtkm/mmvtkmRenderer.h"
+#include "mmvtkm/mmvtkmStreamLines.h"
 #include "mmvtkm/mmvtkmDataCall.h"
 
-namespace megamol::mmvtkm {
-    /** Implementing the instance class of this plugin */
-    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-        REGISTERPLUGIN(plugin_instance)
-    public:
-        /** ctor */
-        plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
 
-                /* machine-readable plugin assembly name */
-                "vtkm", // TODO: Change this!
+/* anonymous namespace hides this type from any other object files */
+namespace {
+/** Implementing the instance class of this plugin */
+class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
+    REGISTERPLUGIN(plugin_instance)
 
-                /* human-readable plugin description */
-                "Plugin to read vtkm and render vtkm data.") {
+public:
+    /** ctor */
+    plugin_instance(void)
+        : ::megamol::core::utility::plugins::Plugin200Instance(
 
-            // here we could perform addition initialization
-        };
-        /** Dtor */
-        virtual ~plugin_instance(void) {
-            // here we could perform addition de-initialization
-        }
-        /** Registers modules and calls */
-        virtual void registerClasses(void) {
+              /* machine-readable plugin assembly name */
+              "vtkm", // TODO: Change this!
 
-            // register modules here:
-           this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataSource>();
-           this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataRenderer>();
+              /* human-readable plugin description */
+              "Plugin to read and render vtkm data."){
 
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::MyModule2>();
-            //   ...
-            //
+              // here we could perform addition initialization
+          };
+    /** Dtor */
+    virtual ~plugin_instance(void) {
+        // here we could perform addition de-initialization
+    }
+    /** Registers modules and calls */
+    virtual void registerClasses(void) {
 
-            // register calls here:
-           this->call_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataCall>();
+        // register modules here:
+        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmFileLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmMeshRenderTasks>();
+        //this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmStreamLines>();
 
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::mmvtkm::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::mmvtkm::MyCall2>();
-            //   ...
-            //
 
-        }
-    };
-} // namespace megamol::mmvtkm
+		// register calls here:
+        this->call_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataCall>();
+    }
+};
+} // namespace

@@ -63,7 +63,7 @@ int intHD1(double** x, int n) {
 /* This is an implemetation of the algorithm of                             */
 /* Rousseeuw, P.J.and Ruts, I. (1996). Algorithm AS 307: bivariate          */
 /* location depth. Journal of the Royal Statistical Society. Series C:      */
-/* Applied Statistics 45, 516–526.                                          */
+/* Applied Statistics 45, 516-526.                                          */
 /*                                                                          */
 /****************************************************************************/
 

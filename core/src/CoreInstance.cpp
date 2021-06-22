@@ -17,7 +17,6 @@
 #include <string>
 #include <memory>
 
-#include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -536,12 +535,6 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
     jd->SetJobModuleID("ctrl");
     this->builtinJobDescs.Register(jd);
 
-    // Generate PluginsStateFile for MegaMol Configurator:
-    jd = std::make_shared<JobDescription>("GenStateFile");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("PluginsStateFileGeneratorJob"), "gen");
-    jd->SetJobModuleID("gen");
-    this->builtinJobDescs.Register(jd);
-
     //////////////////////////////////////////////////////////////////////
 
 
@@ -565,6 +558,8 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
             "Unable to instance \"%s\" as \"%s\": Description not found.\n",
             vislib::StringA(r.Description()).PeekBuffer(), vislib::StringA(r.Identifier()).PeekBuffer());
     }
+
+    translateShaderPaths(config);
 
     SAFE_DELETE(this->preInit);
 }
@@ -3488,4 +3483,20 @@ bool megamol::core::CoreInstance::checkForFlushEvent(size_t const eventIdx, std:
 void megamol::core::CoreInstance::shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list) {
     list.erase(
         std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
+}
+
+
+void megamol::core::CoreInstance::translateShaderPaths(megamol::core::utility::Configuration const& config) {
+    auto const v_paths = config.ShaderDirectories();
+
+    shaderPaths.resize(v_paths.Count());
+
+    for (size_t idx = 0; idx < v_paths.Count(); ++idx) {
+        shaderPaths[idx] = std::filesystem::path(v_paths[idx].PeekBuffer());
+    }
+}
+
+
+std::vector<std::filesystem::path> megamol::core::CoreInstance::GetShaderPaths() const {
+    return shaderPaths;
 }

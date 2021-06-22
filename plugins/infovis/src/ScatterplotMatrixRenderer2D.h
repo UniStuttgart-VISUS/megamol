@@ -3,7 +3,7 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagCall_GL.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/SSBOBufferArray.h"
@@ -18,6 +18,7 @@
 #include <optional>
 #include "Renderer2D.h"
 #include "mmcore/FlagStorage.h"
+#include "vislib/math/Matrix.h"
 
 namespace megamol::infovis {
 
@@ -77,7 +78,6 @@ protected:
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
     bool OnMouseMove(double x, double y) override;
-
 
 private:
     enum ValueMapping {
@@ -153,11 +153,11 @@ private:
 
     void updateColumns();
 
-    void drawMinimalisticAxis();
+    void drawMinimalisticAxis(glm::mat4 ortho);
 
-    void drawScientificAxis();
+    void drawScientificAxis(glm::mat4 ortho);
 
-    void bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader);
+    void bindMappingUniforms(std::unique_ptr<glowl::GLSLProgram>& shader);
 
     void bindFlagsAttribute();
 
@@ -169,13 +169,13 @@ private:
 
     void drawTriangulation();
 
-    void validateText();
+    void validateText(glm::mat4 ortho);
 
-    void drawText();
+    void drawText(glm::mat4 ortho);
 
     void drawPickIndicator();
 
-    void drawMouseLabels();
+    void drawMouseLabels(glm::mat4 ortho);
 
     void unbindScreen();
 
@@ -276,21 +276,21 @@ private:
 
     core::BoundingBoxes_2 bounds;
 
-    vislib::graphics::gl::GLSLShader minimalisticAxisShader;
+    std::unique_ptr<glowl::GLSLProgram> minimalisticAxisShader;
 
-    vislib::graphics::gl::GLSLShader scientificAxisShader;
+    std::unique_ptr<glowl::GLSLProgram> scientificAxisShader;
 
-    vislib::graphics::gl::GLSLShader pointShader;
+    std::unique_ptr<glowl::GLSLProgram> pointShader;
 
-    vislib::graphics::gl::GLSLGeometryShader lineShader;
+    std::unique_ptr<glowl::GLSLProgram> lineShader;
 
-    vislib::graphics::gl::GLSLShader triangleShader;
+    std::unique_ptr<glowl::GLSLProgram> triangleShader;
 
-    vislib::graphics::gl::GLSLShader pickIndicatorShader;
+    std::unique_ptr<glowl::GLSLProgram> pickIndicatorShader;
 
-    vislib::graphics::gl::GLSLShader screenShader;
+    std::unique_ptr<glowl::GLSLProgram> screenShader;
 
-    vislib::graphics::gl::GLSLComputeShader pickProgram;
+    std::unique_ptr<glowl::GLSLProgram> pickProgram;
 
     GLint pickWorkgroupSize[3];
     GLint maxWorkgroupCount[3];

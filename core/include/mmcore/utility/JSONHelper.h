@@ -11,7 +11,7 @@
 
 #include<string>
 
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/UTF8Encoder.h"

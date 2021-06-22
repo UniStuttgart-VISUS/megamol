@@ -104,7 +104,7 @@ namespace view {
         /** The callee slot called on request of a transfer function */
         CalleeSlot getTFSlot;
 
-        /** Parameter continaing the transfer function data serialized into JSON string */
+        /** Parameter containing the transfer function data serialized into JSON string */
         param::ParamSlot tfParam;
 
         /** The OpenGL texture object id */
@@ -124,11 +124,6 @@ namespace view {
 
         /** The value range */
         std::array<float, 2> range;
-
-        /** Flag indicating that there should be no changes applied if the 
-         * parameter has an inital value loaded from project file. */
-        bool tfparam_check_init_value;
-        bool tfparam_skip_changes_once;
 
         /** Version of texture */
         uint32_t version;

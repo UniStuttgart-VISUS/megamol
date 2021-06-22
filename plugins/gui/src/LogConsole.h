@@ -7,15 +7,13 @@
 
 #ifndef MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
 #define MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
 #include "WindowCollection.h"
-#include "widgets/HoverToolTip.h"
-
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/log/OfflineTarget.h"
 #include "mmcore/utility/log/StreamTarget.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/PopUps.h"
 
 
 namespace megamol {
@@ -53,12 +51,11 @@ namespace gui {
         LogConsole();
         ~LogConsole();
 
-        /**
-         * Draw log console window.
-         */
-        bool Draw(WindowCollection::WindowConfiguration& wc);
+        void Update(WindowConfiguration& wc);
 
-        void Update(WindowCollection::WindowConfiguration& wc);
+        bool Draw(WindowConfiguration& wc);
+
+        void PopUps(void);
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -71,6 +68,15 @@ namespace gui {
         unsigned int scroll_down;
         unsigned int scroll_up;
         float last_window_height;
+        std::string window_title;
+
+        struct LogPopUpData {
+            std::string title;
+            bool disable;
+            bool show;
+            std::vector<LogBuffer::LogEntry> entries;
+        };
+        std::vector<LogPopUpData> log_popups;
 
         // Widgets
         HoverToolTip tooltip;
@@ -78,6 +84,10 @@ namespace gui {
         // FUNCTIONS --------------------------------------------------------------
 
         bool connect_log(void);
+
+        void print_message(LogBuffer::LogEntry entry, unsigned int global_log_level) const;
+
+        void draw_popup(LogPopUpData& log_popup);
     };
 
 

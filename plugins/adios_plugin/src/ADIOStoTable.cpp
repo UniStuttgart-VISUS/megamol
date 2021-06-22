@@ -57,7 +57,7 @@ bool ADIOStoTable::getData(core::Call& call) {
 
         
         for (auto var : availVars) {
-            if (!cad->inquire(var)) {
+            if (!cad->inquireVar(var)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOStoTable] variable \"%s\" does not exist.", var.c_str());
             }
         }

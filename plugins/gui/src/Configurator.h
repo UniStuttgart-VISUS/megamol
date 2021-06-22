@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
 #define MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
+#pragma once
 
 
 #include "WindowCollection.h"
@@ -15,10 +16,6 @@
 #include "widgets/HoverToolTip.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
-
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/StringParam.h"
 
 
 namespace megamol {
@@ -49,13 +46,13 @@ namespace gui {
         /**
          * Draw configurator window.
          */
-        bool Draw(WindowCollection::WindowConfiguration& wc);
+        bool Draw(WindowConfiguration& wc);
 
         /**
          * Returns required font scalings for graph canvas
          */
         inline const FontScalingArray_t& GetGraphFontScalings(void) const {
-            return this->graph_state.font_scalings;
+            return this->graph_state.graph_zoom_font_scalings;
         }
 
         /**

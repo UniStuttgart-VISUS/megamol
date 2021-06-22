@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
 #define MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
+#pragma once
 
 
 #include "mmcore/CallerSlot.h"
@@ -33,6 +34,7 @@
 
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iomanip>
 
 
 namespace megamol {
@@ -122,7 +124,7 @@ namespace gui {
             float bottom;
         };
 
-        typedef megamol::core::utility::AbstractFont::Alignment Anchor;
+        typedef megamol::core::utility::SDFFont::Alignment Anchor;
 
         enum Mode { TEXTURE, TRANSPORT_CTRL, PARAMETER, LABEL };
 

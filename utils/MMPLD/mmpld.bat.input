@@ -1,6 +1,6 @@
 @echo off
 SET MEGAMOLDIR=@THESRC@
-SET MEGAMOLBINDIR=%MEGAMOLDIR%bin\
+SET MEGAMOLBINDIR=@THEINST@bin\
 SET MMPLDINFODIR=%MEGAMOLDIR%utils\MMPLD\
 
 if a%2a == aa GOTO ERROR
@@ -12,7 +12,11 @@ GOTO ERROR
 :RENDER
 TITLE MMPLD Render - %2
 cd /d %MEGAMOLBINDIR%
-mmconsole.exe -p %MMPLDINFODIR%mmpld.mmprj -i mmpldview inst -v inst::data::filename %2
+REM legacy
+REM mmconsole.exe -p %MMPLDINFODIR%mmpld.mmprj -i mmpldview inst -v inst::data::filename %2
+set fname=%2
+set fname=%fname:\=\\%
+megamol.exe %MMPLDINFODIR%mmpld.lua --param ::Data::filename=%fname%
 GOTO END
 
 :INFO

@@ -722,12 +722,12 @@ namespace math {
 
         AbstractQuaternion<T, T[4]> q1;
         if (xi == xo) {
-            // rot 0°
+            // rot 0Â°
             q1.Set(static_cast<T>(0), static_cast<T>(0),
                 static_cast<T>(0), static_cast<T>(1));
 
         } else if (xi == -xo) {
-            // rot 180°
+            // rot 180Â°
             q1.Set(static_cast<T>(M_PI), yo);
 
         } else {
@@ -751,14 +751,14 @@ namespace math {
 
         Vector<T, 3> yb = q1 * yo;
         if (yi == yb) {
-            // rot 0°
+            // rot 0Â°
             if ((q1 * zo) != zi) {
                 throw IllegalParamException("Matrix is not rotation-only",
                     __FILE__, __LINE__);
             }
 
         } else if (yi == -yb) {
-            // rot 180°
+            // rot 180Â°
             AbstractQuaternion<T, T[4]> q2;
             q2.Set(static_cast<T>(M_PI), xi);
             q1 = q2 * q1;

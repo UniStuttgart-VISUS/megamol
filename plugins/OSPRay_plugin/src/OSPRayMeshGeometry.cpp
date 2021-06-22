@@ -22,14 +22,14 @@ using namespace megamol::ospray;
 
 OSPRayMeshGeometry::OSPRayMeshGeometry(void)
         : AbstractOSPRayStructure()
-        , getTrimeshDataSlot("getTrimeshData", "Connects to the data source")
-        , getMeshDataSlot("getMeshData", "Connects to the data source") {
+        , _getTrimeshDataSlot("getTrimeshData", "Connects to the data source")
+        , _getMeshDataSlot("getMeshData", "Connects to the data source") {
 
-    this->getTrimeshDataSlot.SetCompatibleCall<geocalls::CallTriMeshDataDescription>();
-    this->MakeSlotAvailable(&this->getTrimeshDataSlot);
+    this->_getTrimeshDataSlot.SetCompatibleCall<geocalls::CallTriMeshDataDescription>();
+    this->MakeSlotAvailable(&this->_getTrimeshDataSlot);
 
-    this->getMeshDataSlot.SetCompatibleCall<mesh::CallMeshDescription>();
-    this->MakeSlotAvailable(&this->getMeshDataSlot);
+    this->_getMeshDataSlot.SetCompatibleCall<mesh::CallMeshDescription>();
+    this->MakeSlotAvailable(&this->_getMeshDataSlot);
 }
 
 
@@ -41,10 +41,16 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
     // fill transformation container
     this->processTransformation();
 
+    //fill clipping plane container
+    this->processClippingPlane();
+
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
 
-    mesh::CallMesh* cm = this->getMeshDataSlot.CallAs<mesh::CallMesh>();
+    mesh::CallMesh* cm = this->_getMeshDataSlot.CallAs<mesh::CallMesh>();
+
+    auto fcw = writeFlagsSlot.CallAs<core::FlagCallWrite_CPU>();
+    auto fcr = readFlagsSlot.CallAs<core::FlagCallRead_CPU>();
 
     if (cm != nullptr) {
         auto meta_data = cm->getMetaData();
@@ -69,10 +75,68 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
             meshStructure mesh_str;
             mesh_str.mesh = cm->getData();
             this->structureContainer.structure = mesh_str;
+
+            _mesh_prefix_count.clear();
+            auto const& meshes = mesh_str.mesh->accessMeshes();
+            _mesh_prefix_count.resize(meshes.size());
+            auto counter = 0u;
+            for (auto const& entry : meshes) {
+                auto c_count = 0;
+                switch (entry.second.primitive_type) {
+                case mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES: {
+                    c_count = 3;
+                } break;
+                case mesh::MeshDataAccessCollection::PrimitiveType::QUADS: {
+                    c_count = 4;
+                } break;
+                }
+                if (c_count == 0) {
+                    _mesh_prefix_count[counter] = counter == 0 ? 0 : _mesh_prefix_count[counter - 1];
+                    ++counter;
+                    break;
+                }
+                auto const c_bs = mesh::MeshDataAccessCollection::getByteSize(entry.second.indices.type);
+                auto const num_el = entry.second.indices.byte_size / (c_bs * c_count);
+                _mesh_prefix_count[counter] = counter == 0 ? num_el : _mesh_prefix_count[counter - 1] + num_el;
+                ++counter;
+            }
+            if (fcw != nullptr && fcr != nullptr && !_mesh_prefix_count.empty()) {
+                if ((*fcr)(core::FlagCallWrite_CPU::CallGetData)) {
+                    auto data = fcr->getData();
+                    auto version = fcr->version();
+                    data->validateFlagCount(_mesh_prefix_count.back());
+                    /*fcw->setData(data, version + 1);
+                    (*fcw)(core::FlagCallWrite_CPU::CallGetData);*/
+                }
+            }
+        }
+        if (fcw != nullptr && fcr != nullptr && !_mesh_prefix_count.empty()) {
+            auto const idx = os->getPickResult();
+            if (std::get<0>(idx) != -1 && std::get<0>(idx) < _mesh_prefix_count.size()) {
+                if ((*fcr)(core::FlagCallWrite_CPU::CallGetData)) {
+                    auto data = fcr->getData();
+                    auto version = fcr->version();
+
+                    auto const base_idx = std::get<0>(idx) == 0 ? 0 : _mesh_prefix_count[std::get<0>(idx) - 1];
+                    auto const a_idx = base_idx + std::get<1>(idx);
+                    /*core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[OSPRayMeshGeometry] Got prim id %d, setting id %d", std::get<1>(idx), a_idx);*/
+
+                    if (a_idx < _mesh_prefix_count.back()) {
+                        auto const cur_sel = data->flags->operator[](a_idx);
+                        data->flags->operator[](a_idx) = cur_sel == core::FlagStorage::ENABLED
+                                                             ? core::FlagStorage::SELECTED
+                                                             : core::FlagStorage::ENABLED;
+                        fcw->setData(data, version + 1);
+                        (*fcw)(core::FlagCallWrite_CPU::CallGetData);
+                        os->setPickResult(-1, -1);
+                    }
+                }
+            }
         }
     } else {
 
-        geocalls::CallTriMeshData* cd = this->getTrimeshDataSlot.CallAs<geocalls::CallTriMeshData>();
+        geocalls::CallTriMeshData* cd = this->_getTrimeshDataSlot.CallAs<geocalls::CallTriMeshData>();
 
         this->structureContainer.dataChanged = false;
         if (cd == NULL)
@@ -273,7 +337,7 @@ bool OSPRayMeshGeometry::InterfaceIsDirty() {
 bool OSPRayMeshGeometry::getExtends(megamol::core::Call& call) {
     CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
 
-    mesh::CallMesh* cm = this->getMeshDataSlot.CallAs<mesh::CallMesh>();
+    mesh::CallMesh* cm = this->_getMeshDataSlot.CallAs<mesh::CallMesh>();
 
     if (cm != nullptr) {
 
@@ -293,7 +357,7 @@ bool OSPRayMeshGeometry::getExtends(megamol::core::Call& call) {
 
     } else {
 
-        megamol::geocalls::CallTriMeshData* cd = this->getTrimeshDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
+        megamol::geocalls::CallTriMeshData* cd = this->_getTrimeshDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
 
         if (cd == NULL)
             return false;

@@ -25,6 +25,7 @@
 #include "UnstructuredGridRenderer.h"
 #include "VariantMatchRenderer.h"
 #include "SombreroMeshRenderer.h"
+#include "MoleculeSESRenderer.h"
 
 // 2D renderers
 #include "Diagram2DRenderer.h"
@@ -171,6 +172,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSCavityFinder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelCutter>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SombreroMeshRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeSESRenderer>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();

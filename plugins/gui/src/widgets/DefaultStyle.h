@@ -7,8 +7,10 @@
 
 #ifndef MEGAMOL_GUI_DEFAULTSTYLE_INCLUDED
 #define MEGAMOL_GUI_DEFAULTSTYLE_INCLUDED
+#pragma once
 
-#include <imgui.h>
+
+#include "imgui.h"
 
 
 /**
@@ -57,7 +59,6 @@ inline void DefaultStyle(void) {
     style.AntiAliasedLinesUseTex = true;
     style.AntiAliasedFill = true;
     style.CurveTessellationTol = 1.25f;
-    style.CircleSegmentMaxError = 1.60f;
 
     // Colors
     ImGui::StyleColorsDark();

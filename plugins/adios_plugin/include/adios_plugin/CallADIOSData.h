@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
@@ -28,17 +29,27 @@ public:
     virtual std::vector<uint32_t> GetAsUInt32() = 0;
     virtual std::vector<char> GetAsChar() = 0;
     virtual std::vector<unsigned char> GetAsUChar() = 0;
+    virtual std::vector<std::string> GetAsString() = 0;
 
 
     virtual const std::string getType() = 0;
     virtual const size_t getTypeSize() = 0;
     virtual size_t size() = 0;
+    std::vector<size_t> getShape() {
+        if (shape.empty()) {
+            std::vector<size_t> size_vec = {size()};
+            return size_vec;
+        }
+        return shape;
+    }
 
     std::vector<size_t> shape;
     bool singleValue = false;
 };
 
 class DoubleContainer : public abstractContainer {
+    typedef double value_type;
+
 public:
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<double> GetAsDouble() override { return this->getAs<double>(); }
@@ -47,30 +58,51 @@ public:
     std::vector<uint32_t> GetAsUInt32() override { return this->getAs<uint32_t>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }
     std::vector<unsigned char> GetAsUChar() override { return this->getAs<unsigned char>(); }
+    std::vector<std::string> GetAsString() override {return this->getAs<std::string>();}
 
-    std::vector<double>& getVec() { return dataVec; }
+    std::vector<value_type>& getVec() {
+        return dataVec;
+    }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "double"; }
-    const size_t getTypeSize() override { return sizeof(double); }
+    const size_t getTypeSize() override {
+        return sizeof(value_type);
+    }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
-    template <class R> std::vector<std::enable_if_t<std::is_same<double, R>::value, R>> getAs() { return dataVec; }
+    template<class R>
+    std::vector<std::enable_if_t<std::is_same<value_type, R>::value, R>> getAs() {
+        return dataVec;
+    }
     
-    template <class R> std::vector<std::enable_if_t<std::is_same<char, R>::value, R>> getAs() {
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>> getAs() {
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
-    template <class R> std::vector<std::enable_if_t<!(std::is_same<double, R>::value || std::is_same<char, R>::value), R>> getAs() {
+
+        template<class R>
+    std::vector<std::enable_if_t<(std::is_same<std::string, R>::value), R>> getAs() {
+        std::vector<R> new_vec(dataVec.size());
+        std::transform(
+            dataVec.begin(), dataVec.end(), new_vec.begin(), [](const value_type& val) { return std::to_string(val); });
+        return new_vec;
+    }
+
+    template<class R>
+    std::vector<std::enable_if_t<!(std::is_same<value_type, R>::value || std::is_same<char, R>::value ||
+                                     std::is_same<unsigned char, R>::value || std::is_same<std::string, R>::value), R>>
+    getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }
 
-
-
-    std::vector<double> dataVec;
+    std::vector<value_type> dataVec;
 };
 
 class FloatContainer : public abstractContainer {
+    typedef float value_type;
+
 public:
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<double> GetAsDouble() override { return this->getAs<double>(); }
@@ -79,33 +111,51 @@ public:
     std::vector<uint32_t> GetAsUInt32() override { return this->getAs<uint32_t>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }
     std::vector<unsigned char> GetAsUChar() override { return this->getAs<unsigned char>(); }
+    std::vector<std::string> GetAsString() override {return this->getAs<std::string>();}
 
-    std::vector<float>& getVec() { return dataVec; }
+    std::vector<value_type>& getVec() {
+        return dataVec;
+    }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "float"; }
-    const size_t getTypeSize() override { return sizeof(float); }
+    const size_t getTypeSize() override {
+        return sizeof(value_type);
+    }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
-    template <class R> std::vector<std::enable_if_t<std::is_same<float, R>::value, R>> getAs() { return dataVec; }
+    template<class R>
+    std::vector<std::enable_if_t<std::is_same<value_type, R>::value, R>> getAs() {
+        return dataVec;
+    }
     
     template <class R>
     std::vector<std::enable_if_t<(std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>> getAs() {
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
 
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<std::string, R>::value), R>> getAs() {
+        std::vector<R> new_vec(dataVec.size());
+        std::transform(
+            dataVec.begin(), dataVec.end(), new_vec.begin(), [](const value_type& val) { return std::to_string(val); });
+        return new_vec;
+    }
+
     template <class R>
-    std::vector<std::enable_if_t<
-        !(std::is_same<float, R>::value || std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>>
+    std::vector<std::enable_if_t<!(std::is_same<value_type, R>::value || std::is_same<char, R>::value ||
+                                     std::is_same<unsigned char, R>::value || std::is_same<std::string, R>::value), R>>
     getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }
 
-    std::vector<float> dataVec;
+    std::vector<value_type> dataVec;
 };
 
 class Int32Container : public abstractContainer {
+    typedef int32_t value_type;
+
 public:
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<double> GetAsDouble() override { return this->getAs<double>(); }
@@ -114,33 +164,51 @@ public:
     std::vector<uint32_t> GetAsUInt32() override { return this->getAs<uint32_t>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }
     std::vector<unsigned char> GetAsUChar() override { return this->getAs<unsigned char>(); }
+    std::vector<std::string> GetAsString() override {return this->getAs<std::string>();}
 
-    std::vector<int32_t>& getVec() { return dataVec; }
+    std::vector<int32_t>& getVec() {
+        return dataVec;
+    }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "int32_t"; }
-    const size_t getTypeSize() override { return sizeof(int32_t); }
+    const size_t getTypeSize() override {
+        return sizeof(int32_t);
+    }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
-    template <class R> std::vector<std::enable_if_t<std::is_same<int, R>::value, R>> getAs() { return dataVec; }
+    template<class R>
+    std::vector<std::enable_if_t<std::is_same<int32_t, R>::value, R>> getAs() {
+        return dataVec;
+    }
     
     template <class R>
     std::vector<std::enable_if_t<(std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>> getAs() {
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
 
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<std::string, R>::value), R>> getAs() {
+        std::vector<R> new_vec(dataVec.size());
+        std::transform(
+            dataVec.begin(), dataVec.end(), new_vec.begin(), [](const value_type& val) { return std::to_string(val); });
+        return new_vec;
+    }
+
     template <class R>
-    std::vector<std::enable_if_t<
-        !(std::is_same<int, R>::value || std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>>
+    std::vector<std::enable_if_t<!(std::is_same<int32_t, R>::value || std::is_same<char, R>::value ||
+                                     std::is_same<unsigned char, R>::value || std::is_same<std::string, R>::value), R>>
     getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }
 
-    std::vector<int> dataVec;
+    std::vector<int32_t> dataVec;
 };
 
 class UInt64Container : public abstractContainer {
+    typedef uint64_t value_type;
+
 public:
     std::vector<double> GetAsDouble() override { return this->getAs<double>(); }
     std::vector<uint64_t> GetAsUInt64() override { return this->getAs<uint64_t>(); }
@@ -149,15 +217,21 @@ public:
     std::vector<int32_t> GetAsInt32() override { return this->getAs<int32_t>(); }
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<unsigned char> GetAsUChar() override { return this->getAs<unsigned char>(); }
+    std::vector<std::string> GetAsString() override {return this->getAs<std::string>();}
 
-    std::vector<uint64_t>& getVec() { return dataVec; }
+    std::vector<value_type>& getVec() {
+        return dataVec;
+    }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "uint64_t"; }
-    const size_t getTypeSize() override { return sizeof(uint64_t); }
+    const size_t getTypeSize() override {
+        return sizeof(value_type);
+    }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
-    template <class R> std::vector<std::enable_if_t<std::is_same<uint64_t, R>::value, R>> getAs() {
+    template<class R>
+    std::vector<std::enable_if_t<std::is_same<value_type, R>::value, R>> getAs() {
         return dataVec;
     }
 
@@ -166,19 +240,28 @@ private:
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
 
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<std::string, R>::value), R>> getAs() {
+        std::vector<R> new_vec(dataVec.size());
+        std::transform(
+            dataVec.begin(), dataVec.end(), new_vec.begin(), [](const value_type& val) { return std::to_string(val); });
+        return new_vec;
+    }
+
     template <class R>
-    std::vector<std::enable_if_t<!(std::is_same<uint64_t, R>::value || std::is_same<char, R>::value ||
-                                     std::is_same<unsigned char, R>::value),
-        R>>
+    std::vector<std::enable_if_t<!(std::is_same<value_type, R>::value || std::is_same<char, R>::value ||
+                                     std::is_same<unsigned char, R>::value || std::is_same<std::string, R>::value), R>>
     getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }
 
-    std::vector<uint64_t> dataVec;
+    std::vector<value_type> dataVec;
 };
 
 class UInt32Container : public abstractContainer {
+    typedef uint32_t value_type;
+
 public:
     std::vector<double> GetAsDouble() override { return this->getAs<double>(); }
     std::vector<uint64_t> GetAsUInt64() override { return this->getAs<uint64_t>(); }
@@ -187,15 +270,21 @@ public:
     std::vector<int32_t> GetAsInt32() override { return this->getAs<int32_t>(); }
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<unsigned char> GetAsUChar() override { return this->getAs<unsigned char>(); }
+    std::vector<std::string> GetAsString() override {return this->getAs<std::string>();}
 
-    std::vector<uint32_t>& getVec() { return dataVec; }
+    std::vector<value_type>& getVec() {
+        return dataVec;
+    }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "uint32_t"; }
-    const size_t getTypeSize() override { return sizeof(uint32_t); }
+    const size_t getTypeSize() override {
+        return sizeof(value_type);
+    }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
-    template <class R> std::vector<std::enable_if_t<std::is_same<uint32_t, R>::value, R>> getAs() {
+    template<class R>
+    std::vector<std::enable_if_t<std::is_same<value_type, R>::value, R>> getAs() {
         return dataVec;
     }
 
@@ -204,20 +293,29 @@ private:
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
 
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<std::string, R>::value), R>> getAs() {
+        std::vector<R> new_vec(dataVec.size());
+        std::transform(
+            dataVec.begin(), dataVec.end(), new_vec.begin(), [](const value_type& val) { return std::to_string(val); });
+        return new_vec;
+    }
+
     template <class R>
-    std::vector<std::enable_if_t<!(std::is_same<uint32_t, R>::value || std::is_same<char, R>::value ||
-                                     std::is_same<unsigned char, R>::value),
+    std::vector<std::enable_if_t<!(std::is_same<value_type, R>::value || std::is_same<char, R>::value ||
+                                     std::is_same<unsigned char, R>::value || std::is_same<std::string, R>::value),
         R>>
     getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }
 
-    std::vector<uint32_t> dataVec;
+    std::vector<value_type> dataVec;
 };
 
 class UCharContainer : public abstractContainer {
-public:
+    typedef unsigned char value_type;
+    public:
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<double> GetAsDouble() override { return this->getAs<double>(); }
     std::vector<int32_t> GetAsInt32() override { return this->getAs<int32_t>(); }
@@ -225,15 +323,21 @@ public:
     std::vector<uint32_t> GetAsUInt32() override { return this->getAs<uint32_t>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }
     std::vector<unsigned char> GetAsUChar() override { return this->getAs<unsigned char>(); }
+    std::vector<std::string> GetAsString() override {return this->getAs<std::string>();}
 
-    std::vector<unsigned char>& getVec() { return dataVec; }
+    std::vector<value_type>& getVec() {
+        return dataVec;
+    }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "unsigned char"; }
-    const size_t getTypeSize() override { return sizeof(unsigned char); }
+    const size_t getTypeSize() override {
+        return sizeof(value_type);
+    }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
-    template <class R> std::vector<std::enable_if_t<std::is_same<unsigned char, R>::value, R>> getAs() {
+    template<class R>
+    std::vector<std::enable_if_t<std::is_same<value_type, R>::value, R>> getAs() {
         return dataVec;
     }
 
@@ -241,13 +345,138 @@ private:
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
 
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<std::string, R>::value), R>> getAs() {
+        std::vector<R> new_vec(dataVec.size());
+        std::transform(dataVec.begin(), dataVec.end(), new_vec.begin(), [](const value_type& val) { return std::to_string(val); });
+        return new_vec;
+    }
+
     template <class R>
-    std::vector<std::enable_if_t<!(std::is_same<unsigned char, R>::value || std::is_same<char, R>::value), R>> getAs() {
+    std::vector<std::enable_if_t<
+        !(std::is_same<value_type, R>::value || std::is_same<char, R>::value || std::is_same<std::string, R>::value), R>>
+    getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }
 
-    std::vector<unsigned char> dataVec;
+    std::vector<value_type> dataVec;
+};
+
+class CharContainer : public abstractContainer {
+    typedef char value_type;
+
+public:
+    std::vector<float> GetAsFloat() override {
+        return this->getAs<float>();
+    }
+    std::vector<double> GetAsDouble() override {
+        return this->getAs<double>();
+    }
+    std::vector<int32_t> GetAsInt32() override {
+        return this->getAs<int32_t>();
+    }
+    std::vector<uint64_t> GetAsUInt64() override {
+        return this->getAs<uint64_t>();
+    }
+    std::vector<uint32_t> GetAsUInt32() override {
+        return this->getAs<uint32_t>();
+    }
+    std::vector<char> GetAsChar() override {
+        return this->getAs<char>();
+    }
+    std::vector<unsigned char> GetAsUChar() override {
+        return this->getAs<unsigned char>();
+    }
+    std::vector<std::string> GetAsString() override {
+        return this->getAs<std::string>();
+    }
+
+    std::vector<value_type>& getVec() {
+        return dataVec;
+    }
+    size_t size() override {
+        return dataVec.size();
+    }
+    const std::string getType() override {
+        return "char";
+    }
+    const size_t getTypeSize() override {
+        return sizeof(value_type);
+    }
+
+private:
+    // TODO: maybe better in abstract container - no copy paste
+    template<class R>
+    std::vector<std::enable_if_t<std::is_same<value_type, R>::value, R>> getAs() {
+        return dataVec;
+    }
+
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<unsigned char, R>::value), R>> getAs() {
+        return reinterpret_cast<std::vector<R>&>(dataVec);
+    }
+
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<std::string, R>::value), R>> getAs() {
+        std::vector<R> new_vec(dataVec.size());
+        std::transform(
+            dataVec.begin(), dataVec.end(), new_vec.begin(), [](const value_type& val) { return std::to_string(val); });
+        return new_vec;
+    }
+
+    template<class R>
+    std::vector<std::enable_if_t<!(std::is_same<value_type, R>::value || std::is_same<unsigned char, R>::value ||
+                                     std::is_same<std::string, R>::value),
+        R>>
+    getAs() {
+        std::vector<R> new_vec(dataVec.begin(), dataVec.end());
+        return new_vec;
+    }
+
+    std::vector<value_type> dataVec;
+};
+
+class StringContainer : public abstractContainer {
+    typedef std::string value_type;
+
+public:
+    std::vector<float> GetAsFloat() override {return this->getAs<float>();}
+    std::vector<double> GetAsDouble() override {return this->getAs<double>();}
+    std::vector<int32_t> GetAsInt32() override {return this->getAs<int32_t>();}
+    std::vector<uint64_t> GetAsUInt64() override {return this->getAs<uint64_t>();}
+    std::vector<uint32_t> GetAsUInt32() override {return this->getAs<uint32_t>();}
+    std::vector<char> GetAsChar() override {return this->getAs<char>();}
+    std::vector<unsigned char> GetAsUChar() override {return this->getAs<unsigned char>();}
+    std::vector<std::string> GetAsString() override {return this->getAs<std::string>();}
+
+    std::vector<value_type>& getVec() {
+        return dataVec;
+    }
+    size_t size() override {return dataVec.size();}
+    const std::string getType() override {return "string";}
+    const size_t getTypeSize() override {
+        return sizeof(value_type);
+    }
+
+private:
+    // TODO: maybe better in abstract container - no copy paste
+    template<class R>
+    std::vector<std::enable_if_t<std::is_same<value_type, R>::value, R>> getAs() {
+        return dataVec;
+    }
+
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<char, R>::value), R>> getAs() {
+        return reinterpret_cast<std::vector<R>&>(dataVec);
+    }
+
+    template<class R>
+    std::vector<std::enable_if_t<!(std::is_same<value_type, R>::value || std::is_same<char, R>::value), R>> getAs() {
+        throw std::runtime_error("[CallADIOSData] Conversion not supported.");
+    }
+
+    std::vector<value_type> dataVec;
 };
 
 
@@ -313,12 +542,15 @@ public:
     void setTime(float time);
     float getTime() const;
 
-    bool inquire(const std::string& varname);
-
+    bool inquireVar(const std::string& varname);
     std::vector<std::string> getVarsToInquire() const;
-
     std::vector<std::string> getAvailableVars() const;
     void setAvailableVars(const std::vector<std::string>& avars);
+
+    bool inquireAttr(const std::string& attrname);
+    std::vector<std::string> getAttributesToInquire() const;
+    std::vector<std::string> getAvailableAttributes() const;
+    void setAvailableAttributes(const std::vector<std::string>& availattribs);
 
     void setDataHash(size_t datah) { this->dataHash = datah; }
     size_t getDataHash() const { return this->dataHash; }
@@ -333,7 +565,8 @@ public:
     std::shared_ptr<abstractContainer> getData(std::string _str) const;
 
     bool isInVars(std::string);
-
+    bool isInAttributes(std::string);
+    
 private:
     size_t dataHash;
     float time;
@@ -341,6 +574,8 @@ private:
     size_t frameIDtoLoad;
     std::vector<std::string> inqVars;
     std::vector<std::string> availableVars;
+    std::vector<std::string> inqAttributes;
+    std::vector<std::string> availableAttributes;
 
     std::shared_ptr<adiosDataMap> dataptr;
 };
