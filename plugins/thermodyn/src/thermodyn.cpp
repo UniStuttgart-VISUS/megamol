@@ -31,6 +31,7 @@
 #include "ParticlePaths.h"
 #include "PathDump.h"
 #include "PathReader.h"
+#include "PathSelection.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -80,6 +81,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticlePaths>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathDump>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathReader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathSelection>();
         //
         // TODO: Register your plugin's modules here
         // like:
