@@ -29,6 +29,7 @@
 #include "io/MeshSTLWriter.h"
 #include "io/MeshSTLDataSource.h"
 #include "io/MeshAugmentInfo.h"
+#include "WavefrontObjWriter.h"
 
 namespace megamol::mesh {
 /** Implementing the instance class of this plugin */
@@ -61,6 +62,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GPUMeshes>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::SimpleGPUMtlDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::WavefrontObjLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::WavefrontObjWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshViewerRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshBakery>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::io::MeshSTLWriter>();
