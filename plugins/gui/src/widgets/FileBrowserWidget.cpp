@@ -83,22 +83,22 @@ bool megamol::gui::FileBrowserWidget::Button_Select(
 
 std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string& in_path_str) const {
 
-    auto return_path_str = in_path_str;
+    auto retval_str = in_path_str;
     if ((in_path_str == "..") || (in_path_str == ".")) {
-        stdfs::path return_path = static_cast<stdfs::path>(in_path_str);
-        return_path = stdfs::absolute(return_path);
+        stdfs::path retval = static_cast<stdfs::path>(in_path_str);
+        retval = stdfs::absolute(retval);
 #if (_MSC_VER < 1916) /// XXX Fixed/No more required since VS 2019
-        if (return_path.has_parent_path()) {
-            return_path = return_path.parent_path();
-            if ((in_path_str == "..") && return_path.has_parent_path()) {
-                return_path = return_path.parent_path();
+        if (retval.has_parent_path()) {
+            retval = retval.parent_path();
+            if ((in_path_str == "..") && retval.has_parent_path()) {
+                retval = retval.parent_path();
             }
         }
 #endif // _MSC_VER > 1916
-        return_path_str = return_path.generic_u8string();
-        gui_utils::Utf8Decode(return_path_str);
+        retval_str = retval.generic_u8string();
+        gui_utils::Utf8Decode(retval_str);
     }
-    return return_path_str;
+    return retval_str;
 }
 
 
@@ -535,6 +535,11 @@ void megamol::gui::FileBrowserWidget::validate_file(
                     this->file_warning += "Overwriting existing file.\n";
                 }
             }
+            // Error when file is directory
+            if (stdfs::is_directory(tmp_file_path)) {
+                this->file_error += "File is directory.\n";
+                this->valid_file = false;
+            }
         } else if (mode == DIALOGMODE_LOAD) {
             // Error when file has not required extension
             if (!ext_lower.empty()) {
@@ -544,14 +549,13 @@ void megamol::gui::FileBrowserWidget::validate_file(
                     this->valid_file = false;
                 }
             }
+            // Error when file is directory
+            if (stdfs::is_directory(tmp_file_path)) {
+                this->file_error += "File is directory.\n";
+                this->valid_file = false;
+            }
         } else if (mode == DIALOGMODE_SELECT) {
             // nothing to check ...
-        }
-
-        // Error when file is directory
-        if (stdfs::is_directory(tmp_file_path)) {
-            this->file_error += "File is directory.\n";
-            this->valid_file = false;
         }
 
     } catch (stdfs::filesystem_error& e) {
