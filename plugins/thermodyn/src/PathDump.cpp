@@ -39,22 +39,26 @@ bool megamol::thermodyn::PathDump::run() {
     uint32_t const f_count = meta.m_frame_cnt;
 
     auto ofile = std::ofstream(filename, std::ios::binary);
+
+    ofile.write(reinterpret_cast<char const*>(meta.m_bboxs.BoundingBox().PeekBounds()), 6 * sizeof(float));
+    ofile.write(reinterpret_cast<char const*>(meta.m_bboxs.ClipBox().PeekBounds()), 6 * sizeof(float));
+
     ofile.write(reinterpret_cast<char const*>(&f_count), sizeof(uint32_t));
-    auto const frame_offset_pos = ofile.tellp();
+    /*auto const frame_offset_pos = ofile.tellp();
     ofile.seekp(f_count * sizeof(uint64_t), std::ios::cur);
 
     std::vector<uint64_t> frame_offset_list;
-    frame_offset_list.reserve(f_count);
+    frame_offset_list.reserve(f_count);*/
 
-    for (std::decay_t<decltype(f_count)> f_idx = 0; f_idx < f_count; ++f_idx) {
-        auto req_meta = meta;
+    /* for (std::decay_t<decltype(f_count)> f_idx = 0; f_idx < f_count; ++f_idx)*/ {
+        /*auto req_meta = meta;
         bool got_data = false;
         do {
             req_meta.m_frame_ID = f_idx;
             data_in->setMetaData(req_meta);
             got_data = (*data_in)(0);
             req_meta = data_in->getMetaData();
-        } while (req_meta.m_frame_ID != f_idx && !got_data);
+        } while (req_meta.m_frame_ID != f_idx && !got_data);*/
 
         auto const data = data_in->getData();
 
@@ -77,7 +81,7 @@ bool megamol::thermodyn::PathDump::run() {
             uint64_t const indices_size = mesh.indices.byte_size;
 
             ofile.write(reinterpret_cast<char const*>(&indices_size), sizeof(uint64_t));
-            ofile.write(reinterpret_cast<char const*>(mesh.indices.data), indices_size);
+            // ofile.write(reinterpret_cast<char const*>(mesh.indices.data), indices_size);
 
             auto const fit = std::find_if(mesh.attributes.begin(), mesh.attributes.end(),
                 [](auto const& el) { return el.semantic == mesh::MeshDataAccessCollection::POSITION; });
@@ -90,16 +94,16 @@ bool megamol::thermodyn::PathDump::run() {
 
             offset_list.push_back(ofile.tellp());
         }
-        auto const frame_end_pos = ofile.tellp();
-        frame_offset_list.push_back(frame_end_pos);
+        /*auto const frame_end_pos = ofile.tellp();
+        frame_offset_list.push_back(frame_end_pos);*/
 
         ofile.seekp(mesh_offset_pos);
         ofile.write(reinterpret_cast<char const*>(offset_list.data()), offset_list.size() * sizeof(uint64_t));
-        ofile.seekp(frame_end_pos);
+        // ofile.seekp(frame_end_pos);
     }
 
-    ofile.seekp(frame_offset_pos);
-    ofile.write(reinterpret_cast<char const*>(frame_offset_list.data()), frame_offset_list.size() * sizeof(uint64_t));
+    /*ofile.seekp(frame_offset_pos);
+    ofile.write(reinterpret_cast<char const*>(frame_offset_list.data()), frame_offset_list.size() * sizeof(uint64_t));*/
 
     return true;
 }
