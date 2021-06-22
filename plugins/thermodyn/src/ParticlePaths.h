@@ -7,6 +7,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "mesh/MeshCalls.h"
 
@@ -35,6 +36,16 @@ protected:
     void release() override;
 
 private:
+    bool is_dirty() const {
+        return all_frames_slot_.IsDirty() || min_frame_slot_.IsDirty() || max_frame_slot_.IsDirty();
+    }
+
+    void reset_dirty() {
+        all_frames_slot_.ResetDirty();
+        min_frame_slot_.ResetDirty();
+        max_frame_slot_.ResetDirty();
+    }
+
     bool get_data_cb(core::Call& c);
 
     bool get_extent_cb(core::Call& c);
@@ -45,8 +56,14 @@ private:
 
     core::CallerSlot data_in_slot_;
 
+    core::param::ParamSlot all_frames_slot_;
+
+    core::param::ParamSlot min_frame_slot_;
+
+    core::param::ParamSlot max_frame_slot_;
+
     std::vector<std::unordered_map<uint64_t /* particle ID */,
-        std::pair<std::vector<glm::vec4> /* line */, std::vector<uint32_t> /* indices */>>>
+        std::pair<std::vector<glm::vec3> /* line */, std::vector<uint32_t> /* indices */>>>
         lines_;
 
     uint64_t in_data_hash_ = std::numeric_limits<uint64_t>::max();
@@ -54,5 +71,9 @@ private:
     uint64_t out_data_hash_ = 0;
 
     std::shared_ptr<mesh::MeshDataAccessCollection> mesh_col_;
+
+    unsigned int frame_count_;
+
+    int frame_id_ = 0;
 };
 } // namespace megamol::thermodyn
