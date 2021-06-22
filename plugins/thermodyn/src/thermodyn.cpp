@@ -30,6 +30,7 @@
 #include "MeshWidget.h"
 #include "ParticlePaths.h"
 #include "PathDump.h"
+#include "PathReader.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -78,6 +79,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::MeshWidget>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticlePaths>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathDump>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathReader>();
         //
         // TODO: Register your plugin's modules here
         // like:
