@@ -1298,6 +1298,7 @@ bool KeyframeKeeper::loadKeyframes() {
                     this->selectedKeyframe = this->interpolateKeyframe(0.0f);
                     this->updateEditParameters(this->selectedKeyframe);
                     this->refreshInterpolCamPos(this->interpolSteps);
+                    this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(this->totalAnimTime);
                 }
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
                 return true;
