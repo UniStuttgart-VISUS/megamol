@@ -743,6 +743,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 cube_picking_id, this->cube_widget.GetInteractions(cube_picking_id));
             bool selected = this->cube_widget.Draw(cube_picking_id, default_view, default_orientation, hovered_face,
                 hovered_orientation, cube_orientation, inout_picking_buffer->GetPendingManipulations());
+
             int hovered_arrow = 0;
             int orientation_change = 0;
             auto arrow_picking_id = param_defaultOrientation->UID(); // Using any other parameter UID
@@ -763,58 +764,127 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             param_defaultView->SetValue(default_view);
 
             // Tooltip
+            bool face_hovered = false;
             std::string tooltip_text;
             if (hovered_face >= 0) {
                 switch (hovered_face) {
                 case (DefaultView_t::DEFAULTVIEW_FACE_FRONT):
-                    tooltip_text += "[Front]";
+                    tooltip_text += "Face [Front]\nAxis  [+Z]";
+                    face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_BACK):
-                    tooltip_text += "[Back]";
+                    tooltip_text += "Face [Back]\nAxis  [-Z]";
+                    face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_RIGHT):
-                    tooltip_text += "[Right]";
+                    tooltip_text += "Face [Right]\nAxis  [+X]";
+                    face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_LEFT):
-                    tooltip_text += "[Left]";
+                    tooltip_text += "Face [Left]\nAxis  [-X]";
+                    face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_TOP):
-                    tooltip_text += "[Top]";
+                    tooltip_text += "Face [Top]\nAxis  [+Y]";
+                    face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_BOTTOM):
-                    tooltip_text += "[Bottom]";
+                    tooltip_text += "Face [Bottom]\nAxis  [-Y]";
+                    face_hovered = true;
                     break;
-                default:
+                case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_LEFT_FRONT):
+                    tooltip_text += "Corner [Left][Top][Front]\nAxis  [-X][+Y][+Z]";
                     break;
-                }
-            }
-            // Order is given by triangle order in shader of pickable cube
-            if (hovered_orientation >= 0) {
-                tooltip_text += " ";
-                switch (hovered_orientation) {
-                case (DefaultOrientation_t::DEFAULTORIENTATION_TOP):
-                    tooltip_text += "0 degree";
+                case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT):
+                    tooltip_text += "Corner [Right][Top][Front]\nAxis  [+X][+Y][+Z]";
                     break;
-                case (DefaultOrientation_t::DEFAULTORIENTATION_RIGHT):
-                    tooltip_text += "90 degree";
+                case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_LEFT_BACK):
+                    tooltip_text += "Corner [Left][Top][Back]\nAxis  [-X][+Y][-Z]";
                     break;
-                case (DefaultOrientation_t::DEFAULTORIENTATION_BOTTOM):
-                    tooltip_text += "180 degree";
+                case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_RIGHT_BACK):
+                    tooltip_text += "Corner [Right][Top][Back]\nAxis  [+X][+Y][-Z]";
                     break;
-                case (DefaultOrientation_t::DEFAULTORIENTATION_LEFT):
-                    tooltip_text += "270 degree";
+                case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT):
+                    tooltip_text += "Corner [Left][Bottom][Front]\nAxis  [-X][-Y][+Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT):
+                    tooltip_text += "Corner [Right][Bottom][Front]\nAxis  [+X][-Y][+Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK):
+                    tooltip_text += "Corner [Left][Bottom][Back]\nAxis  [-X][-Y][-Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK):
+                    tooltip_text += "Corner [Right][Bottom][Back]\nAxis  [+X][-Y][-Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_FRONT):
+                    tooltip_text += "Edge [Top][Front]\nAxis  [+Y][+Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_LEFT):
+                    tooltip_text += "Edge [Top][Left]\nAxis  [+Y][-X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_RIGHT):
+                    tooltip_text += "Edge [Top][Right]\nAxis  [+Y][+X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_BACK):
+                    tooltip_text += "Edge [Top][Back]\nAxis  [+Y][-Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_FRONT):
+                    tooltip_text += "Edge [Bottom][Front]\nAxis  [-Y][+Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_LEFT):
+                    tooltip_text += "Edge [Bottom][Left]\nAxis  [-Y][-X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_RIGHT):
+                    tooltip_text += "Edge [Bottom][Right]\nAxis  [-Y][+X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_BACK):
+                    tooltip_text += "Edge [Bottom][Back]\nAxis  [-Y][-Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_FRONT_LEFT):
+                    tooltip_text += "Edge [Front][Left]\nAxis  [+Z][-X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_FRONT_RIGHT):
+                    tooltip_text += "Edge [Front][Right]\nAxis  [+Z][+X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BACK_LEFT):
+                    tooltip_text += "Edge [Back][Left]\nAxis  [-Z][-X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BACK_RIGHT):
+                    tooltip_text += "Edge [Back][Right]\nAxis  [-Z][+X]";
                     break;
                 default:
                     break;
                 }
             }
 
-            /* DEACTIVATED
+            // Order is given by triangle order in shader of pickable cube
+            if (face_hovered && (hovered_orientation >= 0)) {
+                tooltip_text += " ";
+                switch (hovered_orientation) {
+                    case (DefaultOrientation_t::DEFAULTORIENTATION_TOP):
+                        tooltip_text += "\nRotation [0 degree]";
+                        break;
+                    case (DefaultOrientation_t::DEFAULTORIENTATION_RIGHT):
+                        tooltip_text += "\nRotation [90 degree]";
+                        break;
+                    case (DefaultOrientation_t::DEFAULTORIENTATION_BOTTOM):
+                        tooltip_text += "\nRotation [180 degree]";
+                        break;
+                    case (DefaultOrientation_t::DEFAULTORIENTATION_LEFT):
+                        tooltip_text += "\nRotation [270 degree]";
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            /*
             if (hovered_arrow < 0) {
                 tooltip_text = "Rotate Right";
             } else if (hovered_arrow > 0) {
                 tooltip_text = "Rotate Left";
-            } */
+            }
+             */
 
             if (!tooltip_text.empty()) {
                 ImGui::BeginTooltip();

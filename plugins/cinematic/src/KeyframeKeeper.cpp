@@ -1358,7 +1358,7 @@ void megamol::cinematic::KeyframeKeeper::pendingTotalAnimTimePopUp(uint32_t fram
         bool valid_imgui_scope =
             ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
         if (valid_imgui_scope) {
-            const std::string popup_label = "Changed Total Animation Time";
+            const std::string popup_label = "Changed Total Animation Time##" + std::string(this->FullName());
             if (!ImGui::IsPopupOpen(popup_label.c_str())) {
                 ImGui::OpenPopup(popup_label.c_str());
             }
