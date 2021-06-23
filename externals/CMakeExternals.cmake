@@ -80,10 +80,12 @@ function(require_external NAME)
       return()
     endif()
 
+    # The repo at https://github.com/nlohmann/json is too big, add local copy to avoid very slow download!
     add_external_headeronly_project(json
-      GIT_REPOSITORY https://github.com/nlohmann/json.git
-      GIT_TAG "v3.9.1"
-      INCLUDE_DIR "include")
+      SOURCE_DIR json)
+    if(MSVC)
+      target_sources(json INTERFACE "${CMAKE_SOURCE_DIR}/externals/json/nlohmann_json.natvis")
+    endif()
 
   # libcxxopts
   elseif(NAME STREQUAL "libcxxopts")
