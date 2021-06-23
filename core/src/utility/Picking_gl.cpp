@@ -258,13 +258,10 @@ bool megamol::core::utility::PickingBuffer::DisableInteraction() {
                                    "#extension GL_ARB_explicit_attrib_location : require \n "
                                    "in vec2 uv_coord; \n "
                                    "uniform sampler2D col_tex; \n "
-                                   "uniform sampler2D depth_tex; \n "
                                    "layout(location = 0) out vec4 outFragColor; \n "
                                    "void main() { \n "
                                    "    vec4 color = texture(col_tex, uv_coord).rgba; \n "
                                    "    if (color == vec4(0.0)) discard; \n "
-                                   "    float depth = texture(depth_tex, uv_coord).g; \n "
-                                   "    //gl_FragDepth = depth; \n "
                                    "    outFragColor = color; \n "
                                    "} ";
 
@@ -284,17 +281,14 @@ bool megamol::core::utility::PickingBuffer::DisableInteraction() {
 
     glActiveTexture(GL_TEXTURE0);
     this->fbo->bindColorbuffer(0);
-
-    glActiveTexture(GL_TEXTURE1);
-    this->fbo->bindDepthbuffer();
-
     this->fbo_shader->setUniform("col_tex", 0);
-    this->fbo_shader->setUniform("depth_tex", 1);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glUseProgram(0);
+
     glDisable(GL_BLEND);
+    
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
