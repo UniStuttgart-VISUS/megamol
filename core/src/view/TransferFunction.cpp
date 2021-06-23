@@ -26,7 +26,6 @@ TransferFunction::TransferFunction(void)
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGBA)
     , interpolMode(TransferFunctionParam::InterpolationMode::LINEAR)
     , range({0.0f, 1.0f})
-    , ignore_project_range(false)
     , version(0)
     , last_frame_id(0) {
 
@@ -60,30 +59,33 @@ bool TransferFunction::requestTF(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
-    auto tmp_range = this->range;
-    auto tmp_interpol = this->interpolMode;
-    auto tmp_tex_size = this->texSize;
-    TransferFunctionParam::NodeVector_t tmp_nodes;
-    
-    // Check if range of initially loaded project value should be ignored
-    auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
-    this->ignore_project_range = TransferFunctionParam::IgnoreProjectRange(tf_param_value);
-
-    // Update changed range propagated from the module via the call
-    if (this->ignore_project_range && cgtf->ConsumeRangeUpdate()) {
-        if (TransferFunctionParam::GetParsedTransferFunctionData( tf_param_value, tmp_nodes, tmp_interpol, tmp_tex_size,tmp_range)) {
-            // Set transfer function parameter value using updated range
-            std::string tf_str;
-            if (TransferFunctionParam::GetDumpedTransferFunction(tf_str, tmp_nodes, tmp_interpol, tmp_tex_size, cgtf->Range())) {
-                this->tfParam.Param<TransferFunctionParam>()->SetValue(tf_str);
-            }
-        }
-    }
-
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
 
+        // Check if range of initially loaded project value should be ignored
+        auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
+        bool tmp_ignore_project_range = TransferFunctionParam::IgnoreProjectRange(tf_param_value);
+
+        // Update changed range propagated from the module via the call
+        if (tmp_ignore_project_range && cgtf->ConsumeRangeUpdate()) {
+            auto tmp_range = this->range;
+            auto tmp_interpol = this->interpolMode;
+            auto tmp_tex_size = this->texSize;
+            TransferFunctionParam::NodeVector_t tmp_nodes;
+
+            if (TransferFunctionParam::GetParsedTransferFunctionData(
+                    tf_param_value, tmp_nodes, tmp_interpol, tmp_tex_size, tmp_range)) {
+                // Set transfer function parameter value using updated range
+                std::string tf_str;
+                if (TransferFunctionParam::GetDumpedTransferFunction(
+                        tf_str, tmp_nodes, tmp_interpol, tmp_tex_size, cgtf->Range())) {
+                    this->tfParam.Param<TransferFunctionParam>()->SetValue(tf_str);
+                }
+            }
+        }
+
         // Get current values from parameter string (Values are checked, too).
+        TransferFunctionParam::NodeVector_t tmp_nodes;
         if (!TransferFunctionParam::GetParsedTransferFunctionData(this->tfParam.Param<TransferFunctionParam>()->Value(), tmp_nodes, this->interpolMode, this->texSize, this->range)) {
             return false;
         }

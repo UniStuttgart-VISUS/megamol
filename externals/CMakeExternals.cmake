@@ -80,9 +80,12 @@ function(require_external NAME)
       return()
     endif()
 
+    # The repo at https://github.com/nlohmann/json is too big, add local copy to avoid very slow download!
     add_external_headeronly_project(json
-      GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
-      GIT_TAG "v3.5.0")
+      SOURCE_DIR json)
+    if(MSVC)
+      target_sources(json INTERFACE "${CMAKE_SOURCE_DIR}/externals/json/nlohmann_json.natvis")
+    endif()
 
   # libcxxopts
   elseif(NAME STREQUAL "libcxxopts")
@@ -127,7 +130,8 @@ function(require_external NAME)
 
     add_external_headeronly_project(tinygltf
       GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-      GIT_TAG "v2.2.0")
+      GIT_TAG "v2.5.0")
+    target_compile_definitions(tinygltf INTERFACE TINYGLTF_NO_INCLUDE_JSON)
 
   elseif(NAME STREQUAL "sim_sort")
     if(TARGET sim_sort)
@@ -155,7 +159,7 @@ function(require_external NAME)
 
     add_external_project(adios2 STATIC
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-      GIT_TAG "v2.4.0"
+      GIT_TAG "v2.5.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
