@@ -610,6 +610,7 @@ function(require_external NAME)
         target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
       endif()
       target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD)
+
   # obj-io
   elseif (NAME STREQUAL "obj-io")
     if(TARGET obj-io)
@@ -619,6 +620,7 @@ function(require_external NAME)
     add_external_headeronly_project(obj-io INTERFACE
       GIT_REPOSITORY https://github.com/thinks/obj-io.git
       INCLUDE_DIR "include/thinks")
+
   # qhull
   elseif(NAME STREQUAL "qhull")
     if(TARGET qhull)
@@ -930,6 +932,7 @@ function(require_external NAME)
     add_external_library(vtkm_worklet
       PROJECT vtkm
       LIBRARY ${VTKM_WORKLET_LIB})
+
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()
