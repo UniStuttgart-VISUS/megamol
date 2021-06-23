@@ -177,12 +177,12 @@ bool megamol::flowvis::ExtractPores::compute() {
 
     bool input_changed = false;
 
-    if (tmc.DataHash() != this->input_hash) {
+    if (compute_hash(tmc.DataHash()) != this->input_hash) {
         this->input.vertices = tmc.get_vertices();
         this->input.normals = tmc.get_normals();
         this->input.indices = tmc.get_indices();
 
-        this->input_hash = tmc.DataHash();
+        this->input_hash = compute_hash(tmc.DataHash());
 
         input_changed = true;
     }
@@ -271,10 +271,12 @@ bool megamol::flowvis::ExtractPores::compute() {
                                               static_cast<double>(tmc.get_bounding_box().Depth()));
 
         for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
-            const auto cell_center = cell->circumcenter();
+            const auto cell_center = CGAL::ORIGIN +
+                (0.25 * ((cell->vertex(0)->point() - CGAL::ORIGIN) + (cell->vertex(1)->point() - CGAL::ORIGIN) +
+                            (cell->vertex(2)->point() - CGAL::ORIGIN) + (cell->vertex(3)->point() - CGAL::ORIGIN)));
 
             if (orientation_test(cell_center) != CGAL::ON_BOUNDED_SIDE) {
-                // Count number of facets shared with the surface mesh
+                // Count number of edges shared with the surface mesh
                 const auto& p1 = cell->vertex(0)->point();
                 const auto& p2 = cell->vertex(1)->point();
                 const auto& p3 = cell->vertex(2)->point();
@@ -293,8 +295,8 @@ bool megamol::flowvis::ExtractPores::compute() {
                     }
                 }
 
-                // If no facet is shared with the surface mesh, then this is a pore
-                if (num_shared_segments < 1) {
+                // If at most one edge is shared with the surface mesh, then this is a pore
+                if (num_shared_segments <= 1) {
                     ++num_pores;
 
                     const auto index = this->output.vertices->size() / 3;
@@ -357,4 +359,8 @@ bool megamol::flowvis::ExtractPores::compute() {
     }
 
     return true;
+}
+
+SIZE_T megamol::flowvis::ExtractPores::compute_hash(const SIZE_T data_hash) const {
+    return data_hash;
 }

@@ -1,7 +1,7 @@
 /*
  * ExtractPores.h
  *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 #pragma once
@@ -86,6 +86,9 @@ namespace flowvis {
 
         /** Function to start the computation */
         bool compute();
+
+        /** Compute input hash */
+        SIZE_T compute_hash(SIZE_T data_hash) const;
 
         /** The slots for requesting data from this module, i.e., lhs connection */
         megamol::core::CalleeSlot mesh_lhs_slot, mesh_data_lhs_slot;
