@@ -211,7 +211,11 @@ bool datatools::ParticleThermodyn::assertData(
     const auto theFluidDensity = this->fluidDensitySlot.Param<core::param::FloatParam>()->Value();
     size_t allpartcnt = 0;
 
+    bool data_hash_changed = false;
+    bool recompute = false;
     if (this->lastTime != time || this->datahash != in->DataHash()) {
+        if (this->datahash != in->DataHash())
+            data_hash_changed = true;
         in->SetFrameID(time, true);
 
         if (!(*in)(0)) {
@@ -276,12 +280,14 @@ bool datatools::ParticleThermodyn::assertData(
 
         this->datahash = in->DataHash();
         this->lastTime = time;
-        this->radiusSlot.ForceSetDirty();
+        //this->radiusSlot.ForceSetDirty();
+        recompute = true;
     }
 
-    if (isDirty()) {
+    if (recompute || isDirty()) {
         allpartcnt = 0;
-        ++myHash;
+        if (data_hash_changed || isDirty())
+            ++myHash;
 
         // final computation
         bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
