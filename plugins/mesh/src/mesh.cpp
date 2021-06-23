@@ -31,6 +31,7 @@
 #include "TriangleMeshRenderer2D.h"
 #include "TriangleMeshRenderer3D.h"
 #include "STLDataSource.h"
+#include "STLWriter.h"
 #include "SimplifyMesh.h"
 
 namespace megamol::mesh {
@@ -69,6 +70,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::TriangleMeshRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::TriangleMeshRenderer3D>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::STLDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::STLWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::SimplifyMesh>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::Render3DUI>();
