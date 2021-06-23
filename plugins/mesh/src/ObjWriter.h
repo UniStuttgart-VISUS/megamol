@@ -1,5 +1,5 @@
 /*
- * WavefrontObjWriter.h
+ * ObjWriter.h
  *
  * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
@@ -19,7 +19,7 @@
 namespace megamol {
 namespace mesh {
 
-class WavefrontObjWriter : public core::AbstractDataWriter {
+class ObjWriter : public core::AbstractDataWriter {
     public:
 
     struct Vec2 {
@@ -49,7 +49,7 @@ class WavefrontObjWriter : public core::AbstractDataWriter {
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "WavefrontObjWriter"; }
+    static const char* ClassName(void) { return "ObjWriter"; }
 
     /**
      * Answer a human readable description of this module.
@@ -65,8 +65,8 @@ class WavefrontObjWriter : public core::AbstractDataWriter {
      */
     static bool IsAvailable(void) { return true; }
 
-    WavefrontObjWriter();
-    ~WavefrontObjWriter();
+    ObjWriter();
+    ~ObjWriter();
 
 protected:
     /**
