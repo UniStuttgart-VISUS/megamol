@@ -170,6 +170,7 @@ namespace mesh {
             IndexData const& indices, PrimitiveType primitive_type = TRIANGLES);
         void addMesh(std::string const& identifier, std::vector<VertexAttribute>&& attribs, IndexData const& indices,
             PrimitiveType primitive_type = TRIANGLES);
+        void addMesh(std::string const& identifier, mesh::MeshDataAccessCollection::Mesh const& mesh);
 
         void deleteMesh(std::string const& identifier);
 
@@ -200,6 +201,11 @@ namespace mesh {
     inline void MeshDataAccessCollection::addMesh(std::string const& identifier, std::vector<VertexAttribute>&& attribs,
         IndexData const& indices, PrimitiveType primitive_type) {
         meshes.insert({identifier, {attribs, indices, primitive_type}});
+    }
+
+    inline void MeshDataAccessCollection::addMesh(
+        std::string const& identifier, mesh::MeshDataAccessCollection::Mesh const& mesh) {
+        meshes.insert({identifier, mesh});
     }
 
     inline void MeshDataAccessCollection::deleteMesh(std::string const& identifier) {
