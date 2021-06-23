@@ -13,7 +13,6 @@
 #include "vislib/vislibversion.h"
 
 #include "ExtractPores.h"
-#include "SimplifyMesh.h"
 
 namespace megamol::flowvis {
 /** Implementing the instance class of this plugin */
@@ -41,7 +40,6 @@ public:
 
         // register modules here:
         this->module_descriptions.RegisterAutoDescription<megamol::flowvis::ExtractPores>();
-        this->module_descriptions.RegisterAutoDescription<megamol::flowvis::SimplifyMesh>();
 
         // register calls here:
         
