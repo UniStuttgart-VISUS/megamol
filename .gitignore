@@ -1,38 +1,34 @@
-build/**/*
-build-*/**/*
-build_*/**/*
-out/**/*
-cmake-build-*/**/*
-bin/**/*
-include/**/*
-external/**/*
-share/**/*
-stage/**/*
-lib/**/*
-issues/**/*
-mmprjs/**/*
-configurator/.vs/
-configurator/bin/
-configurator/MegaMolConf/obj/
-configurator/packages/
-configurator/MegaMolConf/Properties/AssemblyInfo\.cs
-configurator/MegaMolConf/Resources/mmconfig\.res
-.vscode/**/*
-.idea/**/*
-.gitmodules
-*.orig
+# IDE/CMake settings
+.vs/
+.vscode/
+.idea/
+CMakeSettings.json
+CMakeUserPresets.json
+
+# Common build dir names
+build/
+build-*/
+build_*/
+cmake-build-*/
+
+# In-source-build artifacts
+CMakeFiles/
+CMakeCache.txt
+
+# Install artifacts
+/bin/
+/examples/
+/lib/
+/share/
+
+# Utils
 utils/MMPLD/mmpld.bat
 utils/MMPLD/mmpld.reg
 utils/MMPLD/test*.mmpld
 utils/MMPLD/test*.lua
 utils/MMPLD/test*.png
 utils/MMPLD/SphereTest.bat
-examples/
-solution/**/*
-deploy/**/*
 
-CMakeSettings.json
-
-.vs/
-
-CMakeUserPresets.json
+# Individual developer settings for local machines
+mmprjs/**/*
+*.orig
