@@ -24,7 +24,7 @@ namespace utility {
 namespace xml {
 
     /**
-     * Base class for MegaMol™ conditional xml parsers.
+     * Base class for MegaMol conditional xml parsers.
      * Theses parsers can evaluate '<if>' tags.
      */
     class ConditionalParser : public XmlParser {

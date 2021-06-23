@@ -7,19 +7,13 @@
 
 #ifndef MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 #define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
+#pragma once
 
 
-#include "ColorPalettes.h"
-#include "GUIUtils.h"
+#include "mmcore/param/TransferFunctionParam.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget_gl.h"
 
-#include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore/view/TransferFunction.h"
-
-#include <cmath>
-#include <iomanip>
-#include <sstream>
 
 using namespace megamol::core::param;
 

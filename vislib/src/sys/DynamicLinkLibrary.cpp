@@ -138,7 +138,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
         this->loadErrorMsg = vislib::sys::SystemMessage(::GetLastError());
     }
 #else /* _WIN32 */
-    // Because we know, that Linux does not support a chefmäßige Unicode-API.
+    // Because we know, that Linux does not support a chefmÃ¤ÃŸige Unicode-API.
     if (!this->Load(W2A(moduleName))) return false;
 #endif /* _WIN32 */
     return (this->hModule!= NULL);

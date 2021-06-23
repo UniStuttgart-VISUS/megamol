@@ -5,8 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "Graph.h"
+#include "imgui_stdlib.h"
+#include "vislib/math/Ternary.h"
+#include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol;
@@ -153,14 +156,14 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                 mod_ptr->SetGraphEntryName("");
 
                 for (auto& p : mod.parameters) {
-                    Parameter param_slot(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
+                    Parameter parameter(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
                         p.param_name, p.description);
-                    param_slot.SetParentModuleName(mod_ptr->FullName());
-                    param_slot.SetValueString(p.default_value, true, true);
-                    param_slot.SetGUIVisible(p.gui_visibility);
-                    param_slot.SetGUIReadOnly(p.gui_read_only);
-                    param_slot.SetGUIPresentation(p.gui_presentation);
-                    mod_ptr->Parameters().emplace_back(param_slot);
+                    parameter.SetParentModuleName(mod_ptr->FullName());
+                    parameter.SetValueString(p.default_value, true, true);
+                    parameter.SetGUIVisible(p.gui_visibility);
+                    parameter.SetGUIReadOnly(p.gui_read_only);
+                    parameter.SetGUIPresentation(p.gui_presentation);
+                    mod_ptr->Parameters().emplace_back(parameter);
                 }
 
                 for (auto& callslots_type : mod.callslots) {

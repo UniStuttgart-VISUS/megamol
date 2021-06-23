@@ -27,7 +27,7 @@ namespace utility {
 
 
     /**
-     * Class for the MegaMol™ project xml parser.
+     * Class for the MegaMol project xml parser.
      */
     class ProjectParser : public xml::ConditionalParser {
     public:
@@ -69,7 +69,7 @@ namespace utility {
     protected:
 
         /**
-         * Checks whether the xml file is a 'project', '1.0' MegaMol™ xml file.
+         * Checks whether the xml file is a 'project', '1.0' MegaMol xml file.
          *
          * @param reader The current xml reader.
          *

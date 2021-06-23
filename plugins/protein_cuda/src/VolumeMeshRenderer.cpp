@@ -1233,7 +1233,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
         glDisable(GL_BLEND);
 		/*
 
-		parameter für an/aus
+		parameter fÃ¼r an/aus
 		selectionHalo
 
 		framebuffer->attach()
@@ -2287,7 +2287,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
 
     cudaDeviceSynchronize(); // Paranoia
 
-    // TODO: für alle feature jede 0.5 T (MegaMol-time) wertepaar anhängen
+    // TODO: fÃ¼r alle feature jede 0.5 T (MegaMol-time) wertepaar anhÃ¤ngen
     // TODO: hash implementieren (fuer diagramcall)
 
     // Get feature selection for coloring
@@ -3195,7 +3195,7 @@ bool VolumeMeshRenderer::GetDiagramData(core::Call& call) {
         ds = new DiagramCall::DiagramSeries(vislib::StringA("helge"), new MappableCategoryFloat(0));
         ds->SetColor(1.0f, 0.4f, 0.7f);
         dc->AddSeries(ds);
-        ds = new DiagramCall::DiagramSeries(vislib::StringA("hägar"), new MappableCategoryFloat(1));
+        ds = new DiagramCall::DiagramSeries(vislib::StringA("hÃ¤gar"), new MappableCategoryFloat(1));
         ds->SetColor(0.6f, 0.8f, 0.7f);
         dc->AddSeries(ds);
     } else {
@@ -3345,7 +3345,7 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         ds = new DiagramCall::DiagramSeries(vislib::StringA("helge"), new MappableCategoryFloat(0));
         ds->SetColor(1.0f, 0.4f, 0.7f);
         dc->AddSeries(ds);
-        ds = new DiagramCall::DiagramSeries(vislib::StringA("hägar"), new MappableCategoryFloat(1));
+        ds = new DiagramCall::DiagramSeries(vislib::StringA("hÃ¤gar"), new MappableCategoryFloat(1));
         ds->SetColor(0.6f, 0.8f, 0.7f);
         dc->AddSeries(ds);
     } else {

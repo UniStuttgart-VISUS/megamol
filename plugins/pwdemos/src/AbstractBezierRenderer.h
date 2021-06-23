@@ -18,7 +18,7 @@ namespace megamol {
 namespace demos {
 
     /**
-     * Raycasting-based renderer for bézier curve tubes
+     * Raycasting-based renderer for bÃ©zier curve tubes
      */
     class AbstractBezierRenderer : public core::view::Renderer3DModuleGL {
     public:

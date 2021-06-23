@@ -79,7 +79,7 @@ void main(void) {
 	lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bullshit now!
 	lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
 
-	// Sphere-Touch-Plane-Approach™
+	// Sphere-Touch-Plane-Approachâ„¢
 	vec2 winHalf = 2.0 / viewAttr.zw; // window size
 
 	vec2 d, p, q, h, dd;

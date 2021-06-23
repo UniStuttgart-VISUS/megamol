@@ -5,9 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "widgets/ParameterGroupAnimationWidget.h"
 #include "graph/ParameterGroups.h"
+#include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol;
