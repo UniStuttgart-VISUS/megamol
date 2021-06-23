@@ -7,6 +7,8 @@
 
 #include "stdafx.h"
 #include "KeyframeKeeper.h"
+#include "imgui.h"
+#include "imgui_internal.h"
 
 
 using namespace megamol;
@@ -55,7 +57,9 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     , simTangentStatus(false)
     , splineTangentLength(0.5f)
     , undoQueue()
-    , undoQueueIndex(0) {
+    , undoQueueIndex(0)
+    , pendingTotalAnimTime(-1.0f)
+    , frameId (0) {
 
     // init callbacks
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
@@ -349,16 +353,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     // setTotalAnimTimeParam --------------------------------------------------
     if (this->setTotalAnimTimeParam.IsDirty()) {
         this->setTotalAnimTimeParam.ResetDirty();
-
-        float tt = this->setTotalAnimTimeParam.Param<param::FloatParam>()->Value();
-        if (!this->keyframes.empty()) {
-            if (tt < this->keyframes.back().GetAnimTime()) {
-                tt = this->keyframes.back().GetAnimTime();
-                this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(tt, false);
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
-            }
-        }
-        this->totalAnimTime = tt;
+        // pendingTotalAnimTime >= 0 triggers GUI popup, see pendingTotalAnimTimePopUp()
+        this->pendingTotalAnimTime = this->setTotalAnimTimeParam.Param<param::FloatParam>()->Value();
     }
     // setKeyframesToSameSpeed ------------------------------------------------
     if (this->setKeyframesToSameSpeed.IsDirty()) {
@@ -573,6 +569,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     ccc->SetTotalSimTime(this->totalSimTime);
     ccc->SetControlPointPosition(this->startCtrllPos, this->endCtrllPos);
     ccc->SetFps(this->fps);
+
+
+    this->pendingTotalAnimTimePopUp(this->GetCoreInstance()->GetFrameID());
 
     return true;
 }
@@ -1298,7 +1297,7 @@ bool KeyframeKeeper::loadKeyframes() {
                     this->selectedKeyframe = this->interpolateKeyframe(0.0f);
                     this->updateEditParameters(this->selectedKeyframe);
                     this->refreshInterpolCamPos(this->interpolSteps);
-                    this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(this->totalAnimTime);
+                    this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(this->totalAnimTime, false);
                 }
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
                 return true;
@@ -1348,4 +1347,63 @@ int KeyframeKeeper::getKeyframeIndex(std::vector<Keyframe>& keyframes, Keyframe 
         }
     }
     return -1;
+}
+
+
+void megamol::cinematic::KeyframeKeeper::pendingTotalAnimTimePopUp(uint32_t frame_id) {
+
+    // Call only once per frame
+    if ((this->pendingTotalAnimTime > 0.0f) && (this->frameId != frame_id)) {
+
+        bool valid_imgui_scope =
+            ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
+        if (valid_imgui_scope) {
+            const std::string popup_label = "Changed Total Animation Time";
+            if (!ImGui::IsPopupOpen(popup_label.c_str())) {
+                ImGui::OpenPopup(popup_label.c_str());
+            }
+            if (ImGui::BeginPopupModal(popup_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+                ImGui::TextUnformatted("Scale animation time of keyframes \nwith new total animation time:");
+                if (ImGui::Button("Yes")) {
+                    for (auto& kf : this->keyframes) {
+                        float at = kf.GetAnimTime() / this->totalAnimTime * this->pendingTotalAnimTime;
+                        kf.SetAnimTime(at);
+                    }
+                    this->totalAnimTime = this->pendingTotalAnimTime;
+                    this->pendingTotalAnimTime = -1.0f;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("No")) {
+                    if (!this->keyframes.empty()) {
+                        if (this->pendingTotalAnimTime < this->keyframes.back().GetAnimTime()) {
+                            this->pendingTotalAnimTime = this->keyframes.back().GetAnimTime();
+                            this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(
+                                this->pendingTotalAnimTime, false);
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                                "[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of "
+                                "last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
+                        }
+                    }
+                    this->totalAnimTime = this->pendingTotalAnimTime;
+                    this->pendingTotalAnimTime = -1.0f;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+        } else {
+            // Default does not change animation time of keyframes
+            if (!this->keyframes.empty()) {
+                if (this->pendingTotalAnimTime < this->keyframes.back().GetAnimTime()) {
+                    this->pendingTotalAnimTime = this->keyframes.back().GetAnimTime();
+                    this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(this->pendingTotalAnimTime, false);
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
+                }
+            }
+            this->totalAnimTime = this->pendingTotalAnimTime;
+            this->pendingTotalAnimTime = -1.0f;
+        }
+
+        this->frameId = frame_id;
+    }
 }
