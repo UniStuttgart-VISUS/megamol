@@ -226,7 +226,6 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             for (auto& plugin : plugins) {
                 plugin_name = plugin->GetAssemblyName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
-                    std::string class_name(m_desc->ClassName());
                     Module::StockModule mod;
                     mod.plugin_name = plugin_name;
                     this->get_module_stock_data(mod, m_desc);
@@ -1676,7 +1675,7 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& o
     }
     // Default for option asking for saving gui state
     auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
-    if (this->gui_file_browser.PopUp_Save("Save Project", "lua", open_dialog, project_filename, save_gui_state)) {
+    if (this->gui_file_browser.PopUp_Save("Save Project", { "lua" }, open_dialog, project_filename, save_gui_state)) {
 
         std::string gui_state;
         if (save_gui_state.IsTrue()) {

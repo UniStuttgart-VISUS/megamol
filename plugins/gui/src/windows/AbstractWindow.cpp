@@ -74,7 +74,7 @@ void AbstractWindow::WindowContextMenu(bool menu_visible, bool& out_collapsing_c
     float y_offset = (menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
     ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
     bool window_maximized = (this->win_config.size == window_viewport);
-    bool toggle_window_size = false; // (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0));
+    bool toggle_window_size = false; // (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left));
 
     // Context Menu
     if (ImGui::BeginPopupContextItem()) {
