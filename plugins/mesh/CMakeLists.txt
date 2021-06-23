@@ -18,6 +18,18 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   require_external(tinyobjloader)
   require_external(tinygltf)
 
+  # Find CGAL
+  find_package(CGAL REQUIRED)
+
+  if(NOT TARGET CGAL::CGAL)
+    message(FATAL_ERROR "Target for CGAL not found")
+  endif()
+
+  if (TARGET CGAL)
+    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+  endif()
+
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -30,7 +42,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                                                     "src")
   target_link_libraries(${PROJECT_NAME} 
-    PRIVATE core 
+    PRIVATE core CGAL::CGAL
     PUBLIC mmstd_datatools quickhull tinyobjloader tinygltf compositing_gl)
 
   if(MSVC)

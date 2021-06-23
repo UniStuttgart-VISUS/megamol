@@ -35,7 +35,7 @@ typedef std::vector<std::size_t> CGAL_Polygon;
 namespace PMP = CGAL::Polygon_mesh_processing;
 namespace SMS = CGAL::Surface_mesh_simplification;
 
-megamol::flowvis::SimplifyMesh::SimplifyMesh()
+megamol::mesh::SimplifyMesh::SimplifyMesh()
         : mesh_lhs_slot("mesh_lhs_slot", "Simplified mesh.")
         , mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh.")
         , stop_ratio("stop_ratio", "Ratio defining the number of resulting faces compared to the original mesh.")
@@ -57,17 +57,17 @@ megamol::flowvis::SimplifyMesh::SimplifyMesh()
     this->MakeSlotAvailable(&this->stop_ratio);
 }
 
-megamol::flowvis::SimplifyMesh::~SimplifyMesh() {
+megamol::mesh::SimplifyMesh::~SimplifyMesh() {
     this->Release();
 }
 
-bool megamol::flowvis::SimplifyMesh::create() {
+bool megamol::mesh::SimplifyMesh::create() {
     return true;
 }
 
-void megamol::flowvis::SimplifyMesh::release() {}
+void megamol::mesh::SimplifyMesh::release() {}
 
-bool megamol::flowvis::SimplifyMesh::getMeshDataCallback(core::Call& _call) {
+bool megamol::mesh::SimplifyMesh::getMeshDataCallback(core::Call& _call) {
     assert(dynamic_cast<mesh::TriangleMeshCall*>(&_call) != nullptr);
 
     auto& call = static_cast<mesh::TriangleMeshCall&>(_call);
@@ -85,7 +85,7 @@ bool megamol::flowvis::SimplifyMesh::getMeshDataCallback(core::Call& _call) {
     return true;
 }
 
-bool megamol::flowvis::SimplifyMesh::getMeshMetaDataCallback(core::Call& _call) {
+bool megamol::mesh::SimplifyMesh::getMeshMetaDataCallback(core::Call& _call) {
     assert(dynamic_cast<mesh::TriangleMeshCall*>(&_call) != nullptr);
 
     auto& call = static_cast<mesh::TriangleMeshCall&>(_call);
@@ -103,7 +103,7 @@ bool megamol::flowvis::SimplifyMesh::getMeshMetaDataCallback(core::Call& _call) 
     return true;
 }
 
-bool megamol::flowvis::SimplifyMesh::compute() {
+bool megamol::mesh::SimplifyMesh::compute() {
 
     // Check input connection and get data
     auto tmc_ptr = this->mesh_rhs_slot.CallAs<mesh::TriangleMeshCall>();
@@ -231,6 +231,6 @@ bool megamol::flowvis::SimplifyMesh::compute() {
     return true;
 }
 
-SIZE_T megamol::flowvis::SimplifyMesh::compute_hash(const SIZE_T data_hash) const {
+SIZE_T megamol::mesh::SimplifyMesh::compute_hash(const SIZE_T data_hash) const {
     return core::utility::DataHash(data_hash, this->stop_ratio.Param<core::param::FloatParam>()->Value());
 }

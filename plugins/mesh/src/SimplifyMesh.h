@@ -20,7 +20,7 @@
 #include <vector>
 
 namespace megamol {
-namespace flowvis {
+namespace mesh {
     /**
      * Module for simplifying a mesh.
      *
@@ -114,5 +114,5 @@ namespace flowvis {
             std::shared_ptr<std::vector<unsigned int>> indices;
         } output;
     };
-} // namespace flowvis
+} // namespace mesh
 } // namespace megamol
