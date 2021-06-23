@@ -613,6 +613,16 @@ function(require_external NAME)
       endif()
       target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD)
 
+  # obj-io
+  elseif (NAME STREQUAL "obj-io")
+    if(TARGET obj-io)
+      return()
+    endif()
+
+    add_external_headeronly_project(obj-io INTERFACE
+      GIT_REPOSITORY https://github.com/thinks/obj-io.git
+      INCLUDE_DIR "include/thinks")
+
   # qhull
   elseif(NAME STREQUAL "qhull")
     if(TARGET qhull)
