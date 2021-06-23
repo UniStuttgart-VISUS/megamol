@@ -17,8 +17,6 @@
 
 #include "vislib/String.h"
 
-#include "nlohmann/json.hpp"
-
 
 #define TFP_VAL_CNT (6)
 

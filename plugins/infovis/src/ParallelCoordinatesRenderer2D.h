@@ -4,7 +4,7 @@
 #include <map>
 
 #include <glm/matrix.hpp>
-#include "nlohmann/json.hpp"
+#include <json.hpp>
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/glowl.h>
