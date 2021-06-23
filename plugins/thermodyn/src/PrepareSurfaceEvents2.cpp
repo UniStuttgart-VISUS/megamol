@@ -125,7 +125,7 @@ bool megamol::thermodyn::PrepareSurfaceEvents2::get_extent_cb(core::Call& c) {
         return false;
 
     data_out->SetFrameCount(parts_in->FrameCount());
-    data_out->SetFrameID(frame_id_);
+    data_out->SetFrameID(parts_in->FrameID());
     data_out->AccessBoundingBoxes() = parts_in->AccessBoundingBoxes();
 
     return true;

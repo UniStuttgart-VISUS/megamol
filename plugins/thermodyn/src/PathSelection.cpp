@@ -108,6 +108,7 @@ bool megamol::thermodyn::PathSelection::get_extent_cb(core::Call& c) {
         return false;
 
     in_meta = data_in->getMetaData();
+    in_meta.m_frame_ID = out_meta.m_frame_ID;
     data_out->setMetaData(in_meta);
 
     return true;
