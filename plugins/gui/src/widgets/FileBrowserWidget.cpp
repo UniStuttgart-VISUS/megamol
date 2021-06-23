@@ -291,7 +291,7 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                         if (path_pair.second) {
                             ImGui::PopStyleColor();
                         }
-                        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) {
+                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered()) {
                             apply = true;
                         }
                     }

@@ -449,7 +449,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                     this->gui_collapsed_view = !this->gui_collapsed_view;
                     changed_view = true;
                 }
-                if (ImGui::MenuItem("Layout")) {
+                if (ImGui::MenuItem("Layout Modules")) {
                     state.interact.group_layout = true;
                 }
                 if (ImGui::MenuItem("Rename")) {
@@ -515,13 +515,13 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             }
 
             // Toggle View
-            if (active && ImGui::IsMouseDoubleClicked(0)) {
+            if (active && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
                 this->gui_collapsed_view = !this->gui_collapsed_view;
                 changed_view = true;
             }
 
             // Dragging
-            if (this->gui_selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
+            if (this->gui_selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
                 this->SetPosition(state, (this->gui_position + (ImGui::GetIO().MouseDelta / state.canvas.zooming)));
             }
 

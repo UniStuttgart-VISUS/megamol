@@ -955,22 +955,22 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     // Process plot interaction -----------------------------------------------
     ImGui::InvisibleButton("plot", canvas_size); // Needs to catch mouse input
     if (ImGui::IsItemHovered()) {
-        if (ImGui::IsMouseClicked(0)) { // Left Mouse Click
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) { // Left Mouse Click
             this->changeNodeSelection(
                 current_selected_node_index, current_selected_channel_index, current_selected_node_drag_delta);
             if (this->plot_paint_mode) {
                 this->selected_node_drag_delta = mouse_pos;
             }
-        } else if (ImGui::IsMouseDragging(0)) { // Left Mouse Drag
+        } else if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) { // Left Mouse Drag
             this->plot_dragging = true;
-        } else if (ImGui::IsMouseClicked(1)) { // Right Mouse Click
+        } else if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) { // Right Mouse Click
             if (!this->deleteNode(current_selected_node_index)) {
                 this->addNode(mouse_pos, canvas_pos, canvas_size);
             }
         }
     }
     // Track mouse even outside canvas in paint mode when dragging started within canvas
-    if (this->plot_dragging && ImGui::IsMouseDragging(0)) {
+    if (this->plot_dragging && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
         if (!this->plot_paint_mode) {
             this->moveSelectedNode(mouse_pos, canvas_pos, canvas_size);
         } else {

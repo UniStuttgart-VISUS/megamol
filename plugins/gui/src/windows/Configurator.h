@@ -70,7 +70,7 @@ namespace gui {
         std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr;
 
         float module_list_sidebar_width;
-        ImGuiID selected_list_module_uid;
+        ImGuiID selected_list_module_id;
         ImGuiID add_project_graph_uid;
         ImGuiID module_list_popup_hovered_group_uid;
         bool show_module_list_sidebar;
