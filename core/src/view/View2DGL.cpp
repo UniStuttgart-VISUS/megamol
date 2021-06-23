@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 #include "mmcore/view/View2DGL.h"
-#include "nlohmann/json.hpp"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"

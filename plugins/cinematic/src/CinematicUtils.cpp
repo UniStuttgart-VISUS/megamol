@@ -7,6 +7,8 @@
 
 #include "stdafx.h"
 #include "CinematicUtils.h"
+#include "imgui.h"
+#include "imgui_internal.h"
 
 
 using namespace megamol::cinematic;
