@@ -449,7 +449,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                     this->gui_collapsed_view = !this->gui_collapsed_view;
                     changed_view = true;
                 }
-                if (ImGui::MenuItem("Layout")) {
+                if (ImGui::MenuItem("Layout Modules")) {
                     state.interact.group_layout = true;
                 }
                 if (ImGui::MenuItem("Rename")) {

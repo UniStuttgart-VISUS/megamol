@@ -2578,8 +2578,6 @@ void megamol::gui::Graph::layout_graph() {
         }
     }
     this->layout(ungrouped_modules, this->GetGroups(), init_position);
-
-    this->gui_update = true;
 }
 
 
@@ -2874,6 +2872,8 @@ void megamol::gui::Graph::layout(const ModulePtrVector_t& ms, const GroupPtrVect
             pos.x += (max_graph_element_width + max_call_width + (2.0f * GUI_GRAPH_BORDER));
         }
     }
+
+    this->gui_update = true;
 }
 
 
