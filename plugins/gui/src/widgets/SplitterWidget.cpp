@@ -52,8 +52,8 @@ bool megamol::gui::SplitterWidget::Widget(FixedSplitterSide fixed_side, float& s
     bool retval = ImGui::SplitterBehavior(
         bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, &size_left, &size_right, min_size, min_size, 0.0f, 0.0f);
 
-    /// XXX Left mouse button (= 0) is not recognized properly
-    if (ImGui::IsMouseDoubleClicked(1) && ImGui::IsItemHovered()) {
+    /// XXX Left mouse button is not recognized properly
+    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
         float consider_width = ((fixed_side == SplitterWidget::FixedSplitterSide::LEFT) ? size_left : size_right);
         if (consider_width <= min_size) {
             size_left =

@@ -1849,7 +1849,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
 
                             module_parm_child_popup_hovered = true;
                         }
-                        if (!param_popup_open && ((ImGui::IsMouseClicked(0) && !module_parm_child_popup_hovered) ||
+                        if (!param_popup_open && ((ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !module_parm_child_popup_hovered) ||
                                                      ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))) {
 
                             this->gui_graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
@@ -2249,7 +2249,7 @@ void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
         this->gui_increment_zooming || this->gui_decrement_zooming) {
 
         // Scrolling (2 = Middle Mouse Button)
-        if (ImGui::IsMouseDragging(2)) { // io.KeyCtrl && ImGui::IsMouseDragging(0)) {
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) { // io.KeyCtrl && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
             this->gui_graph_state.canvas.scrolling = this->gui_graph_state.canvas.scrolling +
                                                      ImGui::GetIO().MouseDelta / this->gui_graph_state.canvas.zooming;
             this->gui_update = true;
@@ -2510,7 +2510,7 @@ void megamol::gui::Graph::draw_canvas_multiselection() {
                                    (this->gui_graph_state.interact.interfaceslot_selected_uid == GUI_INVALID_ID) &&
                                    (this->gui_graph_state.interact.group_selected_uid == GUI_INVALID_ID));
 
-    if (no_graph_item_selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
+    if (no_graph_item_selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
 
         this->gui_multiselect_end_pos = ImGui::GetMousePos();
         this->gui_multiselect_done = true;
@@ -2532,7 +2532,7 @@ void megamol::gui::Graph::draw_canvas_multiselection() {
         float border = (1.0f * megamol::gui::gui_scaling.Get());
         draw_list->AddRect(this->gui_multiselect_start_pos, this->gui_multiselect_end_pos, COLOR_MULTISELECT_BORDER,
             GUI_RECT_CORNER_RADIUS, ImDrawFlags_RoundCornersAll, border);
-    } else if (this->gui_multiselect_done && ImGui::IsWindowHovered() && ImGui::IsMouseReleased(0)) {
+    } else if (this->gui_multiselect_done && ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
         ImVec2 outer_rect_min = ImVec2(std::min(this->gui_multiselect_start_pos.x, this->gui_multiselect_end_pos.x),
             std::min(this->gui_multiselect_start_pos.y, this->gui_multiselect_end_pos.y));
         ImVec2 outer_rect_max = ImVec2(std::max(this->gui_multiselect_start_pos.x, this->gui_multiselect_end_pos.x),

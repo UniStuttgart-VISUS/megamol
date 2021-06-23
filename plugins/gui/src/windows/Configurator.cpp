@@ -19,7 +19,7 @@ megamol::gui::Configurator::Configurator(const std::string& window_name, std::sh
         , graph_collection()
         , win_tfeditor_ptr(win_tfe_ptr)
         , module_list_sidebar_width(250.0f)
-        , selected_list_module_uid(GUI_INVALID_ID)
+        , selected_list_module_id(GUI_INVALID_ID)
         , add_project_graph_uid(GUI_INVALID_ID)
         , module_list_popup_hovered_group_uid(GUI_INVALID_ID)
         , show_module_list_sidebar(true)
@@ -180,10 +180,10 @@ void megamol::gui::Configurator::PopUps() {
         ImGuiID selected_callslot_uid = selected_graph_ptr->GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
 
-        bool valid_double_click = (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->IsCanvasHoverd() &&
+        bool valid_double_click = (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
                                    (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup));
         bool valid_double_click_callslot =
-            (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->IsCanvasHoverd() &&
+            (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
                 (selected_callslot_uid != GUI_INVALID_ID) &&
                 ((!this->show_module_list_popup) || (this->last_selected_callslot_uid != selected_callslot_uid)));
 
@@ -240,7 +240,7 @@ void megamol::gui::Configurator::PopUps() {
                 (ImGui::GetMousePos().y <= (this->module_list_popup_pos.y + popup_height))) {
                 module_list_popup_hovered = true;
             }
-            if (((ImGui::IsMouseClicked(0) && !module_list_popup_hovered)) ||
+            if (((ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !module_list_popup_hovered)) ||
                 ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 this->show_module_list_popup = false;
                 ImGui::CloseCurrentPopup();
@@ -388,13 +388,14 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
             if (mod.is_view) {
                 label += " [View]";
             }
-            if (ImGui::Selectable(label.c_str(), (id == this->selected_list_module_uid))) {
-                this->selected_list_module_uid = id;
-            }
+
             bool add_module = false;
+            if (ImGui::Selectable(label.c_str(), (id == this->selected_list_module_id))) {
+                this->selected_list_module_id = id;
+            }
             // Left mouse button double click action
-            if ((ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) || // Mouse Double Click
-                (!ImGui::IsMouseClicked(0) && ImGui::IsItemFocused() &&
+            if ((ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered()) || // Mouse Double Click
+                (!ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused() &&
                     ImGui::IsItemActivated())) { // Selection via key ('Space')
                 add_module = true;
             }
