@@ -1355,7 +1355,7 @@ void GUIManager::draw_menu() {
             ImGui::BeginGroup();
             float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
             ImGui::PushItemWidth(widget_width);
-            this->file_browser.Button_Select("ttf", this->gui_state.font_load_filename, true);
+            this->file_browser.Button_Select({ "ttf" }, this->gui_state.font_load_filename, true);
             ImGui::SameLine();
             gui_utils::Utf8Encode(this->gui_state.font_load_filename);
             ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_load_filename, ImGuiInputTextFlags_None);
@@ -1540,7 +1540,7 @@ void megamol::gui::GUIManager::draw_popups() {
         auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
         bool popup_failed = false;
         if (this->file_browser.PopUp_Save(
-                "Save Project", "lua", this->gui_state.open_popup_save, filename, save_gui_state)) {
+                "Save Project", { "lua" }, this->gui_state.open_popup_save, filename, save_gui_state)) {
             std::string state_str;
             if (save_gui_state.IsTrue()) {
                 state_str = this->project_to_lua_string(true);
@@ -1556,7 +1556,7 @@ void megamol::gui::GUIManager::draw_popups() {
     // Load project pop-up
     std::string filename;
     this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp_Load("Load Project", "lua", this->gui_state.open_popup_load, filename)) {
+    if (this->file_browser.PopUp_Load("Load Project", { "lua", "png" }, this->gui_state.open_popup_load, filename)) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
@@ -1565,7 +1565,7 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // File name for screenshot pop-up
     auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-    if (this->file_browser.PopUp_Save("Filename for Screenshot", "png", this->gui_state.open_popup_screenshot,
+    if (this->file_browser.PopUp_Save("Filename for Screenshot", { "png" }, this->gui_state.open_popup_screenshot,
             this->gui_state.screenshot_filepath, tmp_flag)) {
         this->gui_state.screenshot_filepath_id = 0;
     }

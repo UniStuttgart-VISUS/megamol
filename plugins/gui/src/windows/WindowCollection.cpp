@@ -20,7 +20,6 @@ using namespace megamol::gui;
 
 WindowCollection::WindowCollection() : windows() {
 
-
     this->windows.emplace_back(std::make_shared<LogConsole>("Log Console"));
     this->windows.emplace_back(std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true));
     this->windows.emplace_back(std::make_shared<PerformanceMonitor>("Performance Metrics"));
@@ -30,7 +29,7 @@ WindowCollection::WindowCollection() : windows() {
 
     // Windows are sorted depending on hotkey
     std::sort(this->windows.begin(), this->windows.end(), [&](std::shared_ptr<AbstractWindow> const& a, std::shared_ptr<AbstractWindow> const& b) {
-        return (a->Config().hotkey.key < b->Config().hotkey.key);
+        return (a->Config().hotkey.key > b->Config().hotkey.key);
     });
 }
 
