@@ -52,15 +52,17 @@ protected:
 
     uint32_t _version;
 
+    core::param::ParamSlot _fallbackColor;
+
     core::CallerSlot _probe_rhs_slot;
     core::CallerSlot _elements_rhs_slot;
     core::CalleeSlot _mesh_lhs_slot;
-
 
 private:
 
     bool getData(core::Call& call);
     bool getMetaData(core::Call& call);
+    bool parameterChanged(core::param::ParamSlot& p);
 
     std::vector<std::string> split(std::string, const char);
     std::vector<std::vector<std::vector<std::array<float,4>>>> _colors;
@@ -70,6 +72,8 @@ private:
 
     mesh::MeshDataAccessCollection _mesh_collection_copy;
     std::vector<mesh::MeshDataAccessCollection::Mesh> _mesh_copy;
+
+    bool _recalc;
 };
 
 } // namespace probe

@@ -70,11 +70,12 @@ SampleAlongPobes::SampleAlongPobes()
     this->_sampling_mode << new megamol::core::param::EnumParam(0);
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Scalar");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Vector");
-    this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Volume");
+    this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "VolumeTrilin");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "Tetrahedral");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "Nearest");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(5, "TetrahedralVector");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(6, "ScalarDistribution");
+    this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(7, "VolumeRadius");
     this->_sampling_mode.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_sampling_mode);
 
@@ -278,7 +279,7 @@ bool SampleAlongPobes::getData(core::Call& call) {
                     doTetrahedralVectorSamling(tree, data_x, data_y, data_z, data_w);
                 }
             }
-        } else {
+        } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 2) {
             if (cv == nullptr) {
                 core::utility::log::Log::DefaultLog.WriteError(
                     "[SampleAlongProbes] Volume mode selected but no volume data connected.");
@@ -290,22 +291,52 @@ bool SampleAlongPobes::getData(core::Call& call) {
 
             if (type == core::misc::FLOATING_POINT) {
                 auto data = reinterpret_cast<float*>(cv->GetData());
-                doVolumeSampling(data);
+                doVolumeTrilinSampling(data);
             } else if (type == core::misc::UNSIGNED_INTEGER) {
                 if (type_length < 4) {
                     auto data = reinterpret_cast<unsigned char*>(cv->GetData());
-                    doVolumeSampling(data);
+                    doVolumeTrilinSampling(data);
                 } else {
                     auto data = reinterpret_cast<unsigned int*>(cv->GetData());
-                    doVolumeSampling(data);  
+                    doVolumeTrilinSampling(data);  
                 }
             } else if (type == core::misc::SIGNED_INTEGER) {
                 if (type_length < 4) {
                     auto data = reinterpret_cast<char*>(cv->GetData());
-                    doVolumeSampling(data);
+                    doVolumeTrilinSampling(data);
                 } else {
                     auto data = reinterpret_cast<int*>(cv->GetData());
-                    doVolumeSampling(data);
+                    doVolumeTrilinSampling(data);
+                }
+            }
+        } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 7) {
+            if (cv == nullptr) {
+                core::utility::log::Log::DefaultLog.WriteError(
+                    "[SampleAlongProbes] Volume mode selected but no volume data connected.");
+                return false;
+            }
+
+            auto type = _vol_metadata->ScalarType;
+            auto type_length = _vol_metadata->ScalarLength;
+
+            if (type == core::misc::FLOATING_POINT) {
+                auto data = reinterpret_cast<float*>(cv->GetData());
+                doVolumeRadiusSampling(data);
+            } else if (type == core::misc::UNSIGNED_INTEGER) {
+                if (type_length < 4) {
+                    auto data = reinterpret_cast<unsigned char*>(cv->GetData());
+                    doVolumeRadiusSampling(data);
+                } else {
+                    auto data = reinterpret_cast<unsigned int*>(cv->GetData());
+                    doVolumeRadiusSampling(data);
+                }
+            } else if (type == core::misc::SIGNED_INTEGER) {
+                if (type_length < 4) {
+                    auto data = reinterpret_cast<char*>(cv->GetData());
+                    doVolumeRadiusSampling(data);
+                } else {
+                    auto data = reinterpret_cast<int*>(cv->GetData());
+                    doVolumeRadiusSampling(data);
                 }
             } else {
                 core::utility::log::Log::DefaultLog.WriteError("[SampleAlongProbes]: Volume data type not supported.");

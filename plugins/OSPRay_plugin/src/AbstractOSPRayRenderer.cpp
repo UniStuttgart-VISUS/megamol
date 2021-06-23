@@ -573,6 +573,8 @@ namespace ospray {
                 if (element.type == structureTypeEnum::GEOMETRY) {
                     _geometricModels[entry.first].back().setParam("material", ::ospray::cpp::CopiedData(_materials[entry.first]));
                     _geometricModels[entry.first].back().commit();
+                    _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
+                    _groups[entry.first].commit();
                 }
             }
         }
