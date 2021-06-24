@@ -81,6 +81,14 @@ public:
         _num_programs = count;
     }
 
+    int64_t get_pick_idx() const {
+        return pick_idx_;
+    }
+
+    void set_pick_idx(int64_t idx) {
+        pick_idx_ = idx;
+    }
+
 private:
     Context const* _ctx;
 
@@ -95,6 +103,8 @@ private:
     OptixProgramGroup const* _geo_programs;
 
     int _num_programs;
+
+    int64_t pick_idx_ = -1;
 };
 
 using CallGeometryDescription = megamol::core::factories::CallAutoDescription<CallGeometry>;

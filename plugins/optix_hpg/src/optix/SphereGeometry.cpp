@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include "mmcore/UniFlagCalls.h"
+
 #include "sphere.h"
 
 #include "optix/CallGeometry.h"
@@ -15,7 +17,11 @@ extern "C" const char embedded_sphere_programs[];
 }
 
 
-megamol::optix_hpg::SphereGeometry::SphereGeometry() : _out_geo_slot("outGeo", ""), _in_data_slot("inData", "") {
+megamol::optix_hpg::SphereGeometry::SphereGeometry()
+        : _out_geo_slot("outGeo", "")
+        , _in_data_slot("inData", "")
+        , flags_read_slot_("flagsRead", "")
+        , flags_write_slot_("flagsWrite", "") {
     _out_geo_slot.SetCallback(CallGeometry::ClassName(), CallGeometry::FunctionName(0), &SphereGeometry::get_data_cb);
     _out_geo_slot.SetCallback(
         CallGeometry::ClassName(), CallGeometry::FunctionName(1), &SphereGeometry::get_extents_cb);
@@ -23,6 +29,12 @@ megamol::optix_hpg::SphereGeometry::SphereGeometry() : _out_geo_slot("outGeo", "
 
     _in_data_slot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&_in_data_slot);
+
+    flags_read_slot_.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
+    MakeSlotAvailable(&flags_read_slot_);
+
+    flags_write_slot_.SetCompatibleCall<core::FlagCallWrite_CPUDescription>();
+    MakeSlotAvailable(&flags_write_slot_);
 }
 
 
@@ -67,6 +79,12 @@ void megamol::optix_hpg::SphereGeometry::init(Context const& ctx) {
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "sphere_intersect"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "sphere_closesthit_occlusion"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds"}});
+    sphere_picking_module_ = MMOptixModule(embedded_sphere_programs, ctx.GetOptiXContext(),
+        &ctx.GetModuleCompileOptions(), &ctx.GetPipelineCompileOptions(),
+        MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP,
+        {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "sphere_intersect"},
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "sphere_closesthit_picking"},
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds"}});
 
     // OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_module_, &_sbt_record));
 }
@@ -88,11 +106,15 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
     std::vector<OptixBuildInput> build_inputs;
     sbt_records_.clear();
 
+    prefix_count_.clear();
+    prefix_count_.resize(pl_count);
+
     for (unsigned int pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
         // for now only the first geometry
         auto const& particles = call.AccessParticles(pl_idx);
 
         auto const p_count = particles.GetCount();
+        prefix_count_[pl_idx] = pl_idx == 0 ? p_count : prefix_count_[pl_idx - 1] + p_count;
         if (p_count == 0)
             continue;
 
@@ -186,6 +208,12 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_occlusion_module_, &sbt_record_occlusion));
         sbt_record_occlusion.data = sbt_record.data;
         sbt_records_.push_back(sbt_record_occlusion);
+
+        // picking stuff
+        SBTRecord<device::SphereGeoData> sbt_record_picking;
+        OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_picking_module_, &sbt_record_picking));
+        sbt_record_picking.data = sbt_record.data;
+        sbt_records_.push_back(sbt_record_picking);
     }
 
     OptixAccelBuildOptions accelOptions = {};
@@ -217,7 +245,6 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
     // end geometry
     //////////////////////////////////////
 
-
     return true;
 }
 
@@ -247,16 +274,45 @@ bool megamol::optix_hpg::SphereGeometry::get_data_cb(core::Call& c) {
     if (in_data->FrameID() != _frame_id || in_data->DataHash() != _data_hash) {
         if (!assertData(*in_data, *ctx))
             return false;
+
         _frame_id = in_data->FrameID();
         _data_hash = in_data->DataHash();
     }
 
+    auto const pick_idx = out_geo->get_pick_idx();
+
+    auto fcw = flags_write_slot_.CallAs<core::FlagCallWrite_CPU>();
+    auto fcr = flags_read_slot_.CallAs<core::FlagCallRead_CPU>();
+
+    if (fcw != nullptr && fcr != nullptr && !prefix_count_.empty()) {
+        if ((*fcr)(core::FlagCallWrite_CPU::CallGetData)) {
+            auto data = fcr->getData();
+            auto version = fcr->version();
+            data->validateFlagCount(prefix_count_.back());
+
+            if (pick_idx > -1 && pick_idx < prefix_count_.back()) {
+                auto const cur_sel = data->flags->operator[](pick_idx);
+
+                if (cur_sel == core::FlagStorage::ENABLED) {
+                    data->flags->operator[](pick_idx) = core::FlagStorage::SELECTED;
+                } else {
+                    data->flags->operator[](pick_idx) = core::FlagStorage::ENABLED;
+                }
+
+                fcw->setData(data, version + 1);
+                (*fcw)(core::FlagCallWrite_CPU::CallGetData);
+                out_geo->set_pick_idx(-1);
+            }
+        }
+    }
+
     program_groups_[0] = sphere_module_;
     program_groups_[1] = sphere_occlusion_module_;
+    program_groups_[2] = sphere_picking_module_;
 
     out_geo->set_handle(&_geo_handle);
     out_geo->set_program_groups(program_groups_.data());
-    out_geo->set_num_programs(2);
+    out_geo->set_num_programs(3);
     out_geo->set_record(sbt_records_.data());
     out_geo->set_record_stride(sizeof(SBTRecord<device::SphereGeoData>));
     out_geo->set_num_records(sbt_records_.size());

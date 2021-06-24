@@ -119,7 +119,7 @@ bool megamol::optix_hpg::Renderer::OnMouseButton(
         pick_state_.primID = tmp_pick_buf[screenX + screenY * _current_fb_size.Width()];
 
 
-        /*pick_state_.mouseCoord = glm::uvec2(screenX, screenY);
+        pick_state_.mouseCoord = glm::uvec2(screenX, screenY);
         pick_state_.primID = -1;
 
         CUDA_CHECK_ERROR(
@@ -128,7 +128,7 @@ bool megamol::optix_hpg::Renderer::OnMouseButton(
         OPTIX_CHECK_ERROR(optixLaunch(_pipeline, optix_ctx_->GetExecStream(), 0, 0, picking_sbt_, 1, 1, 1));
 
         CUDA_CHECK_ERROR(
-            cuMemcpyDtoHAsync(&pick_state_, pick_state_buffer_, sizeof(pick_state_), optix_ctx_->GetExecStream()));*/
+            cuMemcpyDtoHAsync(&pick_state_, pick_state_buffer_, sizeof(pick_state_), optix_ctx_->GetExecStream()));
 
         core::utility::log::Log::DefaultLog.WriteInfo("[OptiXRenderer]: Picking result -> %d", pick_state_.primID);
 
@@ -305,26 +305,30 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
         optixLaunch(_pipeline, optix_ctx_->GetExecStream(), 0, 0, sbt_, viewport.Width(), viewport.Height(), 1));
 
     if (enable_picking_slot_.Param<core::param::BoolParam>()->Value()) {
-        auto fcr = flags_read_slot_.CallAs<core::FlagCallRead_CPU>();
-        auto fcw = flags_write_slot_.CallAs<core::FlagCallWrite_CPU>();
-        if (fcr != nullptr && fcw != nullptr && pick_state_.primID != -1) {
-            if ((*fcr)(0)) {
-                auto flags = fcr->getData();
-                auto version = fcr->version();
-                try {
-                    auto& flag = flags->flags->at(pick_state_.primID);
-                    if (flag == core::FlagStorage::SELECTED) {
-                        flag = core::FlagStorage::ENABLED;
-                    } else {
-                        flag = core::FlagStorage::SELECTED;
-                    }
-                    fcw->setData(flags, version + 1);
-                    fcr->setData(flags, version + 1);
-                    (*fcw)(0);
-                    pick_state_.primID = -1;
-                } catch (...) { return true; }
-            }
+        if (pick_state_.primID != -1) {
+            in_geo->set_pick_idx(pick_state_.primID);
+            pick_state_.primID = -1;
         }
+        //auto fcr = flags_read_slot_.CallAs<core::FlagCallRead_CPU>();
+        //auto fcw = flags_write_slot_.CallAs<core::FlagCallWrite_CPU>();
+        //if (fcr != nullptr && fcw != nullptr && pick_state_.primID != -1) {
+        //    if ((*fcr)(0)) {
+        //        auto flags = fcr->getData();
+        //        auto version = fcr->version();
+        //        try {
+        //            auto& flag = flags->flags->at(pick_state_.primID);
+        //            if (flag == core::FlagStorage::SELECTED) {
+        //                flag = core::FlagStorage::ENABLED;
+        //            } else {
+        //                flag = core::FlagStorage::SELECTED;
+        //            }
+        //            fcw->setData(flags, version + 1);
+        //            //fcr->setData(flags, version + 1);
+        //            (*fcw)(0);
+        //            pick_state_.primID = -1;
+        //        } catch (...) { return true; }
+        //    }
+        //}
     }
 
     return true;
