@@ -56,6 +56,15 @@ namespace mesh {
         }
 
         /**
+         * Global unique ID that can e.g. be used for hash calculation.
+         *
+         * @return Unique ID
+         */
+        static inline SIZE_T GUID() {
+            return 472520021uLL;
+        }
+
+        /**
          * Initialises a new instance.
          */
         SimplifyMesh();

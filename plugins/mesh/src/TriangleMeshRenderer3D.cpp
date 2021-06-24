@@ -36,9 +36,9 @@ namespace mesh {
             , data_set("data_set", "Data set used for coloring the triangles")
             , default_color("default_color", "Default color if no dataset is specified")
             , btf_filename_slot("BTF filename", "Shader path")
-            , triangle_mesh_hash(-681861)
+            , triangle_mesh_hash(TriangleMeshRenderer3D::GUID())
             , triangle_mesh_changed(false)
-            , mesh_data_hash(-3618424)
+            , mesh_data_hash(TriangleMeshRenderer3D::GUID())
             , mesh_data_changed(false)
             , rhs_gpu_tasks_version(0)
             , material_collection(nullptr)
@@ -370,8 +370,8 @@ namespace mesh {
         this->render_data.values->transfer_function_dirty = false;
         this->btf_file_changed = false;
 
-        grtc.setData(rt_collections,
-            core::utility::DataHash(this->triangle_mesh_hash, this->mesh_data_hash, this->rhs_gpu_tasks_version));
+        grtc.setData(rt_collections, core::utility::DataHash(TriangleMeshRenderer3D::GUID(), this->triangle_mesh_hash,
+                                         this->mesh_data_hash, this->rhs_gpu_tasks_version));
 
         return true;
     }

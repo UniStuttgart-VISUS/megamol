@@ -39,7 +39,7 @@ megamol::mesh::SimplifyMesh::SimplifyMesh()
         : mesh_lhs_slot("mesh_lhs_slot", "Simplified mesh.")
         , mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh.")
         , stop_ratio("stop_ratio", "Ratio defining the number of resulting faces compared to the original mesh.")
-        , input_hash(9868752) {
+        , input_hash(SimplifyMesh::GUID()) {
 
     // Connect input slot
     this->mesh_rhs_slot.SetCompatibleCall<mesh::TriangleMeshCall::triangle_mesh_description>();
@@ -234,5 +234,6 @@ bool megamol::mesh::SimplifyMesh::compute() {
 }
 
 SIZE_T megamol::mesh::SimplifyMesh::compute_hash(const SIZE_T data_hash) const {
-    return core::utility::DataHash(data_hash, this->stop_ratio.Param<core::param::FloatParam>()->Value());
+    return core::utility::DataHash(
+        SimplifyMesh::GUID(), data_hash, this->stop_ratio.Param<core::param::FloatParam>()->Value());
 }
