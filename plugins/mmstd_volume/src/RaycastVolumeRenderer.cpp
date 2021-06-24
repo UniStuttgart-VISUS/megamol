@@ -646,7 +646,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             format = GL_RED;
             type = GL_UNSIGNED_BYTE;
         } else if (metadata->ScalarLength == 2) {
-            internal_format = GL_R16UI;
+            internal_format = GL_R16;
             format = GL_RED;
             type = GL_UNSIGNED_SHORT;
         } else {
@@ -657,7 +657,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
         break;
     case core::misc::SIGNED_INTEGER:
         if (metadata->ScalarLength == 2) {
-            internal_format = GL_R16I;
+            internal_format = GL_R16;
             format = GL_RED;
             type = GL_SHORT;
         } else {
