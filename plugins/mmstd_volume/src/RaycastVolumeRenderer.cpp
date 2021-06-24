@@ -682,7 +682,16 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
 
+    GLint unpackAlignmentOrig = 0;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &unpackAlignmentOrig);
+
+    // Pixel data rows must be aligned to 4 bytes by default, this is may not guarantied by all datasets.
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // for upload to GPU
+    //glPixelStorei(GL_PACK_ALIGNMENT, 1); // for download from GPU
+
     m_volume_texture = std::make_unique<glowl::Texture3D>("raycast_volume_texture", volume_layout, volumedata);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignmentOrig);
 
     return true;
 }
