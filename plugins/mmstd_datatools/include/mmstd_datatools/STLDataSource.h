@@ -45,6 +45,15 @@ public:
     /// <returns>Availability</returns>
     static bool IsAvailable() { return true; }
 
+    /**
+     * Global unique ID that can e.g. be used for hash calculation.
+     *
+     * @return Unique ID
+     */
+    static inline SIZE_T GUID() {
+        return 249136880uLL;
+    }
+
     /// <summary>
     /// Constructor
     /// </summary>

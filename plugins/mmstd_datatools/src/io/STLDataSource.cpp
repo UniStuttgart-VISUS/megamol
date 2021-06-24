@@ -457,10 +457,10 @@ void STLDataSource::read_ascii(const std::string& filename) {
 
 uint32_t STLDataSource::hash() const {
     if (this->vertex_buffer == nullptr || this->vertex_buffer->empty()) {
-        return 0;
+        return STLDataSource::GUID();
     }
 
-    return core::utility::DataHash(
+    return core::utility::DataHash(STLDataSource::GUID(),
         // First vertex
         (*this->vertex_buffer)[0 * sizeof(float)],
         (*this->vertex_buffer)[1 * sizeof(float)],
