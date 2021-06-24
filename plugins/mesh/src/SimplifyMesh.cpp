@@ -226,6 +226,8 @@ bool megamol::mesh::SimplifyMesh::compute() {
                 this->output.indices->push_back(vert_it->idx());
             }
         }
+
+        this->output.normals = nullptr;
     }
 
     return true;
