@@ -54,6 +54,15 @@ namespace flowvis {
         }
 
         /**
+         * Global unique ID that can e.g. be used for hash calculation.
+         *
+         * @return Unique ID
+         */
+        static inline SIZE_T GUID() {
+            return 447330808uLL;
+        }
+
+        /**
          * Initialises a new instance.
          */
         ExtractPores();
@@ -86,9 +95,6 @@ namespace flowvis {
 
         /** Function to start the computation */
         bool compute();
-
-        /** Compute input hash */
-        SIZE_T compute_hash(SIZE_T data_hash) const;
 
         /** The slots for requesting data from this module, i.e., lhs connection */
         megamol::core::CalleeSlot mesh_lhs_slot, mesh_data_lhs_slot;

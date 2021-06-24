@@ -4,6 +4,8 @@
 #include "mesh/MeshDataCall.h"
 #include "mesh/TriangleMeshCall.h"
 
+#include "mmcore/utility/DataHash.h"
+
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
 #include <CGAL/AABB_traits.h>
 #include <CGAL/AABB_tree.h>
@@ -44,7 +46,7 @@ megamol::flowvis::ExtractPores::ExtractPores()
         : mesh_lhs_slot("mesh_lhs_slot", "Separated surface meshes representing pores and throats.")
         , mesh_data_lhs_slot("mesh_data_lhs_slot", "Data associated with the meshes.")
         , mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh of the fluid phase.")
-        , input_hash(9834752) {
+        , input_hash(ExtractPores::GUID()) {
 
     // Connect input slot
     this->mesh_rhs_slot.SetCompatibleCall<mesh::TriangleMeshCall::triangle_mesh_description>();
@@ -87,7 +89,7 @@ bool megamol::flowvis::ExtractPores::getMeshDataCallback(core::Call& _call) {
     call.set_normals(this->output.normals);
     call.set_indices(this->output.indices);
 
-    call.SetDataHash(this->input_hash);
+    call.SetDataHash(core::utility::DataHash(ExtractPores::GUID(), this->input_hash));
 
     return true;
 }
@@ -125,7 +127,7 @@ bool megamol::flowvis::ExtractPores::getMeshDataDataCallback(core::Call& _call) 
     call.set_data("type", this->output.datasets[3]);
     call.set_data("volume", this->output.datasets[4]);
 
-    call.SetDataHash(this->input_hash);
+    call.SetDataHash(core::utility::DataHash(ExtractPores::GUID(), this->input_hash));
 
     return true;
 }
@@ -177,12 +179,12 @@ bool megamol::flowvis::ExtractPores::compute() {
 
     bool input_changed = false;
 
-    if (compute_hash(tmc.DataHash()) != this->input_hash) {
+    if (tmc.DataHash() != this->input_hash) {
         this->input.vertices = tmc.get_vertices();
         this->input.normals = tmc.get_normals();
         this->input.indices = tmc.get_indices();
 
-        this->input_hash = compute_hash(tmc.DataHash());
+        this->input_hash = tmc.DataHash();
 
         input_changed = true;
     }
@@ -359,8 +361,4 @@ bool megamol::flowvis::ExtractPores::compute() {
     }
 
     return true;
-}
-
-SIZE_T megamol::flowvis::ExtractPores::compute_hash(const SIZE_T data_hash) const {
-    return data_hash;
 }
