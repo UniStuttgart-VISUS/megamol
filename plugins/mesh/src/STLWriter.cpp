@@ -5,6 +5,7 @@
 #include "mesh/TriangleMeshCall.h"
 
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 
 #include <fstream>
@@ -21,6 +22,7 @@ namespace mesh {
             : mesh_lhs_slot("mesh_lhs_slot", "Separated surface meshes representing pores and throats.")
             , mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh of the fluid phase.")
             , filename("filename", "Name for the output STL file.")
+            , filetype("filetype", "Type of the output STL file (binary vs. ASCII).")
             , save("save", "Save to STL file.")
             , triggered(false) {
 
@@ -38,6 +40,11 @@ namespace mesh {
         // Initialize parameter slots
         this->filename << new core::param::FilePathParam("mesh.stl", core::param::FilePathParam::FLAG_TOBECREATED);
         this->MakeSlotAvailable(&this->filename);
+
+        this->filetype << new core::param::EnumParam(0);
+        this->filetype.Param<core::param::EnumParam>()->SetTypePair(0, "Binary");
+        this->filetype.Param<core::param::EnumParam>()->SetTypePair(1, "ASCII");
+        this->MakeSlotAvailable(&this->filetype);
 
         this->save << new core::param::ButtonParam();
         this->save.SetUpdateCallback(&STLWriter::setButtonPressed);
@@ -141,7 +148,7 @@ namespace mesh {
             const uint16_t dummy_value = 0;
 
             // Store as binary STL file
-            if (true) {
+            if (this->filetype.Param<core::param::EnumParam>()->Value() == 0) {
                 // Set number of triangles in header
                 for (int i = 0; i < 80; ++i)
                     ofs.put(' ');
@@ -182,7 +189,10 @@ namespace mesh {
                 const std::string end_tag("endsolid");
 
                 // Write identifier in header
+                const std::string solid_name(" OBJECT");
+
                 ofs.write(identifier.c_str(), identifier.size() * sizeof(char));
+                ofs.write(solid_name.c_str(), solid_name.size() * sizeof(char));
                 ofs.put('\n');
 
                 // Store triangles
@@ -201,6 +211,7 @@ namespace mesh {
                     ofs.put('\t');
 
                     std::stringstream normal_s;
+                    normal_s << std::scientific;
 
                     if (normals.empty()) {
                         // TODO: calculate normal
@@ -224,7 +235,8 @@ namespace mesh {
                     ofs.put('\t');
 
                     std::stringstream vertex_1_s;
-                    vertex_1_s << vertices[3uLL * vertex_indices[0] + 0] << " "
+                    vertex_1_s << std::scientific
+                               << vertices[3uLL * vertex_indices[0] + 0] << " "
                                << vertices[3uLL * vertex_indices[0] + 1] << " "
                                << vertices[3uLL * vertex_indices[0] + 2];
 
@@ -235,7 +247,8 @@ namespace mesh {
                     ofs.put('\t');
 
                     std::stringstream vertex_2_s;
-                    vertex_2_s << vertices[3uLL * vertex_indices[1] + 0] << " "
+                    vertex_2_s << std::scientific
+                               << vertices[3uLL * vertex_indices[1] + 0] << " "
                                << vertices[3uLL * vertex_indices[1] + 1] << " "
                                << vertices[3uLL * vertex_indices[1] + 2];
 
@@ -246,7 +259,8 @@ namespace mesh {
                     ofs.put('\t');
 
                     std::stringstream vertex_3_s;
-                    vertex_3_s << vertices[3uLL * vertex_indices[2] + 0] << " "
+                    vertex_3_s << std::scientific
+                               << vertices[3uLL * vertex_indices[2] + 0] << " "
                                << vertices[3uLL * vertex_indices[2] + 1] << " "
                                << vertices[3uLL * vertex_indices[2] + 2];
 
@@ -263,6 +277,7 @@ namespace mesh {
 
                 // Finalize with end tag
                 ofs.write(end_tag.c_str(), end_tag.size() * sizeof(char));
+                ofs.write(solid_name.c_str(), solid_name.size() * sizeof(char));
                 ofs.put('\n');
             }
 

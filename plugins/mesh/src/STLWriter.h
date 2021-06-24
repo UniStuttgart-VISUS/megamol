@@ -50,6 +50,15 @@ namespace mesh {
         }
 
         /**
+         * Global unique ID that can e.g. be used for hash calculation.
+         *
+         * @return Unique ID
+         */
+        static inline SIZE_T GUID() {
+            return 903641637uLL;
+        }
+
+        /**
          * Constructor
          */
         STLWriter();
@@ -91,6 +100,7 @@ namespace mesh {
 
         /** Parameters for setting the output file name and triggering the writing process */
         core::param::ParamSlot filename;
+        core::param::ParamSlot filetype;
         core::param::ParamSlot save;
 
         bool triggered;
