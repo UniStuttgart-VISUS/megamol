@@ -11,6 +11,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
+#include "mmcore/param/ParamSlot.h"
+
 #include "mesh/MeshDataCall.h"
 
 #include <array>
@@ -97,10 +99,13 @@ namespace flowvis {
         bool compute();
 
         /** The slots for requesting data from this module, i.e., lhs connection */
-        megamol::core::CalleeSlot mesh_lhs_slot, mesh_data_lhs_slot;
+        core::CalleeSlot mesh_lhs_slot, mesh_data_lhs_slot;
 
         /** The slots for querying data, i.e., a rhs connection */
-        megamol::core::CallerSlot mesh_rhs_slot;
+        core::CallerSlot mesh_rhs_slot;
+
+        /** Parameter slots */
+        core::param::ParamSlot pore_criterion;
 
         /** Input */
         struct input_t {

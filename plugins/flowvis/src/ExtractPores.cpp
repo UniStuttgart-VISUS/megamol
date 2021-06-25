@@ -4,6 +4,7 @@
 #include "mesh/MeshDataCall.h"
 #include "mesh/TriangleMeshCall.h"
 
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/DataHash.h"
 
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
@@ -46,6 +47,7 @@ megamol::flowvis::ExtractPores::ExtractPores()
         : mesh_lhs_slot("mesh_lhs_slot", "Separated surface meshes representing pores and throats.")
         , mesh_data_lhs_slot("mesh_data_lhs_slot", "Data associated with the meshes.")
         , mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh of the fluid phase.")
+        , pore_criterion("pore_criterion", "Criterion for classifying a tetrahedron as belonging to a pore.")
         , input_hash(ExtractPores::GUID()) {
 
     // Connect input slot
@@ -64,6 +66,12 @@ megamol::flowvis::ExtractPores::ExtractPores()
     this->mesh_data_lhs_slot.SetCallback(
         mesh::MeshDataCall::ClassName(), "get_extent", &ExtractPores::getMeshDataMetaDataCallback);
     this->MakeSlotAvailable(&this->mesh_data_lhs_slot);
+
+    // Create parameters
+    this->pore_criterion << new core::param::EnumParam(0);
+    this->pore_criterion.Param<core::param::EnumParam>()->SetTypePair(0, "< 1 shared segments");
+    this->pore_criterion.Param<core::param::EnumParam>()->SetTypePair(1, "< 2 shared segments");
+    this->MakeSlotAvailable(&this->pore_criterion);
 }
 
 megamol::flowvis::ExtractPores::~ExtractPores() {
@@ -89,7 +97,8 @@ bool megamol::flowvis::ExtractPores::getMeshDataCallback(core::Call& _call) {
     call.set_normals(this->output.normals);
     call.set_indices(this->output.indices);
 
-    call.SetDataHash(core::utility::DataHash(ExtractPores::GUID(), this->input_hash));
+    call.SetDataHash(core::utility::DataHash(
+        ExtractPores::GUID(), this->input_hash, this->pore_criterion.Param<core::param::EnumParam>()->Value()));
 
     return true;
 }
@@ -127,7 +136,8 @@ bool megamol::flowvis::ExtractPores::getMeshDataDataCallback(core::Call& _call) 
     call.set_data("type", this->output.datasets[3]);
     call.set_data("volume", this->output.datasets[4]);
 
-    call.SetDataHash(core::utility::DataHash(ExtractPores::GUID(), this->input_hash));
+    call.SetDataHash(core::utility::DataHash(
+        ExtractPores::GUID(), this->input_hash, this->pore_criterion.Param<core::param::EnumParam>()->Value()));
 
     return true;
 }
@@ -204,10 +214,12 @@ bool megamol::flowvis::ExtractPores::compute() {
     }
 
     // Perform computation
-    if (input_changed) {
+    if (input_changed || this->pore_criterion.IsDirty()) {
         this->output.vertices = std::make_shared<std::vector<float>>();
-        this->output.normals = std::make_shared<std::vector<float>>();
+        this->output.normals = nullptr;
         this->output.indices = std::make_shared<std::vector<unsigned int>>();
+
+        this->pore_criterion.ResetDirty();
 
         // Create surface mesh from input triangles and bounding box
         Mesh mesh;
@@ -298,7 +310,10 @@ bool megamol::flowvis::ExtractPores::compute() {
                 }
 
                 // If at most one edge is shared with the surface mesh, then this is a pore
-                if (num_shared_segments <= 1) {
+                const auto max_num_shared_segments =
+                    (this->pore_criterion.Param<core::param::EnumParam>()->Value() == 0) ? 0 : 1;
+
+                if (num_shared_segments <= max_num_shared_segments) {
                     ++num_pores;
 
                     const auto index = this->output.vertices->size() / 3;
@@ -319,23 +334,6 @@ bool megamol::flowvis::ExtractPores::compute() {
                     this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().x())));
                     this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().y())));
                     this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().z())));
-
-                    // Calculate normals
-                    this->output.normals->push_back(0.0);
-                    this->output.normals->push_back(0.0);
-                    this->output.normals->push_back(0.0);
-
-                    this->output.normals->push_back(0.0);
-                    this->output.normals->push_back(0.0);
-                    this->output.normals->push_back(0.0);
-
-                    this->output.normals->push_back(0.0);
-                    this->output.normals->push_back(0.0);
-                    this->output.normals->push_back(0.0);
-
-                    this->output.normals->push_back(0.0);
-                    this->output.normals->push_back(0.0);
-                    this->output.normals->push_back(0.0);
 
                     // Set face indices
                     this->output.indices->push_back(index + 0);
