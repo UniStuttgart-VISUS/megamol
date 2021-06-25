@@ -6,27 +6,29 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 ## Contents
 
-- [Create new Plugin](#create-new-plugin)
-    - [Add own plugin using the template](#add-own-plugin-using-the-template) 
-- [Create GLSL Shader with utility classes](#create-glsl-shader-with-utility-classes)
-- [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
-    - [Recipe](#recipe) 
-    - [Usage: ```DATACallRead```](#usage-datacallread) 
-    - [Usage: ```DataCallWrite```](#usage-datacallwrite) 
-- [Synchronized Selection across Modules](#synchronized-selection-across-modules)
-    - [FlagStorage](#flagstorage) 
-    - [FlagStorage_GL](#flagstorage_gl) 
-- [1D Transfer Function](#1d-transfer-function)  
-    - [Usage](#usage)  
-- [Graph Manipulation](#graph-manipulation)
-    - [Graph Manipulation Queues](#graph-manipulation-queues) 
-- [Build System](#build-system)
-    - [External dependencies](#external-dependencies) 
-        - [Using external dependencies](#using-external-dependencies) 
-        - [Adding new external dependencies](#adding-new-external-dependencies) 
-          - [Header-only libraries](#header-only-libraries) 
-          - [Built libraries](#built-libraries) 
-- [GUI](#gui)
+- [MegaMol Developer Guide](#megamol-developer-guide)
+  - [Contents](#contents)
+  - [Create new Plugin](#create-new-plugin)
+    - [Add own plugin using the template](#add-own-plugin-using-the-template)
+  - [Create GLSL Shader with utility classes](#create-glsl-shader-with-utility-classes)
+  - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
+    - [Recipe](#recipe)
+      - [Usage: ```DATACallRead```](#usage-datacallread)
+      - [Usage: ```DataCallWrite```](#usage-datacallwrite)
+  - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
+    - [FlagStorage](#flagstorage)
+    - [FlagStorage_GL](#flagstorage_gl)
+  - [1D Transfer Function](#1d-transfer-function)
+    - [Usage](#usage)
+  - [Graph Manipulation](#graph-manipulation)
+    - [Graph Manipulation Queues](#graph-manipulation-queues)
+  - [Build System](#build-system)
+    - [External dependencies](#external-dependencies)
+      - [Using external dependencies](#using-external-dependencies)
+      - [Adding new external dependencies](#adding-new-external-dependencies)
+        - [Header-only libraries](#header-only-libraries)
+        - [Built libraries](#built-libraries)
+  - [GUI](#gui)
     - [Parameter Widgets](#parameter-widgets)
     - [Window/PopUp/Notification for Frontend Service](#windowpopupnotification-for-frontend-service)
 
@@ -98,6 +100,9 @@ To properly track changes across several Modules, you need to follow the recipe.
 ### Recipe
 Split up the data flow for each direction, one call for reading only, one call for writing only.
 Keep in mind that the caller by definition is "left" in the module graph and the callee is "right". The callee is the end of a callback, but for this pattern this has nothing to do with the direction the data flows in, which results in the rules defined below.
+
+![bidir example](bidir.png)
+
 - set up a ```uint32_t version_DATA``` in each Module
 - create a ```CallerSlot``` for ```DATACallRead``` for modules consuming the ```DATA```
 - (optional) create a ```CallerSlot``` for ```DATACallWrite``` for modules providing ```DATA```
