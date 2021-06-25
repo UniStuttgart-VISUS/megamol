@@ -99,18 +99,17 @@ To properly track changes across several Modules, you need to follow the recipe.
 Split up the data flow for each direction, one call for reading only, one call for writing only.
 Keep in mind that the caller by definition is "left" in the module graph and the callee is "right". The callee is the end of a callback, but for this pattern this has nothing to do with the direction the data flows in, which results in the rules defined below.
 - set up a ```uint32_t version_DATA``` in each Module
-- create a ```CallerSlot``` for ```DATACallRead``` for modules reading the ```DATA```
-- (optional) create a ```CallerSlot``` for ```DATACallWrite``` for modules writing the ```DATA```
+- create a ```CallerSlot``` for ```DATACallRead``` for modules consuming the ```DATA```
+- (optional) create a ```CallerSlot``` for ```DATACallWrite``` for modules providing ```DATA```
+- create a ```CalleeSlot``` each for ```DATACallRead``` and ```DATACallWrite``` for modules holding the ```DATA```
 - Create a ```DATACallRead``` either instancing the ```core::GenericVersionedCall``` template, or making sure that the call can distinguish between the ```DATA``` version that was last **set** into the Call and that which was last **got** out of the Call
 - (optional) Create a ```DATACallWrite``` along the same lines
-- create a ```CalleeSlot``` for ```DATACallRead``` for modules consuming the ```DATA```
-- create a ```CallerSlot``` for ```DATACallWrite``` for modules supplying the ```DATA```
 
 A module with slots for both directions by convention should first execute the reading and then provide updates via writing.
 
 #### Usage: ```DATACallRead```
 - In the ```GetData``` callback, make sure you can *supply unchanged data very cheaply*.
-  - If parameters or incoming data have changed, modify your ```DATA``` accordingly, **increasing** your version.
+  - If parameters or incoming data (downstream!) have changed, modify your ```DATA``` accordingly, **increasing** your version.
   - **ALWAYS** set the data in the call, supplying your version.
 - As a consumer
     - issue the Call: ```(*call)(DATACallRead::CallGetData)``` or your specialized version
@@ -124,7 +123,7 @@ A module with slots for both directions by convention should first execute the r
 - As a provider
   - If parameters or incoming data have changed, modify your ```DATA``` accordingly, **increasing** your version.
   - **ALWAYS** set the data in the call, supplying your version.
-  - issue the Call: ```(*call)(DATACallRead::CallGetData)``` or your specialized version
+  - issue the Call: ```(*call)(DATACallWrite::CallGetData)``` or your specialized version
 
 
 <!-- ###################################################################### -->
