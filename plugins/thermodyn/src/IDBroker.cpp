@@ -61,9 +61,37 @@ void megamol::thermodyn::IDBroker::release() {}
 
 
 bool megamol::thermodyn::IDBroker::flags_read_cb(core::Call& c) {
-    auto fcr = dynamic_cast<core::FlagCallRead_CPU*>(&c);
-    if (fcr == nullptr)
+    auto out_fcr = dynamic_cast<core::FlagCallRead_CPU*>(&c);
+    if (out_fcr == nullptr)
         return false;
+
+    auto in_fcr = in_flags_read_slot_.CallAs<core::FlagCallRead_CPU>();
+    if (in_fcr == nullptr)
+        return false;
+
+    (*in_fcr)(0);
+    auto const in_fcr_data = in_fcr->getData();
+
+    out_fcr->setData(flag_col_, in_fcr->version());
+
+    return true;
+}
+
+
+bool megamol::thermodyn::IDBroker::flags_read_meta_cb(core::Call& c) {
+    return true;
+}
+
+
+bool megamol::thermodyn::IDBroker::flags_write_cb(core::Call& c) {
+    auto out_fcw = dynamic_cast<core::FlagCallWrite_CPU*>(&c);
+    if (out_fcw == nullptr)
+        return false;
+
+    auto in_fcw = in_flags_write_slot_.CallAs<core::FlagCallWrite_CPU>();
+    if (in_fcw == nullptr)
+        return false;
+
 
     auto id_max_data = id_max_context_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
     if (id_max_data == nullptr)
@@ -71,13 +99,6 @@ bool megamol::thermodyn::IDBroker::flags_read_cb(core::Call& c) {
 
     auto id_sub_data = id_sub_context_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
     if (id_sub_data == nullptr)
-        return false;
-
-    auto in_fcr = in_flags_read_slot_.CallAs<core::FlagCallRead_CPU>();
-    if (in_fcr == nullptr)
-        return false;
-
-    if (!(*in_fcr)(core::FlagCallRead_CPU::CallGetData))
         return false;
 
     id_max_data->SetFrameID(out_frame_id_);
@@ -94,11 +115,10 @@ bool megamol::thermodyn::IDBroker::flags_read_cb(core::Call& c) {
         id_maps_.clear();
         id_maps_.resize(pl_count);
 
-        uint64_t totalCount = 0;
         for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
             auto const& parts = id_max_data->AccessParticles(pl_idx);
             auto const p_count = parts.GetCount();
-            totalCount += p_count;
+            total_count_ += p_count;
 
             auto const id_acc = parts.GetParticleStore().GetIDAcc();
 
@@ -109,8 +129,6 @@ bool megamol::thermodyn::IDBroker::flags_read_cb(core::Call& c) {
                 id_map[id_acc->Get_u64(p_idx)] = p_idx;
             }
         }
-
-        in_fcr->getData()->validateFlagCount(totalCount);
 
         in_data_hash_ = id_max_data->DataHash();
         in_frame_id_ = id_max_data->FrameID();
@@ -144,43 +162,20 @@ bool megamol::thermodyn::IDBroker::flags_read_cb(core::Call& c) {
         in_sub_frame_id_ = id_sub_data->FrameID();
     }
 
-    // validate size
-    // establish translation map
-
-    fcr->setData(flag_col_, version_);
-
-    return true;
-}
-
-
-bool megamol::thermodyn::IDBroker::flags_read_meta_cb(core::Call& c) {
-    return true;
-}
-
-
-bool megamol::thermodyn::IDBroker::flags_write_cb(core::Call& c) {
-    auto fcw = dynamic_cast<core::FlagCallWrite_CPU*>(&c);
-    if (fcw == nullptr)
-        return false;
 
     auto in_fcr = in_flags_read_slot_.CallAs<core::FlagCallRead_CPU>();
     if (in_fcr == nullptr)
         return false;
 
-    auto in_fcw = in_flags_write_slot_.CallAs<core::FlagCallRead_CPU>();
-    if (in_fcw == nullptr)
-        return false;
+    (*in_fcr)(0);
+    auto const in_fcr_data = in_fcr->getData();
+    in_fcr_data->validateFlagCount(total_count_);
 
-    if (!(*in_fcr)(0))
-        return false;
 
-    bool flags_changed = fcw->version() > version_;
-    if (flags_changed) {
-        flag_col_ = fcw->getData();
-        version_ = fcw->version();
+    if (out_fcw->hasUpdate()) {
+        flag_col_ = out_fcw->getData();
 
-        auto const in_flag_col = in_fcr->getData();
-        auto& in_flags = *in_flag_col->flags;
+        auto& in_flags = *in_fcr_data->flags;
 
         auto const& flags = *flag_col_->flags;
         for (std::decay_t<decltype(flags)>::size_type f_idx = 0; f_idx < flags.size(); ++f_idx) {
@@ -196,10 +191,11 @@ bool megamol::thermodyn::IDBroker::flags_write_cb(core::Call& c) {
                 }
             } catch (...) {}
         }
-
-        in_fcw->setData(in_flag_col, in_fcr->version() + 1);
-        (*in_fcw)(0);
     }
+
+
+    in_fcw->setData(in_fcr_data, out_fcw->version());
+    (*in_fcw)(0);
 
     return true;
 }

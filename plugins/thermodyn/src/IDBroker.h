@@ -74,8 +74,8 @@ private:
 
     std::shared_ptr<core::FlagCollection_CPU> flag_col_;
 
-    uint32_t version_ = 0;
-
     std::vector<uint64_t> prefix_count_;
+
+    uint64_t total_count_ = 0;
 };
 } // namespace megamol::thermodyn
