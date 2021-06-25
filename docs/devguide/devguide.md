@@ -105,7 +105,10 @@ Keep in mind that the caller by definition is "left" in the module graph and the
 - Create a ```DATACallRead``` either instancing the ```core::GenericVersionedCall``` template, or making sure that the call can distinguish between the ```DATA``` version that was last **set** into the Call and that which was last **got** out of the Call
 - (optional) Create a ```DATACallWrite``` along the same lines
 
-A module with slots for both directions by convention should first execute the reading and then provide updates via writing.
+A module with slots for both directions by convention must, in this exact order:
+- execute the reading, overwriting its DATA with incoming update
+- apply logic that will modify the DATA (if parameters or user input cause this, for example)
+- provide DATA updates via writing.
 
 #### Usage: ```DATACallRead```
 - In the ```GetData``` callback, make sure you can *supply unchanged data very cheaply*.
