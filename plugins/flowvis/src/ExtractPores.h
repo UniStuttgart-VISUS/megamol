@@ -106,6 +106,8 @@ namespace flowvis {
 
         /** Parameter slots */
         core::param::ParamSlot pore_criterion;
+        core::param::ParamSlot boundary_offset;
+        core::param::ParamSlot error_threshold;
 
         /** Input */
         struct input_t {

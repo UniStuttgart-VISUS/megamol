@@ -5,6 +5,7 @@
 #include "mesh/TriangleMeshCall.h"
 
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/DataHash.h"
 
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
@@ -48,6 +49,8 @@ megamol::flowvis::ExtractPores::ExtractPores()
         , mesh_data_lhs_slot("mesh_data_lhs_slot", "Data associated with the meshes.")
         , mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh of the fluid phase.")
         , pore_criterion("pore_criterion", "Criterion for classifying a tetrahedron as belonging to a pore.")
+        , boundary_offset("boundary_offset", "Boundary width where extracted pores are ignored.")
+        , error_threshold("error_threshold", "Error threshold for determining if an edge from triangulation belongs to the surface mesh.")
         , input_hash(ExtractPores::GUID()) {
 
     // Connect input slot
@@ -72,6 +75,12 @@ megamol::flowvis::ExtractPores::ExtractPores()
     this->pore_criterion.Param<core::param::EnumParam>()->SetTypePair(0, "< 1 shared segments");
     this->pore_criterion.Param<core::param::EnumParam>()->SetTypePair(1, "< 2 shared segments");
     this->MakeSlotAvailable(&this->pore_criterion);
+
+    this->boundary_offset << new core::param::FloatParam(0.0);
+    this->MakeSlotAvailable(&this->boundary_offset);
+
+    this->error_threshold << new core::param::FloatParam(1e-6);
+    this->MakeSlotAvailable(&this->error_threshold);
 }
 
 megamol::flowvis::ExtractPores::~ExtractPores() {
@@ -97,8 +106,10 @@ bool megamol::flowvis::ExtractPores::getMeshDataCallback(core::Call& _call) {
     call.set_normals(this->output.normals);
     call.set_indices(this->output.indices);
 
-    call.SetDataHash(core::utility::DataHash(
-        ExtractPores::GUID(), this->input_hash, this->pore_criterion.Param<core::param::EnumParam>()->Value()));
+    call.SetDataHash(core::utility::DataHash(ExtractPores::GUID(), this->input_hash,
+        this->pore_criterion.Param<core::param::EnumParam>()->Value(),
+        this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+        this->error_threshold.Param<core::param::FloatParam>()->Value()));
 
     return true;
 }
@@ -136,8 +147,10 @@ bool megamol::flowvis::ExtractPores::getMeshDataDataCallback(core::Call& _call) 
     call.set_data("type", this->output.datasets[3]);
     call.set_data("volume", this->output.datasets[4]);
 
-    call.SetDataHash(core::utility::DataHash(
-        ExtractPores::GUID(), this->input_hash, this->pore_criterion.Param<core::param::EnumParam>()->Value()));
+    call.SetDataHash(core::utility::DataHash(ExtractPores::GUID(), this->input_hash,
+        this->pore_criterion.Param<core::param::EnumParam>()->Value(),
+        this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+        this->error_threshold.Param<core::param::FloatParam>()->Value()));
 
     return true;
 }
@@ -214,12 +227,27 @@ bool megamol::flowvis::ExtractPores::compute() {
     }
 
     // Perform computation
-    if (input_changed || this->pore_criterion.IsDirty()) {
+    if (input_changed || this->pore_criterion.IsDirty() || this->boundary_offset.IsDirty() ||
+        this->error_threshold.IsDirty()) {
+
         this->output.vertices = std::make_shared<std::vector<float>>();
         this->output.normals = nullptr;
         this->output.indices = std::make_shared<std::vector<unsigned int>>();
 
         this->pore_criterion.ResetDirty();
+        this->boundary_offset.ResetDirty();
+        this->error_threshold.ResetDirty();
+
+        // Compute "clip" box
+        const auto& bb = tmc.get_bounding_box();
+
+        const vislib::math::Cuboid<float> cp(
+            bb.Left() + this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+            bb.Bottom() + this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+            bb.Back() + this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+            bb.Right() - this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+            bb.Top() - this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+            bb.Front() - this->boundary_offset.Param<core::param::FloatParam>()->Value());
 
         // Create surface mesh from input triangles and bounding box
         Mesh mesh;
@@ -280,9 +308,10 @@ bool megamol::flowvis::ExtractPores::compute() {
         Tree tree(CGAL::faces(mesh).first, CGAL::faces(mesh).second, mesh);
         tree.build();
 
-        const auto err_threshold = 1e-6 * (static_cast<double>(tmc.get_bounding_box().Width()) +
-                                              static_cast<double>(tmc.get_bounding_box().Height()) +
-                                              static_cast<double>(tmc.get_bounding_box().Depth()));
+        const auto err_threshold = this->error_threshold.Param<core::param::FloatParam>()->Value() *
+                                   (static_cast<double>(tmc.get_bounding_box().Width()) +
+                                       static_cast<double>(tmc.get_bounding_box().Height()) +
+                                       static_cast<double>(tmc.get_bounding_box().Depth()));
 
         for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
             const auto cell_center = CGAL::ORIGIN +
@@ -290,12 +319,30 @@ bool megamol::flowvis::ExtractPores::compute() {
                             (cell->vertex(2)->point() - CGAL::ORIGIN) + (cell->vertex(3)->point() - CGAL::ORIGIN)));
 
             if (orientation_test(cell_center) != CGAL::ON_BOUNDED_SIDE) {
-                // Count number of edges shared with the surface mesh
                 const auto& p1 = cell->vertex(0)->point();
                 const auto& p2 = cell->vertex(1)->point();
                 const auto& p3 = cell->vertex(2)->point();
                 const auto& p4 = cell->vertex(3)->point();
 
+                // Remove "pores" at the boundary, which often do not make sense and ill-shaped
+                const bool inside_1 =
+                    cp.Contains(vislib::math::Point<float, 3>(static_cast<float>(CGAL::to_double(p1[0])),
+                        static_cast<float>(CGAL::to_double(p1[1])), static_cast<float>(CGAL::to_double(p1[2]))));
+                const bool inside_2 =
+                    cp.Contains(vislib::math::Point<float, 3>(static_cast<float>(CGAL::to_double(p2[0])),
+                    static_cast<float>(CGAL::to_double(p2[1])), static_cast<float>(CGAL::to_double(p2[2]))));
+                const bool inside_3 =
+                    cp.Contains(vislib::math::Point<float, 3>(static_cast<float>(CGAL::to_double(p3[0])),
+                    static_cast<float>(CGAL::to_double(p3[1])), static_cast<float>(CGAL::to_double(p3[2]))));
+                const bool inside_4 =
+                    cp.Contains(vislib::math::Point<float, 3>(static_cast<float>(CGAL::to_double(p4[0])),
+                    static_cast<float>(CGAL::to_double(p4[1])), static_cast<float>(CGAL::to_double(p4[2]))));
+
+                if (!(inside_1 || inside_2 || inside_3 || inside_4)) {
+                    continue;
+                }
+
+                // Count number of edges shared with the surface mesh
                 std::array<Segment, 6> edges{Segment(p1, p2), Segment(p1, p3), Segment(p1, p4), Segment(p2, p3),
                     Segment(p2, p4), Segment(p3, p4)};
 
