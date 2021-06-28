@@ -6,7 +6,7 @@ layout(location = 1) out vec3 frag_normal;
 layout(location = 2) out float frag_depth;
 
 void main(void) {
-    if (color.a < 0.5f) discard;
+    if (color.a == 0.0f) discard;
 
     frag_color = color;
     frag_normal = normal;
