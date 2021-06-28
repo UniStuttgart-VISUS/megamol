@@ -92,9 +92,9 @@ private:
 
     core::CallerSlot _in_geo_slot;
 
-    core::CallerSlot flags_write_slot_;
+    /*core::CallerSlot flags_write_slot_;
 
-    core::CallerSlot flags_read_slot_;
+    core::CallerSlot flags_read_slot_;*/
 
     core::param::ParamSlot spp_slot_;
 

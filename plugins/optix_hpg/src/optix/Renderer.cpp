@@ -24,8 +24,8 @@ extern "C" const char embedded_miss_programs[];
 
 megamol::optix_hpg::Renderer::Renderer()
         : _in_geo_slot("inGeo", "")
-        , flags_write_slot_("flagsWrite", "")
-        , flags_read_slot_("flagsRead", "")
+        /*, flags_write_slot_("flagsWrite", "")
+        , flags_read_slot_("flagsRead", "")*/
         , spp_slot_("spp", "")
         , max_bounces_slot_("max bounces", "")
         , accumulate_slot_("accumulate", "")
@@ -34,11 +34,11 @@ megamol::optix_hpg::Renderer::Renderer()
     _in_geo_slot.SetCompatibleCall<CallGeometryDescription>();
     MakeSlotAvailable(&_in_geo_slot);
 
-    flags_write_slot_.SetCompatibleCall<core::FlagCallWrite_CPUDescription>();
+    /*flags_write_slot_.SetCompatibleCall<core::FlagCallWrite_CPUDescription>();
     MakeSlotAvailable(&flags_write_slot_);
 
     flags_read_slot_.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
-    MakeSlotAvailable(&flags_read_slot_);
+    MakeSlotAvailable(&flags_read_slot_);*/
 
     spp_slot_ << new core::param::IntParam(1, 1);
     MakeSlotAvailable(&spp_slot_);
