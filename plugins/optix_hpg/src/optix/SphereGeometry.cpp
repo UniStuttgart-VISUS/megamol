@@ -299,11 +299,18 @@ bool megamol::optix_hpg::SphereGeometry::get_data_cb(core::Call& c) {
                     data->flags->operator[](pick_idx) = core::FlagStorage::ENABLED;
                 }
 
-                fcw->setData(data, version + 1);
-                (*fcw)(core::FlagCallWrite_CPU::CallGetData);
+                flags_version_ = version + 1;
+                /*fcw->setData(data, version + 1);
+                (*fcw)(core::FlagCallWrite_CPU::CallGetData);*/
                 out_geo->set_pick_idx(-1);
             }
         }
+    }
+
+    if (fcw != nullptr && fcr != nullptr) {
+        auto data = fcr->getData();
+        fcw->setData(data, flags_version_);
+        (*fcw)(core::FlagCallWrite_CPU::CallGetData);
     }
 
     program_groups_[0] = sphere_module_;

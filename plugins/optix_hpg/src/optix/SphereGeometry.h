@@ -82,5 +82,7 @@ private:
     std::size_t _data_hash = std::numeric_limits<std::size_t>::max();
 
     std::vector<uint64_t> prefix_count_;
+
+    uint32_t flags_version_ = 0;
 };
 } // namespace megamol::optix_hpg
