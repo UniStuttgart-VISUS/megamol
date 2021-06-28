@@ -90,6 +90,9 @@ private:
     /** Parameter for selecting the texture combination mode, e.g. add, multiply */
     megamol::core::param::ParamSlot m_mode;
 
+    /** Parameter for setting a weight in additive mode */
+    megamol::core::param::ParamSlot m_weight_0, m_weight_1;
+
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
 

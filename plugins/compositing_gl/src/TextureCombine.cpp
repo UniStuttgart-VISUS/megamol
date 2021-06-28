@@ -5,6 +5,7 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
 
@@ -15,6 +16,8 @@ megamol::compositing::TextureCombine::TextureCombine()
     , m_version(0)
     , m_output_texture(nullptr)
     , m_mode("Mode", "Sets texture combination mode, e.g. add, multiply...")
+    , m_weight_0("Weight0", "Weight for input texture 0 in additive mode")
+    , m_weight_1("Weight1", "Weight for input texture 1 in additive mode")
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
     , m_input_tex_0_slot(
           "InputTexture0", "Connects the primary input texture that is also used the set the output texture size")
@@ -23,6 +26,12 @@ megamol::compositing::TextureCombine::TextureCombine()
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Add");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Multiply");
     this->MakeSlotAvailable(&this->m_mode);
+
+    this->m_weight_0 << new megamol::core::param::FloatParam(0.5);
+    this->MakeSlotAvailable(&this->m_weight_0);
+
+    this->m_weight_1 << new megamol::core::param::FloatParam(0.5);
+    this->MakeSlotAvailable(&this->m_weight_1);
 
     this->m_output_tex_slot.SetCallback(
         CallTexture2D::ClassName(), "GetData", &TextureCombine::getDataCallback);
@@ -122,6 +131,11 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
             glActiveTexture(GL_TEXTURE1);
             src1_tx2D->bindTexture();
             glUniform1i(m_add_prgm->ParameterLocation("src1_tx2D"), 1);
+
+            glUniform1f(
+                m_add_prgm->ParameterLocation("weight0"), this->m_weight_0.Param<core::param::FloatParam>()->Value());
+            glUniform1f(
+                m_add_prgm->ParameterLocation("weight1"), this->m_weight_1.Param<core::param::FloatParam>()->Value());
 
             m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
