@@ -6,17 +6,20 @@
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/utility/DataHash.h"
 
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
 #include <CGAL/AABB_traits.h>
 #include <CGAL/AABB_tree.h>
 #include <CGAL/Delaunay_triangulation_3.h>
+#include <CGAL/Delaunay_triangulation_cell_base_3.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Point_3.h>
 #include <CGAL/Segment_3.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 #include <CGAL/Surface_mesh.h>
+#include <CGAL/Triangulation_vertex_base_with_info_3.h>
 
 #include <CGAL/Polygon_mesh_processing/orient_polygon_soup.h>
 #include <CGAL/Polygon_mesh_processing/orient_polygon_soup_extension.h>
@@ -26,6 +29,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -34,7 +38,11 @@ typedef K::Point_3 Point;
 typedef K::Segment_3 Segment;
 
 typedef CGAL::Surface_mesh<Point> Mesh;
-typedef CGAL::Delaunay_triangulation_3<K> Delaunay;
+
+typedef CGAL::Triangulation_vertex_base_with_info_3<CGAL::SM_Vertex_index, K> Vb;
+typedef CGAL::Delaunay_triangulation_cell_base_3<K> Cb;
+typedef CGAL::Triangulation_data_structure_3<Vb, Cb> Tds;
+typedef CGAL::Delaunay_triangulation_3<K, Tds> Delaunay;
 
 typedef CGAL::AABB_face_graph_triangle_primitive<Mesh, CGAL::Default, CGAL::Tag_false> Primitive;
 typedef CGAL::AABB_traits<K, Primitive> Traits;
@@ -50,7 +58,7 @@ megamol::flowvis::ExtractPores::ExtractPores()
         , mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh of the fluid phase.")
         , pore_criterion("pore_criterion", "Criterion for classifying a tetrahedron as belonging to a pore.")
         , boundary_offset("boundary_offset", "Boundary width where extracted pores are ignored.")
-        , error_threshold("error_threshold", "Error threshold for determining if an edge from triangulation belongs to the surface mesh.")
+        , neighborhood_size("neighborhood_size", "Neighborhood size for which vertices are checked to belong to the same mesh.")
         , input_hash(ExtractPores::GUID()) {
 
     // Connect input slot
@@ -79,8 +87,8 @@ megamol::flowvis::ExtractPores::ExtractPores()
     this->boundary_offset << new core::param::FloatParam(0.0);
     this->MakeSlotAvailable(&this->boundary_offset);
 
-    this->error_threshold << new core::param::FloatParam(1e-6);
-    this->MakeSlotAvailable(&this->error_threshold);
+    this->neighborhood_size << new core::param::IntParam(1, 1);
+    this->MakeSlotAvailable(&this->neighborhood_size);
 }
 
 megamol::flowvis::ExtractPores::~ExtractPores() {
@@ -109,7 +117,7 @@ bool megamol::flowvis::ExtractPores::getMeshDataCallback(core::Call& _call) {
     call.SetDataHash(core::utility::DataHash(ExtractPores::GUID(), this->input_hash,
         this->pore_criterion.Param<core::param::EnumParam>()->Value(),
         this->boundary_offset.Param<core::param::FloatParam>()->Value(),
-        this->error_threshold.Param<core::param::FloatParam>()->Value()));
+        this->neighborhood_size.Param<core::param::IntParam>()->Value()));
 
     return true;
 }
@@ -150,7 +158,7 @@ bool megamol::flowvis::ExtractPores::getMeshDataDataCallback(core::Call& _call) 
     call.SetDataHash(core::utility::DataHash(ExtractPores::GUID(), this->input_hash,
         this->pore_criterion.Param<core::param::EnumParam>()->Value(),
         this->boundary_offset.Param<core::param::FloatParam>()->Value(),
-        this->error_threshold.Param<core::param::FloatParam>()->Value()));
+        this->neighborhood_size.Param<core::param::IntParam>()->Value()));
 
     return true;
 }
@@ -228,7 +236,7 @@ bool megamol::flowvis::ExtractPores::compute() {
 
     // Perform computation
     if (input_changed || this->pore_criterion.IsDirty() || this->boundary_offset.IsDirty() ||
-        this->error_threshold.IsDirty()) {
+        this->neighborhood_size.IsDirty()) {
 
         this->output.vertices = std::make_shared<std::vector<float>>();
         this->output.normals = nullptr;
@@ -236,7 +244,7 @@ bool megamol::flowvis::ExtractPores::compute() {
 
         this->pore_criterion.ResetDirty();
         this->boundary_offset.ResetDirty();
-        this->error_threshold.ResetDirty();
+        this->neighborhood_size.ResetDirty();
 
         // Compute "clip" box
         const auto& bb = tmc.get_bounding_box();
@@ -297,21 +305,19 @@ bool megamol::flowvis::ExtractPores::compute() {
         }
 
         // Tetrahedralize domain
+        std::vector<std::pair<Point, CGAL::SM_Vertex_index>> mesh_points_with_info;
+
+        for (auto vert_it = mesh.vertices().begin(); vert_it != mesh.vertices().end(); ++vert_it) {
+            mesh_points_with_info.push_back(std::make_pair(mesh.point(*vert_it), *vert_it));
+        }
+
         Delaunay dt;
-        dt.insert(mesh.points().begin(), mesh.points().end());
+        dt.insert(mesh_points_with_info.begin(), mesh_points_with_info.end());
 
         // Iterate over all cells and check which side its center is on
         std::size_t num_pores = 0;
 
         CGAL::Side_of_triangle_mesh<Mesh, K> orientation_test(mesh);
-
-        Tree tree(CGAL::faces(mesh).first, CGAL::faces(mesh).second, mesh);
-        tree.build();
-
-        const auto err_threshold = this->error_threshold.Param<core::param::FloatParam>()->Value() *
-                                   (static_cast<double>(tmc.get_bounding_box().Width()) +
-                                       static_cast<double>(tmc.get_bounding_box().Height()) +
-                                       static_cast<double>(tmc.get_bounding_box().Depth()));
 
         for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
             const auto cell_center = CGAL::ORIGIN +
@@ -343,20 +349,38 @@ bool megamol::flowvis::ExtractPores::compute() {
                 }
 
                 // Count number of edges shared with the surface mesh
-                std::array<Segment, 6> edges{Segment(p1, p2), Segment(p1, p3), Segment(p1, p4), Segment(p2, p3),
-                    Segment(p2, p4), Segment(p3, p4)};
-
                 int num_shared_segments = 0;
 
-                for (auto& edge : edges) {
-                    auto edge_center = CGAL::midpoint(edge.start(), edge.target());
+                for (int i = 0; i < 4; ++i) {
+                    // For each vertex of the tetrahedron, get neighboring vertices with given maximum edge distance
+                    std::unordered_set<CGAL::SM_Vertex_index> all_vertices;
+                    all_vertices.insert(cell->vertex(i)->info());
 
-                    if (CGAL::to_double(tree.squared_distance(edge_center)) < err_threshold) {
-                        ++num_shared_segments;
+                    for (int n = 0; n < neighborhood_size.Param<core::param::IntParam>()->Value(); ++n) {
+                        std::vector<CGAL::SM_Vertex_index> vertices;
+
+                        for (auto it = all_vertices.begin(); it != all_vertices.end(); ++it) {
+                            auto vertex_range = mesh.vertices_around_target(mesh.halfedge(*it));
+
+                            for (auto vertex_it = vertex_range.begin(); vertex_it != vertex_range.end(); ++vertex_it) {
+                                vertices.push_back(*vertex_it);
+                            }
+                        }
+
+                        all_vertices.insert(vertices.begin(), vertices.end());
+                    }
+
+                    // Check how many of the other vertices are in the neighborhood
+                    for (int j = 0; j < 4; ++j) {
+                        if (i != j) {
+                            if (all_vertices.find(cell->vertex(j)->info()) != all_vertices.end()) {
+                                ++num_shared_segments;
+                            }
+                        }
                     }
                 }
 
-                // If at most one edge is shared with the surface mesh, then this is a pore
+                // If [no | at most one] edge is shared with the surface mesh, then this is a pore
                 const auto max_num_shared_segments =
                     (this->pore_criterion.Param<core::param::EnumParam>()->Value() == 0) ? 0 : 1;
 
