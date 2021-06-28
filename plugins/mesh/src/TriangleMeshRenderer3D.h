@@ -135,9 +135,9 @@ namespace mesh {
         /** In-place material collection */
         std::shared_ptr<GPUMaterialCollection> material_collection;
 
-        /** The btf file name to override the default gltf material */
-        core::param::ParamSlot btf_filename_slot;
-        bool btf_file_changed;
+        /** Rendering options */
+        core::param::ParamSlot wireframe, calculate_normals;
+        bool shader_changed;
 
         /** Per draw data offsets and size */
         struct per_draw_data_t {

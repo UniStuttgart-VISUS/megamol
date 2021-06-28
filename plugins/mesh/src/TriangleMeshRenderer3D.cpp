@@ -9,6 +9,7 @@
 
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/Call.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FlexEnumParam.h"
@@ -35,14 +36,16 @@ namespace mesh {
             , clip_plane_slot("clip_plane", "Clip plane for clipping the rendered triangle mesh")
             , data_set("data_set", "Data set used for coloring the triangles")
             , default_color("default_color", "Default color if no dataset is specified")
-            , btf_filename_slot("BTF filename", "Shader path")
+            , wireframe("wireframe", "Render wireframe instead of filled triangles")
+            , calculate_normals(
+                  "calculate_normals", "Calculate normals in geometry shader instead of using input normals")
             , triangle_mesh_hash(TriangleMeshRenderer3D::GUID())
             , triangle_mesh_changed(false)
             , mesh_data_hash(TriangleMeshRenderer3D::GUID())
             , mesh_data_changed(false)
             , rhs_gpu_tasks_version(0)
             , material_collection(nullptr)
-            , btf_file_changed(false) {
+            , shader_changed(false) {
 
         // Connect input slots
         this->triangle_mesh_slot.SetCompatibleCall<TriangleMeshCall::triangle_mesh_description>();
@@ -61,8 +64,11 @@ namespace mesh {
         this->default_color << new core::param::ColorParam(0.7f, 0.7f, 0.7f, 1.0f);
         this->MakeSlotAvailable(&this->default_color);
 
-        this->btf_filename_slot << new core::param::FilePathParam("triangle_mesh");
-        this->MakeSlotAvailable(&this->btf_filename_slot);
+        this->wireframe << new core::param::BoolParam(false);
+        this->MakeSlotAvailable(&this->wireframe);
+
+        this->calculate_normals << new core::param::BoolParam(true);
+        this->MakeSlotAvailable(&this->calculate_normals);
 
         // Disconnect inherited slots
         this->SetSlotUnavailable(&this->m_mesh_slot);
@@ -116,11 +122,32 @@ namespace mesh {
             this->triangle_mesh_changed = true;
         }
 
-        if (this->btf_filename_slot.IsDirty()) {
-            this->btf_filename_slot.ResetDirty();
+        if (this->wireframe.IsDirty() || this->calculate_normals.IsDirty()) {
+            this->wireframe.ResetDirty();
+            this->calculate_normals.ResetDirty();
 
-            auto vislib_filename = this->btf_filename_slot.Param<core::param::FilePathParam>()->Value();
-            std::string filename(vislib_filename.PeekBuffer());
+            const std::string shader("triangle_mesh");
+            const std::string shader_wireframe("triangle_mesh_wireframe");
+            const std::string shader_normals("triangle_mesh_with_normals");
+            const std::string shader_wireframe_normals("triangle_mesh_with_normals_wireframe");
+
+            std::string filename;
+
+            if (this->wireframe.Param<core::param::BoolParam>()->Value() &&
+                this->calculate_normals.Param<core::param::BoolParam>()->Value()) {
+
+                filename = shader_wireframe;
+            } else if (!this->wireframe.Param<core::param::BoolParam>()->Value() &&
+                       this->calculate_normals.Param<core::param::BoolParam>()->Value()) {
+
+                filename = shader;
+            } else if (this->wireframe.Param<core::param::BoolParam>()->Value() &&
+                       !this->calculate_normals.Param<core::param::BoolParam>()->Value()) {
+
+                filename = shader_wireframe_normals;
+            } else {
+                filename = shader_normals;
+            }
 
             this->material_collection->clear();
             this->material_collection->addMaterial(this->instance(), filename, filename);
@@ -132,7 +159,7 @@ namespace mesh {
                 return false;
             }
 
-            this->btf_file_changed = true;
+            this->shader_changed = true;
         }
 
         if (mdc_ptr != nullptr && (*mdc_ptr)(0) && !mdc_ptr->get_data_sets().empty() &&
@@ -252,7 +279,7 @@ namespace mesh {
 
         const std::string identifier("triangle_mesh");
 
-        if (this->triangle_mesh_changed || this->mesh_data_changed || this->btf_file_changed) {
+        if (this->triangle_mesh_changed || this->mesh_data_changed || this->shader_changed) {
             clearRenderTaskCollection();
 
             // Create mesh
@@ -298,7 +325,7 @@ namespace mesh {
         }
 
         if (this->render_data.values->transfer_function_dirty || this->triangle_mesh_changed ||
-            this->mesh_data_changed || this->btf_file_changed) {
+            this->mesh_data_changed || this->shader_changed) {
             // Create texture for transfer function
             std::vector<GLfloat> texture_data;
             int transfer_function_size, _unused__height;
@@ -368,7 +395,7 @@ namespace mesh {
         this->triangle_mesh_changed = false;
         this->mesh_data_changed = false;
         this->render_data.values->transfer_function_dirty = false;
-        this->btf_file_changed = false;
+        this->shader_changed = false;
 
         grtc.setData(rt_collections, core::utility::DataHash(TriangleMeshRenderer3D::GUID(), this->triangle_mesh_hash,
                                          this->mesh_data_hash, this->rhs_gpu_tasks_version));
