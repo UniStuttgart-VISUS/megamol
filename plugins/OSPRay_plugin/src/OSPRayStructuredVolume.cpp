@@ -160,7 +160,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     // get color transfer function
     std::vector<float> rgb;
     std::vector<float> a;
-    std::array<float,2> minmax = {metadata->MinValues[0], metadata->MaxValues[0]};
+    std::array<float,2> minmax = {static_cast<float>(metadata->MinValues[0]), static_cast<float>(metadata->MaxValues[0])};
     cgtf->SetRange(minmax);
     if ((*cgtf)(0)) {
         if (cgtf->OpenGLTextureFormat() ==
@@ -282,7 +282,7 @@ bool OSPRayStructuredVolume::getExtends(megamol::core::Call& call) {
     bbox_string << "BACK: " << extendContainer.boundingBox->BoundingBox().Back() << ";" << std::endl;
     bbox_string << "RIGHT: " << extendContainer.boundingBox->BoundingBox().Right() << ";" << std::endl;
     bbox_string << "TOP: " << extendContainer.boundingBox->BoundingBox().Top() << ";" << std::endl;
-    bbox_string << "FRONT: " << extendContainer.boundingBox->BoundingBox().Bottom();
+    bbox_string << "FRONT: " << extendContainer.boundingBox->BoundingBox().Front();
     this->showBoundingBox.Param<core::param::StringParam>()->SetValue(bbox_string.str().c_str());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;

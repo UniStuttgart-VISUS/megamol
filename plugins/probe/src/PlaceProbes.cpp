@@ -1018,7 +1018,7 @@ namespace probe {
         auto availVars = cd->getAvailableVars();
         if (availVars.empty())
             return false;
-        cd->inquire(availVars[0]);
+        cd->inquireVar(availVars[0]);
         if (!(*cd)(0))
             return false;
 

@@ -991,7 +991,7 @@ namespace probe {
         auto vars = cgh->getAvailableVars();
 
         for (auto var : vars) {
-            if (!cgh->inquire(var)) {
+            if (!cgh->inquireVar(var)) {
                 core::utility::log::Log::DefaultLog.WriteError(
                     (std::string("[ReconstructSurface] Could not inquire ") + var).c_str());
                 return;
@@ -1031,7 +1031,7 @@ namespace probe {
 
         // get data from adios
         for (auto var : toInq) {
-            if (!call->inquire(var)) {
+            if (!call->inquireVar(var)) {
                 return false;
             }
         }
@@ -1378,7 +1378,7 @@ namespace probe {
 
         // get data from adios
         for (auto var : vars) {
-            if (!cd->inquire(var)) {
+            if (!cd->inquireVar(var)) {
                 core::utility::log::Log::DefaultLog.WriteError((std::string("[ReconstructSurface] Could not inquire ") + var).c_str());
                 return false;
             }

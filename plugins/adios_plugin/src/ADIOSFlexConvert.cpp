@@ -145,12 +145,12 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", z_str.c_str());
             }
         } else if (pos_str != "undef") {
-            if (!cad->inquire(pos_str)) {
+            if (!cad->inquireVar(pos_str)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", pos_str.c_str());
             }
         } else if (apos_str != "undef") {
-            if (!cad->inquire(apos_str)) {
+            if (!cad->inquireVar(apos_str)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ADIOSFlexConvert] variable \"%s\" does not exist.", apos_str.c_str());
             }

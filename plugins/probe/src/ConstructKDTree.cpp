@@ -187,7 +187,7 @@ bool ConstructKDTree::getData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var)) {
+        if (!cd->inquireVar(var)) {
             return false;
         }
     }
