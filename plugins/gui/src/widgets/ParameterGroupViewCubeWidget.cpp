@@ -769,88 +769,88 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             if (hovered_face >= 0) {
                 switch (hovered_face) {
                 case (DefaultView_t::DEFAULTVIEW_FACE_FRONT):
-                    tooltip_text += "Face [Front]\nAxis  [+Z]";
+                    tooltip_text += "Face [Front]\nAxis [+Z]";
                     face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_BACK):
-                    tooltip_text += "Face [Back]\nAxis  [-Z]";
+                    tooltip_text += "Face [Back]\nAxis [-Z]";
                     face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_RIGHT):
-                    tooltip_text += "Face [Right]\nAxis  [+X]";
+                    tooltip_text += "Face [Right]\nAxis [+X]";
                     face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_LEFT):
-                    tooltip_text += "Face [Left]\nAxis  [-X]";
+                    tooltip_text += "Face [Left]\nAxis [-X]";
                     face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_TOP):
-                    tooltip_text += "Face [Top]\nAxis  [+Y]";
+                    tooltip_text += "Face [Top]\nAxis [+Y]";
                     face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_BOTTOM):
-                    tooltip_text += "Face [Bottom]\nAxis  [-Y]";
+                    tooltip_text += "Face [Bottom]\nAxis [-Y]";
                     face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_LEFT_FRONT):
-                    tooltip_text += "Corner [Left][Top][Front]\nAxis  [-X][+Y][+Z]";
+                    tooltip_text += "Corner [Left][Top][Front]\nAxis [-X][+Y][+Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT):
-                    tooltip_text += "Corner [Right][Top][Front]\nAxis  [+X][+Y][+Z]";
+                    tooltip_text += "Corner [Right][Top][Front]\nAxis [+X][+Y][+Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_LEFT_BACK):
-                    tooltip_text += "Corner [Left][Top][Back]\nAxis  [-X][+Y][-Z]";
+                    tooltip_text += "Corner [Left][Top][Back]\nAxis [-X][+Y][-Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_RIGHT_BACK):
-                    tooltip_text += "Corner [Right][Top][Back]\nAxis  [+X][+Y][-Z]";
+                    tooltip_text += "Corner [Right][Top][Back]\nAxis [+X][+Y][-Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT):
-                    tooltip_text += "Corner [Left][Bottom][Front]\nAxis  [-X][-Y][+Z]";
+                    tooltip_text += "Corner [Left][Bottom][Front]\nAxis [-X][-Y][+Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT):
-                    tooltip_text += "Corner [Right][Bottom][Front]\nAxis  [+X][-Y][+Z]";
+                    tooltip_text += "Corner [Right][Bottom][Front]\nAxis [+X][-Y][+Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK):
-                    tooltip_text += "Corner [Left][Bottom][Back]\nAxis  [-X][-Y][-Z]";
+                    tooltip_text += "Corner [Left][Bottom][Back]\nAxis [-X][-Y][-Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK):
-                    tooltip_text += "Corner [Right][Bottom][Back]\nAxis  [+X][-Y][-Z]";
+                    tooltip_text += "Corner [Right][Bottom][Back]\nAxis [+X][-Y][-Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_FRONT):
-                    tooltip_text += "Edge [Top][Front]\nAxis  [+Y][+Z]";
+                    tooltip_text += "Edge [Top][Front]\nAxis [+Y][+Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_LEFT):
-                    tooltip_text += "Edge [Top][Left]\nAxis  [+Y][-X]";
+                    tooltip_text += "Edge [Top][Left]\nAxis [+Y][-X]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_RIGHT):
-                    tooltip_text += "Edge [Top][Right]\nAxis  [+Y][+X]";
+                    tooltip_text += "Edge [Top][Right]\nAxis [+Y][+X]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_BACK):
-                    tooltip_text += "Edge [Top][Back]\nAxis  [+Y][-Z]";
+                    tooltip_text += "Edge [Top][Back]\nAxis [+Y][-Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_FRONT):
-                    tooltip_text += "Edge [Bottom][Front]\nAxis  [-Y][+Z]";
+                    tooltip_text += "Edge [Bottom][Front]\nAxis [-Y][+Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_LEFT):
-                    tooltip_text += "Edge [Bottom][Left]\nAxis  [-Y][-X]";
+                    tooltip_text += "Edge [Bottom][Left]\nAxis [-Y][-X]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_RIGHT):
-                    tooltip_text += "Edge [Bottom][Right]\nAxis  [-Y][+X]";
+                    tooltip_text += "Edge [Bottom][Right]\nAxis [-Y][+X]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_BACK):
-                    tooltip_text += "Edge [Bottom][Back]\nAxis  [-Y][-Z]";
+                    tooltip_text += "Edge [Bottom][Back]\nAxis [-Y][-Z]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_FRONT_LEFT):
-                    tooltip_text += "Edge [Front][Left]\nAxis  [+Z][-X]";
+                    tooltip_text += "Edge [Front][Left]\nAxis [+Z][-X]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_FRONT_RIGHT):
-                    tooltip_text += "Edge [Front][Right]\nAxis  [+Z][+X]";
+                    tooltip_text += "Edge [Front][Right]\nAxis [+Z][+X]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_BACK_LEFT):
-                    tooltip_text += "Edge [Back][Left]\nAxis  [-Z][-X]";
+                    tooltip_text += "Edge [Back][Left]\nAxis [-Z][-X]";
                     break;
                 case (DefaultView_t::DEFAULTVIEW_EDGE_BACK_RIGHT):
-                    tooltip_text += "Edge [Back][Right]\nAxis  [-Z][+X]";
+                    tooltip_text += "Edge [Back][Right]\nAxis [-Z][+X]";
                     break;
                 default:
                     break;
@@ -862,16 +862,16 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 tooltip_text += " ";
                 switch (hovered_orientation) {
                     case (DefaultOrientation_t::DEFAULTORIENTATION_TOP):
-                        tooltip_text += "\nRotation [0 degree]";
+                        tooltip_text += "\nRot [0 degree]";
                         break;
                     case (DefaultOrientation_t::DEFAULTORIENTATION_RIGHT):
-                        tooltip_text += "\nRotation [90 degree]";
+                        tooltip_text += "\nRot [+90 degree]";
                         break;
                     case (DefaultOrientation_t::DEFAULTORIENTATION_BOTTOM):
-                        tooltip_text += "\nRotation [180 degree]";
+                        tooltip_text += "\nRot [180 degree]";
                         break;
                     case (DefaultOrientation_t::DEFAULTORIENTATION_LEFT):
-                        tooltip_text += "\nRotation [270 degree]";
+                        tooltip_text += "\nRot [-90 degree]";
                         break;
                     default:
                         break;
@@ -884,7 +884,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             } else if (hovered_arrow > 0) {
                 tooltip_text = "Rotate Left";
             }
-             */
+            */
 
             if (!tooltip_text.empty()) {
                 ImGui::BeginTooltip();
