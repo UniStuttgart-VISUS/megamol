@@ -1169,7 +1169,7 @@ void GUIManager::draw_menu() {
         if (ImGui::MenuItem("Load Project", this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].keycode.ToString().c_str())) {
             this->gui_state.open_popup_load = true;
         }
-        this->tooltip.ToolTip("Loaded project will not replace current project but will be added!");
+        this->tooltip.ToolTip("Project will be added to currently running project.");
         if (ImGui::MenuItem("Save Project", this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].keycode.ToString().c_str())) {
             this->gui_state.open_popup_save = true;
         }
