@@ -19,6 +19,7 @@
 #include <CGAL/Segment_3.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 #include <CGAL/Surface_mesh.h>
+#include <CGAL/Triangulation_cell_base_with_info_3.h>
 #include <CGAL/Triangulation_vertex_base_with_info_3.h>
 
 #include <CGAL/Polygon_mesh_processing/orient_polygon_soup.h>
@@ -30,6 +31,7 @@
 #include <array>
 #include <memory>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -40,8 +42,9 @@ typedef K::Segment_3 Segment;
 typedef CGAL::Surface_mesh<Point> Mesh;
 
 typedef CGAL::Triangulation_vertex_base_with_info_3<CGAL::SM_Vertex_index, K> Vb;
-typedef CGAL::Delaunay_triangulation_cell_base_3<K> Cb;
-typedef CGAL::Triangulation_data_structure_3<Vb, Cb> Tds;
+typedef CGAL::Triangulation_cell_base_with_info_3<std::pair<bool, int>, K> Cb;
+typedef CGAL::Delaunay_triangulation_cell_base_3<K, Cb> Dcb;
+typedef CGAL::Triangulation_data_structure_3<Vb, Dcb> Tds;
 typedef CGAL::Delaunay_triangulation_3<K, Tds> Delaunay;
 
 typedef CGAL::AABB_face_graph_triangle_primitive<Mesh, CGAL::Default, CGAL::Tag_false> Primitive;
@@ -246,17 +249,6 @@ bool megamol::flowvis::ExtractPores::compute() {
         this->boundary_offset.ResetDirty();
         this->neighborhood_size.ResetDirty();
 
-        // Compute "clip" box
-        const auto& bb = tmc.get_bounding_box();
-
-        const vislib::math::Cuboid<float> cp(
-            bb.Left() + this->boundary_offset.Param<core::param::FloatParam>()->Value(),
-            bb.Bottom() + this->boundary_offset.Param<core::param::FloatParam>()->Value(),
-            bb.Back() + this->boundary_offset.Param<core::param::FloatParam>()->Value(),
-            bb.Right() - this->boundary_offset.Param<core::param::FloatParam>()->Value(),
-            bb.Top() - this->boundary_offset.Param<core::param::FloatParam>()->Value(),
-            bb.Front() - this->boundary_offset.Param<core::param::FloatParam>()->Value());
-
         // Create surface mesh from input triangles and bounding box
         Mesh mesh;
 
@@ -314,115 +306,131 @@ bool megamol::flowvis::ExtractPores::compute() {
         Delaunay dt;
         dt.insert(mesh_points_with_info.begin(), mesh_points_with_info.end());
 
-        // Iterate over all cells and check which side its center is on
+        for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
+            cell->info().first = false;
+            cell->info().second = 0;
+        }
+
+        // Compute "clip" box
+        const auto& bb = tmc.get_bounding_box();
+
+        const vislib::math::Cuboid<float> cp(
+            bb.Left() + this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+            bb.Bottom() + this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+            bb.Back() + this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+            bb.Right() - this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+            bb.Top() - this->boundary_offset.Param<core::param::FloatParam>()->Value(),
+            bb.Front() - this->boundary_offset.Param<core::param::FloatParam>()->Value());
+
+        auto inside = [&cp](const Point& p) -> bool {
+            return cp.Contains(vislib::math::Point<float, 3>(static_cast<float>(CGAL::to_double(p[0])),
+                static_cast<float>(CGAL::to_double(p[1])), static_cast<float>(CGAL::to_double(p[2]))));
+        };
+
+        // Iterate over all cells and classify them as pores
         std::size_t num_pores = 0;
 
         CGAL::Side_of_triangle_mesh<Mesh, K> orientation_test(mesh);
 
         for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
+            // Ignore cells within the mesh (solid) or too close to the boundary of the domain (ill-shaped)
             const auto cell_center = CGAL::ORIGIN +
                 (0.25 * ((cell->vertex(0)->point() - CGAL::ORIGIN) + (cell->vertex(1)->point() - CGAL::ORIGIN) +
                             (cell->vertex(2)->point() - CGAL::ORIGIN) + (cell->vertex(3)->point() - CGAL::ORIGIN)));
 
-            if (orientation_test(cell_center) != CGAL::ON_BOUNDED_SIDE) {
-                const auto& p1 = cell->vertex(0)->point();
-                const auto& p2 = cell->vertex(1)->point();
-                const auto& p3 = cell->vertex(2)->point();
-                const auto& p4 = cell->vertex(3)->point();
+            if (orientation_test(cell_center) == CGAL::ON_BOUNDED_SIDE ||
+                !(inside(cell->vertex(0)->point()) || inside(cell->vertex(1)->point()) ||
+                    inside(cell->vertex(2)->point()) || inside(cell->vertex(3)->point()))) {
 
-                // Remove "pores" at the boundary, which often do not make sense and ill-shaped
-                const bool inside_1 =
-                    cp.Contains(vislib::math::Point<float, 3>(static_cast<float>(CGAL::to_double(p1[0])),
-                        static_cast<float>(CGAL::to_double(p1[1])), static_cast<float>(CGAL::to_double(p1[2]))));
-                const bool inside_2 =
-                    cp.Contains(vislib::math::Point<float, 3>(static_cast<float>(CGAL::to_double(p2[0])),
-                    static_cast<float>(CGAL::to_double(p2[1])), static_cast<float>(CGAL::to_double(p2[2]))));
-                const bool inside_3 =
-                    cp.Contains(vislib::math::Point<float, 3>(static_cast<float>(CGAL::to_double(p3[0])),
-                    static_cast<float>(CGAL::to_double(p3[1])), static_cast<float>(CGAL::to_double(p3[2]))));
-                const bool inside_4 =
-                    cp.Contains(vislib::math::Point<float, 3>(static_cast<float>(CGAL::to_double(p4[0])),
-                    static_cast<float>(CGAL::to_double(p4[1])), static_cast<float>(CGAL::to_double(p4[2]))));
+                continue;
+            }
 
-                if (!(inside_1 || inside_2 || inside_3 || inside_4)) {
-                    continue;
-                }
+            // Count number of edges shared with the surface mesh
+            int num_shared_segments = 0;
 
-                // Count number of edges shared with the surface mesh
-                int num_shared_segments = 0;
+            for (int i = 0; i < 4; ++i) {
+                // For each vertex of the tetrahedron, get neighboring vertices with given maximum edge distance
+                std::unordered_set<CGAL::SM_Vertex_index> all_vertices;
+                all_vertices.insert(cell->vertex(i)->info());
 
-                for (int i = 0; i < 4; ++i) {
-                    // For each vertex of the tetrahedron, get neighboring vertices with given maximum edge distance
-                    std::unordered_set<CGAL::SM_Vertex_index> all_vertices;
-                    all_vertices.insert(cell->vertex(i)->info());
+                for (int n = 0; n < neighborhood_size.Param<core::param::IntParam>()->Value(); ++n) {
+                    std::vector<CGAL::SM_Vertex_index> vertices;
 
-                    for (int n = 0; n < neighborhood_size.Param<core::param::IntParam>()->Value(); ++n) {
-                        std::vector<CGAL::SM_Vertex_index> vertices;
+                    for (auto it = all_vertices.begin(); it != all_vertices.end(); ++it) {
+                        auto vertex_range = mesh.vertices_around_target(mesh.halfedge(*it));
 
-                        for (auto it = all_vertices.begin(); it != all_vertices.end(); ++it) {
-                            auto vertex_range = mesh.vertices_around_target(mesh.halfedge(*it));
-
-                            for (auto vertex_it = vertex_range.begin(); vertex_it != vertex_range.end(); ++vertex_it) {
-                                vertices.push_back(*vertex_it);
-                            }
+                        for (auto vertex_it = vertex_range.begin(); vertex_it != vertex_range.end(); ++vertex_it) {
+                            vertices.push_back(*vertex_it);
                         }
-
-                        all_vertices.insert(vertices.begin(), vertices.end());
                     }
 
-                    // Check how many of the other vertices are in the neighborhood
-                    for (int j = 0; j < 4; ++j) {
-                        if (i != j) {
-                            if (all_vertices.find(cell->vertex(j)->info()) != all_vertices.end()) {
-                                ++num_shared_segments;
-                            }
+                    all_vertices.insert(vertices.begin(), vertices.end());
+                }
+
+                // Check how many of the other vertices are in the neighborhood
+                for (int j = 0; j < 4; ++j) {
+                    if (i != j) {
+                        if (all_vertices.find(cell->vertex(j)->info()) != all_vertices.end()) {
+                            ++num_shared_segments;
                         }
                     }
                 }
+            }
 
-                // If [no | at most one] edge is shared with the surface mesh, then this is a pore
-                const auto max_num_shared_segments =
-                    (this->pore_criterion.Param<core::param::EnumParam>()->Value() == 0) ? 0 : 1;
+            // If [no | at most one] edge is shared with the surface mesh, then this is a pore
+            const auto max_num_shared_segments =
+                (this->pore_criterion.Param<core::param::EnumParam>()->Value() == 0) ? 0 : 1;
 
-                if (num_shared_segments <= max_num_shared_segments) {
-                    ++num_pores;
+            if (num_shared_segments <= max_num_shared_segments) {
+                cell->info().first = true;
+            }
+        }
 
-                    const auto index = this->output.vertices->size() / 3;
+        // Count for each tetrahedron the number of face-connected pore tetrahedra
+        for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
+            // TODO
+        }
 
-                    // Add tetrahedron vertices
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(0)->point().x())));
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(0)->point().y())));
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(0)->point().z())));
+        // Add pore tetrahedra to output
+        for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
+            if (cell->info().first) {
+                ++num_pores;
 
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(1)->point().x())));
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(1)->point().y())));
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(1)->point().z())));
+                const auto index = this->output.vertices->size() / 3;
 
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(2)->point().x())));
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(2)->point().y())));
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(2)->point().z())));
+                // Add tetrahedron vertices
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(0)->point().x())));
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(0)->point().y())));
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(0)->point().z())));
 
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().x())));
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().y())));
-                    this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().z())));
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(1)->point().x())));
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(1)->point().y())));
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(1)->point().z())));
 
-                    // Set face indices
-                    this->output.indices->push_back(index + 0);
-                    this->output.indices->push_back(index + 1);
-                    this->output.indices->push_back(index + 2);
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(2)->point().x())));
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(2)->point().y())));
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(2)->point().z())));
 
-                    this->output.indices->push_back(index + 0);
-                    this->output.indices->push_back(index + 2);
-                    this->output.indices->push_back(index + 3);
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().x())));
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().y())));
+                this->output.vertices->push_back(static_cast<float>(CGAL::to_double(cell->vertex(3)->point().z())));
 
-                    this->output.indices->push_back(index + 0);
-                    this->output.indices->push_back(index + 1);
-                    this->output.indices->push_back(index + 3);
+                // Set face indices
+                this->output.indices->push_back(index + 0);
+                this->output.indices->push_back(index + 1);
+                this->output.indices->push_back(index + 2);
 
-                    this->output.indices->push_back(index + 1);
-                    this->output.indices->push_back(index + 2);
-                    this->output.indices->push_back(index + 3);
-                }
+                this->output.indices->push_back(index + 0);
+                this->output.indices->push_back(index + 2);
+                this->output.indices->push_back(index + 3);
+
+                this->output.indices->push_back(index + 0);
+                this->output.indices->push_back(index + 1);
+                this->output.indices->push_back(index + 3);
+
+                this->output.indices->push_back(index + 1);
+                this->output.indices->push_back(index + 2);
+                this->output.indices->push_back(index + 3);
             }
         }
 
