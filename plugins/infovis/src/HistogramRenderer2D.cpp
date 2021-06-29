@@ -412,7 +412,7 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
 
         readFlagsCall->getData()->validateFlagCount(this->rowCount);
 
-        glActiveTexture(0);
+        glActiveTexture(GL_TEXTURE0);
         data->bindTexture();
 
         calcTexHistogramProgram->use();
