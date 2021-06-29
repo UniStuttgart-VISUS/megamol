@@ -156,15 +156,15 @@ namespace mesh {
             batched_mesh->vertices_used = 0;
             batched_mesh->indices_used = 0;
 
-            std::vector<GLvoid*> alloc_data(vertex_buffers.size(), nullptr);
+            std::vector<GLvoid const *> alloc_data(vertex_buffers.size(), nullptr);
             std::vector<size_t> alloc_vb_byte_sizes;
             for (size_t attrib_byte_size : vb_attrib_byte_sizes) {
                 alloc_vb_byte_sizes.push_back(attrib_byte_size * new_allocation_vertex_cnt);
             }
 
-            batched_mesh->mesh = std::make_shared<glowl::Mesh>(alloc_data, alloc_vb_byte_sizes, nullptr,
-                new_allocation_index_cnt * glowl::computeByteSize(index_type), vertex_descriptor, index_type, usage,
-                primitive_type);
+            batched_mesh->mesh =
+                std::make_shared<glowl::Mesh>(alloc_data, alloc_vb_byte_sizes, vertex_descriptor, nullptr,
+                new_allocation_index_cnt * glowl::computeByteSize(index_type), index_type, primitive_type, usage);
 
         } else {
             batched_mesh = (*query);
