@@ -7,6 +7,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/utility/DataHash.h"
 
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
@@ -41,8 +42,14 @@ typedef K::Segment_3 Segment;
 
 typedef CGAL::Surface_mesh<Point> Mesh;
 
+enum class pore_type {
+    none = -1,
+    original,
+    between
+};
+
 typedef CGAL::Triangulation_vertex_base_with_info_3<CGAL::SM_Vertex_index, K> Vb;
-typedef CGAL::Triangulation_cell_base_with_info_3<std::pair<bool, int>, K> Cb;
+typedef CGAL::Triangulation_cell_base_with_info_3<std::pair<pore_type, int>, K> Cb;
 typedef CGAL::Delaunay_triangulation_cell_base_3<K, Cb> Dcb;
 typedef CGAL::Triangulation_data_structure_3<Vb, Dcb> Tds;
 typedef CGAL::Delaunay_triangulation_3<K, Tds> Delaunay;
@@ -62,6 +69,7 @@ megamol::flowvis::ExtractPores::ExtractPores()
         , pore_criterion("pore_criterion", "Criterion for classifying a tetrahedron as belonging to a pore.")
         , boundary_offset("boundary_offset", "Boundary width where extracted pores are ignored.")
         , neighborhood_size("neighborhood_size", "Neighborhood size for which vertices are checked to belong to the same mesh.")
+        , tf_type("tf_type", "Transfer function for 'type' data.")
         , input_hash(ExtractPores::GUID()) {
 
     // Connect input slot
@@ -92,6 +100,9 @@ megamol::flowvis::ExtractPores::ExtractPores()
 
     this->neighborhood_size << new core::param::IntParam(1, 1);
     this->MakeSlotAvailable(&this->neighborhood_size);
+
+    this->tf_type << new core::param::TransferFunctionParam();
+    this->MakeSlotAvailable(&this->tf_type);
 }
 
 megamol::flowvis::ExtractPores::~ExtractPores() {
@@ -178,7 +189,7 @@ bool megamol::flowvis::ExtractPores::getMeshDataMetaDataCallback(core::Call& _ca
     call.set_data("surface");
     // surface-to-volume ratio      - The surface-to-volume ratio of the pore or throat
     call.set_data("surface-to-volume ratio");
-    // type                         - The type of the volume: pore (0), throat (1)
+    // type                         - The type of the pore
     call.set_data("type");
     // volume                       - The volume of the pore or throat
     call.set_data("volume");
@@ -307,7 +318,7 @@ bool megamol::flowvis::ExtractPores::compute() {
         dt.insert(mesh_points_with_info.begin(), mesh_points_with_info.end());
 
         for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
-            cell->info().first = false;
+            cell->info().first = pore_type::none;
             cell->info().second = 0;
         }
 
@@ -382,11 +393,11 @@ bool megamol::flowvis::ExtractPores::compute() {
                 (this->pore_criterion.Param<core::param::EnumParam>()->Value() == 0) ? 0 : 1;
 
             if (num_shared_segments <= max_num_shared_segments) {
-                cell->info().first = true;
+                cell->info().first = pore_type::original;
             }
         }
 
-        // Iteratively classify additional pores
+        // Iteratively classify additional pores lying in between pore tetrahedra
         bool change = false;
 
         do {
@@ -398,7 +409,7 @@ bool megamol::flowvis::ExtractPores::compute() {
 
             // Count for each tetrahedron the number of face-connected pore tetrahedra
             for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
-                if (cell->info().first) {
+                if (cell->info().first != pore_type::none) {
                     for (int i = 0; i < 4; ++i) {
                         if (dt.is_cell(cell->neighbor(i)) && !dt.is_infinite(cell->neighbor(i))) {
                             ++cell->neighbor(i)->info().second;
@@ -409,8 +420,8 @@ bool megamol::flowvis::ExtractPores::compute() {
 
             // Classify tetrahedra as pore when connected to at least two pore tetrahedra
             for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
-                if (!cell->info().first && cell->info().second > 1) {
-                    cell->info().first = true;
+                if (cell->info().first == pore_type::none && cell->info().second > 1) {
+                    cell->info().first = pore_type::between;
 
                     change = true;
                 }
@@ -418,8 +429,13 @@ bool megamol::flowvis::ExtractPores::compute() {
         } while (change);
 
         // Add pore tetrahedra to output
+        this->output.datasets[3] = std::make_shared<mesh::MeshDataCall::data_set>();
+        this->output.datasets[3]->min_value = 0;
+        this->output.datasets[3]->max_value = 1;
+        this->output.datasets[3]->data = std::make_shared<std::vector<float>>();
+
         for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
-            if (cell->info().first) {
+            if (cell->info().first != pore_type::none) {
                 ++num_pores;
 
                 const auto index = this->output.vertices->size() / 3;
@@ -457,10 +473,25 @@ bool megamol::flowvis::ExtractPores::compute() {
                 this->output.indices->push_back(index + 1);
                 this->output.indices->push_back(index + 2);
                 this->output.indices->push_back(index + 3);
+
+                // Set pore information
+                this->output.datasets[3]->data->push_back(static_cast<float>(cell->info().first));
+                this->output.datasets[3]->data->push_back(static_cast<float>(cell->info().first));
+                this->output.datasets[3]->data->push_back(static_cast<float>(cell->info().first));
+                this->output.datasets[3]->data->push_back(static_cast<float>(cell->info().first));
             }
         }
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("Number of pores found: %d\n", num_pores);
+    }
+
+    // Set transfer function
+    if ((this->tf_type.IsDirty() || input_changed) && this->output.datasets[3] != nullptr) {
+        this->tf_type.ResetDirty();
+
+        this->output.datasets[3]->transfer_function =
+            this->tf_type.Param<core::param::TransferFunctionParam>()->Value();
+        this->output.datasets[3]->transfer_function_dirty = true;
     }
 
     return true;

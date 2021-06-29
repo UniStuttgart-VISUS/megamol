@@ -109,6 +109,8 @@ namespace flowvis {
         core::param::ParamSlot boundary_offset;
         core::param::ParamSlot neighborhood_size;
 
+        core::param::ParamSlot tf_type;
+
         /** Input */
         struct input_t {
             std::shared_ptr<std::vector<float>> vertices;
