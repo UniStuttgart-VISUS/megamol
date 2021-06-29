@@ -19,6 +19,9 @@ layout(location = 2) in vec3 normal;
 out vec4 colors;
 out vec3 normals;
 
+out vec4 clip_planes;
+out int use_clip_planes;
+
 void main() {
     colors = texture(mesh_shader_params[gl_DrawIDARB].transfer_function,
         (mesh_shader_params[gl_DrawIDARB].min_value == mesh_shader_params[gl_DrawIDARB].max_value)
@@ -28,11 +31,8 @@ void main() {
 
     normals = normal;
 
-    if (mesh_shader_params[gl_DrawIDARB].use_clip_plane != 0 && clip_halfspace(position,
-        mesh_shader_params[gl_DrawIDARB].clip_plane)) {
-
-        colors.a = 0.0f;
-    }
+    clip_planes = mesh_shader_params[gl_DrawIDARB].clip_plane;
+    use_clip_planes = mesh_shader_params[gl_DrawIDARB].use_clip_plane;
 
     gl_Position =  vec4(position, 1.0f);
 }
