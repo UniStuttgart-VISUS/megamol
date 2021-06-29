@@ -386,10 +386,36 @@ bool megamol::flowvis::ExtractPores::compute() {
             }
         }
 
-        // Count for each tetrahedron the number of face-connected pore tetrahedra
-        for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
-            // TODO
-        }
+        // Iteratively classify additional pores
+        bool change = false;
+
+        do {
+            change = false;
+
+            for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
+                cell->info().second = 0;
+            }
+
+            // Count for each tetrahedron the number of face-connected pore tetrahedra
+            for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
+                if (cell->info().first) {
+                    for (int i = 0; i < 4; ++i) {
+                        if (dt.is_cell(cell->neighbor(i)) && !dt.is_infinite(cell->neighbor(i))) {
+                            ++cell->neighbor(i)->info().second;
+                        }
+                    }
+                }
+            }
+
+            // Classify tetrahedra as pore when connected to at least two pore tetrahedra
+            for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
+                if (!cell->info().first && cell->info().second > 1) {
+                    cell->info().first = true;
+
+                    change = true;
+                }
+            }
+        } while (change);
 
         // Add pore tetrahedra to output
         for (auto cell = dt.finite_cells_begin(); cell != dt.finite_cells_end(); ++cell) {
