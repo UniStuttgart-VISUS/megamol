@@ -109,7 +109,7 @@ megamol::compositing::ASSAO::ASSAO()
     , m_pingPongHalfResultB(nullptr)
     , m_finalResults(nullptr)
     , m_finalResultsArrayViews{nullptr, nullptr, nullptr, nullptr}
-    //, m_normals(nullptr)
+    , m_normals(nullptr)
     , m_finalOutput(nullptr)
     , m_samplerStatePointClamp()
     , m_samplerStatePointMirror()
@@ -335,7 +335,6 @@ bool megamol::compositing::ASSAO::create() {
                 "m_halfDepthsMipViews" + std::to_string(i), *m_halfDepths[j], m_depthBufferViewspaceLinearLayout, 0, 1, 0, 1);
         }
     }
-    // TODO: remake finaloutput
     m_finalOutput = std::make_shared<glowl::Texture2D>("m_finalOutput", m_depthBufferViewspaceLinearLayout, nullptr);
     m_pingPongHalfResultA = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultA", m_AOResultLayout, nullptr);
     m_pingPongHalfResultB = std::make_shared<glowl::Texture2D>("m_pingPongHalfResultB", m_AOResultLayout, nullptr);
@@ -438,13 +437,6 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             m_finalOutput->reload(finalLy, nullptr);
         }
 
-        /*std::vector<float> depthdata(depth_tx2D->getWidth() * depth_tx2D->getHeight());
-        depth_tx2D->bindTexture();
-        glGetTexImage(GL_TEXTURE_2D, 0, depth_tx2D->getFormat(), depth_tx2D->getType(), depthdata.data());
-
-        auto minel = *std::min_element(depthdata.begin(), depthdata.end());
-        auto maxel = *std::max_element(depthdata.begin(), depthdata.end());*/
-
         // obtain camera information
         core::view::Camera_2 cam = call_camera->getData();
         cam_type::snapshot_type snapshot;
@@ -465,8 +457,7 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
 
             m_inputs->ViewportWidth = tx_res_normal[0];
             m_inputs->ViewportHeight = tx_res_normal[1];
-            m_inputs->normalTexture = normal_tx2D;
-            m_inputs->depthTexture = depth_tx2D;
+            m_inputs->generateNormals = normal_tx2D == nullptr;
             // TODO: for now we won't use scissortests
             // but the implementation still stays for a more easy migration
             // can be removed or used if (not) needed
@@ -503,9 +494,9 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
                 m_requiresClear = false;
             }*/
 
-            prepareDepths(m_settings, m_inputs);
+            prepareDepths(m_settings, m_inputs, depth_tx2D, normal_tx2D);
 
-            generateSSAO(m_settings, m_inputs, false);
+            generateSSAO(m_settings, m_inputs, false, depth_tx2D, normal_tx2D);
 
             /*if( inputs->OverrideOutputRTV != nullptr )
             {
@@ -547,21 +538,26 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
         
 
     if (lhs_tc->version() < m_version) {
+        /*std::vector<float> depthdata(4LL * m_finalOutput->getWidth() * m_finalOutput->getHeight());
+        m_finalOutput->bindTexture();
+        glGetTexImage(GL_TEXTURE_2D, 0, m_finalOutput->getFormat(), GL_FLOAT, depthdata.data());
+
+        auto minel = *std::min_element(depthdata.begin(), depthdata.end());
+        auto maxel = *std::max_element(depthdata.begin(), depthdata.end());*/
+
         lhs_tc->setData(m_finalOutput, m_version);
     }
 
     return true;
 }
 
-std::shared_ptr<glowl::Texture2D> test;
-glowl::TextureLayout testly;
-
 void megamol::compositing::ASSAO::prepareDepths(
-    const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs) {
-    bool generateNormals = inputs->normalTexture == nullptr;
+    const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, std::shared_ptr<glowl::Texture2D> depthTexture,
+    std::shared_ptr<glowl::Texture2D> normalTexture) {
+    bool generateNormals = inputs->generateNormals;
 
     std::vector<TextureSamplerTuple> inputTextures(1);
-    inputTextures[0] = { inputs->depthTexture, (std::string) "g_DepthSource", nullptr /*m_samplerStatePointClamp*/ };
+    inputTextures[0] = { depthTexture, (std::string) "g_DepthSource", nullptr /*m_samplerStatePointClamp*/ };
 
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputFourDepths = {
         {m_halfDepths[0], 0}, {m_halfDepths[1], 1}, {m_halfDepths[2], 2}, {m_halfDepths[3], 3}};
@@ -579,12 +575,12 @@ void megamol::compositing::ASSAO::prepareDepths(
     } else {
         if (settings.QualityLevel < 0) {
             // TODO: binding not up-to-date
-            outputTwoDepths.push_back({inputs->normalTexture, 7});
+            outputTwoDepths.push_back({normalTexture, 7});
             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                 m_prepare_depths_and_normals_half_prgm, inputTextures, outputTwoDepths);
         } else {
             // TODO: binding not up-to-date
-            outputFourDepths.push_back({inputs->normalTexture, 7});
+            outputFourDepths.push_back({normalTexture, 7});
             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                 m_prepare_depths_and_normals_prgm, inputTextures, outputFourDepths);
         }
@@ -621,8 +617,9 @@ void megamol::compositing::ASSAO::prepareDepths(
     }
 }
 
-void megamol::compositing::ASSAO::generateSSAO(
-    const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass) {
+void megamol::compositing::ASSAO::generateSSAO(const ASSAO_Settings& settings,
+    const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass, std::shared_ptr<glowl::Texture2D> depthTexture,
+    std::shared_ptr<glowl::Texture2D> normalTexture) {
 
     // omitted viewport and scissor code from intel here
 
@@ -660,11 +657,9 @@ void megamol::compositing::ASSAO::generateSSAO(
 
         // Generate
         {
-            
-
             std::vector<TextureSamplerTuple> inputTextures(3);
             inputTextures[0] = {m_halfDepths[pass], "g_ViewSpaceDepthSource", m_samplerStatePointMirror};
-            inputTextures[1] = {inputs->normalTexture, "g_NormalmapSource", nullptr};
+            inputTextures[1] = {normalTexture, "g_NormalmapSource", nullptr};
             inputTextures[2] = {m_halfDepths[pass], "g_ViewSpaceDepthSourceDepthTapSampler", m_samplerStateViewspaceDepthTap};
 
             // CHECK FOR ADAPTIVE SSAO
@@ -764,10 +759,6 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
     int width = inputs->ViewportWidth;
     int height = inputs->ViewportHeight;
 
-    glowl::TextureLayout depth_layout = inputs->depthTexture->getTextureLayout();
-    glowl::TextureLayout normal_layout = inputs->normalTexture->getTextureLayout();
-
-
     bool needsUpdate = (m_size.x != width) || (m_size.y != height);
 
     m_size.x = width;
@@ -833,7 +824,7 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
         reCreateArrayIfNeeded(m_finalResultsArrayViews[i], m_finalResults, m_halfSize, m_AOResultLayout, i);
     }
 
-    reCreateIfNeeded(m_finalOutput, m_size, m_depthBufferViewspaceLinearLayout); // is this needed?
+    //reCreateIfNeeded(m_finalOutput, m_size, m_depthBufferViewspaceLinearLayout); // is this needed?
 
     // trigger a full buffers clear first time; only really required when using scissor rects
     //m_requiresClear = true;
@@ -841,7 +832,7 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
 
 void megamol::compositing::ASSAO::updateConstants(
     const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, int pass) {
-    bool generateNormals = inputs->normalTexture == nullptr;
+    bool generateNormals = inputs->generateNormals;
 
     // update constants
     ASSAO_Constants& consts = m_constants;// = *((ASSAOConstants*) mappedResource.pData);
@@ -1061,7 +1052,6 @@ bool megamol::compositing::ASSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::T
 
 
 // TODO: make checks for euqality in reCreateMIPViewIfNeeded
-// this function needs to be re-done if used, i.e. if MEGAMOL_ASSAO_MANUAL_MIPS is set
 bool megamol::compositing::ASSAO::reCreateMIPViewIfNeeded(
     std::shared_ptr<glowl::Texture2DView> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice) {
     //glowl::TextureLayout current_layout = current->getTextureLayout();

@@ -21,84 +21,6 @@ namespace glowl
 
     struct SamplerLayout
     {
-    //SamplerLayout()
-    //        : texture_min_filter(GL_NEAREST_MIPMAP_LINEAR)
-    //        , texture_mag_filter(GL_LINEAR)
-    //        , texture_min_lod(-1000)
-    //        , texture_max_lod(1000)
-    //        , texture_wrap_s(GL_REPEAT)
-    //        , texture_wrap_t(GL_REPEAT)
-    //        , texture_wrap_r(GL_REPEAT)
-    //        , texture_border_color({0.f, 0.f, 0.f, 0.f})
-    //        , texture_compare_mode(GL_NONE)
-    //        , texture_compare_func(GL_NEVER) {}
-
-    ///**
-    // * \param texture_min_filter Specifies the minification filtering parameter (e.g. GL_NEAREST_MIPMAP_LINEAR)
-    // * \param texture_mag_filter Specifies the magnification filtering parameter (GL_NEAREST or GL_LINEAR)
-    // * \param texture_wrap_s Specifies the wrap parameter for texture coordinate s (e.g. GL_CLAMP_TO_EDGE)
-    // * \param texture_wrap_t Specifies the wrap parameter for texture coordinate t (e.g. GL_CLAMP_TO_EDGE)
-    // */
-    //SamplerLayout(GLuint texture_min_filter, GLuint texture_mag_filter, GLuint texture_wrap_s, GLuint texture_wrap_t)
-    //        : texture_min_filter(texture_min_filter)
-    //        , texture_mag_filter(texture_mag_filter)
-    //        , texture_wrap_s(texture_wrap_s)
-    //        , texture_wrap_t(texture_wrap_t) {}
-
-    ///**
-    // * \param texture_min_filter Specifies the minification filtering parameter (e.g. GL_NEAREST_MIPMAP_LINEAR)
-    // * \param texture_mag_filter Specifies the magnification filtering parameter (GL_NEAREST or GL_LINEAR)
-    // * \param texture_wrap_s Specifies the wrap parameter for texture coordinate s (e.g. GL_CLAMP_TO_EDGE)
-    // * \param texture_wrap_t Specifies the wrap parameter for texture coordinate t (e.g. GL_CLAMP_TO_EDGE)
-    // * \param texture_wrap_r Specifies the wrap parameter for texture coordinate r (e.g. GL_CLAMP_TO_EDGE)
-    // */
-    //SamplerLayout(GLuint texture_min_filter, GLuint texture_mag_filter, GLuint texture_wrap_s, GLuint texture_wrap_t,
-    //    GLuint texture_wrap_r)
-    //        : texture_min_filter(texture_min_filter)
-    //        , texture_mag_filter(texture_mag_filter)
-    //        , texture_wrap_s(texture_wrap_s)
-    //        , texture_wrap_t(texture_wrap_t)
-    //        , texture_wrap_r(texture_wrap_r) {}
-
-    ///**
-    // * \param texture_min_filter Specifies the minification filtering parameter (e.g. GL_NEAREST_MIPMAP_LINEAR)
-    // * \param texture_mag_filter Specifies the magnification filtering parameter (GL_NEAREST or GL_LINEAR)
-    // * \param texture_min_lod Specifies the magnification filtering parameter (GL_NEAREST or GL_LINEAR)
-    // * \param texture_max_lod Specifies the magnification filtering parameter (GL_NEAREST or GL_LINEAR)
-    // * \param texture_wrap_s Specifies the wrap parameter for texture coordinate s (e.g. GL_CLAMP_TO_EDGE)
-    // * \param texture_wrap_t Specifies the wrap parameter for texture coordinate t (e.g. GL_CLAMP_TO_EDGE)
-    // * \param texture_wrap_r Specifies the wrap parameter for texture coordinate r (e.g. GL_CLAMP_TO_EDGE)
-    // * \param texture_border_color Specifies four values that define the border values that should be used for border
-    // * texels \param texture_compare_mode Specifies the texture comparison mode for currently bound depth texture
-    // * (GL_COMPARE_REF_TO_TEXTURE or GL_NONE) \param texture_compare_func Specifies the comparison operator when
-    // * texture_compare_mode is used (e.g. GL_LEQUAL)
-    // */
-    //SamplerLayout(GLuint texture_min_filter, GLuint texture_mag_filter, GLint texture_min_lod, GLint texture_max_lod,
-    //    GLuint texture_wrap_s, GLuint texture_wrap_t, GLuint texture_wrap_r, std::array<GLfloat, 4> col,
-    //    GLuint comparemode, GLuint comparefunc)
-    //        : texture_min_filter(texture_min_filter)
-    //        , texture_mag_filter(texture_mag_filter)
-    //        , texture_min_lod(texture_min_lod)
-    //        , texture_max_lod(texture_max_lod)
-    //        , texture_wrap_s(texture_wrap_s)
-    //        , texture_wrap_t(texture_wrap_t)
-    //        , texture_wrap_r(texture_wrap_r)
-    //        , texture_border_color(col)
-    //        , texture_compare_mode(comparemode)
-    //        , texture_compare_func(comparefunc) {}
-
-
-    //GLuint texture_min_filter;
-    //GLuint texture_mag_filter;
-    //GLint texture_min_lod;
-    //GLint texture_max_lod;
-    //GLuint texture_wrap_s;
-    //GLuint texture_wrap_t;
-    //GLuint texture_wrap_r;
-    //std::array<GLfloat, 4> texture_border_color;
-    //GLuint texture_compare_mode;
-    //GLuint texture_compare_func;
-
      /**
      * \param int_parameters A list of integer texture parameters, each given by a pair of name and value (e.g.
      * {{GL_TEXTURE_MIN_FILTER, GL_NEAREST}, {...}, ...}
@@ -207,7 +129,7 @@ namespace glowl
                 }
             }
 
-            setTextureBorderColor(layout.border_color);
+            //setTextureBorderColor(layout.border_color);
 
             auto err = glGetError();
             if (err != GL_NO_ERROR) {
@@ -301,18 +223,6 @@ namespace glowl
         GLuint getName() const {
             return m_name;
         }
-
-        // TODO: ??
-//#ifndef GLOWL_NO_ARB_BINDLESS_TEXTURE
-//        GLuint64 getTextureHandle() const
-//        {
-//            return m_texture_handle;
-//        }
-//        GLuint64 getImageHandle(GLint level, GLboolean layered, GLint layer) const
-//        {
-//            return glGetImageHandleARB(m_name, level, layered, layer, m_internal_format);
-//        }
-//#endif
 
         GLint getTextureMinFilter() const {
             return m_texture_min_filter;

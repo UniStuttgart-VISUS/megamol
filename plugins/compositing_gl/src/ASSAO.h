@@ -55,8 +55,7 @@ struct ASSAO_Inputs {
     float NormalsUnpackAdd;
 
     // Incoming textures from callerslots
-    std::shared_ptr<glowl::Texture2D> normalTexture;
-    std::shared_ptr<glowl::Texture2D> depthTexture;
+    bool generateNormals;
     glowl::TextureLayout resultLayout;
 
     // Transformation Matrices
@@ -75,8 +74,7 @@ struct ASSAO_Inputs {
         ViewportHeight = 0;
         NormalsUnpackMul = 2.0f;    // stays constant
         NormalsUnpackAdd = -1.0f;   // stays constant
-        normalTexture = nullptr;
-        depthTexture = nullptr;
+        generateNormals = false;
         ProjectionMatrix = glm::mat4(1.0f);
         ViewMatrix = glm::mat4(1.0f);
     }
@@ -238,8 +236,10 @@ private:
     typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
 
-    void prepareDepths(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs);
-    void generateSSAO(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass);
+    void prepareDepths(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs,
+        std::shared_ptr<glowl::Texture2D> depthTexture, std::shared_ptr<glowl::Texture2D> normalTexture);
+    void generateSSAO(const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass,
+        std::shared_ptr<glowl::Texture2D> depthTexture, std::shared_ptr<glowl::Texture2D> normalTexture);
 
     template<typename Tuple, typename Tex>
     void fullscreenPassDraw(
@@ -291,7 +291,7 @@ private:
     std::shared_ptr<glowl::Texture2D> m_pingPongHalfResultB;
     std::shared_ptr<glowl::Texture2DArray> m_finalResults;
     std::array<std::shared_ptr<glowl::Texture2DView>, 4> m_finalResultsArrayViews;
-    //std::shared_ptr<glowl::Texture2D> m_normals;
+    std::shared_ptr<glowl::Texture2D> m_normals;
     std::shared_ptr<glowl::Texture2D> m_finalOutput;
 
     std::shared_ptr<glowl::Sampler> m_samplerStatePointClamp;
