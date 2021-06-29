@@ -113,6 +113,8 @@ private:
     GLint maxBinValue;
 
     std::unique_ptr<glowl::GLSLProgram> calcHistogramProgram;
+    std::unique_ptr<glowl::GLSLProgram> calcTexHistogramProgram;
+    std::unique_ptr<glowl::GLSLProgram> calcTexHistogramMaxProgram;
     std::unique_ptr<glowl::GLSLProgram> selectionProgram;
     std::unique_ptr<glowl::GLSLProgram> histogramProgram;
     std::unique_ptr<glowl::GLSLProgram> axesProgram;
