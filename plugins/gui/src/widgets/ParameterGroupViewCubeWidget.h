@@ -51,7 +51,7 @@ namespace gui {
         ~PickableTexture() = default;
 
         bool Draw(unsigned int picking_id, int selected_face_id, int& out_orientation_change, int& out_hovered_arrow_id,
-                  megamol::core::utility::ManipVector_t& pending_manipulations);
+            megamol::core::utility::ManipVector_t& pending_manipulations);
 
         megamol::core::utility::InteractVector_t GetInteractions(unsigned int id) const;
 
@@ -72,7 +72,7 @@ namespace gui {
         bool Check(bool only_check, ParamPtrVector_t& params) override;
 
         bool Draw(ParamPtrVector_t params, const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
-                  megamol::core::utility::PickingBuffer* inout_picking_buffer) override;
+            megamol::core::utility::PickingBuffer* inout_picking_buffer) override;
 
     private:
         // VARIABLES --------------------------------------------------------------

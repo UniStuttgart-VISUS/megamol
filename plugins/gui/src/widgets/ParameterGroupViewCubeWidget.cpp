@@ -861,20 +861,20 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             if (face_hovered && (hovered_orientation >= 0)) {
                 tooltip_text += " ";
                 switch (hovered_orientation) {
-                    case (DefaultOrientation_t::DEFAULTORIENTATION_TOP):
-                        tooltip_text += "\nRot [0 degree]";
-                        break;
-                    case (DefaultOrientation_t::DEFAULTORIENTATION_RIGHT):
-                        tooltip_text += "\nRot [+90 degree]";
-                        break;
-                    case (DefaultOrientation_t::DEFAULTORIENTATION_BOTTOM):
-                        tooltip_text += "\nRot [180 degree]";
-                        break;
-                    case (DefaultOrientation_t::DEFAULTORIENTATION_LEFT):
-                        tooltip_text += "\nRot [-90 degree]";
-                        break;
-                    default:
-                        break;
+                case (DefaultOrientation_t::DEFAULTORIENTATION_TOP):
+                    tooltip_text += "\nRot [0 degree]";
+                    break;
+                case (DefaultOrientation_t::DEFAULTORIENTATION_RIGHT):
+                    tooltip_text += "\nRot [+90 degree]";
+                    break;
+                case (DefaultOrientation_t::DEFAULTORIENTATION_BOTTOM):
+                    tooltip_text += "\nRot [180 degree]";
+                    break;
+                case (DefaultOrientation_t::DEFAULTORIENTATION_LEFT):
+                    tooltip_text += "\nRot [-90 degree]";
+                    break;
+                default:
+                    break;
                 }
             }
 

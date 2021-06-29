@@ -7,8 +7,8 @@
 
 
 #include "LogConsole.h"
-#include "widgets/ButtonWidgets.h"
 #include "mmcore/utility/log/OfflineTarget.h"
+#include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol::gui;

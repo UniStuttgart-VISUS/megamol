@@ -15,11 +15,12 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-bool megamol::gui::ButtonWidgets::OptionButton(const std::string& id, const std::string& label, bool dirty, bool read_only) {
+bool megamol::gui::ButtonWidgets::OptionButton(
+    const std::string& id, const std::string& label, bool dirty, bool read_only) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
-    
+
     std::string widget_name("option_button");
     std::string widget_id = widget_name + id;
     ImGui::PushID(widget_id.c_str());
@@ -29,7 +30,7 @@ bool megamol::gui::ButtonWidgets::OptionButton(const std::string& id, const std:
     float half_button_size = button_size / 2.0f;
     ImVec2 button_start_pos = ImGui::GetCursorScreenPos();
     ImVec2 rect = ImVec2(button_size, button_size);
-    
+
     if (!label.empty()) {
         float text_x_offset_pos = button_size + style.ItemInnerSpacing.x;
         ImGui::SetCursorScreenPos(button_start_pos + ImVec2(text_x_offset_pos, 0.0f));
@@ -60,8 +61,7 @@ bool megamol::gui::ButtonWidgets::OptionButton(const std::string& id, const std:
             color_back = style.Colors[ImGuiCol_ButtonActive];
             color_front = style.Colors[ImGuiCol_TextDisabled];
         }
-    }
-    else {
+    } else {
         color_back.w *= 0.5f;
         if (!dirty) {
             color_front.w *= 0.5f;
@@ -200,7 +200,7 @@ bool megamol::gui::ButtonWidgets::ExtendedModeButton(const std::string& id, bool
         }
         ImGui::EndPopup();
     }
-    ImGui::SameLine(ImGui::GetFrameHeight() + 1.5f*style.ItemSpacing.x);
+    ImGui::SameLine(ImGui::GetFrameHeight() + 1.5f * style.ItemSpacing.x);
     ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Mode");
 
@@ -215,7 +215,7 @@ bool megamol::gui::ButtonWidgets::LuaButton(
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
-    
+
     std::string widget_name("lua_button");
     std::string widget_id = widget_name + id;
     ImGui::PushID(widget_id.c_str());
@@ -304,10 +304,10 @@ bool megamol::gui::ButtonWidgets::ToggleButton(const std::string& id, bool& inou
     }
 
     ImVec4 col_knob = colors[ImGuiCol_Text];
-    ImVec4 col_btn_hover_false = colors[ImGuiCol_Button];       // ImVec4(0.78f, 0.78f, 0.78f, 1.0f);
-    ImVec4 col_btn_hover_true = colors[ImGuiCol_ButtonActive];  // ImVec4(0.64f, 0.83f, 0.34f, 1.0f);
-    ImVec4 col_btn_false = colors[ImGuiCol_TextDisabled];       // ImVec4(0.85f, 0.85f, 0.85f, 1.0f);
-    ImVec4 col_btn_true = colors[ImGuiCol_ButtonHovered];       // ImVec4(0.56f, 0.83f, 0.26f, 1.0f);
+    ImVec4 col_btn_hover_false = colors[ImGuiCol_Button];      // ImVec4(0.78f, 0.78f, 0.78f, 1.0f);
+    ImVec4 col_btn_hover_true = colors[ImGuiCol_ButtonActive]; // ImVec4(0.64f, 0.83f, 0.34f, 1.0f);
+    ImVec4 col_btn_false = colors[ImGuiCol_TextDisabled];      // ImVec4(0.85f, 0.85f, 0.85f, 1.0f);
+    ImVec4 col_btn_true = colors[ImGuiCol_ButtonHovered];      // ImVec4(0.56f, 0.83f, 0.26f, 1.0f);
     ImU32 col_bg;
     if (ImGui::IsItemHovered()) {
         col_bg = ImGui::GetColorU32(ImLerp(col_btn_hover_false, col_btn_hover_true, t));

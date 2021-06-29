@@ -211,7 +211,8 @@ TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, b
 }
 
 
-void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode, bool full_init) {
+void TransferFunctionEditor::SetTransferFunction(
+    const std::string& tfs, bool connected_parameter_mode, bool full_init) {
 
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Missing active parameter to edit");

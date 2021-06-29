@@ -128,7 +128,7 @@ namespace gui {
 
         virtual void SpecificStateToJSON(nlohmann::json& inout_json) {}
 
-        virtual void SpecificStateFromJSON(const nlohmann::json& in_json) {};
+        virtual void SpecificStateFromJSON(const nlohmann::json& in_json){};
 
     protected:
         BasicConfig win_config;
@@ -136,8 +136,8 @@ namespace gui {
         WindowConfigID window_id; // [SAVED] ID of the predefined callback drawing the window content
 
     private:
-        size_t hash_id;           // unique hash generated from name to omit string comparison
-        std::string name;         // [SAVED] unique name of the window
+        size_t hash_id;   // unique hash generated from name to omit string comparison
+        std::string name; // [SAVED] unique name of the window
         VolatileDrawCallback_t volatile_draw_callback;
     };
 
