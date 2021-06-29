@@ -878,7 +878,7 @@ bool VoluMetricJob::testFullEnclosing(int enclosingIdx, int enclosedIdx, vislib:
      // if (surf->boundingBox.Intersect(seedPoint, direction, &hitFactor) && hitFactor > 0){
             if(hitTriangleMesh(surf->mesh, seedPoint, direction, &hitFactor) && hitFactor > 0) {
                 hitCount++;
-            //    seedPoint = trangleCenter(hitTriangle); // dazu müsste man ein "walkthrough" programmieren ?!
+            //    seedPoint = trangleCenter(hitTriangle); // dazu mÃ¼sste man ein "walkthrough" programmieren ?!
                 // seedPoint += direction*hitFactor; // alternative
             }
       //}

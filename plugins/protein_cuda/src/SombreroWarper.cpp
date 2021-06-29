@@ -610,7 +610,7 @@ bool SombreroWarper::findSombreroBorder(void) {
         for (auto it = localBorder[maxIndex].begin(); it != localBorder[maxIndex].end(); it++) {
             auto vIdx = *it;
             // we iterate over all outgoing triangles and add up the angles they produce
-            // if the resulting angle is not very close to 360°, it is a cut vertex
+            // if the resulting angle is not very close to 360Â°, it is a cut vertex
             auto firstIt = std::lower_bound(
                 firstOrder.begin(), firstOrder.end(), vIdx, [](const Triangle& t, uint s) { return t.v1 < s; });
             auto secondIt = std::lower_bound(
@@ -743,7 +743,7 @@ bool SombreroWarper::findSombreroBorder(void) {
             // iterate over all identified vertices
             for (auto vIdx : localBorder[j]) {
                 // we iterate over all outgoing triangles and add up the angles they produce
-                // if the resulting angle is not very close to 360°, it is a cut vertex
+                // if the resulting angle is not very close to 360Â°, it is a cut vertex
                 auto firstIt = std::lower_bound(
                     firstOrder.begin(), firstOrder.end(), vIdx, [](const Triangle& t, uint s) { return t.v1 < s; });
                 auto secondIt = std::lower_bound(

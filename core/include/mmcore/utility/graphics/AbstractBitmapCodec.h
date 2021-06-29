@@ -2,7 +2,7 @@
  * AbstractBitmapCodec.h
  *
  * Copyright (C) 2009 - 2010 by Sebastian Grottel.
- * (Copyright (C) 2009 - 2010 by VISUS (Universit‰t Stuttgart))
+ * (Copyright (C) 2009 - 2010 by VISUS (Universit√§t Stuttgart))
  * Alle Rechte vorbehalten.
  */
 

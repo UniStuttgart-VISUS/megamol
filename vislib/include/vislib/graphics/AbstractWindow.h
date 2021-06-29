@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2006 - 2012 by Visualisierungsinstitut Universitaet Stuttgart. 
  * Alle Rechte vorbehalten.
- * Copyright (C) 2012 Christoph Müller. Alle Rechte vorbehalten.
+ * Copyright (C) 2012 Christoph MÃ¼ller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIB_ABSTRACTWINDOW_H_INCLUDED

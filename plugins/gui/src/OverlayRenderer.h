@@ -7,6 +7,7 @@
 
 #ifndef MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
 #define MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
+#pragma once
 
 
 #include "mmcore/CallerSlot.h"

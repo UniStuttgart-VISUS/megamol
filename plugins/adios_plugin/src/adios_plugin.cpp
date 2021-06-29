@@ -20,6 +20,7 @@
 #include "TableToADIOS.h"
 #include "ADIOSFlexConvert.h"
 #include "ADIOStoTable.h"
+#include "ls1ParticleFormat.h"
 
 namespace megamol::adios {
     /** Implementing the instance class of this plugin */
@@ -54,6 +55,7 @@ namespace megamol::adios {
             this->module_descriptions.RegisterAutoDescription<megamol::adios::TableToADIOS>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOSFlexConvert>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoTable>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::ls1ParticleFormat>();
 
             // register calls here:
 

@@ -567,7 +567,7 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
     return (this->handle != INVALID_HANDLE_VALUE);
 
 #else /* _WIN32 */
-    // Because we know, that Linux does not support a chefmäßige Unicode-API.
+    // Because we know, that Linux does not support a chefmÃ¤ÃŸige Unicode-API.
     return this->Open(W2A(filename), accessMode, shareMode, creationMode);
 
 #endif /* _WIN32 */

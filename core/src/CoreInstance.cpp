@@ -17,7 +17,6 @@
 #include <string>
 #include <memory>
 
-#include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -534,12 +533,6 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
     jd = std::make_shared<JobDescription>("DEBUGjob");
     jd->AddModule(this->GetModuleDescriptionManager().Find("JobThread"), "ctrl");
     jd->SetJobModuleID("ctrl");
-    this->builtinJobDescs.Register(jd);
-
-    // Generate PluginsStateFile for MegaMol Configurator:
-    jd = std::make_shared<JobDescription>("GenStateFile");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("PluginsStateFileGeneratorJob"), "gen");
-    jd->SetJobModuleID("gen");
     this->builtinJobDescs.Register(jd);
 
     //////////////////////////////////////////////////////////////////////

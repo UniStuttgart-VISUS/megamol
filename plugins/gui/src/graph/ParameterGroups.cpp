@@ -5,8 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "ParameterGroups.h"
+#include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol;

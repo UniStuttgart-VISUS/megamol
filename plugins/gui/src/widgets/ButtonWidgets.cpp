@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
-#include "ButtonWidgets.h"
 
+#include "ButtonWidgets.h"
 #include "graph/Parameter.h"
+#include "imgui.h"
 
 
 using namespace megamol;

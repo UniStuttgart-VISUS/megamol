@@ -7,12 +7,11 @@
 
 #ifndef MEGAMOL_GUI_PARAMETERGROUPVIEWCUBEWIDGET_INCLUDED
 #define MEGAMOL_GUI_PARAMETERGROUPVIEWCUBEWIDGET_INCLUDED
+#pragma once
 
 
 #include "AbstractParameterGroupWidget.h"
-#include "ImageWidget_gl.h"
 #include "mmcore/view/AbstractView3D.h"
-#include "mmcore/view/RenderUtils.h"
 
 
 namespace megamol {

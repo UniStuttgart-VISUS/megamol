@@ -7,14 +7,13 @@
 
 #ifndef MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
+#pragma once
 
-
-#include "GUIUtils.h"
-#include "widgets/PopUps.h"
 
 #include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"
+#include "widgets/PopUps.h"
 
 
 namespace megamol {

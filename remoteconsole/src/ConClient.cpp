@@ -24,6 +24,7 @@ int main(int argc, char* argv[]) {
     std::string host;
     std::string file, script;
     int hammerFactor = 1;
+    int timeOutSeconds = 0;
     bool keepOpen = false;
     bool singleSend = false;
 
@@ -32,6 +33,7 @@ int main(int argc, char* argv[]) {
         "source", "source file", cxxopts::value<std::string>())(
         "exec", "execute script", cxxopts::value<std::string>())("keep-open", "keep open")(
         "hammer", "multi-connect, works only with exec or source. replaces %%i%% with index", cxxopts::value<int>())(
+        "timeout", "max seconds to wait until MegaMol replies (default 10)", cxxopts::value<int>()->default_value("10"))(
             "single", "send whole file or script in one go")("help", "print help");
 
     try {
@@ -52,6 +54,7 @@ int main(int argc, char* argv[]) {
         if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
         if (parseRes.count("keep-open")) keepOpen = parseRes["keep-open"].as<bool>();
         if (parseRes.count("hammer")) hammerFactor = parseRes["hammer"].as<int>();
+        if (parseRes.count("timeout")) timeOutSeconds = parseRes["timeout"].as<int>();
         if (parseRes.count("single")) singleSend = parseRes["single"].as<bool>();
         
         if (!parseRes.count("exec") && !parseRes.count("source")) {
@@ -72,7 +75,7 @@ int main(int argc, char* argv[]) {
 
         for (int i = 0; i < hammerFactor; ++i) {
             sockets.emplace_back(context, ZMQ_PAIR);
-            connections.emplace_back(sockets.back());
+            connections.emplace_back(sockets.back(), timeOutSeconds);
         }
 
         if (!host.empty()) {

@@ -1,147 +1,148 @@
 /*
-* mmvtkmRenderer.h
-*
-* Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
-* Alle Rechte vorbehalten.
-*/
+ * mmvtkmRenderer.h
+ *
+ * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
+ * Alle Rechte vorbehalten.
+ */
 
-#ifndef MEGAMOL_MMVTKM_MMVTKMRENDERER_H_INCLUDED
-#define MEGAMOL_MMVTKM_MMVTKMRENDERER_H_INCLUDED
+#ifndef MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
+#define MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-//#include "vtkm/cont/DataSet.h"
-#include "vtkm/rendering/Actor.h"
-#include "vtkm/rendering/Scene.h"
-//#include "vtkm/rendering/Canvas.h"
-#include "vtkm/rendering/CanvasRayTracer.h"
-//#include "vtkm/rendering/Mapper.h"
-#include "vtkm/rendering/MapperRayTracer.h"
-#include "vtkm/rendering/MapperVolume.h"
-#include "vtkm/rendering/View3D.h"
-
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmvtkm/mmvtkmDataCall.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/param/ParamSlot.h"
+
+// #include "vtkm/rendering/Actor.h"
+// #include "vtkm/rendering/CanvasRayTracer.h"
+// #include "vtkm/rendering/MapperRayTracer.h"
+// #include "vtkm/rendering/MapperVolume.h"
+// #include "vtkm/rendering/Scene.h"
+// #include "vtkm/rendering/View3D.h"
 
 
 namespace megamol {
 namespace mmvtkm {
 
-	/**
-	* Renderer for vtkm data
-	*/
-	class mmvtkmDataRenderer : public core::view::Renderer3DModule_2 {
-	public:
+/**
+ * Renderer for vtkm data
+ */
+class mmvtkmDataRenderer : public core::view::Renderer3DModuleGL {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) { return "vtkmDataRenderer"; }
 
-		/**
-		* Answer the name of this module.
-		*
-		* @return The name of this module.
-		*/
-		static const char *ClassName(void) {
-			return "vtkmDataRenderer";
-		}
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) { return "Renderer for vtkm data."; }
 
-		/**
-		* Answer a human readable description of this module.
-		*
-		* @return A human readable description of this module.
-		*/
-		static const char *Description(void) {
-			return "Renderer for vtkm data.";
-		}
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) { return true; }
 
-		/**
-		* Answers whether this module is available on the current system.
-		*
-		* @return 'true' if the module is available, 'false' otherwise.
-		*/
-		static bool IsAvailable(void) {
-			return true;
-		}
+    /** Ctor. */
+     mmvtkmDataRenderer(void);
 
+    /** Dtor. */
+    virtual ~mmvtkmDataRenderer(void);
 
-		/** Ctor. */
-		mmvtkmDataRenderer(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-		/** Dtor. */
-		virtual ~mmvtkmDataRenderer(void);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-	protected:
+    /**
+     * The render callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool Render(core::view::CallRender3DGL& call);
 
-		/**
-		* Implementation of 'Create'.
-		*
-		* @return 'true' on success, 'false' otherwise.
-		*/
-		virtual bool create(void);
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(core::view::CallRender3DGL& call);
 
-		/**
-		* Implementation of 'Release'.
-		*/
-		virtual void release(void);
+private:
+    /** Callback function for psColorTables paramslot */
+    bool setLocalUpdate(core::param::ParamSlot& slot);
 
-		/**
-		* The get capabilities callback. The module should set the members
-		* of 'call' to tell the caller its capabilities.
-		*
-		* @param call The calling call.
-		*
-		* @return The return value of the function.
-		*/
-        virtual bool GetCapabilities(core::view::CallRender3D_2& call);
+    /** caller slot */
+    core::CallerSlot vtkmDataCallerSlot_;
 
-		/**
-		* The get extents callback. The module should set the members of
-		* 'call' to tell the caller the extents of its data (bounding boxes
-		* and times).
-		*
-		* @param call The calling call.
-		*
-		* @return The return value of the function.
-		*/
-        virtual bool GetExtents(core::view::CallRender3D_2& call);
+	/** Paramslot for vtkm colortables */
+    core::param::ParamSlot psColorTables_;
 
-		/**
-		* The render callback.
-		*
-		* @param call The calling call.
-		*
-		* @return The return value of the function.
-		*/
-        virtual bool Render(core::view::CallRender3D_2& call);
+    /** Some vtkm data set */
+    std::shared_ptr<VtkmData> vtkmDataSet_;
+    VtkmMetaData vtkmMetaData_;
 
-		/**
-         * The render callback.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetData(core::view::CallRender3D_2& call);
+    /** The vtkm structures used for rendering */
+    // vtkm::rendering::Scene scene_;
+    // vtkm::rendering::MapperRayTracer mapper_;
+    // vtkm::rendering::CanvasRayTracer canvas_;
+    // vtkm::rendering::Camera vtkmCamera_;
+    // vtkm::rendering::View3D view;
+    void* colorArray_;
+    float canvasWidth_;
+    float canvasHeight_;
+    float canvasDepth_;
 
+    /** Various vtkm specific colortables */
+    std::vector<const char*> colorTables_ {
+        "Viridis",					// 0
+        "Cool to Warm",				// 1
+        "Cool to Warm Extended",	// 2
+        "Inferno",					// 3
+        "Plasma",					// 4
+        "Black-Body Radiation",		// 5
+        "X Ray",					// 6
+        "Green",					// 7
+        "Black - Blue - White",		// 8
+        "Blue to Orange",			// 9
+        "Gray to Red",				// 10
+        "Cold and Hot",				// 11
+        "Blue - Green - Orange",	// 12
+        "Yellow - Gray - Blue",		// 13
+        "Rainbow Uniform",			// 14
+        "Jet",						// 15
+        "Rainbow Desaturated"		// 16
+    };
 
-	private:
-       /** caller slot */
-    core::CallerSlot vtkmDataCallerSlot;
-
-	/** Some test vtkm data set */
-    vtkm::cont::DataSet *vtkmDataSet;
-
-	/** The vtkm structures used for rendering */
-    vtkm::rendering::Scene scene;
-    vtkm::rendering::MapperRayTracer mapper;
-    vtkm::rendering::CanvasRayTracer canvas;
-    vtkm::rendering::Camera vtkmCamera;
-    //vtkm::rendering::View3D view;
-    void* colorArray;
-    bool dataHasChanged;
-	float canvasWidth, canvasHeight, canvasDepth;
-    SIZE_T oldHash;
-	};
+	/** Used for version controlling */
+    bool localUpdate_;
+};
 
 } /* end namespace mmvtkm */
 } /* end namespace megamol */
 
-#endif // MEGAMOL_MMVTKM_MMVTKMRENDERER_H_INCLUDED
+#endif // MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
