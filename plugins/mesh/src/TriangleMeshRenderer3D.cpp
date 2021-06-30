@@ -185,18 +185,15 @@ namespace mesh {
         }
 
         if (mdc_ptr != nullptr && !this->data_set.Param<core::param::FlexEnumParam>()->Value().empty()) {
-            auto data = mdc_ptr->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
+            this->render_data.values = mdc_ptr->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
 
-            if (data != nullptr && this->data_set.IsDirty()) {
-                this->render_data.values = data;
-
-                this->data_set.ResetDirty();
-                this->mesh_data_changed = true;
-            }
+            this->data_set.ResetDirty();
+            this->mesh_data_changed = true;
         }
 
         if (this->render_data.values == nullptr ||
-            (this->data_set.Param<core::param::FlexEnumParam>()->Value().empty() && this->default_color.IsDirty())) {
+            (this->data_set.Param<core::param::FlexEnumParam>()->Value().empty()
+                && (this->data_set.IsDirty() || this->default_color.IsDirty()))) {
 
             this->render_data.values = std::make_shared<MeshDataCall::data_set>();
 
