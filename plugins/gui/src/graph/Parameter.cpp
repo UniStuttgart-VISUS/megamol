@@ -30,13 +30,14 @@ using namespace megamol::gui;
 
 
 megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minv, Max_t maxv,
-    const std::string& param_name, const std::string& description)
+    const std::string& param_name, const std::string& description, FilePathFlags_t fileflags)
         : megamol::core::param::AbstractParamPresentation()
         , uid(uid)
         , type(type)
         , param_name(param_name)
         , parent_module_name()
         , description(description)
+        , filepath_flags(fileflags)
         , core_param_ptr(nullptr)
         , minval(minv)
         , maxval(maxv)
@@ -472,7 +473,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FILEPATH,
-            std::monostate(), std::monostate(), std::monostate(), param_name, description);
+            std::monostate(), std::monostate(), std::monostate(), param_name, description, p_ptr->GetFlags());
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

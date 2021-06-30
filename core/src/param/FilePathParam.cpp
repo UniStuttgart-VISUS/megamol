@@ -7,82 +7,29 @@
 
 #include "stdafx.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/StringConverter.h"
+
 
 using namespace megamol::core::param;
 
 
-/*
- * FilePathParam::FLAG_NONE
- */
-const UINT32 FilePathParam::FLAG_NONE = 0x00000000;
-
-
-/*
- * FilePathParam::FLAG_NOPATHCHANGE
- */
-const UINT32 FilePathParam::FLAG_NOPATHCHANGE = 0x00000001;
-
-
-/*
- * FilePathParam::FLAG_NOEXISTANCECHECK
- */
-const UINT32 FilePathParam::FLAG_NOEXISTANCECHECK = 0x00000002;
-
-
-/*
- * FilePathParam::FLAG_TOBECREATED
- */
-const UINT32 FilePathParam::FLAG_TOBECREATED = 0x00000003;
-
-
-/*
- * FilePathParam::FilePathParam
- */
-FilePathParam::FilePathParam(const vislib::StringA& initVal, UINT32 flags)
+FilePathParam::FilePathParam(const std::filesystem::path& initVal, FilePathFlags flags)
         : AbstractParam(), flags(flags), val(initVal) {
     this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
 }
 
 
-/*
- * FilePathParam::FilePathParam
- */
-FilePathParam::FilePathParam(const vislib::StringW& initVal, UINT32 flags)
+FilePathParam::FilePathParam(const std::string& initVal, FilePathFlags flags)
         : AbstractParam(), flags(flags), val(initVal) {
     this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
 }
 
 
-/*
- * FilePathParam::FilePathParam
- */
-FilePathParam::FilePathParam(const char *initVal, UINT32 flags)
+FilePathParam::FilePathParam(const std::wstring& initVal, FilePathFlags flags)
         : AbstractParam(), flags(flags), val(initVal) {
     this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
 }
 
 
-/*
- * FilePathParam::FilePathParam
- */
-FilePathParam::FilePathParam(const wchar_t *initVal, UINT32 flags)
-        : AbstractParam(), flags(flags), val(initVal) {
-    this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
-}
-
-
-/*
- * FilePathParam::~FilePathParam
- */
-FilePathParam::~FilePathParam(void) {
-    // intentionally empty
-}
-
-
-/*
- * FilePathParam::Definition
- */
 void FilePathParam::Definition(vislib::RawStorage& outDef) const {
     outDef.AssertSize(6);
 #if defined(UNICODE) || defined(_UNICODE)
@@ -93,12 +40,9 @@ void FilePathParam::Definition(vislib::RawStorage& outDef) const {
 }
 
 
-/*
- * FilePathParam::ParseValue
- */
 bool FilePathParam::ParseValue(const vislib::TString& v) {
     try {
-        this->SetValue(v);
+        this->SetValue(std::string(v.PeekBuffer()));
         return true;
     } catch(...) {
     }
@@ -106,10 +50,7 @@ bool FilePathParam::ParseValue(const vislib::TString& v) {
 }
 
 
-/*
- * FilePathParam::SetValue
- */
-void FilePathParam::SetValue(const vislib::StringA& v, bool setDirty) {
+void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
         this->indicateChange();
@@ -118,44 +59,16 @@ void FilePathParam::SetValue(const vislib::StringA& v, bool setDirty) {
 }
 
 
-/*
- * FilePathParam::SetValue
- */
-void FilePathParam::SetValue(const vislib::StringW& v, bool setDirty) {
-    if (this->val != v) {
-        this->val = v;
-        this->indicateChange();
-        if (setDirty) this->setDirty();
-    }
+void FilePathParam::SetValue(const std::string& v, bool setDirty) {
+    this->SetValue(std::filesystem::path(v), setDirty);
 }
 
 
-/*
- * FilePathParam::SetValue
- */
-void FilePathParam::SetValue(const char *v, bool setDirty) {
-    if (!this->val.Equals(A2T(v))) {
-        this->val = v;
-        if (setDirty) this->setDirty();
-    }
+void FilePathParam::SetValue(const std::wstring& v, bool setDirty) {
+    this->SetValue(std::filesystem::path(v), setDirty);
 }
 
 
-/*
- * FilePathParam::SetValue
- */
-void FilePathParam::SetValue(const wchar_t *v, bool setDirty) {
-    if (!this->val.Equals(W2T(v))) {
-        this->val = v;
-        this->indicateChange();
-        if (setDirty) this->setDirty();
-    }
-}
-
-
-/*
- * FilePathParam::ValueString
- */
 vislib::TString FilePathParam::ValueString(void) const {
-    return this->val;
+    return vislib::TString(this->val.generic_u8string().c_str());
 }

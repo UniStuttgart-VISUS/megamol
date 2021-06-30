@@ -12,6 +12,7 @@
 
 #include <variant>
 #include "mmcore/param/FlexEnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterOrbitalWidget.h"
@@ -33,6 +34,7 @@ namespace gui {
 
     // Types
     typedef std::vector<Parameter> ParamVector_t;
+    typedef megamol::core::param::FilePathParam::FilePathFlags FilePathFlags_t;
 
 
     /** ************************************************************************
@@ -94,6 +96,7 @@ namespace gui {
             bool gui_visibility;
             bool gui_read_only;
             Present_t gui_presentation;
+            megamol::core::param::FilePathParam::FilePathFlags filepath_flags;
         };
 
         // STATIC ---------------------
@@ -120,7 +123,7 @@ namespace gui {
         // ----------------------------
 
         Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minval, Max_t maxval,
-            const std::string& param_name, const std::string& description);
+            const std::string& param_name, const std::string& description, FilePathFlags_t fileflags = 0);
 
         ~Parameter() override;
 
@@ -274,15 +277,13 @@ namespace gui {
                         }
                     } else if (this->type == ParamType_t::FILEPATH) {
                         // Push log message to GUI pop-up for not existing files
-                        /* TODO Disabled until suitable FilePathParam flags are available
                         auto file = std::get<std::string>(this->value);
-                        if (!megamol::core::utility::FileUtils::FileExists(file)) {
+                        if (!(this->filepath_flags & megamol::core::param::FilePathParam::Flag_NoExistenceCheck) && (!megamol::core::utility::FileUtils::FileExists(file))) {
                             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                                 "%sFile Parameter%sFile not found: '%s' > Parameter '%s'\n\n",
                                 LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG,
                                 this->FullNameProject().c_str(), file.c_str());
                         }
-                        */
                     }
                 }
 
@@ -344,6 +345,7 @@ namespace gui {
         std::string param_name;         /// <param_namespace>::<param_name>
         std::string parent_module_name; /// ::<module_group>::<module_name>
         std::string description;
+        const FilePathFlags_t filepath_flags;
 
         vislib::SmartPtr<megamol::core::param::AbstractParam> core_param_ptr;
 

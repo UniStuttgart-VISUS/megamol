@@ -85,8 +85,8 @@ std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string
 
     auto retval_str = in_path_str;
     if ((in_path_str == "..") || (in_path_str == ".")) {
-        stdfs::path retval = static_cast<stdfs::path>(in_path_str);
-        retval = stdfs::absolute(retval);
+        path retval = static_cast<path>(in_path_str);
+        retval = absolute(retval);
 #if (_MSC_VER < 1916) /// XXX Fixed/No more required since VS 2019
         if (retval.has_parent_path()) {
             retval = retval.parent_path();
@@ -153,12 +153,12 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
             // Path ---------------------------------------------------
             auto last_file_path_str = this->file_path_str;
             if (ImGui::ArrowButton("###arrow_home", ImGuiDir_Right)) {
-                this->file_path_str = stdfs::current_path().generic_u8string();
+                this->file_path_str = current_path().generic_u8string();
             }
             this->tooltip.ToolTip("Working Directory", ImGui::GetID("###arrow_home"), 0.5f, 5.0f);
             ImGui::SameLine();
             if (ImGui::ArrowButton("###arrow_up_directory", ImGuiDir_Up)) {
-                stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str);
+                path tmp_file_path = static_cast<path>(this->file_path_str);
                 if (tmp_file_path.has_parent_path() && tmp_file_path.has_relative_path()) {
                     // Assuming that parent is still valid directory
                     this->file_path_str = tmp_file_path.parent_path().generic_u8string();
@@ -201,7 +201,7 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                 // Parent directory selectable
                 std::string tag_parent("..");
                 if (ImGui::Selectable(tag_parent.c_str(), false, select_flags)) {
-                    stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str);
+                    path tmp_file_path = static_cast<path>(this->file_path_str);
                     if (tmp_file_path.has_parent_path() && tmp_file_path.has_relative_path()) {
                         // Assuming that parent is still valid directory
                         this->file_path_str = tmp_file_path.parent_path().generic_u8string();
@@ -222,10 +222,10 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                     std::vector<ChildData_t> paths;
                     std::vector<ChildData_t> files;
                     try {
-                        stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str);
-                        for (const auto& entry : stdfs::directory_iterator(tmp_file_path)) {
-                            if (stdfs::status_known(stdfs::status(entry.path()))) {
-                                bool is_directory = stdfs::is_directory(entry.path());
+                        path tmp_file_path = static_cast<path>(this->file_path_str);
+                        for (const auto& entry : directory_iterator(tmp_file_path)) {
+                            if (status_known(status(entry.path()))) {
+                                bool is_directory = is_directory(entry.path());
                                 if (is_directory) {
                                     paths.emplace_back(ChildData_t(entry.path(), is_directory));
                                 } else {
@@ -391,25 +391,25 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
 
                 // Assemble final file name
                 this->file_name_str += this->valid_ending;
-                stdfs::path tmp_file_path =
-                    static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(this->file_name_str);
+                path tmp_file_path =
+                    static_cast<path>(this->file_path_str) / static_cast<path>(this->file_name_str);
 
                 // Check for desired path format
                 if (opt_relabspath) {
                     if (this->return_path == PATHMODE_RELATIVE_PROJECT) {
                         if (!project_path.empty()) {
-                            auto relative_project_dir = stdfs::path(project_path);
-                            tmp_file_path = stdfs::relative(tmp_file_path, relative_project_dir);
+                            auto relative_project_dir = path(project_path);
+                            tmp_file_path = relative(tmp_file_path, relative_project_dir);
                         }
                     } else if (this->return_path == PATHMODE_RELATIVE_WORKING) {
-                        tmp_file_path = stdfs::relative(
-                            tmp_file_path, stdfs::current_path()); /// XXX requires non-experimental filesystem support
+                        tmp_file_path = relative(
+                            tmp_file_path, current_path()); /// XXX requires non-experimental filesystem support
                     } else {
-                        tmp_file_path = stdfs::absolute(tmp_file_path);
+                        tmp_file_path = absolute(tmp_file_path);
                     }
                     if (tmp_file_path.empty()) {
-                        tmp_file_path = static_cast<stdfs::path>(this->file_path_str) /
-                                        static_cast<stdfs::path>(this->file_name_str);
+                        tmp_file_path = static_cast<path>(this->file_path_str) /
+                                        static_cast<path>(this->file_name_str);
                     }
                 }
 
@@ -447,13 +447,13 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
     try {
         out_path.clear();
         out_file.clear();
-        stdfs::path out_path_file(in_path_file.c_str());
+        path out_path_file(in_path_file.c_str());
         if (out_path_file.empty()) {
-            out_path_file = stdfs::current_path();
+            out_path_file = current_path();
             out_path = out_path_file.generic_u8string();
-        } else if ((stdfs::status_known(stdfs::status(out_path_file)) && stdfs::is_directory(out_path_file))) {
+        } else if ((status_known(status(out_path_file)) && is_directory(out_path_file))) {
             out_path = out_path_file.generic_u8string();
-        } else if (stdfs::status_known(stdfs::status(out_path_file)) && stdfs::is_regular_file(out_path_file)) {
+        } else if (status_known(status(out_path_file)) && is_regular_file(out_path_file)) {
             out_path = out_path_file.parent_path().generic_u8string();
             out_file = out_path_file.filename().generic_u8string();
             if (out_path.empty()) {
@@ -469,7 +469,7 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
         gui_utils::Utf8Decode(out_path);
         gui_utils::Utf8Decode(out_file);
 
-    } catch (stdfs::filesystem_error& e) {
+    } catch (filesystem_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         out_path.clear();
@@ -484,10 +484,10 @@ void megamol::gui::FileBrowserWidget::validate_directory(const std::string& path
 
     // Validating existing directory
     try {
-        stdfs::path tmp_path = static_cast<stdfs::path>(path_str);
-        this->valid_directory = (stdfs::status_known(stdfs::status(tmp_path)) && stdfs::is_directory(tmp_path) &&
+        path tmp_path = static_cast<path>(path_str);
+        this->valid_directory = (status_known(status(tmp_path)) && is_directory(tmp_path) &&
                                  (tmp_path.root_name() != tmp_path));
-    } catch (stdfs::filesystem_error& e) {
+    } catch (filesystem_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
@@ -514,8 +514,8 @@ void megamol::gui::FileBrowserWidget::validate_file(const std::string& file_str,
         this->valid_file = true;
         this->valid_ending.clear();
 
-        stdfs::path tmp_file_path =
-            static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(file_lower);
+        path tmp_file_path =
+            static_cast<path>(this->file_path_str) / static_cast<path>(file_lower);
 
         if (mode == DIALOGMODE_SAVE) {
 
@@ -534,16 +534,16 @@ void megamol::gui::FileBrowserWidget::validate_file(const std::string& file_str,
                 std::string actual_filename = file_lower;
                 actual_filename += this->valid_ending;
                 tmp_file_path =
-                    static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(actual_filename);
+                    static_cast<path>(this->file_path_str) / static_cast<path>(actual_filename);
 
                 // Warn when file already exists
-                if (stdfs::exists(tmp_file_path) && stdfs::is_regular_file(tmp_file_path)) {
+                if (exists(tmp_file_path) && is_regular_file(tmp_file_path)) {
                     this->file_warning += "Overwriting existing file.\n";
                 }
             }
 
             // Error when file is directory
-            if (stdfs::is_directory(tmp_file_path)) {
+            if (is_directory(tmp_file_path)) {
                 this->file_error += "Input is directory.\n";
                 this->valid_file = false;
             }
@@ -571,19 +571,19 @@ void megamol::gui::FileBrowserWidget::validate_file(const std::string& file_str,
             }
 
             // Error when file is directory
-            if (stdfs::is_directory(tmp_file_path)) {
+            if (is_directory(tmp_file_path)) {
                 this->file_error += "Selection is directory.\n";
                 this->valid_file = false;
             }
         } else if (mode == DIALOGMODE_SELECT) {
 
             // Warning when file is directory
-            if (stdfs::is_directory(tmp_file_path)) {
+            if (is_directory(tmp_file_path)) {
                 this->file_warning += "Selection is directory.\n";
             }
         }
 
-    } catch (stdfs::filesystem_error& e) {
+    } catch (filesystem_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;

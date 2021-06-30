@@ -235,7 +235,7 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
     this->tileHeightSlot << new param::IntParam(1080, 1);
     this->MakeSlotAvailable(&this->tileHeightSlot);
 
-    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png", param::FilePathParam::FLAG_TOBECREATED);
+    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png", param::FilePathParam::Flag_File | param::FilePathParam::Flag_ToBeCreated);
     if (!reducedParameters) this->MakeSlotAvailable(&this->imageFilenameSlot);
 
     param::EnumParam* bkgnd = new param::EnumParam(0);

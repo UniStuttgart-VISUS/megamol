@@ -14,9 +14,6 @@
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
-#include "vislib/String.h"
-#include "vislib/tchar.h"
-#include "vislib/types.h"
 
 
 namespace megamol {
@@ -30,25 +27,14 @@ namespace param {
     class MEGAMOLCORE_API FilePathParam : public AbstractParam {
     public:
 
-        /**
-         * No flags set
-         */
-        static const UINT32 FLAG_NONE;
-
-        /**
-         * Flag that the file path must not be changed by the framework
-         */
-        static const UINT32 FLAG_NOPATHCHANGE;
-
-        /**
-         * Flag that the framework should not search for the file
-         */
-        static const UINT32 FLAG_NOEXISTANCECHECK;
-
-        /**
-         * Flags FLAG_NOPATHCHANGE and FLAG_NOEXISTANCECHECK combined
-         */
-        static const UINT32 FLAG_TOBECREATED;
+        typedef uint FilePathFlags;
+        enum FilePathFlags_ : uint32_t {
+            Flag_File               = 1 << 0,
+            Flag_Directory          = 1 << 1,
+            Flag_NoExistenceCheck   = 1 << 2,
+            Flag_NoChange           = 1 << 3,
+            Flag_ToBeCreated        = Flag_NoExistenceCheck | Flag_NoChange
+        };
 
         /**
          * Ctor.
@@ -56,36 +42,14 @@ namespace param {
          * @param initVal The initial value
          * @param flags The flags for the parameter
          */
-        FilePathParam(const vislib::StringA& initVal, UINT32 flags = FLAG_NONE);
-
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         * @param flags The flags for the parameter
-         */
-        FilePathParam(const vislib::StringW& initVal, UINT32 flags = FLAG_NONE);
-
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         * @param flags The flags for the parameter
-         */
-        FilePathParam(const char *initVal, UINT32 flags = FLAG_NONE);
-
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         * @param flags The flags for the parameter
-         */
-        FilePathParam(const wchar_t *initVal, UINT32 flags = FLAG_NONE);
+        explicit FilePathParam(const std::filesystem::path& initVal, FilePathFlags flags = Flag_File);
+        explicit FilePathParam(const std::string& initVal, FilePathFlags flags = Flag_File);
+        explicit FilePathParam(const std::wstring& initVal, FilePathFlags flags = Flag_File);
 
         /**
          * Dtor.
          */
-        virtual ~FilePathParam(void);
+        ~FilePathParam() override = default;
 
         /**
          * Returns a machine-readable definition of the parameter.
@@ -93,7 +57,7 @@ namespace param {
          * @param outDef A memory block to receive a machine-readable
          *               definition of the parameter.
          */
-        virtual void Definition(vislib::RawStorage& outDef) const;
+        void Definition(vislib::RawStorage& outDef) const override;
 
         /**
          * Tries to parse the given string as value for this parameter and
@@ -104,7 +68,7 @@ namespace param {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool ParseValue(const vislib::TString& v);
+        bool ParseValue(const vislib::TString& v) final;
 
         /**
          * Sets the value of the parameter and optionally sets the dirty flag
@@ -114,44 +78,16 @@ namespace param {
          * @param setDirty If 'true' the dirty flag of the owning parameter
          *                 slot is set and the update callback might be called.
          */
-        void SetValue(const vislib::StringA& v, bool setDirty = true);
-
-        /**
-         * Sets the value of the parameter and optionally sets the dirty flag
-         * of the owning parameter slot.
-         *
-         * @param v the new value for the parameter
-         * @param setDirty If 'true' the dirty flag of the owning parameter
-         *                 slot is set and the update callback might be called.
-         */
-        void SetValue(const vislib::StringW& v, bool setDirty = true);
-
-        /**
-         * Sets the value of the parameter and optionally sets the dirty flag
-         * of the owning parameter slot.
-         *
-         * @param v the new value for the parameter
-         * @param setDirty If 'true' the dirty flag of the owning parameter
-         *                 slot is set and the update callback might be called.
-         */
-        void SetValue(const char *v, bool setDirty = true);
-
-        /**
-         * Sets the value of the parameter and optionally sets the dirty flag
-         * of the owning parameter slot.
-         *
-         * @param v the new value for the parameter
-         * @param setDirty If 'true' the dirty flag of the owning parameter
-         *                 slot is set and the update callback might be called.
-         */
-        void SetValue(const wchar_t *v, bool setDirty = true);
+        void SetValue(const std::filesystem::path& v, bool setDirty = true);
+        void SetValue(const std::string& v, bool setDirty = true);
+        void SetValue(const std::wstring& v, bool setDirty = true);
 
         /**
          * Gets the value of the parameter
          *
          * @return The value of the parameter
          */
-        inline const vislib::TString& Value(void) const {
+        inline const std::filesystem::path& Value() const {
             return this->val;
         }
 
@@ -160,31 +96,33 @@ namespace param {
          *
          * @return The value of the parameter as string.
          */
-        virtual vislib::TString ValueString(void) const;
+        vislib::TString ValueString() const override;
 
         /**
          * Gets the value of the parameter
          *
          * @return The value of the parameter
          */
-        inline operator const vislib::TString&(void) const {
+        explicit inline operator const std::filesystem::path&() const {
             return this->val;
+        }
+
+        /**
+         * ...
+         *
+         * @return ...
+         */
+        inline FilePathFlags GetFlags() const {
+            return this->flags;
         }
 
     private:
 
         /** The flags of the parameter */
-        UINT32 flags;
+        FilePathFlags flags;
 
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
-        /** The value of the parameter */
-        vislib::TString val;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
-
+        /** The file or directory path */
+        std::filesystem::path val;
     };
 
 
