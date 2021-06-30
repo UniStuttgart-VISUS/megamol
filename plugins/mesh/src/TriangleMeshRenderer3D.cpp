@@ -174,15 +174,17 @@ namespace mesh {
             mdc_ptr->DataHash() != this->mesh_data_hash) {
 
             this->data_set.Param<core::param::FlexEnumParam>()->ClearValues();
+            this->data_set.Param<core::param::FlexEnumParam>()->AddValue("");
 
             for (const auto& data_set_name : mdc_ptr->get_data_sets()) {
                 this->data_set.Param<core::param::FlexEnumParam>()->AddValue(data_set_name);
             }
 
+            this->data_set.ForceSetDirty();
             this->mesh_data_hash = mdc_ptr->DataHash();
         }
 
-        if (mdc_ptr != nullptr) {
+        if (mdc_ptr != nullptr && !this->data_set.Param<core::param::FlexEnumParam>()->Value().empty()) {
             auto data = mdc_ptr->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
 
             if (data != nullptr && this->data_set.IsDirty()) {
@@ -193,7 +195,9 @@ namespace mesh {
             }
         }
 
-        if (this->render_data.values == nullptr || this->default_color.IsDirty()) {
+        if (this->render_data.values == nullptr ||
+            (this->data_set.Param<core::param::FlexEnumParam>()->Value().empty() && this->default_color.IsDirty())) {
+
             this->render_data.values = std::make_shared<MeshDataCall::data_set>();
 
             this->render_data.values->min_value = 0.0f;
