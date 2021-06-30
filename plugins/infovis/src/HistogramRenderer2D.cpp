@@ -475,6 +475,7 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
 
         calcTexHistogramMaxProgram->use();
         calcTexHistogramMaxProgram->setUniform("binCount", static_cast<GLuint>(this->bins));
+        calcTexHistogramMaxProgram->setUniform("colCount", static_cast<GLuint>(this->colCount));
         glDispatchCompute(1, 1, 1);
 
         glUseProgram(0);
