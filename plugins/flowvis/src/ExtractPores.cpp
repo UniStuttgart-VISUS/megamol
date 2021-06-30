@@ -69,7 +69,7 @@ megamol::flowvis::ExtractPores::ExtractPores()
         , pore_criterion("pore_criterion", "Criterion for classifying a tetrahedron as belonging to a pore.")
         , boundary_offset("boundary_offset", "Boundary width where extracted pores are ignored.")
         , neighborhood_size("neighborhood_size", "Neighborhood size for which vertices are checked to belong to the same mesh.")
-        , tf_type("tf_type", "Transfer function for 'type' data.")
+        , tf_type("type::tf_type", "Transfer function for 'type' data.")
         , input_hash(ExtractPores::GUID()) {
 
     // Connect input slot
