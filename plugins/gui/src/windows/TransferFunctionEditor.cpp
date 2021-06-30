@@ -211,7 +211,8 @@ TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, b
 }
 
 
-void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode, bool full_init) {
+void TransferFunctionEditor::SetTransferFunction(
+    const std::string& tfs, bool connected_parameter_mode, bool full_init) {
 
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Missing active parameter to edit");
@@ -1158,7 +1159,7 @@ bool TransferFunctionEditor::deleteNode(unsigned int node_index) {
 void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const {
 
     // Save current value of selected node
-    const auto n_count = n.size();
+    auto n_count = static_cast<unsigned int>(n.size());
     float value = 0.0f;
     if (this->selected_node_index < n_count) {
         value = n[this->selected_node_index][4];
@@ -1171,7 +1172,7 @@ void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, u
         });
 
     // Prevent nodes with same value
-    for (size_t i = 0; i < (n_count - 1); i++) {
+    for (int i = 0; i < (static_cast<int>(n_count) - 1); i++) {
         if (n[i][4] == n[i + 1][4]) {
             if (value == 0.0f) {
                 n[i][4] += TF_FLOAT_EPS;

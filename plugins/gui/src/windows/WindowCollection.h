@@ -75,7 +75,8 @@ namespace gui {
 
         // FUNCTIONS ------------------------------------------------------
 
-        void add_parameter_window(const std::string& window_name, AbstractWindow::WindowConfigID win_id, ImGuiID initial_module_uid = GUI_INVALID_ID);
+        void add_parameter_window(const std::string& window_name, AbstractWindow::WindowConfigID win_id,
+            ImGuiID initial_module_uid = GUI_INVALID_ID);
     };
 
 } // namespace gui

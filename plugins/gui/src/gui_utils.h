@@ -473,7 +473,6 @@ namespace gui {
         }
 
     private:
-
         gui_utils() = default;
         ~gui_utils() = default;
     };

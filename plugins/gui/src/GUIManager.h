@@ -12,10 +12,10 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
+#include "mmcore/utility/Picking_gl.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
-#include "mmcore/utility/Picking_gl.h"
 #include "windows/Configurator.h"
 #include "windows/WindowCollection.h"
 
@@ -264,7 +264,7 @@ namespace gui {
             std::string new_gui_state; // If set, new gui state is applied in next graph synchronisation step
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
-            bool load_default_fonts;                               // Flag indicating font loading
+            bool load_default_fonts;                       // Flag indicating font loading
             size_t win_delete_hash_id;                     // Hash id of the window to delete.
             double last_instance_time;                     // Last instance time.
             bool open_popup_about;                         // Flag for opening about pop-up
@@ -277,9 +277,9 @@ namespace gui {
             bool screenshot_triggered;                     // Trigger and file name for screenshot
             std::string screenshot_filepath;               // Filename the screenshot should be saved to
             int screenshot_filepath_id;                    // Last unique id for screenshot filename
-            unsigned int font_load;                        // Flag indicating whether new font should be applied in which frame
-            std::string font_load_filename;                // Font imgui name or font file name.
-            int font_load_size;                            // Font size (only used whe font file name is given)
+            unsigned int font_load;               // Flag indicating whether new font should be applied in which frame
+            std::string font_load_filename;       // Font imgui name or font file name.
+            int font_load_size;                   // Font size (only used whe font file name is given)
             std::string request_load_projet_file; // Project file name which should be loaded by fronted service
             float stat_averaged_fps;              // current average fps value
             float stat_averaged_ms;               // current average fps value

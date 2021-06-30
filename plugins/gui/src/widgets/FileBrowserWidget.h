@@ -12,8 +12,8 @@
 
 #include "HoverToolTip.h"
 #include "StringSearchWidget.h"
-#include "mmcore/utility/FileUtils.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/utility/FileUtils.h"
 
 
 namespace megamol {
@@ -100,9 +100,9 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool popup(DialogMode mode, const std::string& label, const std::vector<std::string>& extensions, bool& inout_open_popup,
-            std::string& inout_filename, bool force_absolute_path, const std::string& project_path,
-            vislib::math::Ternary& inout_save_gui_state);
+        bool popup(DialogMode mode, const std::string& label, const std::vector<std::string>& extensions,
+            bool& inout_open_popup, std::string& inout_filename, bool force_absolute_path,
+            const std::string& project_path, vislib::math::Ternary& inout_save_gui_state);
 
         bool validate_split_path(const std::string& in_path_file, std::string& out_path, std::string& out_file) const;
 

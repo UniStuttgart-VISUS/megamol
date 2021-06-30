@@ -386,8 +386,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
 
                 // Draw Background
-                ImU32 module_bg_color =
-                    (this->gui_selected) ? (COLOR_MODULE_HIGHTLIGHT) : (COLOR_MODULE_BACKGROUND);
+                ImU32 module_bg_color = (this->gui_selected) ? (COLOR_MODULE_HIGHTLIGHT) : (COLOR_MODULE_BACKGROUND);
                 draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, GUI_RECT_CORNER_RADIUS,
                     ImDrawFlags_RoundCornersAll);
 
@@ -409,14 +408,13 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         (ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight));
 
                     text_width = ImGui::CalcTextSize(this->class_name.c_str()).x;
-                    text_pos_left_upper = ImVec2(
-                        module_center.x - (text_width / 2.0f), module_rect_min.y + (style.ItemSpacing.y / 2.0f));
+                    text_pos_left_upper =
+                        ImVec2(module_center.x - (text_width / 2.0f), module_rect_min.y + (style.ItemSpacing.y / 2.0f));
                     draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->class_name.c_str());
 
                     text_width = ImGui::CalcTextSize(this->name.c_str()).x;
-                    text_pos_left_upper =
-                        module_center -
-                        ImVec2((text_width / 2.0f), ((any_option_button) ? (line_height * 0.6f) : (0.0f)));
+                    text_pos_left_upper = module_center - ImVec2((text_width / 2.0f),
+                                                              ((any_option_button) ? (line_height * 0.6f) : (0.0f)));
                     draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name.c_str());
                 }
 
@@ -427,8 +425,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         item_y_offset = -(line_height / 2.0f);
                     }
                     if (graph_entry_button && parameter_button) {
-                        item_x_offset =
-                            ImGui::GetFrameHeight() + (0.5f * style.ItemSpacing.x * state.canvas.zooming);
+                        item_x_offset = ImGui::GetFrameHeight() + (0.5f * style.ItemSpacing.x * state.canvas.zooming);
                     }
                     ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
 
@@ -482,8 +479,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 }
 
                 // Draw Outline
-                float border = ((!this->graph_entry_name.empty()) ? (4.0f) : (1.0f)) *
-                               megamol::gui::gui_scaling.Get() * state.canvas.zooming;
+                float border = ((!this->graph_entry_name.empty()) ? (4.0f) : (1.0f)) * megamol::gui::gui_scaling.Get() *
+                               state.canvas.zooming;
                 draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
                     ImDrawFlags_RoundCornersAll, border);
             }

@@ -398,13 +398,14 @@ bool GUIManager::PostDraw() {
         if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
             /// ! Only enabled in second frame if interaction objects are added during first frame !
             this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
-            graph_ptr->DrawGlobalParameterWidgets(this->picking_buffer,
-                                                  this->win_collection.GetWindow<TransferFunctionEditor>());
+            graph_ptr->DrawGlobalParameterWidgets(
+                this->picking_buffer, this->win_collection.GetWindow<TransferFunctionEditor>());
             this->picking_buffer.DisableInteraction();
         }
 
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unknown Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unknown Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -478,9 +479,10 @@ bool GUIManager::PostDraw() {
                 }
             }
             gui_utils::Utf8Decode(this->gui_state.font_load_filename);
-        } else if ((!this->gui_state.font_load_filename.empty()) && (this->gui_state.font_load_filename != "<unknown>")) {
+        } else if ((!this->gui_state.font_load_filename.empty()) &&
+                   (this->gui_state.font_load_filename != "<unknown>")) {
             std::string imgui_font_string =
-                    this->gui_state.font_load_filename + ", " + std::to_string(this->gui_state.font_load_size) + "px";
+                this->gui_state.font_load_filename + ", " + std::to_string(this->gui_state.font_load_size) + "px";
             for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < (io.Fonts->Fonts.Size); n++) {
                 std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
                 gui_utils::Utf8Decode(font_name);
@@ -490,11 +492,12 @@ bool GUIManager::PostDraw() {
                 }
             }
         }
-        //if (!load_success) {
+        // if (!load_success) {
         //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
         //        "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
         //        "loaded with predefined size 13). [%s, %s, line %d]\n",
-        //        this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__, __LINE__);
+        //        this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
+        //        __LINE__);
         //}
         this->gui_state.font_load = 0;
     }
@@ -718,7 +721,7 @@ void megamol::gui::GUIManager::SetScale(float scale) {
         /// Need to wait 1 additional frame for scaled font being available!
         this->gui_state.font_load = 2;
         this->gui_state.font_load_size = static_cast<int>(
-                static_cast<float>(this->gui_state.font_load_size) * (megamol::gui::gui_scaling.TransitionFactor()));
+            static_cast<float>(this->gui_state.font_load_size) * (megamol::gui::gui_scaling.TransitionFactor()));
     }
     // Scale all windows
     const auto size_func = [&](AbstractWindow& wc) {
@@ -1169,7 +1172,7 @@ void GUIManager::draw_menu() {
         if (ImGui::MenuItem("Load Project", this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].keycode.ToString().c_str())) {
             this->gui_state.open_popup_load = true;
         }
-        this->tooltip.ToolTip("Loaded project will not replace current project but will be added!");
+        this->tooltip.ToolTip("Project will be added to currently running project.");
         if (ImGui::MenuItem("Save Project", this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].keycode.ToString().c_str())) {
             this->gui_state.open_popup_save = true;
         }
@@ -1246,7 +1249,8 @@ void GUIManager::draw_menu() {
 
                 bool running = graph_ptr->IsRunning();
                 std::string button_label = "graph_running_button" + std::to_string(graph_ptr->UID());
-                if (megamol::gui::ButtonWidgets::OptionButton( button_label, ((running) ? ("Running") : ("Run")), running, running)) {
+                if (megamol::gui::ButtonWidgets::OptionButton(
+                        button_label, ((running) ? ("Running") : ("Run")), running, running)) {
                     if (!running) {
                         this->win_configurator_ptr->GetGraphCollection().RequestNewRunningGraph(graph_ptr->UID());
                     }
@@ -1355,7 +1359,7 @@ void GUIManager::draw_menu() {
             ImGui::BeginGroup();
             float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
             ImGui::PushItemWidth(widget_width);
-            this->file_browser.Button_Select({ "ttf" }, this->gui_state.font_load_filename, true);
+            this->file_browser.Button_Select({"ttf"}, this->gui_state.font_load_filename, true);
             ImGui::SameLine();
             gui_utils::Utf8Encode(this->gui_state.font_load_filename);
             ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_load_filename, ImGuiInputTextFlags_None);
@@ -1363,7 +1367,7 @@ void GUIManager::draw_menu() {
             ImGui::PopItemWidth();
             // Validate font file before offering load button
             bool valid_file = megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
-                    this->gui_state.font_load_filename, std::string("ttf"));
+                this->gui_state.font_load_filename, std::string("ttf"));
             if (!valid_file) {
                 megamol::gui::gui_utils::PushReadOnly();
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -1540,7 +1544,7 @@ void megamol::gui::GUIManager::draw_popups() {
         auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
         bool popup_failed = false;
         if (this->file_browser.PopUp_Save(
-                "Save Project", { "lua" }, this->gui_state.open_popup_save, filename, save_gui_state)) {
+                "Save Project", {"lua"}, this->gui_state.open_popup_save, filename, save_gui_state)) {
             std::string state_str;
             if (save_gui_state.IsTrue()) {
                 state_str = this->project_to_lua_string(true);
@@ -1556,7 +1560,7 @@ void megamol::gui::GUIManager::draw_popups() {
     // Load project pop-up
     std::string filename;
     this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp_Load("Load Project", { "lua", "png" }, this->gui_state.open_popup_load, filename)) {
+    if (this->file_browser.PopUp_Load("Load Project", {"lua", "png"}, this->gui_state.open_popup_load, filename)) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
@@ -1565,7 +1569,7 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // File name for screenshot pop-up
     auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-    if (this->file_browser.PopUp_Save("Filename for Screenshot", { "png" }, this->gui_state.open_popup_screenshot,
+    if (this->file_browser.PopUp_Save("Filename for Screenshot", {"png"}, this->gui_state.open_popup_screenshot,
             this->gui_state.screenshot_filepath, tmp_flag)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
@@ -1614,7 +1618,7 @@ void megamol::gui::GUIManager::load_preset_window_docking(ImGuiID global_docking
         case (AbstractWindow::WINDOW_ID_MAIN_PARAMETERS): {
             ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_prop);
         } break;
-        //case (AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION): {
+        // case (AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION): {
         //    ImGui::DockBuilderDockWindow(wc.FullWindowTitle().c_str(), dock_id_prop);
         //} break;
         case (AbstractWindow::WINDOW_ID_CONFIGURATOR): {
@@ -1826,7 +1830,7 @@ void GUIManager::RegisterNotification(const std::string& name, bool& open, const
 }
 
 
-std::string GUIManager::extract_fontname(const std::string &imgui_fontname) const {
+std::string GUIManager::extract_fontname(const std::string& imgui_fontname) const {
 
     auto return_fontname = std::string(imgui_fontname);
     auto sep_index = return_fontname.find(',');
