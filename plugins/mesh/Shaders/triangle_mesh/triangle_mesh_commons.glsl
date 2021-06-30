@@ -1,16 +1,19 @@
 /**
  * Calculate the normal
  */
-vec3 calculate_normal(mat4 view_mx, vec4 vertex_1, vec4 vertex_2, vec4 vertex_3) {
-    vec3 normal = normalize(cross(vertex_1.xyz - vertex_2.xyz, vertex_1.xyz - vertex_3.xyz));
+vec3 calculate_normal(vec4 vertex_1, vec4 vertex_2, vec4 vertex_3) {
+    return normalize(cross(vertex_2.xyz - vertex_1.xyz, vertex_3.xyz - vertex_1.xyz));
+}
 
+/**
+ * Is this triangle front facing
+ *
+ * Return true if front facing; false otherwise
+ */
+bool is_front_face(mat4 view_mx, vec3 normal) {
     const vec3 view_dir = normalize((inverse(view_mx) * vec4(0.0f, 0.0f, -1.0f, 0.0f)).xyz);
 
-    if (dot(view_dir, normal) > 0.0f) {
-        normal *= -1.0f;
-    }
-
-    return normal;
+    return dot(view_dir, normal) < 0.0f;
 }
 
 /**

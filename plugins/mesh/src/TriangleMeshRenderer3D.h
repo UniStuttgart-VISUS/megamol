@@ -136,7 +136,7 @@ namespace mesh {
         std::shared_ptr<GPUMaterialCollection> material_collection;
 
         /** Rendering options */
-        core::param::ParamSlot wireframe, calculate_normals;
+        core::param::ParamSlot wireframe, calculate_normals, culling;
         bool shader_changed;
 
         /** Per draw data offsets and size */
@@ -146,14 +146,16 @@ namespace mesh {
             static constexpr std::size_t size_max_value = sizeof(float);
             static constexpr std::size_t size_plane = 4 * sizeof(float);
             static constexpr std::size_t size_plane_bool = sizeof(int);
+            static constexpr std::size_t size_culling = sizeof(int);
 
             static constexpr std::size_t offset_tf = 0;
             static constexpr std::size_t offset_min_value = offset_tf + size_tf;
             static constexpr std::size_t offset_max_value = offset_min_value + size_min_value;
             static constexpr std::size_t offset_plane = offset_max_value + size_max_value;
             static constexpr std::size_t offset_plane_bool = offset_plane + size_plane;
+            static constexpr std::size_t offset_culling = offset_plane_bool + size_plane_bool;
 
-            static constexpr std::size_t size = offset_plane_bool + size_plane_bool;
+            static constexpr std::size_t size = offset_culling + size_culling;
         };
 
         /** Struct for storing data needed for rendering */

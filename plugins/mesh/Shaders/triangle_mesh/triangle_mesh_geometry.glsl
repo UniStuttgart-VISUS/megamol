@@ -5,9 +5,9 @@ uniform mat4 view_mx;
 uniform mat4 proj_mx;
 
 in vec4 colors[];
-
 in vec4 clip_planes[];
 in int use_clip_planes[];
+in int culling[];
 
 out vec4 color;
 out vec3 normal;
@@ -21,33 +21,40 @@ void main() {
         && clip_halfspace(gl_in[1].gl_Position.xyz, clip_planes[0])
         && clip_halfspace(gl_in[2].gl_Position.xyz, clip_planes[0]))) {
 
-        const vec3 calculated_normal =
-            calculate_normal(view_mx, gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position);
+        const vec3 face_normal =
+            calculate_normal(gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position);
 
-        gl_Position = proj_mx * view_mx * gl_in[0].gl_Position;
-        color = colors[0];
-        normal = calculated_normal;
-        world_pos = gl_in[0].gl_Position;
-        clip_plane = clip_planes[0];
-        use_clip_plane = use_clip_planes[0];
-        EmitVertex();
+        const bool front_face = is_front_face(view_mx, face_normal);
 
-        gl_Position = proj_mx * view_mx * gl_in[1].gl_Position;
-        color = colors[1];
-        normal = calculated_normal;
-        world_pos = gl_in[1].gl_Position;
-        clip_plane = clip_planes[0];
-        use_clip_plane = use_clip_planes[0];
-        EmitVertex();
+        if ((culling[0] == 0)                    // no culling
+            || (culling[0] == 1 && front_face)   // back face culling
+            || (culling[0] == 2 && !front_face)) // front face culling
+        {
+            gl_Position = proj_mx * view_mx * gl_in[0].gl_Position;
+            color = colors[0];
+            normal = face_normal;
+            world_pos = gl_in[0].gl_Position;
+            clip_plane = clip_planes[0];
+            use_clip_plane = use_clip_planes[0];
+            EmitVertex();
 
-        gl_Position = proj_mx * view_mx * gl_in[2].gl_Position;
-        color = colors[2];
-        normal = calculated_normal;
-        world_pos = gl_in[2].gl_Position;
-        clip_plane = clip_planes[0];
-        use_clip_plane = use_clip_planes[0];
-        EmitVertex();
+            gl_Position = proj_mx * view_mx * gl_in[1].gl_Position;
+            color = colors[1];
+            normal = face_normal;
+            world_pos = gl_in[1].gl_Position;
+            clip_plane = clip_planes[0];
+            use_clip_plane = use_clip_planes[0];
+            EmitVertex();
 
-        EndPrimitive();
+            gl_Position = proj_mx * view_mx * gl_in[2].gl_Position;
+            color = colors[2];
+            normal = face_normal;
+            world_pos = gl_in[2].gl_Position;
+            clip_plane = clip_planes[0];
+            use_clip_plane = use_clip_planes[0];
+            EmitVertex();
+
+            EndPrimitive();
+        }
     }
 }

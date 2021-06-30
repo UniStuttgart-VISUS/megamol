@@ -11,6 +11,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
@@ -39,6 +40,7 @@ namespace mesh {
             , wireframe("wireframe", "Render wireframe instead of filled triangles")
             , calculate_normals(
                   "calculate_normals", "Calculate normals in geometry shader instead of using input normals")
+            , culling("culling", "Culling mode")
             , triangle_mesh_hash(TriangleMeshRenderer3D::GUID())
             , triangle_mesh_changed(false)
             , mesh_data_hash(TriangleMeshRenderer3D::GUID())
@@ -69,6 +71,12 @@ namespace mesh {
 
         this->calculate_normals << new core::param::BoolParam(true);
         this->MakeSlotAvailable(&this->calculate_normals);
+
+        this->culling << new core::param::EnumParam(0);
+        this->culling.Param<core::param::EnumParam>()->SetTypePair(0, "None");
+        this->culling.Param<core::param::EnumParam>()->SetTypePair(1, "Backface culling");
+        this->culling.Param<core::param::EnumParam>()->SetTypePair(2, "Frontface culling");
+        this->MakeSlotAvailable(&this->culling);
 
         // Disconnect inherited slots
         this->SetSlotUnavailable(&this->m_mesh_slot);
@@ -390,6 +398,14 @@ namespace mesh {
             }
 
             this->m_rendertask_collection.first->updatePerDrawData(identifier, this->render_data.per_draw_data);
+        }
+
+        {
+            // Set culling mode: 0 - none, 1 - backface culling, 2 - frontface culling
+            const int culling_mode = static_cast<int>(this->culling.Param<core::param::EnumParam>()->Value());
+
+            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_culling], &culling_mode,
+                per_draw_data_t::size_culling);
         }
 
         this->triangle_mesh_changed = false;
