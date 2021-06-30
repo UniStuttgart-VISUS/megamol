@@ -11,7 +11,7 @@ namespace megamol::core::utility {
 
 // STATIC functions -------------------------------------------------------
 
-bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename) {
+bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename, GLint tex_min_filter, GLint tex_max_filter) {
 
     if (filename.empty())
         return false;
@@ -28,7 +28,7 @@ bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_tex
         if (pbc.Load(static_cast<void*>(buf.data()), buf.size())) {
             img.Convert(vislib::graphics::BitmapImage::TemplateFloatRGBA);
             retval =
-                RenderUtils::LoadTextureFromData(out_texture_ptr, img.Width(), img.Height(), img.PeekDataAs<FLOAT>());
+                RenderUtils::LoadTextureFromData(out_texture_ptr, img.Width(), img.Height(), img.PeekDataAs<FLOAT>(), tex_min_filter, tex_max_filter);
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
@@ -44,7 +44,7 @@ bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_tex
 
 
 bool RenderUtils::LoadTextureFromData(
-    std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data) {
+    std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data, GLint tex_min_filter, GLint tex_max_filter) {
 
     if (data == nullptr)
         return false;
@@ -52,6 +52,8 @@ bool RenderUtils::LoadTextureFromData(
         std::vector<std::pair<GLenum, GLint>> int_parameters;
         int_parameters.push_back({GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE});
         int_parameters.push_back({GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE});
+        int_parameters.push_back({GL_TEXTURE_MIN_FILTER, tex_min_filter});
+        int_parameters.push_back({GL_TEXTURE_MAG_FILTER, tex_max_filter});
         std::vector<std::pair<GLenum, GLfloat>> float_parameters;
         glowl::TextureLayout tex_layout(GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1, int_parameters, float_parameters);
         if (out_texture_ptr == nullptr) {

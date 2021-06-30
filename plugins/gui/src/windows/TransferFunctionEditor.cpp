@@ -193,7 +193,8 @@ TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, b
         , win_connected_param_name()
         , win_tfe_reset(false)
         , tooltip()
-        , image_widget() {
+        , image_widget()
+        , image_widget_debug() {
 
     this->widget_buffer.left_range = this->range[0];
     this->widget_buffer.right_range = this->range[1];
@@ -579,8 +580,10 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
         }
         if (!this->flip_legend) {
             this->image_widget.LoadTextureFromData(this->texture_size, 1, texture_data.data());
+            this->image_widget_debug.LoadTextureFromData(this->texture_size, 1, texture_data.data(), GL_NEAREST, GL_NEAREST);
         } else {
             this->image_widget.LoadTextureFromData(1, this->texture_size, texture_data.data());
+            this->image_widget_debug.LoadTextureFromData(1, this->texture_size, texture_data.data(), GL_NEAREST, GL_NEAREST);
         }
         this->reload_texture = false;
     }
@@ -692,6 +695,19 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
         uv0 = ImVec2(1.0f, 1.0f);
         uv1 = ImVec2(0.0f, 0.0f);
     }
+
+    // DEBUG - Render nearest texel
+    if (texture_size == 0 || !this->image_widget_debug.IsLoaded()) {
+        // Reserve layout space and draw a black background rectangle.
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImGui::Dummy(image_size);
+        drawList->AddRectFilled(
+                pos, ImVec2(pos.x + image_size.x, pos.y + image_size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
+    } else {
+        // Draw texture as image.
+        this->image_widget_debug.Widget(image_size, uv0, uv1);
+    }
+
     if (texture_size == 0 || !this->image_widget.IsLoaded()) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -1176,6 +1192,8 @@ void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, u
         if (n[i][4] == n[i + 1][4]) {
             if (value == 0.0f) {
                 n[i][4] += TF_FLOAT_EPS;
+            } else if (value == 1.0f) {
+                n[i + 1][4] -= TF_FLOAT_EPS;
             } else {
                 n[i + 1][4] += TF_FLOAT_EPS;
             }
