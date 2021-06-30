@@ -317,7 +317,7 @@ namespace optix_hpg {
                     OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT, 1, MM_OPTIX_SBT_STRIDE, 1, occluded);
 
                 if (!occluded) {
-                    weight = nDl /* LnDl*/ / (MMO_PI * Ldist * Ldist);
+                    weight = nDl /* LnDl*/ / (MMO_PI /* * Ldist * Ldist*/);
                 }
             }
 
