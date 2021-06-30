@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/factories/ModuleAutoDescription.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmcore/view/MouseFlags.h"
 
 
@@ -25,7 +25,7 @@ namespace special {
     /**
      * A simple 2d renderer which just creates a circle
      */
-    class DemoRenderer2D : public view::Renderer2DModule {
+    class DemoRenderer2D : public view::Renderer2DModuleGL {
     public:
 
         /**

@@ -11,14 +11,16 @@
 
 
 #include "AbstractParameterGroupWidget.h"
-#include "mmcore/view/AbstractView3D.h"
+#include "ImageWidget_gl.h"
+#include "mmcore/view/CameraControllers.h"
+#include "mmcore/view/RenderUtils.h"
 
 
 namespace megamol {
 namespace gui {
 
-    typedef megamol::core::view::AbstractView3D::DefaultView DefaultView_t;
-    typedef megamol::core::view::AbstractView3D::DefaultOrientation DefaultOrientation_t;
+    typedef megamol::core::view::Camera3DController::DefaultView DefaultView_t;
+    typedef megamol::core::view::Camera3DController::DefaultOrientation DefaultOrientation_t;
 
     /** ***********************************************************************
      * Pickable Cube

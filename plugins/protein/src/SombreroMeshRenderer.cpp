@@ -941,22 +941,12 @@ bool SombreroMeshRenderer::Render(core::view::CallRender3DGL& call) {
     auto bbCenter = bb.CalcCenter();
 
     // query the current state of the camera (needed for picking)
-    GLfloat m[16];
-    GLfloat m_proj[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m);
-    glGetFloatv(GL_PROJECTION_MATRIX, m_proj);
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelMatrix(&m[0]);
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> projectionMatrix(&m_proj[0]);
-    auto modelMatrixInv = modelMatrix;
-    modelMatrixInv.Invert();
-
-    // Camera
-    view::Camera_2 cam;
-    cr->GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    auto viewport = cam.resolution_gate();
+    view::Camera cam = cr->GetCamera();
+    glm::mat4 projMat = cam.getProjectionMatrix();
+    glm::mat4 modelViewMat = cam.getViewMatrix();
+    auto modelMatrixInv = modelViewMat;
+    modelMatrixInv = glm::inverse(modelMatrixInv);
+    std::array<int,2> viewport = {cr->GetFramebuffer()->getWidth(), cr->GetFramebuffer()->getHeight()};
 
     if (this->showRadiiSlot.Param<param::BoolParam>()->Value()) {
         // find closest line vertex location
@@ -1022,14 +1012,12 @@ bool SombreroMeshRenderer::Render(core::view::CallRender3DGL& call) {
             float remainleft = distleft - leftwidth;
             float remainright = distright - rightwidth;
 
-            glm::mat4 glmProjMat = glm::make_mat4(projectionMatrix.PeekComponents());
-            glm::mat4 glmModelViewMat = glm::make_mat4(modelMatrix.PeekComponents());
             float fontCol[4] = {fontColor.GetX(), fontColor.GetY(), fontColor.GetZ(), 1.0f};
-            this->theFont.DrawString(glmProjMat, glmModelViewMat, fontCol, bbCenter.GetX() + (remainleft / 2.0f),
+            this->theFont.DrawString(projMat, modelViewMat, fontCol, bbCenter.GetX() + (remainleft / 2.0f),
                 bbCenter.GetY() + 1.0 * leftheight,
                 bbCenter.GetZ(), leftwidth, leftheight, sizeleft, false, textleft,
                 megamol::core::utility::SDFFont::ALIGN_LEFT_BOTTOM);
-            this->theFont.DrawString(glmProjMat, glmModelViewMat, fontCol, closest.GetX() + (remainright / 2.0f),
+            this->theFont.DrawString(projMat, modelViewMat, fontCol, closest.GetX() + (remainright / 2.0f),
                 closest.GetY() + 1.0 * rightheight,
                 closest.GetZ(), rightwidth, rightheight, sizeright, false, textright,
                 megamol::core::utility::SDFFont::ALIGN_LEFT_BOTTOM);
@@ -1039,26 +1027,36 @@ bool SombreroMeshRenderer::Render(core::view::CallRender3DGL& call) {
     }
 
     // the camera position from the matrix seems to be wrong
-    this->lastCamState.camPos = vislib::math::Vector<float,3>(cam.position().x(), cam.position().y(), cam.position().x());
-    this->lastCamState.camDir = vislib::math::Vector<float, 3>(
-        -modelMatrixInv.GetAt(0, 2), -modelMatrixInv.GetAt(1, 2), -modelMatrixInv.GetAt(2, 2));
-    this->lastCamState.camUp = vislib::math::Vector<float, 3>(
-        modelMatrixInv.GetAt(0, 1), modelMatrixInv.GetAt(1, 1), modelMatrixInv.GetAt(2, 1));
-    this->lastCamState.camRight = vislib::math::Vector<float, 3>(
-        modelMatrixInv.GetAt(0, 0), modelMatrixInv.GetAt(1, 0), modelMatrixInv.GetAt(2, 0));
+    auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
+    this->lastCamState.camPos =
+        vislib::math::Vector<float, 3>(cam_pose.position.x, cam_pose.position.y, cam_pose.position.x);
+    this->lastCamState.camDir =
+        vislib::math::Vector<float, 3>(cam_pose.direction.x, cam_pose.direction.y, cam_pose.direction.x);
+    this->lastCamState.camUp =
+        vislib::math::Vector<float, 3>(cam_pose.up.x, cam_pose.up.y, cam_pose.up.x);
+    this->lastCamState.camRight
+        = vislib::math::Vector<float, 3>(cam_pose.right.x, cam_pose.right.y, cam_pose.right.x);
     this->lastCamState.camDir.Normalise();
     this->lastCamState.camUp.Normalise();
     this->lastCamState.camRight.Normalise();
-    this->lastCamState.zNear = cam.near_clipping_plane();
-    this->lastCamState.zFar = cam.far_clipping_plane();
-    this->lastCamState.fovy = (float) (cam.aperture_angle() * M_PI / 180.0f);
-    this->lastCamState.aspect = (float)viewport.width() / (float)viewport.height();
-    if (viewport.height() == 0) {
-        this->lastCamState.aspect = 0.0f;
+
+    try {
+        auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
+        this->lastCamState.zNear = cam_intrinsics.near_plane;
+        this->lastCamState.zFar = cam_intrinsics.far_plane;
+        this->lastCamState.fovy = cam_intrinsics.fovy;
+        this->lastCamState.aspect = cam_intrinsics.aspect;
+        if (std::get<1>(viewport) == 0) {
+            this->lastCamState.aspect = 0.0f;
+        }
+        this->lastCamState.fovx = 2.0f * atan(tan(this->lastCamState.fovy / 2.0f) * this->lastCamState.aspect);
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SombreroMeshRenderer - Error when getting camera intrinsics");
     }
-    this->lastCamState.fovx = 2.0f * atan(tan(this->lastCamState.fovy / 2.0f) * this->lastCamState.aspect);
-    this->lastCamState.width = viewport.width();
-    this->lastCamState.height = viewport.height();
+    
+    this->lastCamState.width = std::get<0>(viewport);
+    this->lastCamState.height = std::get<1>(viewport);
 
     ::glCullFace(cfm);
     ::glFrontFace(twr);

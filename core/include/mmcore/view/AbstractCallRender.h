@@ -15,7 +15,7 @@
 #include "mmcore/view/InputCall.h"
 #include "vislib/Array.h"
 #include "mmcore/BoundingBoxes_2.h"
-#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/Camera.h"
 
 
 
@@ -210,7 +210,7 @@ namespace view {
          *
          * @return A camera object containing the minimal state transferred by this call.
          */
-        inline const Camera_2 GetCamera(void) const {
+        inline const Camera GetCamera(void) const {
             return this->_camera;
         }
 
@@ -221,7 +221,7 @@ namespace view {
          *
          * @param cam The camera object the transferred state is stored in
          */
-        inline void GetCamera(Camera_2& cam) const {
+        inline void GetCamera(Camera& cam) const {
             cam = this->_camera;
         }
 
@@ -231,7 +231,7 @@ namespace view {
          *
          * @param camera The camera the state is adapted from.
          */
-        inline void SetCamera(Camera_2& camera) {
+        inline void SetCamera(Camera const& camera) {
             this->_camera = camera;
         }
 
@@ -272,12 +272,103 @@ namespace view {
         glm::vec4 _backgroundCol;
 
         /** The transferred camera state */
-        Camera_2 _camera;
-
+        Camera _camera;
 
         /** The bounding boxes */
         BoundingBoxes_2 _bboxs;
 
+    };
+
+    /**
+     * Class of CPU context rendering
+     *
+     * Function "Render" tells the callee to render in a CPU context
+     *
+     * Function "GetExtents" asks the callee to fill the extents member of the
+     * call (bounding boxes, temporal extents).
+     */
+    template<typename FBO, const char* NAME, const char* DESC>
+    class MEGAMOLCORE_API BaseCallRender : public AbstractCallRender {
+    public:
+        using FBO_TYPE = FBO;
+
+        /**
+         * Answer the name of the objects of this description.
+         *
+         * @return The name of the objects of this description.
+         */
+        static const char* ClassName(void) {
+            return NAME;
+        }
+        //{ return "CallRender3D"; }
+
+        /**
+         * Gets a human readable description of the module.
+         *
+         * @return A human readable description of the module.
+         */
+        static const char* Description(void) {
+            return DESC;
+        }
+        //{ return "CPU Rendering call"; }
+
+        /**
+         * Answer the number of functions used for this call.
+         *
+         * @return The number of functions used for this call.
+         */
+        static unsigned int FunctionCount(void) {
+            return AbstractCallRender::FunctionCount();
+        }
+        /**
+         * Answer the name of the function used for this call.
+         *
+         * @param idx The index of the function to return it's name.
+         *
+         * @return The name of the requested function.
+         */
+        static const char* FunctionName(unsigned int idx) {
+            return AbstractCallRender::FunctionName(idx);
+        }
+
+        /** Ctor. */
+        BaseCallRender(void) {}
+
+        /** Dtor. */
+        ~BaseCallRender(void) {}
+
+        /**
+         * Assignment operator
+         *
+         * @param rhs The right hand side operand
+         *
+         * @return A reference to this
+         */
+        BaseCallRender& operator=(const BaseCallRender& rhs) {
+            view::AbstractCallRender::operator=(rhs);
+            _framebuffer = rhs._framebuffer;
+            return *this;
+        }
+
+        /**
+         * Sets the Framebuffer
+         *
+         * @param fb The framebuffer
+         */
+        inline void SetFramebuffer(std::shared_ptr<FBO> fb) {
+            _framebuffer = fb;
+        }
+
+        /**
+         * Gets the Framebuffer
+         *
+         */
+        inline std::shared_ptr<FBO> GetFramebuffer() {
+            return _framebuffer;
+        }
+
+    private:
+        std::shared_ptr<FBO> _framebuffer;
     };
 
 

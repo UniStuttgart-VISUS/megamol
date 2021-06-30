@@ -13,7 +13,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "Diagram2DCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -25,7 +25,7 @@ namespace protein {
 	/**
 	 * Protein Renderer class
 	 */
-	class Diagram2DRenderer : public megamol::core::view::Renderer2DModule {
+    class Diagram2DRenderer : public megamol::core::view::Renderer2DModuleGL {
     public:
 		/**
 		 * Answer the name of this module.

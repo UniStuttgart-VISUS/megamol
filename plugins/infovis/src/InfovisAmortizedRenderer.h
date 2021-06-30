@@ -12,7 +12,6 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/Renderer2DModule.h"
 
 #include "Renderer2D.h"
 
@@ -106,7 +105,8 @@ namespace infovis {
         int windowWidth = 1;
         int windowHeight = 1;
 
-        GLint origFBO = 0;
+        std::shared_ptr<glowl::FramebufferObject> fbo = nullptr;
+
         int framesNeeded = 1;
         GLfloat modelViewMatrix_column[16];
         GLfloat projMatrix_column[16];

@@ -37,8 +37,6 @@
 #    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/thecam/utility/config.h"
-
 #include "mmcore/thecam/manipulator_base.h"
 
 namespace megamol {
@@ -56,15 +54,12 @@ public:
     /** The type of the camera to be manipulated by the manipulator. */
     typedef typename manipulator_base<T>::camera_type camera_type;
 
-    /** The mathematical traits of the camera. */
-    typedef typename manipulator_base<T>::maths_type maths_type;
-
     // Typedef all mathematical types we need in the manipulator.
-    typedef typename maths_type::point_type point_type;
-    typedef typename maths_type::quaternion_type quaternion_type;
-    typedef typename maths_type::screen_type screen_type;
-    typedef typename maths_type::vector_type vector_type;
-    typedef typename maths_type::world_type world_type;
+    typedef typename glm::vec4 point_type;
+    typedef typename glm::quat quaternion_type;
+    typedef typename int screen_type;
+    typedef typename glm::vec4 vector_type;
+    typedef typename float world_type;
 
     translate_manipulator(const world_type stepSize = 1);
 

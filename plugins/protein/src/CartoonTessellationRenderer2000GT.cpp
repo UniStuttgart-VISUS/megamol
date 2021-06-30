@@ -436,15 +436,9 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
     clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
     clipCol[3] = 1.0f;
 
-    Camera_2 cam;
-    cr->GetCamera(cam);
-
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewT, projT;
-    cam.calc_matrices(snapshot, viewT, projT);
-
-    glm::mat4 view = viewT;
-    glm::mat4 proj = projT;
+    core::view::Camera cam = cr->GetCamera();
+    glm::mat4 view = cam.getViewMatrix();
+    glm::mat4 proj = cam.getProjectionMatrix();
     glm::mat4 mvp = proj * view;
 
     glDisable(GL_BLEND);

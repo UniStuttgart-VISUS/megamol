@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/Framebuffer.h"
 
 #include "cuda.h"
@@ -23,7 +23,7 @@ inline constexpr char callrender3dcuda_name[] = "CallRender3DCUDA";
 
 inline constexpr char callrender3dcuda_desc[] = "CUDA Rendering call";
 
-using CallRender3DCUDA = core::view::BaseCallRender3D<CUDAFramebuffer, callrender3dcuda_name, callrender3dcuda_desc>;
+using CallRender3DCUDA = core::view::BaseCallRender<CUDAFramebuffer, callrender3dcuda_name, callrender3dcuda_desc>;
 
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CallRender3DCUDA> CallRender3DCUDADescription;

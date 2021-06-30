@@ -156,16 +156,11 @@ bool megamol::remote::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
     csn = av->GetCameraSyncNumber();
     if ((csn != syncnumber)) {
         syncnumber = csn;
-        core::view::Camera_2 cam;
-        call->GetCamera(cam);
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type viewTemp, projTemp;
-        cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
-        cam_type::minimal_state_type min_state;
-        cam.get_minimal_state(min_state);
+        core::view::Camera cam = call->GetCamera();
+        auto cam_pose = cam.get<core::view::Camera::Pose>();
 
         core::view::CameraSerializer serializer;
-        const std::string mem = serializer.serialize(min_state);
+        const std::string mem = serializer.serialize(cam);
 
 
         msg.resize(MessageHeaderSize + mem.size());

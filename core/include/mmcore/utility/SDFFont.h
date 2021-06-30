@@ -354,7 +354,7 @@ namespace utility {
          */
         void BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4]) const;
         void BatchDrawString(const glm::mat4& mvp, const float col[4]) const {
-            this->BatchDrawString(glm::mat4(), mvp, col);
+            this->BatchDrawString(glm::mat4(1.0f), mvp, col);
         }
 
         /**
@@ -368,7 +368,7 @@ namespace utility {
          */
         void BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm) const;
         void BatchDrawString(const glm::mat4& mvp) const {
-            this->BatchDrawString(glm::mat4(), mvp);
+            this->BatchDrawString(glm::mat4(1.0f), mvp);
         }
 
         /**

@@ -202,14 +202,13 @@ bool megamol::remote::FBOCompositor2::Render(megamol::core::view::CallRender3DGL
     // initThreads();
 
     auto req_time = call.Time();
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    core::view::Camera_2::snapshot_type cam_snap;
-    core::view::Camera_2::matrix_type view, proj;
-    cam.calc_matrices(cam_snap, view, proj, core::thecam::snapshot_content::all);
-    auto req_cam_pos = cam_snap.position;
-    auto req_cam_up = cam_snap.up_vector;
-    auto req_cam_view = cam_snap.view_vector;
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto req_cam_pos = cam_pose.position;
+    auto req_cam_up = cam_pose.up;
+    auto req_cam_view = cam_pose.direction;
     auto only_req_frame = this->renderOnlyRequestedFramesSlot_.Param<megamol::core::param::BoolParam>()->Value();
 
     // if data changed check if size has changed
@@ -259,15 +258,15 @@ bool megamol::remote::FBOCompositor2::Render(megamol::core::view::CallRender3DGL
         float min = 0.00001f; // == 0 does not work (?)
         // Aborting rendering if requested frame has not been received yet
         if ((std::fabs(req_time - this->frame_times_[0]) >= min) ||
-            (std::fabs(req_cam_pos.x() - this->camera_params_[0]) >= min) ||
-            (std::fabs(req_cam_pos.y() - this->camera_params_[1]) >= min) ||
-            (std::fabs(req_cam_pos.z() - this->camera_params_[2]) >= min) ||
-            (std::fabs(req_cam_up.x() - this->camera_params_[3]) >= min) ||
-            (std::fabs(req_cam_up.y() - this->camera_params_[4]) >= min) ||
-            (std::fabs(req_cam_up.z() - this->camera_params_[5]) >= min) || 
-            (std::fabs(req_cam_view.x() - this->camera_params_[6]) >= min) ||
-            (std::fabs(req_cam_view.y() - this->camera_params_[7]) >= min) ||
-            (std::fabs(req_cam_view.z() - this->camera_params_[8]) >= min)) {
+            (std::fabs(req_cam_pos.x - this->camera_params_[0]) >= min) ||
+            (std::fabs(req_cam_pos.y - this->camera_params_[1]) >= min) ||
+            (std::fabs(req_cam_pos.z - this->camera_params_[2]) >= min) ||
+            (std::fabs(req_cam_up.x - this->camera_params_[3]) >= min) ||
+            (std::fabs(req_cam_up.y - this->camera_params_[4]) >= min) ||
+            (std::fabs(req_cam_up.z - this->camera_params_[5]) >= min) || 
+            (std::fabs(req_cam_view.x - this->camera_params_[6]) >= min) ||
+            (std::fabs(req_cam_view.y - this->camera_params_[7]) >= min) ||
+            (std::fabs(req_cam_view.z - this->camera_params_[8]) >= min)) {
             // Resetting FBO in cr3d (to nullptr). This is detected by CinemativView to skip not requested frames while
             // rendering.
             call.SetFramebufferObject(nullptr);

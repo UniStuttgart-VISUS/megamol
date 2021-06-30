@@ -69,7 +69,7 @@ public:
      */
     virtual ~RendernodeView(void);
 
-    void Render(const mmcRenderViewContext& context, core::Call* call) override;
+    void Render(double time, double instanceTime) override;
 
     bool OnRenderView(core::Call& call) override;
 

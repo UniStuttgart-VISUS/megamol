@@ -10,8 +10,7 @@
  */
 template <size_t N>
 std::string megamol::core::view::CameraSerializer::serialize(
-    const std::array<megamol::core::view::Camera_2::minimal_state_type, N>& camVec,
-    const std::array<bool, N>& validityFlags) const {
+    std::array<Camera, N> const& camVec, const std::array<bool, N>& validityFlags) const {
 
     nlohmann::json out;
     for (size_t i = 0; i < N; i++) {
@@ -29,7 +28,7 @@ std::string megamol::core::view::CameraSerializer::serialize(
 
 template <size_t N>
 std::string megamol::core::view::CameraSerializer::serialize(
-    const std::array<std::pair<megamol::core::view::Camera_2::minimal_state_type, bool>, N>& camVec) const {
+    std::array<std::pair<Camera, bool>, N> const& camVec) const {
 
     nlohmann::json out;
     for (const auto& obj : camVec) {
@@ -49,8 +48,7 @@ std::string megamol::core::view::CameraSerializer::serialize(
  */
 template <size_t N>
 bool megamol::core::view::CameraSerializer::deserialize(
-    std::array<megamol::core::view::Camera_2::minimal_state_type, N>& outCameras, std::array<bool, N>& outValidity,
-    const std::string text) const {
+    std::array<Camera, N>& outCameras, std::array<bool, N>& outValidity, std::string const text) const {
     nlohmann::json obj = nlohmann::json::parse(text);
     if (!obj.is_array()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("The input text does not contain a json array");
@@ -79,8 +77,7 @@ bool megamol::core::view::CameraSerializer::deserialize(
  */
 template <size_t N>
 bool megamol::core::view::CameraSerializer::deserialize(
-    std::array<std::pair<megamol::core::view::Camera_2::minimal_state_type, bool>, N>& outCameras,
-    const std::string text) const {
+    std::array<std::pair<Camera, bool>, N>& outCameras, std::string const text) const {
     nlohmann::json obj = nlohmann::json::parse(text);
     if (!obj.is_array()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("The input text does not contain a json array");
@@ -93,7 +90,7 @@ bool megamol::core::view::CameraSerializer::deserialize(
     for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {
         size_t index = static_cast<size_t>(it - obj.begin());
         auto cur = *it;
-        megamol::core::view::Camera_2::minimal_state_type cam;
+        megamol::core::view::Camera cam;
         bool result = this->getCamFromJsonObject(cam, cur);
         if (!result) {
             cam = {}; // empty the cam if it is garbage

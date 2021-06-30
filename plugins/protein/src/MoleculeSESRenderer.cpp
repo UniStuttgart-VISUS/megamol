@@ -777,12 +777,10 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
 
     // get camera information
     this->cameraInfo = call.GetCamera();
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cameraInfo.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    auto resolution = cameraInfo.resolution_gate();
-    glm::mat4 view = viewTemp;
-    glm::mat4 proj = projTemp;
+    glm::mat4 view = this->cameraInfo.getViewMatrix();
+    glm::mat4 proj = this->cameraInfo.getProjectionMatrix();
+
+    std::array<int, 2> resolution = {call.GetFramebuffer()->getWidth(), call.GetFramebuffer()->getHeight()};
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -874,10 +872,10 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
     }
 
     bool virtualViewportChanged = false;
-    if (static_cast<unsigned int>(resolution.width()) != this->width ||
-        static_cast<unsigned int>(resolution.height()) != this->height) {
-        this->width = static_cast<unsigned int>(resolution.width());
-        this->height = static_cast<unsigned int>(resolution.height());
+    if (static_cast<unsigned int>(std::get<0>(resolution)) != this->width ||
+        static_cast<unsigned int>(std::get<1>(resolution)) != this->height) {
+        this->width = static_cast<unsigned int>(std::get<0>(resolution));
+        this->height = static_cast<unsigned int>(std::get<1>(resolution));
         virtualViewportChanged = true;
     }
 

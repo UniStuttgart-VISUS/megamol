@@ -1,10 +1,8 @@
 #include "stdafx.h"
 #include "InfovisAmortizedRenderer.h"
 
-#include <glm/gtc/functions.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -28,11 +26,7 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
     this->nextRendererSlot.SetCompatibleCall<megamol::core::view::CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->nextRendererSlot);
 
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
-
     setupBuffers();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
 
     this->halveRes << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&halveRes);
@@ -133,8 +127,6 @@ bool InfovisAmortizedRenderer::makeShaders() {
 }
 
 void InfovisAmortizedRenderer::setupBuffers() {
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
-
     glGenFramebuffers(1, &amortizedFboA);
     glGenFramebuffers(1, &amortizedMsaaFboA);
     glGenFramebuffers(1, &amortizedPushFBO);
@@ -190,8 +182,6 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
 }
 
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel) {
@@ -519,7 +509,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
 
     amort_reconstruction_shdr_array[approach]->use();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+    fbo->bind();
 
     amort_reconstruction_shdr_array[approach]->setUniform("h", h);
     amort_reconstruction_shdr_array[approach]->setUniform("w", w);
@@ -599,12 +589,11 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     }
 
     // get camera
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
+    core::view::Camera cam = call.GetCamera();
     cr2d->SetCamera(cam);
 
-    cam_type::matrix_type view, proj;
-    cam.calc_matrices(view, proj);
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
 
     cr2d->SetTime(call.Time());
     cr2d->SetInstanceTime(call.InstanceTime());
@@ -617,19 +606,15 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     backgroundColor[2] = bg[2];
     backgroundColor[3] = 1.0;
 
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
-    // this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
+    fbo = call.GetFramebuffer();
 
     cr2d->SetBackgroundColor(call.BackgroundColor());
     cr2d->AccessBoundingBoxes() = call.GetBoundingBoxes();
 
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
         int a = amortLevel.Param<core::param::IntParam>()->Value();
-        int w = cam.resolution_gate().width();
-        int h = cam.resolution_gate().height();
+        int w = fbo->getWidth();
+        int h = fbo->getHeight();
         windowWidth = w;
         windowHeight = h;
         int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
@@ -641,7 +626,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         }
 
         setupAccel(approach, w, h, ssLevel);
-        cr2d->SetFramebufferObject(call.GetFramebufferObject());
+        cr2d->SetFramebuffer(call.GetFramebuffer());
 
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
@@ -655,7 +640,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         oldW = w;
         oldaLevel = a;
     } else {
-        cr2d->SetFramebufferObject(call.GetFramebufferObject());
+        cr2d->SetFramebuffer(call.GetFramebuffer());
 
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);

@@ -116,7 +116,6 @@ namespace gl {
         std::shared_ptr<glfwInst> glfw;
         GLFWwindow *hWnd; // glfw window handle
         int width, height;
-        mmcRenderViewContext renderContext;
         UILayersCollection uiLayers;
         std::shared_ptr<AbstractUILayer> mouseCapture;
         std::string name;

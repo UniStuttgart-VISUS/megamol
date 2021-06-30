@@ -68,17 +68,15 @@ namespace gui {
 
         virtual float DefaultTime(double instTime) const override;
 
-        virtual unsigned int GetCameraSyncNumber(void) const override;
-
         virtual bool OnRenderView(megamol::core::Call& call);
 
-        virtual void Render(const mmcRenderViewContext& context, core::Call* call) override;
+        virtual ImageWrapper Render(double time, double instanceTime) override;
+
+        ImageWrapper GetRenderingResult() const override;
 
         virtual void ResetView(void) override;
 
         virtual void Resize(unsigned int width, unsigned int height) override;
-
-        virtual void UpdateFreeze(bool freeze) override;
 
         virtual bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action,
             megamol::core::view::Modifiers mods) override;
@@ -104,16 +102,13 @@ namespace gui {
     private:
         // VARIABLES --------------------------------------------------------------
 
-        /** The override call */
-        megamol::core::view::CallRenderViewGL* overrideCall;
-
         /** The input renderview slot */
         megamol::core::CallerSlot render_view_slot;
 
         /** The gui */
         megamol::gui::GUIWindows gui;
 
-        std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
+        std::shared_ptr<glowl::FramebufferObject> _fbo;
 
         // ------------------------------------------------------------------------
     };

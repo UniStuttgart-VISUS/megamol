@@ -190,7 +190,7 @@ namespace protein {
         megamol::core::CallerSlot protRendererCallerSlot;
         
         // camera information
-        core::view::Camera_2 cameraInfo;
+        core::view::Camera cameraInfo;
         // scaling factor for the scene
         float scale;
         // translation of the scene
@@ -261,7 +261,7 @@ namespace protein {
         unsigned int atomCount;
 
         // FBO for rendering the protein
-        std::shared_ptr<vislib::graphics::gl::FramebufferObject> proteinFBO;
+        std::shared_ptr<glowl::FramebufferObject> proteinFBO;
 
         // volume texture
         GLuint volumeTex;

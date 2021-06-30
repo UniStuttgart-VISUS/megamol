@@ -14,7 +14,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "protein_calls/DiagramCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OutlineFont.h"
@@ -24,7 +24,7 @@
 namespace megamol {
 namespace protein {
 
-    class DiagramRenderer : public megamol::core::view::Renderer2DModule {
+    class DiagramRenderer : public megamol::core::view::Renderer2DModuleGL {
     public:
 
         enum DiagramTypes {

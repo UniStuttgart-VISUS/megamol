@@ -28,7 +28,7 @@ namespace cinematic {
 		/** CTOR */
         Keyframe(void);
 
-        Keyframe(float at, float st, camera_state_type cam);
+        Keyframe(float at, float st, camera_type cam);
 
 		/** DTOR */
 		~Keyframe(void);
@@ -51,7 +51,7 @@ namespace cinematic {
             return this->sim_time; // (this->sim_time == 1.0f) ? (1.0f - 0.0000001f) : (this->sim_time);
         }
 
-        inline camera_state_type GetCameraState() const {
+        inline camera_type GetCamera() const {
             return this->camera_state;
 		}
 
@@ -65,7 +65,7 @@ namespace cinematic {
             this->sim_time = glm::clamp(t, 0.0f, 1.0f);
         }
 
-        inline void SetCameraState(const camera_state_type& cam){
+        inline void SetCameraState(const camera_type& cam){
             this->camera_state = cam;
 		}
     
@@ -81,7 +81,7 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-        camera_state_type camera_state;
+        camera_type camera_state;
         float sim_time; // Simulation time value is relative (always in [0,1])
 		float anim_time;    
 	};

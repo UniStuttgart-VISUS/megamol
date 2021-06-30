@@ -768,11 +768,11 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         (*bs)(BindingSiteCall::CallForGetData);
     }
 
+    // maintainer question: ported this but is it even needed here?
     // get camera information
-    call.GetCamera(cameraInfo);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cameraInfo.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    cameraInfo = call.GetCamera();
+    glm::mat4 viewTemp = cameraInfo.getViewMatrix();
+    glm::mat4 projTemp = cameraInfo.getProjectionMatrix();
 
     // =============== Protein Rendering ===============
     if( molrencr3d ) {

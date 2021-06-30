@@ -9,7 +9,7 @@
 
 #include "AbstractTexQuartzRenderer.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/glfunctions.h"
@@ -21,7 +21,7 @@ namespace demos {
     /**
      * QuartzPlaneTexRenderer
      */
-    class QuartzPlaneTexRenderer : public core::view::Renderer2DModule, public AbstractTexQuartzRenderer {
+    class QuartzPlaneTexRenderer : public core::view::Renderer2DModuleGL, public AbstractTexQuartzRenderer {
     public:
 
         /**

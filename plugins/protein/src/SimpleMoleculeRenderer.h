@@ -226,9 +226,7 @@ namespace protein {
         megamol::core::CallerSlot bsDataCallerSlot;
 
         /** camera information */
-        core::view::Camera_2 cam;
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type viewTemp, projTemp;
+        core::view::Camera cam;
         float viewportStuff[4];
         glm::mat4 view;
         glm::mat4 proj;

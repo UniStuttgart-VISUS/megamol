@@ -52,14 +52,6 @@ float view::AbstractOverrideView::DefaultTime(double instTime) const {
 
 
 /*
- * view::AbstractOverrideView::GetCameraSyncNumber
- */
-unsigned int view::AbstractOverrideView::GetCameraSyncNumber(void) const {
-    return 0; // TODO: Implement
-}
-
-
-/*
  * view::AbstractOverrideView::SerialiseCamera
  */
 void view::AbstractOverrideView::SerialiseCamera(vislib::Serialiser& serialiser) const {
@@ -133,19 +125,6 @@ void view::AbstractOverrideView::Resize(unsigned int width, unsigned int height)
 //        (*crv)(view::CallRenderViewGL::CALL_SETINPUTMODIFIER);
 //    }
 //}
-
-
-/*
- * view::AbstractOverrideView::UpdateFreeze
- */
-void view::AbstractOverrideView::UpdateFreeze(bool freeze) {
-    view::CallRenderViewGL *crv = this->getCallRenderView();
-    if (crv != NULL) {
-        (*crv)(freeze
-            ? view::CallRenderViewGL::CALL_FREEZE
-            : view::CallRenderViewGL::CALL_UNFREEZE);
-    }
-}
 
 
 bool view::AbstractOverrideView::OnKey(Key key, KeyAction action, Modifiers mods) {

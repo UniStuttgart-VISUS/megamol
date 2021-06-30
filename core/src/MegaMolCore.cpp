@@ -23,7 +23,6 @@
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/ViewDescription.h"
 #include "mmcore/ViewInstance.h"
-#include "mmcore/view/AbstractTileView.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/factories/ModuleDescriptionManager.h"
@@ -601,17 +600,11 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
 /*
  * mmcRenderView
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
-        mmcRenderViewContext *context, uint32_t frameID) {
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, uint32_t frameID) {
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
-    ASSERT(context != NULL);
-    // If the following assert explodes, some one has added a new member to the
-    // context structure in the core and not everything has been rebuilt. Most
-    // likely, you should update the frontend and rebuild it.
-    ASSERT(sizeof(mmcRenderViewContext) == context->Size);
-
+    
     if (view != NULL) {
         vislib::sys::AutoLock lock(view->ModuleGraphLock());
 
@@ -653,11 +646,10 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
             auto core = view->View()->GetCoreInstance();
             core->SetFrameID(frameID);
             double it = core->GetCoreInstanceTime();
-            context->Time = view->View()->DefaultTime(it);
-            context->InstanceTime = it; 
+            auto time = view->View()->DefaultTime(it);
+            auto instanceTime = it; 
 
-            view->View()->Render(*context);
-            context->ContinuousRedraw = true; // TODO: Implement the real thing
+            view->View()->Render(time, instanceTime);
         }
     }
 }
@@ -752,21 +744,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseScrollEvent(void *hView,
     megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
         return view->View()->OnMouseScroll(dx, dy);
-    }
-    return false;
-}
-
-
-/*
- * mmcDesiredViewWindowConfig
- */
-MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcDesiredViewWindowConfig(void *hView,
-        int *x, int *y, int *w, int *h, bool *nd) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
-    if ((view != NULL) && (view->View() != NULL)) {
-        return view->View()->DesiredWindowPosition(x, y, w, h, nd);
     }
     return false;
 }
@@ -1160,21 +1137,6 @@ MEGAMOLCORE_API size_t MEGAMOLCORE_CALL mmcGetGlobalParameterHash(void * hCore) 
     if (core == NULL) return 0;
     return core->GetGlobalParameterHash();
 }
-
-
-/*
- * mmcFreezeOrUpdateView
- */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreezeOrUpdateView(
-        void *hView, bool freeze) {
-    megamol::core::ViewInstance *view
-        = megamol::core::ApiHandle::InterpretHandle<
-        megamol::core::ViewInstance>(hView);
-    if ((view != NULL) && (view->View() != NULL)) {
-        view->View()->UpdateFreeze(freeze);
-    }
-}
-
 
 /*
  * mmcWriteStateToXML

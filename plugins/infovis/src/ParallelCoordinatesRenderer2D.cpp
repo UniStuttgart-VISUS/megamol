@@ -5,7 +5,6 @@
 #include <array>
 #include <iostream>
 
-#include <glm/gtc/functions.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -204,8 +203,8 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(std::unique_ptr<glowl::
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
 
     glUniform2f(program->getUniformLocation("scaling"), 1.0f, 1.0f); // scaling, whatever
-    glUniformMatrix4fv(program->getUniformLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(program->getUniformLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    glUniformMatrix4fv(program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getViewMatrix()));
+    glUniformMatrix4fv(program->getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getProjectionMatrix()));
     glUniform1ui(program->getUniformLocation("dimensionCount"), this->columnCount);
     glUniform1ui(program->getUniformLocation("itemCount"), this->itemCount);
 
@@ -489,7 +488,7 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
 
     if (this->scaleToFitSlot.Param<core::param::BoolParam>()->Value()) {
         // scale to fit
-        float requiredHeight = width / windowAspect;
+        float requiredHeight = width / camera_cpy.get<core::view::Camera::OrthographicParameters>().aspect;
         this->axisHeight = requiredHeight - 3.0f * marginY;
     } else {
         this->axisHeight = 80.0f;
@@ -575,8 +574,17 @@ bool ParallelCoordinatesRenderer2D::OnMouseButton(
 }
 
 bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
-    this->mouseX = x;
-    this->mouseY = y;
+    // Make the following a convenience function in the future
+    auto cam_pose = camera_cpy.get<core::view::Camera::Pose>();
+    auto cam_intrinsics = camera_cpy.get<core::view::Camera::OrthographicParameters>();
+    float world_x, world_y;
+    world_x = ((x * 2.0f / fbo->getWidth()) - 1.0f);
+    world_y = 1.0f - (y * 2.0f / fbo->getHeight());
+    world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
+    world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
+
+    this->mouseX = world_x;
+    this->mouseY = world_y;
 
     if (this->ctrlDown) {
         // these clicks go to the view
@@ -647,8 +655,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         glUniform4fv(this->drawAxesProgram->getUniformLocation("color"), 1,
             this->axesColorSlot.Param<core::param::ColorParam>()->Value().data());
         glUniform1i(this->drawAxesProgram->getUniformLocation("pickedAxis"), pickedAxis);
-        glUniform1i(this->drawAxesProgram->getUniformLocation("width"), windowWidth);
-        glUniform1i(this->drawAxesProgram->getUniformLocation("height"), windowHeight);
+        glUniform1i(this->drawAxesProgram->getUniformLocation("width"), fbo->getWidth());
+        glUniform1i(this->drawAxesProgram->getUniformLocation("height"), fbo->getHeight());
         glUniform1f(this->drawAxesProgram->getUniformLocation("axesThickness"),
             axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount);
@@ -660,8 +668,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         glUniform1ui(this->drawScalesProgram->getUniformLocation("numTicks"), this->numTicks);
         glUniform1f(this->drawScalesProgram->getUniformLocation("axisHalfTick"), 2.0f);
         glUniform1i(this->drawScalesProgram->getUniformLocation("pickedAxis"), pickedAxis);
-        glUniform1i(this->drawScalesProgram->getUniformLocation("width"), windowWidth);
-        glUniform1i(this->drawScalesProgram->getUniformLocation("height"), windowHeight);
+        glUniform1i(this->drawScalesProgram->getUniformLocation("width"), fbo->getWidth());
+        glUniform1i(this->drawScalesProgram->getUniformLocation("height"), fbo->getHeight());
         glUniform1f(this->drawScalesProgram->getUniformLocation("axesThickness"),
             axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount * this->numTicks);
@@ -673,8 +681,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         glUniform1f(this->drawFilterIndicatorsProgram->getUniformLocation("axisHalfTick"), 2.0f);
         glUniform2i(this->drawFilterIndicatorsProgram->getUniformLocation("pickedIndicator"), pickedIndicatorAxis,
             pickedIndicatorIndex);
-        glUniform1i(this->drawFilterIndicatorsProgram->getUniformLocation("width"), windowWidth);
-        glUniform1i(this->drawFilterIndicatorsProgram->getUniformLocation("height"), windowHeight);
+        glUniform1i(this->drawFilterIndicatorsProgram->getUniformLocation("width"), fbo->getWidth());
+        glUniform1i(this->drawFilterIndicatorsProgram->getUniformLocation("height"), fbo->getHeight());
         glUniform1f(this->drawFilterIndicatorsProgram->getUniformLocation("axesThickness"),
             axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 12, this->columnCount * 2);
@@ -753,8 +761,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
     glUniform4fv(prog->getUniformLocation("color"), 1, color);
     glUniform1f(prog->getUniformLocation("tfColorFactor"), tfColorFactor);
-    glUniform1f(prog->getUniformLocation("widthR"), this->windowWidth);
-    glUniform1f(prog->getUniformLocation("heightR"), this->windowHeight);
+    glUniform1f(prog->getUniformLocation("widthR"),fbo->getWidth());
+    glUniform1f(prog->getUniformLocation("heightR"), fbo->getHeight());
     try {
         auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
         glUniform1i(prog->getUniformLocation("colorColumn"), colcol);
@@ -815,8 +823,8 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
     glUniform2f(prog->getUniformLocation("mousePressed"), x0, y0);
     glUniform2f(prog->getUniformLocation("mouseReleased"), x1, y1);
 
-    glUniform1i(prog->getUniformLocation("width"), windowWidth);
-    glUniform1i(prog->getUniformLocation("height"), windowHeight);
+    glUniform1i(prog->getUniformLocation("width"), fbo->getWidth());
+    glUniform1i(prog->getUniformLocation("height"), fbo->getHeight());
     glUniform1f(prog->getUniformLocation("thickness"), axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
 
     glUniform4fv(prog->getUniformLocation("indicatorColor"), 1, color);
@@ -863,7 +871,7 @@ void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, flo
 
 void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     debugPush(4, "doFragmentCount");
-    int invocations[] = {static_cast<int>(std::ceil(windowWidth / 16)), static_cast<int>(std::ceil(windowHeight / 16))};
+    int invocations[] = {static_cast<int>(std::ceil(fbo->getWidth() / 16)), static_cast<int>(std::ceil(fbo->getHeight() / 16))};
     GLuint invocationCount = invocations[0] * invocations[1];
 
     size_t bytes = sizeof(uint32_t) * 2 * invocationCount;
@@ -885,7 +893,7 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     // uniforms invocationcount etc.
     glUniform1ui(minMaxProgram->getUniformLocation("invocationCount"), invocationCount);
     glUniform4fv(minMaxProgram->getUniformLocation("clearColor"), 1, backgroundColor);
-    glUniform2ui(minMaxProgram->getUniformLocation("resolution"), windowWidth, windowHeight);
+    glUniform2ui(minMaxProgram->getUniformLocation("resolution"), fbo->getWidth(), fbo->getHeight());
     glUniform2ui(minMaxProgram->getUniformLocation("fragmentCountStepSize"), invocations[0], invocations[1]);
 
 
@@ -957,10 +965,10 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
     case DRAW_CONTINUOUS:
     case DRAW_HISTOGRAM:
         bool ok = true;
-        if (!this->densityFBO.IsValid() || this->densityFBO.GetWidth() != windowWidth ||
-            this->densityFBO.GetHeight() != windowHeight) {
+        if (!this->densityFBO.IsValid() || this->densityFBO.GetWidth() != fbo->getWidth() ||
+            this->densityFBO.GetHeight() != fbo->getHeight()) {
             densityFBO.Release();
-            ok = densityFBO.Create(windowWidth, windowHeight, GL_R32F, GL_RED, GL_FLOAT);
+            ok = densityFBO.Create(fbo->getWidth(), fbo->getHeight(), GL_R32F, GL_RED, GL_FLOAT);
             makeDebugLabel(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
         }
         if (ok) {
@@ -1020,17 +1028,20 @@ void ParallelCoordinatesRenderer2D::load_filters() {
 
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
 
-    megamol::core::view::Camera_2 cam;
-    call.GetCamera(cam);
+    // get camera
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_intrinsics = cam.get<core::view::Camera::OrthographicParameters>(); // don't you dare using a perspective cam here...
+    fbo = call.GetFramebuffer();
+    camera_cpy = cam;
 
-    windowAspect = static_cast<float>(cam.resolution_gate_aspect());
+    // maintainer comment: assuming this wants to know the aspect of the full window, i.e. not onlyof the current image tile
+    
 
-    // this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
-    windowWidth = cam.resolution_gate().width();
-    windowHeight = cam.resolution_gate().height();
+    // maintainer comment: assuming this now here wants to know about the current tile's resolution
+    
+
     auto bg = call.BackgroundColor();
 
     backgroundColor[0] = bg[0];
@@ -1038,12 +1049,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     backgroundColor[2] = bg[2];
     backgroundColor[3] = bg[3];
 
-    // this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
-
-    glm::mat4 ortho = glm::make_mat4(projMatrix_column) * glm::make_mat4(modelViewMatrix_column);
+    glm::mat4 ortho = proj * view;
 
     this->assertData(call);
 

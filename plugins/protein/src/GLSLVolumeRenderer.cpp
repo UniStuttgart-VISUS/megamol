@@ -50,31 +50,45 @@ using namespace megamol::core::utility::log;
  * protein::GLSLVolumeRenderer::GLSLVolumeRenderer (CTOR)
  */
 protein::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
-        : Renderer3DModuleGL(), protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
-        protRendererCallerSlot ( "renderProtein", "Connects the volume rendering with a protein renderer" ),
-        coloringModeParam ( "coloringMode", "Coloring Mode" ),
-        volIsoValueParam( "volIsoValue", "Isovalue for isosurface rendering"),
-        volFilterRadiusParam( "volFilterRadius", "Filter Radius for volume generation"),
-        volDensityScaleParam( "volDensityScale", "Density scale factor for volume generation"),
-        volIsoOpacityParam( "volIsoOpacity", "Opacity of isosurface"),
-        volClipPlaneFlagParam( "volClipPlane", "Enable volume clipping"),
-        volClipPlane0NormParam( "clipPlane0Norm", "Volume clipping plane 0 normal"),
-        volClipPlane0DistParam( "clipPlane0Dist", "Volume clipping plane 0 distance"),
-        volClipPlaneOpacityParam( "clipPlaneOpacity", "Volume clipping plane opacity"),
-        colorTableFileParam( "colorTableFilename", "The filename of the color table."),
-        minGradColorParam( "minGradColor", "The color for the minimum value for gradient coloring" ),
-        midGradColorParam( "midGradColor", "The color for the middle value for gradient coloring" ),
-        maxGradColorParam( "maxGradColor", "The color for the maximum value for gradient coloring" ),
-        renderVolumeParam( "renderVolumeFlag", "Render Volume" ),
-        renderProteinParam( "renderProteinFlag", "Render Protein" ),
-        currentFrameId ( 0 ), atomCount( 0 ), volumeTex( 0), volumeSize( 256), volFBO( 0),
-        volFilterRadius( 1.75f), volDensityScale( 1.0f),
-        width( 0), height( 0), volRayTexWidth( 0), volRayTexHeight( 0),
-        volRayStartTex( 0), volRayLengthTex( 0), volRayDistTex( 0),
-        renderIsometric( true), isoValue( 0.5f),
-        volIsoOpacity( 0.4f), volClipPlaneFlag( false), volClipPlaneOpacity( 0.4f),
-        forceUpdateVolumeTexture( true)
-{
+        : Renderer3DModuleGL()
+        , protDataCallerSlot("getData", "Connects the volume rendering with data storage")
+        , protRendererCallerSlot("renderProtein", "Connects the volume rendering with a protein renderer")
+        , coloringModeParam("coloringMode", "Coloring Mode")
+        , volIsoValueParam("volIsoValue", "Isovalue for isosurface rendering")
+        , volFilterRadiusParam("volFilterRadius", "Filter Radius for volume generation")
+        , volDensityScaleParam("volDensityScale", "Density scale factor for volume generation")
+        , volIsoOpacityParam("volIsoOpacity", "Opacity of isosurface")
+        , volClipPlaneFlagParam("volClipPlane", "Enable volume clipping")
+        , volClipPlane0NormParam("clipPlane0Norm", "Volume clipping plane 0 normal")
+        , volClipPlane0DistParam("clipPlane0Dist", "Volume clipping plane 0 distance")
+        , volClipPlaneOpacityParam("clipPlaneOpacity", "Volume clipping plane opacity")
+        , colorTableFileParam("colorTableFilename", "The filename of the color table.")
+        , minGradColorParam("minGradColor", "The color for the minimum value for gradient coloring")
+        , midGradColorParam("midGradColor", "The color for the middle value for gradient coloring")
+        , maxGradColorParam("maxGradColor", "The color for the maximum value for gradient coloring")
+        , renderVolumeParam("renderVolumeFlag", "Render Volume")
+        , renderProteinParam("renderProteinFlag", "Render Protein")
+        , currentFrameId(0)
+        , atomCount(0)
+        , proteinFBO(nullptr)
+        , volumeTex(0)
+        , volumeSize(256)
+        , volFBO(0)
+        , volFilterRadius(1.75f)
+        , volDensityScale(1.0f)
+        , width(0)
+        , height(0)
+        , volRayTexWidth(0)
+        , volRayTexHeight(0)
+        , volRayStartTex(0)
+        , volRayLengthTex(0)
+        , volRayDistTex(0)
+        , renderIsometric(true)
+        , isoValue(0.5f)
+        , volIsoOpacity(0.4f)
+        , volClipPlaneFlag(false)
+        , volClipPlaneOpacity(0.4f)
+        , forceUpdateVolumeTexture(true) {
     this->protDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
 
@@ -563,34 +577,28 @@ bool protein::GLSLVolumeRenderer::Render( view::CallRender3DGL& call ) {
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
     // get camera information
-    cr3d->GetCamera(cameraInfo);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cameraInfo.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    cameraInfo = cr3d->GetCamera();
 
     // =============== Query Camera View Dimensions ===============
-    if( static_cast<unsigned int>(cameraInfo.resolution_gate().width()) != this->width ||
-        static_cast<unsigned int>(cameraInfo.resolution_gate().height()) != this->height ) {
-        this->width = static_cast<unsigned int>(cameraInfo.resolution_gate().width());
-        this->height = static_cast<unsigned int>(cameraInfo.resolution_gate().height());
+    if (static_cast<unsigned int>(cr3d->GetFramebuffer()->getWidth()) != this->width ||
+        static_cast<unsigned int>(cr3d->GetFramebuffer()->getHeight()) != this->height ) {
+        this->width = static_cast<unsigned int>(cr3d->GetFramebuffer()->getWidth());
+        this->height = static_cast<unsigned int>(cr3d->GetFramebuffer()->getHeight());
     }
 
-    // create the fbo, if necessary
-    if( !this->proteinFBO->IsValid() ) {
-        this->proteinFBO->Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
-    }
-    // resize the fbo, if necessary
-    if( this->proteinFBO->GetWidth() != this->width || this->proteinFBO->GetHeight() != this->height ) {
-        this->proteinFBO->Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+    // (re)create the fbo, if necessary
+    if (this->proteinFBO == nullptr ||
+        (this->proteinFBO->getWidth() != this->width || this->proteinFBO->getHeight() != this->height)) {
+
+        this->proteinFBO = std::make_shared<glowl::FramebufferObject>(this->width, this->height);
+        this->proteinFBO->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_FLOAT);
     }
 
 
     if( this->renderProteinParam.Param<param::BoolParam>()->Value() ) {
         // =============== Protein Rendering ===============
-        // disable the output buffer
-        cr3d->GetFramebufferObject()->Disable();
         // start rendering to the FBO for protein rendering
-        this->proteinFBO->Enable();
+        this->proteinFBO->bind();
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     
         if( protrencr3d ) {
@@ -599,14 +607,12 @@ bool protein::GLSLVolumeRenderer::Render( view::CallRender3DGL& call ) {
             glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
             //glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
             *protrencr3d = *cr3d;
-            protrencr3d->SetFramebufferObject(this->proteinFBO); // TODO: Handle incoming buffers!
+            protrencr3d->SetFramebuffer(this->proteinFBO); // TODO: Handle incoming buffers!
             (*protrencr3d)();
             glPopMatrix();
         }
-        // stop rendering to the FBO for protein rendering
-        this->proteinFBO->Disable();
-        // re-enable the output buffer
-        cr3d->GetFramebufferObject()->Enable();
+        // stop rendering to the FBO for protein rendering by re-enabling the output buffer
+        cr3d->GetFramebuffer()->bind();
     }
 
     // =============== Refresh all parameters ===============
@@ -1181,15 +1187,28 @@ void protein::GLSLVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> 
     // the shader transforms camera coords back to object space
     this->volRayStartEyeShader.Enable();
 
-    float u = this->cameraInfo.near_clipping_plane() * tan( this->cameraInfo.aperture_angle() * float(vislib::math::PI_DOUBLE) / 360.0f);
+    float fovy = 0.0;
+    float near_plane = 0.0;
+    float far_plane = 0.0;
+    try {
+        auto cam_intrinsics = cameraInfo.get<megamol::core::view::Camera::PerspectiveParameters>();
+        near_plane = cam_intrinsics.near_plane;
+        far_plane = cam_intrinsics.far_plane;
+        fovy = cam_intrinsics.fovy;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "GLSLVolumeRenderer - Error when getting perspective camera intrinsics");
+    }
+
+    float u = near_plane * tan(fovy);
     float r = ( this->width / this->height)*u;
 
     glBegin(GL_QUADS);
         //glVertex3f(-r, -u, -_nearClip);
-        glVertex3f(-r, -u, -this->cameraInfo.near_clipping_plane());
-        glVertex3f( r, -u, -this->cameraInfo.near_clipping_plane());
-        glVertex3f( r,  u, -this->cameraInfo.near_clipping_plane());
-        glVertex3f(-r,  u, -this->cameraInfo.near_clipping_plane());
+        glVertex3f(-r, -u, -near_plane);
+        glVertex3f( r, -u, -near_plane);
+        glVertex3f( r,  u, -near_plane);
+        glVertex3f(-r,  u, -near_plane);
     glEnd();
     CHECK_FOR_OGL_ERROR();
 
@@ -1263,7 +1282,7 @@ void protein::GLSLVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> 
     glUniform2f( this->volRayLengthShader.ParameterLocation( "screenResInv"),
         1.0f / float(this->width), 1.0f / float(this->height));
     glUniform2f( this->volRayLengthShader.ParameterLocation( "zNearFar"),
-        this->cameraInfo.near_clipping_plane(), this->cameraInfo.far_clipping_plane() );
+        near_plane, far_plane );
 
     if( this->renderIsometric ) {
         glUniform3f( this->volRayLengthShader.ParameterLocation( "translate"), 
@@ -1277,7 +1296,7 @@ void protein::GLSLVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> 
 
     glActiveTexture( GL_TEXTURE1);
     //glBindTexture( GL_TEXTURE_2D, _depthTexId[0]);
-    this->proteinFBO->BindDepthTexture();
+    this->proteinFBO->bindDepthbuffer();
     glActiveTexture( GL_TEXTURE0);
     //glBindTexture( GL_TEXTURE_2D, _volRayStartTex);
     glBindTexture( GL_TEXTURE_2D, this->volRayStartTex);

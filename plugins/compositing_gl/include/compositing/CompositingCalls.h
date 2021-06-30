@@ -11,7 +11,7 @@
 #include <memory>
 
 #include "mmcore/CallGeneric.h"
-#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/Camera.h"
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
@@ -30,9 +30,9 @@ public:
     static const char* Description(void) { return "Transports a shared pointer to an OpenGL texture object"; }
 };
 
-class CallCamera : public core::GenericVersionedCall<core::view::Camera_2, core::EmptyMetaData> {
+class CallCamera : public core::GenericVersionedCall<core::view::Camera, core::EmptyMetaData> {
 public:
-    inline CallCamera() : GenericVersionedCall<core::view::Camera_2, core::EmptyMetaData>() {}
+    inline CallCamera() : GenericVersionedCall<core::view::Camera, core::EmptyMetaData>() {}
     ~CallCamera() = default;
 
     static const char* ClassName(void) { return "CallCamera"; }

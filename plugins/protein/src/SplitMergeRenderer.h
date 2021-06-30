@@ -14,7 +14,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "protein_calls/SplitMergeCall.h"
 #include "protein_calls/IntSelectionCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -24,7 +24,7 @@
 namespace megamol {
 namespace protein {
 
-    class SplitMergeRenderer : public megamol::core::view::Renderer2DModule {
+    class SplitMergeRenderer : public megamol::core::view::Renderer2DModuleGL {
     public:
 
         /**

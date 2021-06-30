@@ -412,9 +412,11 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             Keyframe tmp_kf = this->selectedKeyframe;
             glm::vec3 pos_v = view::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
             std::array<float, 3> pos = { pos_v.x, pos_v.y, pos_v.z };
-            auto cam_state = this->selectedKeyframe.GetCameraState();
-            cam_state.position = pos;
-            this->selectedKeyframe.SetCameraState(cam_state);
+            auto cam = this->selectedKeyframe.GetCamera();
+            auto cam_pose = cam.get<view::Camera::Pose>();
+            cam_pose.position = glm::vec3(pos[0], pos[1], pos[2]);
+            cam.setPose(cam_pose);
+            this->selectedKeyframe.SetCameraState(cam);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
             this->refreshInterpolCamPos(this->interpolSteps);
         }
@@ -429,20 +431,16 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
   
-            megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
-            cam_type::snapshot_type snapshot;
-            camera.take_snapshot(snapshot, thecam::snapshot_content::all);
-            glm::vec4 cam_pos = snapshot.position;
-            glm::vec4 cam_up = snapshot.up_vector;
+            megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
+            auto cam_pose = camera.get<megamol::core::view::Camera::Pose>();
 
-            glm::vec3 up = static_cast<glm::vec3>(cam_up);
-            glm::vec3 new_view = this->modelBboxCenter - static_cast<glm::vec3>(cam_pos);
-            glm::quat new_orientation = view::quaternion_from_vectors(new_view, up);
-            camera.orientation(new_orientation);
+            glm::vec3 new_view = this->modelBboxCenter - cam_pose.position;
+            glm::quat new_orientation = view::quaternion_from_vectors(new_view, cam_pose.up);
 
-            cam_type::minimal_state_type camera_state;
-            camera.get_minimal_state(camera_state);
-            this->selectedKeyframe.SetCameraState(camera_state);
+            //megamol::core::view::Camera::Pose new_cam_pose(cam_pose.position, new_orientation);
+            camera.setPose({cam_pose.position, new_orientation});
+
+            this->selectedKeyframe.SetCameraState(camera);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
@@ -456,19 +454,14 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
 
-            megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
-            cam_type::snapshot_type snapshot;
-            camera.take_snapshot(snapshot, thecam::snapshot_content::all);
-            glm::vec4 cam_up = snapshot.up_vector;
-            glm::vec3 up = static_cast<glm::vec3>(cam_up);
+            megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
+            auto cam_pose = camera.get<megamol::core::view::Camera::Pose>();
 
             glm::vec3 new_view = view::vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
-            glm::quat new_orientation = view::quaternion_from_vectors(new_view, up);
-            camera.orientation(new_orientation);
+            glm::quat new_orientation = view::quaternion_from_vectors(new_view, cam_pose.up);
+            camera.setPose({cam_pose.position, new_orientation});
 
-            cam_type::minimal_state_type camera_state;
-            camera.get_minimal_state(camera_state);
-            this->selectedKeyframe.SetCameraState(camera_state);
+            this->selectedKeyframe.SetCameraState(camera);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
@@ -482,19 +475,14 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
 
-            megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
-            cam_type::snapshot_type snapshot;
-            camera.take_snapshot(snapshot, thecam::snapshot_content::view_vector);
-            glm::vec4 cam_view = snapshot.view_vector;
-            glm::vec3 view = static_cast<glm::vec3>(cam_view);
+            megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
+            auto cam_pose = camera.get<megamol::core::view::Camera::Pose>();
 
             glm::vec3 new_up= view::vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
-            glm::quat new_orientation = view::quaternion_from_vectors(view, new_up);
-            camera.orientation(new_orientation);
+            glm::quat new_orientation = view::quaternion_from_vectors(cam_pose.direction, new_up);
+            camera.setPose({cam_pose.position, new_orientation});
 
-            cam_type::minimal_state_type camera_state;
-            camera.get_minimal_state(camera_state);
-            this->selectedKeyframe.SetCameraState(camera_state);
+            this->selectedKeyframe.SetCameraState(camera);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
@@ -508,7 +496,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
             float aperture = this->editCurrentApertureParam.Param<param::FloatParam>()->Value();
-            auto cam_state = this->selectedKeyframe.GetCameraState();
+            auto cam_state = this->selectedKeyframe.GetCamera();
             cam_state.half_aperture_angle_radians = glm::radians(aperture/2.0f);
             this->selectedKeyframe.SetCameraState(cam_state);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
@@ -561,7 +549,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     }
 
     // PROPAGATE UPDATED DATA TO CALL -----------------------------------------
-    ccc->SetCameraState(std::make_shared<camera_state_type>(this->cameraState));
+    ccc->SetCameraState(std::make_shared<camera_type>(this->cameraState));
     ccc->SetKeyframes(std::make_shared<std::vector<Keyframe>>(this->keyframes));
     ccc->SetSelectedKeyframe(this->selectedKeyframe);
     ccc->SetTotalAnimTime(this->totalAnimTime);
@@ -862,12 +850,12 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 
             for (unsigned int j = 0; j < s; j++) {
                 kf = this->interpolateKeyframe(startTime + deltaTimeStep*(float)j);
-                auto p = kf.GetCameraState().position;
+                auto p = kf.GetCamera().get<view::Camera::Pose>().position;
                 this->interpolCamPos.emplace_back(glm::vec3(p[0], p[1], p[2]));
             }
         }
         // Add last existing camera position
-        auto p = this->keyframes.back().GetCameraState().position;
+        auto p = this->keyframes.back().GetCamera().get<view::Camera::Pose>().position;
         this->interpolCamPos.emplace_back(glm::vec3(p[0], p[1], p[2]));
     }
 }
@@ -1047,7 +1035,8 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
 
         // New default keyframe
         Keyframe kf = Keyframe();
-        megamol::core::view::Camera_2 cam_kf = kf.GetCameraState();
+        megamol::core::view::Camera cam_kf = kf.GetCamera();
+        auto cam_kf_pose = cam_kf.get<megamol::core::view::Camera::Pose>();
 
         // Nothing to do for animation time
         kf.SetAnimTime(t);
@@ -1072,10 +1061,10 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         i0 = (i1 > 0) ? (i1 - 1) : (0);
         i3 = (i2 < kfIdxCnt) ? (i2 + 1) : (kfIdxCnt);
 
-        megamol::core::view::Camera_2 c0(this->keyframes[i0].GetCameraState());
-        megamol::core::view::Camera_2 c1 = this->keyframes[i1].GetCameraState();
-        megamol::core::view::Camera_2 c2 = this->keyframes[i2].GetCameraState();
-        megamol::core::view::Camera_2 c3 = this->keyframes[i3].GetCameraState();
+        megamol::core::view::Camera c0 = this->keyframes[i0].GetCamera();
+        megamol::core::view::Camera c1 = this->keyframes[i1].GetCamera();
+        megamol::core::view::Camera c2 = this->keyframes[i2].GetCamera();
+        megamol::core::view::Camera c3 = this->keyframes[i3].GetCamera();
 
         // Interpolate simulation time linear between i1 and i2
         float simT1 = this->keyframes[i1].GetSimTime();
@@ -1087,14 +1076,10 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         // => Prevent interpolation loops if time of keyframes is different, but cam params are the same.
 
         //interpolate position ------------------------------------------------
-        glm::vec4 ps0 = c0.position();
-        glm::vec4 ps1 = c1.position();
-        glm::vec4 ps2 = c2.position();
-        glm::vec4 ps3 = c3.position();
-        glm::vec3 p0 = glm::vec3(ps0.x, ps0.y, ps0.z);
-        glm::vec3 p1 = glm::vec3(ps1.x, ps1.y, ps1.z);
-        glm::vec3 p2 = glm::vec3(ps2.x, ps2.y, ps2.z);
-        glm::vec3 p3 = glm::vec3(ps3.x, ps3.y, ps3.z);
+        glm::vec3 p0 = c0.get<megamol::core::view::Camera::Pose>().position;
+        glm::vec3 p1 = c1.get<megamol::core::view::Camera::Pose>().position;
+        glm::vec3 p2 = c2.get<megamol::core::view::Camera::Pose>().position;
+        glm::vec3 p3 = c3.get<megamol::core::view::Camera::Pose>().position;
         /// Use additional control point positions to manipulate interpolation curve for first and last keyframe
         if (p0 == p1) {
             p0 = this->startCtrllPos;
@@ -1103,11 +1088,11 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
             p3 = this->endCtrllPos;
         }
         if (p1 == p2) {
-            cam_kf.position(c1.position());
+            cam_kf_pose.position = p1;
         }
         else {
             glm::vec3 pk = this->vec3_interpolation(iT, p0, p1, p2, p3);
-            cam_kf.position(glm::vec4(pk.x, pk.y, pk.z, 1.0f));
+            cam_kf_pose.position = pk;
         }
 
         //interpolate aperture angle ------------------------------------------
@@ -1124,14 +1109,14 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         }
 
         //interpolate orientation ---------------------------------------------
-        glm::quat c1_orient = c1.orientation();
-        glm::quat c2_orient = c2.orientation();
-        cam_kf.orientation(this->quaternion_interpolation(iT, c1_orient, c2_orient));
+        glm::quat c1_orient = c1.get<megamol::core::view::Camera::Pose>().to_quat();
+        glm::quat c2_orient = c2.get<megamol::core::view::Camera::Pose>().to_quat();
+        cam_kf_pose = megamol::core::view::Camera::Pose(
+            cam_kf_pose.position, this->quaternion_interpolation(iT, c1_orient, c2_orient));
 
         // Finally set new interpoated camera for keyframe
-        cam_type::minimal_state_type camera_state;
-        cam_kf.get_minimal_state(camera_state);
-        kf.SetCameraState(camera_state);
+        cam_kf.setPose(cam_kf_pose);
+        kf.SetCameraState(cam_kf);
 
         return kf;
     }
@@ -1230,7 +1215,7 @@ bool KeyframeKeeper::saveKeyframes() {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.c_str());
     } 
     catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] Unknown Exception - Failed to store keyframes to file: %s", this->filename.c_str());
+        megamol::core::utility::log::Log::DefaultLog.Write6Error("[KEYFRAME KEEPER] Unknown Exception - Failed to store keyframes to file: %s", this->filename.c_str());
         return false;
     }
 
@@ -1319,7 +1304,7 @@ bool KeyframeKeeper::loadKeyframes() {
 void KeyframeKeeper::updateEditParameters(Keyframe kf) {
 
     // Set new parameter values of changed selected keyframe
-    megamol::core::view::Camera_2 camera(kf.GetCameraState());
+    megamol::core::view::Camera camera(kf.GetCamera());
     cam_type::snapshot_type snapshot;
     camera.take_snapshot(snapshot, thecam::snapshot_content::up_vector | thecam::snapshot_content::view_vector | thecam::snapshot_content::camera_coordinate_system);
     glm::vec4 cam_pos = snapshot.position;

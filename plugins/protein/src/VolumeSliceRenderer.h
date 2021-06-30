@@ -13,7 +13,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "VolumeSliceCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
@@ -22,7 +22,7 @@ namespace protein {
 	/**
 	 * Protein Renderer class
 	 */
-	class VolumeSliceRenderer : public megamol::core::view::Renderer2DModule {
+    class VolumeSliceRenderer : public megamol::core::view::Renderer2DModuleGL {
     public:
 		/**
 		 * Answer the name of this module.

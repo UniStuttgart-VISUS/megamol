@@ -77,18 +77,14 @@ public:
     float DefaultTime(double instTime) const override;
 
     /**
-     * Answer the camera synchronization number.
+     * Renders this SplitView.
      *
-     * @return The camera synchronization number
+     * @param time ...
+     * @param instanceTime ...
      */
-    unsigned int GetCameraSyncNumber() const override;
+    virtual ImageWrapper Render(double time, double instanceTime) override;
 
-    /**
-     * Renders this AbstractView3D in the currently active OpenGL context.
-     *
-     * @param context
-     */
-    void Render(const mmcRenderViewContext& context, Call* call) override;
+    ImageWrapper GetRenderingResult() const override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -102,7 +98,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    void Resize(unsigned int width, unsigned int height) override;
+    virtual void Resize(unsigned int width, unsigned int height) override;
 
     /**
      * Callback requesting a rendering of this view
@@ -112,15 +108,6 @@ public:
      * @return The return value
      */
     bool OnRenderView(Call& call) override;
-
-    /**
-     * Freezes, updates, or unfreezes the view onto the scene (not the
-     * rendering, but camera settings, timing, etc).
-     *
-     * @param freeze true means freeze or update freezed settings,
-     *               false means unfreeze
-     */
-    void UpdateFreeze(bool freeze) override;
 
     bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 
@@ -144,15 +131,6 @@ protected:
      * Implementation of 'Release'.
      */
     void release() override;
-
-    /**
-     * Unpacks the mouse coordinates, which are relative to the virtual
-     * viewport size.
-     *
-     * @param x The x coordinate of the mouse position
-     * @param y The y coordinate of the mouse position
-     */
-    void unpackMouseCoordinates(float& x, float& y) override;
 
     /** Override of GetExtents */
     virtual bool GetExtents(core::Call& call) override;
@@ -236,9 +214,11 @@ private:
 
     vislib::math::Rectangle<float> _clientArea2;
 
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo1;
+    std::shared_ptr<glowl::FramebufferObject> _fboFull;
 
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo2;
+    std::shared_ptr<glowl::FramebufferObject> _fbo1;
+
+    std::shared_ptr<glowl::FramebufferObject> _fbo2;
 
     int _focus;
 

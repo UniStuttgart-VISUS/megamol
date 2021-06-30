@@ -9,6 +9,12 @@
 // you should also delete the FAQ comments in these template files after you read and understood them
 #include "ImagePresentation_Service.hpp"
 
+#include "WindowManipulation.h"
+#include "Framebuffer_Events.h"
+#include "GUIState.h"
+
+#include "ImageWrapper_to_GLTexture.h"
+#include "ImagePresentation_Sinks.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -56,6 +62,9 @@ bool ImagePresentation_Service::init(const Config& config) {
     m_entry_points_registry_resource.rename_entry_point = [&](std::string oldName, std::string newName) -> bool { return rename_entry_point(oldName, newName); };
     m_entry_points_registry_resource.clear_entry_points = [&]() { clear_entry_points(); };
 
+    m_presentation_sinks.push_back(
+        {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
+
     this->m_providedResourceReferences =
     {
           {"ImagePresentationEntryPoints", m_entry_points_registry_resource} // used by MegaMolGraph to set entry points
@@ -64,6 +73,9 @@ bool ImagePresentation_Service::init(const Config& config) {
     this->m_requestedResourcesNames =
     {
           "FrontendResources" // std::vector<FrontendResource>
+        , "WindowManipulation"
+        , "FramebufferEvents"
+        , "GUIState"
     };
 
     log("initialized successfully");
@@ -106,7 +118,23 @@ void ImagePresentation_Service::postGraphRender() {
 
 void ImagePresentation_Service::RenderNextFrame() {
     for (auto& entry : m_entry_points) {
-        entry.execute(entry.modulePtr, entry.entry_point_resources, entry.execution_result_image.get());
+        entry.execute(entry.modulePtr, entry.entry_point_resources, entry.execution_result_image);
+    }
+}
+
+void ImagePresentation_Service::PresentRenderedImages() {
+    // pull result images into separate list
+    static std::vector<ImageWrapper> wrapped_images;
+    wrapped_images.clear();
+    wrapped_images.reserve(m_entry_points.size());
+
+    // rendering results are presented in order of execution of entry points
+    for (auto& entry : m_entry_points) {
+        wrapped_images.push_back(entry.execution_result_image);
+    }
+
+    for (auto& sink: m_presentation_sinks) {
+        sink.present_images(wrapped_images);
     }
 }
 
@@ -160,9 +188,6 @@ std::vector<FrontendResource> ImagePresentation_Service::map_resources(std::vect
 }
 
 bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
-    m_wrapped_images.push_back({name});
-    auto& image = m_wrapped_images.back();
-
     auto [execute_etry, init_entry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
 
     auto resource_requests = entry_resource_requests();
@@ -178,7 +203,7 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
         module_raw_ptr,
         resources,
         execute_etry,
-        image
+        {name} // image
         });
 
     auto& entry_point = m_entry_points.back();
@@ -217,6 +242,31 @@ bool ImagePresentation_Service::clear_entry_points() {
     m_entry_points.clear();
 
     return true;
+}
+
+void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageWrapper> const& images) {
+    static auto& window_manipulation       = m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowManipulation>();
+    static auto& window_framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
+    static glfw_window_blit glfw_sink;
+    // TODO: glfw_window_blit destuctor gets called after GL context died
+
+    // glfw sink needs to know current glfw framebuffer size
+    auto framebuffer_width = window_framebuffer_events.previous_state.width;
+    auto framebuffer_height = window_framebuffer_events.previous_state.height;
+    glfw_sink.set_framebuffer_size(framebuffer_width, framebuffer_height);
+
+    for (auto& image: images) {
+        static frontend_resources::gl_texture gl_image = image;
+        gl_image = image;
+        glfw_sink.blit_texture(gl_image.as_gl_handle(), image.size.width, image.size.height);
+    }
+
+    // EXPERIMENTAL: until the GUI Service provides rendering of the GUI on its own
+    // render UI overlay
+    static auto& gui_state = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::GUIState>();
+    gui_state.provide_gui_render();
+
+    window_manipulation.swap_buffers();
 }
 
 } // namespace frontend

@@ -70,13 +70,6 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
  */
 bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
 
-    // Camera
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-
     this->PreRender(call);
 
     CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
@@ -91,8 +84,15 @@ bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
         call = *chainedCall;
     }
 
+    // bind fbo and set viewport before rendering your own stuff
+    auto fbo = call.GetFramebuffer();
+    fbo->bind();
+    glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
+    
     // render our own stuff
     this->Render(call);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }

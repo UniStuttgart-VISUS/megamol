@@ -21,7 +21,7 @@ Keyframe::Keyframe(void)
 }
 
 
-Keyframe::Keyframe(float anim_time, float sim_time, camera_state_type cam_state)
+Keyframe::Keyframe(float anim_time, float sim_time, camera_type cam_state)
     : anim_time(anim_time)
     , sim_time(sim_time)
     , camera_state(cam_state) {
@@ -59,29 +59,33 @@ bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
 
 bool Keyframe::Deserialise(const nlohmann::json& in_json) {
 
-    bool valid = true;
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "animation_time" }, &this->anim_time);
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "simulation_time" }, &this->sim_time);
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "centre_offset" }, this->camera_state.centre_offset.data(), this->camera_state.centre_offset.size());
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "convergence_plane" }, &this->camera_state.convergence_plane);
-    int eye = 0;
-    valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "eye" }, &eye);
-    this->camera_state.eye = static_cast<megamol::core::thecam::Eye>(eye);
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "far_clipping_plane" }, &this->camera_state.far_clipping_plane);
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "film_gate" }, this->camera_state.film_gate.data(), this->camera_state.film_gate.size());
-    int gate_scaling = 0;
-    valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "gate_scaling" }, &gate_scaling);
-    this->camera_state.gate_scaling = static_cast<megamol::core::thecam::Gate_scaling>(gate_scaling);
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "half_aperture_angle_radians" }, &this->camera_state.half_aperture_angle_radians);
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "half_disparity" }, &this->camera_state.half_disparity);
-    valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "image_tile" }, this->camera_state.image_tile.data(), this->camera_state.image_tile.size());
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "near_clipping_plane" }, &this->camera_state.near_clipping_plane);
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "orientation" }, this->camera_state.orientation.data(), this->camera_state.orientation.size());
-    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "position" }, this->camera_state.position.data(), this->camera_state.position.size());
-    int projection_type = 0;
-    valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "projection_type" }, &projection_type);
-    this->camera_state.projection_type = static_cast<megamol::core::thecam::Projection_type>(projection_type);
-    valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "resolution_gate" }, this->camera_state.resolution_gate.data(), this->camera_state.resolution_gate.size());
+    //bool valid = true;
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "animation_time" }, &this->anim_time);
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "simulation_time" }, &this->sim_time);
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "centre_offset" }, this->camera_state.centre_offset.data(), this->camera_state.centre_offset.size());
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "convergence_plane" }, &this->camera_state.convergence_plane);
+    //int eye = 0;
+    //valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "eye" }, &eye);
+    //this->camera_state.eye = static_cast<megamol::core::thecam::Eye>(eye);
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "far_clipping_plane" }, &this->camera_state.far_clipping_plane);
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "film_gate" }, this->camera_state.film_gate.data(), this->camera_state.film_gate.size());
+    //int gate_scaling = 0;
+    //valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "gate_scaling" }, &gate_scaling);
+    //this->camera_state.gate_scaling = static_cast<megamol::core::thecam::Gate_scaling>(gate_scaling);
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "half_aperture_angle_radians" }, &this->camera_state.half_aperture_angle_radians);
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "half_disparity" }, &this->camera_state.half_disparity);
+    //valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "image_tile" }, this->camera_state.image_tile.data(), this->camera_state.image_tile.size());
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "near_clipping_plane" }, &this->camera_state.near_clipping_plane);
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "orientation" }, this->camera_state.orientation.data(), this->camera_state.orientation.size());
+    //valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "position" }, this->camera_state.position.data(), this->camera_state.position.size());
+    //int projection_type = 0;
+    //valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "projection_type" }, &projection_type);
+    //this->camera_state.projection_type = static_cast<megamol::core::thecam::Projection_type>(projection_type);
+    //valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "resolution_gate" }, this->camera_state.resolution_gate.data(), this->camera_state.resolution_gate.size());
+    //
+    //return valid;
 
-    return valid;
+    // TODO...not gonna rewrite serialisation code until the camera design is fixed
+
+    return false;
 }

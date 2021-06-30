@@ -1,5 +1,7 @@
 #include "../include/mmcore/DeferredShading.h"
 
+#include <glm/ext.hpp>
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/view/light/PointLight.h"
@@ -38,12 +40,9 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3DGL& call) {
     if (cr == NULL) return false;
 
     // obtain camera information
-    core::view::Camera_2 cam(cr->GetCamera());
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_tmp, proj_tmp;
-    cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    glm::mat4 view_mx = view_tmp;
-    glm::mat4 proj_mx = proj_tmp;
+    core::view::Camera cam = cr->GetCamera();
+    glm::mat4 view_mx = cam.getViewMatrix();
+    glm::mat4 proj_mx = cam.getProjectionMatrix();
 
     //glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //m_GBuffer->bindToRead(0);

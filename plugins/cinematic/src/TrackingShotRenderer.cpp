@@ -164,29 +164,26 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     this->utils.SetBackgroundColor(back_color);
 
     // Get current camera
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    glm::vec4 snap_pos = snapshot.position;
-    glm::vec4 snap_view = snapshot.view_vector;
-    glm::vec3 cam_pos = static_cast<glm::vec3>(snap_pos);
-    glm::vec3 cam_view = static_cast<glm::vec3>(snap_view);
-    glm::mat4 view = viewTemp;
-    glm::mat4 proj = projTemp;
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto fbo = call.GetFramebufferObject();
+
+    glm::vec3 cam_pos = cam_pose.position;
+    glm::vec3 cam_view = cam_pose.direction;
     glm::mat4 mvp = proj * view;
 
-    glm::vec2 viewport;
-    viewport.x = static_cast<float>(cam.resolution_gate().width());
-    viewport.y = static_cast<float>(cam.resolution_gate().height());
-    glm::mat4 ortho = glm::ortho(0.0f, viewport.x, 0.0f, viewport.y, -1.0f, 1.0f);
+    // Get current viewport
+    const float vp_fw = static_cast<float>(fbo->getWidth());
+    const float vp_fh = static_cast<float>(fbo->getHeight());
+
+    // Get matrix for orthogonal projection of 2D rendering
+    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
 
     // Push manipulators ------------------------------------------------------
     if (keyframes->size() > 0) {
-        cam_type::minimal_state_type camera_state;
-        cam.get_minimal_state(camera_state);
-        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera_state, viewport, mvp);
+        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), cam, glm::vec2(vp_fw, vp_fh), mvp);
         this->manipulators.PushRendering(this->utils);
     }
 
@@ -207,10 +204,10 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     }
 
     // Draw 3D ---------------------------------------------------------------
-    this->utils.DrawAll(mvp, viewport);
+    this->utils.DrawAll(mvp, {vp_fw,vp_fh});
 
     // Push hotkey list ------------------------------------------------------
-    this->utils.HotkeyWindow(this->showHelpText, ortho, viewport);
+    this->utils.HotkeyWindow(this->showHelpText, ortho, {vp_fw, vp_fh});
 
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " TRACKING SHOT ";
@@ -219,10 +216,10 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     if (this->showHelpText) {
         rightLabel = " [Shift+h] Hide Hotkeys ";
     }
-    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, viewport);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, {vp_fw, vp_fh});
 
     // Draw 2D ---------------------------------------------------------------
-    this->utils.DrawAll(ortho, viewport);
+    this->utils.DrawAll(ortho, {vp_fw, vp_fh});
 
     return true;
 }

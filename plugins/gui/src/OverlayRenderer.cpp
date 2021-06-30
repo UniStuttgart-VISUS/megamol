@@ -426,12 +426,8 @@ bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 
 bool OverlayRenderer::Render(view::CallRender3DGL& call) {
 
-    // Camera
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    // Framebuffer object
+    auto fbo = call.GetFramebuffer();
 
     auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (cr3d_out != nullptr) {
@@ -442,9 +438,8 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // Get current viewport
-    auto viewport = cam.image_tile();
-    if ((this->m_viewport.x != viewport.width()) || (this->m_viewport.y != viewport.height())) {
-        this->m_viewport = {viewport.width(), viewport.height()};
+    if ((this->m_viewport.x != fbo->getWidth()) || (this->m_viewport.y != fbo->getHeight())) {
+        this->m_viewport = {fbo->getWidth(), fbo->getHeight()};
         // Reload rectangle on viewport changes
         this->onTriggerRecalcRectangle(this->paramMode);
     }

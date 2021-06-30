@@ -89,6 +89,7 @@ private:
     void resource_provide_gui_state(const std::string& json_state);
     void resource_provide_gui_visibility(bool show);
     void resource_provide_gui_scale(float scale);
+    void resource_provide_gui_render();
 
     void resource_register_window(const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func);
     void resource_register_popup(const std::string& name, bool& open, std::function<void(void)>& func);

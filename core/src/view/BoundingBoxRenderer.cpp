@@ -18,6 +18,7 @@
 #include "mmcore/utility/log/Log.h"
 
 #include "glm/glm.hpp"
+#include <glm/ext.hpp>
 #include "glm/gtc/matrix_transform.hpp"
 
 #include <algorithm>
@@ -179,13 +180,11 @@ bool BoundingBoxRenderer::GetExtents(CallRender3DGL& call) {
  */
 bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
 
-    Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewT, projT;
-    cam.calc_matrices(snapshot, viewT, projT);
-    glm::mat4 view = viewT;
-    glm::mat4 proj = projT;
+    Camera cam = call.GetCamera();
+    auto fbo = call.GetFramebuffer();
+
+    glm::mat4 view = cam.getViewMatrix();
+    glm::mat4 proj = cam.getProjectionMatrix();
     glm::mat4 mvp = proj * view;
 
     CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
@@ -194,6 +193,9 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
             "The BoundingBoxRenderer does not work without a renderer attached to its right");
         return false;
     }
+    *chainedCall = call;
+    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
+    call = *chainedCall;
 
     auto boundingBoxes = chainedCall->AccessBoundingBoxes();
     auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
@@ -317,11 +319,9 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
  */
 bool BoundingBoxRenderer::RenderViewCube(CallRender3DGL& call) {
     // Get camera orientation
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
+    auto cam = call.GetCamera();
 
-    const auto orientation = cam.orientation();
-    const auto rotation = glm::inverse( glm::mat4_cast(static_cast<glm::quat>(orientation)) );
+    const auto rotation = glm::mat4(glm::inverse(glm::mat3(cam.getViewMatrix())));
 
     // Create view/model and projection matrices
     const float dist = 2.0f / std::tan(thecam::math::angle_deg2rad(30.0f) / 2.0f);

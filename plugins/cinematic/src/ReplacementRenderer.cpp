@@ -109,11 +109,8 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) 
 bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     // Camera
-    view::Camera_2 cam;
+    view::Camera cam;
     call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
     if (this->replacementRenderingParam.IsDirty()) {
         this->replacementRenderingParam.ResetDirty();
@@ -158,13 +155,12 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     if (this->draw_replacement) {
         // Render bounding box as replacement
 
-        glm::mat4 proj = projTemp;
-        glm::mat4 view = viewTemp;
+        glm::mat4 proj = cam.getProjectionMatrix();
+        glm::mat4 view = cam.getViewMatrix();
         glm::mat4 mvp = proj * view;
-
-        auto viewport = cam.resolution_gate();
-        float vp_fw = static_cast<float>(viewport.width());
-        float vp_fh = static_cast<float>(viewport.height());
+        
+        float vp_fw = call.GetFramebufferObject()->getWidth();
+        float vp_fh = call.GetFramebufferObject()->getHeight();
 
         float alpha = alphaParam.Param<param::FloatParam>()->Value();
 

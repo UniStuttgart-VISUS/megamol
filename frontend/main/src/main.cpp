@@ -209,10 +209,14 @@ int main(const int argc, const char** argv) {
 
             imagepresentation_service.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
+            // temporary fix to make sure that everything that happens post-draw ends up in default window fbo...
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
         }
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
+
+        imagepresentation_service.PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
 
         return true;
     };

@@ -18,7 +18,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallRender2DGL.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -229,17 +229,14 @@ namespace infovis {
         float axisHeight;
         GLuint numTicks;
         float fontSize;
-        float windowAspect;
-        int windowWidth;
-        int windowHeight;
         float backgroundColor[4];
         core::BoundingBoxes_2 bounds;
+        core::view::Camera camera_cpy; //< local copy of last used camera
+        std::shared_ptr<glowl::FramebufferObject> fbo; //< last used framebuffer
         unsigned int lastTimeStep;
 
         GLuint columnCount;
         GLuint itemCount;
-        GLfloat modelViewMatrix_column[16];
-        GLfloat projMatrix_column[16];
 
         std::unique_ptr<glowl::GLSLProgram> drawAxesProgram;
         std::unique_ptr<glowl::GLSLProgram> drawScalesProgram;

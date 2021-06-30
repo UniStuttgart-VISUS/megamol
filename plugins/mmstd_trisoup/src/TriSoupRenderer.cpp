@@ -28,6 +28,8 @@
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 
+#include <glm/ext.hpp>
+
 using namespace megamol;
 using namespace megamol::trisoup;
 
@@ -147,13 +149,9 @@ bool TriSoupRenderer::Render(view::CallRender3DGL& call) {
     ctmd->SetFrameID(static_cast<int>(call.Time())); // necessary?
     if (!(*ctmd)(0)) return false;
 
-	core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
-    glm::mat4 proj = projTemp;
-    glm::mat4 view = viewTemp;
+	core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
 
 	// lighting setup
     glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};

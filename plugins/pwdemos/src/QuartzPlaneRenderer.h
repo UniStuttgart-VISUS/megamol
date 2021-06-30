@@ -9,7 +9,7 @@
 
 #include "AbstractMultiShaderQuartzRenderer.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
@@ -20,7 +20,7 @@ namespace demos {
     /**
      * QuartzPlaneRenderer
      */
-    class QuartzPlaneRenderer : public core::view::Renderer2DModule, public AbstractMultiShaderQuartzRenderer {
+    class QuartzPlaneRenderer : public core::view::Renderer2DModuleGL, public AbstractMultiShaderQuartzRenderer {
     public:
 
         /**
