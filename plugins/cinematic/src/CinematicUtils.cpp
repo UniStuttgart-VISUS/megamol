@@ -191,8 +191,9 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     this->gui_table_row("SHIFT + D", "Delete selected keyframe.");
                     this->gui_table_row("SHIFT + S", "Save keyframes to file.");
                     this->gui_table_row("SHIFT + L", "Load keyframes from file.");
-                    this->gui_table_row("SHIFT + Z", "Undo keyframe changes (US Keyboard).");
-                    this->gui_table_row("SHIFT + Y", "Redo keyframe changes (US Keyboard).");
+                    this->gui_table_row("SHIFT + Z", "Undo keyframe changes (QUERTY keyboard layout).");
+                    this->gui_table_row("SHIFT + Y", "Redo keyframe changes (QUERTY keyboard layout).");
+                    this->gui_table_row("LEFT Mouse Button", "Select keyframe or drag manipulator.");
                     ImGui::EndTable();
                 }
             }

@@ -390,45 +390,23 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, const glm::m
 
     // Set OpenGL state ----------------------------------------------------
     // Blending
-    GLboolean blendEnabled = glIsEnabled(GL_BLEND);
-    if (!blendEnabled) {
-        glEnable(GL_BLEND);
-    }
-    GLint blendSrc;
-    GLint blendDst;
-    glGetIntegerv(GL_BLEND_SRC, &blendSrc);
-    glGetIntegerv(GL_BLEND_DST, &blendDst);
+    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // Depth
-    GLboolean depthEnabled = glIsEnabled(GL_DEPTH_TEST);
-    if (!depthEnabled) {
-        glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
+    if (primitive == Primitives::COLOR_TEXTURE) {
+        glDisable(GL_DEPTH_TEST);
     }
-    // Cullling
-    GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
-    if (cullEnabled) {
-        glDisable(GL_CULL_FACE);
-    }
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glDisable(GL_CULL_FACE);
     // Smoothing
     if (this->smooth) {
         glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);
-    }
-    // Vertex Point Size
-    bool vertexpointsizeEnabled = glIsEnabled(GL_VERTEX_PROGRAM_POINT_SIZE);
-    if (!vertexpointsizeEnabled) {
-        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     }
 
     // Draw ----------------------------------------------------------------
     GLenum mode = GL_TRIANGLES;
     if (primitive == Primitives::POINTS) {
         mode = GL_POINTS;
-    }
-    if (primitive == Primitives::COLOR_TEXTURE) {
-        glDisable(GL_DEPTH_TEST);
-    }
-    if (primitive == Primitives::DEPTH_TEXTURE) {
-        glEnable(GL_DEPTH_TEST);
     }
 
     glBindVertexArray(this->vertex_array);
@@ -456,25 +434,9 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, const glm::m
     glBindVertexArray(0);
 
     // Reset OpenGL state --------------------------------------------------
-    // Vertex Point Size
-    if (!vertexpointsizeEnabled) {
-        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    }
-    // Smoothing
-    /// not reset ...
-    // Cullling
-    if (cullEnabled) {
-        glEnable(GL_CULL_FACE);
-    }
-    // Depth
-    if (!depthEnabled) {
-        glDisable(GL_DEPTH_TEST);
-    }
-    // Blending
-    glBlendFunc(blendSrc, blendDst);
-    if (!blendEnabled) {
-        glDisable(GL_BLEND);
-    }
+    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 }
 
 
