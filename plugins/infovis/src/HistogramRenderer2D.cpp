@@ -50,7 +50,7 @@ HistogramRenderer2D::HistogramRenderer2D()
     this->flagStorageWriteCallerSlot.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
     this->MakeSlotAvailable(&this->flagStorageWriteCallerSlot);
 
-    this->numberOfBinsParam << new core::param::IntParam(this->bins, 1);
+    this->numberOfBinsParam << new core::param::IntParam(this->bins, 1, 255);
     this->MakeSlotAvailable(&this->numberOfBinsParam);
 
     this->logPlotParam << new core::param::BoolParam(false);
