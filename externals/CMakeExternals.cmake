@@ -80,9 +80,12 @@ function(require_external NAME)
       return()
     endif()
 
+    # The repo at https://github.com/nlohmann/json is too big, add local copy to avoid very slow download!
     add_external_headeronly_project(json
-      GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
-      GIT_TAG "v3.5.0")
+      SOURCE_DIR json)
+    if(MSVC)
+      target_sources(json INTERFACE "${CMAKE_SOURCE_DIR}/externals/json/nlohmann_json.natvis")
+    endif()
 
   # libcxxopts
   elseif(NAME STREQUAL "libcxxopts")
@@ -127,7 +130,8 @@ function(require_external NAME)
 
     add_external_headeronly_project(tinygltf
       GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-      GIT_TAG "v2.2.0")
+      GIT_TAG "v2.5.0")
+    target_compile_definitions(tinygltf INTERFACE TINYGLTF_NO_INCLUDE_JSON)
 
   elseif(NAME STREQUAL "sim_sort")
     if(TARGET sim_sort)
@@ -608,6 +612,16 @@ function(require_external NAME)
         target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
       endif()
       target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD)
+
+  # obj-io
+  elseif (NAME STREQUAL "obj-io")
+    if(TARGET obj-io)
+      return()
+    endif()
+
+    add_external_headeronly_project(obj-io INTERFACE
+      GIT_REPOSITORY https://github.com/thinks/obj-io.git
+      INCLUDE_DIR "include/thinks")
 
   # qhull
   elseif(NAME STREQUAL "qhull")

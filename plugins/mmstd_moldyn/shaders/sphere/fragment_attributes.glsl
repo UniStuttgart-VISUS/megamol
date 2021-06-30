@@ -31,8 +31,10 @@ uniform bool inUseHighPrecision;
 out vec4 outNormal;
 
 // OUTLINE / ifdef RETICLE
-uniform float outlineWidth;
-FLACH in float fragmentRadius;
-FLACH in vec2 centerFragment;
+FLACH in float sphere_frag_radius;
+FLACH in vec2 sphere_frag_center;
+// OUTLINE
+uniform float outlineWidth = 0.0;
+
 
 layout(location = 0) out vec4 outColor;

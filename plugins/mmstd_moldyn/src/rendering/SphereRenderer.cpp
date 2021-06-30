@@ -47,6 +47,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
 , curMVP()
 , curMVPinv()
 , curMVPtransp()
+, init_resources(true)
 , renderMode(RenderMode::SIMPLE)
 , greyTF(0)
 , range()
@@ -278,11 +279,6 @@ bool SphereRenderer::create(void) {
             (this->getRenderModeString(this->renderMode)).c_str(), (this->getRenderModeString(RenderMode::SIMPLE)).c_str());
         // Always available fallback render mode
         this->renderMode = RenderMode::SIMPLE;
-    }
-
-    // Create resources for initial render mode
-    if (!this->createResources()) {
-        return false;
     }
 
     // timer.SetNumRegions(4);
@@ -1044,8 +1040,9 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
 
     // Checking for changed render mode
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
-    if (currentRenderMode != this->renderMode) {
+    if (this->init_resources || (currentRenderMode != this->renderMode)) {
         this->renderMode = currentRenderMode;
+        init_resources = false;
         if (!this->createResources()) {
             return false;
         }

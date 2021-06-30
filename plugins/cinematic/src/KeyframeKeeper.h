@@ -167,6 +167,8 @@ namespace cinematic {
         float             splineTangentLength;
         int               undoQueueIndex;
         std::vector<Undo> undoQueue;
+        float             pendingTotalAnimTime;
+        uint32_t          frameId;
           
         /**********************************************************************
         * functions
@@ -213,6 +215,8 @@ namespace cinematic {
         glm::quat quaternion_interpolation(float u, glm::quat q0, glm::quat q1);
 
         int getKeyframeIndex(std::vector<Keyframe>& keyframes, Keyframe keyframe);
+
+        void pendingTotalAnimTimePopUp(uint32_t frame_id);
 
         /**********************************************************************
         * callbacks
