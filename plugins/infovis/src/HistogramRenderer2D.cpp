@@ -2,6 +2,7 @@
 #include "HistogramRenderer2D.h"
 
 #include <algorithm>
+#include <limits>
 #include "compositing/CompositingCalls.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -77,6 +78,10 @@ bool HistogramRenderer2D::create() {
             core::utility::make_glowl_shader("tex_histo_calc", shader_options, "infovis/tex_histo_calc.comp.glsl");
         calcTexHistogramMaxProgram =
             core::utility::make_glowl_shader("tex_histo_max", shader_options, "infovis/tex_histo_max.comp.glsl");
+        calcTexLineMinMaxProgram =
+            core::utility::make_glowl_shader("tex_line_minmax", shader_options, "infovis/tex_minmax_lines.comp.glsl");
+        calcTexGlobalMinMaxProgram =
+            core::utility::make_glowl_shader("tex_global_minmax", shader_options, "infovis/tex_minmax_all.comp.glsl");
         selectionProgram =
             core::utility::make_glowl_shader("histo_select", shader_options, "infovis/histo_select.comp.glsl");
         histogramProgram = core::utility::make_glowl_shader(
@@ -92,6 +97,8 @@ bool HistogramRenderer2D::create() {
     glGenBuffers(1, &this->floatDataBuffer);
     glGenBuffers(1, &this->minBuffer);
     glGenBuffers(1, &this->maxBuffer);
+    glGenBuffers(1, &this->lineMinBuffer);
+    glGenBuffers(1, &this->lineMaxBuffer);
     glGenBuffers(1, &this->histogramBuffer);
     glGenBuffers(1, &this->selectedHistogramBuffer);
     glGenBuffers(1, &this->maxBinValueBuffer);
@@ -109,6 +116,8 @@ void HistogramRenderer2D::release() {
     glDeleteBuffers(1, &this->floatDataBuffer);
     glDeleteBuffers(1, &this->minBuffer);
     glDeleteBuffers(1, &this->maxBuffer);
+    glDeleteBuffers(1, &this->lineMinBuffer);
+    glDeleteBuffers(1, &this->lineMaxBuffer);
     glDeleteBuffers(1, &this->histogramBuffer);
     glDeleteBuffers(1, &this->selectedHistogramBuffer);
     glDeleteBuffers(1, &this->maxBinValueBuffer);
@@ -348,6 +357,12 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
             this->currentTableFrameId = frameId;
         }
     } else {
+        // stupid cheat, but is that really worth it?
+        // static uint32_t lastFrame = -1;
+        // auto currFrame = this->GetCoreInstance()->GetFrameID();
+        // if (lastFrame == currFrame)
+        //    return true;
+        // lastFrame = currFrame;
         (*textureCall)(compositing::CallTexture2D::CallGetData);
         const auto data = textureCall->getData();
         const auto int_form = data->getFormat();
@@ -388,14 +403,29 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
         this->colNames.resize(this->colCount);
 
         for (size_t i = 0; i < this->colCount; ++i) {
-            this->colMinimums[i] = 0.0f;
-            this->colMaximums[i] = 1.0f;
+            this->colMinimums[i] = std::numeric_limits<float>::max();
+            this->colMaximums[i] = std::numeric_limits<float>::lowest();
             this->colNames[i] = names[i];
         }
 
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->minBuffer);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, this->colCount * sizeof(float), this->colMinimums.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->maxBuffer);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, this->colCount * sizeof(float), this->colMaximums.data(), GL_STATIC_DRAW);
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->lineMinBuffer);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, this->colCount * sizeof(float) * data->getHeight(), nullptr, GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->lineMaxBuffer);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, this->colCount * sizeof(float) * data->getHeight(), nullptr, GL_STATIC_DRAW);
+
+
         auto binsParam = static_cast<size_t>(this->numberOfBinsParam.Param<core::param::IntParam>()->Value());
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_INFO, "Calculate Histogram");
+        // megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        //    megamol::core::utility::log::Log::LEVEL_INFO, "Calculate Histogram");
 
         this->bins = binsParam;
 
@@ -415,14 +445,29 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
         glActiveTexture(GL_TEXTURE0);
         data->bindTexture();
 
-        calcTexHistogramProgram->use();
-        calcTexHistogramProgram->setUniform("anytex", 0);
 
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->minBuffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, this->maxBuffer);
         readFlagsCall->getData()->flags->bind(3);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, this->histogramBuffer);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, this->selectedHistogramBuffer);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, this->maxBinValueBuffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, this->lineMinBuffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, this->lineMaxBuffer);
 
+        calcTexLineMinMaxProgram->use();
+        calcTexLineMinMaxProgram->setUniform("anytex", 0);
+        calcTexLineMinMaxProgram->setUniform("colCount", static_cast<GLuint>(this->colCount));
+
+        glDispatchCompute(std::max(data->getHeight(), 1U), 1, 1);
+
+        calcTexGlobalMinMaxProgram->use();
+        calcTexGlobalMinMaxProgram->setUniform("anytex", 0);
+        calcTexGlobalMinMaxProgram->setUniform("colCount", static_cast<GLuint>(this->colCount));
+        glDispatchCompute(1, 1, 1);
+
+        calcTexHistogramProgram->use();
+        calcTexHistogramProgram->setUniform("anytex", 0);
         calcTexHistogramProgram->setUniform("binCount", static_cast<GLuint>(this->bins));
         calcTexHistogramProgram->setUniform("colCount", static_cast<GLuint>(this->colCount));
 
@@ -440,6 +485,10 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
         // Download max bin value for text label.
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->maxBinValueBuffer);
         glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLint), &this->maxBinValue);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->minBuffer);
+        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->colCount * sizeof(float), this->colMinimums.data());
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->maxBuffer);
+        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->colCount * sizeof(float), this->colMaximums.data());
 
         this->currentTableDataHash = -1;
         this->currentTableFrameId = -1;

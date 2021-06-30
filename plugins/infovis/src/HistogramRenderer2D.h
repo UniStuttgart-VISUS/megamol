@@ -115,6 +115,8 @@ private:
     std::unique_ptr<glowl::GLSLProgram> calcHistogramProgram;
     std::unique_ptr<glowl::GLSLProgram> calcTexHistogramProgram;
     std::unique_ptr<glowl::GLSLProgram> calcTexHistogramMaxProgram;
+    std::unique_ptr<glowl::GLSLProgram> calcTexLineMinMaxProgram;
+    std::unique_ptr<glowl::GLSLProgram> calcTexGlobalMinMaxProgram;
     std::unique_ptr<glowl::GLSLProgram> selectionProgram;
     std::unique_ptr<glowl::GLSLProgram> histogramProgram;
     std::unique_ptr<glowl::GLSLProgram> axesProgram;
@@ -122,6 +124,8 @@ private:
     GLuint floatDataBuffer = 0;
     GLuint minBuffer = 0;
     GLuint maxBuffer = 0;
+    GLuint lineMinBuffer = 0;
+    GLuint lineMaxBuffer = 0;
     GLuint histogramBuffer = 0;
     GLuint selectedHistogramBuffer = 0;
     GLuint maxBinValueBuffer = 0;
