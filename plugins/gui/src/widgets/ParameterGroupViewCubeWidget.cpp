@@ -12,17 +12,18 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core::utility;
 using namespace megamol::gui;
 
 
 // *** Pickable Cube ******************************************************** //
 
-megamol::gui::PickableCube::PickableCube(void) : image_up_arrow(), shader(nullptr) {}
+megamol::gui::PickableCube::PickableCube() : image_up_arrow(), shader(nullptr) {}
 
 
 bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_selected_face_id,
     int& inout_selected_orientation_id, int& out_hovered_face_id, int& out_hovered_orientation_id,
-    const glm::vec4& cube_orientation, ManipVector& pending_manipulations) {
+    const glm::vec4& cube_orientation, ManipVector_t& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -220,7 +221,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
             "    } \n"
             "} \n"
             "\n"
-            "void main(void) { \n"
+            "void main() { \n"
             "    vec4 out_color = vec4(vertex_color, 1.0); \n"
             "    \n"
             "    // Arrow Texture - supersample 4 extra points \n"
@@ -349,7 +350,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
             "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
             "} ";
 
-        if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
+        if (!RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
             return false;
         }
     }
@@ -394,7 +395,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
     if (!culling) {
         glEnable(GL_CULL_FACE);
     }
-    std::array<GLint, 4> viewport;
+    std::array<GLint, 4> viewport = {0, 0, 0, 0};
     glGetIntegerv(GL_VIEWPORT, viewport.data());
     int size = (100 * static_cast<int>(megamol::gui::gui_scaling.Get()));
     int x = viewport[2] - size;
@@ -438,9 +439,9 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
 }
 
 
-InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
+InteractVector_t megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
 
-    InteractVector interactions;
+    InteractVector_t interactions;
     interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
@@ -449,11 +450,11 @@ InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) cons
 
 // *** Pickable Cube ******************************************************** //
 
-megamol::gui::PickableTexture::PickableTexture(void) : image_rotation_arrow(), shader(nullptr) {}
+megamol::gui::PickableTexture::PickableTexture() : image_rotation_arrow(), shader(nullptr) {}
 
 
 bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_face_id, int& out_orientation_change,
-    int& out_hovered_arrow_id, ManipVector& pending_manipulations) {
+    int& out_hovered_arrow_id, ManipVector_t& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -499,7 +500,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
             "float supersample(in vec2 uv, float w, float alpha) { \n"
             "    return smoothstep(0.5 - w, 0.5 + w, alpha); \n"
             "} \n"
-            "void main(void) { \n"
+            "void main() { \n"
             "    // Same colors as in vertex shader of pickable cube \n"
             "    const vec3 colors[6] = vec3[6](vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 1.0), \n"
             "                                   vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 1.0), \n"
@@ -522,7 +523,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
             "    outFragInfo  = vec2(float(encoded_id), gl_FragCoord.z); \n"
             "} ";
 
-        if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
+        if (!RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
             return false;
         }
     }
@@ -553,7 +554,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
     if (!culling) {
         glEnable(GL_CULL_FACE);
     }
-    std::array<GLint, 4> viewport;
+    std::array<GLint, 4> viewport = {0, 0, 0, 0};
     glGetIntegerv(GL_VIEWPORT, viewport.data());
     int size = (2 * 100 * static_cast<int>(megamol::gui::gui_scaling.Get()));
     int x = viewport[2] - size;
@@ -567,7 +568,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
         glEnable(GL_TEXTURE_2D);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture_id);
-        glUniform1i(this->shader->getUniformLocation("tex"), static_cast<GLint>(0));
+        glUniform1i(static_cast<int>(this->shader->getUniformLocation("tex")), static_cast<GLint>(0));
     }
 
     this->shader->setUniform("selected_face_id", selected_face_id);
@@ -596,9 +597,9 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
 }
 
 
-InteractVector megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
+InteractVector_t megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
 
-    InteractVector interactions;
+    InteractVector_t interactions;
     interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
@@ -607,7 +608,7 @@ InteractVector megamol::gui::PickableTexture::GetInteractions(unsigned int id) c
 
 // *** Parameter Group View Cube Widget ************************************ //
 
-megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget(void)
+megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget()
         : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
         , tooltip()
         , cube_widget()
@@ -649,7 +650,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
     megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
+        log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -702,8 +703,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
         if (in_scope == Parameter::WidgetScope::LOCAL) {
             // LOCAL
 
-            ParameterGroups::DrawGroupedParameters(
-                this->name, params, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
+            ParameterGroups::DrawGroupedParameters(this->name, params, in_search, in_scope, nullptr, GUI_INVALID_ID);
 
             return true;
 
@@ -718,9 +718,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
         if (in_scope == Parameter::WidgetScope::LOCAL) {
             // LOCAL
 
-            ParameterGroups::DrawGroupedParameters(
-                this->name, params, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
-
+            ParameterGroups::DrawGroupedParameters(this->name, params, in_search, in_scope, nullptr, GUI_INVALID_ID);
             return true;
 
         } else if (in_scope == Parameter::WidgetScope::GLOBAL) {
@@ -733,7 +731,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 return false;
             }
 
-            ImGui::PushID(this->uid);
+            ImGui::PushID(static_cast<int>(this->uid));
 
             auto default_view = std::get<int>(param_defaultView->GetValue());
             auto default_orientation = std::get<int>(param_defaultOrientation->GetValue());
@@ -745,6 +743,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 cube_picking_id, this->cube_widget.GetInteractions(cube_picking_id));
             bool selected = this->cube_widget.Draw(cube_picking_id, default_view, default_orientation, hovered_face,
                 hovered_orientation, cube_orientation, inout_picking_buffer->GetPendingManipulations());
+
             int hovered_arrow = 0;
             int orientation_change = 0;
             auto arrow_picking_id = param_defaultOrientation->UID(); // Using any other parameter UID
@@ -765,58 +764,127 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             param_defaultView->SetValue(default_view);
 
             // Tooltip
+            bool face_hovered = false;
             std::string tooltip_text;
             if (hovered_face >= 0) {
                 switch (hovered_face) {
                 case (DefaultView_t::DEFAULTVIEW_FACE_FRONT):
-                    tooltip_text += "[Front]";
+                    tooltip_text += "Face [Front]\nAxis [+Z]";
+                    face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_BACK):
-                    tooltip_text += "[Back]";
+                    tooltip_text += "Face [Back]\nAxis [-Z]";
+                    face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_RIGHT):
-                    tooltip_text += "[Right]";
+                    tooltip_text += "Face [Right]\nAxis [+X]";
+                    face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_LEFT):
-                    tooltip_text += "[Left]";
+                    tooltip_text += "Face [Left]\nAxis [-X]";
+                    face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_TOP):
-                    tooltip_text += "[Top]";
+                    tooltip_text += "Face [Top]\nAxis [+Y]";
+                    face_hovered = true;
                     break;
                 case (DefaultView_t::DEFAULTVIEW_FACE_BOTTOM):
-                    tooltip_text += "[Bottom]";
+                    tooltip_text += "Face [Bottom]\nAxis [-Y]";
+                    face_hovered = true;
                     break;
-                default:
+                case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_LEFT_FRONT):
+                    tooltip_text += "Corner [Left][Top][Front]\nAxis [-X][+Y][+Z]";
                     break;
-                }
-            }
-            // Order is given by triangle order in shader of pickable cube
-            if (hovered_orientation >= 0) {
-                tooltip_text += " ";
-                switch (hovered_orientation) {
-                case (DefaultOrientation_t::DEFAULTORIENTATION_TOP):
-                    tooltip_text += "0 degree";
+                case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_RIGHT_FRONT):
+                    tooltip_text += "Corner [Right][Top][Front]\nAxis [+X][+Y][+Z]";
                     break;
-                case (DefaultOrientation_t::DEFAULTORIENTATION_RIGHT):
-                    tooltip_text += "90 degree";
+                case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_LEFT_BACK):
+                    tooltip_text += "Corner [Left][Top][Back]\nAxis [-X][+Y][-Z]";
                     break;
-                case (DefaultOrientation_t::DEFAULTORIENTATION_BOTTOM):
-                    tooltip_text += "180 degree";
+                case (DefaultView_t::DEFAULTVIEW_CORNER_TOP_RIGHT_BACK):
+                    tooltip_text += "Corner [Right][Top][Back]\nAxis [+X][+Y][-Z]";
                     break;
-                case (DefaultOrientation_t::DEFAULTORIENTATION_LEFT):
-                    tooltip_text += "270 degree";
+                case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_LEFT_FRONT):
+                    tooltip_text += "Corner [Left][Bottom][Front]\nAxis [-X][-Y][+Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_RIGHT_FRONT):
+                    tooltip_text += "Corner [Right][Bottom][Front]\nAxis [+X][-Y][+Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_LEFT_BACK):
+                    tooltip_text += "Corner [Left][Bottom][Back]\nAxis [-X][-Y][-Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_CORNER_BOTTOM_RIGHT_BACK):
+                    tooltip_text += "Corner [Right][Bottom][Back]\nAxis [+X][-Y][-Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_FRONT):
+                    tooltip_text += "Edge [Top][Front]\nAxis [+Y][+Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_LEFT):
+                    tooltip_text += "Edge [Top][Left]\nAxis [+Y][-X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_RIGHT):
+                    tooltip_text += "Edge [Top][Right]\nAxis [+Y][+X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_TOP_BACK):
+                    tooltip_text += "Edge [Top][Back]\nAxis [+Y][-Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_FRONT):
+                    tooltip_text += "Edge [Bottom][Front]\nAxis [-Y][+Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_LEFT):
+                    tooltip_text += "Edge [Bottom][Left]\nAxis [-Y][-X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_RIGHT):
+                    tooltip_text += "Edge [Bottom][Right]\nAxis [-Y][+X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BOTTOM_BACK):
+                    tooltip_text += "Edge [Bottom][Back]\nAxis [-Y][-Z]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_FRONT_LEFT):
+                    tooltip_text += "Edge [Front][Left]\nAxis [+Z][-X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_FRONT_RIGHT):
+                    tooltip_text += "Edge [Front][Right]\nAxis [+Z][+X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BACK_LEFT):
+                    tooltip_text += "Edge [Back][Left]\nAxis [-Z][-X]";
+                    break;
+                case (DefaultView_t::DEFAULTVIEW_EDGE_BACK_RIGHT):
+                    tooltip_text += "Edge [Back][Right]\nAxis [-Z][+X]";
                     break;
                 default:
                     break;
                 }
             }
 
-            /* DEACTIVATED
+            // Order is given by triangle order in shader of pickable cube
+            if (face_hovered && (hovered_orientation >= 0)) {
+                tooltip_text += " ";
+                switch (hovered_orientation) {
+                case (DefaultOrientation_t::DEFAULTORIENTATION_TOP):
+                    tooltip_text += "\nRot [0 degree]";
+                    break;
+                case (DefaultOrientation_t::DEFAULTORIENTATION_RIGHT):
+                    tooltip_text += "\nRot [+90 degree]";
+                    break;
+                case (DefaultOrientation_t::DEFAULTORIENTATION_BOTTOM):
+                    tooltip_text += "\nRot [180 degree]";
+                    break;
+                case (DefaultOrientation_t::DEFAULTORIENTATION_LEFT):
+                    tooltip_text += "\nRot [-90 degree]";
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            /*
             if (hovered_arrow < 0) {
                 tooltip_text = "Rotate Right";
             } else if (hovered_arrow > 0) {
                 tooltip_text = "Rotate Left";
-            } */
+            }
+            */
 
             if (!tooltip_text.empty()) {
                 ImGui::BeginTooltip();

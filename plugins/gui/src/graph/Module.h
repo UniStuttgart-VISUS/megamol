@@ -25,7 +25,6 @@ namespace gui {
     class Call;
     class CallSlot;
     class Parameter;
-    typedef std::shared_ptr<Parameter> ParamPtr_t;
     typedef std::shared_ptr<Call> CallPtr_t;
     typedef std::shared_ptr<CallSlot> CallSlotPtr_t;
 
@@ -35,7 +34,7 @@ namespace gui {
 
 
     /** ************************************************************************
-     * Defines module data structure for graph.
+     * Defines module data structure for graph
      */
     class Module {
     public:
@@ -55,7 +54,7 @@ namespace gui {
         ~Module();
 
         bool AddCallSlot(CallSlotPtr_t callslot);
-        bool DeleteCallSlots(void);
+        bool DeleteCallSlots();
 
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
         void Update(const GraphItemsState_t& state);
@@ -66,57 +65,57 @@ namespace gui {
         const CallSlotPtrVector_t& CallSlots(CallSlotType type) {
             return this->callslots[type];
         }
-        const CallSlotPtrMap_t& CallSlots(void) {
+        const CallSlotPtrMap_t& CallSlots() {
             return this->callslots;
         }
 
-        inline const ImGuiID UID(void) const {
+        inline ImGuiID UID() const {
             return this->uid;
         }
-        inline const std::string ClassName(void) const {
+        inline std::string ClassName() const {
             return this->class_name;
         }
-        bool IsGraphEntry(void) {
+        bool IsGraphEntry() const {
             return (!this->graph_entry_name.empty());
         }
-        inline const std::string Name(void) const {
+        inline std::string Name() const {
             return this->name;
         }
-        const inline std::string FullName(void) const {
+        inline std::string FullName() const {
             std::string fullname = "::" + this->name;
             if (!this->group_name.empty()) {
                 fullname = "::" + this->group_name + fullname;
             }
             return fullname;
         }
-        inline ImVec2 Position(void) const {
+        inline ImVec2 Position() const {
             return this->gui_position;
         }
-        inline ImVec2 Size(void) const {
+        inline ImVec2 Size() const {
             return this->gui_size;
         }
-        inline ImGuiID GroupUID(void) const {
+        inline ImGuiID GroupUID() const {
             return this->group_uid;
         }
-        inline ParamVector_t& Parameters(void) {
+        inline ParamVector_t& Parameters() {
             return this->parameters;
         }
-        inline bool IsView(void) const {
+        inline bool IsView() const {
             return this->is_view;
         }
-        inline ParameterGroups& GUIParameterGroups(void) {
+        inline ParameterGroups& GUIParameterGroups() {
             return this->gui_param_groups;
         }
-        inline const std::string GroupName(void) const {
+        inline std::string GroupName() const {
             return this->group_name;
         }
-        inline const std::string Description(void) const {
+        inline std::string Description() const {
             return this->description;
         }
-        inline const std::string GraphEntryName(void) const {
+        inline std::string GraphEntryName() const {
             return this->graph_entry_name;
         }
-        inline bool IsHidden(void) const {
+        inline bool IsHidden() const {
             return this->gui_hidden;
         }
 
@@ -129,8 +128,8 @@ namespace gui {
         inline void SetGraphEntryName(const std::string& graph_entry) {
             this->graph_entry_name = graph_entry;
         }
-        inline void SetGroupUID(ImGuiID uid) {
-            this->group_uid = uid;
+        inline void SetGroupUID(ImGuiID guid) {
+            this->group_uid = guid;
         }
         inline void SetHidden(bool hidden) {
             this->gui_hidden = hidden;
@@ -139,7 +138,7 @@ namespace gui {
         inline void SetPosition(ImVec2 pos) {
             this->gui_position = pos;
         }
-        void SetSelectedSlotPosition(void) {
+        void SetSelectedSlotPosition() {
             this->gui_set_selected_slot_position = true;
         }
         void SetScreenPosition(ImVec2 pos) {
