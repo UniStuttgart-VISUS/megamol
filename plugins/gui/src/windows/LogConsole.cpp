@@ -8,23 +8,23 @@
 
 #include "LogConsole.h"
 #include "mmcore/utility/log/OfflineTarget.h"
+#include "widgets/ButtonWidgets.h"
 
 
-using namespace megamol;
 using namespace megamol::gui;
 
 
-int megamol::gui::LogBuffer::sync(void) {
+int megamol::gui::LogBuffer::sync() {
     try {
         auto message_str = this->str();
         if (!message_str.empty()) {
             // Split message string
-            auto split_index = message_str.find("\n");
+            auto split_index = message_str.find('\n');
             while (split_index != std::string::npos) {
                 // Assuming new line of log message of format "<level>|<message>\r\n"
                 auto new_message = message_str.substr(0, split_index + 1);
                 bool extracted_new_message = false;
-                auto seperator_index = new_message.find("|");
+                auto seperator_index = new_message.find('|');
                 if (seperator_index != std::string::npos) {
                     unsigned int log_level = megamol::core::utility::log::Log::LEVEL_NONE;
                     auto level_str = new_message.substr(0, seperator_index);
@@ -41,7 +41,7 @@ int megamol::gui::LogBuffer::sync(void) {
                     this->messages.back().message.append(new_message);
                 }
                 message_str = message_str.substr(split_index + 1);
-                split_index = message_str.find("\n");
+                split_index = message_str.find('\n');
             }
             this->str("");
         }
@@ -53,22 +53,32 @@ int megamol::gui::LogBuffer::sync(void) {
     return 0;
 }
 
+// ----------------------------------------------------------------------------
 
-megamol::gui::LogConsole::LogConsole()
-        : echo_log_buffer()
+megamol::gui::LogConsole::LogConsole(const std::string& window_name)
+        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_LOGCONSOLE)
+        , echo_log_buffer()
         , echo_log_stream(&this->echo_log_buffer)
         , echo_log_target(nullptr)
         , log_msg_count(0)
         , scroll_down(2)
         , scroll_up(0)
         , last_window_height(0.0f)
-        , window_title()
+        , win_log_level(static_cast<int>(megamol::core::utility::log::Log::LEVEL_ALL))
+        , win_log_force_open(true)
         , log_popups()
         , tooltip() {
 
     this->echo_log_target = std::make_shared<megamol::core::utility::log::StreamTarget>(
         this->echo_log_stream, megamol::core::utility::log::Log::LEVEL_ALL);
     this->connect_log();
+
+    // Configure CONSOLE Window
+    this->win_config.size = ImVec2(500.0f * megamol::gui::gui_scaling.Get(), 50.0f * megamol::gui::gui_scaling.Get());
+    this->win_config.reset_size = this->win_config.size;
+    this->win_config.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
+    this->win_config.hotkey =
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F9, core::view::Modifier::NONE);
 }
 
 
@@ -82,9 +92,7 @@ LogConsole::~LogConsole() {
 }
 
 
-void megamol::gui::LogConsole::Update(WindowConfiguration& wc) {
-
-    this->window_title = wc.Name();
+bool megamol::gui::LogConsole::Update() {
 
     auto new_log_msg_count = this->echo_log_buffer.log().size();
     if (new_log_msg_count > this->log_msg_count) {
@@ -95,12 +103,12 @@ void megamol::gui::LogConsole::Update(WindowConfiguration& wc) {
             auto entry = this->echo_log_buffer.log()[i];
 
             // Bring log console to front on new warnings and errors
-            if (wc.config.specific.log_force_open) {
+            if (this->win_log_force_open) {
                 if (entry.level < megamol::core::utility::log::Log::LEVEL_INFO) {
-                    if (wc.config.specific.log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
-                        wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                    if (this->win_log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
+                        this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
                     }
-                    wc.config.basic.show = true;
+                    this->win_config.show = true;
                 }
             }
 
@@ -134,10 +142,12 @@ void megamol::gui::LogConsole::Update(WindowConfiguration& wc) {
         }
     }
     this->log_msg_count = new_log_msg_count;
+
+    return true;
 }
 
 
-bool megamol::gui::LogConsole::Draw(WindowConfiguration& wc) {
+bool megamol::gui::LogConsole::Draw() {
 
     // Scroll down if window height changes
     if (this->last_window_height != ImGui::GetWindowHeight()) {
@@ -149,39 +159,36 @@ bool megamol::gui::LogConsole::Draw(WindowConfiguration& wc) {
     if (ImGui::BeginMenuBar()) {
 
         // Force Open on Warnings and Errors
-        ImGui::Checkbox("Force Open", &wc.config.specific.log_force_open);
+        megamol::gui::ButtonWidgets::ToggleButton("Force Open", this->win_log_force_open);
         this->tooltip.Marker("Force open log console window on warnings and errors.");
         ImGui::Separator();
 
         // Log Level
         ImGui::TextUnformatted("Show");
         ImGui::SameLine();
-        if (ImGui::RadioButton(
-                "Errors", (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
-            if (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
-                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_NONE;
+        if (ImGui::RadioButton("Errors", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
+            if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
+                this->win_log_level = megamol::core::utility::log::Log::LEVEL_NONE;
             } else {
-                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
+                this->win_log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
             }
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton(
-                "Warnings", (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
-            if (wc.config.specific.log_level >= megamol::core::utility::log::Log::LEVEL_WARN) {
-                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
+        if (ImGui::RadioButton("Warnings", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
+            if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN) {
+                this->win_log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
             } else {
-                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             }
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton(
-                "Infos", (wc.config.specific.log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
-            if (wc.config.specific.log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
-                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+        if (ImGui::RadioButton("Infos", (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
+            if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
+                this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             } else {
-                wc.config.specific.log_level = megamol::core::utility::log::Log::LEVEL_ALL;
+                this->win_log_level = megamol::core::utility::log::Log::LEVEL_ALL;
             }
             this->scroll_down = 3;
         }
@@ -207,7 +214,7 @@ bool megamol::gui::LogConsole::Draw(WindowConfiguration& wc) {
 
     // Print messages ---------------------------------------------------------
     for (auto& entry : this->echo_log_buffer.log()) {
-        this->print_message(entry, wc.config.specific.log_level);
+        this->print_message(entry, this->win_log_level);
     }
 
     // Scroll - Requires 3 frames for being applied!
@@ -232,7 +239,7 @@ void megamol::gui::LogConsole::PopUps() {
 }
 
 
-bool megamol::gui::LogConsole::connect_log(void) {
+bool megamol::gui::LogConsole::connect_log() {
 
     auto current_echo_target = megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget();
     std::shared_ptr<megamol::core::utility::log::OfflineTarget> offline_echo_target =
@@ -251,7 +258,8 @@ bool megamol::gui::LogConsole::connect_log(void) {
 }
 
 
-void megamol::gui::LogConsole::print_message(LogBuffer::LogEntry entry, unsigned int global_log_level) const {
+void megamol::gui::LogConsole::print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const {
+
     if (entry.level <= global_log_level) {
         if (entry.level >= megamol::core::utility::log::Log::LEVEL_INFO) {
             ImGui::TextUnformatted(entry.message.c_str());
@@ -269,7 +277,7 @@ void megamol::gui::LogConsole::draw_popup(LogPopUpData& log_popup) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
 
-    std::string popup_title = this->window_title + " -  [" + log_popup.title + "]";
+    std::string popup_title = this->Name() + " -  [" + log_popup.title + "]";
 
     if ((!log_popup.disable && log_popup.show) && !ImGui::IsPopupOpen(popup_title.c_str())) {
         ImGui::OpenPopup(popup_title.c_str());
@@ -303,4 +311,30 @@ void megamol::gui::LogConsole::draw_popup(LogPopUpData& log_popup) {
     }
 
     log_popup.show = false;
+}
+
+
+void LogConsole::SpecificStateFromJSON(const nlohmann::json& in_json) {
+
+    for (auto& header_item : in_json.items()) {
+        if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
+            for (auto& config_item : header_item.value().items()) {
+                if (config_item.key() == this->Name()) {
+                    auto config_values = config_item.value();
+
+                    megamol::core::utility::get_json_value<unsigned int>(
+                        config_values, {"log_level"}, &this->win_log_level);
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"log_force_open"}, &this->win_log_force_open);
+                }
+            }
+        }
+    }
+}
+
+
+void LogConsole::SpecificStateToJSON(nlohmann::json& inout_json) {
+
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["log_level"] = this->win_log_level;
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["log_force_open"] = this->win_log_force_open;
 }

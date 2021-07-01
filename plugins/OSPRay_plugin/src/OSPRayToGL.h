@@ -16,7 +16,7 @@ inline constexpr auto ospray_to_gl_init_func = [](std::shared_ptr<vislib::graphi
 
 inline constexpr auto ospray_to_gl_ren_func = [](std::shared_ptr<vislib::graphics::gl::FramebufferObject>& lhs_fbo,
                                                   std::shared_ptr<core::view::CPUFramebuffer>& fbo,
-                                                  core::view::RenderUtils& utils, int width,
+                                                  core::utility::RenderUtils& utils, int width,
                                                   int height) -> void { // module own fbo
     auto new_fbo = vislib::graphics::gl::FramebufferObject();
     new_fbo.Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,

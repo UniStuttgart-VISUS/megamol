@@ -13,8 +13,8 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::GUIWrapper::GUIWrapper(void) : m_gui(nullptr) {
-    this->m_gui = std::make_shared<megamol::gui::GUIWindows>();
+megamol::gui::GUIWrapper::GUIWrapper() : m_gui(nullptr) {
+    this->m_gui = std::make_shared<megamol::gui::GUIManager>();
 }
 
-megamol::gui::GUIWrapper::~GUIWrapper(void) {}
+megamol::gui::GUIWrapper::~GUIWrapper() {}
