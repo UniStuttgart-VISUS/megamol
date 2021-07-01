@@ -694,9 +694,9 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
         return;
 
     ImVec2 image_size_interpol = size;
-    ImVec2 image_size_nearest = ImVec2(size.x, size.y / 2.0f);
+    ImVec2 image_size_nearest = ImVec2(size.x, size.y / 3.0f);
     if (this->flip_legend) {
-        image_size_nearest = ImVec2(size.x / 2.0f, size.y);
+        image_size_nearest = ImVec2(size.x / 3.0f, size.y);
     }
 
     // Use same texel offset as in shader
@@ -710,18 +710,21 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
     }
 
     /// Nearest texel
-    if (!this->image_widget_nearest.IsLoaded()) {
-        // Reserve layout space and draw a black background rectangle.
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-        ImGui::Dummy(image_size_nearest);
-        drawList->AddRectFilled(
-            pos, ImVec2(pos.x + image_size_nearest.x, pos.y + image_size_nearest.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
-    } else {
-        // Draw texture as image.
-        this->image_widget_nearest.Widget(image_size_nearest, uv0, uv1);
-    }
-    if (this->flip_legend) {
-        ImGui::SameLine(image_size_nearest.x + style.ItemInnerSpacing.x);
+    if (this->show_options) {
+        if (!this->image_widget_nearest.IsLoaded()) {
+            // Reserve layout space and draw a black background rectangle.
+            ImDrawList *drawList = ImGui::GetWindowDrawList();
+            ImGui::Dummy(image_size_nearest);
+            drawList->AddRectFilled(
+                    pos, ImVec2(pos.x + image_size_nearest.x, pos.y + image_size_nearest.y), IM_COL32(0, 0, 0, 255),
+                    0.0f, 10);
+        } else {
+            // Draw texture as image.
+            this->image_widget_nearest.Widget(image_size_nearest, uv0, uv1);
+        }
+        if (this->flip_legend) {
+            ImGui::SameLine(image_size_nearest.x + style.ItemInnerSpacing.x);
+        }
     }
 
     /// Linear interpolated texel
@@ -771,7 +774,10 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size) {
     float width_delta = 0.0f;
     float height_delta = 0.0f;
     if (this->flip_legend) {
-        init_pos.x += width + (width / 2.0f + item_x_spacing) + item_x_spacing / 2.0f;
+        init_pos.x += width + item_x_spacing / 2.0f;
+        if (this->show_options) { // when nearest texture is shown
+            init_pos.x += width / 3.0f + item_x_spacing;
+        }
         init_pos.y -= (height + item_y_spacing);
         height_delta = height / static_cast<float>(scale_count - 1);
     } else {
