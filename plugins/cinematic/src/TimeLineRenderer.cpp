@@ -772,7 +772,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
             }
             else {
                 // Pan axes ...
-                float panFac = 0.5f;
+                float panFac = 0.4f;
                 this->axes[Axis::X].scaleOffset += (this->mouseX - this->lastMouseX) * panFac;
                 this->axes[Axis::Y].scaleOffset  += (this->mouseY - this->lastMouseY) * panFac;
 
@@ -798,7 +798,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
     else if (this->mouseButton == MouseButton::BUTTON_MIDDLE) {
         if (down) {
             float sensitivityX = 0.01f;
-            float sensitivityY = 0.03f;
+            float sensitivityY = 0.01f;
             float diffX = (this->mouseX - this->lastMouseX);
             float diffY = (this->mouseY - this->lastMouseY);
 
