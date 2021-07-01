@@ -713,11 +713,10 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
     if (this->show_options) {
         if (!this->image_widget_nearest.IsLoaded()) {
             // Reserve layout space and draw a black background rectangle.
-            ImDrawList *drawList = ImGui::GetWindowDrawList();
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
             ImGui::Dummy(image_size_nearest);
-            drawList->AddRectFilled(
-                    pos, ImVec2(pos.x + image_size_nearest.x, pos.y + image_size_nearest.y), IM_COL32(0, 0, 0, 255),
-                    0.0f, 10);
+            drawList->AddRectFilled(pos, ImVec2(pos.x + image_size_nearest.x, pos.y + image_size_nearest.y),
+                IM_COL32(0, 0, 0, 255), 0.0f, 10);
         } else {
             // Draw texture as image.
             this->image_widget_nearest.Widget(image_size_nearest, uv0, uv1);
