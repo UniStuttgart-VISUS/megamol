@@ -32,11 +32,14 @@ namespace gui {
             return (this->tex_ptr->getName() != 0); // OpenGL texture id
         }
 
-        bool LoadTextureFromData(int width, int height, float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR) {
-            return megamol::core::utility::RenderUtils::LoadTextureFromData(this->tex_ptr, width, height, data, tex_min_filter, tex_max_filter);
+        bool LoadTextureFromData(int width, int height, float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
+            GLint tex_max_filter = GL_LINEAR) {
+            return megamol::core::utility::RenderUtils::LoadTextureFromData(
+                this->tex_ptr, width, height, data, tex_min_filter, tex_max_filter);
         }
 
-        bool LoadTextureFromFile(const std::string& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
+        bool LoadTextureFromFile(const std::string& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
+            GLint tex_max_filter = GL_LINEAR);
 
         /**
          * Draw texture as simple image.

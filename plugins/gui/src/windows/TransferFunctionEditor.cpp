@@ -580,10 +580,12 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
         }
         if (!this->flip_legend) {
             this->image_widget_linear.LoadTextureFromData(this->texture_size, 1, texture_data.data());
-            this->image_widget_nearest.LoadTextureFromData(this->texture_size, 1, texture_data.data(), GL_NEAREST, GL_NEAREST);
+            this->image_widget_nearest.LoadTextureFromData(
+                this->texture_size, 1, texture_data.data(), GL_NEAREST, GL_NEAREST);
         } else {
             this->image_widget_linear.LoadTextureFromData(1, this->texture_size, texture_data.data());
-            this->image_widget_nearest.LoadTextureFromData(1, this->texture_size, texture_data.data(), GL_NEAREST, GL_NEAREST);
+            this->image_widget_nearest.LoadTextureFromData(
+                1, this->texture_size, texture_data.data(), GL_NEAREST, GL_NEAREST);
         }
         this->reload_texture = false;
     }
@@ -688,12 +690,13 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 pos = ImGui::GetCursorScreenPos();
-    if (texture_size == 0) return;
+    if (texture_size == 0)
+        return;
 
     ImVec2 image_size_interpol = size;
-    ImVec2 image_size_nearest = ImVec2(size.x, size.y/2.0f);
+    ImVec2 image_size_nearest = ImVec2(size.x, size.y / 2.0f);
     if (this->flip_legend) {
-        image_size_nearest = ImVec2(size.x/2.0f, size.y);
+        image_size_nearest = ImVec2(size.x / 2.0f, size.y);
     }
 
     // Use same texel offset as in shader
@@ -712,7 +715,7 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImGui::Dummy(image_size_nearest);
         drawList->AddRectFilled(
-                pos, ImVec2(pos.x + image_size_nearest.x, pos.y + image_size_nearest.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
+            pos, ImVec2(pos.x + image_size_nearest.x, pos.y + image_size_nearest.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
     } else {
         // Draw texture as image.
         this->image_widget_nearest.Widget(image_size_nearest, uv0, uv1);
@@ -726,8 +729,8 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImGui::Dummy(image_size_interpol);
-        drawList->AddRectFilled(
-            pos, ImVec2(pos.x + image_size_interpol.x, pos.y + image_size_interpol.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
+        drawList->AddRectFilled(pos, ImVec2(pos.x + image_size_interpol.x, pos.y + image_size_interpol.y),
+            IM_COL32(0, 0, 0, 255), 0.0f, 10);
     } else {
         // Draw texture as image.
         this->image_widget_linear.Widget(image_size_interpol, uv0, uv1);
@@ -768,7 +771,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size) {
     float width_delta = 0.0f;
     float height_delta = 0.0f;
     if (this->flip_legend) {
-        init_pos.x += width + (width/2.0f + item_x_spacing) + item_x_spacing / 2.0f;
+        init_pos.x += width + (width / 2.0f + item_x_spacing) + item_x_spacing / 2.0f;
         init_pos.y -= (height + item_y_spacing);
         height_delta = height / static_cast<float>(scale_count - 1);
     } else {

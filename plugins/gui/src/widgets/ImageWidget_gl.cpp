@@ -16,12 +16,14 @@ using namespace megamol::gui;
 megamol::gui::ImageWidget::ImageWidget() : tex_ptr(nullptr), tooltip() {}
 
 
-bool megamol::gui::ImageWidget::LoadTextureFromFile(const std::string& filename, GLint tex_min_filter, GLint tex_max_filter) {
+bool megamol::gui::ImageWidget::LoadTextureFromFile(
+    const std::string& filename, GLint tex_min_filter, GLint tex_max_filter) {
     for (auto& resource_directory : megamol::gui::gui_resource_paths) {
         std::string filename_path =
             megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, filename);
         if (!filename_path.empty()) {
-            return megamol::core::utility::RenderUtils::LoadTextureFromFile(this->tex_ptr, filename_path, tex_min_filter, tex_max_filter);
+            return megamol::core::utility::RenderUtils::LoadTextureFromFile(
+                this->tex_ptr, filename_path, tex_min_filter, tex_max_filter);
         }
     }
     return false;
