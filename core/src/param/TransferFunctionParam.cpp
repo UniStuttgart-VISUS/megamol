@@ -251,7 +251,7 @@ bool TransferFunctionParam::CheckTransferFunctionData(const NodeVector_t& nodes,
         }
         if (last_value > a[4]) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "'Values' should be sorted from 0 to 1. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Values should be sorted from 0 to 1. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         } else {
             last_value = a[4];
@@ -468,8 +468,8 @@ std::vector<float> TransferFunctionParam::GaussInterpolation(unsigned int in_tex
  bool megamol::core::param::TransferFunctionParam::GetTextureData(const std::string & in_tfs, std::vector<float>& out_tex_data, int & out_width, int & out_height)  {
 
     out_tex_data.clear();
-    unsigned int tmp_texture_size;
-    std::array<float, 2> tmp_range;
+    unsigned int tmp_texture_size = 0;
+    std::array<float, 2> tmp_range = {0.0f, 0.0f};
     megamol::core::param::TransferFunctionParam::NodeVector_t tmp_nodes;
     megamol::core::param::TransferFunctionParam::InterpolationMode tmp_mode;
 
@@ -483,7 +483,7 @@ std::vector<float> TransferFunctionParam::GaussInterpolation(unsigned int in_tex
     else if (tmp_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
         out_tex_data = param::TransferFunctionParam::GaussInterpolation(tmp_texture_size, tmp_nodes);
     }
-    out_width = tmp_texture_size;
+    out_width = static_cast<int>(tmp_texture_size);
     out_height = 1;
 
     return true;
