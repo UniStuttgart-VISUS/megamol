@@ -193,7 +193,8 @@ TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, b
         , win_connected_param_name()
         , win_tfe_reset(false)
         , tooltip()
-        , image_widget() {
+        , image_widget_linear()
+        , image_widget_nearest() {
 
     this->widget_buffer.left_range = this->range[0];
     this->widget_buffer.right_range = this->range[1];
@@ -578,9 +579,13 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
                 TransferFunctionParam::GaussInterpolation(static_cast<unsigned int>(this->texture_size), this->nodes);
         }
         if (!this->flip_legend) {
-            this->image_widget.LoadTextureFromData(this->texture_size, 1, texture_data.data());
+            this->image_widget_linear.LoadTextureFromData(this->texture_size, 1, texture_data.data());
+            this->image_widget_nearest.LoadTextureFromData(
+                this->texture_size, 1, texture_data.data(), GL_NEAREST, GL_NEAREST);
         } else {
-            this->image_widget.LoadTextureFromData(1, this->texture_size, texture_data.data());
+            this->image_widget_linear.LoadTextureFromData(1, this->texture_size, texture_data.data());
+            this->image_widget_nearest.LoadTextureFromData(
+                1, this->texture_size, texture_data.data(), GL_NEAREST, GL_NEAREST);
         }
         this->reload_texture = false;
     }
@@ -683,30 +688,57 @@ void TransferFunctionEditor::SpecificStateToJSON(nlohmann::json& inout_json) {
 
 void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
 
+    ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 pos = ImGui::GetCursorScreenPos();
+    if (texture_size == 0)
+        return;
 
-    ImVec2 image_size = size;
-    ImVec2 uv0 = ImVec2(0.0f, 0.0f);
-    ImVec2 uv1 = ImVec2(1.0f, 1.0f);
+    ImVec2 image_size_interpol = size;
+    ImVec2 image_size_nearest = ImVec2(size.x, size.y / 2.0f);
     if (this->flip_legend) {
-        uv0 = ImVec2(1.0f, 1.0f);
-        uv1 = ImVec2(0.0f, 0.0f);
+        image_size_nearest = ImVec2(size.x / 2.0f, size.y);
     }
-    if (texture_size == 0 || !this->image_widget.IsLoaded()) {
+
+    // Use same texel offset as in shader
+    float texel_min = (1.0f / static_cast<float>(this->texture_size)) * 0.5f;
+    float texel_max = texel_min + 1.0f - (1.0f / static_cast<float>(this->texture_size));
+    ImVec2 uv0 = ImVec2(texel_min, 0.0f);
+    ImVec2 uv1 = ImVec2(texel_max, 1.0f);
+    if (this->flip_legend) {
+        uv0 = ImVec2(1.0f, texel_max);
+        uv1 = ImVec2(0.0f, texel_min);
+    }
+
+    /// Nearest texel
+    if (!this->image_widget_nearest.IsLoaded()) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
-        ImGui::Dummy(image_size);
+        ImGui::Dummy(image_size_nearest);
         drawList->AddRectFilled(
-            pos, ImVec2(pos.x + image_size.x, pos.y + image_size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
+            pos, ImVec2(pos.x + image_size_nearest.x, pos.y + image_size_nearest.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
     } else {
         // Draw texture as image.
-        this->image_widget.Widget(image_size, uv0, uv1);
+        this->image_widget_nearest.Widget(image_size_nearest, uv0, uv1);
+    }
+    if (this->flip_legend) {
+        ImGui::SameLine(image_size_nearest.x + style.ItemInnerSpacing.x);
     }
 
+    /// Linear interpolated texel
+    if (!this->image_widget_linear.IsLoaded()) {
+        // Reserve layout space and draw a black background rectangle.
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImGui::Dummy(image_size_interpol);
+        drawList->AddRectFilled(pos, ImVec2(pos.x + image_size_interpol.x, pos.y + image_size_interpol.y),
+            IM_COL32(0, 0, 0, 255), 0.0f, 10);
+    } else {
+        // Draw texture as image.
+        this->image_widget_linear.Widget(image_size_interpol, uv0, uv1);
+    }
     // Draw tooltip, if requested.
     if (ImGui::IsItemHovered()) {
         float xPx = ImGui::GetMousePos().x - pos.x - ImGui::GetScrollX();
-        float xU = xPx / image_size.x;
+        float xU = xPx / image_size_interpol.x;
         float xValue = xU * (this->range[1] - this->range[0]) + this->range[0];
         ImGui::BeginTooltip();
         ImGui::Text("%f Absolute Value\n%f Normalized Value", xValue, xU);
@@ -739,7 +771,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size) {
     float width_delta = 0.0f;
     float height_delta = 0.0f;
     if (this->flip_legend) {
-        init_pos.x += width + item_x_spacing / 2.0f;
+        init_pos.x += width + (width / 2.0f + item_x_spacing) + item_x_spacing / 2.0f;
         init_pos.y -= (height + item_y_spacing);
         height_delta = height / static_cast<float>(scale_count - 1);
     } else {
@@ -1176,6 +1208,8 @@ void TransferFunctionEditor::sortNodes(TransferFunctionParam::NodeVector_t& n, u
         if (n[i][4] == n[i + 1][4]) {
             if (value == 0.0f) {
                 n[i][4] += TF_FLOAT_EPS;
+            } else if (value == 1.0f) {
+                n[i + 1][4] -= TF_FLOAT_EPS;
             } else {
                 n[i + 1][4] += TF_FLOAT_EPS;
             }
