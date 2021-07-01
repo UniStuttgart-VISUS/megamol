@@ -162,14 +162,14 @@ namespace core {
             auto fbo = _fbo;
             _fbo = crv->GetFramebuffer();
 
-            auto cam_cpy = _camera;
+            auto cam_aspect = _camera.get<Camera::AspectRatio>();
             auto cam_pose = _camera.get<Camera::Pose>();
             auto cam_type = _camera.get<Camera::ProjectionType>();
             if (cam_type == Camera::ORTHOGRAPHIC) {
                 auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
                 cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
                 _camera = Camera(cam_pose, cam_intrinsics);
-            } else if (cam_type == Camera::ORTHOGRAPHIC) {
+            } else if (cam_type == Camera::PERSPECTIVE) {
                 auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
                 cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
                 _camera = Camera(cam_pose, cam_intrinsics);
@@ -178,7 +178,18 @@ namespace core {
             this->Render(time, instanceTime);
 
             _fbo = fbo;
-            _camera = cam_cpy;
+            // only re-apply aspect ratio from copy, because otherwise camera updates handled within Render(...) are lost
+            cam_pose = _camera.get<Camera::Pose>();
+            cam_type = _camera.get<Camera::ProjectionType>();
+            if (cam_type == Camera::ORTHOGRAPHIC) {
+                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                cam_intrinsics.aspect = cam_aspect;
+                _camera = Camera(cam_pose, cam_intrinsics);
+            } else if (cam_type == Camera::PERSPECTIVE) {
+                auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+                cam_intrinsics.aspect = cam_aspect;
+                _camera = Camera(cam_pose, cam_intrinsics);
+            }
 
             return true;
         }
