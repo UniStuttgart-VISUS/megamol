@@ -269,7 +269,10 @@ private:
     megamol::core::CallerSlot molColorCallerSlot;
 
     /** camera information */
-    core::view::Camera cameraInfo;
+    core::view::Camera camera;
+
+    /** framebuffer information */
+    std::shared_ptr<glowl::FramebufferObject> fbo;
 
     megamol::core::param::ParamSlot renderingModeParam;
     /** parameter slot for coloring mode */
