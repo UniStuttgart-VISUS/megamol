@@ -144,8 +144,8 @@ namespace gui {
 
         // Widgets
         HoverToolTip tooltip;
-        ImageWidget image_widget;
-        ImageWidget image_widget_debug;
+        ImageWidget image_widget_linear;
+        ImageWidget image_widget_nearest;
 
         // FUNCTIONS -----------------------------------------------------------
 
