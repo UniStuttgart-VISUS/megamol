@@ -204,7 +204,6 @@ namespace gui {
 
     typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;
     typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType_t;
-    typedef std::map<int, std::string> EnumStorage_t;
 
     typedef std::array<float, 5> FontScalingArray_t;
 

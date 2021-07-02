@@ -12,25 +12,15 @@
 using namespace megamol::core::param;
 
 
-FilePathParam::FilePathParam(const std::filesystem::path& initVal, FilePathFlags flags)
-        : AbstractParam(), flags(flags), val(initVal) {
-    this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
-}
+FilePathParam::FilePathParam(const std::string& initVal, FilePathFlags_t flags, FilePathExtensions_t exts)
+        : AbstractParam(), value(initVal), flags(flags), extensions(exts) {
 
-
-FilePathParam::FilePathParam(const std::string& initVal, FilePathFlags flags)
-        : AbstractParam(), flags(flags), val(initVal) {
-    this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
-}
-
-
-FilePathParam::FilePathParam(const std::wstring& initVal, FilePathFlags flags)
-        : AbstractParam(), flags(flags), val(initVal) {
     this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
 }
 
 
 void FilePathParam::Definition(vislib::RawStorage& outDef) const {
+
     outDef.AssertSize(6);
 #if defined(UNICODE) || defined(_UNICODE)
     memcpy(outDef.AsAt<char>(0), "MMFILW", 6);
@@ -41,6 +31,7 @@ void FilePathParam::Definition(vislib::RawStorage& outDef) const {
 
 
 bool FilePathParam::ParseValue(const vislib::TString& v) {
+
     try {
         this->SetValue(std::string(v.PeekBuffer()));
         return true;
@@ -50,25 +41,27 @@ bool FilePathParam::ParseValue(const vislib::TString& v) {
 }
 
 
-void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
-    if (this->val != v) {
-        this->val = v;
+void FilePathParam::SetValue(const std::string& v, bool setDirty) {
+
+    if (this->valid_change(v)) {
+        this->value = static_cast<std::filesystem::path>(v);
         this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }
 
 
-void FilePathParam::SetValue(const std::string& v, bool setDirty) {
-    this->SetValue(std::filesystem::path(v), setDirty);
+void FilePathParam::SetValue(const vislib::TString& v, bool setDirty) {
+
+    this->SetValue(std::string(v.PeekBuffer()), setDirty);
 }
 
 
-void FilePathParam::SetValue(const std::wstring& v, bool setDirty) {
-    this->SetValue(std::filesystem::path(v), setDirty);
-}
+bool FilePathParam::valid_change(std::string v) {
 
-
-vislib::TString FilePathParam::ValueString(void) const {
-    return vislib::TString(this->val.generic_u8string().c_str());
+    auto new_value = static_cast<std::filesystem::path>(v);
+    if (this->value != new_value) {
+        return true;
+    }
+    return false;
 }

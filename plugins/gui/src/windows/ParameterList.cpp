@@ -241,12 +241,6 @@ bool ParameterList::Draw() {
 }
 
 
-void ParameterList::PopUps() {
-
-    // UNUSED
-}
-
-
 void ParameterList::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
     for (auto& header_item : in_json.items()) {

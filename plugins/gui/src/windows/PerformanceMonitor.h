@@ -36,7 +36,6 @@ namespace gui {
 
         bool Update() override;
         bool Draw() override;
-        void PopUps() override;
 
         void SpecificStateFromJSON(const nlohmann::json& in_json) override;
         void SpecificStateToJSON(nlohmann::json& inout_json) override;

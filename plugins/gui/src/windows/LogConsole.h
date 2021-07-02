@@ -54,7 +54,6 @@ namespace gui {
 
         bool Update() override;
         bool Draw() override;
-        void PopUps() override;
 
         void SpecificStateFromJSON(const nlohmann::json& in_json) override;
         void SpecificStateToJSON(nlohmann::json& inout_json) override;
@@ -74,14 +73,6 @@ namespace gui {
         unsigned int win_log_level; // [SAVED] Log level used in log window
         bool win_log_force_open; // [SAVED] flag indicating if log window should be forced open on warnings and errors
 
-        struct LogPopUpData {
-            std::string title;
-            bool disable;
-            bool show;
-            std::vector<LogBuffer::LogEntry> entries;
-        };
-        std::vector<LogPopUpData> log_popups;
-
         // Widgets
         HoverToolTip tooltip;
 
@@ -90,8 +81,6 @@ namespace gui {
         bool connect_log();
 
         void print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const;
-
-        void draw_popup(LogPopUpData& log_popup);
     };
 
 
