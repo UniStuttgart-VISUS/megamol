@@ -1,22 +1,22 @@
 /*,
- * WidgetPicking_gl.cpp
+ * Picking_gl.cpp
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 
-#include "WidgetPicking_gl.h"
+#include "mmcore/utility/Picking_gl.h"
 
 
-using namespace megamol;
-using namespace megamol::gui;
+using namespace megamol::core;
+using namespace megamol::core::utility;
 
 
-#define GUI_INTERACTION_TUPLE_INIT \
+#define PICKING_INTERACTION_TUPLE_INIT \
     { false, -1, FLT_MAX }
 
-#define GUI_GL_CHECK_ERROR                                                                        \
+#define PICKING_GL_CHECK_ERROR                                                                        \
     {                                                                                             \
         auto err = glGetError();                                                                  \
         if (err != 0)                                                                             \
@@ -25,12 +25,12 @@ using namespace megamol::gui;
     }
 
 
-megamol::gui::PickingBuffer::PickingBuffer(void)
+megamol::core::utility::PickingBuffer::PickingBuffer()
         : cursor_x(0.0)
         , cursor_y(0.0)
-        , viewport_dim{0.0f, 0.0f}
-        , cursor_on_interaction_obj(GUI_INTERACTION_TUPLE_INIT)
-        , active_interaction_obj(GUI_INTERACTION_TUPLE_INIT)
+        , viewport_dim{0, 0}
+        , cursor_on_interaction_obj(PICKING_INTERACTION_TUPLE_INIT)
+        , active_interaction_obj(PICKING_INTERACTION_TUPLE_INIT)
         , available_interactions()
         , pending_manipulations()
         , fbo(nullptr)
@@ -38,12 +38,13 @@ megamol::gui::PickingBuffer::PickingBuffer(void)
         , enabled(false) {}
 
 
-megamol::gui::PickingBuffer::~PickingBuffer(void) {
+megamol::core::utility::PickingBuffer::~PickingBuffer() {
+
     this->fbo.reset();
 }
 
 
-bool megamol::gui::PickingBuffer::ProcessMouseMove(double x, double y) {
+bool megamol::core::utility::PickingBuffer::ProcessMouseMove(double x, double y) {
 
     double dx = x - this->cursor_x;
     double dy = y - this->cursor_y;
@@ -75,7 +76,7 @@ bool megamol::gui::PickingBuffer::ProcessMouseMove(double x, double y) {
                 float scale = glm::dot(axis_norm, mouse_move);
 
                 this->pending_manipulations.emplace_back(Manipulation{InteractionType::MOVE_ALONG_AXIS_SCREEN,
-                    active_id, interaction.axis_x, interaction.axis_y, interaction.axis_z, scale});
+                                                                      active_id, interaction.axis_x, interaction.axis_y, interaction.axis_z, scale});
 
             } else if (interaction.type == InteractionType::MOVE_ALONG_AXIS_3D) {
                 /* FIXME
@@ -128,8 +129,8 @@ bool megamol::gui::PickingBuffer::ProcessMouseMove(double x, double y) {
 }
 
 
-bool megamol::gui::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseButton button,
-    megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
+bool megamol::core::utility::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseButton button,
+                                                              megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
     // Enable/Disable cursor interaction
     if ((button == megamol::core::view::MouseButton::BUTTON_LEFT) &&
@@ -141,7 +142,7 @@ bool megamol::gui::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseBu
             this->active_interaction_obj = this->cursor_on_interaction_obj;
             auto active_id = std::get<1>(this->active_interaction_obj);
             this->pending_manipulations.emplace_back(
-                Manipulation{InteractionType::SELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
+                    Manipulation{InteractionType::SELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
 
             // Consume when interaction is started
             return true;
@@ -151,19 +152,19 @@ bool megamol::gui::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseBu
 
         auto active_id = std::get<1>(this->active_interaction_obj);
         this->pending_manipulations.emplace_back(
-            Manipulation{InteractionType::DESELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
-        this->active_interaction_obj = GUI_INTERACTION_TUPLE_INIT;
+                Manipulation{InteractionType::DESELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
+        this->active_interaction_obj = PICKING_INTERACTION_TUPLE_INIT;
     }
 
     return false;
 }
 
 
-bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
+bool megamol::core::utility::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
 
     if (this->enabled) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Disable interaction before enabling again. [%s, %s, line %d]\n ", __FILE__, __FUNCTION__, __LINE__);
+                "[GL Picking Buffer] Disable interaction before enabling again. [%s, %s, line %d]\n ", __FILE__, __FUNCTION__, __LINE__);
         return true;
     }
 
@@ -175,21 +176,21 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
     // Interactions are processed in ProcessMouseMove() and should be cleared each frame
     this->available_interactions.clear();
     this->enabled = false;
-    this->viewport_dim = vp_dim;
+    this->viewport_dim = glm::ivec2(static_cast<int>(vp_dim.x), static_cast<int>(vp_dim.y));
 
     if (this->fbo == nullptr) {
         try {
             this->fbo = std::make_unique<glowl::FramebufferObject>(
-                this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
+                    this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
         } catch (glowl::FramebufferObjectException& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Error during framebuffer object creation: '%s'. [%s, %s, line %d]\n ", e.what(), __FILE__,
-                __FUNCTION__, __LINE__);
+                    "[GL Picking Buffer] Error during framebuffer object creation: '%s'. [%s, %s, line %d]\n ", e.what(), __FILE__,
+                    __FUNCTION__, __LINE__);
             return false;
         }
         this->fbo->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT); // 0 Output Image
         this->fbo->createColorAttachment(GL_RG32F, GL_RG, GL_FLOAT);     // 1 Object ID(red) and Depth (green)
-        GUI_GL_CHECK_ERROR
+        PICKING_GL_CHECK_ERROR
     } else if (this->fbo->getWidth() != this->viewport_dim.x || this->fbo->getHeight() != this->viewport_dim.y) {
         this->fbo->resize(this->viewport_dim.x, this->viewport_dim.y);
     }
@@ -198,18 +199,18 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     GLint in[1] = {0};
     glClearBufferiv(GL_COLOR, 1, in);
-    GUI_GL_CHECK_ERROR
+    PICKING_GL_CHECK_ERROR
 
     this->enabled = true;
     return this->enabled;
 }
 
 
-bool megamol::gui::PickingBuffer::DisableInteraction(void) {
+bool megamol::core::utility::PickingBuffer::DisableInteraction() {
 
     if (!this->enabled) {
         // megamol::core::utility::log::Log::DefaultLog.WriteError(
-        //    "[GUI] Enable interaction before disabling it. [%s, %s, line %d]\n ", __FILE__, __FUNCTION__, __LINE__);
+        //    "[GL Picking Buffer] Enable interaction before disabling it. [%s, %s, line %d]\n ", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     this->enabled = false;
@@ -221,7 +222,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
     if (this->fbo_shader == nullptr) {
         std::string vertex_src = "#version 130 \n "
                                  "out vec2 uv_coord; \n "
-                                 "void main(void) { \n "
+                                 "void main() { \n "
                                  "    const vec4 vertices[6] = vec4[6](vec4(-1.0, -1.0, 0.0, 0.0), \n "
                                  "        vec4(1.0, 1.0, 1.0, 1.0), \n "
                                  "        vec4(-1.0, 1.0, 0.0, 1.0), \n "
@@ -239,7 +240,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
                                    "uniform sampler2D col_tex; \n "
                                    "uniform sampler2D depth_tex; \n "
                                    "layout(location = 0) out vec4 outFragColor; \n "
-                                   "void main(void) { \n "
+                                   "void main() { \n "
                                    "    vec4 color = texture(col_tex, uv_coord).rgba; \n "
                                    "    if (color == vec4(0.0)) discard; \n "
                                    "    float depth = texture(depth_tex, uv_coord).g; \n "
@@ -247,22 +248,22 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
                                    "    outFragColor = color; \n "
                                    "} ";
 
-        if (!megamol::core::view::RenderUtils::CreateShader(this->fbo_shader, vertex_src, fragment_src))
+        if (!megamol::core::utility::RenderUtils::CreateShader(this->fbo_shader, vertex_src, fragment_src))
             return false;
     }
 
-    GUI_GL_CHECK_ERROR
+    PICKING_GL_CHECK_ERROR
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Bind fbo to read buffer for retrieving pixel data
     GLfloat pixel_data[2] = {-1.0f, FLT_MAX};
     this->fbo->bindToRead(1);
-    GUI_GL_CHECK_ERROR
+    PICKING_GL_CHECK_ERROR
     // Get object id and depth at cursor location from framebuffer's second color attachment
     /// TODO Check if cursor position is within framebuffer pixel range -> ensured by GLFW?
     glReadPixels(static_cast<GLint>(this->cursor_x), this->fbo->getHeight() - static_cast<GLint>(this->cursor_y), 1, 1,
-        GL_RG, GL_FLOAT, pixel_data);
-    GUI_GL_CHECK_ERROR
+                 GL_RG, GL_FLOAT, pixel_data);
+    PICKING_GL_CHECK_ERROR
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     auto id = static_cast<unsigned int>(pixel_data[0]);
@@ -273,7 +274,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
         this->pending_manipulations.emplace_back(Manipulation{InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f});
         /// megamol::core::utility::log::Log::DefaultLog.WriteError("[[[DEBUG]]] ID = %i | Depth = %f", id, depth);
     } else {
-        this->cursor_on_interaction_obj = GUI_INTERACTION_TUPLE_INIT;
+        this->cursor_on_interaction_obj = PICKING_INTERACTION_TUPLE_INIT;
     }
 
     // Draw fbo color buffer as texture because blending is required

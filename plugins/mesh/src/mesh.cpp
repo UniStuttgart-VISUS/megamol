@@ -26,6 +26,7 @@
 #include "SimpleGPUMtlDataSource.h"
 #include "MeshViewerRenderTasks.h"
 #include "MeshBakery.h"
+#include "ObjWriter.h"
 
 namespace megamol::mesh {
 /** Implementing the instance class of this plugin */
@@ -58,6 +59,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GPUMeshes>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::SimpleGPUMtlDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::WavefrontObjLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::ObjWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshViewerRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshBakery>();
 

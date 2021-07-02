@@ -251,7 +251,7 @@ bool TransferFunctionParam::CheckTransferFunctionData(const NodeVector_t& nodes,
         }
         if (last_value > a[4]) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "'Values' should be sorted from 0 to 1. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Values should be sorted from 0 to 1. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         } else {
             last_value = a[4];
@@ -399,29 +399,29 @@ std::vector<float> TransferFunctionParam::LinearInterpolation(unsigned int in_te
     out_texdata.resize(4 * in_texsize);
     out_texdata.assign(out_texdata.size(), 0.0f);
 
-    NodeData_t cx1 = in_nodes[0];
-    NodeData_t cx2 = cx1;
-    int p1 = static_cast<int>(floorf(cx1[4] * static_cast<float>(in_texsize - 1)));
-    int p2 = p1;
-
-    size_t data_cnt = in_nodes.size();
-    for (size_t i = 1; i < data_cnt; i++) {
-
-        cx1 = cx2;
-        cx2 = in_nodes[i];
-        p1 = p2;
-        p2 = static_cast<int>(cx2[4] * static_cast<float>(in_texsize - 1));
-
-        assert(cx2[4] <= 1.0f + 1e-5f); // 1e-5f = vislib::math::FLOAT_EPSILON
-
-        for (int p = p1; p <= p2; p++) {
-            float al = (static_cast<float>(p - p1)) / static_cast<float>(p2 - p1);
-            float be = 1.0f - al;
-
-            out_texdata[p * 4] = cx1[0] * be + cx2[0] * al;
-            out_texdata[p * 4 + 1] = cx1[1] * be + cx2[1] * al;
-            out_texdata[p * 4 + 2] = cx1[2] * be + cx2[2] * al;
-            out_texdata[p * 4 + 3] = cx1[3] * be + cx2[3] * al;
+    // Idea: Loop over all pixels of TF texture, find node left and right of texel position and linear interpolate
+    // node values.
+    int right_node_idx = 0;
+    for (int i = 0; i < in_texsize; i++) {
+        float px_pos = static_cast<float>(i) / static_cast<float>(in_texsize - 1);
+        while (in_nodes[right_node_idx][4] <= px_pos && right_node_idx < in_nodes.size() - 1) {
+            right_node_idx++;
+        }
+        const NodeData_t& cx1 = in_nodes[std::max(0, right_node_idx - 1)];
+        const NodeData_t& cx2 = in_nodes[right_node_idx];
+        const float dist = cx2[4] - cx1[4];
+        if (dist > 0.0f) {
+            const float al = std::clamp((px_pos - cx1[4]) / dist, 0.0f, 1.0f);
+            const float be = 1.0f - al;
+            out_texdata[i * 4] = cx1[0] * be + cx2[0] * al;
+            out_texdata[i * 4 + 1] = cx1[1] * be + cx2[1] * al;
+            out_texdata[i * 4 + 2] = cx1[2] * be + cx2[2] * al;
+            out_texdata[i * 4 + 3] = cx1[3] * be + cx2[3] * al;
+        } else {
+            out_texdata[i * 4] = cx1[0];
+            out_texdata[i * 4 + 1] = cx1[1];
+            out_texdata[i * 4 + 2] = cx1[2];
+            out_texdata[i * 4 + 3] = cx1[3];
         }
     }
     return out_texdata;
@@ -468,8 +468,8 @@ std::vector<float> TransferFunctionParam::GaussInterpolation(unsigned int in_tex
  bool megamol::core::param::TransferFunctionParam::GetTextureData(const std::string & in_tfs, std::vector<float>& out_tex_data, int & out_width, int & out_height)  {
 
     out_tex_data.clear();
-    unsigned int tmp_texture_size;
-    std::array<float, 2> tmp_range;
+    unsigned int tmp_texture_size = 0;
+    std::array<float, 2> tmp_range = {0.0f, 0.0f};
     megamol::core::param::TransferFunctionParam::NodeVector_t tmp_nodes;
     megamol::core::param::TransferFunctionParam::InterpolationMode tmp_mode;
 
@@ -483,7 +483,7 @@ std::vector<float> TransferFunctionParam::GaussInterpolation(unsigned int in_tex
     else if (tmp_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
         out_tex_data = param::TransferFunctionParam::GaussInterpolation(tmp_texture_size, tmp_nodes);
     }
-    out_width = tmp_texture_size;
+    out_width = static_cast<int>(tmp_texture_size);
     out_height = 1;
 
     return true;

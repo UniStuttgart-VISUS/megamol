@@ -10,7 +10,8 @@ megamol_plugin(mesh
   DEPENDS_EXTERNALS PUBLIC
     quickhull
     tinyobjloader
-    tinygltf)
+    tinygltf
+    obj-io)
 
 if (mesh_PLUGIN_ENABLED)
   if (MSVC)

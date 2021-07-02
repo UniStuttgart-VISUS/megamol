@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "WindowCollection.h"
+#include "AbstractWindow.h"
 #include "graph/GraphCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
@@ -22,83 +22,62 @@ namespace megamol {
 namespace gui {
 
 
-    class Configurator {
+    /* ************************************************************************
+     * The graph configurator GUI window
+     */
+    class Configurator : public AbstractWindow {
     public:
-        /**
-         * CTOR.
-         */
-        Configurator();
+        explicit Configurator(const std::string& window_name, std::shared_ptr<TransferFunctionEditor> win_tfe_ptr);
+        ~Configurator() = default;
 
-        /**
-         * DTOR.
-         */
-        virtual ~Configurator();
+        bool Update() override;
+        bool Draw() override;
+        void PopUps() override;
 
-        /**
-         * Get hotkey of configurator.
-         *
-         * @return Hotkeys of configurator.
-         */
-        inline megamol::gui::HotkeyArray_t& GetHotkeys(void) {
-            return this->graph_state.hotkeys;
-        }
-
-        /**
-         * Draw configurator window.
-         */
-        bool Draw(WindowConfiguration& wc);
+        void SpecificStateFromJSON(const nlohmann::json& in_json) override;
+        void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
         /**
          * Returns required font scalings for graph canvas
          */
-        inline const FontScalingArray_t& GetGraphFontScalings(void) const {
+        inline const FontScalingArray_t& GetGraphFontScalings() const {
             return this->graph_state.graph_zoom_font_scalings;
         }
 
         /**
          * Return graph collection.
          */
-        GraphCollection& GetGraphCollection(void) {
+        GraphCollection& GetGraphCollection() {
             return this->graph_collection;
         }
-        /**
-         * State to and from JSON.
-         */
-        bool StateToJSON(nlohmann::json& inout_json);
-        bool StateFromJSON(const nlohmann::json& in_json);
 
         /**
          * Globally save currently selected graph in configurator.
          */
-        inline bool ConsumeTriggeredGlobalProjectSave(void) {
+        inline bool ConsumeTriggeredGlobalProjectSave() {
             bool trigger_global_graph_save = this->graph_state.global_graph_save;
             this->graph_state.global_graph_save = false;
             return trigger_global_graph_save;
         }
 
-        /**
-         * Indicates whether project file drop for configurator is valid.
-         */
-        inline bool IsProjectFileDropValid(void) {
-            return this->project_file_drop_valid;
-        }
-
     private:
         // VARIABLES --------------------------------------------------------------
 
+        megamol::gui::GraphState_t graph_state;
         GraphCollection graph_collection;
 
+        /** Shortcut pointer to transfer function window */
+        std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr;
+
         float module_list_sidebar_width;
-        ImGuiID selected_list_module_uid;
+        ImGuiID selected_list_module_id;
         ImGuiID add_project_graph_uid;
         ImGuiID module_list_popup_hovered_group_uid;
         bool show_module_list_sidebar;
         bool show_module_list_popup;
         ImVec2 module_list_popup_pos;
         ImGuiID last_selected_callslot_uid;
-        megamol::gui::GraphState_t graph_state;
         bool open_popup_load;
-        bool project_file_drop_valid;
 
         // Widgets
         FileBrowserWidget file_browser;
@@ -108,12 +87,9 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        void draw_window_menu(void);
-        void draw_window_module_list(float width, float height, bool apply_focus);
+        void draw_window_menu();
 
-        void drawPopUps(void);
-
-        bool load_graph_state_from_file(const std::string& filename);
+        void draw_window_module_list(float width, float height, bool omit_focus);
     };
 
 
