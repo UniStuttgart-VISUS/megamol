@@ -15,8 +15,7 @@ using namespace megamol::core;
 using namespace megamol::gui;
 
 
-megamol::gui::ParameterGroups::ParameterGroups(void)
-        : tooltip(), cube_widget_group(), animation_group(), group_widgets() {
+megamol::gui::ParameterGroups::ParameterGroups() : tooltip(), cube_widget_group(), animation_group(), group_widgets() {
 
     // Create/register available group widgets
     this->group_widgets.emplace_back(static_cast<AbstractParameterGroupWidget*>(&this->cube_widget_group));
@@ -24,18 +23,12 @@ megamol::gui::ParameterGroups::ParameterGroups(void)
 }
 
 
-megamol::gui::ParameterGroups::~ParameterGroups(void) {}
-
-
 bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_search,
-    vislib::math::Ternary in_extended, bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
-    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
-    ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer) {
+    bool in_extended, bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
+    std::shared_ptr<TransferFunctionEditor> tfeditor_ptr, ImGuiID in_override_header_state,
+    megamol::core::utility::PickingBuffer* inout_picking_buffer) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
-
-    if (out_open_external_tf_editor != nullptr)
-        (*out_open_external_tf_editor) = false;
 
     // Nothing to do if there are no parameters
     if (inout_params.empty())
@@ -53,17 +46,14 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
     ParamGroup_t group_map;
     for (auto& param : inout_params) {
         auto param_namespace = param.NameSpace();
-        if (!in_extended.IsUnknown()) {
-            param.SetExtended(in_extended.IsTrue());
-        }
+        param.SetExtended(in_extended);
 
         if (!param_namespace.empty()) {
             // Sort parameters with namespace to group
             group_map[param_namespace].emplace_back(&param);
         } else {
             // Draw parameters without namespace directly at the beginning
-            ParameterGroups::DrawParameter(
-                param, in_search, in_scope, in_external_tf_editor, out_open_external_tf_editor);
+            ParameterGroups::DrawParameter(param, in_search, in_scope, tfeditor_ptr);
         }
     }
 
@@ -84,13 +74,13 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                 if (in_scope == Parameter::WidgetScope::LOCAL) {
                     // LOCAL
 
-                    if (in_extended.IsTrue()) {
+                    if (in_extended) {
                         // Visibility
                         bool visible = group_widget_data->IsGUIVisible();
                         if (ImGui::RadioButton("###visibile", visible)) {
                             group_widget_data->SetGUIVisible(!visible);
                         }
-                        this->tooltip.ToolTip("Visibility", ImGui::GetItemID(), 0.5f);
+                        this->tooltip.ToolTip("Visibility (Basic Mode)");
                         ImGui::SameLine();
 
                         // Read-only option
@@ -98,13 +88,14 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                         if (ImGui::Checkbox("###readonly", &readonly)) {
                             group_widget_data->SetGUIReadOnly(readonly);
                         }
-                        this->tooltip.ToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
+                        this->tooltip.ToolTip("Read-Only");
                         ImGui::SameLine();
 
                         // Presentation option
                         ButtonWidgets::OptionButton(
-                            "param_groups", "", (group_widget_data->GetGUIPresentation() != Present_t::Basic));
-                        if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
+                            "param_groups", "", (group_widget_data->GetGUIPresentation() != Present_t::Basic), false);
+                        if (ImGui::BeginPopupContextItem(
+                                "param_present_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
                             for (auto& present_name_pair : group_widget_data->GetPresentationNameMap()) {
                                 if (group_widget_data->IsPresentationCompatible(present_name_pair.first)) {
                                     if (ImGui::MenuItem(present_name_pair.second.c_str(), nullptr,
@@ -115,29 +106,21 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                             }
                             ImGui::EndPopup();
                         }
-                        this->tooltip.ToolTip("Presentation", ImGui::GetItemID(), 0.5f);
+                        this->tooltip.ToolTip("Presentation");
                         ImGui::SameLine();
                     }
 
                     // Call group widget draw function
-                    if (group_widget_data->IsGUIVisible() || in_extended.IsTrue()) {
-                        if (group_widget_data->IsGUIReadOnly()) {
-                            GUIUtils::ReadOnlyWigetStyle(true);
-                        }
-
+                    if (group_widget_data->IsGUIVisible() || in_extended) {
+                        gui_utils::PushReadOnly(group_widget_data->IsGUIReadOnly());
                         if (!group_widget_data->Draw(group.second, in_search, in_scope, inout_picking_buffer)) {
-
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "[GUI] No LOCAL widget presentation '%s' available for group widget '%s'. [%s, %s, "
-                                "line "
-                                "%d]\n",
+                                "line %d]\n",
                                 group_widget_data->GetPresentationName(group_widget_data->GetGUIPresentation()).c_str(),
                                 group_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                         }
-
-                        if (group_widget_data->IsGUIReadOnly()) {
-                            GUIUtils::ReadOnlyWigetStyle(false);
-                        }
+                        gui_utils::PopReadOnly(group_widget_data->IsGUIReadOnly());
                     }
                 } else {
                     // GLOBAL
@@ -155,14 +138,13 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
             if (in_scope == Parameter::WidgetScope::LOCAL) {
                 /// LOCAL
 
-                ParameterGroups::DrawGroupedParameters(group_name, group.second, in_search, in_scope,
-                    in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
+                ParameterGroups::DrawGroupedParameters(
+                    group_name, group.second, in_search, in_scope, tfeditor_ptr, in_override_header_state);
             } else {
                 /// GLOBAL
 
                 for (auto& param : group.second) {
-                    ParameterGroups::DrawParameter(
-                        (*param), in_search, in_scope, in_external_tf_editor, out_open_external_tf_editor);
+                    ParameterGroups::DrawParameter((*param), in_search, in_scope, tfeditor_ptr);
                 }
             }
         }
@@ -208,11 +190,10 @@ bool megamol::gui::ParameterGroups::StateFromJSON(const nlohmann::json& in_json,
 
 
 void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout_param, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor,
-    bool* out_open_external_tf_editor) {
+    megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr) {
 
     if (inout_param.Type() == ParamType_t::TRANSFERFUNCTION) {
-        inout_param.TransferFunctionEditor_ConnectExternal(in_external_tf_editor, false);
+        inout_param.TransferFunctionEditor_ConnectExternal(tfeditor_ptr, false);
     }
 
     if (in_scope == Parameter::WidgetScope::GLOBAL) {
@@ -225,21 +206,12 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
         auto param_fullname = inout_param.FullNameProject();
         bool param_searched = true;
         if (in_scope == Parameter::WidgetScope::LOCAL) {
-            param_searched = GUIUtils::FindCaseInsensitiveSubstring(param_fullname, in_search);
+            param_searched = gui_utils::FindCaseInsensitiveSubstring(param_fullname, in_search);
         }
         bool visible = (inout_param.IsGUIVisible() || inout_param.IsExtended()) && param_searched;
 
         if (visible) {
-            if (inout_param.Draw(in_scope)) {
-
-                // Open window calling the transfer function editor callback
-                if ((inout_param.Type() == ParamType_t::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
-                    if (out_open_external_tf_editor != nullptr) {
-                        (*out_open_external_tf_editor) = true;
-                    }
-                    in_external_tf_editor->SetConnectedParameter(&inout_param, param_fullname);
-                }
-            }
+            inout_param.Draw(in_scope);
         }
     }
 }
@@ -247,8 +219,8 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
 
 void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_group_name,
     AbstractParameterGroupWidget::ParamPtrVector_t& params, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor,
-    bool* out_open_external_tf_editor, ImGuiID in_override_header_state) {
+    megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
+    ImGuiID in_override_header_state) {
 
     if (in_scope != Parameter::WidgetScope::LOCAL) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -268,14 +240,13 @@ void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_
 
     // Open namespace header when parameter search is active.
     auto search_string = in_search;
-    bool param_group_header_open = megamol::gui::GUIUtils::GroupHeader(
+    bool param_group_header_open = megamol::gui::gui_utils::GroupHeader(
         megamol::gui::HeaderType::PARAMETER_GROUP, in_group_name, search_string, in_override_header_state);
 
     if (param_group_header_open) {
         ImGui::Indent();
         for (auto& param : params) {
-            ParameterGroups::DrawParameter(
-                (*param), search_string, in_scope, in_external_tf_editor, out_open_external_tf_editor);
+            ParameterGroups::DrawParameter((*param), search_string, in_scope, tfeditor_ptr);
         }
         ImGui::Unindent();
     }

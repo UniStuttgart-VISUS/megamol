@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "WindowCollection.h"
+#include "AbstractWindow.h"
 #include "mmcore/utility/log/StreamTarget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
@@ -19,22 +19,23 @@
 namespace megamol {
 namespace gui {
 
-    /*
+
+    /* ************************************************************************
      * The log buffer collecting all the messages
      */
     class LogBuffer : public std::stringbuf {
     public:
         LogBuffer() = default;
-        ~LogBuffer() = default;
+        ~LogBuffer() override = default;
 
         struct LogEntry {
             unsigned int level;
             std::string message;
         };
 
-        int sync(void);
+        int sync() override;
 
-        inline const std::vector<LogEntry>& log(void) const {
+        inline const std::vector<LogEntry>& log() const {
             return this->messages;
         }
 
@@ -43,19 +44,20 @@ namespace gui {
     };
 
 
-    /*
-     * The content of the log cnsole GUI window
+    /* ************************************************************************
+     * The content of the log console GUI window
      */
-    class LogConsole {
+    class LogConsole : public AbstractWindow {
     public:
-        LogConsole();
+        explicit LogConsole(const std::string& window_name);
         ~LogConsole();
 
-        void Update(WindowConfiguration& wc);
+        bool Update() override;
+        bool Draw() override;
+        void PopUps() override;
 
-        bool Draw(WindowConfiguration& wc);
-
-        void PopUps(void);
+        void SpecificStateFromJSON(const nlohmann::json& in_json) override;
+        void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -68,7 +70,9 @@ namespace gui {
         unsigned int scroll_down;
         unsigned int scroll_up;
         float last_window_height;
-        std::string window_title;
+
+        unsigned int win_log_level; // [SAVED] Log level used in log window
+        bool win_log_force_open; // [SAVED] flag indicating if log window should be forced open on warnings and errors
 
         struct LogPopUpData {
             std::string title;
@@ -83,9 +87,9 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool connect_log(void);
+        bool connect_log();
 
-        void print_message(LogBuffer::LogEntry entry, unsigned int global_log_level) const;
+        void print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const;
 
         void draw_popup(LogPopUpData& log_popup);
     };

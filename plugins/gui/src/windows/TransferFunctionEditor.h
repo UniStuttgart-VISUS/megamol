@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include "AbstractWindow.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget_gl.h"
@@ -24,22 +25,22 @@ namespace gui {
 
     // Forward declarations
     class Parameter;
-    typedef std::shared_ptr<Parameter> ParamPtr_t;
 
 
-    /**
-     * 1D Transfer Function Editor.
+    /** ************************************************************************
+     * 1D Transfer Function Editor GUI window
      */
-    class TransferFunctionEditor {
+    class TransferFunctionEditor : public AbstractWindow {
     public:
-        TransferFunctionEditor(void);
+        TransferFunctionEditor(const std::string& window_name, bool windowed);
+        ~TransferFunctionEditor() = default;
 
-        ~TransferFunctionEditor(void) = default;
+        bool Update() override;
+        bool Draw() override;
+        void PopUps() override;
 
-        /**
-         * Draws the transfer function editor.
-         */
-        bool Widget(bool connected_parameter_mode);
+        void SpecificStateFromJSON(const nlohmann::json& in_json) override;
+        void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
         /**
          * Set transfer function data to use in editor.
@@ -48,7 +49,7 @@ namespace gui {
          *
          * @return True if string was successfully converted into transfer function data, false otherwise.
          */
-        void SetTransferFunction(const std::string& tfs, bool connected_parameter_mode);
+        void SetTransferFunction(const std::string& tfs, bool connected_parameter_mode, bool full_init);
 
         /**
          * Get current transfer function data.
@@ -63,16 +64,9 @@ namespace gui {
         void SetConnectedParameter(Parameter* param_ptr, const std::string& param_full_name);
 
         /**
-         * Get currently connected parameter.
-         */
-        inline std::string GetConnectedParameterName(void) const {
-            return this->connected_parameter_name;
-        }
-
-        /**
          * Returns true if editor is in minimized view.
          */
-        inline bool IsMinimized(void) const {
+        inline bool IsMinimized() const {
             return !this->show_options;
         }
 
@@ -86,7 +80,7 @@ namespace gui {
         /**
          * Returns true if editor is in vertical view.
          */
-        inline bool IsVertical(void) const {
+        inline bool IsVertical() const {
             return this->flip_legend;
         }
 
@@ -95,6 +89,16 @@ namespace gui {
          */
         inline void SetVertical(bool vertical) {
             this->flip_legend = vertical;
+        }
+
+        bool IsParameterConnected() const {
+            return (this->connected_parameter_ptr != nullptr);
+        }
+
+        std::string ProcessParameterConnectionRequest() {
+            auto rpnc = this->request_parameter_name_connect;
+            this->request_parameter_name_connect.clear();
+            return rpnc;
         }
 
     private:
@@ -109,9 +113,9 @@ namespace gui {
 
         // VARIABLES -----------------------------------------------------------
 
+        const bool windowed_mode;
         /** The currently active parameter whose transfer function is currently loaded into this editor. */
         Parameter* connected_parameter_ptr;
-        std::string connected_parameter_name;
         TransferFunctionParam::NodeVector_t nodes;
         std::array<float, 2> range;
         std::array<float, 2> last_range;
@@ -131,23 +135,29 @@ namespace gui {
         bool check_once_force_set_overwrite_range;
         bool plot_paint_mode;
         bool plot_dragging;
+        std::string request_parameter_name_connect;
+
+        bool win_view_minimized;              // [SAVED] flag indicating minimized window state
+        bool win_view_vertical;               // [SAVED] flag indicating vertical window state
+        std::string win_connected_param_name; // [SAVED] last active parameter connected to editor
+        bool win_tfe_reset;                   // flag for reset of tfe window on state loading
 
         // Widgets
         HoverToolTip tooltip;
-        ImageWidget image_widget;
+        ImageWidget image_widget_linear;
+        ImageWidget image_widget_nearest;
 
         // FUNCTIONS -----------------------------------------------------------
 
-        void drawTextureBox(const ImVec2& size, bool flip_xy);
-        void drawScale(const ImVec2& pos, const ImVec2& size, bool flip_xy);
+        void drawTextureBox(const ImVec2& size);
+        void drawScale(const ImVec2& pos, const ImVec2& size);
         void drawFunctionPlot(const ImVec2& size);
 
         bool addNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
         bool paintModeNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
         bool changeNodeSelection(unsigned int new_selected_node_index, unsigned int new_selected_channel_index,
             ImVec2 new_selected_node_drag_delta);
-        bool moveSelectedNode(unsigned int selected_node_index, const ImVec2& mouse_pos, const ImVec2& canvas_pos,
-            const ImVec2& canvas_size);
+        bool moveSelectedNode(const ImVec2& mouse_pos, const ImVec2& canvas_pos, const ImVec2& canvas_size);
         bool deleteNode(unsigned int node_index);
         void sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const;
     };

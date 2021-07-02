@@ -10,36 +10,37 @@
 #pragma once
 
 
-#include "WidgetPicking_gl.h"
 #include "graph/Parameter.h"
+#include "mmcore/utility/Picking_gl.h"
 
 
 namespace megamol {
 namespace gui {
 
-    /**
-     * Animation widget for parameter group.
+    /** ************************************************************************
+     * Animation widget for parameter group
      */
     class AbstractParameterGroupWidget : public megamol::core::param::AbstractParamPresentation {
     public:
         typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
 
-        ~AbstractParameterGroupWidget(void) = default;
+        ~AbstractParameterGroupWidget() override = default;
 
         virtual bool Check(bool only_check, ParamPtrVector_t& params) = 0;
 
         virtual bool Draw(ParamPtrVector_t params, const std::string& in_search,
-            megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) = 0;
+            megamol::gui::Parameter::WidgetScope in_scope,
+            megamol::core::utility::PickingBuffer* inout_picking_buffer) = 0;
 
-        bool IsActive(void) const {
+        bool IsActive() const {
             return this->active;
         }
 
-        void SetActive(bool active) {
-            this->active = active;
+        void SetActive(bool a) {
+            this->active = a;
         }
 
-        std::string GetName(void) const {
+        std::string GetName() const {
             return this->name;
         };
 
@@ -52,7 +53,7 @@ namespace gui {
 
         // FUNCTIONS ----------------------------------------------------------
 
-        AbstractParameterGroupWidget(ImGuiID uid)
+        explicit AbstractParameterGroupWidget(ImGuiID uid)
                 : megamol::core::param::AbstractParamPresentation(), active(false), name(), uid(uid){};
     };
 

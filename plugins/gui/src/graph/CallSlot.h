@@ -40,7 +40,7 @@ namespace gui {
 
 
     /** ************************************************************************
-     * Defines call slot data structure for graph.
+     * Defines call slot data structure for graph
      */
     class CallSlot {
     public:
@@ -57,16 +57,16 @@ namespace gui {
             megamol::core::AbstractCallSlotPresentation::Necessity necessity);
         ~CallSlot();
 
-        bool CallsConnected(void) const;
+        bool CallsConnected() const;
         bool ConnectCall(const CallPtr_t& call_ptr);
         bool DisconnectCall(ImGuiID call_uid);
-        bool DisconnectCalls(void);
-        const std::vector<CallPtr_t>& GetConnectedCalls(void);
+        bool DisconnectCalls();
+        const std::vector<CallPtr_t>& GetConnectedCalls();
 
-        bool IsParentModuleConnected(void) const;
+        bool IsParentModuleConnected() const;
         bool ConnectParentModule(ModulePtr_t pm);
-        bool DisconnectParentModule(void);
-        const ModulePtr_t& GetParentModule(void);
+        bool DisconnectParentModule();
+        const ModulePtr_t& GetParentModule();
 
         static ImGuiID GetCompatibleCallIndex(const CallSlotPtr_t& callslot_1, const CallSlotPtr_t& callslot_2);
         static ImGuiID GetCompatibleCallIndex(
@@ -77,22 +77,22 @@ namespace gui {
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
         void Update(const GraphItemsState_t& state);
 
-        inline const ImGuiID UID(void) const {
+        inline ImGuiID UID() const {
             return this->uid;
         }
-        inline const std::string Name(void) const {
+        inline std::string Name() const {
             return this->name;
         }
-        inline const CallSlotType Type(void) const {
+        inline CallSlotType Type() const {
             return this->type;
         }
-        inline InterfaceSlotPtr_t InterfaceSlotPtr(void) const {
+        inline InterfaceSlotPtr_t InterfaceSlotPtr() const {
             return this->gui_interfaceslot_ptr;
         }
-        inline ImVec2 Position(void) const {
+        inline ImVec2 Position() const {
             return this->gui_position;
         }
-        inline const std::vector<size_t> CompatibleCallIdxs(void) const {
+        inline std::vector<size_t> CompatibleCallIdxs() const {
             return this->compatible_call_idxs;
         }
 
@@ -119,7 +119,6 @@ namespace gui {
         bool gui_selected;
         ImVec2 gui_position; /// Absolute position including canvas offset and zooming
         bool gui_update_once;
-        bool gui_show_modulestock;
         ImGuiID gui_last_compat_callslot_uid;
         ImGuiID gui_last_compat_interface_uid;
         bool gui_compatible;
