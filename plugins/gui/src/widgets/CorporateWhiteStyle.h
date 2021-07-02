@@ -13,8 +13,8 @@
 #include "DefaultStyle.h"
 
 
-/**
- * A "CorporateWhite"-Style.
+/** ************************************************************************
+ * A "CorporateWhite"-Style
  *
  * TODO Complete with more colors
  */

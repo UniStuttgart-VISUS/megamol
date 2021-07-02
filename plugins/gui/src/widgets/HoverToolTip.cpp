@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-HoverToolTip::HoverToolTip(void) : tooltip_time(0.0f), tooltip_id(GUI_INVALID_ID) {}
+HoverToolTip::HoverToolTip() : tooltip_time(0.0f), tooltip_id(GUI_INVALID_ID) {}
 
 
 bool HoverToolTip::ToolTip(const std::string& text, ImGuiID id, float time_start, float time_end) {
@@ -57,7 +57,7 @@ bool HoverToolTip::ToolTip(const std::string& text, ImGuiID id, float time_start
 }
 
 
-bool HoverToolTip::Marker(const std::string& text, std::string label) {
+bool HoverToolTip::Marker(const std::string& text, const std::string& label) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 
@@ -71,7 +71,7 @@ bool HoverToolTip::Marker(const std::string& text, std::string label) {
 }
 
 
-void HoverToolTip::Reset(void) {
+void HoverToolTip::Reset() {
     this->tooltip_time = 0.0f;
     this->tooltip_id = GUI_INVALID_ID;
 }
