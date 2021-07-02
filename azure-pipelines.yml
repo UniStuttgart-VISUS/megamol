@@ -101,3 +101,10 @@ jobs:
     displayName: 'Run File Checks'
     inputs:
       filePath: '.ci/check_files.sh'
+
+- job: GitHistory
+  displayName: 'Print Git Log Graph'
+  pool:
+    name: 'default'
+  steps:
+  - script: git log --graph -10
