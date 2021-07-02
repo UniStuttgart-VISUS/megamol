@@ -75,7 +75,10 @@ bool megamol::thermodyn::SphereWidget::Render(core::view::CallRender3DGL& call) 
     if (!(*flags_read)(0))
         return false;
 
-    parse_data(*parts_in, temp_in, dens_in, *flags_read);
+    core::view::Camera_2 cam;
+    call.GetCamera(cam);
+
+    parse_data(*parts_in, temp_in, dens_in, *flags_read, cam);
 
     return true;
 }
@@ -114,10 +117,41 @@ bool megamol::thermodyn::SphereWidget::GetExtents(core::view::CallRender3DGL& ca
 
 bool megamol::thermodyn::SphereWidget::widget(float x, float y, std::size_t idx,
     core::moldyn::SimpleSphericalParticles const& parts, core::moldyn::SimpleSphericalParticles const* temps,
-    core::moldyn::SimpleSphericalParticles const* dens) {
-    ImGui::SetNextWindowPos(ImVec2(x, y), ImGuiCond_Appearing);
-
+    core::moldyn::SimpleSphericalParticles const* dens, glm::mat4 vp, glm::ivec2 res) {
     // ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_Appearing);
+
+    auto const x_acc = parts.GetParticleStore().GetXAcc();
+    auto const y_acc = parts.GetParticleStore().GetYAcc();
+    auto const z_acc = parts.GetParticleStore().GetZAcc();
+
+    auto const pos = glm::vec4(x_acc->Get_f(idx), y_acc->Get_f(idx), z_acc->Get_f(idx), 1.0f);
+
+    auto p_pos = vp * pos;
+    p_pos /= p_pos.w;
+    auto const half_width = static_cast<float>(res.x) * 0.5f;
+    auto const half_height = static_cast<float>(res.y) * 0.5f;
+    float const new_x = (half_width * p_pos.x + half_width);
+    float const new_y = res.y - (half_height * p_pos.y + half_height);
+
+    // glViewport(0, 0, res.x, res.y);
+    /*glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf(glm::value_ptr(view));
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(glm::value_ptr(proj));
+    glDisable(GL_PROGRAM_POINT_SIZE);
+    glPointSize(80.f);
+    glBegin(GL_POINTS);
+    glColor3ub(255, 232, 69);
+    glVertex3f(x_acc->Get_f(idx), y_acc->Get_f(idx), z_acc->Get_f(idx));
+    glEnd();
+    glEnable(GL_PROGRAM_POINT_SIZE);*/
+
+    ImGui::SetNextWindowPos(ImVec2(new_x, new_y), ImGuiCond_Always);
+
+    // core::utility::log::Log::DefaultLog.WriteInfo("Coord %f %f for pos (%f, %f, %f)", new_x, new_y, pos.x, pos.y,
+    // pos.z);
+
+    ////ImGui::SetNextWindowPos(ImVec2(x, y), ImGuiCond_Appearing);
 
     bool plot_open = true;
     ImGui::Begin((std::string("Test Plot ") + std::to_string(idx)).c_str(), &plot_open,
@@ -149,7 +183,7 @@ bool megamol::thermodyn::SphereWidget::widget(float x, float y, std::size_t idx,
 
 bool megamol::thermodyn::SphereWidget::parse_data(core::moldyn::MultiParticleDataCall& in_parts,
     core::moldyn::MultiParticleDataCall* in_temps, core::moldyn::MultiParticleDataCall* in_dens,
-    core::FlagCallRead_CPU& fcr) {
+    core::FlagCallRead_CPU& fcr, megamol::core::view::Camera_2 const& cam) {
     auto const pl_count = in_parts.GetParticleListCount();
 
     if (pl_count == 0)
@@ -175,10 +209,18 @@ bool megamol::thermodyn::SphereWidget::parse_data(core::moldyn::MultiParticleDat
         dens = &(in_dens->AccessParticles(selected_pl));
     }
 
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+
+    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+
+    auto const res = cam.resolution_gate();
+
+    auto const vp = projTemp * viewTemp;
     for (decltype(selection_data->flags)::element_type::size_type i = 0; i < selection_data->flags->size(); ++i) {
         auto const el = (*selection_data->flags)[i];
         if (el == core::FlagStorage::SELECTED) {
-            widget(mouse_x_, mouse_y_, i, parts, temps, dens);
+            widget(mouse_x_, mouse_y_, i, parts, temps, dens, vp, res);
         }
     }
 
