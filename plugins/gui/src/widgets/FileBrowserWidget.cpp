@@ -7,9 +7,9 @@
 
 
 #include "FileBrowserWidget.h"
-#include "widgets/ButtonWidgets.h"
 #include "gui_utils.h"
 #include "imgui_stdlib.h"
+#include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol;
@@ -36,8 +36,8 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
 }
 
 
-bool megamol::gui::FileBrowserWidget::Button_Select(
-        const std::vector<std::string>& extensions, std::string& inout_filename, bool force_absolute, const std::string& project_path) {
+bool megamol::gui::FileBrowserWidget::Button_Select(const std::vector<std::string>& extensions,
+    std::string& inout_filename, bool force_absolute, const std::string& project_path) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -102,9 +102,9 @@ std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string
 }
 
 
-bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& label, const std::vector<std::string>& extensions,
-    bool& inout_open_popup, std::string& inout_filename, bool force_absolute_path, const std::string& project_path,
-    vislib::math::Ternary& inout_save_gui_state) {
+bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& label,
+    const std::vector<std::string>& extensions, bool& inout_open_popup, std::string& inout_filename,
+    bool force_absolute_path, const std::string& project_path, vislib::math::Ternary& inout_save_gui_state) {
 
     bool retval = false;
 
@@ -118,7 +118,7 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
             popup_label += " (";
             for (auto ei = extensions.begin(); ei != extensions.end(); ei++) {
                 popup_label += "." + (*ei);
-                if (ei+1 != extensions.end()) {
+                if (ei + 1 != extensions.end()) {
                     popup_label += " ";
                 }
             }
@@ -402,7 +402,8 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                             tmp_file_path = stdfs::relative(tmp_file_path, relative_project_dir);
                         }
                     } else if (this->return_path == PATHMODE_RELATIVE_WORKING) {
-                        tmp_file_path = stdfs::relative(tmp_file_path, stdfs::current_path()); /// XXX requires non-experimental filesystem support
+                        tmp_file_path = stdfs::relative(
+                            tmp_file_path, stdfs::current_path()); /// XXX requires non-experimental filesystem support
                     } else {
                         tmp_file_path = stdfs::absolute(tmp_file_path);
                     }
@@ -494,8 +495,8 @@ void megamol::gui::FileBrowserWidget::validate_directory(const std::string& path
 }
 
 
-void megamol::gui::FileBrowserWidget::validate_file(
-    const std::string& file_str, const std::vector<std::string>& extensions, megamol::gui::FileBrowserWidget::DialogMode mode) {
+void megamol::gui::FileBrowserWidget::validate_file(const std::string& file_str,
+    const std::vector<std::string>& extensions, megamol::gui::FileBrowserWidget::DialogMode mode) {
 
     // Validating given path
     try {
@@ -560,7 +561,7 @@ void megamol::gui::FileBrowserWidget::validate_file(
                     this->file_error += "Require file with extension: ";
                     for (auto ei = exts_lower.begin(); ei != exts_lower.end(); ei++) {
                         this->file_error += "'" + (*ei) + "'";
-                        if (ei+1 != extensions.end()) {
+                        if (ei + 1 != extensions.end()) {
                             this->file_error += " ";
                         }
                     }

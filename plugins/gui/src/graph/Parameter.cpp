@@ -1558,7 +1558,7 @@ bool megamol::gui::Parameter::widget_filepath(
         ImGui::PushItemWidth(widget_width);
         /// TODO Provide path to file name of parent graph/project
         bool button_edit =
-            this->gui_file_browser.Button_Select({ }, std::get<std::string>(this->gui_widget_store), false, "");
+            this->gui_file_browser.Button_Select({}, std::get<std::string>(this->gui_widget_store), false, "");
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
@@ -2081,7 +2081,8 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
         }
         if (!this->tf_use_external_editor) {
             ImGui::SameLine();
-            if (megamol::gui::ButtonWidgets::ToggleButton(((this->tf_show_editor)?("Hide"):("Show")), this->tf_show_editor)) {
+            if (megamol::gui::ButtonWidgets::ToggleButton(
+                    ((this->tf_show_editor) ? ("Hide") : ("Show")), this->tf_show_editor)) {
                 if (this->tf_show_editor) {
                     update_editor = true;
                     retval = true;

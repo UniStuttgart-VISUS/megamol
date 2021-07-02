@@ -274,6 +274,7 @@ namespace gui {
                         }
                     } else if (this->type == ParamType_t::FILEPATH) {
                         // Push log message to GUI pop-up for not existing files
+                        /* TODO Disabled until suitable FilePathParam flags are available
                         auto file = std::get<std::string>(this->value);
                         if (!megamol::core::utility::FileUtils::FileExists(file)) {
                             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -281,6 +282,7 @@ namespace gui {
                                 LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG,
                                 this->FullNameProject().c_str(), file.c_str());
                         }
+                        */
                     }
                 }
 

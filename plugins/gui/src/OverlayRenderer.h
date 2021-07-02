@@ -24,12 +24,12 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/utility/RenderUtils.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/utility/RenderUtils.h"
 #include "mmcore/view/RendererModule.h"
 
 #include <chrono>

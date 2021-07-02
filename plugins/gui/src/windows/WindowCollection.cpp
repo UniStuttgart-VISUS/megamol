@@ -23,14 +23,16 @@ WindowCollection::WindowCollection() : windows() {
     this->windows.emplace_back(std::make_shared<LogConsole>("Log Console"));
     this->windows.emplace_back(std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true));
     this->windows.emplace_back(std::make_shared<PerformanceMonitor>("Performance Metrics"));
-    this->windows.emplace_back(std::make_shared<Configurator>("Configurator", this->GetWindow<TransferFunctionEditor>()));
+    this->windows.emplace_back(
+        std::make_shared<Configurator>("Configurator", this->GetWindow<TransferFunctionEditor>()));
     // Requires Configurator and TFEditor to be added before
     this->add_parameter_window("Parameters", AbstractWindow::WINDOW_ID_MAIN_PARAMETERS);
 
     // Windows are sorted depending on hotkey
-    std::sort(this->windows.begin(), this->windows.end(), [&](std::shared_ptr<AbstractWindow> const& a, std::shared_ptr<AbstractWindow> const& b) {
-        return (a->Config().hotkey.key > b->Config().hotkey.key);
-    });
+    std::sort(this->windows.begin(), this->windows.end(),
+        [&](std::shared_ptr<AbstractWindow> const& a, std::shared_ptr<AbstractWindow> const& b) {
+            return (a->Config().hotkey.key > b->Config().hotkey.key);
+        });
 }
 
 
@@ -86,13 +88,13 @@ void WindowCollection::Draw(bool menu_visible) {
             wc.WindowContextMenu(menu_visible, collapsing_changed);
 
             // Draw window content
-            ///ImGui::PushID(static_cast<int>(wc.Hash()));
+            /// ImGui::PushID(static_cast<int>(wc.Hash()));
             wc.Draw();
-            ///ImGui::PopID();
+            /// ImGui::PopID();
 
             // Reset or store window position and size
-            if (wc.Config().reset_pos_size ||
-                (menu_visible && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))) {
+            if (wc.Config().reset_pos_size || (menu_visible && ImGui::IsMouseReleased(ImGuiMouseButton_Left) &&
+                                                  ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))) {
                 wc.ApplyWindowSizePosition(menu_visible);
                 wc.Config().reset_pos_size = false;
             } else {
@@ -221,13 +223,15 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
 }
 
 
-void WindowCollection::add_parameter_window(const std::string& window_name, AbstractWindow::WindowConfigID win_id, ImGuiID initial_module_uid) {
+void WindowCollection::add_parameter_window(
+    const std::string& window_name, AbstractWindow::WindowConfigID win_id, ImGuiID initial_module_uid) {
 
     if ((win_id == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) || (win_id == AbstractWindow::WINDOW_ID_PARAMETERS)) {
-        auto win_paramlist = std::make_shared<ParameterList>(window_name, win_id, initial_module_uid, this->GetWindow<Configurator>(), this->GetWindow<TransferFunctionEditor>(),
-                [&](const std::string& windowname, AbstractWindow::WindowConfigID winid, ImGuiID initialmoduleuid) {
-                    this->add_parameter_window(windowname, winid, initialmoduleuid);
-                });
+        auto win_paramlist = std::make_shared<ParameterList>(window_name, win_id, initial_module_uid,
+            this->GetWindow<Configurator>(), this->GetWindow<TransferFunctionEditor>(),
+            [&](const std::string& windowname, AbstractWindow::WindowConfigID winid, ImGuiID initialmoduleuid) {
+                this->add_parameter_window(windowname, winid, initialmoduleuid);
+            });
         this->windows.emplace_back(win_paramlist);
     }
 }

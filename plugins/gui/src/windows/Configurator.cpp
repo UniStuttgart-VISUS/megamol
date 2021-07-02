@@ -13,7 +13,8 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::Configurator::Configurator(const std::string& window_name, std::shared_ptr<TransferFunctionEditor> win_tfe_ptr)
+megamol::gui::Configurator::Configurator(
+    const std::string& window_name, std::shared_ptr<TransferFunctionEditor> win_tfe_ptr)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_CONFIGURATOR)
         , graph_state()
         , graph_collection()
@@ -167,7 +168,7 @@ void megamol::gui::Configurator::PopUps() {
     if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
         project_filename = graph_ptr->GetFilename();
     }
-    if (this->file_browser.PopUp_Load("Load Project", { "lua" }, this->open_popup_load, project_filename)) {
+    if (this->file_browser.PopUp_Load("Load Project", {"lua"}, this->open_popup_load, project_filename)) {
 
         popup_failed = this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
@@ -180,8 +181,9 @@ void megamol::gui::Configurator::PopUps() {
         ImGuiID selected_callslot_uid = selected_graph_ptr->GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
 
-        bool valid_double_click = (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
-                                   (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup));
+        bool valid_double_click =
+            (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
+                (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup));
         bool valid_double_click_callslot =
             (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
                 (selected_callslot_uid != GUI_INVALID_ID) &&
