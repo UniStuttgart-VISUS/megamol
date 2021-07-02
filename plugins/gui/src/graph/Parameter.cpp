@@ -1556,7 +1556,13 @@ bool megamol::gui::Parameter::widget_filepath(
         widget_width = std::max(widget_width, text_width);
 
         ImGui::PushItemWidth(widget_width);
+
         /// TODO Provide path to file name of parent graph/project
+
+        /// TODO Propagate to fiel browser dialog (Button_Select)
+        auto file_flags = store.first;
+        auto file_extensions = store.second;
+
         bool button_edit =
             this->gui_file_browser.Button_Select({}, std::get<std::string>(this->gui_widget_store), false, "");
         ImGui::SameLine();

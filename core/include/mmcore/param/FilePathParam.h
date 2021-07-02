@@ -45,7 +45,7 @@ namespace param {
          * @param flags The flags for the parameter
          * @param exts The required file extensions for the parameter
          */
-        explicit FilePathParam(const std::string& initVal, FilePathFlags_t flags = Flag_File, FilePathExtensions_t exts = {});
+        FilePathParam(const std::string& initVal, FilePathFlags_t flags = Flag_File, FilePathExtensions_t exts = {});
 
         /**
          * Dtor.
@@ -97,7 +97,7 @@ namespace param {
          * @return The value of the parameter as string.
          */
         vislib::TString ValueString() const override {
-            vislib::TString(this->value.generic_u8string().c_str());
+            return vislib::TString(this->value.generic_u8string().c_str());
         }
 
         /**

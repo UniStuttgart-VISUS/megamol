@@ -26,11 +26,11 @@ namespace utility {
 
     // #### Utility string conversion functions ############################ //
 
-    static inline std::string to_string(std::wstring wstr) {
+    static inline std::string to_string(const std::wstring& wstr) {
          return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr);
     }
 
-    static inline std::wstring to_wstring(std::string str) {
+    static inline std::wstring to_wstring(const std::string& str) {
         return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
     }
 
@@ -118,8 +118,8 @@ namespace utility {
         static bool ReadFile(const std::string& filename, std::string& out_content, bool silent = false);
 
     private:
-        FileUtils(void);
-        ~FileUtils(void) = default;
+        FileUtils() = default;
+        ~FileUtils() = default;
     };
 
 
@@ -127,7 +127,7 @@ namespace utility {
     bool megamol::core::utility::FileUtils::FileExists(const T& path_str) {
         auto path = static_cast<std::filesystem::path>(path_str);
         try {
-            if (exists(path) && is_regular_file(path)) {
+            if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
                 return true;
             }
         } catch (...) {}

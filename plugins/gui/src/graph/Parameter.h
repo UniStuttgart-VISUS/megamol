@@ -366,7 +366,7 @@ namespace gui {
                     }
                 }
             }
-            // Check default value
+            // Set default value
             if (set_default_val) {
                 this->value_dirty = false;
                 this->default_value = val;
