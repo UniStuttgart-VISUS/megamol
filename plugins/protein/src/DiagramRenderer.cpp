@@ -30,7 +30,7 @@ using megamol::core::utility::log::Log;
 /*
  * DiagramRenderer::DiagramRenderer (CTOR)
  */
-DiagramRenderer::DiagramRenderer( void ) : Renderer2DModule (),
+DiagramRenderer::DiagramRenderer( void ) : Renderer2DModuleGL (),
         dataCallerSlot( "getData", "Connects the diagram rendering with data storage." ),
         selectionCallerSlot( "getSelection", "Connects the diagram rendering with selection storage." ),
         hiddenCallerSlot( "getHidden", "Connects the diagram rendering with visibility storage." ),
