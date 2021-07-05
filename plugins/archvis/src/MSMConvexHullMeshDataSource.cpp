@@ -1,13 +1,14 @@
 #include "MSMConvexHullMeshDataSource.h"
 
-#include "MSMDataCall.h"
+#include <QuickHull.hpp>
+
 #include "mesh/MeshCalls.h"
 
-#include <QuickHull.hpp>
+#include "ArchVisCalls.h"
 
 megamol::archvis::MSMConvexHullDataSource::MSMConvexHullDataSource() 
 : m_MSM_callerSlot("getMSM", "Connects the "), m_MSM_hash(0) {
-    this->m_MSM_callerSlot.SetCompatibleCall<MSMDataCallDescription>();
+    this->m_MSM_callerSlot.SetCompatibleCall<ScaleModelCallDescription>();
     this->MakeSlotAvailable(&this->m_MSM_callerSlot);
 }
 
@@ -17,7 +18,7 @@ bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& call
     mesh::CallGPUMeshData* mc = dynamic_cast<mesh::CallGPUMeshData*>(&caller);
     if (mc == NULL) return false;
 
-    MSMDataCall* msm_call = this->m_MSM_callerSlot.CallAs<MSMDataCall>();
+    CallScaleModel* msm_call = this->m_MSM_callerSlot.CallAs<CallScaleModel>();
     if (msm_call == NULL) return false;
 
     if (!(*msm_call)(0)) return false;
