@@ -48,9 +48,10 @@ Eigen::VectorXd DepthFunction::halfSpaceDepth(Eigen::MatrixXd dataMatrix) {
 }
 
 
-double megamol::infovis::DepthFunction::binomialCoeff(int n, int k) {
-    if (k == 0 || k == n)
+double DepthFunction::binomialCoeff(int n, int k) {
+    if (k == 0 || k == n) {
         return 1;
+    }
 
     double result = 1.0;
 
@@ -66,7 +67,7 @@ Eigen::VectorXd DepthFunction::functionalDepth(
     srand(seed);
 
     Eigen::VectorXd result = Eigen::VectorXd(dataMatrix.rows());
-    double binom = megamol::infovis::DepthFunction::binomialCoeff(dataMatrix.rows(), samplesCount);
+    double binom = binomialCoeff(dataMatrix.rows(), samplesCount);
 
     // count the hits for every data point (= row in the data matrix)
     for (int row = 0; row < dataMatrix.rows(); row++) {
@@ -118,7 +119,7 @@ Eigen::VectorXd DepthFunction::functionalDepth(
 
         // result = 1 / binom(n, j) * hitsCount
         // where n = samplesLength and j = samplesCount
-        result(row) = (double) hitsCount / (double) binom;
+        result(row) = static_cast<double>(hitsCount) / static_cast<double>(binom);
     }
 
     return result;
@@ -181,7 +182,7 @@ Eigen::VectorXd DepthFunction::simplicalDepth(Eigen::MatrixXd dataMatrix, int sa
                 hitsCount++;
         }
 
-        result(row) = (double) hitsCount / (double) samplesCount;
+        result(row) = static_cast<double>(hitsCount) / static_cast<double>(samplesCount);
     }
 
     return result;
