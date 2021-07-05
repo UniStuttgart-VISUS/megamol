@@ -60,7 +60,7 @@ namespace infovis {
 
         bool makeShaders();
 
-        void setupAccel(int approach, int ow, int oh, int ssLevel);
+        void setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera cam);
 
         void doReconstruction(int approach, int w, int h, int ssLevel);
 
@@ -87,6 +87,7 @@ namespace infovis {
         GLuint amortizedFboA = 0;
         GLuint amortizedMsaaFboA = 0;
         GLuint amortizedPushFBO = 0;
+        std::shared_ptr<glowl::FramebufferObject> glowlFBO;
         GLuint msImageArray = 0;
         GLuint pushImage = 0;
         GLuint imageArrayA = 0;
