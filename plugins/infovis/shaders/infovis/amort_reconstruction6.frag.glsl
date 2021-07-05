@@ -31,7 +31,7 @@ void main() {
     vec2 moveP = (moveM * p).xy;
     ivec2 movedICoord = ivec2((moveP.x / 2 + 0.5) * w, (moveP.y / 2 + 0.5) * h);
     int i = (amortLevel * line + col);
-
+    frag_out = imageLoad(StoreA, iCoord);
     if (parity == 0){
         vec4 tempColor = vec4(0, 0, 0, 0);
         ivec2 movedICoord = ivec2((moveP.x / 2 + 0.5) * w, (moveP.y / 2 + 0.5) * h);
@@ -40,7 +40,7 @@ void main() {
         if (frametype == i){
             imageStore(StoreA, iCoord, texelFetch(src_tex2D, iCoord /amortLevel, 0));
         }
-        frag_out = imageLoad(StoreA, iCoord);
+        //frag_out = imageLoad(StoreA, iCoord);
     } else {
         vec4 tempColor = vec4(0, 0, 0, 0);
         for (int q = 0; q < 5; q++){
@@ -52,8 +52,10 @@ void main() {
         if (frametype == i){
             imageStore(StoreB, iCoord, texelFetch(src_tex2D, iCoord/amortLevel, 0));
         }
-        frag_out = imageLoad(StoreB, iCoord);
+        //frag_out = imageLoad(StoreB, iCoord);
+        //frag_out = texelFetch(src_tex2D, iCoord /amortLevel, 0);
     }
     //imageStore(StoreArray, ivec3(iCoord.x, iCoord.y, frametype % 2), imageLoad(StoreB, iCoord));
     //frag_out = texelFetch(src_tex2D, iCoord/amortLevel, 0);
+    //frag_out = imageLoad(StoreA, iCoord);
 }
