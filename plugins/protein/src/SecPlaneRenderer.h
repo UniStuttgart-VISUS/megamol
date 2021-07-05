@@ -15,10 +15,11 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
@@ -27,7 +28,7 @@ namespace protein {
 /*
  * Class that renders sectional planes of 3D textures.
  */
-class SecPlaneRenderer : public core::view::Renderer3DModule {
+class SecPlaneRenderer : public core::view::Renderer3DModuleGL {
 public:
 
     enum ShadingMode {DENSITY=0, POTENTIAL, LIC, ISOLINES};
@@ -83,7 +84,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(core::view::CallRender3DGL& call);
 
     /**
      * Initializes the random noise texture used for LIC.
@@ -103,7 +104,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(core::view::CallRender3DGL& call);
 
 private:
 
@@ -111,7 +112,7 @@ private:
     core::CallerSlot textureSlot;
 
     /// The data bounding box
-    core::BoundingBoxes bbox;
+    core::BoundingBoxes_2 bbox;
 
     /// The OpenGL texture handle
     GLuint tex;

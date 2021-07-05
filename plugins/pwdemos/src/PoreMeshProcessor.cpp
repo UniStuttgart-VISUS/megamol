@@ -8,10 +8,10 @@
 #include "stdafx.h"
 #include "PoreMeshProcessor.h"
 //#include "vislib/Array.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 //#include "vislib/math/Point.h"
-#include "vislib/sys/Thread.h"
-//#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/sys/Thread.h"
+//#include "mmcore/utility/sys/MemmappedFile.h"
 //#include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowPoint.h"
 
@@ -39,7 +39,7 @@ PoreMeshProcessor::~PoreMeshProcessor(void) {
  * PoreMeshProcessor::Run
  */
 DWORD PoreMeshProcessor::Run(void *userData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(this->inputBuffers != NULL);
     //ASSERT(this->outputBuffers != NULL);
     Log::DefaultLog.WriteInfo("PoreMeshProcessor Thread started");
@@ -127,7 +127,7 @@ void PoreMeshProcessor::workOnBuffer(LoopBuffer& buffer/*, LoopBuffer& outBuffer
     while (l->next != NULL) l = l->next;
     l->next = sd;
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Slice %u added to loop-debug-data\n", this->sliceNum);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Slice %u added to loop-debug-data\n", this->sliceNum);
 
     this->sliceNum++;
 }

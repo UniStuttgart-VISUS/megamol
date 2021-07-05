@@ -10,8 +10,8 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/SingleLinkedList.h"
@@ -20,6 +20,8 @@
 #include <cfloat>
 #include <climits>
 #include <cmath>
+
+#include "mmcore/BoundingBoxes_2.h"
 
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -119,10 +121,7 @@ bool SolPathDataSource::getExtent(megamol::core::Call &call) {
         this->loadData();
     }
 
-    megamol::core::BoundingBoxes &bboxs = spdc->AccessBoundingBoxes();
-    bboxs.SetObjectSpaceBBox(this->bbox);
-    bboxs.SetObjectSpaceClipBox(bboxs.ObjectSpaceBBox());
-    bboxs.MakeScaledWorld(1.0f); // at least this is what i think
+    spdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
 
     return false;
 }
@@ -147,7 +146,7 @@ void SolPathDataSource::clear(void) {
  */
 void SolPathDataSource::loadData(void) {
     using vislib::sys::File;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::sys::MemmappedFile file;
 
     this->filenameslot.ResetDirty();

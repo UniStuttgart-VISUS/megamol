@@ -13,7 +13,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "inttypes.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCall_GL.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
@@ -23,7 +23,7 @@
 #include "vislib/String.h"
 #include "vislib/assert.h"
 #include "vislib/math/Quaternion.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -34,7 +34,7 @@ using namespace megamol::stdplugin::moldyn::rendering;
 //const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
 
 GlyphRenderer::GlyphRenderer(void)
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , getDataSlot("getData", "The slot to fetch the data")
     , getTFSlot("getTF", "the slot for the transfer function")
     , getClipPlaneSlot("getClipPlane", "the slot for the clip plane")
@@ -110,7 +110,7 @@ bool GlyphRenderer::create(void) {
 
 bool GlyphRenderer::makeShader(
     std::string vertexName, std::string fragmentName, vislib::graphics::gl::GLSLShader& shader) {
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
     using namespace vislib::graphics::gl;
 
     ShaderSource vertSrc;
@@ -128,29 +128,29 @@ bool GlyphRenderer::makeShader(
     }
     try {
         if (!shader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "GlyphRenderer: unable to compile shader: unknown error\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "GlyphRenderer: unable to compile shader: unknown error\n");
             return false;
         }
     } catch (AbstractOpenGLShader::CompileException& ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "GlyphRenderer: unable to compile shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception& e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "GlyphRenderer: unable to compile shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "GlyphRenderer: unable to compile shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "GlyphRenderer: unable to compile shader: unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "GlyphRenderer: unable to compile shader: unknown exception\n");
         return false;
     }
     return true;
 }
 
-bool GlyphRenderer::GetExtents(core::view::CallRender3D_2& call) {
+bool GlyphRenderer::GetExtents(core::view::CallRender3DGL& call) {
 
     auto* epdc = this->getDataSlot.CallAs<core::moldyn::EllipsoidalParticleDataCall>();
     if ((epdc != NULL) && ((*epdc)(1))) {
@@ -211,7 +211,7 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
             case core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ:
             case core::moldyn::SimpleSphericalParticles::VERTDATA_NONE:
             default:
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "GlyphRenderer: no support for vertex data types SHORT_XYZ or NONE");
                 return false;
             }
@@ -221,7 +221,7 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
                 break;
             case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGB:
                 // we could just pad this, but such datasets need to disappear...
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "GlyphRenderer: COLDATA_UINT8_RGB is deprecated and unsupported");
                 return false;
             case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA:
@@ -259,7 +259,7 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
                     });
                 break;
             case core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
-                vislib::sys::Log::DefaultLog.WriteError("GlyphRenderer: COLDATA_USHORT_RGBA is unsupported");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("GlyphRenderer: COLDATA_USHORT_RGBA is unsupported");
                 return false;
             case core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I:
                 this->color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
@@ -283,7 +283,7 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
     return true;
 }
 
-bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
+bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
     auto* epdc = this->getDataSlot.CallAs<core::moldyn::EllipsoidalParticleDataCall>();
     if (epdc == nullptr) return false;
 
@@ -339,12 +339,13 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    auto viewport = call.GetViewport();
+    int w = call.GetFramebufferObject()->GetWidth();
+    int h = call.GetFramebufferObject()->GetHeight();
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(viewport.Width());
-    viewportStuff[3] = static_cast<float>(viewport.Height());
+    viewportStuff[2] = static_cast<float>(w);
+    viewportStuff[3] = static_cast<float>(h);
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -402,7 +403,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
         (*flagsc)(core::FlagCallRead_GL::CallGetData);
         auto flags = flagsc->getData();
         //if (flags->flags->getByteSize() / sizeof(core::FlagStorage::FlagVectorType) < num_total_glyphs) {
-        //    vislib::sys::Log::DefaultLog.WriteError("Not enough flags in storage for proper selection!");
+        //    megamol::core::utility::log::Log::DefaultLog.WriteError("Not enough flags in storage for proper selection!");
         //    return false;
         //}
         flags->validateFlagCount(num_total_glyphs);
@@ -477,7 +478,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
                 //glUniform2f(shader->ParameterLocation("tf_range"), elParts.GetMinColourIndexValue(),
                 //    elParts.GetMaxColourIndexValue());
             } else {
-                vislib::sys::Log::DefaultLog.WriteError("GlyphRenderer: could not retrieve transfer function!");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("GlyphRenderer: could not retrieve transfer function!");
                 return false;
             }
             glUniform1i(shader->ParameterLocation("tf_texture"), 0);

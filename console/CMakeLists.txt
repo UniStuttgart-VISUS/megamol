@@ -14,7 +14,7 @@ if(BUILD_CONSOLE)
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
   # Collect source files
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h" "src/*.hpp")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
 
   # Add target
@@ -31,8 +31,8 @@ if(BUILD_CONSOLE)
 
   # GLFW
   if(USE_GLFW)
-    require_external(glfw3)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
+    require_external(glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
@@ -46,14 +46,12 @@ if(BUILD_CONSOLE)
   endif ()
 
   # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
-  set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-  set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
   if(UNIX)
     include(GNUInstallDirs)
-    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-    set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
-    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
+    set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir
+    set(MEGAMOL_SHELL_START_SCRIPT "mmconsole.sh")
+    configure_file(extra/mmconsole.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
     install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
   endif()
 

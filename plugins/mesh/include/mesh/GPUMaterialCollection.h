@@ -13,11 +13,11 @@
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 
 #include <memory>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
-#include "mesh.h"
-
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
@@ -28,43 +28,43 @@
 namespace megamol {
 namespace mesh {
 
-typedef glowl::GLSLProgram Shader;
+    typedef glowl::GLSLProgram Shader;
 
-class MESH_API GPUMaterialCollecton {
-public:
-    using TexturePtrType =
-        std::variant <
-            std::shared_ptr<glowl::Texture>,
-            std::shared_ptr<glowl::Texture2D>,
-            std::shared_ptr<glowl::Texture2DArray>,
-            std::shared_ptr<glowl::Texture3D>,
-            std::shared_ptr<glowl::TextureCubemapArray> >;
+    class GPUMaterialCollection {
+    public:
+        using TexturePtrType = std::variant<std::shared_ptr<glowl::Texture>, std::shared_ptr<glowl::Texture2D>,
+            std::shared_ptr<glowl::Texture2DArray>, std::shared_ptr<glowl::Texture3D>,
+            std::shared_ptr<glowl::TextureCubemapArray>>;
 
-    struct Material {
-        std::shared_ptr<Shader> shader_program;
-        std::vector<std::shared_ptr<glowl::Texture>> textures;
+        struct Material {
+            std::shared_ptr<Shader> shader_program;
+            std::vector<std::shared_ptr<glowl::Texture>> textures;
+        };
+
+        void addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& identifier,
+            std::string const& shader_btf_name, std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
+
+        void addMaterial(std::string const& identifier, std::shared_ptr<Shader> const& shader,
+            std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
+
+        void addMaterial(std::string const& identifier, Material const& material);
+
+        void updateMaterialTexture(
+            std::string const& identifier, size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture);
+
+        void deleteMaterial(std::string const& identifier);
+
+        void clear();
+
+        Material const& getMaterial(std::string const& identifier);
+
+        inline std::unordered_map<std::string, GPUMaterialCollection::Material> const& getMaterials() {
+            return m_materials;
+        }
+
+    private:
+        std::unordered_map<std::string, Material> m_materials;
     };
-
-    size_t addMaterial(
-        megamol::core::CoreInstance* mm_core_inst,
-        std::string const& shader_btf_name,
-        std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
-
-    size_t addMaterial(
-        std::shared_ptr<Shader> const& shader, 
-        std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
-
-    void updateMaterialTexture(size_t mtl_idx, size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture);
-
-    void clearMaterials();
-
-    inline std::vector<Material> const& getMaterials();
-
-private:
-    std::vector<Material> m_materials;
-};
-
-inline std::vector<GPUMaterialCollecton::Material> const& GPUMaterialCollecton::getMaterials() { return m_materials; }
 
 } // namespace mesh
 } // namespace megamol

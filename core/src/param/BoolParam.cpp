@@ -16,7 +16,7 @@ using namespace megamol::core::param;
  */
 BoolParam::BoolParam(bool initVal)
         : AbstractParam(), val(initVal) {
-    // intentionally empty
+    this->InitPresentation(AbstractParamPresentation::ParamType::BOOL);
 }
 
 
@@ -56,6 +56,7 @@ bool BoolParam::ParseValue(const vislib::TString& v) {
 void BoolParam::SetValue(bool v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }

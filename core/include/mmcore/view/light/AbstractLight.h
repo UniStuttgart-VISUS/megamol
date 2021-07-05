@@ -28,17 +28,23 @@ protected:
     virtual bool create();
     virtual void release();
     bool getLightCallback(core::Call& call);
+    bool getMetaDataCallback(core::Call& call);
     virtual bool InterfaceIsDirty() { return false; };
     virtual void readParams(){};
+    virtual void addLight(LightCollection& light_collection) = 0;
     bool AbstractIsDirty();
 
-    LightContainer lightContainer;
+    uint32_t version;
+
+    std::shared_ptr<BaseLightType> lightsource;
 
     // Interface variables
     core::param::ParamSlot lightIntensity;
     core::param::ParamSlot lightColor;
 
 private:
+    bool rhs_connected;
+
     core::CallerSlot getLightSlot;
     core::CalleeSlot deployLightSlot;
 };

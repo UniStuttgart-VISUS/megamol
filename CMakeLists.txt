@@ -1,21 +1,23 @@
-#
-# MegaMol™ Core
-# Copyright 2017, by MegaMol Team
-# Alle Rechte vorbehalten. All rights reserved.
+# MegaMol
+# Copyright (c) 2020, MegaMol Dev Team
+# All rights reserved.
 #
 
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
-if(POLICY CMP0054)
-  cmake_policy(SET CMP0054 NEW)
+cmake_policy(SET CMP0054 NEW)
+cmake_policy(SET CMP0079 NEW) # Needed for static build, requires CMake 3.13!
+if (POLICY CMP0104)
+  cmake_policy(SET CMP0104 NEW)
 endif()
 
 project(megamol)
 
+# Default to install to source directory
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install"
     CACHE PATH "default install path" FORCE)
 endif()
 
@@ -42,7 +44,13 @@ include(check_mmdep)
 include(ClangFormat)
 
 # External
-include("CMakeExternals.cmake")
+include("externals/CMakeExternals.cmake")
+
+# Frontend Resources, Input Events interfaces
+add_subdirectory(${MEGAMOL_DIR}/frontend/resources)
+
+# Frontend Services (e.g. OpenGL_GLFW provider)
+add_subdirectory(${MEGAMOL_DIR}/frontend/services)
 
 # Vislib
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
@@ -54,22 +62,55 @@ add_subdirectory(${MEGAMOL_CORE_DIR})
 set(CONSOLE_NAME mmconsole)
 add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 
+# Remoteconsole
+add_subdirectory(remoteconsole)
+
+# MegaMol.exe, new frontend, Main3000
+add_subdirectory(${MEGAMOL_DIR}/frontend/main)
+
 # Add directory structure for visual studio
 if(WIN32)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif()
 
-# Configurator
-if(WIN32)
-  # NuGet
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config
-    ${CMAKE_CURRENT_BINARY_DIR}/NuGet.Config COPYONLY)
-  add_subdirectory(configurator)
-endif()
+# Plugin register function
+# This function must be called by every plugin.
+# Within this function we need to define every binary which should include plugins.
+function(megamol_register_plugin TARGET)
+  if (WIN32)
+    if (BUILD_CONSOLE)
+      target_link_libraries(mmconsole PRIVATE ${TARGET})
+      target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${TARGET}")
+    endif()
+    if (BUILD_FRONTEND)
+      target_link_libraries(megamol PRIVATE ${TARGET})
+      target_link_options(megamol PRIVATE "/WHOLEARCHIVE:${TARGET}")
+    endif()
+  else ()
+    if (BUILD_CONSOLE)
+      target_link_libraries(mmconsole PRIVATE
+        -Wl,--whole-archive
+        ${TARGET}
+        -Wl,--no-whole-archive)
+    endif()
+    if (BUILD_FRONTEND)
+      target_link_libraries(megamol PRIVATE
+        -Wl,--whole-archive
+        ${TARGET}
+        -Wl,--no-whole-archive)
+    endif()
+  endif ()
+endfunction(megamol_register_plugin)
 
 # Plugins
 add_subdirectory(plugins)
+if (BUILD_CONSOLE)
+  target_link_libraries(mmconsole PRIVATE plugins)
+endif()
+if (BUILD_FRONTEND)
+  target_link_libraries(megamol PRIVATE plugins)
+endif()
 
 # Utils
 add_subdirectory(utils)

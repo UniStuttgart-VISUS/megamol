@@ -17,21 +17,25 @@
 #include "gl/glfwInst.h"
 #include "utility/ConfigHelper.h"
 #include "mmcore/api/MegaMolCore.h"
-#include "AbstractUILayer.h"
 #include "vislib/graphics/FpsCounter.h"
 #include "UILayersCollection.hpp"
 #include <chrono>
 #include <array>
 #include <cstring>
+#include <AbstractUILayer.h>
 
 namespace megamol {
 namespace console {
 namespace gl {
 
+    using namespace megamol::frontend_resources;
+    using megamol::frontend_resources::AbstractUILayer;
+
     /**
      * Class of viewing windows.
      */
     class Window {
+
     public:
         static void MEGAMOLCORE_CALLBACK RequestCloseCallback(void *w) {
             Window* win = static_cast<Window*>(w);
@@ -94,7 +98,7 @@ namespace gl {
         }
         void RequestClose();
 
-        void Update();
+        void Update(uint32_t frameID);
 
     private:
 
@@ -126,6 +130,7 @@ namespace gl {
         GLuint primsQuery;
         bool showFragmentsInTitle;
         bool showPrimsInTitle;
+        bool firstUpdate;
     };
 
 } /* end namespace gl */

@@ -8,21 +8,22 @@
 #ifndef LOCAL_LIGHTING_H_INCLUDED
 #define LOCAL_LIGHTING_H_INCLUDED
 
-#include "compositing/compositing_gl.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 
 namespace megamol {
 namespace compositing {
 
-class COMPOSITING_GL_API LocalLighting : public core::Module {
+class LocalLighting : public core::Module {
 public:
     struct LightParams {
         float x, y, z, intensity;
@@ -40,9 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() {
-        return "Compositing module that computes local lighting";
-    }
+    static const char* Description() { return "Compositing module that computes local lighting"; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -77,23 +76,21 @@ protected:
      */
     bool getMetaDataCallback(core::Call& caller);
 
-    /**
-     * Receives the current lights from the light call and writes them to the lightMap
-     *
-     * @return True if any light has changed, false otherwise.
-     */
-    bool GetLights(void);
-
 private:
     typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
     uint32_t m_version;
 
-    /** Shader program for texture add */
-    std::unique_ptr<GLSLComputeShader> m_lighting_prgm;
+    /** Shader program for texture add (Lambert Illumination) */
+    std::unique_ptr<GLSLComputeShader> m_lambert_prgm;
+
+    /** Shader program for texture add (Blinn-Phong Illumination) */
+    std::unique_ptr<GLSLComputeShader> m_phong_prgm;
 
     /** Texture that the lighting result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
+
+    //TODO add same thing for Ambient Light as for point & distant light
 
     /** GPU buffer object for making active (point)lights available in during shading pass */
     std::unique_ptr<glowl::BufferObject> m_point_lights_buffer;
@@ -101,14 +98,22 @@ private:
     /** GPU buffer object for making active (distant)lights available in during shading pass */
     std::unique_ptr<glowl::BufferObject> m_distant_lights_buffer;
 
-    /** map to store the called lights */
-    core::view::light::LightMap m_light_map;
-
     /** buffered light information */
     std::vector<LightParams> m_point_lights, m_distant_lights;
 
 
-    //TODO mode slot for LAMBERT, PHONG, etc.
+    /**Parameter for different illuminations e.g. Lambertian, Phong */ 
+    megamol::core::param::ParamSlot m_illuminationmode;
+
+    /**Parameters for Blinn-Phong Illumination*/
+    megamol::core::param::ParamSlot m_phong_ambientColor;
+    megamol::core::param::ParamSlot m_phong_diffuseColor;
+    megamol::core::param::ParamSlot m_phong_specularColor;
+
+    megamol::core::param::ParamSlot m_phong_k_ambient;
+    megamol::core::param::ParamSlot m_phong_k_diffuse;
+    megamol::core::param::ParamSlot m_phong_k_specular;
+    megamol::core::param::ParamSlot m_phong_k_exp;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
@@ -130,7 +135,6 @@ private:
 
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot m_camera_slot;
-
 };
 
 } // namespace compositing

@@ -1,7 +1,7 @@
 /*
  * CoreInstance.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2008, 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -15,8 +15,8 @@
 #endif /* (_MSC_VER > 1000) */
 
 #include <string>
+#include <memory>
 
-#include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -24,8 +24,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/cluster/ClusterController.h"
-#include "mmcore/cluster/ClusterViewMaster.h"
-#include "mmcore/cluster/simple/Server.h"
 #include "mmcore/job/JobThread.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
@@ -34,6 +32,7 @@
 #include "mmcore/profiler/Manager.h"
 #include "mmcore/utility/APIValueUtil.h"
 #include "mmcore/utility/ProjectParser.h"
+#include "mmcore/utility/plugins/PluginRegister.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/GUID.h"
@@ -43,14 +42,13 @@
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/functioncast.h"
-#include "vislib/net/AbstractSimpleMessage.h"
+#include "mmcore/utility/net/AbstractSimpleMessage.h"
 #include "vislib/net/NetworkInformation.h"
 #include "vislib/net/Socket.h"
 #include "vislib/sys/AutoLock.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
-#include "vislib/sys/RegistryKey.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/vislibversion.h"
 
 #include "factories/CallClassRegistry.h"
@@ -69,16 +67,17 @@
 #include "vislib/Trace.h"
 #include "vislib/functioncast.h"
 #include "vislib/memutils.h"
-#include "vislib/sys/Console.h"
+#include "mmcore/utility/log/Console.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/sysfunctions.h"
 
 #include <sstream>
 
 #include "mmcore/utility/LuaHostService.h"
+#include "mmcore/utility/graphics/ScreenShotComments.h"
 
 /*****************************************************************************/
 
@@ -130,7 +129,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     , preInit(new PreInit)
     , config()
     , shaderSourceFactory(config)
-    , log()
     , lua(nullptr)
     , builtinViewDescs()
     , projViewDescs()
@@ -152,22 +150,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     , all_call_descriptions()
     , all_module_descriptions()
     , parameterHash(1) {
-    // setup log as early as possible.
-    this->log.SetLogFileName(static_cast<const char*>(NULL), false);
-    this->log.SetLevel(vislib::sys::Log::LEVEL_ALL);
-#ifdef _DEBUG
-    this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-#else
-    this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ERROR);
-#endif
-    this->log.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
-    this->log.SetOfflineMessageBufferSize(25);
-    // redirect default log to instance log of last instance
-    //  not perfect, but better than nothing.
-    vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-    vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
-    vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(&this->log));
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
@@ -187,7 +169,6 @@ megamol::core::CoreInstance::CoreInstance(void)
 
     profiler::Manager::Instance().SetCoreInstance(this);
     this->namespaceRoot->SetCoreInstance(*this);
-    this->config.instanceLog = &this->log;
     factories::register_module_classes(this->module_descriptions);
     for (auto md : this->module_descriptions) this->all_module_descriptions.Register(md);
     factories::register_call_classes(this->call_descriptions);
@@ -209,9 +190,9 @@ megamol::core::CoreInstance::CoreInstance(void)
     this->timeOffset += 100.0 * static_cast<double>(::rand()) / static_cast<double>(RAND_MAX);
     //#endif
 
-    this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Core Instance created");
 
-    // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO+42, "GraphUpdateLock address: %x\n",
+    // megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO+42, "GraphUpdateLock address: %x\n",
     // std::addressof(this->graphUpdateLock));
 }
 
@@ -220,9 +201,8 @@ megamol::core::CoreInstance::CoreInstance(void)
  * megamol::core::CoreInstance::~CoreInstance
  */
 megamol::core::CoreInstance::~CoreInstance(void) {
-    this->config.instanceLog = NULL;
     SAFE_DELETE(this->preInit);
-    this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance destroyed");
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Core Instance destroyed");
 
     // Shutdown all views and jobs, which might still run
     {
@@ -295,35 +275,48 @@ const megamol::core::factories::ModuleDescriptionManager& megamol::core::CoreIns
 /*
  * megamol::core::CoreInstance::Initialise
  */
-void megamol::core::CoreInstance::Initialise(void) {
+void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible) {
     if (this->preInit == NULL) {
         throw vislib::IllegalStateException("Cannot initialise a core instance twice.", __FILE__, __LINE__);
     }
 
+    this->mmconsoleFrontendCompatible = mmconsole_frontend_compatible;
+
     // logging mechanism
-    if (this->preInit->IsLogEchoLevelSet()) {
-        this->log.SetEchoLevel(this->preInit->GetLogEchoLevel());
-        this->config.logEchoLevelLocked = true;
-        if (this->preInit->GetLogEchoLevel() != 0) {
-            this->log.EchoOfflineMessages(true);
-        }
-    }
-    if (this->preInit->IsLogLevelSet()) {
-        this->log.SetLevel(this->preInit->GetLogLevel());
-        this->config.logLevelLocked = true;
-        if (this->preInit->GetLogLevel() == 0) {
-            this->log.SetLogFileName(static_cast<char*>(NULL), false);
-            this->config.logFilenameLocked = true;
-        } else {
-            if (this->preInit->IsLogFileSet()) {
-                this->log.SetLogFileName(this->preInit->GetLogFile(), false);
-                this->config.logFilenameLocked = true;
-            } else {
-                this->log.SetLogFileName(static_cast<char*>(NULL), false);
+    if (mmconsole_frontend_compatible) {
+
+        megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
+        megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+#ifdef _DEBUG
+        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+#else
+        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ERROR);
+#endif
+
+        if (this->preInit->IsLogEchoLevelSet()) {
+            megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(this->preInit->GetLogEchoLevel());
+            this->config.logEchoLevelLocked = true;
+            if (this->preInit->GetLogEchoLevel() != 0) {
+                megamol::core::utility::log::Log::DefaultLog.EchoOfflineMessages(true);
             }
         }
+        if (this->preInit->IsLogLevelSet()) {
+            megamol::core::utility::log::Log::DefaultLog.SetLevel(this->preInit->GetLogLevel());
+            this->config.logLevelLocked = true;
+            if (this->preInit->GetLogLevel() == 0) {
+                megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
+                this->config.logFilenameLocked = true;
+            } else {
+                if (this->preInit->IsLogFileSet()) {
+                    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(this->preInit->GetLogFile().c_str(), false);
+                    this->config.logFilenameLocked = true;
+                } else {
+                    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<char*>(NULL), false);
+                }
+            }
+        }
+        megamol::core::utility::log::Log::DefaultLog.EchoOfflineMessages(true);
     }
-    vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
 
     this->lua = new LuaState(this);
     if (this->lua == nullptr || !this->lua->StateOk()) {
@@ -335,58 +328,48 @@ void megamol::core::CoreInstance::Initialise(void) {
                                    "' mode on ', mmGetMachineName(), '.')",
         result);
     if (ok) {
-        // vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", result.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution is NOT OK and returned '%s'", result.c_str());
     }
     // lua->RunString("mmLogInfo('Lua loaded Ok.')");
 
     // configuration file
-    if (this->preInit->IsConfigFileSet()) {
-        this->config.LoadConfig(this->preInit->GetConfigFile());
-    } else {
-        this->config.LoadConfig();
-    }
+    if (mmconsole_frontend_compatible) {
+        if (this->preInit->IsConfigFileSet()) {
+            this->config.LoadConfig(this->preInit->GetConfigFile());
+        } else {
+            this->config.LoadConfig();
+        }
 
-    // config overrides from command line
-    if (this->preInit->IsConfigOverrideSet()) {
-        const vislib::StringW& overrides = this->preInit->GetConfigFileOverrides();
-        int pos = 0;
-        int next = overrides.Find('\b', pos);
-        do {
-            if (next == vislib::StringW::INVALID_POS) next = overrides.Length();
-            auto sub = overrides.Substring(pos, next - pos);
-            int split = sub.Find('\a');
-            if (split != vislib::StringW::INVALID_POS) {
-                auto name = sub.Substring(0, split);
-                auto val = sub.Substring(split + 1, sub.Length() - split);
-                vislib::sys::Log::DefaultLog.WriteWarn("Overriding from command line:");
-                this->config.SetValue<wchar_t>(MMC_CFGID_VARIABLE, name, val);
-            }
-            pos = next + 1;
-        } while ((next = overrides.Find('\b', pos)) != vislib::StringW::INVALID_POS || pos < overrides.Length());
+        // config overrides from command line
+        if (this->preInit->IsConfigOverrideSet()) {
+            const vislib::StringW& overrides = this->preInit->GetConfigFileOverrides();
+            int pos = 0;
+            int next = overrides.Find('\b', pos);
+            do {
+                if (next == vislib::StringW::INVALID_POS) next = overrides.Length();
+                auto sub = overrides.Substring(pos, next - pos);
+                int split = sub.Find('\a');
+                if (split != vislib::StringW::INVALID_POS) {
+                    auto name = sub.Substring(0, split);
+                    auto val = sub.Substring(split + 1, sub.Length() - split);
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("Overriding from command line:");
+                    this->config.SetValue<wchar_t>(MMC_CFGID_VARIABLE, name, val);
+                }
+                pos = next + 1;
+            } while ((next = overrides.Find('\b', pos)) != vislib::StringW::INVALID_POS || pos < overrides.Length());
+        }
     }
 
     // register services? TODO: right place?
-    megamol::core::utility::LuaHostService::ID = this->InstallService<megamol::core::utility::LuaHostService>();
+    if (mmconsole_frontend_compatible)
+        megamol::core::utility::LuaHostService::ID = this->InstallService<megamol::core::utility::LuaHostService>();
 
     // loading plugins
-    // printf("Log: %d:\n", (long)(&vislib::sys::Log::DefaultLog));
-    // printf("\tAutoflush: %s\n", vislib::sys::Log::DefaultLog.IsAutoFlushEnabled() ? "enabled" : "disabled");
-    // printf("\tLevel: %u\n", vislib::sys::Log::DefaultLog.GetLevel());
-    // printf("\tEcho-Level: %u\n", vislib::sys::Log::DefaultLog.GetEchoLevel());
-    // printf("\tEcho-Target: %d\n", (long)(vislib::sys::Log::DefaultLog.GetEchoOutTarget()));
-    vislib::SingleLinkedList<vislib::TString> plugins_paths;
-    this->config.ListPluginsToLoad(plugins_paths);
-    vislib::SingleLinkedList<vislib::TString>::Iterator iter = plugins_paths.GetIterator();
-    while (iter.HasNext()) {
-        this->loadPlugin(iter.Next());
+    for (const auto& plugin : utility::plugins::PluginRegister::getAll()) {
+        this->loadPlugin(plugin);
     }
-    // printf("Log: %d:\n", (long)(&vislib::sys::Log::DefaultLog));
-    // printf("\tAutoflush: %s\n", vislib::sys::Log::DefaultLog.IsAutoFlushEnabled() ? "enabled" : "disabled");
-    // printf("\tLevel: %u\n", vislib::sys::Log::DefaultLog.GetLevel());
-    // printf("\tEcho-Level: %u\n", vislib::sys::Log::DefaultLog.GetEchoLevel());
-    // printf("\tEcho-Target: %d\n", (long)(vislib::sys::Log::DefaultLog.GetEchoOutTarget()));
 
     // set up profiling manager
     if (this->config.IsConfigValueSet("profiling")) {
@@ -436,10 +419,10 @@ void megamol::core::CoreInstance::Initialise(void) {
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
-    // empty View2D
+    // empty View2DGL
     vd = std::make_shared<ViewDescription>("emptyview2d");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("View2D"), "view");
-    // 'View2D' will show the title logo as long as no renderer is connected
+    vd->AddModule(this->GetModuleDescriptionManager().Find("View2DGL"), "view");
+    // 'View2DGL' will show the title logo as long as no renderer is connected
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
@@ -552,12 +535,6 @@ void megamol::core::CoreInstance::Initialise(void) {
     jd->SetJobModuleID("ctrl");
     this->builtinJobDescs.Register(jd);
 
-    // Generate PluginsStateFile for MegaMol Configurator:
-    jd = std::make_shared<JobDescription>("GenStateFile");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("PluginsStateFileGeneratorJob"), "gen");
-    jd->SetJobModuleID("gen");
-    this->builtinJobDescs.Register(jd);
-
     //////////////////////////////////////////////////////////////////////
 
 
@@ -577,10 +554,12 @@ void megamol::core::CoreInstance::Initialise(void) {
             continue;
         }
 
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
             "Unable to instance \"%s\" as \"%s\": Description not found.\n",
             vislib::StringA(r.Description()).PeekBuffer(), vislib::StringA(r.Identifier()).PeekBuffer());
     }
+
+    translateShaderPaths(config);
 
     SAFE_DELETE(this->preInit);
 }
@@ -606,7 +585,7 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
             if (!utility::APIValueUtil::IsStringType(type)) {
                 return MMC_ERR_TYPE;
             }
-            this->preInit->SetLogFile(utility::APIValueUtil::AsStringW(type, value));
+            this->preInit->SetLogFile(utility::APIValueUtil::AsStringA(type, value).PeekBuffer());
             break;
         case MMC_INITVAL_LOGLEVEL:
             if (!utility::APIValueUtil::IsIntType(type)) {
@@ -622,28 +601,28 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
             break;
         case MMC_INITVAL_INCOMINGLOG: {
             // if (type != MMC_TYPE_VOIDP) { return MMC_ERR_TYPE; }
-            // vislib::sys::Log *log = static_cast<vislib::sys::Log*>(
+            // megamol::core::utility::log::Log *log = static_cast<megamol::core::utility::log::Log*>(
             //    const_cast<void*>(value));
-            // log->SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-            // log->SetEchoTarget(&this->logRedirection);
+            // log->SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+            // log->SetEchoTarget(&megamol::core::utility::log::Log::DefaultLogRedirection);
             // log->EchoOfflineMessages(true);
             // log->SetLogFileName(static_cast<const char*>(NULL), false);
-            // log->SetLevel(vislib::sys::Log::LEVEL_NONE);
+            // log->SetLevel(megamol::core::utility::log::Log::LEVEL_NONE);
             return MMC_ERR_NOT_IMPLEMENTED; // use MMC_INITVAL_CORELOG instead
         } break;
         case MMC_INITVAL_CORELOG: {
             if (type != MMC_TYPE_VOIDP) {
                 return MMC_ERR_TYPE;
             }
-            vislib::sys::Log** log = static_cast<vislib::sys::Log**>(const_cast<void*>(value));
-            *log = &this->log;
+            megamol::core::utility::log::Log** log = static_cast<megamol::core::utility::log::Log**>(const_cast<void*>(value));
+            *log = &megamol::core::utility::log::Log::DefaultLog;
         } break;
         case MMC_INITVAL_LOGECHOFUNC:
             if (type != MMC_TYPE_VOIDP) {
                 return MMC_ERR_TYPE;
             }
-            this->log.SetEchoTarget(
-                new utility::LogEchoTarget(function_cast<mmcLogEchoFunction>(const_cast<void*>(value))));
+            megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(
+                std::make_shared<utility::LogEchoTarget>(function_cast<mmcLogEchoFunction>(const_cast<void*>(value))));
             break;
         case MMC_INITVAL_CFGOVERRIDE:
             if (!utility::APIValueUtil::IsStringType(type)) {
@@ -652,11 +631,11 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
             this->preInit->SetConfigFileOverrides(utility::APIValueUtil::AsStringW(type, value));
             break;
         default:
-            vislib::sys::Log::DefaultLog.WriteError("CoreInstance::SetInitValue: unknown initval");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("CoreInstance::SetInitValue: unknown initval");
             return MMC_ERR_UNKNOWN;
         }
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("CoreInstance::SetInitValue: exception during evaluation of initval");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("CoreInstance::SetInitValue: exception during evaluation of initval");
         return MMC_ERR_UNKNOWN;
     }
     return MMC_ERR_NO_ERROR;
@@ -740,8 +719,8 @@ void megamol::core::CoreInstance::RequestAllInstantiations() {
 void megamol::core::CoreInstance::RequestViewInstantiation(
     const megamol::core::ViewDescription* desc, const vislib::StringA& id, const ParamValueSetRequest* param) {
     if (id.Find(':') != vislib::StringA::INVALID_POS) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "View instantiation request aborted: name contains invalid character \":\"");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "View instantiation request aborted: name contains invalid character \":\"");
         return;
     }
     // could check here if the description is instantiable, but I do not want
@@ -764,8 +743,8 @@ void megamol::core::CoreInstance::RequestViewInstantiation(
 void megamol::core::CoreInstance::RequestJobInstantiation(
     const megamol::core::JobDescription* desc, const vislib::StringA& id, const ParamValueSetRequest* param) {
     if (id.Find(':') != vislib::StringA::INVALID_POS) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Job instantiation request aborted: name contains invalid character \":\"");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Job instantiation request aborted: name contains invalid character \":\"");
         return;
     }
     // could check here if the description is instantiable, but I do not want
@@ -801,7 +780,7 @@ bool megamol::core::CoreInstance::RequestModuleInstantiation(
 
     factories::ModuleDescription::ptr md = this->GetModuleDescriptionManager().Find(vislib::StringA(className));
     if (md == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to request instantiation of module"
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to request instantiation of module"
                                                 " \"%s\": class \"%s\" not found.",
             id.PeekBuffer(), className.PeekBuffer());
         return false;
@@ -821,7 +800,7 @@ bool megamol::core::CoreInstance::RequestCallInstantiation(
 
     factories::CallDescription::ptr cd = this->GetCallDescriptionManager().Find(vislib::StringA(className));
     if (cd == NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to request instantiation of "
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to request instantiation of "
                                                 " unknown call class \"%s\".",
             className.PeekBuffer());
         return false;
@@ -837,7 +816,7 @@ bool megamol::core::CoreInstance::RequestChainCallInstantiation(
     const vislib::StringA& className, const vislib::StringA& chainStart, const vislib::StringA& to) {
     factories::CallDescription::ptr cd = this->GetCallDescriptionManager().Find(vislib::StringA(className));
     if (cd == NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to request chain instantiation of "
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to request chain instantiation of "
                                                 " unknown call class \"%s\".",
             className.PeekBuffer());
         return false;
@@ -859,7 +838,7 @@ bool megamol::core::CoreInstance::RequestParamValue(const vislib::StringA& id, c
 bool megamol::core::CoreInstance::CreateParamGroup(const vislib::StringA& name, const int size) {
     vislib::sys::AutoLock l(this->graphUpdateLock);
     if (this->pendingGroupParamSetRequests.Contains(name)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Cannot create parameter group %s: group already exists!", name.PeekBuffer());
         return false;
     } else {
@@ -867,7 +846,7 @@ bool megamol::core::CoreInstance::CreateParamGroup(const vislib::StringA& name, 
         pg.GroupSize = size;
         pg.Name = name;
         this->pendingGroupParamSetRequests[name] = pg;
-        vislib::sys::Log::DefaultLog.WriteInfo("Created parameter group %s with size %i", name.PeekBuffer(), size);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Created parameter group %s with size %i", name.PeekBuffer(), size);
         return true;
     }
 }
@@ -879,17 +858,17 @@ bool megamol::core::CoreInstance::RequestParamGroupValue(
     if (this->pendingGroupParamSetRequests.Contains(group)) {
         auto& g = this->pendingGroupParamSetRequests[group];
         if (g.Requests.Contains(id)) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Cannot queue %s parameter change in group %s twice!", id.PeekBuffer(), group.PeekBuffer());
             return false;
         } else {
-            vislib::sys::Log::DefaultLog.WriteInfo("Queueing parameter value change: [%s] %s = %s", group.PeekBuffer(),
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Queueing parameter value change: [%s] %s = %s", group.PeekBuffer(),
                 id.PeekBuffer(), value.PeekBuffer());
             g.Requests[id] = value;
         }
         return true;
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Cannot queue parameter change into nonexisting group %s", group.PeekBuffer());
         return false;
     }
@@ -925,138 +904,12 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
     AbstractNamedObject::ptr_type ano = this->namespaceRoot;
     AbstractNamedObjectContainer::ptr_type root = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
     if (!root) {
-        vislib::sys::Log::DefaultLog.WriteError("PerformGraphUpdates: no root");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("PerformGraphUpdates: no root");
         return;
     }
 
     // counts processed graph update events for flush mechanism
     size_t counter = 0;
-
-    this->shortenFlushIdxList(this->pendingModuleDelRequests.Count(), this->moduleDelRequestsFlushIndices);
-
-    // delete modules
-    while (this->pendingModuleDelRequests.Count() > 0) {
-        // flush mechanism
-        if (this->checkForFlushEvent(counter, this->moduleDelRequestsFlushIndices)) {
-            this->updateFlushIdxList(counter, this->moduleDelRequestsFlushIndices);
-            break;
-        }
-
-        auto mdr = this->pendingModuleDelRequests.First();
-        this->pendingModuleDelRequests.RemoveFirst();
-
-        ++counter;
-
-        Module::ptr_type mod = Module::dynamic_pointer_cast(root.get()->FindNamedObject(mdr));
-        if (!mod) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "PerformGraphUpdates: could not find module \"%s\" for deletion.", mdr.PeekBuffer());
-            continue;
-        }
-
-        if (mod.get()->Parent() != nullptr) {
-            auto p = mod.get()->Parent();
-            auto n = dynamic_cast<core::ModuleNamespace*>(p.get());
-            if (n) {
-
-                // find all incoming calls. these need to be disconnected properly and deleted.
-                std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
-                anoStack.push_back(root);
-                while (anoStack.size() > 0) {
-                    AbstractNamedObjectContainer::ptr_type anoc = anoStack.back();
-                    anoStack.pop_back();
-
-                    if (anoc) {
-                        auto it_end = anoc->ChildList_End();
-                        for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
-                            AbstractNamedObject::ptr_type ano = *it;
-                            AbstractNamedObjectContainer::ptr_type anoc =
-                                std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
-                            if (anoc) {
-                                anoStack.push_back(anoc);
-                            } else {
-                                core::CallerSlot* callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
-                                if (callerSlot != nullptr) {
-                                    core::Call* call = callerSlot->CallAs<Call>();
-                                    if (call != nullptr) {
-                                        auto target = call->PeekCalleeSlot()->Parent();
-                                        if (target->FullName().Equals(mod->FullName())) {
-                                            // this call points to mod
-                                            // vislib::sys::Log::DefaultLog.WriteInfo("found call from %s to %s",
-                                            // call->PeekCallerSlot()->FullName(),
-                                            //   call->PeekCalleeSlot()->FullName());
-                                            callerSlot->ConnectCall(nullptr);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // delete all outgoing calls of mod
-                AbstractNamedObjectContainer::child_list_type::iterator children, childrenend;
-                childrenend = mod->ChildList_End();
-                std::vector<AbstractNamedObject::ptr_type> deletionQueue;
-                for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
-                    AbstractNamedObject::ptr_type child = *children;
-                    AbstractNamedObjectContainer::ptr_type anoc =
-                        AbstractNamedObjectContainer::dynamic_pointer_cast(child);
-                    if (anoc) {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "PerformGraphUpdates: found container \"%s\" inside module \"%s\"",
-                            anoc->FullName().PeekBuffer(), mod->FullName().PeekBuffer());
-                        continue;
-                    }
-                    core::CallerSlot* callerSlot = dynamic_cast<core::CallerSlot*>(child.get());
-                    if (callerSlot != nullptr) {
-                        core::Call* call = callerSlot->CallAs<Call>();
-                        if (call != nullptr) {
-                            vislib::sys::Log::DefaultLog.WriteInfo("removing call from %s to %s",
-                                call->PeekCallerSlot()->FullName().PeekBuffer(),
-                                call->PeekCalleeSlot()->FullName().PeekBuffer());
-                            callerSlot->ConnectCall(nullptr);
-                        }
-                        deletionQueue.push_back(child);
-                    }
-                    core::param::ParamSlot* paramSlot = dynamic_cast<core::param::ParamSlot*>(child.get());
-                    if (paramSlot != nullptr) {
-                        // paramSlot->SetCleanupMark(true);
-                        // paramSlot->PerformCleanup();
-                        deletionQueue.push_back(child);
-                    }
-                    core::CalleeSlot* calleeSlot = dynamic_cast<core::CalleeSlot*>(child.get());
-                    if (calleeSlot != nullptr) {
-                        deletionQueue.push_back(child);
-                    }
-                }
-
-                for (auto& c : deletionQueue) {
-                    mod->RemoveChild(c);
-                }
-
-                for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
-                    AbstractNamedObject::ptr_type child = *children;
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "child remaining in %s: %s", mod->FullName().PeekBuffer(), child->FullName().PeekBuffer());
-                }
-
-                // remove mod
-                n->RemoveChild(mod);
-            } else {
-                vislib::sys::Log::DefaultLog.WriteError("PerformGraphUpdates:module \"%s\" has no parent of type "
-                                                        "ModuleNamespace. Deletion makes no sense.",
-                    mdr.PeekBuffer());
-                continue;
-            }
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "PerformGraphUpdates:module \"%s\" has no parent. Deletion makes no sense.", mdr.PeekBuffer());
-            continue;
-        }
-    }
-
-    counter = 0;
 
     this->shortenFlushIdxList(this->pendingCallDelRequests.Count(), this->callDelRequestsFlushIndices);
 
@@ -1089,7 +942,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                         std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
                     if (anoc) {
                         anoStack.push_back(anoc);
-                    } else {
+                    }
+                    else {
                         core::CallerSlot* callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
                         if (callerSlot != nullptr) {
                             core::Call* call = callerSlot->CallAs<Call>();
@@ -1098,7 +952,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                                 auto source = call->PeekCallerSlot();
                                 if (source->FullName().Equals(cdr.First()) && target->FullName().Equals(cdr.Second())) {
                                     // this should be the right call
-                                    // vislib::sys::Log::DefaultLog.WriteInfo("found call from %s to %s",
+                                    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("found call from %s to %s",
                                     // call->PeekCallerSlot()->FullName(),
                                     //    call->PeekCalleeSlot()->FullName());
                                     callerSlot->SetCleanupMark(true);
@@ -1114,8 +968,134 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             }
         }
         if (!found) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "cannot delete call from \"%s\" to \"%s\"", cdr.First().PeekBuffer(), cdr.Second().PeekBuffer());
+        }
+    }
+
+    counter = 0;
+
+    this->shortenFlushIdxList(this->pendingModuleDelRequests.Count(), this->moduleDelRequestsFlushIndices);
+
+    // delete modules
+    while (this->pendingModuleDelRequests.Count() > 0) {
+        // flush mechanism
+        if (this->checkForFlushEvent(counter, this->moduleDelRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->moduleDelRequestsFlushIndices);
+            break;
+        }
+
+        auto mdr = this->pendingModuleDelRequests.First();
+        this->pendingModuleDelRequests.RemoveFirst();
+
+        ++counter;
+
+        Module::ptr_type mod = Module::dynamic_pointer_cast(root.get()->FindNamedObject(mdr));
+        if (!mod) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "PerformGraphUpdates: could not find module \"%s\" for deletion.", mdr.PeekBuffer());
+            continue;
+        }
+
+        if (mod.get()->Parent() != nullptr) {
+            auto p = mod.get()->Parent();
+            auto n = dynamic_cast<core::ModuleNamespace*>(p.get());
+            if (n) {
+
+                // find all incoming calls. these need to be disconnected properly and deleted.
+                std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
+                anoStack.push_back(root);
+                while (anoStack.size() > 0) {
+                    AbstractNamedObjectContainer::ptr_type anoc = anoStack.back();
+                    anoStack.pop_back();
+
+                    if (anoc) {
+                        auto it_end = anoc->ChildList_End();
+                        for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                            AbstractNamedObject::ptr_type ano = *it;
+                            AbstractNamedObjectContainer::ptr_type anoc =
+                                std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+                            if (anoc) {
+                                anoStack.push_back(anoc);
+                            } else {
+                                core::CallerSlot* callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
+                                if (callerSlot != nullptr) {
+                                    core::Call* call = callerSlot->CallAs<Call>();
+                                    if (call != nullptr) {
+                                        auto target = call->PeekCalleeSlot()->Parent();
+                                        if (target->FullName().Equals(mod->FullName())) {
+                                            // this call points to mod
+                                            // megamol::core::utility::log::Log::DefaultLog.WriteInfo("found call from %s to %s",
+                                            // call->PeekCallerSlot()->FullName(),
+                                            //   call->PeekCalleeSlot()->FullName());
+                                            callerSlot->ConnectCall(nullptr);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // delete all outgoing calls of mod
+                AbstractNamedObjectContainer::child_list_type::iterator children, childrenend;
+                childrenend = mod->ChildList_End();
+                std::vector<AbstractNamedObject::ptr_type> deletionQueue;
+                for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
+                    AbstractNamedObject::ptr_type child = *children;
+                    AbstractNamedObjectContainer::ptr_type anoc =
+                        AbstractNamedObjectContainer::dynamic_pointer_cast(child);
+                    if (anoc) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "PerformGraphUpdates: found container \"%s\" inside module \"%s\"",
+                            anoc->FullName().PeekBuffer(), mod->FullName().PeekBuffer());
+                        continue;
+                    }
+                    core::CallerSlot* callerSlot = dynamic_cast<core::CallerSlot*>(child.get());
+                    if (callerSlot != nullptr) {
+                        core::Call* call = callerSlot->CallAs<Call>();
+                        if (call != nullptr) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteInfo("removing call from %s to %s",
+                                call->PeekCallerSlot()->FullName().PeekBuffer(),
+                                call->PeekCalleeSlot()->FullName().PeekBuffer());
+                            callerSlot->ConnectCall(nullptr);
+                        }
+                        deletionQueue.push_back(child);
+                    }
+                    core::param::ParamSlot* paramSlot = dynamic_cast<core::param::ParamSlot*>(child.get());
+                    if (paramSlot != nullptr) {
+                        // paramSlot->SetCleanupMark(true);
+                        // paramSlot->PerformCleanup();
+                        deletionQueue.push_back(child);
+                    }
+                    core::CalleeSlot* calleeSlot = dynamic_cast<core::CalleeSlot*>(child.get());
+                    if (calleeSlot != nullptr) {
+                        deletionQueue.push_back(child);
+                    }
+                }
+
+                for (auto& c : deletionQueue) {
+                    mod->RemoveChild(c);
+                }
+
+                for (children = mod->ChildList_Begin(); children != childrenend; ++children) {
+                    AbstractNamedObject::ptr_type child = *children;
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "child remaining in %s: %s", mod->FullName().PeekBuffer(), child->FullName().PeekBuffer());
+                }
+
+                // remove mod
+                n->RemoveChild(mod);
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("PerformGraphUpdates:module \"%s\" has no parent of type "
+                                                        "ModuleNamespace. Deletion makes no sense.",
+                    mdr.PeekBuffer());
+                continue;
+            }
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "PerformGraphUpdates:module \"%s\" has no parent. Deletion makes no sense.", mdr.PeekBuffer());
+            continue;
         }
     }
 
@@ -1137,7 +1117,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         ++counter;
 
         if (this->instantiateModule(mir.First(), mir.Second()) == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError("cannot instantiate module \"%s\""
+            megamol::core::utility::log::Log::DefaultLog.WriteError("cannot instantiate module \"%s\""
                                                     " of class \"%s\".",
                 mir.First().PeekBuffer(), mir.Second()->ClassName());
         }
@@ -1161,7 +1141,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         ++counter;
 
         if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
+            megamol::core::utility::log::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
                                                     " from \"%s\" to \"%s\".",
                 cir.Description()->ClassName(), cir.From().PeekBuffer(), cir.To().PeekBuffer());
         }
@@ -1197,21 +1177,21 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         ModuleNamespace::ptr_type fromNS =
             ModuleNamespace::dynamic_pointer_cast(this->namespaceRoot->FindNamespace(fromDirs, false));
         if (!fromNS) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to instantiate call: can not find source namespace \"%s\"", cir.From().PeekBuffer());
             continue;
         }
 
         Module::ptr_type fromMod = std::dynamic_pointer_cast<Module>(fromNS->FindChild(fromModName));
         if (!fromMod) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to instantiate call: can not find source module \"%s\"", cir.From().PeekBuffer());
             continue;
         }
 
         CallerSlot* fromSlot = dynamic_cast<CallerSlot*>(fromMod->FindSlot(fromSlotName));
         if (fromSlot == NULL) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to instantiate call: can not find source slot \"%s\"", cir.From().PeekBuffer());
             continue;
         }
@@ -1264,11 +1244,11 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         }
 
         // for (auto& conn : connections) {
-        //    vislib::sys::Log::DefaultLog.WriteInfo(
+        //    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //        "connection: %s --%s-> %s", conn.fromFull.c_str(), conn.name.c_str(), conn.toFull.c_str());
         //}
 
-        vislib::sys::Log::DefaultLog.WriteInfo("chain call: trying to find slot for appending %s at the end of %s",
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("chain call: trying to find slot for appending %s at the end of %s",
             cir.Description()->ClassName(), cir.From().PeekBuffer());
         std::string currFrom = cir.From().PeekBuffer();
 
@@ -1279,11 +1259,11 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             connections.begin(), connections.end(), [currFrom](conn& c) { return c.fromFull == currFrom; });
         if (which == connections.end()) {
             // nothing found, this is the same as a normal call connection
-            vislib::sys::Log::DefaultLog.WriteInfo(
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "chain call: there is nothing connected to %s, appending %s directly", cir.From().PeekBuffer(),
                 cir.Description()->ClassName());
             if (this->InstantiateCall(cir.From(), cir.To(), cir.Description()) == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteError("chain call: cannot instantiate \"%s\" call"
+                megamol::core::utility::log::Log::DefaultLog.WriteError("chain call: cannot instantiate \"%s\" call"
                                                         " from \"%s\" to \"%s\".",
                     cir.Description()->ClassName(), cir.From().PeekBuffer(), cir.To().PeekBuffer());
             }
@@ -1291,7 +1271,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             // walk the connection chain until we find an end
 
             // step out of the starting module.
-            vislib::sys::Log::DefaultLog.WriteInfo(
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "chain call: following chain from %s to %s", which->fromFull.c_str(), which->toFull.c_str());
             auto pos = which->toFull.find_last_of("::");
             modFull = which->toFull.substr(0, pos - 1);
@@ -1306,7 +1286,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                 Module::ptr_type mod =
                     Module::dynamic_pointer_cast(this->namespaceRoot.get()->FindNamedObject(cand.c_str()));
                 if (!mod) {
-                    vislib::sys::Log::DefaultLog.WriteError("chain call: cannot get module %s", cand.c_str());
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("chain call: cannot get module %s", cand.c_str());
                     continue;
                 }
 
@@ -1322,13 +1302,13 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                             if (connectedCall != connections.end()) {
                                 auto pos = connectedCall->toFull.find_last_of("::");
                                 candidateModules.push_back(connectedCall->toFull.substr(0, pos - 1));
-                                vislib::sys::Log::DefaultLog.WriteInfo("chaincall: %s is connected to %s, pushing.",
+                                megamol::core::utility::log::Log::DefaultLog.WriteInfo("chaincall: %s is connected to %s, pushing.",
                                     slot->FullName().PeekBuffer(), connectedCall->toFull.c_str());
                             } else {
-                                vislib::sys::Log::DefaultLog.WriteInfo(
+                                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                                     "chain connection from slot %s", slot->FullName().PeekBuffer());
                                 if (this->InstantiateCall(slot->FullName(), cir.To(), cir.Description()) == nullptr) {
-                                    vislib::sys::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
+                                    megamol::core::utility::log::Log::DefaultLog.WriteError("cannot instantiate \"%s\" call"
                                                                             " from \"%s\" to \"%s\".",
                                         cir.Description()->ClassName(), slot->FullName().PeekBuffer(),
                                         cir.To().PeekBuffer());
@@ -1365,16 +1345,16 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             vislib::UTF8Encoder::Decode(val, psr.Second());
 
             if (!p->ParseValue(val)) {
-                vislib::sys::Log::DefaultLog.WriteError("Setting parameter \"%s\" to \"%s\": ParseValue failed.",
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Setting parameter \"%s\" to \"%s\": ParseValue failed.",
                     psr.First().PeekBuffer(), psr.Second().PeekBuffer());
                 continue;
             } else {
                 if (psr.Second().Length() > 255) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("Setting parameter \"%s\" to \"%s\"[... (shortened)]\"%s\".",
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Setting parameter \"%s\" to \"%s\"[... (shortened)]\"%s\".",
                         psr.First().PeekBuffer(), psr.Second().Substring(0, 10).PeekBuffer(),
                         psr.Second().Substring(psr.Second().Length() - 11, 10).PeekBuffer());
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteInfo(
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "Setting parameter \"%s\" to \"%s\".", psr.First().PeekBuffer(), psr.Second().PeekBuffer());
                 }
             }
@@ -1402,7 +1382,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
 
             ++counter;
 
-            vislib::sys::Log::DefaultLog.WriteInfo("parameter group %s is complete. executing:", pg.Name.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("parameter group %s is complete. executing:", pg.Name.PeekBuffer());
             auto pgi = pg.Requests.GetIterator();
             while (pgi.HasNext()) {
                 auto& pr = pgi.Next();
@@ -1413,12 +1393,12 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                     vislib::UTF8Encoder::Decode(val, pr.Value());
 
                     if (!p->ParseValue(val)) {
-                        vislib::sys::Log::DefaultLog.WriteError(
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "Setting parameter \"%s\" to \"%s\": ParseValue failed.", pr.Key().PeekBuffer(),
                             pr.Value().PeekBuffer());
                         continue;
                     } else {
-                        vislib::sys::Log::DefaultLog.WriteInfo(
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                             "Setting parameter \"%s\" to \"%s\".", pr.Key().PeekBuffer(), pr.Value().PeekBuffer());
                     }
                 } else {
@@ -1429,6 +1409,10 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             pg.Requests.Clear();
         }
     }
+
+    // notify ParamUpdateListeners
+    this->NotifyParamUpdateListener();
+    this->paramUpdates.clear();
 }
 
 
@@ -1447,7 +1431,7 @@ vislib::StringA megamol::core::CoreInstance::GetPendingViewName(void) {
  * megamol::core::CoreInstance::InstantiatePendingView
  */
 megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePendingView(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     vislib::sys::AutoLock l(this->graphUpdateLock);
     vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
@@ -1585,7 +1569,7 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
  * megamol::core::CoreInstance::instantiateSubView
  */
 megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription* vd) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     bool hasErrors = false;
@@ -1674,7 +1658,7 @@ megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubVi
  * megamol::core::CoreInstance::InstantiatePendingJob
  */
 megamol::core::JobInstance::ptr_type megamol::core::CoreInstance::InstantiatePendingJob(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::sys::AutoLock l(this->graphUpdateLock);
     vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
@@ -1826,7 +1810,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
  */
 vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstance::FindParameter(
     const vislib::StringA& name, bool quiet, bool create) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     vislib::Array<vislib::StringA> path = vislib::StringTokeniserA::Split(name, "::", true);
@@ -1947,42 +1931,6 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 }
 
 
-std::string megamol::core::CoreInstance::GetProjectFromPNG(std::string filename) {
-    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-    if (!png) {
-        vislib::sys::Log::DefaultLog.WriteError("getProjectFromPNG: Unable to create png struct");
-    } else {
-        FILE* fp = fopen(filename.c_str(), "rb");
-        if (fp == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "getProjectFromPNG: Unable to open png file \"%s\"", filename.c_str());
-        } else {
-            png_infop info = png_create_info_struct(png);
-            if (!info) {
-                vislib::sys::Log::DefaultLog.WriteError("getProjectFromPNG: Unable to create png info struct");
-            } else {
-                setjmp(png_jmpbuf(png));
-                png_init_io(png, fp);
-                png_read_info(png, info);
-                png_uint_32 exif_size = 0;
-                png_bytep exif_data = nullptr;
-                png_get_eXIf_1(png, info, &exif_size, &exif_data);
-                if (exif_size > 0) {
-                    std::string content(reinterpret_cast<char*>(exif_data));
-                    return content;
-                } else {
-                    vislib::sys::Log::DefaultLog.WriteError("LoadProject: Unable to extract png exif data");
-                }
-                png_destroy_info_struct(png, &info);
-            }
-            fclose(fp);
-        }
-        png_destroy_read_struct(&png, nullptr, nullptr);
-        // exif_data buffer seems to live inside exif_info and is disposed automatically
-    }
-    return "";
-}
-
 /*
  * megamol::core::CoreInstance::LoadProject
  */
@@ -1991,13 +1939,13 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
         vislib::StringA content;
         std::string result;
         if (!vislib::sys::ReadTextFile(content, filename)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to open project file \"%s\"", filename.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open project file \"%s\"", filename.PeekBuffer());
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Loading project file \"%s\"", filename.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_INFO, "Loading project file \"%s\"", filename.PeekBuffer());
             if (!this->lua->RunString(content.PeekBuffer(), result, filename.PeekBuffer())) {
-                vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
                     "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
             } else {
                 this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content));
@@ -2005,10 +1953,10 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
         }
     } else if (filename.EndsWith(".png")) {
         std::string result;
-        std::string content = GetProjectFromPNG(filename.PeekBuffer());
-        // vislib::sys::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
+        std::string content = megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(filename.PeekBuffer());
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
         if (!this->lua->RunString(content.c_str(), result, filename.PeekBuffer())) {
-            vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
                 "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
         } else {
             this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content.c_str()));
@@ -2016,12 +1964,12 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
     } else {
         megamol::core::utility::xml::XmlReader reader;
         if (!reader.OpenFile(filename)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to open project file \"%s\"", filename.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open project file \"%s\"", filename.PeekBuffer());
             return;
         }
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_INFO, "Loading project file \"%s\"", filename.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_INFO, "Loading project file \"%s\"", filename.PeekBuffer());
         this->addProject(reader);
     }
 }
@@ -2035,13 +1983,13 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
         vislib::StringA content;
         std::string result;
         if (!vislib::sys::ReadTextFile(content, filename)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to open project file \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open project file \"%s\"",
                 vislib::StringA(filename).PeekBuffer());
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_INFO, "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
             if (!this->lua->RunString(content.PeekBuffer(), result)) {
-                vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
                     "Failed loading project file \"%s\": %s", vislib::StringA(filename).PeekBuffer(), result.c_str());
             } else {
                 this->loadedLuaProjects.Add(
@@ -2050,10 +1998,10 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
         }
     } else if (filename.EndsWith(L".png")) {
         std::string result;
-        std::string content = GetProjectFromPNG(W2A(filename.PeekBuffer()));
-        // vislib::sys::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
+        std::string content = megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(W2A(filename.PeekBuffer()));
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
         if (!this->lua->RunString(content.c_str(), result, W2A(filename.PeekBuffer()))) {
-            vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
                 "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
         } else {
             this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content.c_str()));
@@ -2061,19 +2009,23 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
     } else {
         megamol::core::utility::xml::XmlReader reader;
         if (!reader.OpenFile(filename)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to open project file \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to open project file \"%s\"",
                 vislib::StringA(filename).PeekBuffer());
             return;
         }
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_INFO, "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_INFO, "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
         this->addProject(reader);
     }
 }
 
 
-void megamol::core::CoreInstance::SerializeGraph(
-    std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams) {
+std::string megamol::core::CoreInstance::SerializeGraph() {
+
+    std::string serInstances;
+    std::string serModules;
+    std::string serCalls;
+    std::string serParams;
 
     std::stringstream confInstances, confModules, confCalls, confParams;
 
@@ -2090,14 +2042,14 @@ void megamol::core::CoreInstance::SerializeGraph(
             if (vi && vi->View()) {
                 std::string vin = vi->Name().PeekBuffer();
                 view_instances[vi->View()->FullName().PeekBuffer()] = vin;
-                vislib::sys::Log::DefaultLog.WriteInfo("SerializeGraph: Found view instance \"%s\" with view \"%s\".",
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("SerializeGraph: Found view instance \"%s\" with view \"%s\".",
                     view_instances[vi->View()->FullName().PeekBuffer()].c_str(), vi->View()->FullName().PeekBuffer());
             }
             if (ji && ji->Job()) {
                 std::string jin = ji->Name().PeekBuffer();
                 // todo: find job module! WTF!
                 job_instances[jin] = std::string("job") + std::to_string(job_counter);
-                vislib::sys::Log::DefaultLog.WriteInfo("SerializeGraph: Found job instance \"%s\" with job \"%s\".",
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("SerializeGraph: Found job instance \"%s\" with job \"%s\".",
                     jin.c_str(), job_instances[jin].c_str());
                 ++job_counter;
             }
@@ -2149,6 +2101,8 @@ void megamol::core::CoreInstance::SerializeGraph(
         serCalls = confCalls.str();
         serParams = confParams.str();
     }
+
+    return serInstances + '\n' + serModules + '\n' + serCalls + '\n' + serParams;
 }
 
 
@@ -2349,7 +2303,7 @@ void megamol::core::CoreInstance::Shutdown(void) {
  */
 void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
     using vislib::net::AbstractSimpleMessage;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     const AbstractSimpleMessage* dataPtr = static_cast<const AbstractSimpleMessage*>(data);
     const AbstractSimpleMessage& dat = *dataPtr;
@@ -2369,9 +2323,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
             vislib::StringA modName(dat.GetBodyAsAt<char>(pos));
             pos += modName.Length() + 1;
 
-            if (modClass.Equals(cluster::ClusterViewMaster::ClassName()) ||
-                modClass.Equals(cluster::ClusterController::ClassName()) ||
-                modClass.Equals(cluster::simple::Server::ClassName())) {
+            if (modClass.Equals(cluster::ClusterController::ClassName()) ) {
                 // these are infra structure modules and not to be synced
                 continue;
             }
@@ -2487,260 +2439,20 @@ void megamol::core::CoreInstance::ParameterValueUpdate(megamol::core::param::Par
     while (i.HasNext()) {
         i.Next()->ParamUpdated(slot);
     }
+    this->paramUpdates.emplace_back(slot.FullName(), slot.Param<param::AbstractParam>()->ValueString());
 }
 
 
 /*
- * megamol::core::CoreInstance::Quickstart
+ * megamol::core::CoreInstance::NotifyParamUpdateListener
  */
-void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
-    using vislib::sys::Log;
-    Log::DefaultLog.WriteInfo(_T("Quickstarting \"%s\" ..."), filename.PeekBuffer());
-
-    const SIZE_T maxBufferSize = 4 * 1024;
-    unsigned char* buffer = new unsigned char[maxBufferSize];
-
-    vislib::sys::File file;
-    if (!file.Open(
-            filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        delete[] buffer;
-        Log::DefaultLog.WriteError(_T("Failed to Quickstart \"%s\": Unable to load peek data"), filename.PeekBuffer());
-        return;
+void megamol::core::CoreInstance::NotifyParamUpdateListener() {
+    vislib::SingleLinkedList<param::ParamUpdateListener*>::Iterator i = this->paramUpdateListeners.GetIterator();
+    while (i.HasNext()) {
+        i.Next()->BatchParamUpdated(this->paramUpdates);
     }
-    SIZE_T bufferSize = static_cast<SIZE_T>(file.Read(buffer, maxBufferSize));
-    file.Close();
-
-    if (bufferSize <= 0) {
-        delete[] buffer;
-        Log::DefaultLog.WriteError(_T("Failed to Quickstart \"%s\": Unable to load peek data"), filename.PeekBuffer());
-        return;
-    }
-
-    // auto-detect data source module
-    factories::ModuleDescription::ptr dataSrcClass = NULL;
-    //    factories::ModuleDescriptionManager::description_const_iterator_type di =
-    //    ModuleDescriptionManager::Instance()->GetIterator();
-
-    // first try auto-detect with loaders with matching file name extension
-    //    while (di.HasNext()) {
-    //        ModuleDescription *md = di.Next();
-    for (auto md : this->GetModuleDescriptionManager()) {
-        if (!md->IsLoaderWithAutoDetection()) continue;
-        const char* extsStr = md->LoaderAutoDetectionFilenameExtensions();
-        if (extsStr == NULL) continue;
-        vislib::Array<vislib::StringA> exts = vislib::StringTokeniserA::Split(extsStr, ';', true);
-        bool found = false;
-        for (SIZE_T i = 0; i < exts.Count(); i++) {
-            if (filename.EndsWith(A2T(exts[i]))) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) continue;
-
-        float adcv = md->LoaderAutoDetection(buffer, bufferSize);
-        Log::DefaultLog.WriteInfo(100, "Module %s auto-detect confidence %f\n", md->ClassName(), adcv);
-        if (adcv > 0.99) { // enough for me
-            dataSrcClass = md;
-            break;
-        }
-    }
-
-    if (dataSrcClass == NULL) {
-        // brute force auto-detection
-        // di = ModuleDescriptionManager::Instance()->GetIterator();
-        // while (di.HasNext()) {
-        //    ModuleDescription *md = di.Next();
-        for (auto md : this->GetModuleDescriptionManager()) {
-            if (!md->IsLoaderWithAutoDetection()) continue;
-            float adcv = md->LoaderAutoDetection(buffer, bufferSize);
-            Log::DefaultLog.WriteInfo(100, "Module %s auto-detect confidence %f\n", md->ClassName(), adcv);
-            if (adcv > 0.99) { // enough for me
-                dataSrcClass = md;
-                break;
-            }
-        }
-    }
-
-    delete[] buffer;
-
-    if (dataSrcClass == NULL) {
-        Log::DefaultLog.WriteError(
-            _T("Failed to Quickstart \"%s\": No suitable data source class found"), filename.PeekBuffer());
-        return;
-    }
-
-    static int quickstartCounter = 1;
-    vislib::StringA viewName;
-    vislib::StringA valname;
-
-    viewName.Format("quickstart-%.3d", quickstartCounter);
-    ViewDescription view(viewName);
-
-    view.SetViewModuleID("");
-    view.AddModule(dataSrcClass, "data");
-    valname.Format("data::%s", dataSrcClass->LoaderFilenameSlotName());
-    view.AddParamValue(valname, filename);
-
-    valname.Format("quickstartrenderer-%s", dataSrcClass->ClassName());
-    if (this->config.IsConfigValueSet(valname)) {
-        vislib::StringA rndName(this->config.ConfigValue(valname));
-        Log::DefaultLog.WriteInfo(100, "Renderer \"%s\" configured for quickstart", rndName.PeekBuffer());
-
-        // use this renderer
-        bool found = false;
-        // di = ModuleDescriptionManager::Instance()->GetIterator();
-        // while (di.HasNext()) {
-        //    ModuleDescription *md = di.Next();
-        for (auto md : this->GetModuleDescriptionManager()) {
-            if (!rndName.Equals(md->ClassName())) continue;
-            view.AddModule(md, "renderer");
-            found = true;
-            break;
-        }
-
-        if (!found) {
-            Log::DefaultLog.WriteWarn("Unable to find configured renderer for quickstart. Trying auto-search");
-        } else {
-            Log::DefaultLog.WriteInfo(50, "Starting module instantiation tests");
-
-            if (!this->quickConnectUp(view, "data", "renderer")) {
-                Log::DefaultLog.WriteWarn(
-                    "Unable to connect data source with configured renderer for quickstart. Trying auto-search");
-                view.ClearModules();
-                view.ClearCalls();
-                view.ClearParamValues();
-                view.SetViewModuleID("");
-                view.AddModule(dataSrcClass, "data");
-                valname.Format("data::%s", dataSrcClass->LoaderFilenameSlotName());
-                view.AddParamValue(valname, filename);
-
-            } else if (!this->quickConnectUp(view, "renderer", NULL)) {
-                Log::DefaultLog.WriteWarn("Unable to connect renderer with view for quickstart. Trying auto-search");
-                view.ClearModules();
-                view.ClearCalls();
-                view.ClearParamValues();
-                view.SetViewModuleID("");
-                view.AddModule(dataSrcClass, "data");
-                valname.Format("data::%s", dataSrcClass->LoaderFilenameSlotName());
-                view.AddParamValue(valname, filename);
-
-            } else {
-                ASSERT(!view.ViewModuleID().IsEmpty());
-            }
-        }
-    } else {
-        Log::DefaultLog.WriteInfo(50, "Starting module instantiation tests");
-    }
-
-    if (view.ViewModuleID().IsEmpty()) {
-        if (!this->quickConnectUp(view, "data", NULL)) {
-            Log::DefaultLog.WriteError(
-                _T("Failed to Quickstart \"%s\": Cannot auto-connect data source to view"), filename.PeekBuffer());
-            return;
-        }
-        ASSERT(!view.ViewModuleID().IsEmpty());
-    }
-
-    std::shared_ptr<ViewDescription> newview(new ViewDescription(view.ClassName()));
-    Log::DefaultLog.WriteInfo(
-        10, "Quickstart module graph with %u modules and %u calls defined:", view.ModuleCount(), view.CallCount());
-    for (unsigned int i = 0; i < view.ModuleCount(); i++) {
-        Log::DefaultLog.WriteInfo(25, "Module \"%s\" of class \"%s\"\n", view.Module(i).First().PeekBuffer(),
-            view.Module(i).Second()->ClassName());
-        newview->AddModule(view.Module(i).Second(), view.Module(i).First());
-    }
-    for (unsigned int i = 0; i < view.CallCount(); i++) {
-        Log::DefaultLog.WriteInfo(25, "Call from \"%s\" to \"%s\" of class \"%s\"\n", view.Call(i).From().PeekBuffer(),
-            view.Call(i).To().PeekBuffer(), view.Call(i).Description()->ClassName());
-        newview->AddCall(view.Call(i).Description(), view.Call(i).From(), view.Call(i).To());
-    }
-    for (unsigned int i = 0; i < view.ParamValueCount(); i++) {
-        newview->AddParamValue(view.ParamValue(i).First(), view.ParamValue(i).Second());
-    }
-    newview->SetViewModuleID(view.ViewModuleID());
-    this->builtinViewDescs.Register(newview);
-
-    viewName.Format("q%d", quickstartCounter);
-    this->RequestViewInstantiation(newview.get(), viewName);
-    quickstartCounter++;
-    Log::DefaultLog.WriteInfo("Quickstart view instantiation request posted");
 }
 
-
-/*
- * megamol::core::CoreInstance::QuickstartRegistry
- */
-void megamol::core::CoreInstance::QuickstartRegistry(const vislib::TString& frontend, const vislib::TString& feparams,
-    const vislib::TString& filetype, bool unreg, bool overwrite) {
-    using vislib::sys::Log;
-    vislib::TString filetypename;
-
-    if (filetype.IsEmpty()) {
-        Log::DefaultLog.WriteError("Empty file type is illegal\n");
-        return;
-    }
-    if (filetype.Equals(_T("*"))) {
-        // all file types
-        // ModuleDescriptionManager::DescriptionIterator di
-        //    = ModuleDescriptionManager::Instance()->GetIterator();
-        // while (di.HasNext()) {
-        //    const ModuleDescription *md = di.Next();
-        for (auto md : this->GetModuleDescriptionManager()) {
-            if (!md->IsVisibleForQuickstart()) continue;
-            const char* fnextsstr = md->LoaderAutoDetectionFilenameExtensions();
-            const char* fnnamestr = md->LoaderFileTypeName();
-            if (fnextsstr == NULL) continue;
-            vislib::Array<vislib::TString> fnexts = vislib::TStringTokeniser::Split(A2T(fnextsstr), _T(";"), true);
-            for (SIZE_T i = 0; i < fnexts.Count(); i++) {
-                filetypename.Format(_T("%s File"),
-                    ((fnnamestr == NULL) ? fnexts[i].Substring(1) : vislib::TString(fnnamestr)).PeekBuffer());
-                if (unreg) {
-                    this->unregisterQuickstart(frontend, feparams, fnexts[i], filetypename, !overwrite);
-                } else {
-                    this->registerQuickstart(frontend, feparams, fnexts[i], filetypename, !overwrite);
-                }
-            }
-        }
-
-        return;
-    }
-
-    vislib::TString fnext(filetype);
-    if (fnext[0] != _T('.')) fnext.Prepend(_T("."));
-    // ModuleDescriptionManager::DescriptionIterator di
-    //    = ModuleDescriptionManager::Instance()->GetIterator();
-    // while (di.HasNext()) {
-    //    const ModuleDescription *md = di.Next();
-    for (auto md : this->GetModuleDescriptionManager()) {
-        if (!md->IsVisibleForQuickstart()) continue;
-        const char* fnextsstr = md->LoaderAutoDetectionFilenameExtensions();
-        if (fnextsstr == NULL) continue;
-        vislib::Array<vislib::TString> fnexts = vislib::TStringTokeniser::Split(A2T(fnextsstr), _T(";"), true);
-        for (SIZE_T i = 0; i < fnexts.Count(); i++) {
-            if (fnexts[i].Equals(fnext, false)) {
-                const char* fnnamestr = md->LoaderFileTypeName();
-                filetypename.Format(_T("%s File"),
-                    ((fnnamestr == NULL) ? fnext.Substring(1) : vislib::TString(fnnamestr)).PeekBuffer());
-                if (unreg) {
-                    this->unregisterQuickstart(frontend, feparams, fnext, filetypename, !overwrite);
-                } else {
-                    this->registerQuickstart(frontend, feparams, fnext, filetypename, !overwrite);
-                }
-                return;
-            }
-        }
-    }
-
-    Log::DefaultLog.WriteWarn(
-        _T("Quickstart %sregistration for unknown type %s"), ((unreg) ? _T("un") : _T("")), filetype.PeekBuffer());
-    filetypename.Format(_T("%s File"), filetype.PeekBuffer());
-    if (unreg) {
-        this->unregisterQuickstart(frontend, feparams, fnext, filetypename, !overwrite);
-    } else {
-        this->registerQuickstart(frontend, feparams, fnext, filetypename, !overwrite);
-    }
-}
 
 /*
  * megamol::core::CoreInstance::addProject::WriteStateToXML
@@ -2751,11 +2463,11 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
     vislib::sys::FastFile outfile;
     if (!outfile.Open(outFilename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ,
             vislib::sys::File::CREATE_OVERWRITE)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to create state file file.");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to create state file file.");
         return false;
     } else {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_INFO, "State has been written to '%s'", outFilename);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_INFO, "State has been written to '%s'", outFilename);
     }
 
     // Write root tag and 'header'
@@ -3011,7 +2723,7 @@ megamol::core::AbstractService* megamol::core::CoreInstance::GetInstalledService
  * megamol::core::CoreInstance::addProject
  */
 void megamol::core::CoreInstance::addProject(megamol::core::utility::xml::XmlReader& reader) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     utility::ProjectParser parser(this);
     if (parser.Parse(reader)) {
         // success, add project elements
@@ -3052,7 +2764,7 @@ void debugDumpSlots(megamol::core::AbstractNamedObjectContainer* c) {
     using megamol::core::CalleeSlot;
     using megamol::core::CallerSlot;
     using megamol::core::param::ParamSlot;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     auto e = c->ChildList_End();
     for (auto b = c->ChildList_Begin(); b != e; ++b) {
@@ -3082,7 +2794,7 @@ void debugDumpSlots(megamol::core::AbstractNamedObjectContainer* c) {
  */
 megamol::core::Module::ptr_type megamol::core::CoreInstance::instantiateModule(
     const vislib::StringA path, factories::ModuleDescription::ptr desc) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     ASSERT(path.StartsWith("::"));
     ASSERT(desc != NULL);
@@ -3153,7 +2865,7 @@ megamol::core::Module::ptr_type megamol::core::CoreInstance::instantiateModule(
  */
 megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
     const vislib::StringA fromPath, const vislib::StringA toPath, megamol::core::factories::CallDescription::ptr desc) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     ASSERT(fromPath.StartsWith("::"));
     ASSERT(toPath.StartsWith("::"));
@@ -3367,13 +3079,13 @@ void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace::p
     ViewInstance* vi = dynamic_cast<ViewInstance*>(obj.get());
     JobInstance* ji = dynamic_cast<JobInstance*>(obj.get());
     if (vi != NULL) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_INFO + 50, "View instance %s terminating ...", vi->Name().PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_INFO + 50, "View instance %s terminating ...", vi->Name().PeekBuffer());
         vi->Terminate();
     }
     if (ji != NULL) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_INFO + 50, "Job instance %s terminating ...", ji->Name().PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_INFO + 50, "Job instance %s terminating ...", ji->Name().PeekBuffer());
         ji->Terminate();
     }
 
@@ -3415,12 +3127,12 @@ void megamol::core::CoreInstance::applyConfigParams(
 
         vislib::SmartPtr<param::AbstractParam> p = this->FindParameter(nameA, true);
         if (!p.IsNull()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                 "Initializing parameter \"%s\" to \"%s\"", nameA.PeekBuffer(),
                 vislib::StringA(pvr.Second()).PeekBuffer());
             p->ParseValue(pvr.Second());
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "Unable to set parameter \"%s\" to \"%s\": parameter not found", nameA.PeekBuffer(),
                 vislib::StringA(pvr.Second()).PeekBuffer());
         }
@@ -3439,11 +3151,11 @@ void megamol::core::CoreInstance::applyConfigParams(
 
         vislib::SmartPtr<param::AbstractParam> p = this->FindParameter(nameA, true);
         if (!p.IsNull()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Setting parameter \"%s\" to \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Setting parameter \"%s\" to \"%s\"",
                 nameA.PeekBuffer(), vislib::StringA(pvr.Second()).PeekBuffer());
             p->ParseValue(pvr.Second());
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "Unable to set parameter \"%s\" to \"%s\": parameter not found", nameA.PeekBuffer(),
                 vislib::StringA(pvr.Second()).PeekBuffer());
         }
@@ -3454,20 +3166,20 @@ void megamol::core::CoreInstance::applyConfigParams(
 /*
  * megamol::core::CoreInstance::loadPlugin
  */
-void megamol::core::CoreInstance::loadPlugin(const vislib::TString& filename) {
+void megamol::core::CoreInstance::loadPlugin(const std::shared_ptr<utility::plugins::AbstractPluginDescriptor>& pluginDescriptor) {
 
     // select log level for plugin loading errors
-    unsigned int loadFailedLevel = vislib::sys::Log::LEVEL_ERROR;
+    unsigned int loadFailedLevel = megamol::core::utility::log::Log::LEVEL_ERROR;
     if (this->config.IsConfigValueSet("PluginLoadFailMsg")) {
         try {
             const vislib::StringW& v = this->config.ConfigValue("PluginLoadFailMsg");
             if (v.Equals(L"error", false) || v.Equals(L"err", false) || v.Equals(L"e", false)) {
-                loadFailedLevel = vislib::sys::Log::LEVEL_ERROR;
+                loadFailedLevel = megamol::core::utility::log::Log::LEVEL_ERROR;
             } else if (v.Equals(L"warning", false) || v.Equals(L"warn", false) || v.Equals(L"w", false)) {
-                loadFailedLevel = vislib::sys::Log::LEVEL_WARN;
+                loadFailedLevel = megamol::core::utility::log::Log::LEVEL_WARN;
             } else if (v.Equals(L"information", false) || v.Equals(L"info", false) || v.Equals(L"i", false) ||
                        v.Equals(L"message", false) || v.Equals(L"msg", false) || v.Equals(L"m", false)) {
-                loadFailedLevel = vislib::sys::Log::LEVEL_INFO;
+                loadFailedLevel = megamol::core::utility::log::Log::LEVEL_INFO;
             } else {
                 loadFailedLevel = vislib::CharTraitsW::ParseInt(v.PeekBuffer());
             }
@@ -3477,37 +3189,32 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString& filename) {
 
     try {
 
-        utility::plugins::PluginManager::collection_type new_plugins =
-            this->plugins->LoadPlugin(filename.PeekBuffer(), *this);
+        auto new_plugin = this->plugins->LoadPlugin(pluginDescriptor, *this);
 
-        for (auto new_plugin : new_plugins) {
-            this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-                "Plugin \"%s\" (%s) loaded: %d Modules, %d Calls registered\n", new_plugin->GetAssemblyName().c_str(),
-                vislib::StringA(filename).PeekBuffer(), new_plugin->GetModuleDescriptionManager().Count(),
-                new_plugin->GetCallDescriptionManager().Count());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+            "Plugin \"%s\" loaded: %d Modules, %d Calls registered\n", new_plugin->GetAssemblyName().c_str(),
+            new_plugin->GetModuleDescriptionManager().Count(), new_plugin->GetCallDescriptionManager().Count());
 
-            for (auto md : new_plugin->GetModuleDescriptionManager()) {
-                try {
-                    this->all_module_descriptions.Register(md);
-                } catch (const vislib::AlreadyExistsException&) {
-                    this->log.WriteError("Failed to load module description \"%s\": Naming conflict", md->ClassName());
-                }
+        for (auto md : new_plugin->GetModuleDescriptionManager()) {
+            try {
+                this->all_module_descriptions.Register(md);
+            } catch (const vislib::AlreadyExistsException&) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load module description \"%s\": Naming conflict", md->ClassName());
             }
-            for (auto cd : new_plugin->GetCallDescriptionManager()) {
-                try {
-                    this->all_call_descriptions.Register(cd);
-                } catch (const vislib::AlreadyExistsException&) {
-                    this->log.WriteError("Failed to load call description \"%s\": Naming conflict", cd->ClassName());
-                }
+        }
+        for (auto cd : new_plugin->GetCallDescriptionManager()) {
+            try {
+                this->all_call_descriptions.Register(cd);
+            } catch (const vislib::AlreadyExistsException&) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load call description \"%s\": Naming conflict", cd->ClassName());
             }
         }
 
     } catch (const vislib::Exception& vex) {
-        this->log.WriteMsg(loadFailedLevel, "Unable to load Plugin \"%s\": %s (%s, &d)",
-            vislib::StringA(filename).PeekBuffer(), vex.GetMsgA(), vex.GetFile(), vex.GetLine());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(loadFailedLevel, "Unable to load Plugin: %s (%s, &d)",
+            vex.GetMsgA(), vex.GetFile(), vex.GetLine());
     } catch (...) {
-        this->log.WriteMsg(
-            loadFailedLevel, "Unable to load Plugin \"%s\": unknown exception", vislib::StringA(filename).PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(loadFailedLevel, "Unable to load Plugin: unknown exception");
     }
 }
 
@@ -3532,7 +3239,7 @@ bool megamol::core::CoreInstance::mapCompare(ParamHashMap_t& one, ParamHashMap_t
  */
 bool megamol::core::CoreInstance::quickConnectUp(
     megamol::core::ViewDescription& view, const char* from, const char* to) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     vislib::SingleLinkedList<vislib::Array<quickStepInfo>> fifo;
     vislib::Array<quickStepInfo> connInfo;
@@ -3581,7 +3288,7 @@ bool megamol::core::CoreInstance::quickConnectUp(
         // test for end condition
         if (to == NULL) {
             for (SIZE_T i = 0; i < connInfo.Count(); i++) {
-                if (vislib::StringA("View2D").Equals(connInfo[i].nextMod->ClassName(), false) ||
+                if (vislib::StringA("View2DGL").Equals(connInfo[i].nextMod->ClassName(), false) ||
                     vislib::StringA("View3D").Equals(connInfo[i].nextMod->ClassName(), false) ||
                     vislib::StringA("View3D_2").Equals(connInfo[i].nextMod->ClassName(), false)) {
 
@@ -3650,7 +3357,7 @@ bool megamol::core::CoreInstance::quickConnectUp(
  */
 void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::factories::ModuleDescription::ptr from,
     vislib::Array<megamol::core::CoreInstance::quickStepInfo>& step) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(from != NULL);
     step.Clear();
 
@@ -3754,279 +3461,6 @@ extern HMODULE mmCoreModuleHandle;
 #endif /* _WIN32 */
 
 
-/*
- * megamol::core::CoreInstance::registerQuickstart
- */
-void megamol::core::CoreInstance::registerQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
-    const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers) {
-    using vislib::sys::Log;
-#ifdef _WIN32
-    using vislib::sys::RegistryKey;
-#endif /* _WIN32 */
-    ASSERT(!fnext.IsEmpty());
-    ASSERT(fnext[0] == _T('.'));
-#ifdef _WIN32
-    Log::DefaultLog.WriteInfo(
-        _T("Registering \"%s\" type (*%s) for quickstart"), fnname.PeekBuffer(), fnext.PeekBuffer());
-    try {
-        DWORD errcode;
-        vislib::TString str;
-        RegistryKey crw(RegistryKey::HKeyClassesRoot(), KEY_ALL_ACCESS);
-        if (!crw.IsValid()) {
-            throw vislib::Exception("Cannot open \"HKEY_CLASSES_ROOT\" for writing", __FILE__, __LINE__);
-        }
-
-        RegistryKey extKey;
-        errcode = crw.OpenSubKey(extKey, fnext);
-        if (errcode != ERROR_SUCCESS) {
-            if (errcode == ERROR_FILE_NOT_FOUND) {
-                errcode = crw.CreateSubKey(extKey, fnext);
-            }
-            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
-        }
-
-        vislib::TString typeName;
-        errcode = extKey.GetValue(_T(""), typeName);
-        if (errcode != ERROR_SUCCESS) {
-            typeName.Format(_T("MegaMol.%d.%d%s"), MEGAMOL_VERSION_MAJOR, MEGAMOL_VERSION_MINOR, fnext.PeekBuffer());
-            errcode = extKey.SetValue(_T(""), typeName);
-            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
-            errcode = extKey.GetValue(_T(""), typeName);
-            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
-        }
-        extKey.Close();
-
-        RegistryKey typeKey;
-        errcode = crw.OpenSubKey(typeKey, typeName);
-        if (errcode != ERROR_SUCCESS) {
-            if (errcode == ERROR_FILE_NOT_FOUND) {
-                errcode = crw.CreateSubKey(typeKey, typeName);
-            }
-            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
-        }
-
-        errcode = typeKey.GetValue(_T(""), str);
-        if (errcode != ERROR_SUCCESS) {
-            typeKey.SetValue(_T(""), fnname);
-        }
-
-        RegistryKey defIcon;
-        errcode = typeKey.OpenSubKey(defIcon, "DefaultIcon");
-        if (errcode != ERROR_SUCCESS) {
-            errcode = typeKey.CreateSubKey(defIcon, "DefaultIcon");
-        }
-        if (errcode == ERROR_SUCCESS) {
-            TCHAR fn[64 * 1024];
-            DWORD size = 64 * 1024;
-            size = ::GetModuleFileName(mmCoreModuleHandle, fn, size);
-            str = vislib::TString(fn, size);
-            str.Append(_T(",3")); // TODO: howto map: 1001 -> 3
-            defIcon.SetValue(_T(""), str);
-        }
-        defIcon.Close();
-
-        RegistryKey shell;
-        errcode = typeKey.OpenSubKey(shell, "shell");
-        if (errcode != ERROR_SUCCESS) {
-            errcode = typeKey.CreateSubKey(shell, "shell");
-            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
-        }
-
-        RegistryKey open;
-        vislib::TString opencmd;
-        opencmd.Format(_T("open.%d.%d.%d.%d"), MEGAMOL_CORE_VERSION);
-        errcode = shell.OpenSubKey(open, opencmd);
-        if (errcode != ERROR_SUCCESS) {
-            errcode = shell.CreateSubKey(open, opencmd);
-            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
-        }
-
-        str = _T("Open with MegaMol�");
-        if (vislib::sys::SystemInformation::SystemWordSize() != vislib::sys::SystemInformation::SelfWordSize()) {
-            if (vislib::sys::SystemInformation::SelfWordSize() == 64) {
-                str.Append(_T(" x64"));
-            } else {
-                str.Append(_T(" x86"));
-            }
-        }
-#    if defined(DEBUG) || defined(_DEBUG)
-        str.Append(_T(" [Debug]"));
-#    endif /* DEBUG || _DEBUG */
-        open.SetValue(_T(""), str);
-
-        vislib::TString cmdline = feparams;
-        cmdline.Replace(_T("$(FILENAME)"), _T("\"%1\""));
-        cmdline.Prepend(_T("\" "));
-        cmdline.Prepend(frontend);
-        cmdline.Prepend(_T("\""));
-        RegistryKey opencommand;
-        errcode = open.OpenSubKey(opencommand, "command");
-        if (errcode != ERROR_SUCCESS) {
-            errcode = open.CreateSubKey(opencommand, "command");
-            if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
-        }
-        opencommand.SetValue(_T(""), cmdline);
-        opencommand.Close();
-        open.Close();
-
-        errcode = shell.GetValue(_T(""), str);
-        if ((errcode == 2) || !keepothers) {
-            shell.SetValue(_T(""), opencmd);
-        }
-
-        shell.Close();
-        typeKey.Close();
-        crw.Close();
-
-    } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteError(_T("Cannot register quickstart for %s: %s (%s, %d)"), fnext.PeekBuffer(),
-            ex.GetMsg(), vislib::TString(ex.GetFile()).PeekBuffer(), ex.GetLine());
-    } catch (...) {
-        Log::DefaultLog.WriteError(_T("Cannot register quickstart for %s: Unexpected Exception"), fnext.PeekBuffer());
-    }
-#else  /* _WIN32 */
-    Log::DefaultLog.WriteError(
-        _T("Quickstart registration is not supported on this operating system"), fnext.PeekBuffer());
-#endif /* _WIN32 */
-}
-
-
-/*
- * megamol::core::CoreInstance::unregisterQuickstart
- */
-void megamol::core::CoreInstance::unregisterQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
-    const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers) {
-    using vislib::sys::Log;
-#ifdef _WIN32
-    using vislib::sys::RegistryKey;
-#endif /* _WIN32 */
-    ASSERT(!fnext.IsEmpty());
-    ASSERT(fnext[0] == _T('.'));
-#ifdef _WIN32
-    Log::DefaultLog.WriteInfo(
-        _T("Un-Registering \"%s\" type (*%s) for quickstart"), fnname.PeekBuffer(), fnext.PeekBuffer());
-    try {
-        DWORD errcode;
-
-        RegistryKey crw(RegistryKey::HKeyClassesRoot(), KEY_ALL_ACCESS);
-        if (!crw.IsValid()) {
-            throw vislib::Exception("Cannot open \"HKEY_CLASSES_ROOT\" for writing", __FILE__, __LINE__);
-        }
-
-        RegistryKey extKey;
-        errcode = crw.OpenSubKey(extKey, fnext);
-        if (errcode != ERROR_SUCCESS) {
-            Log::DefaultLog.WriteWarn(_T("File type %s does not seem to be registered"), fnext.PeekBuffer());
-            return;
-        }
-
-        vislib::TString typeName;
-        errcode = extKey.GetValue(_T(""), typeName);
-        if (errcode != ERROR_SUCCESS) {
-            Log::DefaultLog.WriteWarn(
-                _T("File type %s does not seem to be correctly registered (#0x1)"), fnext.PeekBuffer());
-            if (extKey.GetSubKeysA().Count() == 0) {
-                extKey.Close();
-                crw.DeleteSubKey(fnext); // just delete it already, since it's broken anyway
-            }
-            return;
-        }
-
-        RegistryKey typeKey;
-        errcode = crw.OpenSubKey(typeKey, typeName);
-        if (errcode != ERROR_SUCCESS) {
-            Log::DefaultLog.WriteWarn(
-                _T("File type %s does not seem to be correctly registered (#0x2)"), fnext.PeekBuffer());
-            if (extKey.GetSubKeysA().Count() == 0) {
-                extKey.Close();
-                crw.DeleteSubKey(fnext); // just delete it already, since it's broken anyway
-            }
-            return;
-        }
-        bool delTypeKeys = false;
-
-        if (keepothers) {
-            RegistryKey shell;
-            errcode = typeKey.OpenSubKey(shell, "shell");
-            if (errcode == ERROR_SUCCESS) {
-                vislib::Array<vislib::TString> subkeys =
-#    if defined(UNICODE) || defined(_UNICODE)
-                    shell.GetSubKeysW();
-#    else  /* UNICODE || _UNICODE */
-                    shell.GetSubKeysA();
-#    endif /* UNICODE || _UNICODE */
-                vislib::TString fecmd(frontend);
-                fecmd.Prepend(_T("\""));
-                fecmd.Append(_T("\" "));
-
-                for (SIZE_T i = 0; i < subkeys.Count(); i++) {
-                    RegistryKey subkey;
-                    errcode = shell.OpenSubKey(subkey, subkeys[i]);
-                    if (errcode != ERROR_SUCCESS) continue;
-                    RegistryKey shellCmd;
-                    errcode = subkey.OpenSubKey(shellCmd, "command");
-                    if (errcode != ERROR_SUCCESS) continue;
-                    vislib::TString cmdLine;
-                    errcode = shellCmd.GetValue(_T(""), cmdLine);
-                    if (errcode != ERROR_SUCCESS) continue;
-
-                    if (!cmdLine.StartsWith(fecmd, false)) continue; // other front-end
-
-                    // this front-end, so delete!
-
-                    shellCmd.Close();
-                    subkey.Close();
-
-                    shell.DeleteSubKey(subkeys[i]);
-                }
-
-                delTypeKeys = (shell.GetSubKeysA().Count() == 0);
-
-                if (!delTypeKeys) {
-                    vislib::TString defCmd;
-                    errcode = shell.GetValue(_T(""), defCmd);
-                    if ((errcode == ERROR_SUCCESS) && !defCmd.IsEmpty()) {
-                        RegistryKey tmpkey;
-                        errcode = shell.OpenSubKey(tmpkey, defCmd);
-                        if (errcode != ERROR_SUCCESS) {
-                            shell.DeleteValue(_T(""));
-                        } else {
-                            tmpkey.Close();
-                        }
-                    }
-                }
-
-            } else {
-                Log::DefaultLog.WriteWarn(
-                    _T("File type %s does not seem to be correctly registered (#0x3)"), fnext.PeekBuffer());
-                delTypeKeys = true;
-            }
-        } else {
-            delTypeKeys = true;
-        }
-
-        typeKey.Close();
-        extKey.Close();
-        if (delTypeKeys) {
-            crw.DeleteSubKey(typeName);
-            crw.DeleteSubKey(fnext);
-        }
-
-        crw.Close();
-
-    } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteError(_T("Cannot unregister quickstart for %s: %s (%s, %d)"), fnext.PeekBuffer(),
-            ex.GetMsg(), vislib::TString(ex.GetFile()).PeekBuffer(), ex.GetLine());
-    } catch (...) {
-        Log::DefaultLog.WriteError(_T("Cannot unregister quickstart for %s: Unexpected Exception"), fnext.PeekBuffer());
-    }
-#else  /* _WIN32 */
-    Log::DefaultLog.WriteWarn(
-        _T("Quickstart registration is not supported on this operating system"), fnext.PeekBuffer());
-#endif /* _WIN32 */
-}
-
-
 void megamol::core::CoreInstance::updateFlushIdxList(size_t const processedCount, std::vector<size_t>& list) {
     list.erase(list.begin());
     std::transform(list.begin(), list.end(), list.begin(), [processedCount](size_t el) { return el - processedCount; });
@@ -4049,4 +3483,20 @@ bool megamol::core::CoreInstance::checkForFlushEvent(size_t const eventIdx, std:
 void megamol::core::CoreInstance::shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list) {
     list.erase(
         std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
+}
+
+
+void megamol::core::CoreInstance::translateShaderPaths(megamol::core::utility::Configuration const& config) {
+    auto const v_paths = config.ShaderDirectories();
+
+    shaderPaths.resize(v_paths.Count());
+
+    for (size_t idx = 0; idx < v_paths.Count(); ++idx) {
+        shaderPaths[idx] = std::filesystem::path(v_paths[idx].PeekBuffer());
+    }
+}
+
+
+std::vector<std::filesystem::path> megamol::core::CoreInstance::GetShaderPaths() const {
+    return shaderPaths;
 }

@@ -18,11 +18,9 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/CameraParameters.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/forceinline.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -32,7 +30,6 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/Camera.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/mathtypes.h"
 #include "vislib/Pair.h"
@@ -56,7 +53,7 @@ namespace rendering {
     /**
         * Renderer for gridded imposters
         */
-    class GrimRenderer : public core::view::Renderer3DModule {
+    class GrimRenderer : public core::view::Renderer3DModuleGL {
     public:
 
         /**
@@ -114,7 +111,7 @@ namespace rendering {
             *
             * @return The return value of the function.
             */
-        virtual bool GetExtents(core::view::CallRender3D &call);
+        virtual bool GetExtents(core::view::CallRender3DGL &call);
 
         /**
             * Implementation of 'Release'.
@@ -128,7 +125,7 @@ namespace rendering {
             *
             * @return The return value of the function.
             */
-        virtual bool Render(core::view::CallRender3D &call);
+        virtual bool Render(core::view::CallRender3DGL& call);
 
     private:
 
@@ -217,6 +214,10 @@ namespace rendering {
         static bool depthSort(const vislib::Pair<unsigned int, float> &lhs,
             const vislib::Pair<unsigned int, float> &rhs);
 
+        void set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, glm::mat4 view_matrix_inv,
+            glm::mat4 view_matrix_inv_transp, glm::mat4 mvp_matrix, glm::mat4 mvp_matrix_transp,
+            glm::mat4 mvp_matrix_inv, glm::vec4 camPos, glm::vec4 curlightDir);
+
         /** The sphere shader */
         vislib::graphics::gl::GLSLShader sphereShader;
 
@@ -255,6 +256,9 @@ namespace rendering {
 
         /** The call for Transfer function */
         core::CallerSlot getTFSlot;
+
+        /** The call for light sources */
+        core::CallerSlot getLightsSlot;
 
         /** Flag to activate per cell culling */
         core::param::ParamSlot useCellCullSlot;

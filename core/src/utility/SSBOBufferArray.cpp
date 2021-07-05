@@ -40,7 +40,7 @@ void SSBOBufferArray::upload(const std::function<void(void *, const void *)> &co
     if (this->maxSSBOSize == 0) {
         glGetInteger64v(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &this->maxSSBOSize);
     }
-    ASSERT(this->maxBufferSize <= this->maxSSBOSize && "The size per SSBO is larger than you OpenGL implementation allows!");
+    ASSERT(this->maxBufferSize <= this->maxSSBOSize && "The size per SSBO is larger than your OpenGL implementation allows!");
 
     // either we can grab all the data at once or we need the copyOp to re-arrange stuff for us
     ASSERT(this->dstStride == this->srcStride || copyOp);

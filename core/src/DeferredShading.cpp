@@ -2,17 +2,22 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/view/light/PointLight.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
 megamol::core::DeferredShading::DeferredShading() 
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , m_GBuffer(nullptr)
     , m_deferred_shading_prgm(nullptr)
     , m_lights_buffer(nullptr)
+    , getLightsSlot("lights", "Lights are retrieved over this slot.")
     , m_btf_filename_slot("BTF filename", "The name of the btf file to load") 
 {
     this->m_btf_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
 }
 
 megamol::core::DeferredShading::~DeferredShading() { this->Release(); }
@@ -23,13 +28,13 @@ bool megamol::core::DeferredShading::create() {
 
 void megamol::core::DeferredShading::release() { m_GBuffer.reset(); }
 
-bool megamol::core::DeferredShading::GetExtents(core::view::CallRender3D_2& call) { 
+bool megamol::core::DeferredShading::GetExtents(core::view::CallRender3DGL& call) { 
     return true;
 }
 
-bool megamol::core::DeferredShading::Render(core::view::CallRender3D_2& call) { 
+bool megamol::core::DeferredShading::Render(core::view::CallRender3DGL& call) { 
 
-    megamol::core::view::CallRender3D_2* cr = &call; // dynamic_cast<core::view::CallRender3D_2*>(&call);
+    megamol::core::view::CallRender3DGL* cr = &call; // dynamic_cast<core::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     // obtain camera information
@@ -66,17 +71,17 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3D_2& call) {
             m_deferred_shading_prgm->Create(
                 vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
         } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
                 shader_base_name.PeekBuffer(),
                 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
                 ce.GetMsgA());
             // return false;
         } catch (vislib::Exception e) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n",
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n",
                 shader_base_name.PeekBuffer(), e.GetMsgA());
             // return false;
         } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
             // return false;
         }
@@ -88,24 +93,34 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3D_2& call) {
             GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
     }
 
-    auto light_update = this->GetLights();
-    if (light_update)
-    {
-        struct LightParams {
-            float x, y, z, intensity;
-        };
-
-        auto light_cnt = lightMap.size();
-
-        std::vector<LightParams> lights;
-        lights.reserve(light_cnt);
-
-        for (const auto element : this->lightMap) {
-            auto light = element.second;
-            lights.push_back({light.pl_position[0], light.pl_position[1], light.pl_position[2], light.lightIntensity});
+    auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
         }
 
-        m_lights_buffer->rebuffer(lights);
+        if (call_light->hasUpdate()) {
+            auto lights = call_light->getData();
+            auto point_lights = lights.get<core::view::light::PointLightType>();
+
+            if (point_lights.empty()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[DeferredShading] No 'Point Light' found");
+            }
+
+            struct LightParams {
+                float x, y, z, intensity;
+            };
+            auto light_cnt = point_lights.size();
+            std::vector<LightParams> light_params;
+            light_params.reserve(light_cnt);
+
+            for (auto const& light : point_lights) {
+                light_params.push_back(
+                    {light.position[0], light.position[1], light.position[2], light.intensity});
+            }
+
+            m_lights_buffer->rebuffer(light_params);
+        }
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -144,13 +159,13 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3D_2& call) {
     return true; 
 }
 
-void megamol::core::DeferredShading::PreRender(core::view::CallRender3D_2& call) {
+void megamol::core::DeferredShading::PreRender(core::view::CallRender3DGL& call) {
 
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
 
     if (m_GBuffer == nullptr) {
-        m_GBuffer = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3], true);
+        m_GBuffer = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3]);
         m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // surface albedo
         m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // normals
         m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT); // clip space depth

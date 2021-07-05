@@ -15,23 +15,24 @@
 #include "ogl_error_check.h"
 //#include "vislib_vector_typedefs.h"
 
-#include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/CoreInstance.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
+using namespace megamol::core::utility::log;
 
 
 /*
  * SecPlaneRenderer::SecPlaneRenderer
  */
-SecPlaneRenderer::SecPlaneRenderer(void) : view::Renderer3DModule(),
+SecPlaneRenderer::SecPlaneRenderer(void) : view::Renderer3DModuleGL(),
     textureSlot("getData", "Connects the slice rendering with data storage" ),
     shadingSlot("shading", "Determines the shading mode"),
     shadingMinTexSlot("min", "The minimum texture value (used for shading)"),
@@ -140,7 +141,6 @@ SecPlaneRenderer::~SecPlaneRenderer(void) {
  * SecPlaneRenderer::create
  */
 bool SecPlaneRenderer::create(void) {
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     // Init extensions
@@ -193,7 +193,7 @@ bool SecPlaneRenderer::create(void) {
 /*
  * SecPlaneRenderer::GetExtents
  */
-bool SecPlaneRenderer::GetExtents(megamol::core::Call& call) {
+bool SecPlaneRenderer::GetExtents(core::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) {
         return false;
@@ -209,14 +209,6 @@ bool SecPlaneRenderer::GetExtents(megamol::core::Call& call) {
     }
 
     this->bbox = vti->AccessBoundingBoxes();
-    float scale;
-    if(!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    this->bbox.MakeScaledWorld(scale);
-
     cr3d->AccessBoundingBoxes() = this->bbox;
     cr3d->SetTimeFramesCount(vti->FrameCount()); // TODO USe combined frame count
 
@@ -286,9 +278,7 @@ void SecPlaneRenderer::release(void) {
 /*
  * SecPlaneRenderer::Render
  */
-bool SecPlaneRenderer::Render(megamol::core::Call& call) {
-    using namespace vislib::sys;
-
+bool SecPlaneRenderer::Render(core::view::CallRender3DGL& call) {
     // Get render call
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) {
@@ -359,14 +349,6 @@ bool SecPlaneRenderer::Render(megamol::core::Call& call) {
     // Compute scale factor and scale world
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-
-    float scale;
-    if(!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    glScalef(scale, scale, scale);
 
     glEnable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

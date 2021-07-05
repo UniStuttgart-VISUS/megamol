@@ -7,6 +7,10 @@
 
 #include "stdafx.h"
 #include "ReplacementRenderer.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ButtonParam.h"
 
 
 using namespace megamol;
@@ -16,15 +20,15 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>(),
-    alphaParam("alpha", "The alpha value of the replacement rendering."),
-    replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer."),
-    replacementKeyParam("hotkeyAssignment", "Choose hotkey for replacement rendering button."),
-    toggleReplacementParam("toggleReplacement", "Toggle replacement rendering."),
-    toggle(false),
-    utils(),
-    bbox()
-{
+ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>()
+    , alphaParam("alpha", "The alpha value of the replacement rendering.")
+    , replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer.")
+    , replacementKeyParam("hotkeyAssignment", "Choose hotkey for replacement rendering button.")
+    , toggleReplacementParam("toggleReplacement", "Toggle replacement rendering.")
+    , draw_replacement(false)
+    , utils()
+    , bbox() {
+
     // Make render slots available
     this->MakeSlotAvailable(&this->chainRenderSlot);
     this->MakeSlotAvailable(&this->renderSlot);
@@ -36,7 +40,7 @@ ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererMo
     this->toggleReplacementParam.SetParameter(new param::ButtonParam());
     this->MakeSlotAvailable(&this->toggleReplacementParam);
 
-    this->replacementRenderingParam.SetParameter(new param::BoolParam(this->toggle));
+    this->replacementRenderingParam.SetParameter(new param::BoolParam(this->draw_replacement));
     this->MakeSlotAvailable(&this->replacementRenderingParam);
 
     param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(KeyAssignment::KEY_ASSIGN_NONE));
@@ -53,6 +57,7 @@ ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererMo
     tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_0, "Alt + 0");
     this->replacementKeyParam << tmpEnum;
     this->MakeSlotAvailable(&this->replacementKeyParam);
+    tmpEnum = nullptr;
 }
 
 
@@ -71,7 +76,7 @@ bool ReplacementRenderer::create(void) {
 
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {
-        vislib::sys::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't initialize the font.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[REPLACEMENT RENDERER] [create] Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -79,9 +84,9 @@ bool ReplacementRenderer::create(void) {
 }
 
 
-bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
+bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) {
 
-    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
 
     bool retVal = true;
     if (cr3d_out != nullptr) {
@@ -101,28 +106,24 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) 
 }
 
 
-bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
+bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
-    auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
-    if (viewptr != nullptr) { // TODO move this behind the fbo magic?
-        auto vp = call.GetViewport();
-        glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
-        auto backCol = call.BackgroundColor();
-        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
+    // Camera
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
     if (this->replacementRenderingParam.IsDirty()) {
         this->replacementRenderingParam.ResetDirty();
-        this->toggle = this->replacementRenderingParam.Param<param::BoolParam>()->Value();
+        this->draw_replacement = this->replacementRenderingParam.Param<param::BoolParam>()->Value();
     }
 
     if (this->toggleReplacementParam.IsDirty()) {
         this->toggleReplacementParam.ResetDirty();
-        this->toggle = !this->toggle;
-        this->replacementRenderingParam.Param<param::BoolParam>()->SetValue(this->toggle, false);
+        this->draw_replacement = !this->draw_replacement;
+        this->replacementRenderingParam.Param<param::BoolParam>()->SetValue(this->draw_replacement, false);
     }
 
     if (this->replacementKeyParam.IsDirty()) {
@@ -154,29 +155,25 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         }
     }
 
-    if (this->toggle) {
+    if (this->draw_replacement) {
+        // Render bounding box as replacement
 
-        view::Camera_2 cam;
-        call.GetCamera(cam);
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type viewTemp, projTemp;
-        cam.calc_matrices(snapshot, viewTemp, projTemp);
         glm::mat4 proj = projTemp;
         glm::mat4 view = viewTemp;
         glm::mat4 mvp = proj * view;
 
-        auto viewport = call.GetViewport();
-        float vp_fw = static_cast<float>(viewport.Width());
-        float vp_fh = static_cast<float>(viewport.Height());
+        auto viewport = cam.resolution_gate();
+        float vp_fw = static_cast<float>(viewport.width());
+        float vp_fh = static_cast<float>(viewport.height());
 
         float alpha = alphaParam.Param<param::FloatParam>()->Value();
 
-        glm::vec4 dark_blue = { 0.0f, 0.0f, 0.25f, alpha };
-        glm::vec4 light_blue = { 0.0f, 0.0f, 0.75f, alpha };
-        glm::vec4 dark_red = { 0.25f, 0.0f, 0.0f, alpha };
-        glm::vec4 light_red = { 0.75f, 0.0f, 0.0f, alpha };
-        glm::vec4 dark_green = { 0.0f, 0.25f, 0.0f, alpha };
-        glm::vec4 light_green = { 0.0f, 0.75f, 0.0f, alpha };
+        glm::vec4 front   = {0.0f, 0.0f, 1.0f, alpha};
+        glm::vec4 back    = {0.0f, 1.0f, 1.0f, alpha};
+        glm::vec4 right   = {1.0f, 0.0f, 0.0f, alpha};
+        glm::vec4 left    = {1.0f, 0.0f, 1.0f, alpha};
+        glm::vec4 top     = {0.0f, 1.0f, 0.0f, alpha};
+        glm::vec4 bottom  = {1.0f, 1.0f, 0.0f, alpha};
 
         glm::vec3 left_top_back = { this->bbox.Left(), this->bbox.Top(), this->bbox.Back() };
         glm::vec3 left_bottom_back = { this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back() };
@@ -187,19 +184,18 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glm::vec3 right_top_front = { this->bbox.Right(), this->bbox.Top(), this->bbox.Front() };
         glm::vec3 right_bottom_front = { this->bbox.Right(), this->bbox.Bottom(), this->bbox.Front() };
 
-        this->utils.PushQuadPrimitive(left_bottom_back, left_top_back, right_top_back, right_bottom_back, dark_blue);
-        this->utils.PushQuadPrimitive(left_bottom_front, right_bottom_front, right_top_front, left_top_front, light_blue);
-        this->utils.PushQuadPrimitive(left_top_back, left_top_front, right_top_front, right_top_back, dark_green);
-        this->utils.PushQuadPrimitive(left_bottom_back, right_bottom_back, right_bottom_front, left_bottom_front, light_green);
-        this->utils.PushQuadPrimitive(left_bottom_back, left_bottom_front, left_top_front, left_top_back, dark_red);
-        this->utils.PushQuadPrimitive(right_bottom_back, right_top_back, right_top_front, right_bottom_front, light_red);
+        this->utils.PushQuadPrimitive(left_bottom_front, right_bottom_front, right_top_front, left_top_front, front); // Front
+        this->utils.PushQuadPrimitive(left_bottom_back, left_top_back, right_top_back, right_bottom_back, back); // Back
+        this->utils.PushQuadPrimitive(left_top_back, left_top_front, right_top_front, right_top_back, top); // Top
+        this->utils.PushQuadPrimitive(left_bottom_back, right_bottom_back, right_bottom_front, left_bottom_front, bottom); // Bottom
+        this->utils.PushQuadPrimitive(left_bottom_back, left_bottom_front, left_top_front, left_top_back, left); // Left
+        this->utils.PushQuadPrimitive(right_bottom_back, right_top_back, right_top_front, right_bottom_front, right); // Right
 
-        // Render bounding box as replacement
         this->utils.DrawQuadPrimitives(mvp, glm::vec2(vp_fw, vp_fh));
-    }
-    else {
 
-        auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    } else {
+
+        auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
         if (cr3d_out != nullptr) {
             *cr3d_out = call;
             return (*cr3d_out)(core::view::AbstractCallRender::FnRender);

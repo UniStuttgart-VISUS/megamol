@@ -15,7 +15,7 @@
 #include "mmcore/thecam/math/functions.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -32,7 +32,7 @@ using namespace megamol::core::view;
  * BoundingBoxRenderer::BoundingBoxRenderer
  */
 BoundingBoxRenderer::BoundingBoxRenderer(void)
-    : RendererModule<CallRender3D_2>()
+    : RendererModule<CallRender3DGL>()
     , enableBoundingBoxSlot("enableBoundingBox", "Enables the rendering of the bounding box")
     , boundingBoxColorSlot("boundingBoxColor", "Color of the bounding box")
     , smoothLineSlot("smoothLines", "Enables the smoothing of lines (may look strange on some setups)")
@@ -81,33 +81,33 @@ bool BoundingBoxRenderer::create(void) {
     // TODO the vislib shaders have to die a slow and painful death
     vislib::graphics::gl::ShaderSource bbVertSrc, bbFragSrc;
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("boundingbox::vertex", bbVertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load vertex shader source for bounding box line shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load vertex shader source for bounding box line shader");
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("boundingbox::fragment", bbFragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load fragment shader source for bounding box line shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load fragment shader source for bounding box line shader");
     }
     try {
         if (!this->lineShader.Create(bbVertSrc.Code(), bbVertSrc.Count(), bbFragSrc.Code(), bbFragSrc.Count())) {
             throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create bounding box line shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to create bounding box line shader: %s\n", e.GetMsgA());
         return false;
     }
 
     vislib::graphics::gl::ShaderSource vcVertSrc, vcFragSrc;
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("viewcube::vertex", vcVertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load vertex shader source for view cube shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load vertex shader source for view cube shader");
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("viewcube::fragment", vcFragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load fragment shader source for view cube shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load fragment shader source for view cube shader");
     }
     try {
         if (!this->cubeShader.Create(vcVertSrc.Code(), vcVertSrc.Count(), vcFragSrc.Code(), vcFragSrc.Count())) {
             throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create view cube shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to create view cube shader: %s\n", e.GetMsgA());
         return false;
     }
 
@@ -161,10 +161,10 @@ void BoundingBoxRenderer::release(void) {
 /*
  * BoundingBoxRenderer::GetExtents
  */
-bool BoundingBoxRenderer::GetExtents(CallRender3D_2& call) {
-    CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
+bool BoundingBoxRenderer::GetExtents(CallRender3DGL& call) {
+    CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
     if (chainedCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "The BoundingBoxRenderer does not work without a renderer attached to its right");
         return false;
     }
@@ -177,41 +177,23 @@ bool BoundingBoxRenderer::GetExtents(CallRender3D_2& call) {
 /*
  * BoundingBoxRenderer::Render
  */
-bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
-    auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
-
-    if (viewptr != nullptr) {
-        // TODO move this behind the fbo magic?
-        auto vp = call.GetViewport();
-        glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
-        auto backCol = call.BackgroundColor();
-        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
-    CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
-    if (chainedCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "The BoundingBoxRenderer does not work without a renderer attached to its right");
-        return false;
-    }
-    *chainedCall = call;
-    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
-    call = *chainedCall;
+bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
 
     Camera_2 cam;
     call.GetCamera(cam);
-
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewT, projT;
-
     cam.calc_matrices(snapshot, viewT, projT);
-
     glm::mat4 view = viewT;
     glm::mat4 proj = projT;
     glm::mat4 mvp = proj * view;
+
+    CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
+    if (chainedCall == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "The BoundingBoxRenderer does not work without a renderer attached to its right");
+        return false;
+    }
 
     auto boundingBoxes = chainedCall->AccessBoundingBoxes();
     auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
@@ -220,7 +202,10 @@ bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes, smoothLines);
     }
+
+    *chainedCall = call;
     renderRes &= (*chainedCall)(view::AbstractCallRender::FnRender);
+
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes, smoothLines);
     }
@@ -330,7 +315,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
 /*
  * BoundingBoxRenderer::RenderViewCube
  */
-bool BoundingBoxRenderer::RenderViewCube(CallRender3D_2& call) {
+bool BoundingBoxRenderer::RenderViewCube(CallRender3DGL& call) {
     // Get camera orientation
     core::view::Camera_2 cam;
     call.GetCamera(cam);

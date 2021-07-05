@@ -5,6 +5,9 @@ else()
   string(REPLACE "/" "\\" THEBIN "${CMAKE_CURRENT_BINARY_DIR}")
   string(APPEND THEBIN "\\")
 
+  string(REPLACE "/" "\\" THEINST "${CMAKE_INSTALL_PREFIX}")
+  string(APPEND THEINST "\\")
+
   string(REPLACE "/" "\\" THESRC "${CMAKE_SOURCE_DIR}")
   string(APPEND THESRC "\\")
 

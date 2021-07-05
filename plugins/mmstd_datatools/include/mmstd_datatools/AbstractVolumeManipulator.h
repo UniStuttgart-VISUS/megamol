@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmstd_datatools/mmstd_datatools.h"
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -28,7 +27,7 @@ namespace datatools {
      *
      * Migrated from SGrottel particle's tool box
      */
-    class MMSTD_DATATOOLS_API AbstractVolumeManipulator : public megamol::core::Module {
+    class AbstractVolumeManipulator : public megamol::core::Module {
     public:
 
         /**

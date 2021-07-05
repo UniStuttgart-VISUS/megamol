@@ -9,7 +9,7 @@
 #include <sstream>
 #include <string>
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "lua.hpp"
 
@@ -47,6 +47,22 @@ template <class C, luaCallbackFunc<C> func> int dispatch(lua_State* L) {
     C* ptr = *static_cast<C**>(lua_getextraspace(L));
     return (ptr->*func)(L);
 }
+
+static int invoke_lua_std_function(lua_State* L){
+    //const int argc = lua_gettop(L);
+
+    const auto index = lua_upvalueindex(1);
+    //if (lua_islightuserdata(L, index))
+    //{
+        const void* ptr = lua_touserdata(L, index);
+        const auto func_ptr = reinterpret_cast<std::function<int(lua_State *)> const*>(ptr);
+        return (*func_ptr)(L);
+
+    //} else {
+    //    std::cout << "PANIC: NO USER DATA" << std::endl;
+    //}
+    //return 0;
+};
 
 // clang-format off
 #define MMC_LUA_MMLOG "mmLog"
@@ -98,8 +114,22 @@ public:
      */
     template <class C, luaCallbackFunc<C> func> void RegisterCallback(std::string const& name, std::string const& help) {
         //this->theCallbacks += name + "=" + name + ",";
-        this->theHelp += name + help + "\n";
+        this->theHelp.push_back(std::make_pair(name,help));
         lua_register(L, name.c_str(), &(dispatch<C, func>));
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + name + "="+name).c_str());
+        }
+    }
+
+    /**
+     * Register callback function in lua and all environments known to date
+     */
+    void RegisterCallback(std::string const& name, std::string const& help, std::function<int(lua_State*)>& func) {
+        //this->theCallbacks += name + "=" + name + ",";
+        this->theHelp.push_back(std::make_pair(name,help));
+        lua_pushlightuserdata(L, &func); // push ptr to func as user data to be used by invoke_lua_std_function onto stack
+        lua_pushcclosure(L, &invoke_lua_std_function, 1); // register invoke_lua_std_function as closure that gets ptr to func
+        lua_setglobal(L, name.c_str()); // set pushed closure as global under name "name"
         for(auto &x: theEnvironments) {
             luaL_dostring(L, (x + "." + name + "="+name).c_str());
         }
@@ -119,12 +149,36 @@ public:
     /**
      * Register a constant in lua and all environments known to date.
      */
-    void RegisterConstant(std::string const &name, uint32_t value) {
+    void RegisterConstant(std::string const& name, uint32_t value) {
         //this->theConstants[name] = value;
         lua_pushinteger(L, value);
         lua_setglobal(L, name.c_str());
         for(auto &x: theEnvironments) {
             luaL_dostring(L, (x + "." + name + "="+name).c_str());
+        }
+    }
+
+    void UnregisterCallback(std::string const& name) {
+        auto remove_end = std::remove_if(this->theHelp.begin(), this->theHelp.end(), [name](std::pair<std::string, std::string> const& p){return p.first == name;});
+        this->theHelp.erase(remove_end, this->theHelp.end());
+
+        luaL_dostring(L, (name + "= nil").c_str());
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + name + "= nil").c_str());
+        }
+    }
+
+    void UnregisterAlias(std::string const& alias) {
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + alias + "= nil").c_str());
+        }
+    }
+
+    void UnregisterConstant(std::string const& name) {
+        lua_pushnil(L);
+        lua_setglobal(L, name.c_str());
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + name + "= nil").c_str());
         }
     }
 
@@ -145,6 +199,8 @@ private:
 
     /** gets a string from the stack position i. returns false if it's not a string */
     bool getString(int i, std::string& out);
+
+    bool getDouble(int i, double& out);
 
     /** print table on the stack somewhat */
     void printTable(std::stringstream& out);
@@ -170,7 +226,7 @@ private:
 
     T* that;
 
-    std::string theHelp;
+    std::vector<std::pair<std::string, std::string>> theHelp;
 
     std::vector<std::string> theEnvironments;
 
@@ -189,7 +245,7 @@ private:
 template <class T> void megamol::core::LuaInterpreter<T>::consumeError(int error, const char* file, int line) {
     if (error != LUA_OK) {
         const char* err = lua_tostring(L, -1); // get error from top of stack...
-        vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
         lua_pop(L, 1); // and remove it.
     }
 }
@@ -255,9 +311,9 @@ template <class T> megamol::core::LuaInterpreter<T>::LuaInterpreter(T* t, std::s
     RegisterCallback<LuaInterpreter, &LuaInterpreter::logInfo>(MMC_LUA_MMDEBUGPRINT, "(...)\n\tLog to MegaMol console with LOGINFO level.");
     RegisterCallback<LuaInterpreter, &LuaInterpreter::help>(MMC_LUA_MMHELP, "()\n\tShow this help.");
 
-    RegisterConstant("LOGINFO", vislib::sys::Log::LEVEL_INFO);
-    RegisterConstant("LOGWARNING", vislib::sys::Log::LEVEL_WARN);
-    RegisterConstant("LOGERROR", vislib::sys::Log::LEVEL_ERROR);
+    RegisterConstant("LOGINFO", megamol::core::utility::log::Log::LEVEL_INFO);
+    RegisterConstant("LOGWARNING", megamol::core::utility::log::Log::LEVEL_WARN);
+    RegisterConstant("LOGERROR", megamol::core::utility::log::Log::LEVEL_ERROR);
 }
 
 
@@ -314,7 +370,7 @@ bool megamol::core::LuaInterpreter<T>::RunString(
         if (ret != LUA_OK) {
             const char* err = lua_tostring(
                 L, -1); // get error from top of stack...
-                        // vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
+                        // megamol::core::utility::log::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
             result = std::string(err);
             lua_pop(L, 1); // and remove it.
             return false;
@@ -324,7 +380,7 @@ bool megamol::core::LuaInterpreter<T>::RunString(
             int n = lua_gettop(L);
             if (n > 0) {
                 if (n > 2) {
-                    vislib::sys::Log::DefaultLog.WriteError("Lua execution returned more than one value");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution returned more than one value");
                     good = false;
                 } else {
                     std::string res;
@@ -332,9 +388,14 @@ bool megamol::core::LuaInterpreter<T>::RunString(
                     if (getString(1, res)) {
                         result = res;
                     } else {
-                        result = "Result is a non-string";
-                        vislib::sys::Log::DefaultLog.WriteError("Lua execution returned non-string");
-                        good = false;
+                        double r;
+                        if (getDouble(1, r)) {
+                            result = std::to_string(r);
+                        } else {
+                            result = "Result is a complex type.";
+                            megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution returned complex type");
+                            good = false;
+                        }
                     }
                 }
                 // clean up stack!
@@ -354,6 +415,15 @@ template <class T> bool megamol::core::LuaInterpreter<T>::getString(int i, std::
     if (t == LUA_TSTRING) {
         auto* res = lua_tostring(L, i);
         out = std::string(res);
+        return true;
+    }
+    return false;
+}
+
+template <class T> bool megamol::core::LuaInterpreter<T>::getDouble(int i, double& out) {
+    int t = lua_type(L, i);
+    if (t == LUA_TNUMBER) {
+        out = lua_tonumber(L, i);
         return true;
     }
     return false;
@@ -387,30 +457,30 @@ template <class T> void megamol::core::LuaInterpreter<T>::printTable(std::string
 
 template <class T> void megamol::core::LuaInterpreter<T>::printStack() {
     int n = lua_gettop(L); // get stack height
-    vislib::sys::Log::DefaultLog.WriteInfo("Lua Stack:");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Lua Stack:");
     for (int x = n; x >= 1; x--) {
         int t = lua_type(L, x);
         switch (t) {
         case LUA_TSTRING: /* strings */
-            vislib::sys::Log::DefaultLog.WriteInfo("%02i: string %s", x, lua_tostring(L, x));
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("%02i: string %s", x, lua_tostring(L, x));
             break;
 
         case LUA_TBOOLEAN: /* booleans */
-            vislib::sys::Log::DefaultLog.WriteInfo("%02i: bool %s", x, (lua_toboolean(L, x) ? "true" : "false"));
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("%02i: bool %s", x, (lua_toboolean(L, x) ? "true" : "false"));
             break;
 
         case LUA_TNUMBER: /* numbers */
-            vislib::sys::Log::DefaultLog.WriteInfo("%02i: number %f", x, lua_tonumber(L, x));
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("%02i: number %f", x, lua_tonumber(L, x));
             break;
 
         case LUA_TTABLE: {
             std::stringstream out;
             printTable(out);
-            vislib::sys::Log::DefaultLog.WriteInfo("%02i: table:\n%s", x, out.str().c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("%02i: table:\n%s", x, out.str().c_str());
         } break;
 
         default: /* other values */
-            vislib::sys::Log::DefaultLog.WriteInfo("%02i: unprintable %s", x, lua_typename(L, t));
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("%02i: unprintable %s", x, lua_typename(L, t));
             break;
         }
     }
@@ -446,14 +516,14 @@ template <class T> int megamol::core::LuaInterpreter<T>::log(lua_State* L) {
             break;
         }
     }
-    vislib::sys::Log::DefaultLog.WriteMsg(static_cast<UINT>(level), "%s", out.str().c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(static_cast<unsigned int>(level), "%s", out.str().c_str());
     return 0;
 }
 
 
 template <class T> int megamol::core::LuaInterpreter<T>::logInfo(lua_State* L) {
     USES_CHECK_LUA;
-    lua_pushinteger(L, vislib::sys::Log::LEVEL_INFO);
+    lua_pushinteger(L, megamol::core::utility::log::Log::LEVEL_INFO);
     lua_insert(L, 1); // prepend info level to arguments
     lua_getglobal(L, "mmLog");
     lua_insert(L, 1);                                 // prepend mmLog function to all arguments
@@ -464,7 +534,10 @@ template <class T> int megamol::core::LuaInterpreter<T>::logInfo(lua_State* L) {
 template <class T> int megamol::core::LuaInterpreter<T>::help(lua_State *L) {
     std::stringstream out;
     out << "MegaMol Lua Help:" << std::endl;
-    out << theHelp;
+    std::string helpString;
+    for (const auto &s : theHelp)
+        helpString += s.first + s.second + "\n";
+    out << helpString;
     lua_pushstring(L, out.str().c_str());
     return 1;
 }

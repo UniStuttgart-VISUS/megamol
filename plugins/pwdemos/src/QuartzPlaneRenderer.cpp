@@ -12,7 +12,7 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Vector.h"
 
 
@@ -53,11 +53,11 @@ QuartzPlaneRenderer::~QuartzPlaneRenderer(void) {
  */
 bool QuartzPlaneRenderer::create(void) {
     using vislib::graphics::gl::GLSLShader;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::graphics::gl::ShaderSource;
 
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
         return false;
     }
 
@@ -91,7 +91,7 @@ bool QuartzPlaneRenderer::create(void) {
 /*
  * QuartzPlaneRenderer::QuartzPlaneRenderer
  */
-bool QuartzPlaneRenderer::GetExtents(core::view::CallRender2D& call) {
+bool QuartzPlaneRenderer::GetExtents(core::view::CallRender2DGL& call) {
     ParticleGridDataCall *pgdc = this->getParticleData();
     core::view::CallClipPlane *ccp = this->getClipPlaneData();
     if ((pgdc != NULL) && (ccp != NULL)) {
@@ -167,7 +167,7 @@ bool QuartzPlaneRenderer::GetExtents(core::view::CallRender2D& call) {
                 if (minY > y) minY = y;
                 if (maxY < y) maxY = y;
 
-                call.SetBoundingBox(minX, minY, maxX, maxY);
+                call.AccessBoundingBoxes().SetBoundingBox(minX, minY, 0, maxX, maxY, 0);
 
                 return true;
             }
@@ -175,7 +175,7 @@ bool QuartzPlaneRenderer::GetExtents(core::view::CallRender2D& call) {
         }
     }
 
-    call.SetBoundingBox(-1.0f, -1.0f, 1.0f, 1.0f);
+    call.AccessBoundingBoxes().SetBoundingBox(-1.0f, -1.0f, 0, 1.0f, 1.0f, 0);
     return false;
 }
 
@@ -192,7 +192,7 @@ void QuartzPlaneRenderer::release(void) {
 /*
  * QuartzPlaneRenderer::Render
  */
-bool QuartzPlaneRenderer::Render(core::view::CallRender2D& call) {
+bool QuartzPlaneRenderer::Render(core::view::CallRender2DGL& call) {
     ParticleGridDataCall *pgdc = this->getParticleData();
     CrystalDataCall *tdc = this->getCrystaliteData();
     core::view::CallClipPlane *ccp = this->getClipPlaneData();
@@ -435,7 +435,7 @@ bool QuartzPlaneRenderer::Render(core::view::CallRender2D& call) {
  */
 vislib::graphics::gl::GLSLShader* QuartzPlaneRenderer::makeShader(const CrystalDataCall::Crystal& c) {
     using vislib::graphics::gl::GLSLShader;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::graphics::gl::ShaderSource;
 
     GLSLShader *s = new GLSLShader();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <limits>
 
 #if !defined(_MSC_VER)
 #    if (__cplusplus < 201703L)
@@ -103,7 +104,7 @@ private:
 /**
  * Accessor class reporting const values, for instance globals.
  */
-template <class T>
+template <class T, bool Norm>
 class Accessor_Val : public Accessor {
 public:
     Accessor_Val(T const val) : val_(val) {}
@@ -116,7 +117,15 @@ public:
 
     Accessor_Val& operator=(Accessor_Val&& rhs) = default;
 
-    template <class R> R Get() const { return static_cast<R>(this->val_); }
+    template<class R>
+    std::enable_if_t<!Norm, R> Get() const {
+        return static_cast<R>(this->val_);
+    }
+
+    template<class R>
+    std::enable_if_t<Norm, R> Get() const {
+        return static_cast<R>(this->val_) / static_cast<R>(std::numeric_limits<T>::max());
+    }
 
     float Get_f(size_t idx) const override { return Get<float>(); }
 

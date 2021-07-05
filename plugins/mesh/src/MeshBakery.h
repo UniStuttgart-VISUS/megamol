@@ -6,20 +6,20 @@
  */
 
 #ifndef MESH_BAKERY_H_INCLUDED
-#    define MESH_BAKERY_H_INCLUDED
+#define MESH_BAKERY_H_INCLUDED
 
-#    include "mmcore/CalleeSlot.h"
-#    include "mmcore/param/ParamSlot.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/param/ParamSlot.h"
 
-#    include "mesh/MeshCalls.h"
-#    include "mesh/MeshDataAccessCollection.h"
-#    include "mesh/mesh.h"
+#include "mesh/AbstractMeshDataSource.h"
+#include "mesh/MeshCalls.h"
+#include "mesh/MeshDataAccessCollection.h"
 
 namespace megamol {
 namespace mesh {
 
 
-class MeshBakery : public core::Module {
+class MeshBakery : public AbstractMeshDataSource {
 public:
     /**
      * Answer the name of this module.
@@ -58,9 +58,9 @@ protected:
      */
     void release();
 
-    virtual bool getDataCallback(core::Call& caller);
+    virtual bool getMeshDataCallback(core::Call& caller);
 
-    virtual bool getMetaDataCallback(core::Call& caller);
+    virtual bool getMeshMetaDataCallback(core::Call& caller);
 
 private:
 
@@ -70,8 +70,6 @@ private:
 
     uint32_t m_version;
 
-    std::shared_ptr<MeshDataAccessCollection> m_mesh_access_collection;
-
     std::vector<float>   m_vertex_positions;
     std::vector<float>   m_vertex_normals;
     std::vector<float>   m_vertex_tangents;
@@ -80,15 +78,8 @@ private:
 
     std::vector<uint32_t> m_indices;
 
-
     /** Parameter for selecting the geometry to be generated */
     megamol::core::param::ParamSlot m_geometry_type;
-
-    /** The slot for providing access to internal mesh data */
-    megamol::core::CalleeSlot m_mesh_lhs_slot;
-
-    /** The slot for chaining mesh data access */
-    megamol::core::CallerSlot m_mesh_rhs_slot;
 
 };
 

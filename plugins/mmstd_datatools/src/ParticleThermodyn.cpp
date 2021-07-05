@@ -18,8 +18,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/ConsoleProgressBar.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/sys/ConsoleProgressBar.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "MinSphereWrapper.h"
 
@@ -46,6 +46,9 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
                                         "sure you have a transfer function that has stops at 0.4 and 0.5. The 0.5 stop "
                                         "allows you to highlight the neighbors responsible for the extremes.")
     , extremeValueSlot("extreme value", "the extreme value that you find weird")
+    , fluidDensitySlot("phase01::fluid density", "Density of the fluid")
+    , tcSlot("phase02::Tc", "Critical temperature")
+    , rhocSlot("phase02::RhoC", "Critical density")
     , datahash(0)
     , lastTime(-1)
     , newColors()
@@ -84,6 +87,8 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     mt->SetTypePair(metricsEnum::PRESSURE, "Pressure");
     mt->SetTypePair(metricsEnum::NEIGHBORS, "Num Neighbors");
     mt->SetTypePair(metricsEnum::NEAREST_DISTANCE, "Nearest Dist");
+    mt->SetTypePair(metricsEnum::PHASE01, "Phase01");
+    mt->SetTypePair(metricsEnum::PHASE02, "Phase02");
     this->metricsSlot << mt;
     this->MakeSlotAvailable(&this->metricsSlot);
 
@@ -108,6 +113,14 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
 
     this->extremeValueSlot.SetParameter(new core::param::FloatParam(50.0));
     this->MakeSlotAvailable(&this->extremeValueSlot);
+
+    this->fluidDensitySlot.SetParameter(new core::param::FloatParam(1.0f));
+    this->MakeSlotAvailable(&this->fluidDensitySlot);
+
+    this->tcSlot.SetParameter(new core::param::FloatParam(1.0795f));
+    this->MakeSlotAvailable(&this->tcSlot);
+    this->rhocSlot.SetParameter(new core::param::FloatParam(0.3211f));
+    this->MakeSlotAvailable(&this->rhocSlot);
 
     this->outDataSlot.SetCallback(
         megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
@@ -136,8 +149,28 @@ bool isListOK(megamol::core::moldyn::MultiParticleDataCall* in, const unsigned i
     auto& pl = in->AccessParticles(i);
     // TODO: double
     return ((pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) ||
-               (pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR)) &&
-           pl.GetDirDataType() == MultiParticleDataCall::Particles::DirDataType::DIRDATA_FLOAT_XYZ;
+               (pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR));
+}
+
+
+bool hasDir(megamol::core::moldyn::MultiParticleDataCall* in, const unsigned int i) {
+    using megamol::core::moldyn::MultiParticleDataCall;
+    auto& pl = in->AccessParticles(i);
+    return pl.GetDirDataType() == MultiParticleDataCall::Particles::DirDataType::DIRDATA_FLOAT_XYZ;
+}
+
+
+bool metricRequiresDir(megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum metric) {
+    return metric == megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum::TEMPERATURE ||
+           metric == megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum::FRACTIONAL_ANISOTROPY;
+}
+
+
+bool isDirOK(megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum metric,
+    megamol::core::moldyn::MultiParticleDataCall* in, const unsigned int i) {
+    if (metricRequiresDir(metric) && !hasDir(in, i))
+        return false;
+    return true;
 }
 
 
@@ -164,13 +197,14 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
     const int theNumber = this->numNeighborSlot.Param<core::param::IntParam>()->Value();
     const auto theSearchType = this->searchTypeSlot.Param<core::param::EnumParam>()->Value();
     const auto theMetrics = this->metricsSlot.Param<core::param::EnumParam>()->Value();
+    const auto theFluidDensity = this->fluidDensitySlot.Param<core::param::FloatParam>()->Value();
     size_t allpartcnt = 0;
 
     if (this->lastTime != time || this->datahash != in->DataHash()) {
         in->SetFrameID(time, true);
 
         if (!(*in)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("ParticleThermodyn: could not get frame (%u)", time);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleThermodyn: could not get frame (%u)", time);
             return false;
         }
 
@@ -178,7 +212,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         plc = in->GetParticleListCount();
 
         for (unsigned int i = 0; i < plc; i++) {
-            if (isListOK(in, i)) totalParts += in->AccessParticles(i).GetCount();
+            if (isListOK(in, i) && isDirOK(static_cast<metricsEnum>(theMetrics), in, i))
+                totalParts += in->AccessParticles(i).GetCount();
         }
 
         if (theSearchType == searchTypeEnum::RADIUS) {
@@ -194,8 +229,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = in->AccessParticles(pli);
-            if (!isListOK(in, pli)) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
+            if (!isListOK(in, pli) || !isDirOK(static_cast<metricsEnum>(theMetrics), in, pli)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "ParticleThermodyn: ignoring list %d because it either has no proper positions or no velocity",
                     pli);
                 continue;
@@ -220,11 +255,11 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         assert(allpartcnt == totalParts);
         this->myPts = std::make_shared<simplePointcloud>(in, allParts);
 
-        vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermodyn: building acceleration structure...");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleThermodyn: building acceleration structure...");
         particleTree = std::make_shared<my_kd_tree_t>(
             3 /* dim */, *myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
         particleTree->buildIndex();
-        vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermodyn: done.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleThermodyn: done.");
 
         this->datahash = in->DataHash();
         this->lastTime = time;
@@ -234,7 +269,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
     if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() ||
         this->cyclZSlot.IsDirty() || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty() ||
         this->metricsSlot.IsDirty() || this->removeSelfSlot.IsDirty() || this->findExtremesSlot.IsDirty() ||
-        this->extremeValueSlot.IsDirty()) {
+        this->extremeValueSlot.IsDirty() || this->fluidDensitySlot.IsDirty()) {
         allpartcnt = 0;
         ++myHash;
 
@@ -254,12 +289,19 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         float theMinTemp = FLT_MAX;
         float theMaxTemp = 0.0f;
 
+        /*auto const search_volume = 4.0f / 3.0f * 3.14f * theRadius * theRadius * theRadius;
+        auto const inv_search_volume = 1.0f / search_volume;*/
+        auto const phase_krit = 0.5f * theFluidDensity;
+
         const bool remove_self = this->removeSelfSlot.Param<megamol::core::param::BoolParam>()->Value();
+
+        auto const T_c = tcSlot.Param<core::param::FloatParam>()->Value();
+        auto const rho_c = rhocSlot.Param<core::param::FloatParam>()->Value();
 
         allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = in->AccessParticles(pli);
-            if (!isListOK(in, pli)) {
+            if (!isListOK(in, pli) || !isDirOK(static_cast<metricsEnum>(theMetrics), in, pli)) {
                 continue;
             }
 
@@ -369,14 +411,14 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
                         magnitude = computeTemperature(ret_matches, num_matches, theMass, theFreedom);
                         break;
                     case metricsEnum::DENSITY:
-                        //vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute density yet!");
+                        //megamol::core::utility::log::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute density yet!");
                         magnitude = computeDensity(ret_matches, num_matches, vertexBase, pl.GetGlobalRadius(), bbox);
                         break;
                     case metricsEnum::FRACTIONAL_ANISOTROPY:
                         magnitude = computeFractionalAnisotropy(ret_matches, num_matches);
                         break;
                     case metricsEnum::PRESSURE:
-                        vislib::sys::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute pressure yet!");
+                        megamol::core::utility::log::Log::DefaultLog.WriteWarn("ParticleThermodyn: cannot compute pressure yet!");
                         break;
                     case metricsEnum::NEIGHBORS:
                         magnitude = num_matches;
@@ -395,10 +437,39 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
                                     magnitude = ret_matches[1].second;
                                 }
                             }
+                        } break;
+                    case metricsEnum::PHASE01: {
+                        auto const inv_search_volume = 1.0f / (4.0f / 3.0f * 3.14f * maxDist * maxDist * maxDist);
+                        auto const num_density = num_matches * inv_search_volume;
+                        magnitude = 0.5f;
+                        if (num_density > phase_krit) {
+                            // fluid
+                            magnitude = phaseEnum::FLUID;
+                        } else {
+                            // gas
+                            magnitude = phaseEnum::GAS;
                         }
-                        break;
+                    } break;
+                    case metricsEnum::PHASE02: {
+                        auto const inv_search_volume = 1.0f / (4.0f / 3.0f * 3.14f * maxDist * maxDist * maxDist);
+                        auto const temperature = computeTemperature(ret_matches, num_matches, theMass, theFreedom);
+                        auto const rho_fluid = rho_c + 0.5649f * std::pow(T_c - temperature, 0.3333333f) +
+                                               0.1314 * (T_c - temperature) +
+                                               0.0412 * std::pow(T_c - temperature, 1.5f);
+                        auto const rho_gas = rho_c - 0.5649f * std::pow(T_c - temperature, 0.3333333f) +
+                                             0.2128 * (T_c - temperature) + 0.0702 * std::pow(T_c - temperature, 1.5f);
+                        auto const num_density = num_matches * inv_search_volume;
+                        magnitude = 0.5f;
+                        if (num_density > 0.5f * rho_fluid) {
+                            // fluid
+                            magnitude = phaseEnum::FLUID;
+                        } else {
+                            // gas
+                            magnitude = phaseEnum::GAS;
+                        }
+                    } break;
                     default:
-                        vislib::sys::Log::DefaultLog.WriteError("ParticleThermodyn: unknown metric");
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleThermodyn: unknown metric");
                         break;
                     }
                     if (findExtremes) {
@@ -434,7 +505,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
 
         this->minMetricSlot.Param<core::param::FloatParam>()->SetValue(theMinTemp);
         this->maxMetricSlot.Param<core::param::FloatParam>()->SetValue(theMaxTemp);
-        vislib::sys::Log::DefaultLog.WriteInfo(
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "ParticleThermodyn: min metric: %f max metric: %f", theMinTemp, theMaxTemp);
 
         this->radiusSlot.ResetDirty();
@@ -447,13 +518,14 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         this->removeSelfSlot.ResetDirty();
         this->findExtremesSlot.ResetDirty();
         this->extremeValueSlot.ResetDirty();
+        this->fluidDensitySlot.ResetDirty();
     }
 
     // now the colors are known, inject them
     // in->SetUnlocker(nullptr, false);
     // in->Unlock();
 
-    // vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermodyn: found temperatures between %f and %f", minTemp,
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleThermodyn: found temperatures between %f and %f", minTemp,
     // maxTemp);
 
     allpartcnt = 0;
@@ -461,7 +533,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         outMPDC->SetParticleListCount(in->GetParticleListCount());
         for (unsigned int i = 0; i < in->GetParticleListCount(); ++i) {
             auto& pl = in->AccessParticles(i);
-            if (!isListOK(in, i)) {
+            if (!isListOK(in, i) || !isDirOK(static_cast<metricsEnum>(theMetrics), in, i)) {
                 outMPDC->AccessParticles(i).SetCount(0);
                 continue;
             }
@@ -585,14 +657,14 @@ bool datatools::ParticleThermodyn::getExtentCallback(megamol::core::Call& c) {
 
     inDpdc->SetFrameID(out->FrameID(), true);
     if (!(*inDpdc)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "ParticleThermodyn: could not get current frame extents (%u)", out->FrameID());
         return false;
     }
     out->AccessBoundingBoxes().SetObjectSpaceBBox(inDpdc->GetBoundingBoxes().ObjectSpaceBBox());
     out->AccessBoundingBoxes().SetObjectSpaceClipBox(inDpdc->GetBoundingBoxes().ObjectSpaceClipBox());
     if (inDpdc->FrameCount() < 1) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticleThermodyn: no frame data!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleThermodyn: no frame data!");
         return false;
     }
     out->SetFrameCount(inDpdc->FrameCount());

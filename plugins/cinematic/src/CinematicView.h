@@ -8,12 +8,10 @@
 #ifndef MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
 #define MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/View3D_2.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/View3DGL.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -45,10 +43,16 @@ namespace cinematic {
     /**
     * Cinemtic View.
     */
-    class CinematicView : public core::view::View3D_2 {
+    class CinematicView : public core::view::View3DGL {
     public:
 
-        typedef core::view::View3D_2 Base;
+        typedef core::view::View3DGL Base;
+
+        std::vector<std::string> requested_lifetime_resources() override {
+            auto lifetime_resources = Base::requested_lifetime_resources();
+            lifetime_resources.push_back("MegaMolGraph");
+            return lifetime_resources;
+        }
 
         /**
          * Answer the name of this module.
@@ -90,9 +94,9 @@ namespace cinematic {
     protected:
 
         /**
-         * Renders this View3D_2 in the currently active OpenGL context.
+         * Renders this View3DGL in the currently active OpenGL context.
          */
-        virtual void Render(const mmcRenderViewContext& context);
+        virtual void Render(const mmcRenderViewContext& context, core::Call* call);
 
     private:
 
@@ -129,7 +133,6 @@ namespace cinematic {
             unsigned int          exp_frame_cnt;
         };
 
-        vislib::graphics::gl::FramebufferObject fbo;
         PngData                                 png_data;
         CinematicUtils                          utils;
         clock_t                                 deltaAnimTime;
@@ -137,8 +140,6 @@ namespace cinematic {
         bool                                    playAnim;
         int                                     cineWidth;
         int                                     cineHeight;
-        float                                   vp_lastw;
-        float                                   vp_lasth;
         SkyboxSides                             sbSide;
         bool                                    rendering;
         unsigned int                            fps;
@@ -173,7 +174,7 @@ namespace cinematic {
          * @param msg The error message
          */
         static void PNGAPI pngWarn(png_structp pngPtr, png_const_charp msg) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
         }
 
         /**

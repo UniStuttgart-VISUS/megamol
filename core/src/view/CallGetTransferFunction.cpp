@@ -15,7 +15,7 @@ using namespace megamol::core;
  * view::CallGetTransferFunction::CallGetTransferFunction
  */
 view::CallGetTransferFunction::CallGetTransferFunction(void) : Call(),
-    texID(0), texSize(1), texData(NULL), range({0.0f, 1.0f}) {
+    texID(0), texSize(1), texData(NULL), range({0.0f, 1.0f}), range_updated(false) {
     // intentionally empty
 }
 
@@ -33,6 +33,14 @@ void view::CallGetTransferFunction::BindConvenience(vislib::graphics::gl::GLSLSh
     glBindTexture(GL_TEXTURE_1D, this->texID);
     glUniform1i(shader.ParameterLocation("tfTexture"), textureUniform);
     glUniform2fv(shader.ParameterLocation("tfRange"), 1, this->range.data());
+}
+
+void view::CallGetTransferFunction::BindConvenience(std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform) {
+    glEnable(GL_TEXTURE_1D);
+    glActiveTexture(activeTexture);
+    glBindTexture(GL_TEXTURE_1D, this->texID);
+    shader->setUniform("tfTexture", textureUniform);
+    glUniform2fv(shader->getUniformLocation("tfRange"), 1, this->range.data());
 }
 
 void view::CallGetTransferFunction::UnbindConvenience() {

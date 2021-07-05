@@ -12,7 +12,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/Call.h"
 
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -48,15 +48,24 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     // get transformation parameter
     this->processTransformation();
 
+    // fill clipping plane container
+    this->processClippingPlane();
+
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
-	cd->SetTimeStamp(os->getTime());
-    cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+    cd->SetTimeStamp(os->getTime());
+    cd->SetFrameID(os->getTime(), true);
+    if (!(*cd)(1))
+        return false;
+    if (!(*cd)(0))
+        return false;
+
+    auto interface_dirty = this->InterfaceIsDirty();
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || interface_dirty ) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
@@ -64,8 +73,6 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
         return true;
     }
 
-    if (!(*cd)(1)) return false;
-    if (!(*cd)(0)) return false;
     if (cd->GetParticleListCount() == 0) return false;
 
     if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
@@ -107,20 +114,22 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 
     if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE &&
         parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-        vislib::sys::Log::DefaultLog.WriteError("Only color data is not allowed.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Only color data is not allowed.");
     }
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::NHSPHERES;
-    this->structureContainer.raw = parts.GetVertexData();
-    this->structureContainer.vertexLength = vertexLength;
-    this->structureContainer.vertexStride = vstride;
-    this->structureContainer.colorLength = colorLength;
-    this->structureContainer.colorStride = parts.GetColourDataStride();
-    this->structureContainer.partCount = partCount;
-    this->structureContainer.globalRadius = globalRadius;
-    this->structureContainer.mmpldColor = parts.GetColourDataType();
+    sphereStructure ss;
+    ss.raw = parts.GetVertexData();
+    ss.vertexLength = vertexLength;
+    ss.dataStride = vstride;
+    ss.colorLength = colorLength;
+    ss.partCount = partCount;
+    ss.globalRadius = globalRadius;
+    ss.mmpldColor = parts.GetColourDataType();
+
+    this->structureContainer.structure = ss;
 
     return true;
 }

@@ -13,9 +13,9 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "vislib/forceinline.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
-#include <ospray.h>
+#include "ospray/ospray_cpp.h"
 #include "OSPRay_plugin/CallOSPRayAPIObject.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -59,25 +59,27 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
     megamol::core::moldyn::MultiParticleDataCall* cd =
         this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
+    
+
+    //auto const minFrameCount = cd->FrameCount();
+
+    //if (minFrameCount == 0) return false;
+
+    //auto frameTime = 0;
+
+    //if (os->FrameID() >= minFrameCount) {
+    //    cd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
+    //    frameTime = minFrameCount - 1;
+    //} else {
+    //    cd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
+    //    frameTime = os->FrameID();
+    //}
+    cd->SetFrameID(os->FrameID(), true);
     if (!(*cd)(1)) return false;
 
-    auto const minFrameCount = cd->FrameCount();
-
-    if (minFrameCount == 0) return false;
-
-    auto frameTime = 0;
-
-    if (os->FrameID() >= minFrameCount) {
-        cd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
-        frameTime = minFrameCount - 1;
-    } else {
-        cd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
-        frameTime = os->FrameID();
-    }
-
-    if (this->datahash != cd->DataHash() || this->time != frameTime || this->InterfaceIsDirty()) {
+    if (this->datahash != cd->DataHash() || this->time != cd->FrameID() || this->InterfaceIsDirty()) {
         this->datahash = cd->DataHash();
-        this->time = frameTime;
+        this->time = cd->FrameID();
     } else {
         return true;
     }
@@ -85,28 +87,30 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
     if (!(*cd)(0)) return false;
 
     size_t listCount = cd->GetParticleListCount();
-    std::vector<OSPGeometry> geo;
+    std::vector<::ospray::cpp::Geometry> geo;
     for (size_t i = 0; i < listCount; i++) {
 
         core::moldyn::MultiParticleDataCall::Particles& parts = cd->AccessParticles(i);
 
         auto colorType = this->colorTypeSlot.Param<megamol::core::param::EnumParam>()->Value();
 
-        geo.push_back(ospNewGeometry("pkd_geometry"));
+        geo.emplace_back(ospNewGeometry("pkd_geometry"));
 
-        auto vertexData = ospNewData(parts.GetCount(), OSP_FLOAT4, parts.GetVertexData(), OSP_DATA_SHARED_BUFFER);
-        ospCommit(vertexData);
+        auto vertexData =
+            ::ospray::cpp::SharedData(parts.GetVertexData(), OSP_FLOAT, parts.GetCount(), 4 * sizeof(float));
+        vertexData.commit();
 
         // set bbox
-        auto bboxData = ospNewData(6, OSP_FLOAT, parts.GetBBox().PeekBounds());
-        ospCommit(bboxData);
+        auto bboxData = ::ospray::cpp::CopiedData(parts.GetBBox().PeekBounds(),OSP_FLOAT, 6);
+        bboxData.commit();
 
-        ospSet1f(geo.back(), "radius", parts.GetGlobalRadius());
-        ospSet1i(geo.back(), "colorType", colorType);
-        ospSetData(geo.back(), "position", vertexData);
+        geo.back().setParam("radius", parts.GetGlobalRadius());
+        //ospSet1i(geo.back(), "colorType", colorType);
+        geo.back().setParam("colorType", 2);
+        geo.back().setParam("position", vertexData);
         // ospSetData(geo.back(), "bbox", bboxData);
-        ospSetData(geo.back(), "bbox", nullptr);
-        ospCommit(geo.back());
+        geo.back().setParam("bbox", NULL);
+        geo.back().commit();
 
         // TODO: implement distributed stuff
         // if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST) {
@@ -125,7 +129,7 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
 
     std::vector<void*> geo_transfer(geo.size());
     for (auto i = 0; i < geo.size(); i++) {
-        geo_transfer[i] = reinterpret_cast<void*>(geo[i]);
+        geo_transfer[i] = geo[i].handle();
     }
     os->setStructureType(GEOMETRY);
     os->setAPIObjects(std::move(geo_transfer));
@@ -139,7 +143,7 @@ OSPRayPKDGeometry::~OSPRayPKDGeometry() { this->Release(); }
 bool OSPRayPKDGeometry::create() {
     auto error = ospLoadModule("pkd");
     if (error != OSPError::OSP_NO_ERROR) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load OSPRay module: PKD. Error occured in %s:%d", __FILE__, __LINE__);
     }
     return true;

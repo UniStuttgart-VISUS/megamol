@@ -7,12 +7,16 @@
 
 #include "stdafx.h"
 #include "mmcore/view/special/ScreenShooter.h"
+
 #include <climits>
+#include <limits>
 #include <map>
 #include <sstream>
+
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -20,19 +24,20 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "png.h"
+#include "mmcore/versioninfo.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/Thread.h"
-
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/Thread.h"
+#include "mmcore/utility/DateTime.h"
+#include "mmcore/utility/graphics/ScreenShotComments.h"
 
 namespace megamol {
 namespace core {
@@ -56,7 +61,7 @@ static void PNGAPI myPngError(png_structp pngPtr, png_const_charp msg) {
  * @param msg The error message
  */
 static void PNGAPI myPngWarn(png_structp pngPtr, png_const_charp msg) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
 }
 
 /**
@@ -134,7 +139,7 @@ static DWORD myPngStoreData(void* d) {
     BYTE* buffer = new BYTE[data->imgWidth * data->bpp]; // 1 scanline at a time
 
     if (buffer == NULL) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to allocate scanline buffer");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to allocate scanline buffer");
         return -1;
     }
 
@@ -211,7 +216,7 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
         animStepSlot("anim::step", "The time step"),
         animAddTime2FrameSlot("anim::addTime2Fname", "Add animation time to the output filenames"),
         makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots"),
-        animTimeParamNameSlot("anim::paramname", "Name of the time parameter"),
+        animTimeParamNameSlot("anim::paramname", "Name of the time parameter. Default if blank: 'anim::time'"),
         disableCompressionSlot("disableCompressionSlot", "set compression level to 0"),
         running(false),
         animLastFrameTime(std::numeric_limits<decltype(animLastFrameTime)>::lowest()),
@@ -220,14 +225,14 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
     this->viewNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
 
-    this->imgWidthSlot << new param::IntParam(1024, 1);
+    this->imgWidthSlot << new param::IntParam(1920, 1);
     this->MakeSlotAvailable(&this->imgWidthSlot);
-    this->imgHeightSlot << new param::IntParam(768, 1);
+    this->imgHeightSlot << new param::IntParam(1080, 1);
     this->MakeSlotAvailable(&this->imgHeightSlot);
 
-    this->tileWidthSlot << new param::IntParam(1024, 1);
+    this->tileWidthSlot << new param::IntParam(1920, 1);
     this->MakeSlotAvailable(&this->tileWidthSlot);
-    this->tileHeightSlot << new param::IntParam(1024, 1);
+    this->tileHeightSlot << new param::IntParam(1080, 1);
     this->MakeSlotAvailable(&this->tileHeightSlot);
 
     this->imageFilenameSlot << new param::FilePathParam("Unnamed.png", param::FilePathParam::FLAG_TOBECREATED);
@@ -242,7 +247,7 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
     this->backgroundSlot << bkgnd;
     this->MakeSlotAvailable(&this->backgroundSlot);
 
-    this->triggerButtonSlot << new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::CTRL);
+    this->triggerButtonSlot << new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::ALT);
     this->triggerButtonSlot.SetUpdateCallback(&ScreenShooter::triggerButtonClicked);
     if (!reducedParameters) this->MakeSlotAvailable(&this->triggerButtonSlot);
 
@@ -270,6 +275,11 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
 
     this->animTimeParamNameSlot << new param::StringParam("");
     if (!reducedParameters) this->MakeSlotAvailable(&this->animTimeParamNameSlot);
+
+    /// XXX Disable tiling option since it is not working for new megamol frontend (yet)
+    this->tileWidthSlot.Parameter()->SetGUIVisible(false);
+    this->tileHeightSlot.Parameter()->SetGUIVisible(false);
+    this->closeAfterShotSlot.Parameter()->SetGUIVisible(false);
 }
 
 
@@ -307,7 +317,7 @@ bool view::special::ScreenShooter::Terminate(void) {
  * view::special::ScreenShooter::release
  */
 bool view::special::ScreenShooter::create(void) {
-    // Intentionally empty. Initialization is lazy.
+    currentFbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
     return true;
 }
 
@@ -324,8 +334,7 @@ void view::special::ScreenShooter::release(void) {
  * view::special::ScreenShooter::BeforeRender
  */
 void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
-    using vislib::sys::Log;
-    vislib::graphics::gl::FramebufferObject fbo;
+    using megamol::core::utility::log::Log;
     ShooterData data;
     vislib::sys::Thread t2(&myPngStoreData);
 
@@ -335,6 +344,11 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
     data.imgHeight = static_cast<UINT>(vislib::math::Max(0, this->imgHeightSlot.Param<param::IntParam>()->Value()));
     data.tileWidth = static_cast<UINT>(vislib::math::Max(0, this->tileWidthSlot.Param<param::IntParam>()->Value()));
     data.tileHeight = static_cast<UINT>(vislib::math::Max(0, this->tileHeightSlot.Param<param::IntParam>()->Value()));
+
+    /// XXX Disable tiling option since it is not working for new megamol frontend (yet)
+    data.tileWidth = data.imgWidth;
+    data.tileHeight = data.imgHeight;
+
     vislib::TString filename = this->imageFilenameSlot.Param<param::FilePathParam>()->Value();
     float frameTime = -1.0f;
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
@@ -355,8 +369,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
 
                 if (this->animAddTime2FrameSlot.Param<param::BoolParam>()->Value()) {
                     int intPart = static_cast<int>(floor(this->animLastFrameTime));
-                    float fractPart = this->animLastFrameTime - (float)intPart;
-                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart * 1000.0f));
+                    float fractPart = this->animLastFrameTime - (float) intPart;
+                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int) (fractPart * 1000.0f));
                 } else {
                     ext.Format(_T(".%.5u.png"), this->outputCounter);
                 }
@@ -412,11 +426,12 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         return;
     }
 
-    view::CallRenderView crv;
+    view::CallRenderViewGL crv;
     BYTE* buffer = NULL;
     vislib::sys::FastFile file;
     bool rollback = false;
-    vislib::graphics::gl::FramebufferObject* overlayfbo = NULL;
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> overlayfbo;
+    float bckcolalpha = 1.0f;
 
     try {
 
@@ -436,9 +451,6 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             throw vislib::Exception("Cannot create png info", __FILE__, __LINE__);
         }
         png_set_write_fn(data.pngPtr, static_cast<void*>(&file), &myPngWrite, &myPngFlush);
-        png_set_IHDR(data.pngPtr, data.pngInfoPtr, data.imgWidth, data.imgHeight, 8,
-            (bkgndMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-            PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
         if (this->disableCompressionSlot.Param<param::BoolParam>()->Value()) {
             png_set_compression_level(data.pngPtr, 0);
@@ -448,22 +460,19 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         // to have a legal exif structure (lol)
 
         // todo: camera settings are not stored without magic knowledge about the view
+        megamol::core::utility::graphics::ScreenShotComments ssc(this->GetCoreInstance()->SerializeGraph());
 
-        std::string serInstances, serModules, serCalls, serParams;
-        this->GetCoreInstance()->SerializeGraph(serInstances, serModules, serCalls, serParams);
-        auto confstr = serInstances + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
-        std::vector<png_byte> tempvec(confstr.begin(), confstr.end());
-        tempvec.push_back('\0');
-        // auto info = new png_byte[confstr.size()];
-        // memcpy(info, confstr.c_str(), confstr.size());
-        // png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, sizeof(info), info);
-        png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, tempvec.size(), tempvec.data());
+        png_set_text(data.pngPtr, data.pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
+
+        png_set_IHDR(data.pngPtr, data.pngInfoPtr, data.imgWidth, data.imgHeight, 8,
+            (bkgndMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+            PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
         // check how complex the upcoming action is
         if ((data.imgWidth <= data.tileWidth) && (data.imgHeight <= data.tileHeight)) {
             // we can render the whole image in just one call!
 
-            if (!fbo.Create(data.imgWidth, data.imgHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+            if (!currentFbo->Create(data.imgWidth, data.imgHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                     vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
                 throw vislib::Exception("Unable to create image framebuffer object.", __FILE__, __LINE__);
             }
@@ -472,40 +481,39 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             if (buffer == NULL) {
                 throw vislib::Exception("Cannot allocate image buffer.", __FILE__, __LINE__);
             }
+
             crv.ResetAll();
             switch (bkgndMode) {
-            case 0: /* don't set bkgnd */
+            case 0:
+                crv.SetBackgroundColor(view->BkgndColour());
                 break;
             case 1:
-                crv.SetBackground(0, 0, 0);
+                crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
                 break;
             case 2:
-                crv.SetBackground(255, 255, 255);
+                crv.SetBackgroundColor(glm::vec4(1, 1, 1, 1));
                 break;
             case 3:
-                crv.SetBackground(0, 0, 0);
+                crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
                 break;
             case 4:
-                crv.SetBackground(192, 192, 192);
+                crv.SetBackgroundColor(glm::vec4(255.0f / 192.0f, 255.0f / 192.0f, 255.0f / 192.0f, 1));
                 break;
             default: /* don't set bkgnd */
                 break;
             }
-            // don't set projection
-            if (fbo.Enable() != GL_NO_ERROR) {
-                throw vislib::Exception(
-                    "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
-            }
-            glViewport(0, 0, data.imgWidth, data.imgHeight);
-            crv.SetOutputBuffer(&fbo, vislib::math::Rectangle<int>(0, 0, data.imgWidth, data.imgHeight));
+            int vp[4];
+            glGetIntegerv(GL_VIEWPORT, vp);
+            crv.SetFramebufferObject(currentFbo);
+            crv.SetTime(frameTime);
             crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
                 static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
-            crv.SetTime(frameTime);
             view->OnRenderView(crv); // glClear by SFX
+            view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
             glFlush();
-            fbo.Disable();
 
-            if (fbo.GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
+            if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
+                GL_NO_ERROR) {
                 throw vislib::Exception("Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
             }
             if (bkgndMode == 1) {
@@ -513,7 +521,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 for (UINT x = 0; x < data.imgWidth; x++) {
                     for (UINT y = 0; y < data.imgHeight; y++) {
                         BYTE* cptr = buffer + 4 * (x + y * data.imgWidth);
-                        if (cptr[3] == 0) continue;
+                        if (cptr[3] == 0)
+                            continue;
                         float r = static_cast<float>(cptr[0]) / 255.0f;
                         float g = static_cast<float>(cptr[1]) / 255.0f;
                         float b = static_cast<float>(cptr[2]) / 255.0f;
@@ -552,12 +561,15 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         } else {
             // here we have to render tiles of the image. Woho for optimizing!
 
+            /// XXX Tiling currently breaks for unknown reason ...
+            throw vislib::Exception("[ScreenShooter] Tiling is currently not supported.", __FILE__, __LINE__);
+
             buffer = new BYTE[data.tileWidth * data.tileHeight * data.bpp];
             if (buffer == NULL) {
                 throw vislib::Exception("Cannot allocate temporary image buffer", __FILE__, __LINE__);
             }
 
-            if (!fbo.Create(data.tileWidth, data.tileHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+            if (!currentFbo->Create(data.tileWidth, data.tileHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                     vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
                 throw vislib::Exception("Unable to create image framebuffer object.", __FILE__, __LINE__);
             }
@@ -569,24 +581,22 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             }
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "%d tile(s) scheduled for rendering", xSteps * ySteps);
 
+            int vp[4];
+            glGetIntegerv(GL_VIEWPORT, vp);
+
             // overlay for user information
-            overlayfbo = new vislib::graphics::gl::FramebufferObject();
+            overlayfbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
             if (overlayfbo != NULL) {
-                int vp[4];
-                glGetIntegerv(GL_VIEWPORT, vp);
                 if (overlayfbo->Create(vp[0] + vp[2], vp[1] + vp[3], GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                         vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
-                    if (overlayfbo->Enable() == GL_NO_ERROR) {
-                        crv.ResetAll();
-                        crv.SetTime(frameTime);
-                        view->OnRenderView(crv); // glClear by SFX
-                        glFlush();
-                        overlayfbo->Disable();
-                    } else {
-                        SAFE_DELETE(overlayfbo);
-                    }
+                    crv.ResetAll();
+                    crv.SetFramebufferObject(overlayfbo);
+                    crv.SetTime(frameTime);
+                    view->OnRenderView(crv); // glClear by SFX
+                    /// view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
+                    glFlush();
                 } else {
-                    SAFE_DELETE(overlayfbo);
+                    overlayfbo.reset();
                 }
             }
 
@@ -682,44 +692,40 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                     // render a tile
                     crv.ResetAll();
                     switch (bkgndMode) {
-                    case 0: /* don't set bkgnd */
+                    case 0:
+                        crv.SetBackgroundColor(view->BkgndColour());
                         break;
                     case 1:
-                        crv.SetBackground(0, 0, 0);
+                        crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
                         break;
                     case 2:
-                        crv.SetBackground(255, 255, 255);
+                        crv.SetBackgroundColor(glm::vec4(1, 1, 1, 1));
                         break;
                     case 3:
-                        crv.SetBackground(0, 0, 0);
+                        crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
                         break;
                     case 4:
                         if ((xi + yi) % 2) {
-                            crv.SetBackground(192, 192, 192);
+                            crv.SetBackgroundColor(glm::vec4(255.0f / 192.0f, 255.0f / 192.0f, 255.0f / 192.0f, 1));
                         } else {
-                            crv.SetBackground(128, 128, 128);
+                            crv.SetBackgroundColor(glm::vec4(255.0f / 128.0f, 255.0f / 128.0f, 255.0f / 128.0f, 1));
                         }
                         break;
                     default: /* don't set bkgnd */
                         break;
                     }
-                    // don't set projection
-                    if (fbo.Enable() != GL_NO_ERROR) {
-                        throw vislib::Exception(
-                            "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
-                    }
-                    glViewport(0, 0, tileW, tileH);
-                    crv.SetOutputBuffer(&fbo, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
+
+                    crv.SetFramebufferObject(currentFbo);
+                    crv.SetTime(frameTime);
                     crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
                         static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
                         static_cast<float>(tileH));
-                    crv.SetTime(frameTime);
                     view->OnRenderView(crv); // glClear by SFX
+                    /// view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
                     glFlush();
-                    fbo.Disable();
 
-                    if (fbo.GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
-                        GL_NO_ERROR) {
+                    if (currentFbo->GetColourTexture(
+                            buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
                         throw vislib::Exception(
                             "Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
                     }
@@ -728,7 +734,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                         for (UINT x = 0; x < data.tileWidth; x++) {
                             for (UINT y = 0; y < data.tileHeight; y++) {
                                 BYTE* cptr = buffer + 4 * (x + y * data.tileWidth);
-                                if (cptr[3] == 0) continue;
+                                if (cptr[3] == 0)
+                                    continue;
                                 float r = static_cast<float>(cptr[0]) / 255.0f;
                                 float g = static_cast<float>(cptr[1]) / 255.0f;
                                 float b = static_cast<float>(cptr[2]) / 255.0f;
@@ -806,6 +813,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
 
             png_write_end(data.pngPtr, data.pngInfoPtr);
 
+            view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
+
         } /* end if */
 
     } catch (vislib::Exception ex) {
@@ -821,54 +830,48 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         data.imgHeight = 0;
         t2.Join();
     }
-    if (overlayfbo != NULL) {
+    if (overlayfbo != nullptr) {
         try {
             overlayfbo->Release();
-        } catch (...) {
-        }
-        delete overlayfbo;
+        } catch (...) {}
+        overlayfbo.reset();
     }
     if (data.pngPtr != NULL) {
         if (data.pngInfoPtr != NULL) {
             png_destroy_write_struct(&data.pngPtr, &data.pngInfoPtr);
         } else {
-            png_destroy_write_struct(&data.pngPtr, (png_infopp)NULL);
+            png_destroy_write_struct(&data.pngPtr, (png_infopp) NULL);
         }
     }
     try {
         file.Flush();
-    } catch (...) {
-    }
+    } catch (...) {}
     try {
         file.Close();
-    } catch (...) {
-    }
+    } catch (...) {}
     if (rollback) {
         try {
             if (vislib::sys::File::Exists(filename)) {
                 vislib::sys::File::Delete(filename);
             }
-        } catch (...) {
-        }
+        } catch (...) {}
     }
     if (data.tmpFiles[0] != NULL) {
         try {
             data.tmpFiles[0]->Close();
-        } catch (...) {
-        }
+        } catch (...) {}
         delete data.tmpFiles[0];
     }
     if (data.tmpFiles[1] != NULL) {
         try {
             data.tmpFiles[1]->Close();
-        } catch (...) {
-        }
+        } catch (...) {}
         delete data.tmpFiles[1];
     }
     delete[] buffer;
-    fbo.Release();
+    currentFbo->Release();
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Screen shot stored");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Screen shot stored");
 
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
         if (this->animLastFrameTime >= this->animToSlot.Param<param::IntParam>()->Value()) {
@@ -897,7 +900,12 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
 
     if (closeAfter) {
         this->running = false;
-        this->GetCoreInstance()->Shutdown();
+        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+            this->GetCoreInstance()->Shutdown();
+        } else {
+            /// XXX TODO Tell any frontend service to shutdown
+            Log::DefaultLog.WriteError("'close after' option is not yet supported for new megamol frontend.");
+        }
     }
 }
 
@@ -917,7 +925,7 @@ void view::special::ScreenShooter::createScreenshot(const std::string& filename)
  */
 bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) {
     // happy trigger finger hit button action happend
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->triggerButtonSlot);
 
     vislib::StringA mvn(this->viewNameSlot.Param<param::StringParam>()->Value());
@@ -925,11 +933,22 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
 
     vislib::sys::AutoLock lock(this->ModuleGraphLock());
     {
-        AbstractNamedObjectContainer::ptr_type anoc =
-            AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-        AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
-        ViewInstance* vi = dynamic_cast<ViewInstance*>(ano.get());
-        auto av = dynamic_cast<AbstractView*>(ano.get());
+        ViewInstance* vi = nullptr;
+        AbstractView* av = nullptr;
+
+        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+            AbstractNamedObjectContainer::ptr_type anoc =
+                AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+            AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
+            vi = dynamic_cast<ViewInstance*>(ano.get());
+            av = dynamic_cast<AbstractView*>(ano.get());
+        } else {
+            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+            auto module_ptr = megamolgraph.FindModule(std::string(mvn.PeekBuffer()));
+            vi = dynamic_cast<ViewInstance*>(module_ptr.get());
+            av = dynamic_cast<AbstractView*>(module_ptr.get());
+        }
+
         if (vi != nullptr) {
             if (vi->View() != nullptr) {
                 av = vi->View();
@@ -937,13 +956,14 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
         }
         if (av != nullptr) {
             if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
-                param::ParamSlot* timeSlot = this->findTimeParam(vi->View());
+                param::ParamSlot* timeSlot = this->findTimeParam(av);
                 if (timeSlot != nullptr) {
-                    timeSlot->Param<param::FloatParam>()->SetValue(
-                        static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value()));
-                    this->animLastFrameTime = (float)UINT_MAX;
+                    auto startTime = static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value());
+                    Log::DefaultLog.WriteInfo("Starting animation of screen shots at %f.", time);
+                    timeSlot->Param<param::FloatParam>()->SetValue(startTime);
+                    this->animLastFrameTime = std::numeric_limits<decltype(animLastFrameTime)>::lowest();
                 } else {
-                    Log::DefaultLog.WriteError("Unable to make animation screen shots");
+                    Log::DefaultLog.WriteError("Unable to find animation time parameter in given view. Unable to make animation screen shots.");
                     this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
                 }
                 // this is not a good idea because the animation module interferes with the "anim::time" parameter in
@@ -989,8 +1009,14 @@ param::ParamSlot* view::special::ScreenShooter::findTimeParam(view::AbstractView
     if (name.IsEmpty()) {
         timeSlot = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time").get());
     } else {
-        AbstractNamedObjectContainer* anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule().get());
-        timeSlot = dynamic_cast<param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)).get());
+        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+            AbstractNamedObjectContainer* anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule().get());
+            timeSlot = dynamic_cast<param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)).get());
+        } else {
+            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+            std::string fullname = std::string(view->Name().PeekBuffer()) + "::" + std::string(name.PeekBuffer());
+            timeSlot = megamolgraph.FindParameterSlot(fullname);
+        }
     }
 
     return timeSlot;

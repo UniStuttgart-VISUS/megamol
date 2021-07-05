@@ -8,8 +8,6 @@
 #ifndef MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -95,8 +93,8 @@ namespace cinematic {
 
         // Variables shared/updated with call ---------------------------------
         camera_state_type            cameraState;
-		std::vector<glm::vec3 >      interpolCamPos;
-		std::vector<Keyframe>        keyframes;
+	std::vector<glm::vec3 >      interpolCamPos;
+        std::vector<Keyframe>        keyframes;
         Keyframe                     selectedKeyframe;
         Keyframe                     dragDropKeyframe;
         glm::vec3                    startCtrllPos;
@@ -168,6 +166,8 @@ namespace cinematic {
         float             splineTangentLength;
         int               undoQueueIndex;
         std::vector<Undo> undoQueue;
+        float             pendingTotalAnimTime;
+        uint32_t          frameId;
           
         /**********************************************************************
         * functions
@@ -175,11 +175,11 @@ namespace cinematic {
 
         Keyframe interpolateKeyframe(float time);
 
-        bool addKeyframe(Keyframe kf, bool undo);
+        bool addKeyframe(Keyframe kf, bool add_undo);
 
-        bool replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo);
+        bool replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool add_undo);
 
-        bool deleteKeyframe(Keyframe kf, bool undo);
+        bool deleteKeyframe(Keyframe kf, bool add_undo);
 
         bool loadKeyframes(void);
 
@@ -214,6 +214,8 @@ namespace cinematic {
         glm::quat quaternion_interpolation(float u, glm::quat q0, glm::quat q1);
 
         int getKeyframeIndex(std::vector<Keyframe>& keyframes, Keyframe keyframe);
+
+        void pendingTotalAnimTimePopUp(uint32_t frame_id);
 
         /**********************************************************************
         * callbacks

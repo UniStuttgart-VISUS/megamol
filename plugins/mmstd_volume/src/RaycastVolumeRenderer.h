@@ -1,139 +1,164 @@
 /*
  * RaycastVolumeRenderer.h
  *
- * Copyright (C) 2018-2019 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2018-2020 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
 #ifndef RAYCAST_VOLUME_RENDERER_H_INCLUDED
 #define RAYCAST_VOLUME_RENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
-#include <algorithm>
-#include <array>
-#include <limits>
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
-
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
+
+#include "mmcore/utility/ShaderFactory.h"
+
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
 
+#include <array>
+#include <limits>
+#include <memory>
+
 namespace megamol {
 namespace stdplugin {
-namespace volume {
+    namespace volume {
 
-class RaycastVolumeRenderer : public core::view::Renderer3DModule_2 {
-public:
-    /**
-     * Answer the name of this module.
-     *
-     * @return The name of this module.
-     */
-    static const char* ClassName(void) { return "RaycastVolumeRenderer"; }
+        class RaycastVolumeRenderer : public megamol::core::view::Renderer3DModuleGL {
+        public:
+            /**
+             * Answer the name of this module.
+             *
+             * @return The name of this module.
+             */
+            static const char* ClassName(void) {
+                return "RaycastVolumeRenderer";
+            }
 
-    /**
-     * Answer a human readable description of this module.
-     *
-     * @return A human readable description of this module.
-     */
-    static const char* Description(void) { return "Modern compute-based raycast renderer for volumetric datasets."; }
+            /**
+             * Answer a human readable description of this module.
+             *
+             * @return A human readable description of this module.
+             */
+            static const char* Description(void) {
+                return "Modern compute-based raycast renderer for volumetric datasets.";
+            }
 
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) {
+            /**
+             * Answers whether this module is available on the current system.
+             *
+             * @return 'true' if the module is available, 'false' otherwise.
+             */
+            static bool IsAvailable(void) {
 #ifdef _WIN32
-#    if defined(DEBUG) || defined(_DEBUG)
-        HDC dc = ::wglGetCurrentDC();
-        HGLRC rc = ::wglGetCurrentContext();
-        ASSERT(dc != NULL);
-        ASSERT(rc != NULL);
-#    endif // DEBUG || _DEBUG
-#endif     // _WIN32
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable() && ogl_IsVersionGEQ(4, 3);
-    }
+#if defined(DEBUG) || defined(_DEBUG)
+                HDC dc = ::wglGetCurrentDC();
+                HGLRC rc = ::wglGetCurrentContext();
+                ASSERT(dc != NULL);
+                ASSERT(rc != NULL);
+#endif // DEBUG || _DEBUG
+#endif // _WIN32
+                return ogl_IsVersionGEQ(4, 3);
+            }
 
-    RaycastVolumeRenderer();
-    ~RaycastVolumeRenderer();
+            RaycastVolumeRenderer();
+            ~RaycastVolumeRenderer();
 
-protected:
-    /**
-     * Implementation of 'Create'.
-     *
-     * @return 'true' on success, 'false' otherwise.
-     */
-    virtual bool create() override;
+        protected:
+            /**
+             * Implementation of 'Create'.
+             *
+             * @return 'true' on success, 'false' otherwise.
+             */
+            bool create();
 
-    /**
-     * Implementation of 'Release'.
-     */
-    virtual void release() override;
+            /**
+             * Implementation of 'Release'.
+             */
+            void release();
 
-    /**
-     * The get extents callback. The module should set the members of
-     * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times).
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    virtual bool GetExtents(core::view::CallRender3D_2& call) override;
+            /**
+             * The get extents callback. The module should set the members of
+             * 'call' to tell the caller the extents of its data (bounding boxes
+             * and times).
+             *
+             * @param call The calling call.
+             *
+             * @return The return value of the function.
+             */
+            bool GetExtents(core::view::CallRender3DGL& call) override;
 
-    /**
-     * The render callback.
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    virtual bool Render(core::view::CallRender3D_2& call) override;
+            /**
+             * The render callback.
+             *
+             * @param call The calling call.
+             *
+             * @return The return value of the function.
+             */
+            bool Render(core::view::CallRender3DGL& call) override;
 
-    /**
-     * Get and update data by calling input modules
-     */
-    bool updateVolumeData();
+            bool updateVolumeData(const unsigned int frameID);
 
-private:
-    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_shdr;
-    std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
+            bool updateTransferFunction();
 
-    std::unique_ptr<glowl::Texture2D> m_render_target;
+        private:
+            std::unique_ptr<glowl::GLSLProgram> rvc_dvr_shdr;
+            std::unique_ptr<glowl::GLSLProgram> rvc_iso_shdr;
+            std::unique_ptr<glowl::GLSLProgram> rvc_aggr_shdr;
+            std::unique_ptr<glowl::GLSLProgram> rtf_shdr;
+            std::unique_ptr<glowl::GLSLProgram> rtf_aggr_shdr;
 
-    std::unique_ptr<glowl::Texture3D> m_volume_texture;
+            std::unique_ptr<glowl::Texture2D> m_render_target;
+            std::unique_ptr<glowl::Texture2D> m_normal_target;
+            std::unique_ptr<glowl::Texture2D> m_depth_target;
 
-    std::size_t m_volume_datahash = std::numeric_limits<std::size_t>::max();
-    int m_frame_id = -1;
+            std::unique_ptr<glowl::Texture3D> m_volume_texture;
 
-    glm::vec3 m_volume_origin;
-    glm::vec3 m_volume_extents;
-    glm::vec3 m_volume_resolution;
+            GLuint tf_texture;
 
-    /** caller slot */
-    core::CallerSlot m_volumetricData_callerSlot;
-    core::CallerSlot m_transferFunction_callerSlot;
+            size_t m_volume_datahash = std::numeric_limits<size_t>::max();
+            int m_frame_id = -1;
 
-    core::param::ParamSlot m_ray_step_ratio_param;
+            float m_volume_origin[3];
+            float m_volume_extents[3];
+            float m_volume_resolution[3];
 
-    std::array<float, 2> valRange;
-};
+            /** Parameters for changing the behavior */
+            core::param::ParamSlot m_mode;
 
-} // namespace volume
+            core::param::ParamSlot m_ray_step_ratio_param;
+            core::param::ParamSlot m_opacity_threshold;
+            core::param::ParamSlot m_iso_value;
+            core::param::ParamSlot m_opacity;
+
+            core::param::ParamSlot m_use_lighting_slot;
+            core::param::ParamSlot m_ka_slot;
+            core::param::ParamSlot m_kd_slot;
+            core::param::ParamSlot m_ks_slot;
+            core::param::ParamSlot m_shininess_slot;
+            core::param::ParamSlot m_ambient_color;
+            core::param::ParamSlot m_specular_color;
+            core::param::ParamSlot m_material_color;
+
+            /** caller slot */
+            megamol::core::CallerSlot m_renderer_callerSlot;
+            megamol::core::CallerSlot m_volumetricData_callerSlot;
+            megamol::core::CallerSlot m_lights_callerSlot;
+            megamol::core::CallerSlot m_transferFunction_callerSlot;
+
+            std::array<float, 2> valRange;
+            bool valRangeNeedsUpdate = false;
+
+            /** FBO for chaining renderers */
+            vislib::graphics::gl::FramebufferObject fbo;
+        };
+
+    } // namespace volume
 } // namespace stdplugin
 } // namespace megamol
 

@@ -1,7 +1,7 @@
 /*
  * VolumetricDataSource.h
  *
- * Copyright (C) 2014 by Visualisierungsinstitut der Universit‰t Stuttgart.
+ * Copyright (C) 2014 by Visualisierungsinstitut der Universit√§t Stuttgart.
  * Alle rechte vorbehalten.
  */
 
@@ -27,7 +27,7 @@
 
 #include "vislib/PtrArray.h"
 #include "vislib/sys/Event.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 
 namespace megamol {
 namespace stdplugin {

@@ -13,14 +13,14 @@
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Point.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
@@ -33,7 +33,7 @@
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
 megamol::stdplugin::volume::VolumeSliceRenderer::VolumeSliceRenderer(void)
-	: Renderer3DModule_2()
+	: Renderer3DModuleGL()
 	, getVolSlot("getVol", "The call for data")
 	, getTFSlot("gettransferfunction", "The call for Transfer function")
 	, getClipPlaneSlot("getclipplane", "The call for clipping plane") {
@@ -83,19 +83,19 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::create(void) {
 		if (!this->render_shader.Link()) return false;
 	}
 	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
 			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
 			ce.GetMsgA());
 		return false;
 	}
 	catch (vislib::Exception e) {
-		vislib::sys::Log::DefaultLog.WriteMsg(
-			vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+			megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
 		return false;
 	}
 	catch (...) {
-		vislib::sys::Log::DefaultLog.WriteMsg(
-			vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+			megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
 		return false;
 	}
 
@@ -106,7 +106,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::create(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume::VolumeSliceRenderer::GetExtents(core::view::CallRender3D_2& cr) {
+bool megamol::stdplugin::volume::VolumeSliceRenderer::GetExtents(core::view::CallRender3DGL& cr) {
     auto *vdc = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
 
 	vdc->SetFrameID(static_cast<unsigned int>(cr.Time()));
@@ -131,7 +131,7 @@ void megamol::stdplugin::volume::VolumeSliceRenderer::release(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRender3D_2& cr) {
+bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRender3DGL& cr) {
     // get volume data
     auto *vdc = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
 	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
@@ -152,7 +152,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 			type = GL_FLOAT;
 		}
 		else {
-			vislib::sys::Log::DefaultLog.WriteError("Floating point values with a length != 4 byte are invalid.");
+			megamol::core::utility::log::Log::DefaultLog.WriteError("Floating point values with a length != 4 byte are invalid.");
 			return false;
 		}
 		break;
@@ -168,7 +168,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 			type = GL_UNSIGNED_SHORT;
 		}
 		else {
-			vislib::sys::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
+			megamol::core::utility::log::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
 			return false;
 		}
 		break;
@@ -179,12 +179,12 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 			type = GL_SHORT;
 		}
 		else {
-			vislib::sys::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
+			megamol::core::utility::log::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
 			return false;
 		}
 		break;
 	case core::misc::BITS:
-		vislib::sys::Log::DefaultLog.WriteError("Invalid datatype.");
+		megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid datatype.");
 		return false;
 		break;
 	}
@@ -215,7 +215,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 	cam.calc_matrices(view, proj);
 
 	// create render target
-	glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr.GetViewport().Width(), cr.GetViewport().Height(),
+	glowl::TextureLayout render_tgt_layout(GL_RGBA8, cam.resolution_gate().width(), cam.resolution_gate().height(),
 		1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},

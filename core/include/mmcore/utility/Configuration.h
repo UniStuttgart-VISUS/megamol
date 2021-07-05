@@ -11,16 +11,19 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/LuaState.h"
 #include "mmcore/ParamValueSetRequest.h"
 #include "mmcore/api/MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/xml/ConditionalParser.h"
-#include "vislib/sys/Log.h"
 #include "vislib/Map.h"
 #include "vislib/Pair.h"
-#include "vislib/String.h"
 #include "vislib/SingleLinkedList.h"
-#include "mmcore/LuaState.h"
+#include "vislib/String.h"
+#include "vislib/StringConverter.h"
+
+#include <string>
 
 namespace megamol {
 namespace core {
@@ -361,6 +364,15 @@ namespace xml {
             vislib::SingleLinkedList<vislib::TString> &plugins);
 
         /**
+         * Sets 'dir' as application directory 
+         *
+         * @param dir The path to be set
+         */
+        void SetApplicationDirectory(const char* dir) {
+            this->appDir = vislib::StringW{dir};
+        }
+
+        /**
          * Adds 'dir' as search path for resource files
          *
          * @param dir The resource path to be added
@@ -449,7 +461,7 @@ namespace xml {
             bool echoLevelValid : 1;
 
             /** file name of the log file */
-            vislib::StringW logFileNameValue;
+            std::string logFileNameValue;
 
             /** log level */
             unsigned int logLevelValue;
@@ -681,12 +693,6 @@ namespace xml {
 
         /** the shader sourcecode directories */
         vislib::Array<vislib::StringW> shaderDirs;
-
-        /**
-         * temporary pointer to the log object of the instance. This pointer 
-         * is only valid under certain conditions.
-         */
-        vislib::sys::Log *instanceLog;
 
         /** map of generic configuration values */
         vislib::Map<ConfigValueName, vislib::StringW> configValues;

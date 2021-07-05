@@ -13,24 +13,9 @@ if(BUILD_CORE)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
 
-  # Add expat.
-  if(WIN32)
-    option(USE_INTERNAL_EXPAT "Compiles the expat provided by MegaMol" ON)
-    if(USE_INTERNAL_EXPAT)
-      add_subdirectory(expat)
-      set(EXPAT_LIBRARIES expat)
-      set(EXPAT_INCLUDE_DIRS "")
-    else()
-      find_package(EXPAT REQUIRED)
-    endif()
-  else()
-    find_package(EXPAT REQUIRED)
-  endif()
-
-  # Add Lua.
-  add_subdirectory(lua)
-
   # Add externals.
+  require_external(expat)
+  require_external(lua)
   require_external(libzmq)
   require_external(libcppzmq)
   require_external(zlib)
@@ -38,6 +23,7 @@ if(BUILD_CORE)
   require_external(glm)
   require_external(glowl)
   require_external(json)
+  require_external(megamol-shader-factory)
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
@@ -62,14 +48,16 @@ if(BUILD_CORE)
     )
 
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
-    PUBLIC ${EXPAT_INCLUDE_DIRS})
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include")
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad glm glowl zlib libpng json lua ${EXPAT_LIBRARIES}
-    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    PUBLIC vislib glm glowl zlib libpng json lua megamol-shader-factory expat frontend_resources libcppzmq libzmq
+    PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service) # abstract render api used by MegaMolGraph
+  if(UNIX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
+  endif()
 
   # Add libunwind.
   if(UNIX)
@@ -122,20 +110,13 @@ if(BUILD_CORE)
   source_group("Version" FILES ${version_files})
 
   # Installation rules for generated files
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
+  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
-  get_target_property(zmqcpp_include libcppzmq INTERFACE_INCLUDE_DIRECTORIES)
-  install(DIRECTORY ${zmqcpp_include} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/libzmq FILES_MATCHING PATTERN "*.hpp")
   if(WIN32)
-    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-    install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-    if (MSVC)
-      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
-    endif()
+    #install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+    #install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
   else()
-    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
+    #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
-
-  add_subdirectory(remoteconsole)
 endif(BUILD_CORE)

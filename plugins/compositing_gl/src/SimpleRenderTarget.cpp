@@ -5,7 +5,7 @@
 #include "compositing/CompositingCalls.h"
 
 megamol::compositing::SimpleRenderTarget::SimpleRenderTarget() 
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , m_version(0)
     , m_GBuffer(nullptr)
     , m_color_render_target("Color", "Access the color render target texture")
@@ -52,10 +52,10 @@ megamol::compositing::SimpleRenderTarget::~SimpleRenderTarget() {
 
 bool megamol::compositing::SimpleRenderTarget::create() { 
 
-    m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1, true);
+    m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1);
     m_GBuffer->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // surface albedo
-    m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // normals
-    m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);        // clip space depth
+    m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT);   // normals
+    m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);          // clip space depth
 
     return true; 
 }
@@ -63,11 +63,11 @@ bool megamol::compositing::SimpleRenderTarget::create() {
 void megamol::compositing::SimpleRenderTarget::release() {
 }
 
-bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender3D_2& call) { 
+bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender3DGL& call) { 
     return true; 
 }
 
-bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2& call) { 
+bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3DGL& call) { 
 
     ++m_version;
 
@@ -91,7 +91,7 @@ bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2
     return true; 
 }
 
-void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3D_2& call)
+void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3DGL& call)
 {
 }
 
@@ -120,7 +120,7 @@ bool megamol::compositing::SimpleRenderTarget::getDepthRenderTarget(core::Call& 
 
     if (ct == NULL) return false;
 
-    ct->setData(m_GBuffer->getColorAttachment(2), m_version);
+    ct->setData(m_GBuffer->getDepthStencil(), m_version);
 
     return true;
 }

@@ -77,13 +77,13 @@ public:
                 this->x_acc_ = std::make_shared<Accessor_Impl<double>>(p, s);
                 this->y_acc_ = std::make_shared<Accessor_Impl<double>>(p + sizeof(double), s);
                 this->z_acc_ = std::make_shared<Accessor_Impl<double>>(p + 2 * sizeof(double), s);
-                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
+                this->r_acc_ = std::make_shared<Accessor_Val<float, false>>(globRad);
             } break;
             case SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: {
                 this->x_acc_ = std::make_shared<Accessor_Impl<float>>(p, s);
                 this->y_acc_ = std::make_shared<Accessor_Impl<float>>(p + sizeof(float), s);
                 this->z_acc_ = std::make_shared<Accessor_Impl<float>>(p + 2 * sizeof(float), s);
-                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
+                this->r_acc_ = std::make_shared<Accessor_Val<float, false>>(globRad);
             } break;
             case SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: {
                 this->x_acc_ = std::make_shared<Accessor_Impl<float>>(p, s);
@@ -95,14 +95,14 @@ public:
                 this->x_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(p, s);
                 this->y_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(p + sizeof(unsigned short), s);
                 this->z_acc_ = std::make_shared<Accessor_Impl<unsigned short>>(p + 2 * sizeof(unsigned short), s);
-                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
+                this->r_acc_ = std::make_shared<Accessor_Val<float, false>>(globRad);
             } break;
             case SimpleSphericalParticles::VERTDATA_NONE:
             default: {
                 this->x_acc_ = std::make_shared<Accessor_0>();
                 this->y_acc_ = std::make_shared<Accessor_0>();
                 this->z_acc_ = std::make_shared<Accessor_0>();
-                this->r_acc_ = std::make_shared<Accessor_Val<float>>(globRad);
+                this->r_acc_ = std::make_shared<Accessor_Val<float, false>>(globRad);
             }
             }
         }
@@ -127,7 +127,7 @@ public:
                 this->cr_acc_ = std::make_shared<Accessor_Impl<float>>(p, s);
                 this->cg_acc_ = std::make_shared<Accessor_Impl<float>>(p + sizeof(float), s);
                 this->cb_acc_ = std::make_shared<Accessor_Impl<float>>(p + 2 * sizeof(float), s);
-                this->ca_acc_ = std::make_shared<Accessor_Val<float>>(1.0f);
+                this->ca_acc_ = std::make_shared<Accessor_Val<float, false>>(1.0f);
             } break;
             case SimpleSphericalParticles::COLDATA_FLOAT_RGBA: {
                 this->cr_acc_ = std::make_shared<Accessor_Impl<float>>(p, s);
@@ -139,7 +139,7 @@ public:
                 this->cr_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p, s);
                 this->cg_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p + sizeof(unsigned char), s);
                 this->cb_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p + 2 * sizeof(unsigned char), s);
-                this->ca_acc_ = std::make_shared<Accessor_Val<unsigned char>>(255);
+                this->ca_acc_ = std::make_shared<Accessor_Val<unsigned char, false>>(255);
             } break;
             case SimpleSphericalParticles::COLDATA_UINT8_RGBA: {
                 this->cr_acc_ = std::make_shared<Accessor_Impl<unsigned char>>(p, s);
@@ -155,10 +155,10 @@ public:
             } break;
             case SimpleSphericalParticles::COLDATA_NONE:
             default: {
-                this->cr_acc_ = std::make_shared<Accessor_Val<unsigned char>>(r);
-                this->cg_acc_ = std::make_shared<Accessor_Val<unsigned char>>(g);
-                this->cb_acc_ = std::make_shared<Accessor_Val<unsigned char>>(b);
-                this->ca_acc_ = std::make_shared<Accessor_Val<unsigned char>>(a);
+                this->cr_acc_ = std::make_shared<Accessor_Val<unsigned char, true>>(r);
+                this->cg_acc_ = std::make_shared<Accessor_Val<unsigned char, true>>(g);
+                this->cb_acc_ = std::make_shared<Accessor_Val<unsigned char, true>>(b);
+                this->ca_acc_ = std::make_shared<Accessor_Val<unsigned char, true>>(a);
             }
             }
         }

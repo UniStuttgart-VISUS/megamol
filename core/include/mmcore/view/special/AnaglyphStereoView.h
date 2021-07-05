@@ -75,7 +75,7 @@ namespace special {
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          */
-        virtual void Render(const mmcRenderViewContext& context);
+        virtual void Render(const mmcRenderViewContext& context, Call* call) override;
 
     protected:
 
@@ -94,10 +94,10 @@ namespace special {
     private:
 
         /** The left frame buffer */
-        vislib::graphics::gl::FramebufferObject leftBuffer;
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> leftBuffer;
 
         /** The right frame buffer */
-        vislib::graphics::gl::FramebufferObject rightBuffer;
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> rightBuffer;
 
         /** The compositing shader */
         vislib::graphics::gl::GLSLShader shader;

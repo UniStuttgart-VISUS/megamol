@@ -15,11 +15,12 @@
 #include "vislib/sys/AutoLock.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
 
@@ -49,14 +50,18 @@ Module::~Module(void) {
 /*
  * Module::Create
  */
-bool Module::Create(void) {
-    using vislib::sys::Log;
+bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) {
+    using megamol::core::utility::log::Log;
+
+    this->frontend_resources = {resources}; // put resources in hash map using type hashes of present resources
+
     ASSERT(this->instance() != NULL);
     if (!this->created) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         auto p3 = dynamic_cast<core::view::Renderer3DModule*>(this);
+        auto p3_2 = dynamic_cast<core::view::Renderer3DModuleGL*>(this);
         auto p2 = dynamic_cast<core::view::Renderer2DModule*>(this);
-        if (p2 || p3) {
+        if (p2 || p3 || p3_2) {
             std::string output = this->ClassName();
             output += "::create";
             glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
@@ -64,7 +69,7 @@ bool Module::Create(void) {
 #endif
         this->created = this->create();
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-        if (p2 || p3) glPopDebugGroup();
+        if (p2 || p3 || p3_2) glPopDebugGroup();
 #endif
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350,
             "%s module \"%s\"\n", ((this->created) ? "Created"
@@ -74,6 +79,7 @@ bool Module::Create(void) {
         // Now reregister parents at children
         this->fixParentBackreferences();
     }
+
     return this->created;
 }
 
@@ -111,8 +117,9 @@ vislib::StringA Module::GetDemiRootName() const {
 /*
  * Module::Release
  */
-void Module::Release(void) {
-    using vislib::sys::Log;
+void Module::Release(std::vector<megamol::frontend::FrontendResource> resources) {
+    using megamol::core::utility::log::Log;
+
     if (this->created) {
         this->release();
         this->created = false;

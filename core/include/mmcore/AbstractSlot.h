@@ -8,11 +8,12 @@
 #ifndef MEGAMOLCORE_ABSTRACTSLOT_H_INCLUDED
 #define MEGAMOLCORE_ABSTRACTSLOT_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
+#include "factories/CallDescription.h"
 #include "mmcore/AbstractNamedObject.h"
+#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 
@@ -29,7 +30,7 @@ namespace core {
      * owner in the ctor would require the use of 'this' in the initialisation
      * list, which is not allowed.
      */
-    class MEGAMOLCORE_API AbstractSlot: public AbstractNamedObject {
+    class MEGAMOLCORE_API AbstractSlot : public AbstractNamedObject {
     public:
 
         /**
@@ -139,6 +140,15 @@ namespace core {
             this->listeners.Remove(listener);
         }
 
+		/**
+		 * Answers whether a given call is compatible with this slot.
+		 *
+		 * @param desc The description of the call to test.
+		 *
+		 * @return 'true' if the call is compatible, 'false' otherwise.
+		 */
+		virtual bool IsCallCompatible(factories::CallDescription::ptr desc) const { return false; };
+
     protected:
 
         /**
@@ -190,6 +200,7 @@ namespace core {
 
         /** List of listeners */
         vislib::SingleLinkedList<Listener*> listeners;
+
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */

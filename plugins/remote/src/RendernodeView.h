@@ -3,17 +3,17 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <thread>
 #include <vector>
-#include <string>
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/LuaState.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractTileView.h"
-#include "mmcore/LuaState.h"
 
 #ifdef WITH_MPI
-#include "mpi.h"
+#    include "mpi.h"
 #endif
 
 #include "DistributedProto.h"
@@ -69,9 +69,9 @@ public:
      */
     virtual ~RendernodeView(void);
 
-    void Render(const mmcRenderViewContext& context) override;
+    void Render(const mmcRenderViewContext& context, core::Call* call) override;
 
-	bool OnRenderView(core::Call& call) override;
+    bool OnRenderView(core::Call& call) override;
 
 protected:
     bool create(void) override;
@@ -82,8 +82,6 @@ private:
     bool init_threads();
 
     bool shutdown_threads();
-
-    // Message_t prepare_bcast_msg();
 
     Message_t prepare_null_msg() const {
         Message_t msg(MessageHeaderSize);
@@ -141,11 +139,6 @@ private:
         return true;
     }
 
-    bool onAddressChanged(core::param::ParamSlot& p) {
-        if (isBCastMaster()) init_threads();
-        return true;
-    }
-
     bool isBCastMaster() const { return rank_ == bcast_rank_; }
 
     bool initMPI();
@@ -154,11 +147,9 @@ private:
 
     core::CallerSlot sync_data_slot_;
 
-    // core::param::ParamSlot isBCastMasterSlot_;
-
     core::param::ParamSlot BCastRankSlot_;
 
-    core::param::ParamSlot address_slot_;
+    core::param::ParamSlot port_slot_;
 
     std::thread receiver_thread_;
 
@@ -174,8 +165,6 @@ private:
 
     bool run_threads;
 
-    // core::view::CallRenderView* crv_ = nullptr;
-
 #ifdef WITH_MPI
     MPI_Comm comm_;
 #else
@@ -187,6 +176,9 @@ private:
     int bcast_rank_;
 
     int comm_size_;
+
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
+
 }; // end class RendernodeView
 
 } // end namespace remote

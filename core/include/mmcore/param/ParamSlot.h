@@ -82,6 +82,11 @@ namespace param {
         }
 
         /**
+         * ---
+         * NOTE: Do not call this version if param slot is made available afterwards 
+         *     in child class. Call SetUpdateCallback(obj, func) in parent class instead.
+         * --- 
+         * 
          * Sets an update callback method, which is called whenever the dirty
          * flag is set (the value of the parameter changes). The method will
          * not be called when the parameter changes, but the dirty flag still
@@ -119,6 +124,17 @@ namespace param {
         virtual bool IsParamRelevant(
             vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
             const vislib::SmartPtr<param::AbstractParam>& param) const;
+
+        /**
+         * Queue a notification that the parameter value has changed, to notify
+         * those that have a registered listener. This method is public to allow
+         * pushing parameter changes that cannot use the dirty flag to avoid feedback
+         * loops.
+         *
+         * @param force Enforce notification, otherwise the notification will only be triggered if the value has
+         * changed.
+         */
+        void QueueUpdateNotification(bool force = false);
 
     protected:
 

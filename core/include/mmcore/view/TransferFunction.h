@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
+#include "mmcore/CoreInstance.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
@@ -22,7 +23,7 @@
 #include "mmcore/param/TransferFunctionParam.h"
 
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 namespace megamol {
@@ -103,7 +104,7 @@ namespace view {
         /** The callee slot called on request of a transfer function */
         CalleeSlot getTFSlot;
 
-        /** Parameter continaing the transfer function data serialized into JSON string */
+        /** Parameter containing the transfer function data serialized into JSON string */
         param::ParamSlot tfParam;
 
         /** The OpenGL texture object id */
@@ -124,7 +125,11 @@ namespace view {
         /** The value range */
         std::array<float, 2> range;
 
-        uint32_t version = 0;
+        /** Version of texture */
+        uint32_t version;
+
+        /** Global frame ID */
+        uint32_t last_frame_id;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)

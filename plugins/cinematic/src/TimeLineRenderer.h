@@ -8,11 +8,9 @@
 #ifndef MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/ResourceWrapper.h"
@@ -24,6 +22,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
 
+#include "RuntimeConfig.h"
+
 #include "vislib/String.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/graphics/BitmapImage.h"
@@ -31,7 +31,7 @@
 #include "vislib/graphics/InputModifiers.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "Keyframe.h"
 #include "CallKeyframeKeeper.h"
@@ -46,6 +46,12 @@ namespace cinematic {
 	*/
 	class TimeLineRenderer : public core::view::Renderer2DModule {
 	public:
+
+        std::vector<std::string> requested_lifetime_resources() {
+            auto lifetime_resources = Module::requested_lifetime_resources();
+            lifetime_resources.push_back("RuntimeConfig");
+            return lifetime_resources;
+        }
 
 		/**
 		* Answer the name of this module.
@@ -103,7 +109,7 @@ namespace cinematic {
         *
         * @return The return value of the function.
         */
-        virtual bool GetExtents(core::view::CallRender2D& call);
+        virtual bool GetExtents(core::view::CallRender2DGL& call);
 
         /**
         * The render callback.
@@ -112,7 +118,7 @@ namespace cinematic {
         *
         * @return The return value of the function.
         */
-        virtual bool Render(core::view::CallRender2D& call);
+        virtual bool Render(core::view::CallRender2DGL& call);
 
         /** 
         * The mouse button pressed/released callback. 
@@ -157,7 +163,7 @@ namespace cinematic {
 
         std::array<AxisData, Axis::COUNT> axes;
         CinematicUtils                    utils;
-        GLuint                            texture;
+        GLuint                            texture_id;
         ActiveParam                       yAxisParam;
         Keyframe                          dragDropKeyframe;
         bool                              dragDropActive;

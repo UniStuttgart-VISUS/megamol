@@ -1,106 +1,128 @@
 /*
  * CallRender3D.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CALLRENDER3D_H_INCLUDED
-#define MEGAMOLCORE_CALLRENDER3D_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <glm/glm.hpp>
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRender3D.h"
-#include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/RenderOutputOpenGL.h"
-
+#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/CPUFramebuffer.h"
 
 namespace megamol {
 namespace core {
 namespace view {
 
 
-#ifdef _WIN32
-#pragma warning(disable: 4250)  // I know what I am doing ...
-#endif /* _WIN32 */
+/**
+ * Class of CPU context rendering
+ *
+ * Function "Render" tells the callee to render in a CPU context
+ *
+ * Function "GetExtents" asks the callee to fill the extents member of the
+ * call (bounding boxes, temporal extents).
+ */
+template <typename FBO, const char* NAME, const char* DESC>
+class MEGAMOLCORE_API BaseCallRender3D : public AbstractCallRender {
+public:
+
+    using FBO_TYPE = FBO;
+
     /**
-     * Base class of rendering graph calls
+     * Answer the name of the objects of this description.
      *
-     * Function "Render" tells the callee to render itself into the currently
-     * active opengl context (TODO: Late on it could also be a FBO).
-     *
-     * Function "GetExtents" asks the callee to fill the extents member of the
-     * call (bounding boxes, temporal extents).
+     * @return The name of the objects of this description.
      */
-    class MEGAMOLCORE_API [[deprecated]] CallRender3D : public AbstractCallRender3D, public RenderOutputOpenGL {
-    public:
-        /**
-         * Answer the name of the objects of this description.
-         *
-         * @return The name of the objects of this description.
-         */
-        static const char *ClassName(void) {
-            return "CallRender3D";
-        }
+    static const char* ClassName(void) {
+        return NAME;
+    }
+    //{ return "CallRender3D"; }
 
-        /**
-         * Gets a human readable description of the module.
-         *
-         * @return A human readable description of the module.
-         */
-        static const char *Description(void) {
-            return "Call for rendering a frame";
-        }
+    /**
+     * Gets a human readable description of the module.
+     *
+     * @return A human readable description of the module.
+     */
+    static const char* Description(void) {
+        return DESC;
+    }
+    //{ return "CPU Rendering call"; }
 
-        /**
-         * Answer the number of functions used for this call.
-         *
-         * @return The number of functions used for this call.
-         */
-        static unsigned int FunctionCount(void) {
-            return AbstractCallRender::FunctionCount();
-        }
+    /**
+     * Answer the number of functions used for this call.
+     *
+     * @return The number of functions used for this call.
+     */
+    static unsigned int FunctionCount(void) {
+        return AbstractCallRender::FunctionCount();
+    }
+    /**
+     * Answer the name of the function used for this call.
+     *
+     * @param idx The index of the function to return it's name.
+     *
+     * @return The name of the requested function.
+     */
+    static const char* FunctionName(unsigned int idx) {
+        return AbstractCallRender::FunctionName(idx);
+    }
 
-        /**
-         * Answer the name of the function used for this call.
-         *
-         * @param idx The index of the function to return it's name.
-         *
-         * @return The name of the requested function.
-         */
-        static const char * FunctionName(unsigned int idx) {
-            return AbstractCallRender::FunctionName(idx);
-        }
+    /** Ctor. */
+    BaseCallRender3D(void) {}
 
-        /** Ctor. */
-        CallRender3D(void) = default;
+    /** Dtor. */
+    ~BaseCallRender3D(void) {}
 
-        /** Dtor. */
-        virtual ~CallRender3D(void) = default;
+    /**
+     * Assignment operator
+     *
+     * @param rhs The right hand side operand
+     *
+     * @return A reference to this
+     */
+    BaseCallRender3D& operator=(const BaseCallRender3D& rhs) {
+        view::AbstractCallRender::operator=(rhs);
+        _framebuffer = rhs._framebuffer;
+        return *this;
+    }
 
-        /**
-         * Assignment operator
-         *
-         * @param rhs The right hand side operand
-         *
-         * @return A reference to this
-         */
-        inline CallRender3D& operator=(const CallRender3D& rhs) = default;
-    };
-#ifdef _WIN32
-#pragma warning(default: 4250)
-#endif /* _WIN32 */
+    /**
+     * Sets the Framebuffer
+     *
+     * @param fb The framebuffer
+     */
+    inline void SetFramebuffer(std::shared_ptr<FBO> fb) {
+        _framebuffer = fb;
+    }
 
+    /**
+     * Gets the Framebuffer
+     *
+     */
+    inline std::shared_ptr<FBO> GetFramebuffer() {
+        return _framebuffer;
+    }
 
-    /** Description class typedef */
-    typedef factories::CallAutoDescription<CallRender3D> CallRender3DDescription;
+private:
 
+    std::shared_ptr<FBO> _framebuffer;
+};
 
-} /* end namespace view */
+inline constexpr char callrender3d_name[] = "CallRender3D";
+
+inline constexpr char callrender3d_desc[] = "CPU Rendering call";
+
+using CallRender3D = BaseCallRender3D<CPUFramebuffer, callrender3d_name, callrender3d_desc>;
+
+/** Description class typedef */
+typedef factories::CallAutoDescription<CallRender3D> CallRender3DDescription;
+
+} // namespace view
 } /* end namespace core */
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CALLRENDER3D_H_INCLUDED */

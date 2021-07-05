@@ -19,8 +19,8 @@ KeyframeManipulators::KeyframeManipulators(void)
     , visibleGroupParam("manipulators::visibleGroup", "Select visible manipulator group.")
     , toggleOusideBboxParam("manipulators::showOutsideBBox", "Show manipulators always outside of model bounding box.")
     , paramSlots()
-    , visibleGroup(VisibleGroup::SELECTED_KEYFRAME_AND_CTRLPOINT_POSITION)
-    , toggleOusideBbox(false)
+    , visibleGroup(VisibleGroup::SELECTED_KEYFRAME_LOOKAT_AND_UP_VECTOR)
+    , toggleOusideBbox(true)
     , manipulators()
     , selectors()
     , state() {
@@ -29,10 +29,10 @@ KeyframeManipulators::KeyframeManipulators(void)
     this->selectors.clear();
     this->manipulators.clear();
 
-    this->toggleOusideBboxParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_W, core::view::Modifier::CTRL));
+    this->toggleOusideBboxParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_W, core::view::Modifier::SHIFT));
     this->paramSlots.emplace_back(&this->toggleOusideBboxParam);
 
-    this->toggleVisibleGroupParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Q, core::view::Modifier::CTRL));
+    this->toggleVisibleGroupParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Q, core::view::Modifier::SHIFT));
     this->paramSlots.emplace_back(&this->toggleVisibleGroupParam);
 
     param::EnumParam* vmg = new param::EnumParam(this->visibleGroup);
@@ -40,7 +40,25 @@ KeyframeManipulators::KeyframeManipulators(void)
     vmg->SetTypePair(VisibleGroup::SELECTED_KEYFRAME_LOOKAT_AND_UP_VECTOR, "LookAt Vector and Up Vector");
     this->visibleGroupParam << vmg;
     this->paramSlots.emplace_back(&this->visibleGroupParam);
+    vmg = nullptr;
 
+    // Init state
+    this->state.selected_keyframe = Keyframe();
+    this->state.viewport = glm::vec2(0.0f, 0.0f);
+    this->state.mvp = glm::mat4();
+    this->state.first_ctrl_point = glm::vec3(0.0f, 0.0f, 0.0f);
+    this->state.last_ctrl_point = glm::vec3(0.0f, 0.0f, 0.0f);
+    this->state.cam_min_snapshot = camera_state_type();
+    this->state.bbox = vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    this->state.hit.reset();
+    this->state.last_mouse = glm::vec2(0.0f, 0.0f);
+    this->state.selected_index = 0;
+    this->state.point_radius = 0.05f;
+    this->state.line_width = 0.01f;
+    this->state.line_length = 0.3f;
+
+    // Init manipulators
+    float lookat_length;
     Manipulator m;
     m.show = false;
     m.vector = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -101,12 +119,12 @@ void KeyframeManipulators::UpdateExtents(vislib::math::Cuboid<float>& inout_bbox
     glm::vec3 pos; 
     for (auto& m : this->manipulators) {
         pos = this->getActualManipulatorPosition(m);
-        inout_bbox.GrowToPoint(glm_to_vislib_point(pos));
+        inout_bbox.GrowToPoint(utility::glm_to_vislib_point(pos));
     }
     for (auto& s : this->selectors) {
         pos = s.vector;
         pos = pos + glm::normalize(pos) * (this->state.point_radius * 2.0f);
-        inout_bbox.GrowToPoint(glm_to_vislib_point(pos));
+        inout_bbox.GrowToPoint(utility::glm_to_vislib_point(pos));
     }
 }
 
@@ -147,7 +165,7 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
         float length = this->state.bbox.LongestEdge();
         this->state.line_length  = length * 0.3f;
         this->state.line_width   = length * 0.01f;
-        this->state.point_radius = length * 0.05;
+        this->state.point_radius = length * 0.05f;
         if (this->state.lookat_length <= 0.0f) {
             this->state.lookat_length = 2.0f * this->state.line_length;
         }
@@ -406,7 +424,7 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
         glm::vec3 up = static_cast<glm::vec3>(snap_up);
 
         glm::vec3 new_view = (manipulator_origin - static_cast<glm::vec3>(camera_position)) + diff_world_vector;
-        glm::quat new_orientation = quaternion_from_vectors(new_view, up);
+        glm::quat new_orientation = utility::quaternion_from_vectors(new_view, up);
         selected_camera.orientation(new_orientation);
         this->state.lookat_length = glm::length(new_view);
     }
@@ -439,7 +457,7 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
         diff_world_vector = right * diff_world_length;
 
         glm::vec3 new_up = world_vector + diff_world_vector;
-        glm::quat new_orientation = quaternion_from_vectors(view, new_up);
+        glm::quat new_orientation = utility::quaternion_from_vectors(view, new_up);
         selected_camera.orientation(new_orientation);
 
         this->state.hit->vector = glm::normalize(new_up);
@@ -504,12 +522,12 @@ glm::vec3 KeyframeManipulators::getManipulatorOrigin(Manipulator& manipulator) {
 glm::vec3 KeyframeManipulators::getActualManipulatorPosition(Manipulator& manipulator) {
 
     glm::vec3 manipulator_origin = this->getManipulatorOrigin(manipulator);
-    glm::vec3 manipulator_position = manipulator_origin + manipulator.vector * this->state.line_length;
+    glm::vec3 manipulator_position = manipulator_origin + (manipulator.vector * this->state.line_length);
 
-    if (this->toggleOusideBbox && this->state.bbox.Contains(glm_to_vislib_point(manipulator_position))) {
+    if (this->toggleOusideBbox && (this->state.line_length > 0.0f) && (glm::length(manipulator.vector) > 0.0f) && (!this->state.bbox.IsEmpty())) {
         float offset = 0.0f;
-        while (this->state.bbox.Contains(glm_to_vislib_point(manipulator_position))) {
-            offset += this->state.line_length/4.0f;
+        while (this->state.bbox.Contains(utility::glm_to_vislib_point(manipulator_position))) {
+            offset += this->state.line_length / 4.0f;
             manipulator_position += manipulator.vector * offset;
         }
     }

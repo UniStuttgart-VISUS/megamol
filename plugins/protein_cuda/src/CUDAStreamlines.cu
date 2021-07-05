@@ -12,7 +12,6 @@
 #include "cuda_error_check.h"
 #include "CUDAGrid.cuh"
 #include "HostArr.h"
-#include "vislib/sys/Log.h"
 
 #include <cuda_runtime.h>
 #define WGL_NV_gpu_affinity

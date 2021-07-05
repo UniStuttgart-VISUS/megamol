@@ -7,14 +7,13 @@
 #include "stdafx.h"
 
 #include "mesh/AbstractGPUMeshDataSource.h"
-#include "mesh/MeshCalls.h"
 
 
 megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
-    : core::Module()
-    , m_mesh_lhs_slot("getData", "The slot publishing the loaded data")
-    , m_mesh_rhs_slot("getMesh", "The slot for chaining material data sources") 
-{
+        : core::Module()
+        , m_mesh_collection({nullptr, {}})
+        , m_mesh_lhs_slot("gpuMeshes", "The slot publishing the loaded data")
+        , m_mesh_rhs_slot("chainGpuMeshes", "The slot for chaining material data sources") {
     this->m_mesh_lhs_slot.SetCallback(
         CallGPUMeshData::ClassName(), "GetData", &AbstractGPUMeshDataSource::getDataCallback);
     this->m_mesh_lhs_slot.SetCallback(
@@ -25,12 +24,21 @@ megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
     this->MakeSlotAvailable(&this->m_mesh_rhs_slot);
 }
 
-megamol::mesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource() { this->Release(); }
+megamol::mesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource() {
+    this->Release();
+}
 
 bool megamol::mesh::AbstractGPUMeshDataSource::create(void) {
-    m_gpu_meshes = std::make_shared<GPUMeshCollection>();
-
+    // default empty collection
+    m_mesh_collection.first = std::make_shared<GPUMeshCollection>();
     return true;
 }
 
 void megamol::mesh::AbstractGPUMeshDataSource::release() {}
+
+void megamol::mesh::AbstractGPUMeshDataSource::clearMeshCollection() {
+    for (auto& identifier : m_mesh_collection.second) {
+        m_mesh_collection.first->deleteSubMesh(identifier);
+    }
+    m_mesh_collection.second.clear();
+}

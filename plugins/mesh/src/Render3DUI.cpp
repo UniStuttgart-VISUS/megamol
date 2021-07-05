@@ -121,15 +121,15 @@ bool megamol::mesh::Render3DUI::create() { return true; }
 
 void megamol::mesh::Render3DUI::release() { m_fbo.reset(); }
 
-bool megamol::mesh::Render3DUI::GetExtents(core::view::CallRender3D_2& call) {
+bool megamol::mesh::Render3DUI::GetExtents(core::view::CallRender3DGL& call) {
     RenderMDIMesh::GetExtents(call);
 
     return true;
 }
 
-bool megamol::mesh::Render3DUI::Render(core::view::CallRender3D_2& call) {
+bool megamol::mesh::Render3DUI::Render(core::view::CallRender3DGL& call) {
 
-    core::view::CallRender3D_2* cr = dynamic_cast<core::view::CallRender3D_2*>(&call);
+    core::view::CallRender3DGL* cr = dynamic_cast<core::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     // obtain camera information
@@ -150,7 +150,7 @@ bool megamol::mesh::Render3DUI::Render(core::view::CallRender3D_2& call) {
     glGetFloatv(GL_VIEWPORT, viewport);
 
     if (m_fbo == nullptr) {    
-        m_fbo = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3],true);
+        m_fbo = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3]);
         m_fbo->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // output image
         m_fbo->createColorAttachment(GL_R32I, GL_RED, GL_INT); // object ids
     }

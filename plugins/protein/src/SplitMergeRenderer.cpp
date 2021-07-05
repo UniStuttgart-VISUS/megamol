@@ -23,7 +23,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace vislib::graphics::gl;
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 
 vislib::Array<int> *SplitMergeRenderer::FastMapWrapper::sortedSeries;
 protein_calls::SplitMergeCall *SplitMergeRenderer::FastMapWrapper::diagram;
@@ -152,15 +152,15 @@ void SplitMergeRenderer::calcExtents() {
     this->bounds.Set(minX, -1.0f - (sortedSeries.Count() - 1) * seriesSpacing, maxX, 1.0f);
 }
 
-bool SplitMergeRenderer::GetExtents(view::CallRender2D& call) {
+bool SplitMergeRenderer::GetExtents(view::CallRender2DGL& call) {
     // set the bounding box to 0..1
     
     if (diagram == NULL) {
         return false;
     }
 
-    call.SetBoundingBox(this->bounds.GetLeft() - noseLength,
-        this->bounds.GetBottom(), this->bounds.GetRight() + noseLength, this->bounds.GetTop());
+    call.AccessBoundingBoxes().SetBoundingBox(this->bounds.GetLeft() - noseLength,
+        this->bounds.GetBottom(), 0, this->bounds.GetRight() + noseLength, this->bounds.GetTop(), 0);
 
     return true;
 }
@@ -232,7 +232,7 @@ void SplitMergeRenderer::closePath(protein_calls::SplitMergeCall::SplitMergeMapp
 /*
  * SplitMergeRenderer::Render
  */
-bool SplitMergeRenderer::Render(view::CallRender2D &call) {
+bool SplitMergeRenderer::Render(view::CallRender2DGL &call) {
     // get pointer to Diagram2DCall
 	diagram = this->dataCallerSlot.CallAs<protein_calls::SplitMergeCall>();
     if( diagram == NULL ) return false;
