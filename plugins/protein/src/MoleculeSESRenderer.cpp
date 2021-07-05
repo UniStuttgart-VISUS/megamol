@@ -776,9 +776,9 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
     unsigned int cntRS = 0;
 
     // get camera information
-    this->cameraInfo = call.GetCamera();
-    glm::mat4 view = this->cameraInfo.getViewMatrix();
-    glm::mat4 proj = this->cameraInfo.getProjectionMatrix();
+    this->camera = call.GetCamera();
+    glm::mat4 view = this->camera.getViewMatrix();
+    glm::mat4 proj = this->camera.getProjectionMatrix();
 
     std::array<int, 2> resolution = {call.GetFramebuffer()->getWidth(), call.GetFramebuffer()->getHeight()};
 
@@ -1364,13 +1364,11 @@ void MoleculeSESRenderer::CreateFBO() {
 void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
     // TODO: attribute locations nicht jedes mal neu abfragen!
 
-    auto resolution = cameraInfo.resolution_gate();
-
     bool virtualViewportChanged = false;
-    if (static_cast<unsigned int>(resolution.width()) != this->width ||
-        static_cast<unsigned int>(resolution.height()) != this->height) {
-        this->width = static_cast<unsigned int>(resolution.width());
-        this->height = static_cast<unsigned int>(resolution.height());
+    if (static_cast<unsigned int>(fbo->getWidth()) != this->width ||
+        static_cast<unsigned int>(fbo->getHeight()) != this->height) {
+        this->width = static_cast<unsigned int>(fbo->getWidth());
+        this->height = static_cast<unsigned int>(fbo->getHeight());
         virtualViewportChanged = true;
     }
 
@@ -1381,8 +1379,8 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(resolution.width());
-    viewportStuff[3] = static_cast<float>(resolution.height());
+    viewportStuff[2] = static_cast<float>(fbo->getWidth());
+    viewportStuff[3] = static_cast<float>(fbo->getHeight());
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -1390,11 +1388,11 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    glm::vec4 camdir = cameraInfo.view_vector();
-    glm::vec4 right = cameraInfo.right_vector();
-    glm::vec4 up = cameraInfo.up_vector();
-    float nearplane = cameraInfo.near_clipping_plane();
-    float farplane = cameraInfo.far_clipping_plane();
+    glm::vec3 camdir = camera.get<core::view::Camera::Pose>().direction;
+    glm::vec3 right = camera.get<core::view::Camera::Pose>().right;
+    glm::vec3 up = camera.get<core::view::Camera::Pose>().up;
+    float nearplane = camera.get<core::view::Camera::NearPlane>();
+    float farplane = camera.get<core::view::Camera::FarPlane>();
 
     // get clear color (i.e. background color) for fogging
     float* clearColor = new float[4];
@@ -1729,12 +1727,11 @@ void MoleculeSESRenderer::RenderDebugStuff(const MolecularDataCall* mol) {
     vislib::math::Vector<float, 3> tmpVec, ortho, dir, position;
     float angle;
     // set viewport
-    auto resolution = cameraInfo.resolution_gate();
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(resolution.width());
-    viewportStuff[3] = static_cast<float>(resolution.height());
+    viewportStuff[2] = static_cast<float>(fbo->getWidth());
+    viewportStuff[3] = static_cast<float>(fbo->getHeight());
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -1742,9 +1739,9 @@ void MoleculeSESRenderer::RenderDebugStuff(const MolecularDataCall* mol) {
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    glm::vec4 camdir = cameraInfo.view_vector();
-    glm::vec4 right = cameraInfo.right_vector();
-    glm::vec4 up = cameraInfo.up_vector();
+    glm::vec3 camdir = camera.get<core::view::Camera::Pose>().direction;
+    glm::vec3 right = camera.get<core::view::Camera::Pose>().right;
+    glm::vec3 up = camera.get<core::view::Camera::Pose>().up;
     // enable cylinder shader
     this->cylinderShader.Enable();
     // set shader variables
@@ -2583,14 +2580,12 @@ void MoleculeSESRenderer::CreateSingularityTexture(unsigned int idxRS) {
 void MoleculeSESRenderer::RenderAtomsGPU(const MolecularDataCall* mol, const float scale) {
     unsigned int cnt, cntRS, max1, max2;
 
-    auto resolution = cameraInfo.resolution_gate();
-
     // set viewport
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(resolution.width());
-    viewportStuff[3] = static_cast<float>(resolution.height());
+    viewportStuff[2] = static_cast<float>(fbo->getWidth());
+    viewportStuff[3] = static_cast<float>(fbo->getHeight());
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -2598,9 +2593,9 @@ void MoleculeSESRenderer::RenderAtomsGPU(const MolecularDataCall* mol, const flo
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    glm::vec4 right = this->cameraInfo.right_vector();
-    glm::vec4 camdir = this->cameraInfo.view_vector();
-    glm::vec4 up = this->cameraInfo.up_vector();
+    glm::vec3 camdir = camera.get<core::view::Camera::Pose>().direction;
+    glm::vec3 right = camera.get<core::view::Camera::Pose>().right;
+    glm::vec3 up = camera.get<core::view::Camera::Pose>().up;
 
     // enable sphere shader
     this->sphereShader.Enable();
@@ -2666,14 +2661,11 @@ void MoleculeSESRenderer::RenderProbe(const vislib::math::Vector<float, 3> m) {
  */
 void MoleculeSESRenderer::RenderProbeGPU(const vislib::math::Vector<float, 3> m) {
     // set viewport
-    auto& resolution = cameraInfo.resolution_gate();
-
-    // set viewport
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(resolution.width());
-    viewportStuff[3] = static_cast<float>(resolution.height());
+    viewportStuff[2] = static_cast<float>(fbo->getWidth());
+    viewportStuff[3] = static_cast<float>(fbo->getHeight());
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -2681,9 +2673,9 @@ void MoleculeSESRenderer::RenderProbeGPU(const vislib::math::Vector<float, 3> m)
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    glm::vec4 right = this->cameraInfo.right_vector();
-    glm::vec4 camdir = this->cameraInfo.view_vector();
-    glm::vec4 up = this->cameraInfo.up_vector();
+    glm::vec3 camdir = camera.get<core::view::Camera::Pose>().direction;
+    glm::vec3 right = camera.get<core::view::Camera::Pose>().right;
+    glm::vec3 up = camera.get<core::view::Camera::Pose>().up;
 
     // enable sphere shader
     this->sphereShader.Enable();
@@ -2790,15 +2782,13 @@ void MoleculeSESRenderer::puxelsCreateBuffers() {
  * puxelsBufferHeaderand puxelsAtomicBufferNextId to zero.
  */
 void MoleculeSESRenderer::puxelsClear() {
-    auto& resolution = cameraInfo.resolution_gate();
-
     puxelClearShader.Enable();
-    glUniform1ui(this->puxelClearShader.ParameterLocation("width"), (GLuint) resolution.width());
-    glUniform1ui(this->puxelClearShader.ParameterLocation("height"), (GLuint) resolution.height());
+    glUniform1ui(this->puxelClearShader.ParameterLocation("width"), (GLuint) fbo->getWidth());
+    glUniform1ui(this->puxelClearShader.ParameterLocation("height"), (GLuint) fbo->getHeight());
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
 
-    puxelClearShader.Dispatch((unsigned int) resolution.width() / 16, (unsigned int) resolution.height() / 16, 1);
+    puxelClearShader.Dispatch((unsigned int) fbo->getWidth() / 16, (unsigned int) fbo->getHeight() / 16, 1);
 
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -2816,11 +2806,9 @@ void MoleculeSESRenderer::puxelsClear() {
  * according to the depth of the fragments.
  */
 void MoleculeSESRenderer::puxelsReorder() {
-    auto& resolution = cameraInfo.resolution_gate();
-
     puxelOrderShader.Enable();
-    glUniform1ui(this->puxelOrderShader.ParameterLocation("width"), (GLuint) resolution.width());
-    glUniform1ui(this->puxelOrderShader.ParameterLocation("height"), (GLuint) resolution.height());
+    glUniform1ui(this->puxelOrderShader.ParameterLocation("width"), (GLuint) fbo->getWidth());
+    glUniform1ui(this->puxelOrderShader.ParameterLocation("height"), (GLuint) fbo->getHeight());
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);

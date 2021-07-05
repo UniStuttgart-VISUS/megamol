@@ -11,9 +11,6 @@
 
 #include "mmcore/view/RenderUtils.h"
 
-#include "imgui.h"
-#include "imgui_internal.h"
-
 
 // #### Utility minimal camera state ################################### //
 

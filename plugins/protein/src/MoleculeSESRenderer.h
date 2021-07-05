@@ -276,7 +276,10 @@ namespace protein {
 
         /** camera information */
         // vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
-        core::view::Camera cameraInfo;
+        core::view::Camera camera;
+
+        /** framebuffer information */
+        std::shared_ptr<glowl::FramebufferObject> fbo;
 
         // camera information
         // vislib::SmartPtr<vislib::graphics::CameraParameters> MoleculeSESRenderercameraInfo;

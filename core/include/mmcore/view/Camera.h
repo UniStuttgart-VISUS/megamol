@@ -327,6 +327,22 @@ namespace view {
             } else if (_intrinsics.index() == 2) {
                 return std::get<OrthographicParameters>(_intrinsics).aspect;
             }
+        } else if constexpr (std::is_same_v<CameraInfoType, NearPlane>) {
+            if (_intrinsics.index() == 0) {
+                throw std::exception(); // How dare you
+            } else if (_intrinsics.index() == 1) {
+                return std::get<PerspectiveParameters>(_intrinsics).near_plane;
+            } else if (_intrinsics.index() == 2) {
+                return std::get<OrthographicParameters>(_intrinsics).near_plane;
+            }
+        } else if constexpr (std::is_same_v<CameraInfoType, FarPlane>) {
+            if (_intrinsics.index() == 0) {
+                throw std::exception(); // How dare you
+            } else if (_intrinsics.index() == 1) {
+                return std::get<PerspectiveParameters>(_intrinsics).far_plane;
+            } else if (_intrinsics.index() == 2) {
+                return std::get<OrthographicParameters>(_intrinsics).far_plane;
+            }
         } else {
             return std::get<CameraInfoType>(_intrinsics);
         }

@@ -298,7 +298,7 @@ namespace core {
 
             void reset(BoundingBoxes_2 const& bboxs, float window_aspect) {
                 Camera::PerspectiveParameters cam_intrinsics;
-                cam_intrinsics.near_plane = 0.1f;
+                cam_intrinsics.near_plane = 0.01f;
                 cam_intrinsics.far_plane = 100.0f;
                 cam_intrinsics.fovy = 0.5;
                 cam_intrinsics.aspect = window_aspect;
@@ -307,6 +307,10 @@ namespace core {
 
                 auto cam_orientation = get_default_camera_orientation();
                 auto cam_position = get_default_camera_position(bboxs, cam_intrinsics, cam_orientation);
+
+                auto min_max_dist = get_min_max_dist_to_bbox(bboxs);
+                cam_intrinsics.far_plane = std::max(0.0f, min_max_dist.y);
+                cam_intrinsics.near_plane = std::max(cam_intrinsics.far_plane / 10000.0f, min_max_dist.x);
 
                 Camera::Pose cam_pose(glm::vec3(cam_position),cam_orientation);
                 
@@ -355,17 +359,20 @@ namespace core {
                     this->_cameraHalfApertureDegreesParam.Param<param::FloatParam>()->SetValue(
                         cam_intrinsics.fovy * 180.0f / 3.14159265359 /*TODO*/, makeDirty);
                     this->_cameraHalfApertureDegreesParam.QueueUpdateNotification();
+
+                    this->_cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam_intrinsics.near_plane, makeDirty);
+                    this->_cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam_intrinsics.far_plane, makeDirty);
                 }
             }
 
             void applyParameterSlotsToCamera(BoundingBoxes_2 const& bboxs) {
+                // set pose
                 auto cam_pose = _target_camera->get<Camera::Pose>();
                 if (this->_cameraPositionParam.IsDirty()) {
                     auto val = this->_cameraPositionParam.Param<param::Vector3fParam>()->Value();
                     cam_pose.position = glm::vec3(val.GetX(), val.GetY(), val.GetZ());
                     this->_cameraPositionParam.ResetDirty();
                 }
-
                 if (this->_cameraOrientationParam.IsDirty()) {
                     auto val = this->_cameraOrientationParam.Param<param::Vector4fParam>()->Value();
                     const auto orientation = glm::quat(val.GetW(), val.GetX(), val.GetY(), val.GetZ());
@@ -374,37 +381,50 @@ namespace core {
                 }
                 _target_camera->setPose(cam_pose);
 
-                // BIG TODO: manipulation of intrinsics via GUI
-
-                if (this->_cameraProjectionTypeParam.IsDirty()) {
+                // set intrinsics
+                if (_target_camera->get<Camera::ProjectionType>() != Camera::UNKNOWN)
+                {
                     auto curr_proj_type = _target_camera->get<Camera::ProjectionType>();
                     auto cam_pose = _target_camera->get<Camera::Pose>();
                     float orbitalAltitude = glm::length(cam_pose.position - _rotCenter);
+
+                    // Intialize with current camera state
                     float fovy;
                     float vertical_height;
-                    float aspect;
-                    float near_plane;
-                    float far_plane;
-                    Camera::ImagePlaneTile tile;
+                    float aspect = _target_camera->get<Camera::AspectRatio>();
+                    float near_plane = _target_camera->get<Camera::NearPlane>();
+                    float far_plane = _target_camera->get<Camera::FarPlane>();
+                    Camera::ImagePlaneTile tile = _target_camera->get<Camera::ImagePlaneTile>();
+
                     if (curr_proj_type == Camera::ProjectionType::PERSPECTIVE) {
                         fovy = _target_camera->get<Camera::PerspectiveParameters>().fovy;
-                        aspect = _target_camera->get<Camera::AspectRatio>();
-                        near_plane = _target_camera->get<Camera::PerspectiveParameters>().near_plane;
-                        far_plane = _target_camera->get<Camera::PerspectiveParameters>().far_plane;
                         vertical_height = std::tan(fovy) * orbitalAltitude;
-                        tile = _target_camera->get<Camera::PerspectiveParameters>().image_plane_tile;
                     } else if (curr_proj_type == Camera::ProjectionType::ORTHOGRAPHIC) {
-                        aspect = _target_camera->get<Camera::AspectRatio>();
-                        near_plane = _target_camera->get<Camera::OrthographicParameters>().near_plane;
-                        far_plane = _target_camera->get<Camera::OrthographicParameters>().far_plane;
                         vertical_height = _target_camera->get<Camera::OrthographicParameters>().frustrum_height;
                         fovy = std::atan(vertical_height / orbitalAltitude);
-                        tile = _target_camera->get<Camera::OrthographicParameters>().image_plane_tile;
                     }
 
-                    auto val = static_cast<Camera::ProjectionType>(
+                    // if set to auto
+                    {
+                        // compute auto-adjusted near far plane
+                        auto min_max_dist = get_min_max_dist_to_bbox(bboxs);
+                        far_plane = std::max(0.0f, min_max_dist.y);
+                        near_plane = std::max(far_plane / 10000.0f, min_max_dist.x);
+                    }
+
+                    if (_cameraHalfApertureDegreesParam.IsDirty()) {
+                        fovy = this->_cameraHalfApertureDegreesParam.Param<param::FloatParam>()->Value() *
+                               3.14159265359 / 180.0f;
+                        _cameraHalfApertureDegreesParam.ResetDirty();
+                    }
+
+                    // projection param is used every frame, but reset if dirty anyway
+                    if (this->_cameraProjectionTypeParam.IsDirty()) {
+                        this->_cameraProjectionTypeParam.ResetDirty();
+                    }
+                    auto proj_type = static_cast<Camera::ProjectionType>(
                         this->_cameraProjectionTypeParam.Param<param::EnumParam>()->Value());
-                    if (val == Camera::PERSPECTIVE) {
+                    if (proj_type == Camera::PERSPECTIVE) {
                         Camera::PerspectiveParameters cam_intrinsics;
                         cam_intrinsics.aspect = aspect;
                         cam_intrinsics.fovy = fovy;
@@ -413,7 +433,7 @@ namespace core {
                         cam_intrinsics.image_plane_tile = tile;
 
                         *_target_camera = Camera(cam_pose, cam_intrinsics);
-                    } else if (val == Camera::ORTHOGRAPHIC) {
+                    } else if (proj_type == Camera::ORTHOGRAPHIC) {
                         Camera::OrthographicParameters cam_intrinsics;
                         cam_intrinsics.aspect = aspect;
                         cam_intrinsics.frustrum_height = vertical_height;
@@ -423,8 +443,6 @@ namespace core {
 
                         *_target_camera = Camera(cam_pose, cam_intrinsics);
                     }
-
-                    this->_cameraProjectionTypeParam.ResetDirty();
                 }
 
                 if (_cameraSetOrientationChooserParam.IsDirty() || _cameraSetViewChooserParam.IsDirty()) {
@@ -1314,6 +1332,73 @@ namespace core {
                     break;
                 }
                 return default_orientation;
+            }
+
+            glm::vec2 get_min_max_dist_to_bbox(BoundingBoxes_2 const& bboxs) {
+                // compute min and max distance from camera to bounding box corners
+                auto pointPlaneDist = [](std::array<float, 3> point, std::array<float, 3> point_on_plane,
+                                          std::array<float, 3> plane_normal) -> float {
+                    return (std::get<0>(point) - std::get<0>(point_on_plane)) * std::get<0>(plane_normal) +
+                               (std::get<1>(point) - std::get<1>(point_on_plane)) * std::get<1>(plane_normal) +
+                               (std::get<2>(point) - std::get<2>(point_on_plane)) * std::get<2>(plane_normal);
+                };
+
+                std::array<float, 3> point = {_target_camera->get<Camera::Pose>().position.x,
+                    _target_camera->get<Camera::Pose>().position.y, _target_camera->get<Camera::Pose>().position.z};
+                std::array<float, 3> plane_normal = {-_target_camera->get<Camera::Pose>().direction.x,
+                    -_target_camera->get<Camera::Pose>().direction.y, -_target_camera->get<Camera::Pose>().direction.z};
+
+                float left_bottom_back_dist = pointPlaneDist(point,
+                    {bboxs.ClipBox().GetLeftBottomBack().GetX(), bboxs.ClipBox().GetLeftBottomBack().GetY(),
+                        bboxs.ClipBox().GetLeftBottomBack().GetZ()},
+                    plane_normal);
+                float left_bottom_front_dist = pointPlaneDist(point,
+                    {bboxs.ClipBox().GetLeftBottomFront().GetX(), bboxs.ClipBox().GetLeftBottomFront().GetY(),
+                        bboxs.ClipBox().GetLeftBottomFront().GetZ()},
+                    plane_normal);
+                float left_top_back_dist = pointPlaneDist(point,
+                    {bboxs.ClipBox().GetLeftTopBack().GetX(), bboxs.ClipBox().GetLeftTopBack().GetY(),
+                        bboxs.ClipBox().GetLeftTopBack().GetZ()},
+                    plane_normal);
+                float left_top_front_dist = pointPlaneDist(point,
+                    {bboxs.ClipBox().GetLeftTopFront().GetX(), bboxs.ClipBox().GetLeftTopFront().GetY(),
+                        bboxs.ClipBox().GetLeftTopFront().GetZ()},
+                    plane_normal);
+
+                float right_bottom_back_dist = pointPlaneDist(point,
+                    {bboxs.ClipBox().GetRightBottomBack().GetX(), bboxs.ClipBox().GetRightBottomBack().GetY(),
+                        bboxs.ClipBox().GetRightBottomBack().GetZ()},
+                    plane_normal);
+                float right_bottom_front_dist = pointPlaneDist(point,
+                    {bboxs.ClipBox().GetRightBottomFront().GetX(), bboxs.ClipBox().GetRightBottomFront().GetY(),
+                        bboxs.ClipBox().GetRightBottomFront().GetZ()},
+                    plane_normal);
+                float right_top_back_dist = pointPlaneDist(point,
+                    {bboxs.ClipBox().GetRightTopBack().GetX(), bboxs.ClipBox().GetRightTopBack().GetY(),
+                        bboxs.ClipBox().GetRightTopBack().GetZ()},
+                    plane_normal);
+                float right_top_front_dist = pointPlaneDist(point,
+                    {bboxs.ClipBox().GetRightTopFront().GetX(), bboxs.ClipBox().GetRightTopFront().GetY(),
+                        bboxs.ClipBox().GetRightTopFront().GetZ()},
+                    plane_normal);
+
+                float min_dist = std::min(left_bottom_back_dist,
+                    std::min(left_bottom_front_dist,
+                        std::min(
+                            left_top_back_dist, std::min(left_top_front_dist,
+                                                    std::min(right_bottom_back_dist,
+                                                        std::min(right_bottom_front_dist,
+                                                            std::min(right_top_back_dist, right_top_front_dist)))))));
+
+                float max_dist = std::max(left_bottom_back_dist,
+                    std::max(left_bottom_front_dist,
+                        std::max(
+                            left_top_back_dist, std::max(left_top_front_dist,
+                                                    std::max(right_bottom_back_dist,
+                                                        std::max(right_bottom_front_dist,
+                                                            std::max(right_top_back_dist, right_top_front_dist)))))));
+
+                return glm::vec2(min_dist, max_dist);
             }
 
             /** The move step size in world coordinates */

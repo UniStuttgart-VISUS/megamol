@@ -31,12 +31,6 @@
 
 #define DATRAW_MAX(x, y)  ((x) > (y) ? (x) : (y))
 
-#ifdef _WIN32
-#define DIR_SEP '\\'
-#else
-#define DIR_SEP '/'
-#endif
-
 static char *dupstr(const char *s)
 {
     char *dup;
@@ -55,14 +49,14 @@ static char *dirname(char *path)
     static char* dot = ".";
     char *s;
 
-    s = path != NULL ? strrchr(path, DIR_SEP) : NULL;
+    s = path != NULL ? strrchr(path, '/') : NULL;
 
     if (!s) {
         return dot;
     } else if (s == path) {
         return path;
     } else if (s[1] == '\0') {
-        while (s != path && *s != DIR_SEP) s--;
+        while (s != path && *s != '/') s--;
         s[1] = '\0';
         return path;
     } else {
