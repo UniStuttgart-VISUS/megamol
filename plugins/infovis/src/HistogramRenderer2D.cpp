@@ -50,7 +50,7 @@ HistogramRenderer2D::HistogramRenderer2D()
     this->flagStorageWriteCallerSlot.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
     this->MakeSlotAvailable(&this->flagStorageWriteCallerSlot);
 
-    this->numberOfBinsParam << new core::param::IntParam(this->bins, 1, 255);
+    this->numberOfBinsParam << new core::param::IntParam(this->bins, 1, 256);
     this->MakeSlotAvailable(&this->numberOfBinsParam);
 
     this->logPlotParam << new core::param::BoolParam(false);
@@ -174,6 +174,7 @@ bool HistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
             writeFlagsCall->setData(readFlagsCall->getData(), readFlagsCall->version() + 1);
             (*writeFlagsCall)(core::FlagCallWrite_GL::CallGetData);
         }
+        // TODO BUG separate code for the texture histogram
     }
 
     // this is the apex of suck and must die
@@ -386,7 +387,6 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
             this->colCount = 1;
             break;
             // channels.r = true;
-            break;
         case GL_DEPTH_COMPONENT:
             this->colCount = 1;
             names[0] = "Depth";

@@ -36,8 +36,8 @@ uniform uint binCount = 0;
 uniform uint colCount = 0;
 //uniform uint rowCount = 0;
 
-int local_histo[255];
-int local_selected[255];
+int local_histo[256];
+int local_selected[256];
 
 uniform sampler2D anytex;
 
