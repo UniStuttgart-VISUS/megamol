@@ -209,6 +209,10 @@ private:
 
     core::param::ParamSlot kernelTypeParam;
 
+    core::param::ParamSlot splitLinesByValueParam;
+
+    core::param::ParamSlot lineConnectedValueSelectorParam;
+
     core::param::ParamSlot pickRadiusParam;
 
     core::param::ParamSlot pickColorParam;
