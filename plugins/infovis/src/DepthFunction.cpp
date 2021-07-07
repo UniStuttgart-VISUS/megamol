@@ -47,23 +47,42 @@ Eigen::VectorXd DepthFunction::halfSpaceDepth(Eigen::MatrixXd dataMatrix) {
     return result;
 }
 
+
+double DepthFunction::binomialCoeff(int n, int k) {
+    if (k == 0 || k == n) {
+        return 1;
+    }
+
+    double result = 1.0;
+
+    for (int i = 0; i < k; i++) {
+        result *= (n + 1.0 - i) / i;
+    }
+
+    return result;
+}
+
 Eigen::VectorXd DepthFunction::functionalDepth(
     Eigen::MatrixXd dataMatrix, int samplesCount, int samplesLength, unsigned int seed) {
     srand(seed);
 
     Eigen::VectorXd result = Eigen::VectorXd(dataMatrix.rows());
+    double binom = binomialCoeff(dataMatrix.rows(), samplesCount);
 
+    // count the hits for every data point (= row in the data matrix)
     for (int row = 0; row < dataMatrix.rows(); row++) {
         Eigen::RowVectorXd dataPoint = dataMatrix.row(row);
 
         int hitsCount = 0;
 
+        // generate random samples of length samplesLength
         for (int sampleIndex = 0; sampleIndex < samplesCount; sampleIndex++) {
             Eigen::VectorXd rndIndices =
                 (Eigen::VectorXd::Random(samplesLength).array() + 1.0) / 2.0 * (dataMatrix.rows() - 1.0);
 
             bool minMaxFound = true;
 
+            // for every property of the data point (= columns)
             for (int dim = 0; dim < dataMatrix.cols(); dim++) {
 
                 double dataPointValue = dataPoint(dim);
@@ -71,6 +90,9 @@ Eigen::VectorXd DepthFunction::functionalDepth(
                 bool dim_maxFound = false;
                 bool dim_minFound = false;
 
+                // for every data point in the random set, check if its value
+                // is <= or >= than the current data point value
+                // (equiv. to: is the data point contained in a random set of points?)
                 for (int rndIndexCounter = 0; rndIndexCounter < samplesLength; rndIndexCounter++) {
                     int rndIndex = rndIndices(rndIndexCounter);
 
@@ -95,7 +117,9 @@ Eigen::VectorXd DepthFunction::functionalDepth(
                 hitsCount++;
         }
 
-        result(row) = (double) hitsCount / (double) samplesCount;
+        // result = 1 / binom(n, j) * hitsCount
+        // where n = samplesLength and j = samplesCount
+        result(row) = static_cast<double>(hitsCount) / static_cast<double>(binom);
     }
 
     return result;
@@ -158,7 +182,7 @@ Eigen::VectorXd DepthFunction::simplicalDepth(Eigen::MatrixXd dataMatrix, int sa
                 hitsCount++;
         }
 
-        result(row) = (double) hitsCount / (double) samplesCount;
+        result(row) = static_cast<double>(hitsCount) / static_cast<double>(samplesCount);
     }
 
     return result;
