@@ -23,10 +23,6 @@
 #include "stdafx.h"
 #include "ArchVisMSMDataSource.h"
 
-#define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#include "tiny_gltf.h"
-
 using namespace megamol::archvis;
 
 ArchVisMSMDataSource::ArchVisMSMDataSource() :
