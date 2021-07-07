@@ -561,7 +561,7 @@ void megamol::gui::FileBrowserWidget::validate_file(const std::string& file_str,
                     this->file_error += "Require file with extension: ";
                     for (auto ei = exts_lower.begin(); ei != exts_lower.end(); ei++) {
                         this->file_error += "'" + (*ei) + "'";
-                        if (ei + 1 != extensions.end()) {
+                        if (ei + 1 != exts_lower.end()) {
                             this->file_error += " ";
                         }
                     }
