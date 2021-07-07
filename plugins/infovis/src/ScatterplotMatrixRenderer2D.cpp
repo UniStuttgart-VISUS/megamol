@@ -93,6 +93,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , geometryTypeParam("geometryType", "Geometry type to map data to")
         , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
         , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
+        , splitLinesByValueParam("splitLinesByValue", "Draw lines only between points with same id value")
+        , lineConnectedValueSelectorParam("lineConnectedValueSelector", "Select id value column for line connection")
         , pickRadiusParam("pickRadius", "Picking radius")
         , pickColorParam("pickColor", "Picking color")
         , resetSelectionParam("resetSelection", "Reset selection")
@@ -180,6 +182,12 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     kernelTypes->SetTypePair(KERNEL_TYPE_GAUSSIAN, "Gaussian");
     this->kernelTypeParam << kernelTypes;
     this->MakeSlotAvailable(&this->kernelTypeParam);
+
+    this->splitLinesByValueParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->splitLinesByValueParam);
+
+    this->lineConnectedValueSelectorParam << new core::param::FlexEnumParam("undef");
+    this->MakeSlotAvailable(&this->lineConnectedValueSelectorParam);
 
     this->pickRadiusParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->pickRadiusParam);
@@ -272,6 +280,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     screenParams.push_back(&this->geometryTypeParam);
     screenParams.push_back(&this->kernelWidthParam);
     screenParams.push_back(&this->kernelTypeParam);
+    screenParams.push_back(&this->splitLinesByValueParam);
+    screenParams.push_back(&this->lineConnectedValueSelectorParam);
     screenParams.push_back(&this->pickRadiusParam);
     screenParams.push_back(&this->pickColorParam);
     screenParams.push_back(&this->axisModeParam);
@@ -522,9 +532,11 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2DGL& call, boo
         // Update dynamic parameters.
         this->valueSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         this->labelSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->lineConnectedValueSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         for (size_t i = 0; i < colCount; i++) {
             this->valueSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
             this->labelSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
+            this->lineConnectedValueSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
         }
     }
 
@@ -937,7 +949,26 @@ void ScatterplotMatrixRenderer2D::drawLines() {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(0));
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ValueSSBOBindingPoint, this->valueSSBO.GetHandle(0));
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    glDrawArraysInstanced(GL_LINE_STRIP, 0, static_cast<GLsizei>(dataItems), this->plots.size());
+    if (!this->splitLinesByValueParam.Param<core::param::BoolParam>()->Value()) {
+        glDrawArraysInstanced(GL_LINE_STRIP, 0, static_cast<GLsizei>(dataItems), this->plots.size());
+    } else {
+        auto col_idx = nameToIndex(
+            this->floatTable, this->lineConnectedValueSelectorParam.Param<core::param::FlexEnumParam>()->Value());
+        if (col_idx.has_value()) {
+            // Connect neighboring dataItems with the same value in the idx column.
+            std::size_t row_id = 0;
+            while (row_id < dataItems) {
+                float current_value = floatTable->GetData(col_idx.value(), row_id);
+                const GLint line_start = static_cast<GLint>(row_id);
+                row_id++;
+                while (row_id < dataItems && floatTable->GetData(col_idx.value(), row_id) == current_value) {
+                    row_id++;
+                }
+                glDrawArraysInstanced(
+                    GL_LINE_STRIP, line_start, static_cast<GLsizei>(row_id - line_start), this->plots.size());
+            }
+        }
+    }
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_1D, 0);
