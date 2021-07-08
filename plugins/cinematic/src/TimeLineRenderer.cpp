@@ -131,6 +131,9 @@ bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
 
 bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
 
+    auto const lhsFBO = call.GetFramebufferObject();
+    lhsFBO->Enable();
+
     view::Camera_2 cam;
     call.GetCamera(cam);
     glm::vec2 current_viewport;
@@ -438,8 +441,9 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     // Draw all ---------------------------------------------------------------
     this->utils.DrawAll(ortho, this->viewport);
 
+    lhsFBO->Disable();
 
-	return true;
+    return true;
 }
 
 void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color) {
