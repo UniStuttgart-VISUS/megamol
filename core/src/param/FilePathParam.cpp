@@ -12,7 +12,7 @@
 using namespace megamol::core::param;
 
 
-FilePathParam::FilePathParam(const std::string& initVal, FilePathFlags_t flags, FilePathExtensions_t exts)
+FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, Extensions_t exts)
         : AbstractParam(), value(initVal), flags(flags), extensions(exts) {
 
     this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);

@@ -14,6 +14,7 @@
 
 using namespace megamol;
 using namespace megamol::gui;
+using namespace megamol::core::param;
 
 
 megamol::gui::FileBrowserWidget::FileBrowserWidget()
@@ -36,8 +37,7 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
 }
 
 
-bool megamol::gui::FileBrowserWidget::Button_Select(const std::vector<std::string>& extensions,
-    std::string& inout_filename, bool force_absolute, const std::string& project_path) {
+bool megamol::gui::FileBrowserWidget::Button_Select(std::string& inout_filename, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -76,8 +76,7 @@ bool megamol::gui::FileBrowserWidget::Button_Select(const std::vector<std::strin
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    return this->PopUp_Select(
-        "Select File", extensions, open_popup_select_file, inout_filename, force_absolute, project_path);
+    return this->PopUp_Select("Select File", inout_filename, open_popup_select_file, extensions, flags);
 }
 
 
@@ -102,9 +101,7 @@ std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string
 }
 
 
-bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& label,
-    const std::vector<std::string>& extensions, bool& inout_open_popup, std::string& inout_filename,
-    bool force_absolute_path, const std::string& project_path, vislib::math::Ternary& inout_save_gui_state) {
+bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, const std::string& label, std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state) {
 
     bool retval = false;
 
@@ -131,7 +128,7 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
             // Browse to given file name path
             this->validate_split_path(inout_filename, this->file_path_str, this->file_name_str);
             this->validate_directory(this->file_path_str);
-            this->validate_file(this->file_name_str, extensions, mode);
+            this->validate_file(mode, extensions, flags, this->file_name_str);
             this->path_changed = true;
 
             ImGui::OpenPopup(popup_label.c_str());
@@ -148,7 +145,6 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
         if (ImGui::BeginPopupModal(popup_label.c_str(), &open, ImGuiWindowFlags_None)) {
 
             bool apply = false;
-            bool opt_relabspath = false; /// XXX (!force_absolute_path && (mode == DIALOGMODE_SELECT));
 
             // Path ---------------------------------------------------
             auto last_file_path_str = this->file_path_str;
@@ -185,14 +181,8 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
 
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
-            float footer_height =
-                ImGui::GetFrameHeightWithSpacing() * ((inout_save_gui_state.IsUnknown())
-                                                             ? (2.0f)
-                                                             : (3.0f)) + // 1x save gui state line + 2x line for button
-                (ImGui::GetTextLineHeightWithSpacing() * 2.0f);          // 2x max log lines
-            if (opt_relabspath) {
-                footer_height += ImGui::GetTextLineHeightWithSpacing() * ((project_path.empty()) ? (4.5f) : (6.0f));
-            }
+            // Footer Height: 1x save gui state line + 2x line for button + 2x max log lines
+            float footer_height = ImGui::GetFrameHeightWithSpacing() * ((inout_save_gui_state.IsUnknown()) ? (2.0f) : (3.0f)) + (ImGui::GetTextLineHeightWithSpacing() * 2.0f);
             float child_select_height = (ImGui::GetContentRegionAvail().y - footer_height);
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);
@@ -282,7 +272,7 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                             auto new_path = path_pair.first.generic_u8string();
                             gui_utils::Utf8Decode(new_path);
                             this->validate_split_path(new_path, this->file_path_str, this->file_name_str);
-                            this->validate_file(this->file_name_str, extensions, mode);
+                            this->validate_file(mode, extensions, flags, this->file_name_str);
                             if (last_file_path_str != this->file_path_str) {
                                 this->path_changed = true;
                             }
@@ -329,7 +319,7 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                 ImGui::PopItemFlag();
             }
             if (last_file_name_str != this->file_name_str) {
-                this->validate_file(this->file_name_str, extensions, mode);
+                this->validate_file(mode, extensions, flags, this->file_name_str);
             }
 
             // Optional save GUI state option ------------
@@ -339,30 +329,6 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                 this->save_gui_state =
                     ((check) ? (vislib::math::Ternary::TRI_TRUE) : (vislib::math::Ternary::TRI_FALSE));
                 this->tooltip.Marker("Check this option to also save all settings affecting the GUI.");
-            }
-
-            // Relative output path options
-            if (opt_relabspath) {
-                ImGui::Separator();
-                ImGui::TextUnformatted("Return Path: ");
-                ImGui::AlignTextToFramePadding();
-                // ImGui::SameLine();
-                if (ImGui::RadioButton("Absolute", (this->return_path == PATHMODE_ABSOLUTE))) {
-                    this->return_path = PATHMODE_ABSOLUTE;
-                }
-                // ImGui::SameLine();
-                if (ImGui::RadioButton(
-                        "Relative to Working Directory", (this->return_path == PATHMODE_RELATIVE_WORKING))) {
-                    this->return_path = PATHMODE_RELATIVE_WORKING;
-                }
-                // ImGui::SameLine();
-                if (!project_path.empty()) {
-                    if (ImGui::RadioButton(
-                            "Relative to Project File", (this->return_path == PATHMODE_RELATIVE_PROJECT))) {
-                        this->return_path = PATHMODE_RELATIVE_PROJECT;
-                    }
-                }
-                ImGui::Separator();
             }
 
             // Buttons --------------------------
@@ -393,26 +359,6 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                 this->file_name_str += this->valid_ending;
                 auto tmp_file_path =
                     static_cast<std::filesystem::path>(this->file_path_str) / static_cast<std::filesystem::path>(this->file_name_str);
-
-                // Check for desired path format
-                if (opt_relabspath) {
-                    if (this->return_path == PATHMODE_RELATIVE_PROJECT) {
-                        if (!project_path.empty()) {
-                            auto relative_project_dir = std::filesystem::path(project_path);
-                            tmp_file_path = relative(tmp_file_path, relative_project_dir);
-                        }
-                    } else if (this->return_path == PATHMODE_RELATIVE_WORKING) {
-                        tmp_file_path = relative(
-                            tmp_file_path, std::filesystem::current_path()); /// XXX requires non-experimental filesystem support
-                    } else {
-                        tmp_file_path = absolute(tmp_file_path);
-                    }
-                    if (tmp_file_path.empty()) {
-                        tmp_file_path = static_cast<std::filesystem::path>(this->file_path_str) /
-                                        static_cast<std::filesystem::path>(this->file_name_str);
-                    }
-                }
-
                 inout_filename = tmp_file_path.generic_u8string();
                 gui_utils::Utf8Decode(inout_filename);
                 inout_save_gui_state = this->save_gui_state;
@@ -495,15 +441,14 @@ void megamol::gui::FileBrowserWidget::validate_directory(const std::string& path
 }
 
 
-void megamol::gui::FileBrowserWidget::validate_file(const std::string& file_str,
-    const std::vector<std::string>& extensions, megamol::gui::FileBrowserWidget::DialogMode mode) {
+void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMode mode, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, const std::string& file_str) {
 
     // Validating given path
     try {
         std::string file_lower = file_str;
         megamol::gui::gui_utils::StringToLowerCase(file_lower);
 
-        std::vector<std::string> exts_lower;
+        FilePathParam::Extensions_t exts_lower;
         for (auto& ext : extensions) {
             exts_lower.emplace_back("." + ext);
             megamol::gui::gui_utils::StringToLowerCase(exts_lower.back());
@@ -565,6 +510,7 @@ void megamol::gui::FileBrowserWidget::validate_file(const std::string& file_str,
                             this->file_error += " ";
                         }
                     }
+                    this->file_error += "\n";
                     this->valid_ending.clear();
                     this->valid_file = false;
                 }

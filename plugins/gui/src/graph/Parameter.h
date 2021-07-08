@@ -35,7 +35,7 @@ namespace gui {
     // Types
     typedef std::vector<Parameter> ParamVector_t;
     typedef std::map<int, std::string> EnumStorage_t;
-    typedef std::pair<megamol::core::param::FilePathParam::FilePathFlags_t, megamol::core::param::FilePathParam::FilePathExtensions_t> FilePathStorage_t;
+    typedef std::pair<megamol::core::param::FilePathParam::Flags_t, megamol::core::param::FilePathParam::Extensions_t> FilePathStorage_t;
 
 
     /** ************************************************************************

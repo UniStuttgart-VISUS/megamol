@@ -27,15 +27,18 @@ namespace param {
     class MEGAMOLCORE_API FilePathParam : public AbstractParam {
     public:
 
-        typedef std::vector<std::string> FilePathExtensions_t;
-        typedef uint FilePathFlags_t;
+        typedef std::vector<std::string> Extensions_t;
+
+        typedef uint32_t Flags_t;
+
         enum FilePathFlags_ : uint32_t {
-            Flag_File                 = 1 << 0,
-            Flag_Directory            = 1 << 1,
-            Flag_NoExistenceCheck     = 1 << 2,
-            Flag_NoChange             = 1 << 3,
-            Flag_RestrictedExtensions = 1 << 4,
-            Flag_ToBeCreated          = Flag_NoExistenceCheck | Flag_NoChange
+            Flag_File                       = 1 << 0,
+            Flag_Directory                  = 1 << 1,
+            Flag_NoExistenceCheck           = 1 << 2,
+            Flag_NoChange                   = 1 << 3,
+            Flag_RestrictedExtensions       = 1 << 4,
+            Flag_File_RestrictedExtensions  = Flag_File | Flag_RestrictedExtensions,
+            Flag_File_ToBeCreated           = Flag_File | Flag_NoExistenceCheck | Flag_NoChange
         };
 
         /**
@@ -45,7 +48,7 @@ namespace param {
          * @param flags The flags for the parameter
          * @param exts The required file extensions for the parameter
          */
-        FilePathParam(const std::string& initVal, FilePathFlags_t flags = Flag_File, FilePathExtensions_t exts = {});
+        FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, Extensions_t exts = {});
 
         /**
          * Dtor.
@@ -105,7 +108,7 @@ namespace param {
          *
          * @return The flags
          */
-        inline FilePathFlags_t GetFlags() const {
+        inline Flags_t GetFlags() const {
             return this->flags;
         }
 
@@ -114,20 +117,20 @@ namespace param {
          *
          * @return The file extensions
          */
-        inline const FilePathExtensions_t& GetExtensions() const {
+        inline const Extensions_t& GetExtensions() const {
             return this->extensions;
         }
 
     private:
 
         /** The flags of the parameter */
-        FilePathFlags_t flags;
+        Flags_t flags;
 
         /** The accepted file extension(s).
          * Leave empty to allow all extensions.
          * Use with Flag_RestrictedExtensions flag.
          */
-        FilePathExtensions_t extensions;
+        Extensions_t extensions;
 
         /** The file or directory path */
         std::filesystem::path value;
