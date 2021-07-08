@@ -12,6 +12,7 @@
 
 #include <variant>
 #include "mmcore/param/FlexEnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterOrbitalWidget.h"
@@ -33,6 +34,8 @@ namespace gui {
 
     // Types
     typedef std::vector<Parameter> ParamVector_t;
+    typedef std::map<int, std::string> EnumStorage_t;
+    typedef std::pair<megamol::core::param::FilePathParam::FilePathFlags_t, megamol::core::param::FilePathParam::FilePathExtensions_t> FilePathStorage_t;
 
 
     /** ************************************************************************
@@ -79,6 +82,7 @@ namespace gui {
         typedef std::variant<std::monostate,               // default (unused/unavailable)
             megamol::core::view::KeyCode,                  // BUTTON
             EnumStorage_t,                                 // ENUM
+            FilePathStorage_t,                             // FILEPATH
             megamol::core::param::FlexEnumParam::Storage_t // FLEXENUM
             >
             Storage_t;
@@ -246,91 +250,16 @@ namespace gui {
         bool SetValueString(const std::string& val_str, bool set_default_val = false, bool set_dirty = true);
 
         template<typename T>
-        void SetValue(T val, bool set_default_val = false, bool set_dirty = true) {
-            if (std::holds_alternative<T>(this->value)) {
-
-                // Set value
-                if (std::get<T>(this->value) != val) {
-                    this->value = val;
-                    if (set_dirty) {
-                        this->value_dirty = true;
-                    }
-
-                    if (this->type == ParamType_t::FLEXENUM) {
-                        // Flex Enum
-                        auto flex_storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
-                        flex_storage.insert(std::get<std::string>(this->value));
-                        this->SetStorage(flex_storage);
-                    } else if (this->type == ParamType_t::TRANSFERFUNCTION) {
-                        // Transfer Function
-                        if constexpr (std::is_same_v<T, std::string>) {
-                            int texture_width, texture_height;
-                            std::vector<float> texture_data;
-                            if (megamol::core::param::TransferFunctionParam::GetTextureData(
-                                    val, texture_data, texture_width, texture_height)) {
-                                this->TransferFunction_LoadTexture(texture_data, texture_width, texture_height);
-                            }
-                            this->tf_string_hash = std::hash<std::string>()(val);
-                        }
-                    } else if (this->type == ParamType_t::FILEPATH) {
-                        // Push log message to GUI pop-up for not existing files
-                        /* TODO Disabled until suitable FilePathParam flags are available
-                        auto file = std::get<std::string>(this->value);
-                        if (!megamol::core::utility::FileUtils::FileExists(file)) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                                "%sFile Parameter%sFile not found: '%s' > Parameter '%s'\n\n",
-                                LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG,
-                                this->FullNameProject().c_str(), file.c_str());
-                        }
-                        */
-                    }
-                }
-
-                // Check default value
-                if (set_default_val) {
-                    this->value_dirty = false;
-                    this->default_value = val;
-                    this->default_value_mismatch = false;
-                } else {
-                    try {
-                        this->default_value_mismatch = (std::get<T>(this->default_value) != val);
-                    } catch (...) {}
-                }
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-        }
+        void SetValue(T val, bool set_default_val = false, bool set_dirty = true);
 
         template<typename T>
-        void SetMinValue(T minv) {
-            if (std::holds_alternative<T>(this->minval)) {
-                this->minval = minv;
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-        }
+        void SetMinValue(T minv);
 
         template<typename T>
-        void SetMaxValue(T maxv) {
-            if (std::holds_alternative<T>(this->maxval)) {
-                this->maxval = maxv;
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-        }
+        void SetMaxValue(T maxv);
 
         template<typename T>
-        void SetStorage(T store) {
-            if (std::holds_alternative<T>(this->storage)) {
-                this->storage = store;
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-        }
+        void SetStorage(T store);
 
         inline void SetExtended(bool extended) {
             this->gui_extended = extended;
@@ -386,8 +315,8 @@ namespace gui {
         bool widget_color(WidgetScope scope, const std::string& label, glm::vec4& val);
         bool widget_enum(WidgetScope scope, const std::string& label, int& val, EnumStorage_t store);
         bool widget_flexenum(WidgetScope scope, const std::string& label, std::string& val,
-            megamol::core::param::FlexEnumParam::Storage_t store);
-        bool widget_filepath(WidgetScope scope, const std::string& label, std::string& val);
+            const megamol::core::param::FlexEnumParam::Storage_t& store);
+        bool widget_filepath(WidgetScope scope, const std::string& label, std::string& val, const FilePathStorage_t& store);
         bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& val);
         bool widget_int(WidgetScope scope, const std::string& label, int& val, int minv, int maxv);
         bool widget_float(WidgetScope scope, const std::string& label, float& val, float minv, float maxv);
@@ -405,6 +334,86 @@ namespace gui {
         bool widget_rotation_direction(
             WidgetScope scope, const std::string& label, glm::vec3& val, glm::vec3 minv, glm::vec3 maxv);
     };
+
+    // ------------------------------------------------------------------------
+
+
+    template<typename T>
+    void Parameter::SetValue(T val, bool set_default_val, bool set_dirty) {
+
+        if (std::holds_alternative<T>(this->value)) {
+            // Set value
+            if (std::get<T>(this->value) != val) {
+                this->value = val;
+                if (set_dirty) {
+                    this->value_dirty = true;
+                }
+                if (this->type == ParamType_t::FLEXENUM) {
+                    // Update storage
+                    auto flex_storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
+                    flex_storage.insert(std::get<std::string>(this->value));
+                    this->SetStorage(flex_storage);
+                } else if (this->type == ParamType_t::TRANSFERFUNCTION) {
+                    // Update texture
+                    if constexpr (std::is_same_v<T, std::string>) {
+                        int texture_width, texture_height;
+                        std::vector<float> texture_data;
+                        if (megamol::core::param::TransferFunctionParam::GetTextureData(
+                            val, texture_data, texture_width, texture_height)) {
+                            this->TransferFunction_LoadTexture(texture_data, texture_width, texture_height);
+                        }
+                        this->tf_string_hash = std::hash<std::string>()(val);
+                    }
+                }
+            }
+            // Set default value
+            if (set_default_val) {
+                this->value_dirty = false;
+                this->default_value = val;
+                this->default_value_mismatch = false;
+            } else {
+                try {
+                    this->default_value_mismatch = (std::get<T>(this->default_value) != val);
+                } catch (...) {}
+            }
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+    }
+
+    template<typename T>
+    void Parameter::SetMinValue(T minv) {
+
+        if (std::holds_alternative<T>(this->minval)) {
+            this->minval = minv;
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+    }
+
+    template<typename T>
+    void Parameter::SetMaxValue(T maxv) {
+
+        if (std::holds_alternative<T>(this->maxval)) {
+            this->maxval = maxv;
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+    }
+
+    template<typename T>
+    void Parameter::SetStorage(T store) {
+
+        if (std::holds_alternative<T>(this->storage)) {
+            this->storage = store;
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+    }
 
 
 } // namespace gui

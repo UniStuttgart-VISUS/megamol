@@ -74,7 +74,7 @@ namespace gui {
             const std::string& project_path = "");
 
     private:
-        typedef std::pair<stdfs::path, bool> ChildData_t;
+        typedef std::pair<std::filesystem::path, bool> ChildData_t;
 
         enum DialogMode { DIALOGMODE_SAVE, DIALOGMODE_LOAD, DIALOGMODE_SELECT };
         enum PathMode { PATHMODE_RELATIVE_PROJECT, PATHMODE_RELATIVE_WORKING, PATHMODE_ABSOLUTE };

@@ -472,7 +472,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FILEPATH,
-            std::monostate(), std::monostate(), std::monostate(), param_name, description);
+            FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()}), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -699,7 +699,7 @@ bool megamol::gui::Parameter::WriteCoreParameterValue(
         }
     } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::FilePathParam>()) {
         if (in_param.type == ParamType_t::FILEPATH) {
-            p_ptr->SetValue(vislib::StringA(std::get<std::string>(in_param.GetValue()).c_str()));
+            p_ptr->SetValue(std::get<std::string>(in_param.GetValue()));
         } else {
             type_error = true;
         }
@@ -1118,7 +1118,7 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
                     // FILE PATH ---------------------------------------
                 case (ParamType_t::FILEPATH): {
                     auto val = arg;
-                    if (this->widget_filepath(scope, param_label, val)) {
+                    if (this->widget_filepath(scope, param_label, val, this->GetStorage<FilePathStorage_t>())) {
                         this->SetValue(val);
                         retval = true;
                     }
@@ -1475,7 +1475,7 @@ bool megamol::gui::Parameter::widget_enum(
 
 
 bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
-    std::string& val, megamol::core::param::FlexEnumParam::Storage_t store) {
+    std::string& val, const megamol::core::param::FlexEnumParam::Storage_t& store) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1536,7 +1536,7 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
 
 
 bool megamol::gui::Parameter::widget_filepath(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, std::string& val) {
+    megamol::gui::Parameter::WidgetScope scope, const std::string& label, std::string& val, const FilePathStorage_t& store) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1556,7 +1556,13 @@ bool megamol::gui::Parameter::widget_filepath(
         widget_width = std::max(widget_width, text_width);
 
         ImGui::PushItemWidth(widget_width);
+
         /// TODO Provide path to file name of parent graph/project
+
+        /// TODO Propagate to fiel browser dialog (Button_Select)
+        auto file_flags = store.first;
+        auto file_extensions = store.second;
+
         bool button_edit =
             this->gui_file_browser.Button_Select({}, std::get<std::string>(this->gui_widget_store), false, "");
         ImGui::SameLine();
