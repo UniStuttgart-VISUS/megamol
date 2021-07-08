@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <optional>
+#include <tuple>
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -51,6 +53,9 @@ private:
     bool get_extent_cb(core::Call& c);
 
     bool assert_data(core::moldyn::MultiParticleDataCall& in_parts);
+
+    std::optional<std::tuple<unsigned int /*min*/, unsigned int /*max*/, unsigned int /*count*/>> calc_frame_extent(
+        unsigned int f_count);
 
     core::CalleeSlot data_out_slot_;
 

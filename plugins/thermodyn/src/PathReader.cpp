@@ -128,8 +128,8 @@ bool megamol::thermodyn::PathReader::assert_data(int frame_id) {
         ifile.read(reinterpret_cast<char*>(&indices_size), sizeof(uint64_t));
         indices.clear();
         indices.reserve(indices_size / sizeof(uint32_t));
-        // ifile.read(reinterpret_cast<char*>(indices.data()), indices_size);
-        for (uint64_t f_idx = 0; f_idx < (indices_size / sizeof(uint32_t) / 2) - 1; ++f_idx) {
+        //ifile.read(reinterpret_cast<char*>(indices.data()), indices_size);
+        for (uint64_t f_idx = 0; f_idx < (indices_size / sizeof(uint32_t) / 2) - 2; ++f_idx) {
             indices.push_back(f_idx);
             indices.push_back(f_idx + 1);
         }
@@ -156,7 +156,7 @@ bool megamol::thermodyn::PathReader::assert_data(int frame_id) {
                 num_pos * sizeof(glm::vec3), 3, mesh::MeshDataAccessCollection::FLOAT, sizeof(glm::vec3), 0,
                 mesh::MeshDataAccessCollection::AttributeSemanticType::COLOR});
 
-        mesh_col_->addMesh(std::to_string(idx), attributes, index_data, mesh::MeshDataAccessCollection::LINES);
+        mesh_col_->addMesh(std::to_string(idx), attributes, index_data, mesh::MeshDataAccessCollection::LINE_STRIP);
     }
 
     ++out_data_hash_;

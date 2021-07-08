@@ -75,8 +75,8 @@ bool megamol::thermodyn::ParticlePaths::get_data_cb(core::Call& c) {
                 std::vector<mesh::MeshDataAccessCollection::VertexAttribute> mesh_attributes;
                 mesh_attributes.emplace_back(
                     mesh::MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(line.first.data()),
-                        line.first.size() * sizeof(glm::vec4), 4, mesh::MeshDataAccessCollection::FLOAT,
-                        sizeof(glm::vec4), 0, mesh::MeshDataAccessCollection::POSITION});
+                        line.first.size() * sizeof(glm::vec3), 3, mesh::MeshDataAccessCollection::FLOAT,
+                        sizeof(glm::vec3), 0, mesh::MeshDataAccessCollection::POSITION});
                 auto const ident = std::to_string(id);
                 mesh_col_->addMesh(ident, mesh_attributes, mesh_indices, mesh::MeshDataAccessCollection::LINE_STRIP);
             }
@@ -106,7 +106,8 @@ bool megamol::thermodyn::ParticlePaths::get_extent_cb(core::Call& c) {
     data_in->SetFrameID(meta.m_frame_ID);
     if (!(*data_in)(1))
         return false;
-    if (!(*data_in)(0))
+    auto f_count = data_in->FrameCount();
+    /*if (!(*data_in)(0))
         return false;
 
     if (data_in->DataHash() != in_data_hash_ || is_dirty()) {
@@ -135,7 +136,9 @@ bool megamol::thermodyn::ParticlePaths::get_extent_cb(core::Call& c) {
         }
 
         reset_dirty();
-    }
+    }*/
+
+    calc_frame_extent(f_count);
 
     meta.m_frame_cnt = frame_count_;
     meta.m_frame_ID = frame_id_;
@@ -150,7 +153,7 @@ bool megamol::thermodyn::ParticlePaths::get_extent_cb(core::Call& c) {
 
 bool megamol::thermodyn::ParticlePaths::assert_data(core::moldyn::MultiParticleDataCall& in_parts) {
     auto f_count = in_parts.FrameCount();
-    auto min_f = 0;
+    /*auto min_f = 0;
     auto max_f = f_count == 0 ? 0 : f_count - 1;
 
     if (!all_frames_slot_.Param<core::param::BoolParam>()->Value()) {
@@ -163,7 +166,15 @@ bool megamol::thermodyn::ParticlePaths::assert_data(core::moldyn::MultiParticleD
     }
 
     frame_count_ = f_count;
-    frame_id_ = min_f;
+    frame_id_ = min_f;*/
+    unsigned int min_f = 0;
+    unsigned int max_f = 0;
+    auto frame_extent = calc_frame_extent(f_count);
+    if (frame_extent.has_value()) {
+        std::tie(min_f, max_f, f_count) = frame_extent.value();
+    } else {
+        return false;
+    }
 
     if (f_count == 0)
         return true;
@@ -220,7 +231,10 @@ bool megamol::thermodyn::ParticlePaths::assert_data(core::moldyn::MultiParticleD
         for (auto& [key, value] : lines) {
             value.second.reserve(2 * f_count);
             //std::iota(value.second.begin(), value.second.end(), 0);
-            for (std::decay_t<decltype(f_count)> f_idx = 0; f_idx < f_count - 1; ++f_idx) {
+            auto cur_f_count = value.first.size();
+            if (cur_f_count <= 1)
+                continue;
+            for (std::decay_t<decltype(cur_f_count)> f_idx = 0; f_idx < cur_f_count - 2; ++f_idx) {
                 value.second.push_back(f_idx);
                 value.second.push_back(f_idx + 1);
             }
@@ -228,4 +242,24 @@ bool megamol::thermodyn::ParticlePaths::assert_data(core::moldyn::MultiParticleD
     }
 
     return true;
+}
+
+
+std::optional<std::tuple<unsigned int, unsigned int, unsigned int>> megamol::thermodyn::ParticlePaths::calc_frame_extent(unsigned int f_count) {
+    auto min_f = 0u;
+    auto max_f = f_count == 0 ? 0 : f_count - 1;
+
+    if (!all_frames_slot_.Param<core::param::BoolParam>()->Value()) {
+        min_f = min_frame_slot_.Param<core::param::IntParam>()->Value();
+        max_f = max_frame_slot_.Param<core::param::IntParam>()->Value();
+        auto new_f_count = max_f - min_f;
+        if (new_f_count > f_count)
+            return std::nullopt;
+        f_count = new_f_count;
+    }
+
+    frame_count_ = f_count;
+    frame_id_ = min_f;
+
+    return std::make_optional(std::make_tuple(min_f, max_f, f_count));
 }
