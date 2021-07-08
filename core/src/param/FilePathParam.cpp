@@ -13,7 +13,7 @@ using namespace megamol::core::param;
 
 
 FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, Extensions_t exts)
-        : AbstractParam(), value(initVal), flags(flags), extensions(exts) {
+        : AbstractParam(), value(initVal), flags(flags), extensions(exts), registered_notifications(false), open_notification__file_is_dir(false) {
 
     this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
 }
@@ -61,7 +61,23 @@ bool FilePathParam::valid_change(std::string v) {
 
     auto new_value = static_cast<std::filesystem::path>(v);
     if (this->value != new_value) {
+        if ((this->flags & Flag_File) && std::filesystem::is_directory(new_value)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("FilePathParam: Omitting new value '%s'. Expected file but directory is given.", new_value.generic_u8string().c_str());
+            this->open_notification__file_is_dir = true;
+            return false;
+        }
         return true;
     }
     return false;
+}
+
+
+void FilePathParam::RegisterNotifications(const FilePathParam::RegisterNotificationCallback_t& pc) {
+
+    // Push static
+    if (!this->registered_notifications) {
+        pc("FilePathParam", &this->open_notification__file_is_dir, "Omitting new value. Expected file but directory is given.");
+
+        this->registered_notifications = true;
+    }
 }

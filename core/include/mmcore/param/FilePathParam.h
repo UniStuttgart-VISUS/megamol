@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
@@ -38,9 +39,10 @@ namespace param {
             Flag_File_ToBeCreated        = Flag_File | Flag_NoExistenceCheck | Flag_NoChange,
             Flag_Directory_ToBeCreated   = Flag_Directory | Flag_NoExistenceCheck | Flag_NoChange
         };
-        typedef std::function<void(std::string&, const std::string&)> PopUpCallback_t;
         typedef std::vector<std::string> Extensions_t;
         typedef uint32_t Flags_t;
+
+        typedef std::function<void(const std::string&, bool*, const std::string&)> RegisterNotificationCallback_t;
 
         /**
          * Ctor.
@@ -122,9 +124,10 @@ namespace param {
             return this->extensions;
         }
 
-        void SetPopUpCallback(const PopUpCallback_t& pc) {
-            this->popup_callback = pc;
-        }
+        /**
+         * Register notifications.
+         */
+        void RegisterNotifications(const RegisterNotificationCallback_t& pc);
 
     private:
 
@@ -143,8 +146,10 @@ namespace param {
         /** Function checks if setting new file path value is valid depending on given flags */
         bool valid_change(std::string v);
 
-        /** Pop-up callback function propagating log messages to gui pop-up */
-        PopUpCallback_t popup_callback;
+        /** Indicates whether notifications are already registered or not (should be done only once) */
+        bool registered_notifications;
+        /** Flags for opening specific notifications */
+        bool open_notification__file_is_dir;
     };
 
 

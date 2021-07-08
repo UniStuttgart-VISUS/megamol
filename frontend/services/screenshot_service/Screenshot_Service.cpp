@@ -22,6 +22,10 @@
 #include "GUIRegisterWindow.h"
 
 static const std::string service_name = "Screenshot_Service: ";
+static const std::string privacy_note("--- PRIVACY NOTE ---\n"
+    "Please note that the complete MegaMol project is stored in the header of the screenshot image file. \n"
+    "Before giving away the screenshot, clear privacy relevant information in the project file before taking a screenshot (e.g. user name in file paths). \n"
+    ">>> In the file [megamol_config.lua] set mmSetCliOption(\"privacynote\", \"off\") to permanently turn off privacy notifications for screenshots.");
 static bool service_open_popup = false;
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
@@ -108,6 +112,7 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
     png_destroy_write_struct(&pngPtr, &pngInfoPtr);
 
     if (screenshot_show_privacy_note) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Screenshot: %s", privacy_note.c_str());
         service_open_popup = true;
     }
     return true;
@@ -228,11 +233,7 @@ void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> res
     guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(&resources[2].getResource<megamol::frontend_resources::GUIState>());
 
     auto &gui_window_request_resource = resources[4].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-    std::string message("--- PRIVACY NOTE ---\n"
-        "Please note that the complete MegaMol project is stored in the header of the screenshot image file. \n"
-        "Before giving away the screenshot, clear privacy relevant information in the project file before taking a screenshot (e.g. user name in file paths). \n"
-        ">>> In the file [megamol_config.lua] set mmSetCliOption(\"privacynote\", \"off\") to permanently turn off privacy notifications for screenshots.");
-    gui_window_request_resource.register_notification("Screenshot", service_open_popup, message);
+    gui_window_request_resource.register_notification("Screenshot", service_open_popup, privacy_note);
 }
 
 void Screenshot_Service::updateProvidedResources() {

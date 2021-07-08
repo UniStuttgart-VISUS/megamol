@@ -886,13 +886,12 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
 
                 if (!param.CoreParamPtr().IsNull()) {
 
-                    // Set callback for pop-up XXX each frame XXX
+                    // Register parameter notifications from file path params (XXX call only once ...)
                     if (param.Type() == ParamType_t::FILEPATH) {
                         if (auto* p_ptr = param.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
-                            const megamol::core::param::FilePathParam::PopUpCallback_t param_popup_callback = [this](std::string& name, const std::string& message) {
-                              this->notification_collection[name] = std::tuple<bool*, bool, std::string>(nullptr, false, message);
-                            };
-                            p_ptr->SetPopUpCallback(param_popup_callback);
+                            p_ptr->RegisterNotifications([this](const std::string& name, bool* open, const std::string& message) {
+                              this->notification_collection[name] = std::tuple<bool*, bool, std::string>(open, false, message);
+                            });
                         }
                     }
 
@@ -1458,11 +1457,11 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // Externally registered notifications
     for (auto& popup_map : this->notification_collection) {
-        if (!std::get<1>(popup_map.second) && ((std::get<0>(popup_map.second) == nullptr) || (*std::get<0>(popup_map.second)))) {
-            ImGui::OpenPopup(popup_map.first.c_str());
+        if ((std::get<0>(popup_map.second) != nullptr) && (*std::get<0>(popup_map.second))) {
             (*std::get<0>(popup_map.second)) = false;
-            // Mirror message in console log with info level
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(std::get<2>(popup_map.second).c_str());
+            if (!std::get<1>(popup_map.second)) {
+                ImGui::OpenPopup(popup_map.first.c_str());
+            }
         }
         if (ImGui::BeginPopupModal(popup_map.first.c_str(), nullptr, popup_flags)) {
             ImGui::TextUnformatted(std::get<2>(popup_map.second).c_str());
