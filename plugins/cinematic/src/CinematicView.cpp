@@ -481,10 +481,10 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     float left = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
     float bottom = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;
     float up = (vp_fh_reduced - static_cast<float>(texHeight)) / 2.0f;
-    glm::vec3 pos_bottom_left = {left, bottom, 0.0f};
-    glm::vec3 pos_upper_left = {left, up, 0.0f};
-    glm::vec3 pos_upper_right = {right, up, 0.0f};
-    glm::vec3 pos_bottom_right = {right, bottom, 0.0f};
+    glm::vec3 pos_bottom_left = {left, bottom, 1.0f};
+    glm::vec3 pos_upper_left = {left, up, 1.0f};
+    glm::vec3 pos_upper_right = {right, up, 1.0f};
+    glm::vec3 pos_bottom_right = {right, bottom, 1.0f};
     this->utils.Push2DColorTexture(this->_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left,
         pos_upper_right, pos_bottom_right, true, glm::vec4(0.0f), true);
     
