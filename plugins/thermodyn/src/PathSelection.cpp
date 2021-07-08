@@ -104,8 +104,8 @@ bool megamol::thermodyn::PathSelection::get_extent_cb(core::Call& c) {
     if (!(*parts_in)(1))
         return false;
 
-    if (!(*flags_read)(1))
-        return false;
+    /*if (!(*flags_read)(1))
+        return false;*/
 
     in_meta = data_in->getMetaData();
     in_meta.m_frame_ID = out_meta.m_frame_ID;
