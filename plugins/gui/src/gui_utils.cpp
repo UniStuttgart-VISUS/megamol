@@ -1,12 +1,12 @@
 /*
- * GUIUtils.cpp
+ * gui_utils.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 
-#include "GUIUtils.h"
+#include "gui_utils.h"
 
 
 ImGuiID megamol::gui::gui_generated_uid = 0;

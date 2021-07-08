@@ -410,7 +410,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
-            glm::vec3 pos_v = view::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
+            glm::vec3 pos_v = utility::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
             std::array<float, 3> pos = { pos_v.x, pos_v.y, pos_v.z };
             auto cam_state = this->selectedKeyframe.GetCameraState();
             cam_state.position = pos;
@@ -437,7 +437,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
             glm::vec3 up = static_cast<glm::vec3>(cam_up);
             glm::vec3 new_view = this->modelBboxCenter - static_cast<glm::vec3>(cam_pos);
-            glm::quat new_orientation = view::quaternion_from_vectors(new_view, up);
+            glm::quat new_orientation = utility::quaternion_from_vectors(new_view, up);
             camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
@@ -462,8 +462,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             glm::vec4 cam_up = snapshot.up_vector;
             glm::vec3 up = static_cast<glm::vec3>(cam_up);
 
-            glm::vec3 new_view = view::vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
-            glm::quat new_orientation = view::quaternion_from_vectors(new_view, up);
+            glm::vec3 new_view = utility::vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
+            glm::quat new_orientation = utility::quaternion_from_vectors(new_view, up);
             camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
@@ -488,8 +488,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             glm::vec4 cam_view = snapshot.view_vector;
             glm::vec3 view = static_cast<glm::vec3>(cam_view);
 
-            glm::vec3 new_up= view::vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
-            glm::quat new_orientation = view::quaternion_from_vectors(view, new_up);
+            glm::vec3 new_up= utility::vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
+            glm::quat new_orientation = utility::quaternion_from_vectors(view, new_up);
             camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
@@ -1330,9 +1330,9 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     glm::vec3 up = static_cast<glm::vec3>(cam_up);
     this->editCurrentAnimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetAnimTime(), false);
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
-    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(view::glm_to_vislib_vector(pos), false);
-    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(view::glm_to_vislib_vector(view), false);
-    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(view::glm_to_vislib_vector(up), false);
+    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(pos), false);
+    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(view), false);
+    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(up), false);
     this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(camera.aperture_angle(), false);
     
 }
@@ -1358,7 +1358,7 @@ void megamol::cinematic::KeyframeKeeper::pendingTotalAnimTimePopUp(uint32_t fram
         bool valid_imgui_scope =
             ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
         if (valid_imgui_scope) {
-            const std::string popup_label = "Changed Total Animation Time";
+            const std::string popup_label = "Changed Total Animation Time##" + std::string(this->FullName());
             if (!ImGui::IsPopupOpen(popup_label.c_str())) {
                 ImGui::OpenPopup(popup_label.c_str());
             }

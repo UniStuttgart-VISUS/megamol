@@ -29,54 +29,50 @@ namespace gui {
 
 
     /** ************************************************************************
-     * Defines module data structure for graph.
+     * Defines module data structure for graph
      */
     class Group {
     public:
-        Group(ImGuiID uid);
+        explicit Group(ImGuiID uid);
         ~Group();
 
         bool AddModule(const ModulePtr_t& module_ptr);
         bool RemoveModule(ImGuiID module_uid);
         bool ContainsModule(ImGuiID module_uid);
-        inline bool Empty(void) {
+        inline bool Empty() {
             return (this->modules.empty());
         }
 
         InterfaceSlotPtr_t AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add = true);
         InterfaceSlotPtr_t InterfaceSlotPtr(ImGuiID interfaceslot_uid);
-        inline InterfaceSlotPtrMap_t& InterfaceSlots(void) {
+        inline InterfaceSlotPtrMap_t& InterfaceSlots() {
             return this->interfaceslots;
         }
         inline InterfaceSlotPtrVector_t& InterfaceSlots(CallSlotType type) {
             return this->interfaceslots[type];
         }
         bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
-        bool ContainsInterfaceSlot(ImGuiID interfaceslot_uid);
         bool InterfaceSlot_RemoveCallSlot(ImGuiID callslot_uid, bool force = false);
         bool InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid);
 
-        void RestoreInterfaceslots(void);
+        void RestoreInterfaceslots();
 
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
         void UpdatePositionSize(const GraphCanvas_t& in_canvas);
 
-        inline const ImGuiID UID(void) const {
+        inline ImGuiID UID() const {
             return this->uid;
         }
-        inline ModulePtrVector_t& Modules(void) {
+        inline const ModulePtrVector_t& Modules() const {
             return this->modules;
         }
-        inline const std::string Name(void) const {
+        inline std::string Name() const {
             return this->name;
         }
-        inline ImVec2 Size(void) {
+        inline ImVec2 Size() const {
             return this->gui_size;
         }
-        inline bool IsViewCollapsed(void) {
-            return this->gui_collapsed_view;
-        }
-        inline void ForceUpdate(void) {
+        inline void ForceUpdate() {
             this->gui_update = true;
         }
 
@@ -100,14 +96,13 @@ namespace gui {
         ImVec2 gui_size;     /// Relative size without considering zooming
         bool gui_collapsed_view;
         bool gui_allow_selection;
-        bool gui_allow_context;
         bool gui_update;
 
         PopUps gui_rename_popup;
 
         // FUNCTIONS --------------------------------------------------------------
 
-        void spacial_sort_interfaceslots(void) {
+        void spacial_sort_interfaceslots() {
             for (auto& interfaceslot_map : this->interfaceslots) {
                 std::sort(interfaceslot_map.second.begin(), interfaceslot_map.second.end(),
                     [](InterfaceSlotPtr_t isptr1, InterfaceSlotPtr_t isptr2) {

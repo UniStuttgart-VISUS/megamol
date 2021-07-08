@@ -29,7 +29,7 @@
 #include "mmcore/view/Camera_2.h"
 
 
-namespace megamol::core::view {
+namespace megamol::core::utility {
 
 // #### Utility vector conversion functions ############################ //
 
@@ -118,15 +118,13 @@ public:
     /**
      * Load textures.
      */
-    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename) {
-        return megamol::core::view::RenderUtils::LoadTextureFromFile(
-            out_texture_ptr, megamol::core::utility::to_string(filename));
+    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
+    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR) {
+        return megamol::core::utility::RenderUtils::LoadTextureFromFile(out_texture_ptr, megamol::core::utility::to_string(filename), tex_min_filter, tex_max_filter);
     }
 
-    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename);
-
     static bool LoadTextureFromData(
-        std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data);
+        std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
 
     /**
      * Create shader.
