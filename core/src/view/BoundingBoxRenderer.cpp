@@ -195,16 +195,24 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
         return false;
     }
 
+    auto const lhsFBO = call.GetFramebufferObject();
+
     auto boundingBoxes = chainedCall->AccessBoundingBoxes();
     auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
+
+    lhsFBO->Enable();
 
     bool renderRes = true;
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes, smoothLines);
     }
 
+    lhsFBO->Disable();
+
     *chainedCall = call;
     renderRes &= (*chainedCall)(view::AbstractCallRender::FnRender);
+
+    lhsFBO->Enable();
 
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes, smoothLines);
@@ -212,6 +220,8 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     if (this->enableViewCubeSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderViewCube(call);
     }
+
+    lhsFBO->Disable();
 
     return renderRes;
 }
