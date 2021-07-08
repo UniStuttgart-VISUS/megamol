@@ -35,7 +35,6 @@ public:
         // here we could perform addition de-initialization
     }
     /** Registers modules and calls */
-    virtual void registerClasses() {
-    }
+    virtual void registerClasses() {}
 };
 } // namespace megamol::gui
