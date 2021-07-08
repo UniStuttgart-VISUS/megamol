@@ -11,7 +11,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::gui;
+using namespace megamol::cinematic;
 
 
 OverlayRenderer::OverlayRenderer()
@@ -426,6 +426,9 @@ bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 
 bool OverlayRenderer::Render(view::CallRender3DGL& call) {
 
+    auto const lhsFBO = call.GetFramebufferObject();
+    lhsFBO->Enable();
+
     // Camera
     view::Camera_2 cam;
     call.GetCamera(cam);
@@ -584,6 +587,8 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
             ortho, (*this->m_font_ptr), text, color, font_size, anchor, this->m_current_rectangle);
     } break;
     }
+
+    lhsFBO->Disable();
 
     return true;
 }

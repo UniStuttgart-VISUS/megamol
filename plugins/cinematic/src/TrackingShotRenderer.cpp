@@ -159,6 +159,9 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     }
 
     // Init rendering ---------------------------------------------------------
+    auto const lhsFBO = call.GetFramebufferObject();
+    lhsFBO->Enable();
+
     glm::vec4 back_color;
     glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
     this->utils.SetBackgroundColor(back_color);
@@ -223,6 +226,8 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     // Draw 2D ---------------------------------------------------------------
     this->utils.DrawAll(ortho, viewport);
+
+    lhsFBO->Disable();
 
     return true;
 }

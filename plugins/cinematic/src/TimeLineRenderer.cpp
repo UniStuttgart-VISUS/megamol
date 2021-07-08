@@ -19,7 +19,7 @@ using namespace vislib;
 
 
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
-	, keyframeKeeperSlot("keyframeData", "Connects to the KeyframeKeeper")
+    , keyframeKeeperSlot("keyframeData", "Connects to the KeyframeKeeper")
     , moveRightFrameParam("gotoRightFrame", "Move to right animation time frame.")
     , moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame.")
     , resetPanScaleParam("resetAxes", "Reset shifted and scaled time axes.")
