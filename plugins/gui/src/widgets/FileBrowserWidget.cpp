@@ -127,7 +127,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 
             // Browse to given file name path
             this->validate_split_path(inout_filename, this->file_path_str, this->file_name_str);
-            this->validate_directory(this->file_path_str);
+            this->validate_directory(flags, this->file_path_str);
             this->validate_file(mode, extensions, flags, this->file_name_str);
             this->path_changed = true;
 
@@ -167,7 +167,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
             gui_utils::Utf8Decode(this->file_path_str);
             if (last_file_path_str != this->file_path_str) {
                 this->path_changed = true;
-                this->validate_directory(this->file_path_str);
+                this->validate_directory(flags, this->file_path_str);
             }
             // Error message when path is no valid directory
             if (!this->valid_directory) {
@@ -426,7 +426,7 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
 }
 
 
-void megamol::gui::FileBrowserWidget::validate_directory(const std::string& path_str) {
+void megamol::gui::FileBrowserWidget::validate_directory(FilePathParam::Flags_t flags, const std::string& path_str) {
 
     // Validating existing directory
     try {
@@ -489,7 +489,7 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
 
             // Error when file is directory
             if (is_directory(tmp_file_path)) {
-                this->file_error += "Input is directory.\n";
+                this->file_error += "Selection is directory.\n";
                 this->valid_file = false;
             }
         } else if (mode == DIALOGMODE_LOAD) {
@@ -503,7 +503,7 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
                     }
                 }
                 if (!extension_found) {
-                    this->file_error += "Require file with extension: ";
+                    this->file_error += "Allowed file extension(s): ";
                     for (auto ei = exts_lower.begin(); ei != exts_lower.end(); ei++) {
                         this->file_error += "'" + (*ei) + "'";
                         if (ei + 1 != exts_lower.end()) {

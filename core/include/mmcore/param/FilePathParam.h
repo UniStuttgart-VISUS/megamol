@@ -27,19 +27,20 @@ namespace param {
     class MEGAMOLCORE_API FilePathParam : public AbstractParam {
     public:
 
-        typedef std::vector<std::string> Extensions_t;
-
-        typedef uint32_t Flags_t;
-
         enum FilePathFlags_ : uint32_t {
-            Flag_File                       = 1 << 0,
-            Flag_Directory                  = 1 << 1,
-            Flag_NoExistenceCheck           = 1 << 2,
-            Flag_NoChange                   = 1 << 3,
-            Flag_RestrictedExtensions       = 1 << 4,
-            Flag_File_RestrictedExtensions  = Flag_File | Flag_RestrictedExtensions,
-            Flag_File_ToBeCreated           = Flag_File | Flag_NoExistenceCheck | Flag_NoChange
+            Flag_File                    = 1 << 0,
+            Flag_Directory               = 1 << 1,
+            Flag_NoExistenceCheck        = 1 << 2,
+            Flag_NoChange                = 1 << 3,
+            Flag_RestrictExtension       = 1 << 4,
+            /// Convenience flags:
+            Flag_File_RestrictExtension  = Flag_File | Flag_RestrictExtension,
+            Flag_File_ToBeCreated        = Flag_File | Flag_NoExistenceCheck | Flag_NoChange,
+            Flag_Directory_ToBeCreated   = Flag_Directory | Flag_NoExistenceCheck | Flag_NoChange
         };
+        typedef std::function<void(std::string&, const std::string&)> PopUpCallback_t;
+        typedef std::vector<std::string> Extensions_t;
+        typedef uint32_t Flags_t;
 
         /**
          * Ctor.
@@ -121,6 +122,10 @@ namespace param {
             return this->extensions;
         }
 
+        void SetPopUpCallback(const PopUpCallback_t& pc) {
+            this->popup_callback = pc;
+        }
+
     private:
 
         /** The flags of the parameter */
@@ -128,7 +133,7 @@ namespace param {
 
         /** The accepted file extension(s).
          * Leave empty to allow all extensions.
-         * Use with Flag_RestrictedExtensions flag.
+         * Use with Flag_RestrictExtension flag.
          */
         Extensions_t extensions;
 
@@ -137,6 +142,9 @@ namespace param {
 
         /** Function checks if setting new file path value is valid depending on given flags */
         bool valid_change(std::string v);
+
+        /** Pop-up callback function propagating log messages to gui pop-up */
+        PopUpCallback_t popup_callback;
     };
 
 

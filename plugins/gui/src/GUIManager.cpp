@@ -848,6 +848,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
 
     // 3) Synchronize parameter values -------------------------------------------
     if (graph_ptr != nullptr) {
+
         bool param_sync_success = true;
         for (auto& module_ptr : graph_ptr->Modules()) {
             for (auto& param : module_ptr->Parameters()) {
@@ -884,6 +885,17 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                 }
 
                 if (!param.CoreParamPtr().IsNull()) {
+
+                    // Set callback for pop-up XXX each frame XXX
+                    if (param.Type() == ParamType_t::FILEPATH) {
+                        if (auto* p_ptr = param.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
+                            const megamol::core::param::FilePathParam::PopUpCallback_t param_popup_callback = [this](std::string& name, const std::string& message) {
+                              this->notification_collection[name] = std::tuple<bool*, bool, std::string>(nullptr, false, message);
+                            };
+                            p_ptr->SetPopUpCallback(param_popup_callback);
+                        }
+                    }
+
                     // Write changed gui state to core parameter
                     if (param.IsGUIStateDirty()) {
                         param_sync_success &=
@@ -1358,7 +1370,7 @@ void GUIManager::draw_menu() {
             ImGui::BeginGroup();
             float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
             ImGui::PushItemWidth(widget_width);
-            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"}, megamol::core::param::FilePathParam::Flag_File_RestrictedExtensions);
+            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension);
             ImGui::SameLine();
             gui_utils::Utf8Encode(this->gui_state.font_load_filename);
             ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_load_filename, ImGuiInputTextFlags_None);
@@ -1446,7 +1458,7 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // Externally registered notifications
     for (auto& popup_map : this->notification_collection) {
-        if (!std::get<1>(popup_map.second) && (*std::get<0>(popup_map.second))) {
+        if (!std::get<1>(popup_map.second) && ((std::get<0>(popup_map.second) == nullptr) || (*std::get<0>(popup_map.second)))) {
             ImGui::OpenPopup(popup_map.first.c_str());
             (*std::get<0>(popup_map.second)) = false;
             // Mirror message in console log with info level
@@ -1543,7 +1555,7 @@ void megamol::gui::GUIManager::draw_popups() {
         auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
         bool popup_failed = false;
         if (this->file_browser.PopUp_Save(
-                "Save Project", filename, this->gui_state.open_popup_save, {"lua"}, megamol::core::param::FilePathParam::Flag_File_RestrictedExtensions, save_gui_state)) {
+                "Save Project", filename, this->gui_state.open_popup_save, {"lua"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension, save_gui_state)) {
             std::string state_str;
             if (save_gui_state.IsTrue()) {
                 state_str = this->project_to_lua_string(true);
@@ -1559,7 +1571,7 @@ void megamol::gui::GUIManager::draw_popups() {
     // Load project pop-up
     std::string filename;
     this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load, {"lua", "png"}, megamol::core::param::FilePathParam::Flag_File_RestrictedExtensions)) {
+    if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load, {"lua", "png"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
@@ -1568,7 +1580,7 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // File name for screenshot pop-up
     auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-    if (this->file_browser.PopUp_Save("Filename for Screenshot", this->gui_state.screenshot_filepath, this->gui_state.open_popup_screenshot, {"png"}, megamol::core::param::FilePathParam::Flag_File_RestrictedExtensions, tmp_flag)) {
+    if (this->file_browser.PopUp_Save("Filename for Screenshot", this->gui_state.screenshot_filepath, this->gui_state.open_popup_screenshot, {"png"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension, tmp_flag)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
 }

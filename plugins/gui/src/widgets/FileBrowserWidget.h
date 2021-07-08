@@ -98,7 +98,7 @@ namespace gui {
 
         bool validate_split_path(const std::string& in_path_file, std::string& out_path, std::string& out_file) const;
 
-        void validate_directory(const std::string& path_str);
+        void validate_directory(FilePathParam::Flags_t flags, const std::string& path_str);
 
         void validate_file(DialogMode mode, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, const std::string& file_str);
 
