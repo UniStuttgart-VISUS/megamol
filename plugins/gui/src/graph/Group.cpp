@@ -15,15 +15,14 @@ using namespace megamol::gui;
 
 megamol::gui::Group::Group(ImGuiID uid)
         : uid(uid)
-        , name("")
+        , name()
         , modules()
         , interfaceslots()
+        , gui_selected(false)
         , gui_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_size(ImVec2(0.0f, 0.0f))
         , gui_collapsed_view(false)
         , gui_allow_selection(false)
-        , gui_allow_context(false)
-        , gui_selected(false)
         , gui_update(true)
         , gui_rename_popup() {
 
@@ -311,22 +310,7 @@ bool megamol::gui::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
 }
 
 
-bool megamol::gui::Group::ContainsInterfaceSlot(ImGuiID interfaceslot_uid) {
-
-    if (interfaceslot_uid != GUI_INVALID_ID) {
-        for (auto& interfaceslots_map : this->interfaceslots) {
-            for (auto& interfaceslot : interfaceslots_map.second) {
-                if (interfaceslot->UID() == interfaceslot_uid) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-
-void megamol::gui::Group::RestoreInterfaceslots(void) {
+void megamol::gui::Group::RestoreInterfaceslots() {
 
     /// 1] REMOVE connected call slots of group interface if connected module is part of same group
     for (auto& module_ptr : this->modules) {
@@ -419,7 +403,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
         ImVec2 header_size = ImVec2(group_size.x, ImGui::GetTextLineHeightWithSpacing());
         ImVec2 header_rect_max = group_rect_min + header_size;
 
-        ImGui::PushID(this->uid);
+        ImGui::PushID(static_cast<int>(this->uid));
 
         bool changed_view = false;
 
@@ -431,9 +415,6 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             if ((mouse_pos.x >= group_rect_min.x) && (mouse_pos.y >= group_rect_min.y) &&
                 (mouse_pos.x <= header_rect_max.x) && (mouse_pos.y <= header_rect_max.y)) {
                 this->gui_allow_selection = true;
-                if (state.interact.group_hovered_uid == this->uid) {
-                    this->gui_allow_context = true;
-                }
             }
 
             // Button
@@ -468,40 +449,30 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                     this->gui_collapsed_view = !this->gui_collapsed_view;
                     changed_view = true;
                 }
-                if (ImGui::MenuItem("Layout")) {
+                if (ImGui::MenuItem("Layout Modules")) {
                     state.interact.group_layout = true;
                 }
                 if (ImGui::MenuItem("Rename")) {
                     popup_rename = true;
                 }
-                if (ImGui::MenuItem("Delete",
-                        state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
+                if (ImGui::MenuItem(
+                        "Delete", state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
                     state.interact.process_deletion = true;
                 }
                 ImGui::EndPopup();
             } /// else { this->allow_context = false; }
 
             // Rename pop-up
-            if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                if (popup_rename) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] The action [Rename Group] is not yet supported for the graph "
-                        "using the 'Core Instance Graph' interface. Open project from file to make desired "
-                        "changes. [%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
-                }
-            } else {
-                if (this->gui_rename_popup.Rename("Rename Group", popup_rename, this->name)) {
-                    for (auto& module_ptr : this->modules) {
-                        std::string last_module_name = module_ptr->FullName();
-                        module_ptr->SetGroupName(this->name);
-                        module_ptr->Update(state);
-                        if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
-                            state.interact.module_rename.push_back(StrPair_t(last_module_name, module_ptr->FullName()));
-                        }
+            if (this->gui_rename_popup.Rename("Rename Group", popup_rename, this->name)) {
+                for (auto& module_ptr : this->modules) {
+                    std::string last_module_name = module_ptr->FullName();
+                    module_ptr->SetGroupName(this->name);
+                    module_ptr->Update(state);
+                    if (state.interact.graph_is_running) {
+                        state.interact.module_rename.push_back(StrPair_t(last_module_name, module_ptr->FullName()));
                     }
-                    this->UpdatePositionSize(state.canvas);
                 }
+                this->UpdatePositionSize(state.canvas);
             }
 
             ImGui::PopFont();
@@ -544,13 +515,13 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             }
 
             // Toggle View
-            if (active && ImGui::IsMouseDoubleClicked(0)) {
+            if (active && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
                 this->gui_collapsed_view = !this->gui_collapsed_view;
                 changed_view = true;
             }
 
             // Dragging
-            if (this->gui_selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
+            if (this->gui_selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
                 this->SetPosition(state, (this->gui_position + (ImGui::GetIO().MouseDelta / state.canvas.zooming)));
             }
 
@@ -646,7 +617,7 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
     float pos_minX = FLT_MAX;
     float pos_minY = FLT_MAX;
     ImVec2 tmp_pos;
-    if (this->modules.size() > 0) {
+    if (!this->modules.empty()) {
         for (auto& mod : this->modules) {
             tmp_pos = mod->Position();
             pos_minX = std::min(tmp_pos.x, pos_minX);
@@ -660,8 +631,6 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
     }
 
     // SIZE
-    float group_width = 0.0f;
-    float group_height = 0.0f;
     size_t caller_count = this->InterfaceSlots().operator[](CallSlotType::CALLER).size();
     size_t callee_count = this->InterfaceSlots().operator[](CallSlotType::CALLEE).size();
     size_t max_slot_count = std::max(caller_count, callee_count);
@@ -680,17 +649,17 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
             max_label_length = (2.0f * max_label_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
         }
     }
-    group_width = std::max((1.5f * ImGui::CalcTextSize(this->name.c_str()).x / in_canvas.zooming), max_label_length) +
-                  (3.0f * GUI_SLOT_RADIUS);
+    float group_width =
+        std::max((1.5f * ImGui::CalcTextSize(this->name.c_str()).x / in_canvas.zooming), max_label_length) +
+        (3.0f * GUI_SLOT_RADIUS);
 
     // HEIGHT
-    group_height = std::max((3.0f * line_height),
+    float group_height = std::max((3.0f * line_height),
         (line_height + (static_cast<float>(max_slot_count) * (GUI_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_SLOT_RADIUS));
 
     if (!this->gui_collapsed_view) {
         float pos_maxX = -FLT_MAX;
         float pos_maxY = -FLT_MAX;
-        ImVec2 tmp_pos;
         ImVec2 tmp_size;
         for (auto& mod : this->modules) {
             tmp_pos = mod->Position();

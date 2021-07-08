@@ -15,7 +15,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/view/RenderUtils.h"
+#include "RenderUtils.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ResourceWrapper.h"
 

@@ -17,22 +17,24 @@
 namespace megamol {
 namespace gui {
 
+
     typedef megamol::core::view::AbstractView3D::DefaultView DefaultView_t;
     typedef megamol::core::view::AbstractView3D::DefaultOrientation DefaultOrientation_t;
+
 
     /** ***********************************************************************
      * Pickable Cube
      */
     class PickableCube {
     public:
-        PickableCube(void);
-        ~PickableCube(void) = default;
+        PickableCube();
+        ~PickableCube() = default;
 
         bool Draw(unsigned int picking_id, int& inout_selected_face_id, int& inout_selected_orientation_id,
             int& out_hovered_face_id, int& out_hovered_orientation_id, const glm::vec4& cube_orientation,
-            ManipVector& pending_manipulations);
+            megamol::core::utility::ManipVector_t& pending_manipulations);
 
-        InteractVector GetInteractions(unsigned int id) const;
+        megamol::core::utility::InteractVector_t GetInteractions(unsigned int id) const;
 
     private:
         ImageWidget image_up_arrow;
@@ -45,13 +47,13 @@ namespace gui {
      */
     class PickableTexture {
     public:
-        PickableTexture(void);
-        ~PickableTexture(void) = default;
+        PickableTexture();
+        ~PickableTexture() = default;
 
         bool Draw(unsigned int picking_id, int selected_face_id, int& out_orientation_change, int& out_hovered_arrow_id,
-            ManipVector& pending_manipulations);
+            megamol::core::utility::ManipVector_t& pending_manipulations);
 
-        InteractVector GetInteractions(unsigned int id) const;
+        megamol::core::utility::InteractVector_t GetInteractions(unsigned int id) const;
 
     private:
         ImageWidget image_rotation_arrow;
@@ -60,18 +62,17 @@ namespace gui {
 
 
     /** ***********************************************************************
-     * View cube widget for parameter group.
+     * View cube widget for parameter group
      */
     class ParameterGroupViewCubeWidget : public AbstractParameterGroupWidget {
     public:
-        ParameterGroupViewCubeWidget(void);
+        ParameterGroupViewCubeWidget();
+        ~ParameterGroupViewCubeWidget() override = default;
 
-        ~ParameterGroupViewCubeWidget(void) = default;
-
-        bool Check(bool only_check, ParamPtrVector_t& params);
+        bool Check(bool only_check, ParamPtrVector_t& params) override;
 
         bool Draw(ParamPtrVector_t params, const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
-            PickingBuffer* inout_picking_buffer);
+            megamol::core::utility::PickingBuffer* inout_picking_buffer) override;
 
     private:
         // VARIABLES --------------------------------------------------------------

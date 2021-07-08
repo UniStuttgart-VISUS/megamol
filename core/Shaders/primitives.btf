@@ -89,6 +89,7 @@
     </snippet>
 
     <!-- POINTS ########################################################### -->
+
     <namespace name="points">
 
         <shader name="vertex">
@@ -235,6 +236,7 @@
     </namespace>     
 
     <!-- COLOR TEXTURE #################################################### -->
+
     <namespace name="color_texture">
 
         <shader name="vertex">
@@ -292,6 +294,7 @@
     </namespace>
 
     <!-- DEPTH TEXTURE #################################################### -->
+
     <namespace name="depth_texture">
 
         <shader name="vertex">
