@@ -30,7 +30,6 @@
 #include "io/MeshSTLWriter.h"
 #include "io/MeshSTLDataSource.h"
 #include "io/MeshAugmentInfo.h"
-#include "WavefrontObjWriter.h"
 
 namespace megamol::mesh {
 /** Implementing the instance class of this plugin */

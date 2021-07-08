@@ -16,7 +16,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
-#include "nlohmann/json.hpp"
+#include "json.hpp"
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix4.h"
