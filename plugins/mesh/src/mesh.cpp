@@ -26,6 +26,7 @@
 #include "SimpleGPUMtlDataSource.h"
 #include "MeshViewerRenderTasks.h"
 #include "MeshBakery.h"
+#include "ObjWriter.h"
 #include "io/MeshSTLWriter.h"
 #include "io/MeshSTLDataSource.h"
 #include "io/MeshAugmentInfo.h"
@@ -62,7 +63,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GPUMeshes>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::SimpleGPUMtlDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::WavefrontObjLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::WavefrontObjWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::ObjWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshViewerRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshBakery>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::io::MeshSTLWriter>();

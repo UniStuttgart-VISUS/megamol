@@ -40,7 +40,7 @@ megamol::gui::Call::~Call() {
 }
 
 
-bool megamol::gui::Call::IsConnected(void) {
+bool megamol::gui::Call::IsConnected() {
 
     unsigned int connected = 0;
     for (auto& callslot_map : this->connected_callslots) {
@@ -161,7 +161,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                     }
                 }
 
-                ImGui::PushID(this->uid);
+                ImGui::PushID(static_cast<int>(this->uid));
 
                 /// COLOR_CALL_BACKGROUND
                 ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
@@ -253,9 +253,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                             ImGui::TextDisabled("Call");
                             ImGui::Separator();
 
-                            if (ImGui::MenuItem("Delete", state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]
-                                                              .keycode.ToString()
-                                                              .c_str())) {
+                            if (ImGui::MenuItem("Delete",
+                                    state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
                                 state.interact.process_deletion = true;
                             }
                             ImGui::Separator();

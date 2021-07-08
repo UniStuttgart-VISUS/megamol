@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-ParameterOrbitalWidget::ParameterOrbitalWidget(void)
+ParameterOrbitalWidget::ParameterOrbitalWidget()
         : m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_direction(0.0f, 0.0f, 0.0f), init(false) {}
 
 

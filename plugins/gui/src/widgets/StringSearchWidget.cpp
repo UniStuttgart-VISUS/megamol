@@ -14,10 +14,10 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-StringSearchWidget::StringSearchWidget(void) : search_focus(false), search_string(), tooltip() {}
+StringSearchWidget::StringSearchWidget() : search_focus(false), search_string(), tooltip() {}
 
 
-bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::string& help, bool apply_focus) {
+bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::string& help, bool omit_focus) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -33,10 +33,10 @@ bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::
     ImGui::SameLine();
 
     // Set keyboard focus when hotkey is pressed
-    if (apply_focus && this->search_focus) {
+    if (!omit_focus && (this->search_focus > 0)) {
         ImGui::SetKeyboardFocusHere();
         this->search_string = "";
-        this->search_focus = false;
+        this->search_focus--;
     }
 
     std::string complete_label("Search (?)");
@@ -46,9 +46,9 @@ bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::
     width = (width < min_width) ? (min_width) : width;
     ImGui::PushItemWidth(width);
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-    GUIUtils::Utf8Encode(this->search_string);
+    gui_utils::Utf8Encode(this->search_string);
     ImGui::InputText("Search", &this->search_string, ImGuiInputTextFlags_AutoSelectAll);
-    GUIUtils::Utf8Decode(this->search_string);
+    gui_utils::Utf8Decode(this->search_string);
     if (ImGui::IsItemActive()) {
         retval = true;
     }

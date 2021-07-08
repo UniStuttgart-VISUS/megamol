@@ -31,7 +31,7 @@ megamol::gui::InterfaceSlot::InterfaceSlot(ImGuiID uid, bool auto_create)
         , gui_tooltip() {}
 
 
-megamol::gui::InterfaceSlot::~InterfaceSlot(void) {
+megamol::gui::InterfaceSlot::~InterfaceSlot() {
 
     // Remove all call slots from interface slot
     std::vector<ImGuiID> callslots_uids;
@@ -171,7 +171,7 @@ bool megamol::gui::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
 }
 
 
-CallSlotPtr_t megamol::gui::InterfaceSlot::GetCompatibleCallSlot(void) {
+CallSlotPtr_t megamol::gui::InterfaceSlot::GetCompatibleCallSlot() {
 
     if (!this->callslots.empty()) {
         return this->callslots[0];
@@ -180,18 +180,7 @@ CallSlotPtr_t megamol::gui::InterfaceSlot::GetCompatibleCallSlot(void) {
 }
 
 
-bool megamol::gui::InterfaceSlot::IsConnected(void) {
-
-    for (auto& callslot_ptr : this->callslots) {
-        if (callslot_ptr->CallsConnected()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-
-CallSlotType megamol::gui::InterfaceSlot::GetCallSlotType(void) {
+CallSlotType megamol::gui::InterfaceSlot::GetCallSlotType() {
 
     CallSlotType ret_type = CallSlotType::CALLER;
     if (!this->callslots.empty()) {
@@ -201,7 +190,7 @@ CallSlotType megamol::gui::InterfaceSlot::GetCallSlotType(void) {
 }
 
 
-bool megamol::gui::InterfaceSlot::IsEmpty(void) {
+bool megamol::gui::InterfaceSlot::IsEmpty() {
     return (this->callslots.empty());
 }
 
@@ -209,7 +198,7 @@ bool megamol::gui::InterfaceSlot::IsEmpty(void) {
 bool megamol::gui::InterfaceSlot::is_callslot_compatible(CallSlot& callslot) {
 
     // Callee interface slots can only have one call slot
-    if (this->callslots.size() > 0) {
+    if (!this->callslots.empty()) {
         if ((this->GetCallSlotType() == CallSlotType::CALLEE)) {
             /// megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Callee interface slots can only have one
             /// call slot connceted.
@@ -288,7 +277,7 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
         }
         std::string button_label = "interfaceslot_" + std::to_string(this->uid);
 
-        ImGui::PushID(this->uid);
+        ImGui::PushID(static_cast<int>(this->uid));
 
         if (phase == megamol::gui::PresentPhase::INTERACTION) {
 
@@ -313,8 +302,8 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
                 ImGui::TextDisabled("Interface Slot");
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Delete",
-                        state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
+                if (ImGui::MenuItem(
+                        "Delete", state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
                     state.interact.process_deletion = true;
                 }
 
@@ -474,7 +463,7 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
 ImVec2 megamol::gui::InterfaceSlot::Position(bool group_collapsed_view) {
 
     ImVec2 ret_position = this->gui_position;
-    if ((!group_collapsed_view) && (this->CallSlots().size() > 0)) {
+    if ((!group_collapsed_view) && (!this->CallSlots().empty())) {
         auto only_callslot_ptr = this->CallSlots().front();
         ret_position.x = this->gui_position.x;
         ret_position.y = only_callslot_ptr->Position().y;

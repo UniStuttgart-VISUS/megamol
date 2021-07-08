@@ -1,5 +1,5 @@
 /*
- * GUIUtils.h
+ * gui_utils.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -80,6 +80,7 @@
 namespace megamol {
 namespace gui {
 
+
     /********** Additional Global ImGui Operators ****************************/
 
     namespace {
@@ -100,49 +101,49 @@ namespace gui {
     /// ! Do not directly change
     extern ImGuiID gui_generated_uid;
 
-    inline ImGuiID GenerateUniqueID(void) {
+    inline ImGuiID GenerateUniqueID() {
         return (++gui_generated_uid);
     }
 
 
     /********** Global ImGui Context Pointer Counter *************************/
 
-    // Only accessed by possible multiple instances of GUIWindows
+    // Only accessed by possible multiple instances of GUIManager
     extern unsigned int gui_context_count;
 
 
     /********** Global Resource Paths ****************************************/
 
-    // Resource paths set by GUIWindows
+    // Resource paths set by GUIManager
     extern std::vector<std::string> gui_resource_paths;
 
 
     /********** Global GUI Scaling Factor ************************************/
 
     // Forward declaration
-    class GUIWindows;
+    class GUIManager;
 
     class GUIScaling {
     public:
-        friend class GUIWindows;
+        friend class GUIManager;
 
         GUIScaling() = default;
         ~GUIScaling() = default;
 
-        float Get(void) const {
+        float Get() const {
             return this->scale;
         }
 
-        float TransitionFactor(void) const {
+        float TransitionFactor() const {
             return (this->scale / this->last_scale);
         }
 
-        bool PendingChange(void) const {
+        bool PendingChange() const {
             return this->pending_change;
         }
 
     private:
-        bool ConsumePendingChange(void) {
+        bool ConsumePendingChange() {
             bool current_pending_change = this->pending_change;
             this->pending_change = false;
             return current_pending_change;
@@ -175,21 +176,31 @@ namespace gui {
     /** Available ImGui APIs */
     enum class GUIImGuiAPI { NONE, OPEN_GL };
 
-    /** Hotkey Data Types (exclusively for configurator) */
+    // Hotkeys
     enum HotkeyIndex : size_t {
-        MODULE_SEARCH = 0,
-        PARAMETER_SEARCH = 1,
-        DELETE_GRAPH_ITEM = 2,
-        SAVE_PROJECT = 3,
-        INDEX_COUNT = 4
+        HOTKEY_GUI_EXIT_PROGRAM,
+        HOTKEY_GUI_PARAMETER_SEARCH,
+        HOTKEY_GUI_SAVE_PROJECT,
+        HOTKEY_GUI_LOAD_PROJECT,
+        HOTKEY_GUI_MENU,
+        HOTKEY_GUI_TOGGLE_GRAPH_ENTRY,
+        HOTKEY_GUI_TRIGGER_SCREENSHOT,
+        HOTKEY_GUI_SHOW_HIDE_GUI,
+        HOTKEY_CONFIGURATOR_MODULE_SEARCH,
+        HOTKEY_CONFIGURATOR_PARAMETER_SEARCH,
+        HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM,
+        HOTKEY_CONFIGURATOR_SAVE_PROJECT,
+        HOTKEY_WINDOW_CONFIGURATOR,
+        HOTKEY_WINDOW_TRANSFER_FUNCTION_EDITOR,
+        HOTKEY_WINDOW_LOG_CONSOLE,
+        HOTKEY_WINDOW_MAIN_PARAMETER_LIST,
+        HOTKEY_WINDOW_PERFORMANCE_MONITOR
     };
-
     struct HotkeyData_t {
         megamol::core::view::KeyCode keycode;
         bool is_pressed = false;
     };
-
-    typedef std::array<megamol::gui::HotkeyData_t, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArray_t;
+    typedef std::map<HotkeyIndex, megamol::gui::HotkeyData_t> HotkeyMap_t;
 
     typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;
     typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType_t;
@@ -220,12 +231,6 @@ namespace gui {
         ImVec2 offset;        // in
         ImFont* gui_font_ptr; // in
     } GraphCanvas_t;
-
-    enum GraphCoreInterface {
-        NO_INTERFACE,
-        CORE_INSTANCE_GRAPH,
-        MEGAMOL_GRAPH,
-    };
 
     /* Data type holding information on graph item interaction. */
     typedef struct _interact_state_ {
@@ -268,7 +273,7 @@ namespace gui {
 
         bool parameters_extended_mode; // in
 
-        GraphCoreInterface graph_core_interface; // in
+        bool graph_is_running; // in
 
     } GraphItemsInteract_t;
 
@@ -276,7 +281,7 @@ namespace gui {
     typedef struct _graph_item_state_ {
         megamol::gui::GraphCanvas_t canvas;          // (see above)
         megamol::gui::GraphItemsInteract_t interact; // (see above)
-        megamol::gui::HotkeyArray_t hotkeys;         // in out
+        megamol::gui::HotkeyMap_t hotkeys;           // in out
         megamol::gui::GraphGroupPairVector_t groups; // in
     } GraphItemsState_t;
 
@@ -285,7 +290,7 @@ namespace gui {
         FontScalingArray_t graph_zoom_font_scalings; // in
         float graph_width;                           // in
         bool show_parameter_sidebar;                 // in
-        megamol::gui::HotkeyArray_t hotkeys;         // in out
+        megamol::gui::HotkeyMap_t hotkeys;           // in out
         ImGuiID graph_selected_uid;                  // out
         bool graph_delete;                           // out
         bool configurator_graph_save;                // out
@@ -296,16 +301,17 @@ namespace gui {
     enum class HeaderType { MODULE_GROUP, MODULE, PARAMETER_GROUP };
 
 
-    /********** GUIUtils *****************************************************/
+    /********** gui_utils *****************************************************/
 
     /**
      * Static GUI utility functions.
      */
-    class GUIUtils {
+    class gui_utils {
     public:
         /** Extract string enclosed in predefined tags. */
         static std::string ExtractTaggedString(
             const std::string& str, const std::string& start_tag, const std::string& end_tag) {
+
             std::string return_str;
             auto start_idx = str.find(start_tag);
             if (start_idx != std::string::npos) {
@@ -320,6 +326,7 @@ namespace gui {
 
         /** Decode string from UTF-8. */
         static bool Utf8Decode(std::string& str) {
+
             vislib::StringA dec_tmp;
             if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
                 str = std::string(dec_tmp.PeekBuffer());
@@ -330,6 +337,7 @@ namespace gui {
 
         /** Encode string into UTF-8. */
         static bool Utf8Encode(std::string& str) {
+
             vislib::StringA dec_tmp;
             if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
                 str = std::string(dec_tmp.PeekBuffer());
@@ -341,13 +349,18 @@ namespace gui {
         /**
          * Enable/Disable read only widget style.
          */
-        static void ReadOnlyWigetStyle(bool set) {
+        static void PushReadOnly(bool set = true) {
+
             if (set) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-            } else {
-                ImGui::PopItemFlag();
+            }
+        }
+        static void PopReadOnly(bool set = true) {
+
+            if (set) {
                 ImGui::PopStyleVar();
+                ImGui::PopItemFlag();
             }
         }
 
@@ -358,6 +371,7 @@ namespace gui {
          * @param search   The string to search for in the source.
          */
         static bool FindCaseInsensitiveSubstring(const std::string& source, const std::string& search) {
+
             if (search.empty())
                 return true;
             auto it = std::search(source.begin(), source.end(), search.begin(), search.end(),
@@ -372,6 +386,7 @@ namespace gui {
          * @param search   Second string.
          */
         static bool CaseInsensitiveStringCompare(std::string const& str1, std::string const& str2) {
+
             return ((str1.size() == str2.size()) &&
                     std::equal(str1.begin(), str1.end(), str2.begin(), [](char const& c1, char const& c2) {
                         return (c1 == c2 || std::toupper(c1) == std::toupper(c2));
@@ -383,6 +398,7 @@ namespace gui {
          */
         static bool GroupHeader(megamol::gui::HeaderType type, const std::string& name, std::string& inout_search,
             ImGuiID override_header_state = GUI_INVALID_ID) {
+
             if (ImGui::GetCurrentContext() == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -406,10 +422,9 @@ namespace gui {
                 pop_style_color_number += 3;
             }
 
-            bool searched = true;
             if (!inout_search.empty()) {
                 headerState = 1;
-                searched = GUIUtils::FindCaseInsensitiveSubstring(name, inout_search);
+                bool searched = gui_utils::FindCaseInsensitiveSubstring(name, inout_search);
                 if (!searched) {
                     auto header_col = ImGui::GetStyleColorVec4(ImGuiCol_Header);
                     header_col.w *= 0.25;
@@ -426,7 +441,7 @@ namespace gui {
                     inout_search.clear();
                 }
             }
-            ImGui::GetStateStorage()->SetInt(headerId, headerState);
+            ImGui::GetStateStorage()->SetInt(headerId, static_cast<int>(headerState));
             bool header_open = ImGui::CollapsingHeader(name.c_str(), nullptr);
             ImGui::PopStyleColor(pop_style_color_number);
 
@@ -437,10 +452,31 @@ namespace gui {
             return header_open;
         }
 
+        /*
+         * Convert given string to lower case.
+         */
+        static void StringToLowerCase(std::string& str) {
+
+            for (auto& c : str) {
+                c = static_cast<char>(std::tolower(c));
+            }
+        }
+
+        /*
+         * Convert given string to upper case.
+         */
+        static void StringToUpperCase(std::string& str) {
+
+            for (auto& c : str) {
+                c = static_cast<char>(std::toupper(c));
+            }
+        }
+
     private:
-        GUIUtils(void) = default;
-        ~GUIUtils(void) = default;
+        gui_utils() = default;
+        ~gui_utils() = default;
     };
+
 
 } // namespace gui
 } // namespace megamol

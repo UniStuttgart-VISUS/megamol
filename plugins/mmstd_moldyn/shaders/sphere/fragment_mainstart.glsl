@@ -29,7 +29,7 @@ void main(void) {
     float delta = squarRad - dot(temp, temp);  // Raytracing Gem Magic (http://www.realtimerendering.com/raytracinggems/)
 
 #ifdef CLIP
-    if (delta < 0.0) { 
+    if (delta < 0.0) {
 #ifdef DISCARD_COLOR_MARKER
         color = vec4(1.0, 0.0, 0.0, 1.0);       
 #else // DISCARD_COLOR_MARKER

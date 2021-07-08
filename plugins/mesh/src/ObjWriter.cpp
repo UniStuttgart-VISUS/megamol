@@ -1,10 +1,10 @@
 #include "stdafx.h"
 
-#include "WavefrontObjWriter.h"
+#include "ObjWriter.h"
 
 #include "mmcore/param/FilePathParam.h"
 
-megamol::mesh::WavefrontObjWriter::WavefrontObjWriter()
+megamol::mesh::ObjWriter::ObjWriter()
         : core::AbstractDataWriter()
         , _version(0)
         , _meta_data()
@@ -18,13 +18,13 @@ megamol::mesh::WavefrontObjWriter::WavefrontObjWriter()
     this->MakeSlotAvailable(&this->_filename_slot);
 }
 
-megamol::mesh::WavefrontObjWriter::~WavefrontObjWriter() {}
+megamol::mesh::ObjWriter::~ObjWriter() {}
 
-bool megamol::mesh::WavefrontObjWriter::create(void) {
+bool megamol::mesh::ObjWriter::create(void) {
     return true;
 }
 
-bool megamol::mesh::WavefrontObjWriter::run() {
+bool megamol::mesh::ObjWriter::run() {
 
     auto rhs_mesh_call = _rhs_mesh_slot.CallAs<CallMesh>();
 
@@ -97,13 +97,13 @@ bool megamol::mesh::WavefrontObjWriter::run() {
     return true;
 }
 
-bool megamol::mesh::WavefrontObjWriter::getCapabilities(core::DataWriterCtrlCall& call) {
+bool megamol::mesh::ObjWriter::getCapabilities(core::DataWriterCtrlCall& call) {
     return true;
 }
 
-void megamol::mesh::WavefrontObjWriter::release() {}
+void megamol::mesh::ObjWriter::release() {}
 
-void megamol::mesh::WavefrontObjWriter::WriteMesh(const std::string& fname, const ObjMesh& mesh) {
+void megamol::mesh::ObjWriter::WriteMesh(const std::string& fname, const ObjMesh& mesh) {
     //code from https://github.com/thinks/obj-io
     const auto vtx_iend = std::end(mesh.vertices);
 

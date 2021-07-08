@@ -80,10 +80,12 @@ function(require_external NAME)
       return()
     endif()
 
+    # The repo at https://github.com/nlohmann/json is too big, add local copy to avoid very slow download!
     add_external_headeronly_project(json
-      GIT_REPOSITORY https://github.com/nlohmann/json.git
-      GIT_TAG "v3.9.1"
-      INCLUDE_DIR "include")
+      SOURCE_DIR json)
+    if(MSVC)
+      target_sources(json INTERFACE "${CMAKE_SOURCE_DIR}/externals/json/nlohmann_json.natvis")
+    endif()
 
   # libcxxopts
   elseif(NAME STREQUAL "libcxxopts")
@@ -653,6 +655,16 @@ function(require_external NAME)
       endif()
       target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD)
 
+  # obj-io
+  elseif (NAME STREQUAL "obj-io")
+    if(TARGET obj-io)
+      return()
+    endif()
+
+    add_external_headeronly_project(obj-io INTERFACE
+      GIT_REPOSITORY https://github.com/thinks/obj-io.git
+      INCLUDE_DIR "include/thinks")
+
   # qhull
   elseif(NAME STREQUAL "qhull")
     if(TARGET qhull)
@@ -965,14 +977,6 @@ function(require_external NAME)
       PROJECT vtkm
       LIBRARY ${VTKM_WORKLET_LIB})
 
-  elseif (NAME STREQUAL "obj-io")
-    if(TARGET obj-io)
-      return()
-    endif()
-
-    add_external_headeronly_project(obj-io INTERFACE
-      GIT_REPOSITORY https://github.com/thinks/obj-io.git
-      INCLUDE_DIR "include/thinks")
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()
