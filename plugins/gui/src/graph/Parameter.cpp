@@ -854,17 +854,17 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                 }
 
                 /// PARAMETER VALUE WIDGET ---------------------------------
+
                 /// DEBUG ImGui::TextUnformatted(this->FullName().c_str());
                 if (this->draw_parameter(scope)) {
                     retval = true;
                 }
-
-                ImGui::SameLine();
-
-                /// POSTFIX ------------------------------------------------
                 if (!ImGui::IsItemActive()) {
                     this->gui_tooltip.ToolTip(this->gui_tooltip_text, ImGui::GetItemID(), 1.0f, 4.0f);
                 }
+
+                /// POSTFIX ------------------------------------------------
+                ImGui::SameLine();
                 this->gui_tooltip.Marker(this->gui_help);
 
                 ImGui::EndGroup();
@@ -1393,11 +1393,8 @@ bool megamol::gui::Parameter::widget_string(
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         ImGui::BeginGroup();
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
-            std::string utf8Str = val;
-            gui_utils::Utf8Encode(utf8Str);
-            this->gui_widget_store = utf8Str;
+            this->gui_widget_store = val;
         }
         std::string hidden_label = "###" + label;
 
@@ -1410,14 +1407,10 @@ bool megamol::gui::Parameter::widget_string(
         ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->gui_widget_store), multiline_size,
             ImGuiInputTextFlags_CtrlEnterForNewLine);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            std::string utf8Str = std::get<std::string>(this->gui_widget_store);
-            gui_utils::Utf8Decode(utf8Str);
-            val = utf8Str;
+            val = std::get<std::string>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            std::string utf8Str = val;
-            gui_utils::Utf8Encode(utf8Str);
-            this->gui_widget_store = utf8Str;
+            this->gui_widget_store = val;
         }
         ImGui::SameLine();
 
@@ -1453,16 +1446,11 @@ bool megamol::gui::Parameter::widget_enum(
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        std::string utf8Str = store[val];
-        gui_utils::Utf8Encode(utf8Str);
         auto combo_flags = ImGuiComboFlags_HeightRegular;
-        if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str(), combo_flags)) {
+        if (ImGui::BeginCombo(label.c_str(), store[val].c_str(), combo_flags)) {
             for (auto& pair : store) {
                 bool isSelected = (pair.first == val);
-                utf8Str = pair.second;
-                gui_utils::Utf8Encode(utf8Str);
-                if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
+                if (ImGui::Selectable(pair.second.c_str(), isSelected)) {
                     val = pair.first;
                     retval = true;
                 }
@@ -1480,22 +1468,16 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
             this->gui_widget_store = std::string();
         }
-        std::string utf8Str = val;
-        gui_utils::Utf8Encode(utf8Str);
         auto combo_flags = ImGuiComboFlags_HeightRegular;
-        if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str(), combo_flags)) {
+        if (ImGui::BeginCombo(label.c_str(), val.c_str(), combo_flags)) {
             bool one_present = false;
             for (auto& valueOption : store) {
-                bool isSelected = (valueOption == val);
-                utf8Str = valueOption;
-                gui_utils::Utf8Encode(utf8Str);
-                if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
-                    gui_utils::Utf8Decode(utf8Str);
-                    val = utf8Str;
+                bool isSelected = (valueOption == val);;
+                if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
+                    val = valueOption;
                     retval = true;
                 }
                 if (isSelected) {
@@ -1518,10 +1500,9 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
                 "###flex_enum_text_edit", &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 if (!std::get<std::string>(this->gui_widget_store).empty()) {
-                    gui_utils::Utf8Decode(std::get<std::string>(this->gui_widget_store));
                     val = std::get<std::string>(this->gui_widget_store);
+                    std::get<std::string>(this->gui_widget_store).clear();
                     retval = true;
-                    std::get<std::string>(this->gui_widget_store) = std::string();
                 }
                 ImGui::CloseCurrentPopup();
             }
@@ -1542,11 +1523,8 @@ bool megamol::gui::Parameter::widget_filepath(
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         ImGui::BeginGroup();
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
-            std::string utf8Str = val;
-            gui_utils::Utf8Encode(utf8Str);
-            this->gui_widget_store = utf8Str;
+            this->gui_widget_store = val;
         }
         ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1564,17 +1542,15 @@ bool megamol::gui::Parameter::widget_filepath(
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
-            std::string utf8Str = std::get<std::string>(this->gui_widget_store);
-            gui_utils::Utf8Decode(utf8Str);
-            val = utf8Str;
+            val = std::get<std::string>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            std::string utf8Str = val;
-            gui_utils::Utf8Encode(utf8Str);
-            this->gui_widget_store = utf8Str;
+            this->gui_widget_store = val;
         }
         ImGui::PopItemWidth();
         ImGui::EndGroup();
+
+        this->gui_tooltip_text += "\n" + std::get<std::string>(this->gui_widget_store);
     }
     return retval;
 }

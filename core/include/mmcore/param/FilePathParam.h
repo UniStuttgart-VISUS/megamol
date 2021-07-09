@@ -104,9 +104,6 @@ namespace param {
          */
         vislib::TString ValueString() const override {
             return vislib::TString(this->value.c_str());
-            //vislib::TString dec_tmp;
-            //vislib::UTF8Encoder::Decode(dec_tmp, vislib::TString(this->value.c_str()));
-            //return dec_tmp;
         }
 
         /**

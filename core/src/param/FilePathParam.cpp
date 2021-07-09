@@ -53,10 +53,7 @@ bool FilePathParam::ParseValue(const vislib::TString& v) {
 
 void FilePathParam::SetValue(const std::string& v, bool setDirty) {
 
-    //auto new_value = std::filesystem::path(v);
-    vislib::TString enc_tmp;
-    vislib::UTF8Encoder::Encode(enc_tmp, vislib::TString(v.c_str()));
-    auto new_value = std::filesystem::path(std::string(enc_tmp.PeekBuffer()));
+    auto new_value = std::filesystem::path(v);
 
     if (this->value != new_value) {
         auto error_flags = FilePathParam::ValidatePath(new_value, this->extensions, this->flags);

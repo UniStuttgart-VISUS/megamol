@@ -136,19 +136,15 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
             this->tooltip.ToolTip("Working Directory", ImGui::GetID("arrow_home_dir"), 0.5f, 5.0f);
             ImGui::SameLine();
             if (ImGui::ArrowButton("arrow_up_dir", ImGuiDir_Up)) {
-                auto tmp_file_path = std::filesystem::path(this->current_directory_str);
-                if (tmp_file_path.has_parent_path() && tmp_file_path.has_relative_path()) {
-                    // Assuming that parent is still valid directory
-                    this->current_directory_str = tmp_file_path.parent_path().generic_string();
-                }
+                this->get_parent_path(this->current_directory_str);
             }
             this->tooltip.ToolTip("Up", ImGui::GetID("arrow_up_dir"), 0.5f, 5.0f);
             ImGui::SameLine();
             ImGui::InputText("Directory", &this->current_directory_str, ImGuiInputTextFlags_AutoSelectAll);
             this->tooltip.ToolTip(this->current_directory_str);
             if (last_file_path_str != this->current_directory_str) {
-                this->path_changed = true;
                 this->validate_directory(flags, this->current_directory_str);
+                this->path_changed = true;
             }
             // Error message when path is no valid directory
             if (!this->valid_directory) {
@@ -170,12 +166,8 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 
             if (this->valid_directory) {
                 // Parent directory selectable
-                std::string tag_parent("..");
-                if (ImGui::Selectable(tag_parent.c_str(), false, select_flags)) {
-                    auto tmp_file_path = std::filesystem::path(this->current_directory_str);
-                    if (tmp_file_path.has_parent_path() && tmp_file_path.has_relative_path()) {
-                        // Assuming that parent is still valid directory
-                        this->current_directory_str = tmp_file_path.parent_path().generic_string();
+                if (ImGui::Selectable("..", false, select_flags)) {
+                    if (this->get_parent_path(this->current_directory_str)) {
                         this->path_changed = true;
                     }
                 }
@@ -184,10 +176,8 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 if (this->path_changed) {
                     // Reset scrolling
                     ImGui::SetScrollY(0.0f);
-
                     // Update child paths
                     this->child_directories.clear();
-
                     std::vector<ChildData_t> paths;
                     std::vector<ChildData_t> files;
                     try {
@@ -334,6 +324,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 // Assemble final file name
                 this->current_file_str += this->append_ending_str;
                 auto tmp_path= std::filesystem::path(this->current_directory_str) / std::filesystem::path(this->current_file_str);
+                /// TODO tmp_path = std::filesystem::relative(tmp_path, std::filesystem::current_path());
                 inout_filename = tmp_path.generic_string();
                 if (utf8enc) {
                     gui_utils::Utf8Decode(inout_filename);
@@ -366,7 +357,6 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 bool megamol::gui::FileBrowserWidget::validate_split_path(
     const std::string& in_path_file, std::string& out_path, std::string& out_file) const {
 
-    // Splitting file path into path string and file string
     try {
         out_path.clear();
         out_file.clear();
@@ -404,7 +394,6 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
 
 void megamol::gui::FileBrowserWidget::validate_directory(FilePathParam::Flags_t flags, const std::string& path_str) {
 
-    // Validating existing directory
     try {
         auto tmp_path = std::filesystem::path(path_str);
         this->valid_directory = (status_known(status(tmp_path)) && is_directory(tmp_path) &&
@@ -448,7 +437,7 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
                 megamol::gui::gui_utils::StringToLowerCase(tmp_exts.back());
                 log_exts += "'" + tmp_exts.back() + "' ";
             }
-            if (mode == DIALOGMODE_SAVE) {
+            if ((mode == DIALOGMODE_SAVE) || (mode == DIALOGMODE_SELECT)) {
                 if (this->file_errors.empty()) {
                     // Automatically append first extension
                     if (!tmp_exts.empty()) {
@@ -478,19 +467,32 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
 }
 
 
-std::filesystem::path megamol::gui::FileBrowserWidget::get_absolute_path(const std::filesystem::path& p) const {
+bool FileBrowserWidget::get_parent_path(std::string& dir) const {
 
-    auto retval = p;
-    if ((p.generic_string() == "..") || (p.generic_string()  == ".")) {
-        retval = absolute(p);
+    auto tmp_dir = dir;
+    this->get_absolute_path(tmp_dir);
+    auto parent_dir = std::filesystem::path(tmp_dir);
+    if (parent_dir.has_parent_path() && parent_dir.has_relative_path()) {
+        dir = parent_dir.parent_path().generic_string();
+        return true;
+    }
+    return false;
+}
+
+
+bool megamol::gui::FileBrowserWidget::get_absolute_path(std::string& dir) const {
+
+    auto absolute_dir = std::filesystem::path(dir);
+    if ((absolute_dir.generic_string() == "..") || (absolute_dir.generic_string()  == ".")) {
+        absolute_dir = absolute(absolute_dir);
 #if (_MSC_VER < 1916) /// XXX Fixed/No more required since VS 2019
-        if (retval.has_parent_path()) {
-            retval = retval.parent_path();
-            if ((p.generic_string() == "..") && retval.has_parent_path()) {
-                retval = retval.parent_path();
+        if (absolute_dir.has_parent_path()) {
+            absolute_dir = absolute_dir.parent_path();
+            if ((absolute_dir.generic_string() == "..") && absolute_dir.has_parent_path()) {
+                absolute_dir = absolute_dir.parent_path();
             }
         }
 #endif // _MSC_VER > 1916
     }
-    return retval;
+    dir = absolute_dir.generic_string();
 }

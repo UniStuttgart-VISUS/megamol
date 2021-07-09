@@ -659,7 +659,9 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
 bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename) {
 
     std::string projectstr;
-    if (!megamol::core::utility::FileUtils::ReadFile(project_filename, projectstr)) {
+    auto enc_filename = project_filename;
+    gui_utils::Utf8Encode(enc_filename);
+    if (!megamol::core::utility::FileUtils::ReadFile(enc_filename, projectstr)) {
         return false;
     }
 
@@ -1054,7 +1056,7 @@ bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid,
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "[GUI] Successfully loaded project '%s' from file '%s'.\n", graph_ptr->Name().c_str(),
-            project_filename.c_str());
+            enc_filename.c_str());
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1108,8 +1110,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         // - Write all parameters for running graph (default value is not available)
                         // - For other graphs only write parameters with other values than the default
                         // - Ignore button parameters
-                        if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
-                            (parameter.Type() != ParamType_t::BUTTON)) {
+                        if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) && (parameter.Type() != ParamType_t::BUTTON)) {
                             confParams << "mmSetParamValue(\"" << parameter.FullNameProject() << "\",[=[" << parameter.GetValueString() << "]=])\n";
                         }
                     }
@@ -1131,10 +1132,12 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                              confParams.str() + "\n" + state_json;
 
                 graph_ptr->ResetDirty();
-                if (megamol::core::utility::FileUtils::WriteFile(project_filename, projectstr)) {
+                auto enc_filename = project_filename;
+                gui_utils::Utf8Encode(enc_filename);
+                if (megamol::core::utility::FileUtils::WriteFile(enc_filename, projectstr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "[GUI] Successfully saved project '%s' to file '%s'.\n", graph_ptr->Name().c_str(),
-                        project_filename.c_str());
+                        enc_filename.c_str());
 
                     // Save filename for graph
                     graph_ptr->SetFilename(project_filename, true);
@@ -1492,7 +1495,9 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 
     // Try to load existing gui state from file
     std::string state_str;
-    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str)) {
+    auto enc_filename = filename;
+    gui_utils::Utf8Encode(enc_filename);
+    if (megamol::core::utility::FileUtils::ReadFile(enc_filename, state_str)) {
         state_str = gui_utils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (!state_str.empty()) {
             state_json = nlohmann::json::parse(state_str);
@@ -1538,7 +1543,9 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
 
     std::string state_str;
-    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str)) {
+    auto enc_filename = filename;
+    gui_utils::Utf8Encode(enc_filename);
+    if (megamol::core::utility::FileUtils::ReadFile(enc_filename, state_str)) {
         state_str = gui_utils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (state_str.empty())
             return false;
