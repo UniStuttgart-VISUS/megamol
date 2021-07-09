@@ -662,7 +662,6 @@ bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid,
     if (!megamol::core::utility::FileUtils::ReadFile(project_filename, projectstr)) {
         return false;
     }
-    gui_utils::Utf8Decode(projectstr);
 
     const std::string luacmd_view("mmCreateView");
     const std::string luacmd_module("mmCreateModule");
@@ -1111,12 +1110,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         // - Ignore button parameters
                         if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
                             (parameter.Type() != ParamType_t::BUTTON)) {
-                            // Encode to UTF-8 string
-                            vislib::StringA valueString;
-                            vislib::UTF8Encoder::Encode(
-                                valueString, vislib::StringA(parameter.GetValueString().c_str()));
-                            confParams << "mmSetParamValue(\"" << parameter.FullNameProject() << "\",[=["
-                                       << std::string(valueString.PeekBuffer()) << "]=])\n";
+                            confParams << "mmSetParamValue(\"" << parameter.FullNameProject() << "\",[=[" << parameter.GetValueString() << "]=])\n";
                         }
                     }
 

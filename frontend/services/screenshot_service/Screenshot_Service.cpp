@@ -26,7 +26,7 @@ static const std::string privacy_note("--- PRIVACY NOTE ---\n"
     "Please note that the complete MegaMol project is stored in the header of the screenshot image file. \n"
     "Before giving away the screenshot, clear privacy relevant information in the project file before taking a screenshot (e.g. user name in file paths). \n"
     ">>> In the file [megamol_config.lua] set mmSetCliOption(\"privacynote\", \"off\") to permanently turn off privacy notifications for screenshots.");
-static bool service_open_popup = false;
+static std::shared_ptr<bool> service_open_popup = std::make_shared<bool>(false);
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
@@ -113,7 +113,8 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
 
     if (screenshot_show_privacy_note) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("Screenshot: %s", privacy_note.c_str());
-        service_open_popup = true;
+        if (service_open_popup != nullptr)
+            *service_open_popup = true;
     }
     return true;
 }
@@ -176,7 +177,9 @@ namespace frontend {
 
 Screenshot_Service::Screenshot_Service() {}
 
-Screenshot_Service::~Screenshot_Service() {}
+Screenshot_Service::~Screenshot_Service() {
+    service_open_popup.reset();
+}
 
 bool Screenshot_Service::init(void* configPtr) {
     if (configPtr == nullptr) return false;

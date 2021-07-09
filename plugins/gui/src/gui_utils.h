@@ -334,12 +334,12 @@ namespace gui {
             return false;
         }
 
-        /** Encode string into UTF-8. */
+        /** Encode string to UTF-8. */
         static bool Utf8Encode(std::string& str) {
 
-            vislib::StringA dec_tmp;
-            if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
-                str = std::string(dec_tmp.PeekBuffer());
+            vislib::StringA enc_tmp;
+            if (vislib::UTF8Encoder::Encode(enc_tmp, vislib::StringA(str.c_str()))) {
+                str = std::string(enc_tmp.PeekBuffer());
                 return true;
             }
             return false;

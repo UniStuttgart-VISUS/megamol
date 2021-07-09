@@ -224,9 +224,9 @@ namespace gui {
         void RegisterWindow(
             const std::string& window_name, std::function<void(AbstractWindow::BasicConfig&)> const& callback);
 
-        void RegisterPopUp(const std::string& name, bool& open, std::function<void()> const& callback);
+        void RegisterPopUp(const std::string& name, std::shared_ptr<bool> open, std::function<void()> const& callback);
 
-        void RegisterNotification(const std::string& name, bool& open, const std::string& message);
+        void RegisterNotification(const std::string& name, std::shared_ptr<bool> open, const std::string& message);
 
         /**
          * Synchronise changes between core graph <-> gui graph.
@@ -303,9 +303,9 @@ namespace gui {
         /** GUI element collections. */
         WindowCollection win_collection;
         // Pop-up name, open pop-up flag held by pop-up caller, function drawing content of pop-up
-        std::map<std::string, std::pair<bool*, std::function<void()>>> popup_collection;
+        std::map<std::string, std::pair<std::shared_ptr<bool>, std::function<void()>>> popup_collection;
         // Pop-up name, open pop-up flag held by pop-up caller, flag to dismiss further pop-ups but print console log, message
-        std::map<std::string, std::tuple<bool*, bool, std::string>> notification_collection;
+        std::map<std::string, std::tuple<std::shared_ptr<bool>, bool, std::string>> notification_collection;
 
         /** Shortcut pointer to configurator window */
         std::shared_ptr<Configurator> win_configurator_ptr;

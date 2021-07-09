@@ -22,10 +22,10 @@ FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, const Ex
 
     this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
 
-    this->open_notification[Flag_File] = false;
-    this->open_notification[Flag_Directory] = false;
-    this->open_notification[Flag_NoExistenceCheck] = false;
-    this->open_notification[Flag_RestrictExtension] = false;
+    this->open_notification[Flag_File] = std::make_shared<bool>(false);
+    this->open_notification[Flag_Directory] = std::make_shared<bool>(false);
+    this->open_notification[Flag_NoExistenceCheck] = std::make_shared<bool>(false);
+    this->open_notification[Flag_RestrictExtension] = std::make_shared<bool>(false);
 }
 
 
@@ -53,21 +53,28 @@ bool FilePathParam::ParseValue(const vislib::TString& v) {
 
 void FilePathParam::SetValue(const std::string& v, bool setDirty) {
 
-    auto new_value = static_cast<std::filesystem::path>(v);
+    //auto new_value = std::filesystem::path(v);
+    vislib::TString enc_tmp;
+    vislib::UTF8Encoder::Encode(enc_tmp, vislib::TString(v.c_str()));
+    auto new_value = std::filesystem::path(std::string(enc_tmp.PeekBuffer()));
+
     if (this->value != new_value) {
         auto error_flags = FilePathParam::ValidatePath(new_value, this->extensions, this->flags);
 
         if (error_flags & Flag_File) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting new value '%s'. Expected file but directory is given.", new_value.generic_u8string().c_str());
-            this->open_notification[Flag_File] = true;
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting new value '%s'. Expected file but directory is given.", new_value.c_str());
+            if (this->open_notification[Flag_File] != nullptr)
+                *this->open_notification[Flag_File] = true;
         }
         if (error_flags & Flag_Directory) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting new value '%s'. Expected directory but file is given.", new_value.generic_u8string().c_str());
-            this->open_notification[Flag_Directory] = true;
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting new value '%s'. Expected directory but file is given.", new_value.c_str());
+            if (this->open_notification[Flag_Directory] != nullptr)
+                *this->open_notification[Flag_Directory] = true;
         }
         if (error_flags & Flag_NoExistenceCheck) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting new value '%s'. File does not exist.", new_value.generic_u8string().c_str());
-            this->open_notification[Flag_NoExistenceCheck] = true;
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting new value '%s'. File does not exist.", new_value.c_str());
+            if (this->open_notification[Flag_NoExistenceCheck] != nullptr)
+                *this->open_notification[Flag_NoExistenceCheck] = true;
         }
         if (error_flags & Flag_RestrictExtension) {
             std::string log_exts;
@@ -76,8 +83,9 @@ void FilePathParam::SetValue(const std::string& v, bool setDirty) {
             }
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[FilePathParam] Omitting new value '%s'. File does not have required extension: %s",
-                new_value.generic_u8string().c_str(), log_exts.c_str());
-            this->open_notification[Flag_RestrictExtension] = true;
+                new_value.c_str(), log_exts.c_str());
+            if (this->open_notification[Flag_RestrictExtension] != nullptr)
+                *this->open_notification[Flag_RestrictExtension] = true;
         }
         if (error_flags == 0) {
             this->value = new_value;
@@ -110,7 +118,7 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
     if (f & FilePathParam::Flag_RestrictExtension) {
         bool valid_ext = false;
         for (auto& ext : e) {
-            if (p.extension().generic_u8string() == std::string("." + ext)) {
+            if (p.extension().generic_string() == std::string("." + ext)) {
                 valid_ext = true;
             }
         }
@@ -126,14 +134,14 @@ bool FilePathParam::RegisterNotifications(const FilePathParam::RegisterNotificat
 
     if (!this->registered_notifications) {
         const std::string prefix = "Omitting new value. ";
-        pc("file_is_dir", &this->open_notification[Flag_File], prefix + "Expected file but directory is given.");
-        pc("dir_is_file", &this->open_notification[Flag_Directory], prefix + "Expected directory but file is given.");
-        pc("file_not_exist", &this->open_notification[Flag_NoExistenceCheck], prefix + "Path does not exist.");
+        pc("file_is_dir", this->open_notification[Flag_File], prefix + "Expected file but directory is given.");
+        pc("dir_is_file", this->open_notification[Flag_Directory], prefix + "Expected directory but file is given.");
+        pc("file_not_exist", this->open_notification[Flag_NoExistenceCheck], prefix + "Path does not exist.");
         std::string log_exts;
         for (auto& ext : this->extensions) {
             log_exts += "'." + ext + "' ";
         }
-        pc("file_wrong_ext", &this->open_notification[Flag_RestrictExtension], prefix + "File does not have required extension: " + log_exts);
+        pc("file_wrong_ext", this->open_notification[Flag_RestrictExtension], prefix + "File does not have required extension: " + log_exts);
 
         this->registered_notifications = true;
         return true;

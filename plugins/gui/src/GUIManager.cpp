@@ -458,7 +458,6 @@ bool GUIManager::PostDraw() {
             config.OversampleH = 4;
             config.OversampleV = 4;
             config.GlyphRanges = this->gui_state.font_utf8_ranges.data();
-            gui_utils::Utf8Encode(this->gui_state.font_load_filename);
             if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_filename.c_str(),
                     static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
                 bool font_api_load_success = false;
@@ -477,7 +476,6 @@ bool GUIManager::PostDraw() {
                     load_success = true;
                 }
             }
-            gui_utils::Utf8Decode(this->gui_state.font_load_filename);
         } else if ((!this->gui_state.font_load_filename.empty()) &&
                    (this->gui_state.font_load_filename != "<unknown>")) {
             std::string imgui_font_string =
@@ -491,13 +489,13 @@ bool GUIManager::PostDraw() {
                 }
             }
         }
-        // if (!load_success) {
-        //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        //        "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
-        //        "loaded with predefined size 13). [%s, %s, line %d]\n",
-        //        this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
-        //        __LINE__);
-        //}
+        if (!load_success) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
+                "loaded with predefined size 13). [%s, %s, line %d]\n",
+                this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
+                __LINE__);
+        }
         this->gui_state.font_load = 0;
     }
 
@@ -890,10 +888,10 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                         if (auto* p_ptr = p.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
                             if (p_ptr->RegisterNotifications()) {
                                 p_ptr->RegisterNotifications(
-                                    [&, this](const std::string& id, bool* open, const std::string& message) {
+                                    [&, this](const std::string& id, std::shared_ptr<bool> open, const std::string& message) {
                                         const auto notification_name = std::string("Parameter: ") + p.FullNameProject() + "##" + id;
                                         this->notification_collection[notification_name] =
-                                            std::tuple<bool*, bool, std::string>(open, false, message);
+                                            std::tuple<std::shared_ptr<bool>, bool, std::string>(open, false, message);
                                     });
                             }
                         }
@@ -1372,11 +1370,9 @@ void GUIManager::draw_menu() {
             ImGui::BeginGroup();
             float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
             ImGui::PushItemWidth(widget_width);
-            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension);
+            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension, false);
             ImGui::SameLine();
-            gui_utils::Utf8Encode(this->gui_state.font_load_filename);
             ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_load_filename, ImGuiInputTextFlags_None);
-            gui_utils::Utf8Decode(this->gui_state.font_load_filename);
             ImGui::PopItemWidth();
             // Validate font file before offering load button
             bool valid_file = megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
@@ -1444,13 +1440,17 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // Externally registered pop-ups
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
-    for (auto& popup_map : this->popup_collection) {
-        if ((*popup_map.second.first)) {
-            ImGui::OpenPopup(popup_map.first.c_str());
-            (*popup_map.second.first) = false;
+    for (auto it = this->popup_collection.begin(); it != this->popup_collection.end(); it++) {
+        if (it->second.first == nullptr) {
+            this->popup_collection.erase(it);
+            break;
         }
-        if (ImGui::BeginPopupModal(popup_map.first.c_str(), nullptr, popup_flags)) {
-            popup_map.second.second();
+        if (*(it->second.first)) {
+            ImGui::OpenPopup(it->first.c_str());
+            *(it->second.first) = false;
+        }
+        if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
+            it->second.second();
             if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 ImGui::CloseCurrentPopup();
             }
@@ -1459,15 +1459,19 @@ void megamol::gui::GUIManager::draw_popups() {
     }
 
     // Externally registered notifications
-    for (auto& popup_map : this->notification_collection) {
-        if ((std::get<0>(popup_map.second) != nullptr) && (*std::get<0>(popup_map.second))) {
-            (*std::get<0>(popup_map.second)) = false;
-            if (!std::get<1>(popup_map.second)) {
-                ImGui::OpenPopup(popup_map.first.c_str());
+    for (auto it = this->notification_collection.begin(); it != this->notification_collection.end(); it++) {
+        if (std::get<0>(it->second) == nullptr) {
+            this->notification_collection.erase(it);
+            break;
+        }
+        if (*std::get<0>(it->second)) {
+            (*std::get<0>(it->second)) = false;
+            if (!std::get<1>(it->second)) {
+                ImGui::OpenPopup(it->first.c_str());
             }
         }
-        if (ImGui::BeginPopupModal(popup_map.first.c_str(), nullptr, popup_flags)) {
-            ImGui::TextUnformatted(std::get<2>(popup_map.second).c_str());
+        if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
+            ImGui::TextUnformatted(std::get<2>(it->second).c_str());
             bool close = false;
             if (ImGui::Button("Ok")) {
                 close = true;
@@ -1476,7 +1480,7 @@ void megamol::gui::GUIManager::draw_popups() {
             if (ImGui::Button("Ok - Disable further notifications.")) {
                 close = true;
                 // Disable further notifications
-                std::get<1>(popup_map.second) = true;
+                std::get<1>(it->second) = true;
             }
             if (close || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 ImGui::CloseCurrentPopup();
@@ -1829,16 +1833,15 @@ void GUIManager::RegisterWindow(
 }
 
 
-void GUIManager::RegisterPopUp(const std::string& name, bool& open, const std::function<void()>& callback) {
+void GUIManager::RegisterPopUp(const std::string& name, std::shared_ptr<bool> open, const std::function<void()>& callback) {
 
-    this->popup_collection[name] =
-        std::pair<bool*, std::function<void()>>(&open, const_cast<std::function<void()>&>(callback));
+    this->popup_collection[name] = std::pair<std::shared_ptr<bool>, std::function<void()>>(open, const_cast<std::function<void()>&>(callback));
 }
 
 
-void GUIManager::RegisterNotification(const std::string& name, bool& open, const std::string& message) {
+void GUIManager::RegisterNotification(const std::string& name, std::shared_ptr<bool> open, const std::string& message) {
 
-    this->notification_collection[name] = std::tuple<bool*, bool, std::string>(&open, false, message);
+    this->notification_collection[name] = std::tuple<std::shared_ptr<bool>, bool, std::string>(open, false, message);
 }
 
 

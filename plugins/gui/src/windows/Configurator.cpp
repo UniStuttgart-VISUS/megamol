@@ -169,7 +169,7 @@ void megamol::gui::Configurator::PopUps() {
     }
     if (this->file_browser.PopUp_Load("Load Project", project_filename, this->open_popup_load, {"lua"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
 
-        popup_failed = this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
+        popup_failed = !this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
     PopUps::Minimal("Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");

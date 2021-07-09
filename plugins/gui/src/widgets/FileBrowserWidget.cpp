@@ -36,7 +36,7 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
 }
 
 
-bool megamol::gui::FileBrowserWidget::Button_Select(std::string& inout_filename, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
+bool megamol::gui::FileBrowserWidget::Button_Select(std::string& inout_filename, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool utf8enc) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -75,11 +75,11 @@ bool megamol::gui::FileBrowserWidget::Button_Select(std::string& inout_filename,
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    return this->PopUp_Select("Select File", inout_filename, open_popup_select_file, extensions, flags);
+    return this->PopUp_Select("Select File", inout_filename, open_popup_select_file, extensions, flags, utf8enc);
 }
 
 
-bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, const std::string& label, std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state) {
+bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, const std::string& label, std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state, bool utf8enc) {
 
     bool retval = false;
 
@@ -104,7 +104,11 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
         if (inout_open_popup) {
 
             // Browse to given file name path
-            this->validate_split_path(inout_filename, this->current_directory_str, this->current_file_str);
+            auto tmp_inout_filename = inout_filename;
+            if (utf8enc) {
+                megamol::gui::gui_utils::Utf8Encode(tmp_inout_filename);
+            }
+            this->validate_split_path(tmp_inout_filename, this->current_directory_str, this->current_file_str);
             this->validate_directory(flags, this->current_directory_str);
             this->validate_file(mode, extensions, flags, this->current_file_str);
             this->path_changed = true;
@@ -126,23 +130,22 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 
             // Path ---------------------------------------------------
             auto last_file_path_str = this->current_directory_str;
-            if (ImGui::ArrowButton("###arrow_home", ImGuiDir_Right)) {
-                this->current_directory_str = std::filesystem::current_path().generic_u8string();
+            if (ImGui::ArrowButton("arrow_home_dir", ImGuiDir_Right)) {
+                this->current_directory_str = std::filesystem::current_path().generic_string();
             }
-            this->tooltip.ToolTip("Working Directory", ImGui::GetID("###arrow_home"), 0.5f, 5.0f);
+            this->tooltip.ToolTip("Working Directory", ImGui::GetID("arrow_home_dir"), 0.5f, 5.0f);
             ImGui::SameLine();
-            if (ImGui::ArrowButton("###arrow_up_directory", ImGuiDir_Up)) {
-                auto tmp_file_path = static_cast<std::filesystem::path>(this->current_directory_str);
+            if (ImGui::ArrowButton("arrow_up_dir", ImGuiDir_Up)) {
+                auto tmp_file_path = std::filesystem::path(this->current_directory_str);
                 if (tmp_file_path.has_parent_path() && tmp_file_path.has_relative_path()) {
                     // Assuming that parent is still valid directory
-                    this->current_directory_str = tmp_file_path.parent_path().generic_u8string();
+                    this->current_directory_str = tmp_file_path.parent_path().generic_string();
                 }
             }
+            this->tooltip.ToolTip("Up", ImGui::GetID("arrow_up_dir"), 0.5f, 5.0f);
             ImGui::SameLine();
-            /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            gui_utils::Utf8Encode(this->current_directory_str);
             ImGui::InputText("Directory", &this->current_directory_str, ImGuiInputTextFlags_AutoSelectAll);
-            gui_utils::Utf8Decode(this->current_directory_str);
+            this->tooltip.ToolTip(this->current_directory_str);
             if (last_file_path_str != this->current_directory_str) {
                 this->path_changed = true;
                 this->validate_directory(flags, this->current_directory_str);
@@ -169,10 +172,10 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 // Parent directory selectable
                 std::string tag_parent("..");
                 if (ImGui::Selectable(tag_parent.c_str(), false, select_flags)) {
-                    auto tmp_file_path = static_cast<std::filesystem::path>(this->current_directory_str);
+                    auto tmp_file_path = std::filesystem::path(this->current_directory_str);
                     if (tmp_file_path.has_parent_path() && tmp_file_path.has_relative_path()) {
                         // Assuming that parent is still valid directory
-                        this->current_directory_str = tmp_file_path.parent_path().generic_u8string();
+                        this->current_directory_str = tmp_file_path.parent_path().generic_string();
                         this->path_changed = true;
                     }
                 }
@@ -188,7 +191,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                     std::vector<ChildData_t> paths;
                     std::vector<ChildData_t> files;
                     try {
-                        auto tmp_file_path = static_cast<std::filesystem::path>(this->current_directory_str);
+                        auto tmp_file_path = std::filesystem::path(this->current_directory_str);
                         for (const auto& entry : std::filesystem::directory_iterator(tmp_file_path)) {
                             if (status_known(status(entry.path()))) {
                                 bool is_dir = std::filesystem::is_directory(entry.path());
@@ -203,16 +206,16 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 
                     // Sort path case insensitive alphabetically ascending
                     std::sort(paths.begin(), paths.end(), [&](ChildData_t const& a, ChildData_t const& b) {
-                        std::string a_str = a.first.filename().generic_u8string();
+                        std::string a_str = a.first.filename().generic_string();
                         megamol::gui::gui_utils::StringToUpperCase(a_str);
-                        std::string b_str = b.first.filename().generic_u8string();
+                        std::string b_str = b.first.filename().generic_string();
                         megamol::gui::gui_utils::StringToUpperCase(b_str);
                         return (a_str < b_str);
                     });
                     std::sort(files.begin(), files.end(), [&](ChildData_t const& a, ChildData_t const& b) {
-                        std::string a_str = a.first.filename().generic_u8string();
+                        std::string a_str = a.first.filename().generic_string();
                         megamol::gui::gui_utils::StringToUpperCase(a_str);
-                        std::string b_str = b.first.filename().generic_u8string();
+                        std::string b_str = b.first.filename().generic_string();
                         megamol::gui::gui_utils::StringToUpperCase(b_str);
                         return (a_str < b_str);
                     });
@@ -230,7 +233,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 // Files and directories ----------------
                 for (const auto& path_pair : this->child_directories) {
 
-                    auto select_label = path_pair.first.filename().generic_u8string();
+                    auto select_label = path_pair.first.filename().generic_string();
                     bool showSearchedParameter = true;
                     if (!currentSearchString.empty()) {
                         showSearchedParameter =
@@ -245,8 +248,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                         if (ImGui::Selectable(
                                 select_label.c_str(), (select_label == this->current_file_str), select_flags)) {
                             last_file_path_str = this->current_directory_str;
-                            auto new_path = path_pair.first.generic_u8string();
-                            gui_utils::Utf8Decode(new_path);
+                            auto new_path = path_pair.first.generic_string();
                             this->validate_split_path(new_path, this->current_directory_str, this->current_file_str);
                             this->validate_file(mode, extensions, flags, this->current_file_str);
                             if (last_file_path_str != this->current_directory_str) {
@@ -285,13 +287,10 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             auto last_file_name_str = this->current_file_str;
-            /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            gui_utils::Utf8Encode(this->current_file_str);
             if (ImGui::InputText("File Name", &this->current_file_str,
                     ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                 apply = true;
             }
-            gui_utils::Utf8Decode(this->current_file_str);
             if (mode == DIALOGMODE_LOAD) {
                 ImGui::PopItemFlag();
             }
@@ -335,8 +334,10 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 // Assemble final file name
                 this->current_file_str += this->append_ending_str;
                 auto tmp_path= std::filesystem::path(this->current_directory_str) / std::filesystem::path(this->current_file_str);
-                inout_filename = tmp_path.generic_u8string();
-                gui_utils::Utf8Decode(inout_filename);
+                inout_filename = tmp_path.generic_string();
+                if (utf8enc) {
+                    gui_utils::Utf8Decode(inout_filename);
+                }
                 inout_save_gui_state = this->save_gui_state;
                 ImGui::CloseCurrentPopup();
                 retval = true;
@@ -369,28 +370,27 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
     try {
         out_path.clear();
         out_file.clear();
-        std::filesystem::path out_path_file(in_path_file.c_str());
+
+        std::filesystem::path out_path_file(in_path_file);
+
         if (out_path_file.empty()) {
             out_path_file = std::filesystem::current_path();
-            out_path = out_path_file.generic_u8string();
+            out_path = out_path_file.generic_string();
         } else if ((status_known(status(out_path_file)) && is_directory(out_path_file))) {
-            out_path = out_path_file.generic_u8string();
+            out_path = out_path_file.generic_string();
         } else if (status_known(status(out_path_file)) && is_regular_file(out_path_file)) {
-            out_path = out_path_file.parent_path().generic_u8string();
-            out_file = out_path_file.filename().generic_u8string();
+            out_path = out_path_file.parent_path().generic_string();
+            out_file = out_path_file.filename().generic_string();
             if (out_path.empty()) {
                 out_path = ".";
             }
         } else {
-            out_path = out_path_file.parent_path().generic_u8string();
-            out_file = out_path_file.filename().generic_u8string();
+            out_path = out_path_file.parent_path().generic_string();
+            out_file = out_path_file.filename().generic_string();
             if (out_path.empty()) {
                 out_path = ".";
             }
         }
-        gui_utils::Utf8Decode(out_path);
-        gui_utils::Utf8Decode(out_file);
-
     } catch (std::filesystem::filesystem_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -406,7 +406,7 @@ void megamol::gui::FileBrowserWidget::validate_directory(FilePathParam::Flags_t 
 
     // Validating existing directory
     try {
-        auto tmp_path = static_cast<std::filesystem::path>(path_str);
+        auto tmp_path = std::filesystem::path(path_str);
         this->valid_directory = (status_known(status(tmp_path)) && is_directory(tmp_path) &&
                                  (tmp_path.root_name() != tmp_path));
     } catch (std::filesystem::filesystem_error& e) {
@@ -420,55 +420,54 @@ void megamol::gui::FileBrowserWidget::validate_directory(FilePathParam::Flags_t 
 void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMode mode, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, const std::string& file_str) {
 
     try {
-        std::string file_str_lower = file_str;
-        megamol::gui::gui_utils::StringToLowerCase(file_str_lower);
-        auto tmp_filepath = std::filesystem::path(this->current_directory_str) / std::filesystem::path(file_str_lower);
-
-        std::string log_exts;
-        FilePathParam::Extensions_t tmp_exts;
-        for (auto& ext : extensions) {
-            tmp_exts.emplace_back("." + ext);
-            megamol::gui::gui_utils::StringToLowerCase(tmp_exts.back());
-            log_exts += "'" + tmp_exts.back() + "' ";
-        }
-
         this->file_errors.clear();
         this->file_warnings.clear();
         this->valid_file = true;
         this->append_ending_str.clear();
 
-        // General validation depending on given flags ------------------------
+        auto tmp_filepath = std::filesystem::path(this->current_directory_str) / std::filesystem::path(file_str);
+
         auto error_flags = FilePathParam::ValidatePath(tmp_filepath, extensions, flags);
         if (error_flags != 0) {
             this->valid_file = false;
         }
         if (error_flags & FilePathParam::Flag_File) {
-            this->file_errors += "Expecting file.";
+            this->file_errors += "Expecting file.\n";
         }
         if (error_flags & FilePathParam::Flag_Directory) {
-            this->file_errors += "Expecting directory.";
+            this->file_errors += "Expecting directory.\n";
         }
         if (error_flags & FilePathParam::Flag_NoExistenceCheck) {
-            this->file_errors += "Path does not exist.";
+            this->file_errors += "Path does not exist.\n";
         }
         if (error_flags & FilePathParam::Flag_RestrictExtension) {
-            if ((mode == DIALOGMODE_SAVE) && this->file_errors.empty()) {
-                // Automatically append first extension
-                if (!tmp_exts.empty()) {
-                    this->file_warnings += "Appending required file extension '" + tmp_exts[0] + "'\n";
-                    this->append_ending_str = tmp_exts[0];
-                }
-                // Warn when file already exists
-                std::string actual_filename = tmp_filepath;
-                actual_filename += this->append_ending_str;
-                tmp_filepath = std::filesystem::path(this->current_directory_str) / std::filesystem::path(actual_filename);
-                if (exists(tmp_filepath) && is_regular_file(tmp_filepath)) {
-                    this->file_warnings += "Overwriting existing file.\n";
+            std::string log_exts;
+            FilePathParam::Extensions_t tmp_exts;
+            for (auto& ext : extensions) {
+                tmp_exts.emplace_back("." + ext);
+                megamol::gui::gui_utils::StringToLowerCase(tmp_exts.back());
+                log_exts += "'" + tmp_exts.back() + "' ";
+            }
+            if (mode == DIALOGMODE_SAVE) {
+                if (this->file_errors.empty()) {
+                    // Automatically append first extension
+                    if (!tmp_exts.empty()) {
+                        this->file_warnings += "Appending required file extension '" + tmp_exts[0] + "'\n";
+                        this->append_ending_str = tmp_exts[0];
+                    }
+                    // Warn when file already exists
+                    std::string actual_filename = tmp_filepath;
+                    actual_filename += this->append_ending_str;
+                    tmp_filepath =
+                        std::filesystem::path(this->current_directory_str) / std::filesystem::path(actual_filename);
+                    if (exists(tmp_filepath) && is_regular_file(tmp_filepath)) {
+                        this->file_warnings += "Overwriting existing file.\n";
+                    }
+                    this->valid_file = true;
                 }
             }
             else {
-                this->file_errors += "File does not have required extension: " + log_exts;
-                this->valid_file = false;
+                this->file_errors += "File does not have required extension: " + log_exts + "\n";
             }
         }
     } catch (std::filesystem::filesystem_error& e) {
@@ -482,12 +481,12 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
 std::filesystem::path megamol::gui::FileBrowserWidget::get_absolute_path(const std::filesystem::path& p) const {
 
     auto retval = p;
-    if ((p.generic_u8string() == "..") || (p.generic_u8string()  == ".")) {
+    if ((p.generic_string() == "..") || (p.generic_string()  == ".")) {
         retval = absolute(p);
 #if (_MSC_VER < 1916) /// XXX Fixed/No more required since VS 2019
         if (retval.has_parent_path()) {
             retval = retval.parent_path();
-            if ((p.generic_u8string() == "..") && retval.has_parent_path()) {
+            if ((p.generic_string() == "..") && retval.has_parent_path()) {
                 retval = retval.parent_path();
             }
         }

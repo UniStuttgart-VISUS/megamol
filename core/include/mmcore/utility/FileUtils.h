@@ -9,6 +9,7 @@
 #define MEGAMOL_GUI_FILEUTILS_INCLUDED
 
 
+#include "vislib/UTF8Encoder.h"
 #include "mmcore/utility/log/Log.h"
 #include <fstream>
 #include <istream>
@@ -26,11 +27,11 @@ namespace utility {
 
     // #### Utility string conversion functions ############################ //
 
-    static inline std::string to_string(const std::wstring& wstr) {
+    static inline std::string ToString(const std::wstring& wstr) {
          return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr);
     }
 
-    static inline std::wstring to_wstring(const std::string& str) {
+    static inline std::wstring ToWString(const std::string& str) {
         return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
     }
 
@@ -44,8 +45,7 @@ namespace utility {
          * Load raw data from file (e.g. texture data)
          */
         static bool LoadRawFile(const std::wstring& filename, std::vector<char>& out_data) {
-            return megamol::core::utility::FileUtils::LoadRawFile(
-                megamol::core::utility::to_string(filename), out_data);
+            return megamol::core::utility::FileUtils::LoadRawFile(megamol::core::utility::ToString(filename), out_data);
         }
 
         static bool LoadRawFile(const std::string& filename, std::vector<char>& out_data);

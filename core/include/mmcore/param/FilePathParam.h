@@ -42,7 +42,7 @@ namespace param {
         typedef std::vector<std::string> Extensions_t;
         typedef uint32_t Flags_t;
 
-        typedef std::function<void(const std::string&, bool*, const std::string&)> RegisterNotificationCallback_t;
+        typedef std::function<void(const std::string&, std::shared_ptr<bool>, const std::string&)> RegisterNotificationCallback_t;
 
         /**
          * Ctor.
@@ -94,7 +94,7 @@ namespace param {
          * @return The value of the parameter
          */
         inline vislib::TString Value() const {
-            return vislib::TString(this->value.generic_u8string().c_str());
+            return this->ValueString();
         }
 
         /**
@@ -103,7 +103,10 @@ namespace param {
          * @return The value of the parameter as string.
          */
         vislib::TString ValueString() const override {
-            return vislib::TString(this->value.generic_u8string().c_str());
+            return vislib::TString(this->value.c_str());
+            //vislib::TString dec_tmp;
+            //vislib::UTF8Encoder::Decode(dec_tmp, vislib::TString(this->value.c_str()));
+            //return dec_tmp;
         }
 
         /**
@@ -157,7 +160,7 @@ namespace param {
         /** Indicates whether notifications are already registered or not (should be done only once) */
         bool registered_notifications;
         /** Flags for opening specific notifications */
-        std::map<Flags_t, bool> open_notification;
+        std::map<Flags_t, std::shared_ptr<bool>> open_notification;
     };
 
 

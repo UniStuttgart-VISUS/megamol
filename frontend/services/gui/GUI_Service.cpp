@@ -86,10 +86,10 @@ bool GUI_Service::init(const Config& config) {
                     this->m_providedRegisterWindowResource.register_window = [&](const std::string& name, std::function<void(megamol::gui::AbstractWindow::BasicConfig&)> func) -> void {
                         this->resource_register_window(name, func);
                     };
-                    this->m_providedRegisterWindowResource.register_popup = [&](const std::string& name, bool& open, std::function<void(void)> func) -> void {
+                    this->m_providedRegisterWindowResource.register_popup = [&](const std::string& name, std::shared_ptr<bool> open, std::function<void(void)> func) -> void {
                         this->resource_register_popup(name, open, func);
                     };
-                    this->m_providedRegisterWindowResource.register_notification = [&](const std::string& name, bool& open, const std::string& message) -> void {
+                    this->m_providedRegisterWindowResource.register_notification = [&](const std::string& name, std::shared_ptr<bool> open, const std::string& message) -> void {
                         this->resource_register_notification(name, open, message);
                     };
 
@@ -348,14 +348,14 @@ void GUI_Service::resource_register_window(const std::string& name, std::functio
 }
 
 
-void GUI_Service::resource_register_popup(const std::string& name, bool& open, std::function<void(void)>& func) {
+void GUI_Service::resource_register_popup(const std::string& name, std::shared_ptr<bool> open, std::function<void(void)>& func) {
 
     VALIDATE_GUI_PTR()
     gui->RegisterPopUp(name, open, func);
 }
 
 
-void GUI_Service::resource_register_notification(const std::string& name, bool& open, const std::string& message) {
+void GUI_Service::resource_register_notification(const std::string& name, std::shared_ptr<bool> open, const std::string& message) {
 
     VALIDATE_GUI_PTR()
     gui->RegisterNotification(name, open, message);
