@@ -6,7 +6,6 @@
 
 
 #include "stdafx.h"
-#include "OverlayRenderer.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
@@ -36,8 +35,6 @@ public:
         // here we could perform addition de-initialization
     }
     /** Registers modules and calls */
-    virtual void registerClasses() {
-        this->module_descriptions.RegisterAutoDescription<megamol::gui::OverlayRenderer>();
-    }
+    virtual void registerClasses() {}
 };
 } // namespace megamol::gui
