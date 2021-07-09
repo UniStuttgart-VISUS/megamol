@@ -181,6 +181,8 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3DGL& cr) 
 }
 
 bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
+    auto const lhsFBO = cr.GetFramebufferObject();
+
     // Chain renderer
     auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3DGL>();
 
@@ -308,6 +310,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("[RaycastVolumeRenderer] No 'Distant Light' found");
         }
     }
+
+    lhsFBO->Enable();
 
     // setup
     compute_shdr->use();
@@ -568,6 +572,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
         glDisable(GL_DEPTH_TEST);
 
     glUseProgram(0);
+
+    lhsFBO->Disable();
 
     return true;
 }
