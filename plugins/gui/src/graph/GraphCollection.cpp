@@ -1110,8 +1110,10 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         // - Write all parameters for running graph (default value is not available)
                         // - For other graphs only write parameters with other values than the default
                         // - Ignore button parameters
-                        if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) && (parameter.Type() != ParamType_t::BUTTON)) {
-                            confParams << "mmSetParamValue(\"" << parameter.FullNameProject() << "\",[=[" << parameter.GetValueString() << "]=])\n";
+                        if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
+                            (parameter.Type() != ParamType_t::BUTTON)) {
+                            confParams << "mmSetParamValue(\"" << parameter.FullNameProject() << "\",[=["
+                                       << parameter.GetValueString() << "]=])\n";
                         }
                     }
 
@@ -1676,7 +1678,8 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& o
     }
     // Default for option asking for saving gui state
     auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
-    if (this->gui_file_browser.PopUp_Save("Save Project", project_filename, open_dialog, {"lua"}, megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
+    if (this->gui_file_browser.PopUp_Save("Save Project", project_filename, open_dialog, {"lua"},
+            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
 
         std::string gui_state;
         if (save_gui_state.IsTrue()) {

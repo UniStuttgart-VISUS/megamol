@@ -888,8 +888,10 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                         if (auto* p_ptr = p.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
                             if (p_ptr->RegisterNotifications()) {
                                 p_ptr->RegisterNotifications(
-                                    [&, this](const std::string& id, std::shared_ptr<bool> open, const std::string& message) {
-                                        const auto notification_name = std::string("Parameter: ") + p.FullNameProject() + "##" + id;
+                                    [&, this](
+                                        const std::string& id, std::shared_ptr<bool> open, const std::string& message) {
+                                        const auto notification_name =
+                                            std::string("Parameter: ") + p.FullNameProject() + "##" + id;
                                         this->notification_collection[notification_name] =
                                             std::tuple<std::shared_ptr<bool>, bool, std::string>(open, false, message);
                                     });
@@ -898,19 +900,17 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                     }
                     // Write changed gui state to core parameter
                     if (p.IsGUIStateDirty()) {
-                        param_sync_success &=
-                            megamol::gui::Parameter::WriteCoreParameterGUIState(p, p.CoreParamPtr());
+                        param_sync_success &= megamol::gui::Parameter::WriteCoreParameterGUIState(p, p.CoreParamPtr());
                         p.ResetGUIStateDirty();
                     }
                     // Write changed parameter value to core parameter
                     if (p.IsValueDirty()) {
-                        param_sync_success &=
-                            megamol::gui::Parameter::WriteCoreParameterValue(p, p.CoreParamPtr());
+                        param_sync_success &= megamol::gui::Parameter::WriteCoreParameterValue(p, p.CoreParamPtr());
                         p.ResetValueDirty();
                     }
                     // Read current parameter value and GUI state fro core parameter
-                    param_sync_success &= megamol::gui::Parameter::ReadCoreParameterToParameter(
-                        p.CoreParamPtr(), p, false, false);
+                    param_sync_success &=
+                        megamol::gui::Parameter::ReadCoreParameterToParameter(p.CoreParamPtr(), p, false, false);
                 }
             }
         }
@@ -1370,7 +1370,8 @@ void GUIManager::draw_menu() {
             ImGui::BeginGroup();
             float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
             ImGui::PushItemWidth(widget_width);
-            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension, false);
+            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"},
+                megamol::core::param::FilePathParam::Flag_File_RestrictExtension, false);
             ImGui::SameLine();
             ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_load_filename, ImGuiInputTextFlags_None);
             ImGui::PopItemWidth();
@@ -1560,8 +1561,8 @@ void megamol::gui::GUIManager::draw_popups() {
         auto filename = graph_ptr->GetFilename();
         auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
         bool popup_failed = false;
-        if (this->file_browser.PopUp_Save(
-                "Save Project", filename, this->gui_state.open_popup_save, {"lua"}, megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
+        if (this->file_browser.PopUp_Save("Save Project", filename, this->gui_state.open_popup_save, {"lua"},
+                megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
             std::string state_str;
             if (save_gui_state.IsTrue()) {
                 state_str = this->project_to_lua_string(true);
@@ -1577,7 +1578,8 @@ void megamol::gui::GUIManager::draw_popups() {
     // Load project pop-up
     std::string filename;
     this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load, {"lua", "png"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
+    if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load, {"lua", "png"},
+            megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
@@ -1586,7 +1588,9 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // File name for screenshot pop-up
     auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-    if (this->file_browser.PopUp_Save("Filename for Screenshot", this->gui_state.screenshot_filepath, this->gui_state.open_popup_screenshot, {"png"}, megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag)) {
+    if (this->file_browser.PopUp_Save("Filename for Screenshot", this->gui_state.screenshot_filepath,
+            this->gui_state.open_popup_screenshot, {"png"},
+            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
 }
@@ -1833,9 +1837,11 @@ void GUIManager::RegisterWindow(
 }
 
 
-void GUIManager::RegisterPopUp(const std::string& name, std::shared_ptr<bool> open, const std::function<void()>& callback) {
+void GUIManager::RegisterPopUp(
+    const std::string& name, std::shared_ptr<bool> open, const std::function<void()>& callback) {
 
-    this->popup_collection[name] = std::pair<std::shared_ptr<bool>, std::function<void()>>(open, const_cast<std::function<void()>&>(callback));
+    this->popup_collection[name] =
+        std::pair<std::shared_ptr<bool>, std::function<void()>>(open, const_cast<std::function<void()>&>(callback));
 }
 
 

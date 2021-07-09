@@ -39,8 +39,10 @@ namespace param {
             Flag_File_ToBeCreatedWithRestrExts  = Flag_File | Flag_NoExistenceCheck | Flag_RestrictExtension,
             Flag_Directory_ToBeCreated          = Flag_Directory | Flag_NoExistenceCheck
         };
-        typedef std::vector<std::string> Extensions_t;
+
         typedef uint32_t Flags_t;
+
+        typedef std::vector<std::string> Extensions_t;
 
         typedef std::function<void(const std::string&, std::shared_ptr<bool>, const std::string&)> RegisterNotificationCallback_t;
 
