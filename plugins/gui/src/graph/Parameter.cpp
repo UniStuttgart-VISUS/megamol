@@ -329,6 +329,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param.type = ParamType_t::FILEPATH;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.storage = FilePathStorage_t({FilePathParam::Flag_File, {}});
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FlexEnumParam>()) {
         out_param.type = ParamType_t::FLEXENUM;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
@@ -1522,6 +1523,7 @@ bool megamol::gui::Parameter::widget_filepath(
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
+
         ImGui::BeginGroup();
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
             this->gui_widget_store = val;
@@ -1532,13 +1534,11 @@ bool megamol::gui::Parameter::widget_filepath(
         float text_width = ImGui::CalcTextSize(std::get<std::string>(this->gui_widget_store).c_str()).x +
                            (2.0f * style.ItemInnerSpacing.x);
         widget_width = std::max(widget_width, text_width);
-
         ImGui::PushItemWidth(widget_width);
 
         auto file_flags = store.first;
         auto file_extensions = store.second;
-        bool button_edit =
-            this->gui_file_browser.Button_Select( std::get<std::string>(this->gui_widget_store), file_extensions, file_flags, false);
+        bool button_edit = this->gui_file_browser.Button_Select( std::get<std::string>(this->gui_widget_store), file_extensions, file_flags, false);
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1547,6 +1547,7 @@ bool megamol::gui::Parameter::widget_filepath(
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->gui_widget_store = val;
         }
+
         ImGui::PopItemWidth();
         ImGui::EndGroup();
 

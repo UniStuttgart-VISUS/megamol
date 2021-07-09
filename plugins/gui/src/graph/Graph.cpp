@@ -1812,8 +1812,8 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             } else {
                 if ((this->gui_graph_state.interact.module_param_child_position.x > 0.0f) &&
                     (this->gui_graph_state.interact.module_param_child_position.y > 0.0f)) {
-                    std::string pop_up_id = "module_param_child";
 
+                    std::string pop_up_id = "module_param_child";
                     if (!ImGui::IsPopupOpen(pop_up_id.c_str())) {
                         ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
                         ImGui::SetNextWindowPos(this->gui_graph_state.interact.module_param_child_position);
