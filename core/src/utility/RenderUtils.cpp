@@ -155,14 +155,6 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
     }
     this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocations(location_name_pairs);
 
-    if (!this->createShader(this->shaders[Primitives::DEPTH_TEXTURE], shader_factory,
-            "primitives::depth_texture::vertex", "primitives::depth_texture::fragment")) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to create depth texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocations(location_name_pairs);
-
     // Create buffers
     this->buffers[Buffers::POSITION] =
         std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
@@ -327,25 +319,6 @@ void RenderUtils::Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bot
 }
 
 
-void RenderUtils::Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left,
-    const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y,
-    const glm::vec4& color) {
-
-    glm::vec3 pbl = pos_bottom_left;
-    glm::vec3 pul = pos_upper_left;
-    glm::vec3 pur = pos_upper_right;
-    glm::vec3 pbr = pos_bottom_right;
-    if (flip_y) {
-        pbl.y = pos_upper_left.y;
-        pul.y = pos_bottom_left.y;
-        pur.y = pos_bottom_right.y;
-        pbr.y = pos_upper_right.y;
-    }
-    glm::vec4 attributes = {0.0f, 0.0f, 0.0f, 0.0f};
-    this->pushQuad(RenderUtils::Primitives::DEPTH_TEXTURE, texture_id, pbl, pul, pur, pbr, color, attributes);
-}
-
-
 unsigned int RenderUtils::GetTextureWidth(GLuint texture_id) const {
 
     unsigned int texture_width = 0;
@@ -395,9 +368,6 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, const glm::m
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
-    if (primitive == Primitives::COLOR_TEXTURE) {
-        glDisable(GL_DEPTH_TEST);
-    }
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glDisable(GL_CULL_FACE);
     // Smoothing

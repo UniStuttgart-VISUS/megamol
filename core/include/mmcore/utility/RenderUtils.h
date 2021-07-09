@@ -159,10 +159,6 @@ public:
         const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false,
         const glm::vec4& color = glm::vec4(0.0f), bool force_opaque = false);
 
-    void Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left,
-        const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false,
-        const glm::vec4& color = glm::vec4(0.0f));
-
     inline void DrawPointPrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->drawPrimitives(RenderUtils::Primitives::POINTS, mat_mvp, dim_vp);
         this->clearQueue(Primitives::POINTS);
@@ -179,10 +175,8 @@ public:
     }
 
     inline void DrawTextures(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
-        this->drawPrimitives(RenderUtils::Primitives::DEPTH_TEXTURE, mat_mvp, dim_vp);
         this->drawPrimitives(RenderUtils::Primitives::COLOR_TEXTURE, mat_mvp, dim_vp);
         this->clearQueue(Primitives::COLOR_TEXTURE);
-        this->clearQueue(Primitives::DEPTH_TEXTURE);
     }
 
     inline void DrawAllPrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
@@ -213,7 +207,7 @@ public:
 
 private:
 
-    enum Primitives : size_t { LINES = 0, POINTS = 1, QUADS = 2, COLOR_TEXTURE = 3, DEPTH_TEXTURE = 4, PRIM_COUNT = 5 };
+    enum Primitives : size_t { LINES = 0, POINTS = 1, QUADS = 2, COLOR_TEXTURE = 3, PRIM_COUNT = 4 };
 
     enum Buffers : GLuint { POSITION = 0, COLOR = 1, TEXTURE_COORD = 2, ATTRIBUTES = 3, BUFF_COUNT = 4 };
 
