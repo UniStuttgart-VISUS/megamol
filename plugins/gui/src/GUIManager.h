@@ -304,7 +304,8 @@ namespace gui {
         WindowCollection win_collection;
         // Pop-up name, open pop-up flag held by pop-up caller, function drawing content of pop-up
         std::map<std::string, std::pair<std::shared_ptr<bool>, std::function<void()>>> popup_collection;
-        // Pop-up name, open pop-up flag held by pop-up caller, flag to dismiss further pop-ups but print console log, message
+        // Pop-up name, open pop-up flag held by pop-up caller, flag to dismiss further pop-ups but print console log,
+        // message
         std::map<std::string, std::tuple<std::shared_ptr<bool>, bool, std::string>> notification_collection;
 
         /** Shortcut pointer to configurator window */

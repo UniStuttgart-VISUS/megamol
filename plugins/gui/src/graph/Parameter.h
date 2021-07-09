@@ -11,8 +11,8 @@
 
 
 #include <variant>
-#include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FlexEnumParam.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterOrbitalWidget.h"
@@ -35,7 +35,8 @@ namespace gui {
     // Types
     typedef std::vector<Parameter> ParamVector_t;
     typedef std::map<int, std::string> EnumStorage_t;
-    typedef std::pair<megamol::core::param::FilePathParam::Flags_t, megamol::core::param::FilePathParam::Extensions_t> FilePathStorage_t;
+    typedef std::pair<megamol::core::param::FilePathParam::Flags_t, megamol::core::param::FilePathParam::Extensions_t>
+        FilePathStorage_t;
 
 
     /** ************************************************************************
@@ -316,7 +317,8 @@ namespace gui {
         bool widget_enum(WidgetScope scope, const std::string& label, int& val, EnumStorage_t store);
         bool widget_flexenum(WidgetScope scope, const std::string& label, std::string& val,
             const megamol::core::param::FlexEnumParam::Storage_t& store);
-        bool widget_filepath(WidgetScope scope, const std::string& label, std::string& val, const FilePathStorage_t& store);
+        bool widget_filepath(
+            WidgetScope scope, const std::string& label, std::string& val, const FilePathStorage_t& store);
         bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& val);
         bool widget_int(WidgetScope scope, const std::string& label, int& val, int minv, int maxv);
         bool widget_float(WidgetScope scope, const std::string& label, float& val, float minv, float maxv);
@@ -359,7 +361,7 @@ namespace gui {
                         int texture_width, texture_height;
                         std::vector<float> texture_data;
                         if (megamol::core::param::TransferFunctionParam::GetTextureData(
-                            val, texture_data, texture_width, texture_height)) {
+                                val, texture_data, texture_width, texture_height)) {
                             this->TransferFunction_LoadTexture(texture_data, texture_width, texture_height);
                         }
                         this->tf_string_hash = std::hash<std::string>()(val);

@@ -16,7 +16,7 @@
 #include "mmcore/utility/FileUtils.h"
 
 using namespace megamol::core::param;
-    
+
 
 namespace megamol {
 namespace gui {
@@ -35,23 +35,30 @@ namespace gui {
          *
          * @param label                 The pop-up label.
          * @param inout_filename        The user selected file name. Provide file name to use as initial value.
-         * @param inout_open_popup      Indicates whether to open the pop-up or not. 
+         * @param inout_open_popup      Indicates whether to open the pop-up or not.
          * @param extensions            The required file extensions. Leave emtpy to allow all file extensions.
          * @param flags                 The flags defining the required file path.
          * @param inout_save_gui_state  The flag indicating whether to save the gui state or not.
          *
          * @return True on success, false otherwise.
          */
-        bool PopUp_Save(const std::string& label, std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state, bool utf8enc = true) {
-            return this->popup(DIALOGMODE_SAVE, label, inout_filename, inout_open_popup, extensions, flags,  inout_save_gui_state, utf8enc);
+        bool PopUp_Save(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
+            const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
+            vislib::math::Ternary& inout_save_gui_state, bool utf8enc = true) {
+            return this->popup(DIALOGMODE_SAVE, label, inout_filename, inout_open_popup, extensions, flags,
+                inout_save_gui_state, utf8enc);
         }
-        bool PopUp_Load(const std::string& label, std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool utf8enc = true) {
+        bool PopUp_Load(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
+            const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool utf8enc = true) {
             auto tmp = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-            return this->popup(DIALOGMODE_LOAD, label, inout_filename, inout_open_popup, extensions, flags, tmp, utf8enc);
+            return this->popup(
+                DIALOGMODE_LOAD, label, inout_filename, inout_open_popup, extensions, flags, tmp, utf8enc);
         }
-        bool PopUp_Select(const std::string& label, std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool utf8enc = true) {
+        bool PopUp_Select(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
+            const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool utf8enc = true) {
             auto tmp = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-            return this->popup(DIALOGMODE_SELECT, label, inout_filename, inout_open_popup, extensions, flags, tmp, utf8enc);
+            return this->popup(
+                DIALOGMODE_SELECT, label, inout_filename, inout_open_popup, extensions, flags, tmp, utf8enc);
         }
 
         /**
@@ -65,7 +72,8 @@ namespace gui {
          *
          * @return True on success, false otherwise.
          */
-        bool Button_Select(std::string& inout_filename, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool utf8enc = true);
+        bool Button_Select(std::string& inout_filename, const FilePathParam::Extensions_t& extensions,
+            FilePathParam::Flags_t flags, bool utf8enc = true);
 
     private:
         typedef std::pair<std::filesystem::path, bool> ChildData_t;
@@ -95,14 +103,17 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool popup(DialogMode mode, const std::string& label, std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state, bool utf8enc);
+        bool popup(DialogMode mode, const std::string& label, std::string& inout_filename, bool& inout_open_popup,
+            const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
+            vislib::math::Ternary& inout_save_gui_state, bool utf8enc);
 
         bool validate_split_path(const std::string& in_pathfile, std::string& out_path, std::string& out_file) const;
         void validate_directory(FilePathParam::Flags_t flags, const std::string& directory_str);
-        void validate_file(DialogMode mode, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, const std::string& file_str);
+        void validate_file(DialogMode mode, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
+            const std::string& file_str);
 
         bool get_parent_path(std::string& dir) const;
-        bool get_absolute_path(std::string& dir) const;
+        std::string get_absolute_path(const std::string& dir) const;
     };
 
 
