@@ -71,38 +71,39 @@ namespace gui {
         typedef std::pair<std::filesystem::path, bool> ChildData_t;
 
         enum DialogMode { DIALOGMODE_SAVE, DIALOGMODE_LOAD, DIALOGMODE_SELECT };
-        enum PathMode { PATHMODE_RELATIVE_PROJECT, PATHMODE_RELATIVE_WORKING, PATHMODE_ABSOLUTE };
 
         // VARIABLES --------------------------------------------------------------
 
-        StringSearchWidget search_widget;
-        std::string file_name_str;
-        std::string file_path_str;
+        std::string current_directory_str;
+        std::string current_file_str;
+
         bool path_changed;
         bool valid_directory;
         bool valid_file;
-        std::string valid_ending;
-        std::string file_error;
-        std::string file_warning;
-        // Keeps child path and flag whether child is director or not
-        std::vector<ChildData_t> child_paths;
+        std::string append_ending_str;
+
+        std::string file_errors;
+        std::string file_warnings;
+
+        // Keeps child paths and flag whether child is directors or not
+        std::vector<ChildData_t> child_directories;
         vislib::math::Ternary save_gui_state;
         std::map<std::string, std::string> label_uid_map;
-        PathMode return_path;
 
+        StringSearchWidget search_widget;
         HoverToolTip tooltip;
 
         // FUNCTIONS --------------------------------------------------------------
 
         bool popup(DialogMode mode, const std::string& label, std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state);
 
-        bool validate_split_path(const std::string& in_path_file, std::string& out_path, std::string& out_file) const;
+        bool validate_split_path(const std::string& in_pathfile, std::string& out_path, std::string& out_file) const;
 
-        void validate_directory(FilePathParam::Flags_t flags, const std::string& path_str);
+        void validate_directory(FilePathParam::Flags_t flags, const std::string& directory_str);
 
         void validate_file(DialogMode mode, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, const std::string& file_str);
 
-        std::string get_absolute_path(const std::string& in_path_str) const;
+        std::filesystem::path get_absolute_path(const std::filesystem::path& p) const;
     };
 
 

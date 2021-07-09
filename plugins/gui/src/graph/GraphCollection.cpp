@@ -1675,7 +1675,7 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& o
     }
     // Default for option asking for saving gui state
     auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
-    if (this->gui_file_browser.PopUp_Save("Save Project", project_filename, open_dialog, {"lua"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension, save_gui_state)) {
+    if (this->gui_file_browser.PopUp_Save("Save Project", project_filename, open_dialog, {"lua"}, megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
 
         std::string gui_state;
         if (save_gui_state.IsTrue()) {

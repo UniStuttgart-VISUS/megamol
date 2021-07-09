@@ -29,15 +29,15 @@ namespace param {
     public:
 
         enum FilePathFlags_ : uint32_t {
-            Flag_File                    = 1 << 0,
-            Flag_Directory               = 1 << 1,
-            Flag_NoExistenceCheck        = 1 << 2,
-            Flag_NoChange                = 1 << 3,
-            Flag_RestrictExtension       = 1 << 4,
+            Flag_File                           = 1 << 0,
+            Flag_Directory                      = 1 << 1,
+            Flag_NoExistenceCheck               = 1 << 2,
+            Flag_RestrictExtension              = 1 << 3,
             /// Convenience flags:
-            Flag_File_RestrictExtension  = Flag_File | Flag_RestrictExtension,
-            Flag_File_ToBeCreated        = Flag_File | Flag_NoExistenceCheck | Flag_NoChange,
-            Flag_Directory_ToBeCreated   = Flag_Directory | Flag_NoExistenceCheck | Flag_NoChange
+            Flag_File_RestrictExtension         = Flag_File | Flag_RestrictExtension,
+            Flag_File_ToBeCreated               = Flag_File | Flag_NoExistenceCheck,
+            Flag_File_ToBeCreatedWithRestrExts  = Flag_File | Flag_NoExistenceCheck | Flag_RestrictExtension,
+            Flag_Directory_ToBeCreated          = Flag_Directory | Flag_NoExistenceCheck
         };
         typedef std::vector<std::string> Extensions_t;
         typedef uint32_t Flags_t;
@@ -51,7 +51,7 @@ namespace param {
          * @param flags The flags for the parameter
          * @param exts The required file extensions for the parameter
          */
-        FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, Extensions_t exts = {});
+        FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
 
         /**
          * Dtor.
@@ -125,31 +125,39 @@ namespace param {
         }
 
         /**
-         * Register notifications.
+         * Register static notifications.
          */
-        void RegisterNotifications(const RegisterNotificationCallback_t& pc);
+        bool RegisterNotifications(const RegisterNotificationCallback_t& pc);
+        // Check if registration is required
+        inline bool RegisterNotifications() const {
+            return !this->registered_notifications;
+        }
+
+        /**
+         * Function checks if path is valid for given flags
+         *
+         * @return Return 0 for success, flags with failed check otherwise.
+         */
+        static Flags_t ValidatePath(const std::filesystem::path& p, const Extensions_t& , Flags_t f);
 
     private:
 
         /** The flags of the parameter */
-        Flags_t flags;
+        const Flags_t flags;
 
         /** The accepted file extension(s).
          * Leave empty to allow all extensions.
-         * Use with Flag_RestrictExtension flag.
+         * Only considered when Flag_RestrictExtension is set.
          */
-        Extensions_t extensions;
+        const Extensions_t extensions;
 
         /** The file or directory path */
         std::filesystem::path value;
 
-        /** Function checks if setting new file path value is valid depending on given flags */
-        bool valid_change(std::string v);
-
         /** Indicates whether notifications are already registered or not (should be done only once) */
         bool registered_notifications;
         /** Flags for opening specific notifications */
-        bool open_notification__file_is_dir;
+        std::map<Flags_t, bool> open_notification;
     };
 
 

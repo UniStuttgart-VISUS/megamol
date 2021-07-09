@@ -611,16 +611,16 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
             if (hotkeyPressed) {
                 break;
             }
-            for (auto& param : module_ptr->Parameters()) {
-                if (param.Type() == ParamType_t::BUTTON) {
-                    auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
+            for (auto& p : module_ptr->Parameters()) {
+                if (p.Type() == ParamType_t::BUTTON) {
+                    auto keyCode = p.GetStorage<megamol::core::view::KeyCode>();
                     if (this->is_hotkey_pressed(keyCode)) {
                         // Sync directly button action to parameter in core
                         /// Does not require syncing of graphs
-                        if (param.CoreParamPtr() != nullptr) {
-                            param.CoreParamPtr()->setDirty();
+                        if (p.CoreParamPtr() != nullptr) {
+                            p.CoreParamPtr()->setDirty();
                         }
-                        /// param.ForceSetValueDirty();
+                        /// p.ForceSetValueDirty();
                         hotkeyPressed = true;
                     }
                 }
@@ -851,10 +851,10 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
 
         bool param_sync_success = true;
         for (auto& module_ptr : graph_ptr->Modules()) {
-            for (auto& param : module_ptr->Parameters()) {
+            for (auto& p : module_ptr->Parameters()) {
 
                 // Try to connect gui parameters to newly created parameters of core modules
-                if (param.CoreParamPtr().IsNull()) {
+                if (p.CoreParamPtr().IsNull()) {
                     auto module_name = module_ptr->FullName();
                     megamol::core::Module* core_module_ptr = nullptr;
                     core_module_ptr = megamol_graph.FindModule(module_name).get();
@@ -876,7 +876,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                         }
                     }
 #ifdef GUI_VERBOSE
-                    if (param.CoreParamPtr().IsNull()) {
+                    if (p.CoreParamPtr().IsNull()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] Unable to connect core parameter to gui parameter. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
@@ -884,32 +884,35 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
 #endif // GUI_VERBOSE
                 }
 
-                if (!param.CoreParamPtr().IsNull()) {
-
-                    // Register parameter notifications from file path params (XXX call only once ...)
-                    if (param.Type() == ParamType_t::FILEPATH) {
-                        if (auto* p_ptr = param.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
-                            p_ptr->RegisterNotifications([this](const std::string& name, bool* open, const std::string& message) {
-                              this->notification_collection[name] = std::tuple<bool*, bool, std::string>(open, false, message);
-                            });
+                if (!p.CoreParamPtr().IsNull()) {
+                    // Register (new) parameter notifications from file path params
+                    if (p.Type() == ParamType_t::FILEPATH) {
+                        if (auto* p_ptr = p.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
+                            if (p_ptr->RegisterNotifications()) {
+                                p_ptr->RegisterNotifications(
+                                    [&, this](const std::string& id, bool* open, const std::string& message) {
+                                        const auto notification_name = std::string("Parameter: ") + p.FullNameProject() + "##" + id;
+                                        this->notification_collection[notification_name] =
+                                            std::tuple<bool*, bool, std::string>(open, false, message);
+                                    });
+                            }
                         }
                     }
-
                     // Write changed gui state to core parameter
-                    if (param.IsGUIStateDirty()) {
+                    if (p.IsGUIStateDirty()) {
                         param_sync_success &=
-                            megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.CoreParamPtr());
-                        param.ResetGUIStateDirty();
+                            megamol::gui::Parameter::WriteCoreParameterGUIState(p, p.CoreParamPtr());
+                        p.ResetGUIStateDirty();
                     }
                     // Write changed parameter value to core parameter
-                    if (param.IsValueDirty()) {
+                    if (p.IsValueDirty()) {
                         param_sync_success &=
-                            megamol::gui::Parameter::WriteCoreParameterValue(param, param.CoreParamPtr());
-                        param.ResetValueDirty();
+                            megamol::gui::Parameter::WriteCoreParameterValue(p, p.CoreParamPtr());
+                        p.ResetValueDirty();
                     }
                     // Read current parameter value and GUI state fro core parameter
                     param_sync_success &= megamol::gui::Parameter::ReadCoreParameterToParameter(
-                        param.CoreParamPtr(), param, false, false);
+                        p.CoreParamPtr(), p, false, false);
                 }
             }
         }
@@ -1554,7 +1557,7 @@ void megamol::gui::GUIManager::draw_popups() {
         auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
         bool popup_failed = false;
         if (this->file_browser.PopUp_Save(
-                "Save Project", filename, this->gui_state.open_popup_save, {"lua"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension, save_gui_state)) {
+                "Save Project", filename, this->gui_state.open_popup_save, {"lua"}, megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
             std::string state_str;
             if (save_gui_state.IsTrue()) {
                 state_str = this->project_to_lua_string(true);
@@ -1579,7 +1582,7 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // File name for screenshot pop-up
     auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-    if (this->file_browser.PopUp_Save("Filename for Screenshot", this->gui_state.screenshot_filepath, this->gui_state.open_popup_screenshot, {"png"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension, tmp_flag)) {
+    if (this->file_browser.PopUp_Save("Filename for Screenshot", this->gui_state.screenshot_filepath, this->gui_state.open_popup_screenshot, {"png"}, megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
 }
