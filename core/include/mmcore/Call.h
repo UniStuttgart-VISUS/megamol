@@ -66,6 +66,13 @@ namespace core {
          */
         bool operator()(unsigned int func = 0);
 
+        template <typename O, typename I> O Invoke(I data, unsigned int func = 0) {
+            if (this->callee != nullptr) {
+                return this->callee->InCall(func, data);
+            }
+            return static_cast<O>(0);
+        }
+
         /**
          * Answers the callee slot this call is connected to.
          *
