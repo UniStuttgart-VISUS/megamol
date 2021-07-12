@@ -33,6 +33,7 @@
 #include "PathReader.h"
 #include "PathSelection.h"
 #include "IDBroker.h"
+#include "ParticleSurface2.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -84,6 +85,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathReader>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathSelection>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::IDBroker>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticleSurface2>();
         //
         // TODO: Register your plugin's modules here
         // like:
