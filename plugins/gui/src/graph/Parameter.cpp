@@ -1405,10 +1405,13 @@ bool megamol::gui::Parameter::widget_string(
         int multiline_cnt = static_cast<int>(std::count(std::get<std::string>(this->gui_widget_store).begin(),
             std::get<std::string>(this->gui_widget_store).end(), '\n'));
         multiline_cnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), multiline_cnt);
-        ImVec2 multiline_size = ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeightWithSpacing() + (ImGui::GetFontSize() * static_cast<float>(multiline_cnt)));
-        ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->gui_widget_store), multiline_size,ImGuiInputTextFlags_CtrlEnterForNewLine);
+        ImVec2 multiline_size = ImVec2(ImGui::CalcItemWidth(),
+            ImGui::GetFrameHeightWithSpacing() + (ImGui::GetFontSize() * static_cast<float>(multiline_cnt)));
+        ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->gui_widget_store), multiline_size,
+            ImGuiInputTextFlags_CtrlEnterForNewLine);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            val = gui_utils::Utf8Decode(std::get<std::string>(this->gui_widget_store));;
+            val = gui_utils::Utf8Decode(std::get<std::string>(this->gui_widget_store));
+            ;
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->gui_widget_store = gui_utils::Utf8Encode(val);
@@ -1468,7 +1471,7 @@ bool megamol::gui::Parameter::widget_enum(
 
 
 bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
-                                              std::string& val, const megamol::core::param::FlexEnumParam::Storage_t& store) {
+    std::string& val, const megamol::core::param::FlexEnumParam::Storage_t& store) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1526,8 +1529,8 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
 }
 
 
-bool megamol::gui::Parameter::widget_filepath(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, std::string& val, const FilePathStorage_t& store) {
+bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
+    std::string& val, const FilePathStorage_t& store) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
@@ -1541,14 +1544,15 @@ bool megamol::gui::Parameter::widget_filepath(
 
         float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
         float text_width = ImGui::CalcTextSize(std::get<std::string>(this->gui_widget_store).c_str()).x +
-            (2.0f * style.ItemInnerSpacing.x);
+                           (2.0f * style.ItemInnerSpacing.x);
         widget_width = std::max(widget_width, text_width);
 
         ImGui::PushItemWidth(widget_width);
 
         auto file_flags = store.first;
         auto file_extensions = store.second;
-        bool button_edit = this->gui_file_browser.Button_Select( std::get<std::string>(this->gui_widget_store), file_extensions, file_flags, false);
+        bool button_edit = this->gui_file_browser.Button_Select(
+            std::get<std::string>(this->gui_widget_store), file_extensions, file_flags, false);
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {

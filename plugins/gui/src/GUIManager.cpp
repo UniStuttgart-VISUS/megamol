@@ -456,7 +456,7 @@ bool GUIManager::PostDraw() {
         /// XXX: UTF8 conversion required
         auto font_load_filename_utf8enc = gui_utils::Utf8Encode(this->gui_state.font_load_filename);
         if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
-            font_load_filename_utf8enc, std::string("ttf"))) {
+                font_load_filename_utf8enc, std::string("ttf"))) {
             ImFontConfig config;
             config.OversampleH = 4;
             config.OversampleV = 4;
@@ -486,8 +486,7 @@ bool GUIManager::PostDraw() {
                     font_load_filename_utf8enc.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
                     __LINE__);
             }
-        } else if ((!font_load_filename_utf8enc.empty()) &&
-                   (font_load_filename_utf8enc != "<unknown>")) {
+        } else if ((!font_load_filename_utf8enc.empty()) && (font_load_filename_utf8enc != "<unknown>")) {
             std::string imgui_font_string =
                 font_load_filename_utf8enc + ", " + std::to_string(this->gui_state.font_load_size) + "px";
             for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < (io.Fonts->Fonts.Size); n++) {
@@ -1386,7 +1385,8 @@ void GUIManager::draw_menu() {
             /// XXX: UTF8 conversion required
             this->gui_state.font_load_filename = gui_utils::Utf8Encode(this->gui_state.font_load_filename);
 
-            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension, false);
+            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"},
+                megamol::core::param::FilePathParam::Flag_File_RestrictExtension, false);
             ImGui::SameLine();
             ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_load_filename, ImGuiInputTextFlags_None);
             ImGui::PopItemWidth();

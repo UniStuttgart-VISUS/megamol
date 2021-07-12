@@ -1297,7 +1297,7 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
                         }
 
                         /// XXX: UTF8 conversion NOT required
-                        ///callslot_fullname = gui_utils::Utf8Encode(callslot_fullname);
+                        /// callslot_fullname = gui_utils::Utf8Encode(callslot_fullname);
                         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT][GUI_JSON_TAG_INTERFACES]
                                   [group_ptr->Name()][interface_label] += callslot_fullname;
                     }

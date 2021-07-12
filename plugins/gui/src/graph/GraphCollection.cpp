@@ -1134,7 +1134,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
 
                 graph_ptr->ResetDirty();
                 /// XXX: UTF8 conversion required
-                auto project_filename_utf8 = gui_utils::Utf8Encode(project_filename);;
+                auto project_filename_utf8 = gui_utils::Utf8Encode(project_filename);
+                ;
                 if (megamol::core::utility::FileUtils::WriteFile(project_filename_utf8, projectstr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "[GUI] Successfully saved project '%s' to file '%s'.\n", graph_ptr->Name().c_str(),
@@ -1499,7 +1500,8 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
     /// XXX: UTF8 conversion required
     auto filename_utf8 = gui_utils::Utf8Encode(filename);
     if (megamol::core::utility::FileUtils::ReadFile(filename_utf8, loaded_state)) {
-        loaded_state = gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
+        loaded_state =
+            gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (!loaded_state.empty()) {
             state_json = nlohmann::json::parse(loaded_state);
             if (!state_json.is_object()) {
@@ -1545,9 +1547,10 @@ bool megamol::gui::GraphCollection::load_state_from_file(const std::string& file
 
     std::string loaded_state;
     /// XXX: UTF8 conversion required
-    auto filename_utf8 =  gui_utils::Utf8Encode(filename);
+    auto filename_utf8 = gui_utils::Utf8Encode(filename);
     if (megamol::core::utility::FileUtils::ReadFile(filename_utf8, loaded_state)) {
-        loaded_state = gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
+        loaded_state =
+            gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (loaded_state.empty())
             return false;
         nlohmann::json json;

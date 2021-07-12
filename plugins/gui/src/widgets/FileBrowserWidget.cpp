@@ -329,7 +329,8 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 auto tmp_path =
                     std::filesystem::path(this->current_directory_str) / std::filesystem::path(this->current_file_str);
                 /// TODO tmp_path = std::filesystem::relative(tmp_path, std::filesystem::current_path());
-                inout_filename =  (utf8enc) ? (gui_utils::Utf8Decode(tmp_path.generic_string())) : (tmp_path.generic_string());
+                inout_filename =
+                    (utf8enc) ? (gui_utils::Utf8Decode(tmp_path.generic_string())) : (tmp_path.generic_string());
                 inout_save_gui_state = this->save_gui_state;
                 ImGui::CloseCurrentPopup();
                 retval = true;
@@ -439,7 +440,7 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
                 gui_utils::StringToLowerCase(tmp_exts.back());
                 log_exts += "'" + tmp_exts.back() + "' ";
             }
-            if ((mode == DIALOGMODE_SAVE)  && tmp_filepath.extension().empty()) {
+            if ((mode == DIALOGMODE_SAVE) && tmp_filepath.extension().empty()) {
                 // Automatically append first extension
                 if (this->file_errors.empty()) {
                     if (!tmp_exts.empty()) {
@@ -453,7 +454,7 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
             }
         }
 
-        if( (mode == DIALOGMODE_SAVE) && this->file_errors.empty()) {
+        if ((mode == DIALOGMODE_SAVE) && this->file_errors.empty()) {
             // Warn when file already exists
             tmp_filepath = std::filesystem::path(this->current_directory_str) /
                            std::filesystem::path(file_str + this->append_ending_str);
