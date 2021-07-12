@@ -298,10 +298,10 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
 
 bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
-    ImGuiID& inout_graph_uid, megamol::core::MegaMolGraph& megamol_graph) {
+    ImGuiID in_graph_uid, megamol::core::MegaMolGraph& megamol_graph) {
 
     bool created_new_graph = false;
-    ImGuiID valid_graph_id = inout_graph_uid;
+    ImGuiID valid_graph_id = in_graph_uid;
 
     if (valid_graph_id == GUI_INVALID_ID) {
         // Create new graph
@@ -322,7 +322,6 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
     }
 
     if (this->add_update_project_from_core(valid_graph_id, megamol_graph, false)) {
-        inout_graph_uid = valid_graph_id;
         if (created_new_graph) {
             graph_ptr->SetLayoutGraph();
             graph_ptr->ResetDirty();
@@ -658,10 +657,10 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
 
 bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename) {
 
-    std::string projectstr;
-    auto enc_filename = project_filename;
-    gui_utils::Utf8Encode(enc_filename);
-    if (!megamol::core::utility::FileUtils::ReadFile(enc_filename, projectstr)) {
+    std::string loaded_project;
+    /// XXX: UTF8 conversion required
+    std::string project_filename_utf8enc = gui_utils::Utf8Encode(project_filename);
+    if (!megamol::core::utility::FileUtils::ReadFile(project_filename_utf8enc, loaded_project)) {
         return false;
     }
 
@@ -692,7 +691,7 @@ bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid,
     }
 
     try {
-        std::stringstream content(projectstr);
+        std::stringstream content(loaded_project);
         std::vector<std::string> lines;
 
         // Prepare and read lines
@@ -1056,7 +1055,7 @@ bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid,
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "[GUI] Successfully loaded project '%s' from file '%s'.\n", graph_ptr->Name().c_str(),
-            enc_filename.c_str());
+            project_filename_utf8enc.c_str());
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1134,12 +1133,12 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                              confParams.str() + "\n" + state_json;
 
                 graph_ptr->ResetDirty();
-                auto enc_filename = project_filename;
-                gui_utils::Utf8Encode(enc_filename);
-                if (megamol::core::utility::FileUtils::WriteFile(enc_filename, projectstr)) {
+                /// XXX: UTF8 conversion required
+                auto project_filename_utf8 = gui_utils::Utf8Encode(project_filename);;
+                if (megamol::core::utility::FileUtils::WriteFile(project_filename_utf8, projectstr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "[GUI] Successfully saved project '%s' to file '%s'.\n", graph_ptr->Name().c_str(),
-                        enc_filename.c_str());
+                        project_filename_utf8.c_str());
 
                     // Save filename for graph
                     graph_ptr->SetFilename(project_filename, true);
@@ -1496,13 +1495,13 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
     nlohmann::json state_json;
 
     // Try to load existing gui state from file
-    std::string state_str;
-    auto enc_filename = filename;
-    gui_utils::Utf8Encode(enc_filename);
-    if (megamol::core::utility::FileUtils::ReadFile(enc_filename, state_str)) {
-        state_str = gui_utils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
-        if (!state_str.empty()) {
-            state_json = nlohmann::json::parse(state_str);
+    std::string loaded_state;
+    /// XXX: UTF8 conversion required
+    auto filename_utf8 = gui_utils::Utf8Encode(filename);
+    if (megamol::core::utility::FileUtils::ReadFile(filename_utf8, loaded_state)) {
+        loaded_state = gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
+        if (!loaded_state.empty()) {
+            state_json = nlohmann::json::parse(loaded_state);
             if (!state_json.is_object()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -1531,12 +1530,12 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
                 param.StateToJSON(state_json, param.FullNameProject());
             }
         }
-        state_str = state_json.dump(); // No line feed
+        loaded_state = state_json.dump(); // No line feed
 
-        state_str =
-            std::string(GUI_START_TAG_SET_GUI_STATE) + state_str + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
+        loaded_state =
+            std::string(GUI_START_TAG_SET_GUI_STATE) + loaded_state + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
 
-        return state_str;
+        return loaded_state;
     }
     return std::string("");
 }
@@ -1544,15 +1543,15 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 
 bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
 
-    std::string state_str;
-    auto enc_filename = filename;
-    gui_utils::Utf8Encode(enc_filename);
-    if (megamol::core::utility::FileUtils::ReadFile(enc_filename, state_str)) {
-        state_str = gui_utils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
-        if (state_str.empty())
+    std::string loaded_state;
+    /// XXX: UTF8 conversion required
+    auto filename_utf8 =  gui_utils::Utf8Encode(filename);
+    if (megamol::core::utility::FileUtils::ReadFile(filename_utf8, loaded_state)) {
+        loaded_state = gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
+        if (loaded_state.empty())
             return false;
         nlohmann::json json;
-        json = nlohmann::json::parse(state_str);
+        json = nlohmann::json::parse(loaded_state);
         if (!json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

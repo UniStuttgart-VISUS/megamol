@@ -324,25 +324,27 @@ namespace gui {
         }
 
         /** Decode string from UTF-8. */
-        static bool Utf8Decode(std::string& str) {
+        static std::string Utf8Decode(const std::string& input) {
 
             vislib::StringA dec_tmp;
-            if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
-                str = std::string(dec_tmp.PeekBuffer());
-                return true;
+            if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(input.c_str()))) {
+                return std::string(dec_tmp.PeekBuffer());
             }
-            return false;
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Error decoding string from UTF8. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return std::string();
         }
 
         /** Encode string to UTF-8. */
-        static bool Utf8Encode(std::string& str) {
+        static std::string Utf8Encode(const std::string& input) {
 
             vislib::StringA enc_tmp;
-            if (vislib::UTF8Encoder::Encode(enc_tmp, vislib::StringA(str.c_str()))) {
-                str = std::string(enc_tmp.PeekBuffer());
-                return true;
+            if (vislib::UTF8Encoder::Encode(enc_tmp, vislib::StringA(input.c_str()))) {
+                return std::string(enc_tmp.PeekBuffer());
             }
-            return false;
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Error encoding string to UTF8. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return std::string();
         }
 
         /**

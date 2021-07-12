@@ -106,12 +106,10 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 
         if (inout_open_popup) {
 
-            // Browse to given file name path
-            auto tmp_inout_filename = inout_filename;
-            if (utf8enc) {
-                megamol::gui::gui_utils::Utf8Encode(tmp_inout_filename);
-            }
-            this->validate_split_path(tmp_inout_filename, this->current_directory_str, this->current_file_str);
+            /// XXX: UTF8 conversion required
+            auto filename_utf8enc = (utf8enc) ? (gui_utils::Utf8Encode(inout_filename)) : (inout_filename);
+
+            this->validate_split_path(filename_utf8enc, this->current_directory_str, this->current_file_str);
             this->validate_directory(flags, this->current_directory_str);
             this->validate_file(mode, extensions, flags, this->current_file_str);
             this->path_changed = true;
@@ -202,16 +200,16 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                     // Sort path case insensitive alphabetically ascending
                     std::sort(paths.begin(), paths.end(), [&](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_string();
-                        megamol::gui::gui_utils::StringToUpperCase(a_str);
+                        gui_utils::StringToUpperCase(a_str);
                         std::string b_str = b.first.filename().generic_string();
-                        megamol::gui::gui_utils::StringToUpperCase(b_str);
+                        gui_utils::StringToUpperCase(b_str);
                         return (a_str < b_str);
                     });
                     std::sort(files.begin(), files.end(), [&](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_string();
-                        megamol::gui::gui_utils::StringToUpperCase(a_str);
+                        gui_utils::StringToUpperCase(a_str);
                         std::string b_str = b.first.filename().generic_string();
-                        megamol::gui::gui_utils::StringToUpperCase(b_str);
+                        gui_utils::StringToUpperCase(b_str);
                         return (a_str < b_str);
                     });
 
@@ -331,10 +329,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 auto tmp_path =
                     std::filesystem::path(this->current_directory_str) / std::filesystem::path(this->current_file_str);
                 /// TODO tmp_path = std::filesystem::relative(tmp_path, std::filesystem::current_path());
-                inout_filename = tmp_path.generic_string();
-                if (utf8enc) {
-                    gui_utils::Utf8Decode(inout_filename);
-                }
+                inout_filename =  (utf8enc) ? (gui_utils::Utf8Decode(tmp_path.generic_string())) : (tmp_path.generic_string());
                 inout_save_gui_state = this->save_gui_state;
                 ImGui::CloseCurrentPopup();
                 retval = true;
@@ -441,21 +436,15 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
             FilePathParam::Extensions_t tmp_exts;
             for (auto& ext : extensions) {
                 tmp_exts.emplace_back("." + ext);
-                megamol::gui::gui_utils::StringToLowerCase(tmp_exts.back());
+                gui_utils::StringToLowerCase(tmp_exts.back());
                 log_exts += "'" + tmp_exts.back() + "' ";
             }
-            if ((mode == DIALOGMODE_SAVE) || (mode == DIALOGMODE_SELECT)) {
+            if ((mode == DIALOGMODE_SAVE)  && tmp_filepath.extension().empty()) {
+                // Automatically append first extension
                 if (this->file_errors.empty()) {
-                    // Automatically append first extension
                     if (!tmp_exts.empty()) {
                         this->file_warnings += "Appending required file extension '" + tmp_exts[0] + "'\n";
                         this->append_ending_str = tmp_exts[0];
-                    }
-                    // Warn when file already exists
-                    tmp_filepath = std::filesystem::path(this->current_directory_str) /
-                                   std::filesystem::path(file_str + this->append_ending_str);
-                    if (std::filesystem::exists(tmp_filepath) && std::filesystem::is_regular_file(tmp_filepath)) {
-                        this->file_warnings += "Overwriting existing file.\n";
                     }
                     this->valid_file = true;
                 }
@@ -463,6 +452,16 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
                 this->file_errors += "File does not have required extension: " + log_exts + "\n";
             }
         }
+
+        if( (mode == DIALOGMODE_SAVE) && this->file_errors.empty()) {
+            // Warn when file already exists
+            tmp_filepath = std::filesystem::path(this->current_directory_str) /
+                           std::filesystem::path(file_str + this->append_ending_str);
+            if (std::filesystem::exists(tmp_filepath) && std::filesystem::is_regular_file(tmp_filepath)) {
+                this->file_warnings += "Overwriting existing file.\n";
+            }
+        }
+
     } catch (std::filesystem::filesystem_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);

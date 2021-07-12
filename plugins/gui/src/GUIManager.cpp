@@ -87,11 +87,11 @@ void megamol::gui::GUIManager::init_state() {
     this->gui_state.graph_fonts_reserved = 0;
     this->gui_state.shutdown_triggered = false;
     this->gui_state.screenshot_triggered = false;
-    this->gui_state.screenshot_filepath = "megamol_screenshot.png";
+    this->gui_state.screenshot_filepath = "megamol_screenshot.png"; /// Always using UTF8 ENcoded string
     this->create_unique_screenshot_filename(this->gui_state.screenshot_filepath);
     this->gui_state.screenshot_filepath_id = 0;
     this->gui_state.font_load = 0;
-    this->gui_state.font_load_filename = "";
+    this->gui_state.font_load_filename = ""; /// Always using UTF8 DEcoded string
     this->gui_state.font_load_size = 12;
     this->gui_state.request_load_projet_file = "";
     this->gui_state.stat_averaged_fps = 0.0f;
@@ -452,13 +452,17 @@ bool GUIManager::PostDraw() {
         this->gui_state.font_load--;
     } else if (this->gui_state.font_load == 1) {
         bool load_success = false;
+
+        /// XXX: UTF8 conversion required
+        auto font_load_filename_utf8enc = gui_utils::Utf8Encode(this->gui_state.font_load_filename);
         if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
-                this->gui_state.font_load_filename, std::string("ttf"))) {
+            font_load_filename_utf8enc, std::string("ttf"))) {
             ImFontConfig config;
             config.OversampleH = 4;
             config.OversampleV = 4;
             config.GlyphRanges = this->gui_state.font_utf8_ranges.data();
-            if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_filename.c_str(),
+
+            if (io.Fonts->AddFontFromFileTTF(font_load_filename_utf8enc.c_str(),
                     static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
                 bool font_api_load_success = false;
                 switch (this->initialized_api) {
@@ -476,25 +480,30 @@ bool GUIManager::PostDraw() {
                     load_success = true;
                 }
             }
-        } else if ((!this->gui_state.font_load_filename.empty()) &&
-                   (this->gui_state.font_load_filename != "<unknown>")) {
+            if (!load_success) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[GUI] Unable to load font from file '%s' with size %d. [%s, %s, line %d]\n",
+                    font_load_filename_utf8enc.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
+                    __LINE__);
+            }
+        } else if ((!font_load_filename_utf8enc.empty()) &&
+                   (font_load_filename_utf8enc != "<unknown>")) {
             std::string imgui_font_string =
-                this->gui_state.font_load_filename + ", " + std::to_string(this->gui_state.font_load_size) + "px";
+                font_load_filename_utf8enc + ", " + std::to_string(this->gui_state.font_load_size) + "px";
             for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < (io.Fonts->Fonts.Size); n++) {
                 std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
-                gui_utils::Utf8Decode(font_name);
+                font_name = gui_utils::Utf8Decode(font_name);
                 if (font_name == imgui_font_string) {
                     io.FontDefault = io.Fonts->Fonts[n];
                     load_success = true;
                 }
             }
-        }
-        if (!load_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
-                "loaded with predefined size 13). [%s, %s, line %d]\n",
-                this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
-                __LINE__);
+            if (!load_success) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[GUI] Unable to load font '%s' by name with size %d. [%s, %s, line %d]\n",
+                    font_load_filename_utf8enc.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
+                    __LINE__);
+            }
         }
         this->gui_state.font_load = 0;
     }
@@ -764,7 +773,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
 
     bool synced = false;
     bool sync_success = false;
-    GraphPtr_t graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph();
+    auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph();
     // 2a) Either synchronize GUI Graph -> Core Graph ... ---------------------
     if (!synced && (graph_ptr != nullptr)) {
         bool graph_sync_success = true;
@@ -836,6 +845,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                 }
                 // Load GUI state from project file when project file changed
                 if (!script_filename.empty()) {
+                    script_filename = gui_utils::Utf8Decode(script_filename);
                     synced_graph_ptr->SetFilename(script_filename, false);
                 }
             }
@@ -1256,10 +1266,11 @@ void GUIManager::draw_menu() {
     if (ImGui::BeginMenu("Projects")) {
         for (auto& graph_ptr : this->win_configurator_ptr->GetGraphCollection().GetGraphs()) {
 
-            if (ImGui::BeginMenu(graph_ptr->Name().c_str())) {
+            const std::string label_id = "##" + std::to_string(graph_ptr->UID());
+            if (ImGui::BeginMenu((graph_ptr->Name() + label_id).c_str())) {
 
                 bool running = graph_ptr->IsRunning();
-                std::string button_label = "graph_running_button" + std::to_string(graph_ptr->UID());
+                std::string button_label = "graph_running_button" + label_id;
                 if (megamol::gui::ButtonWidgets::OptionButton(
                         button_label, ((running) ? ("Running") : ("Run")), running, running)) {
                     if (!running) {
@@ -1368,16 +1379,23 @@ void GUIManager::draw_menu() {
             }
 
             ImGui::BeginGroup();
+
             float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
             ImGui::PushItemWidth(widget_width);
-            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"},
-                megamol::core::param::FilePathParam::Flag_File_RestrictExtension, false);
+
+            /// XXX: UTF8 conversion required
+            this->gui_state.font_load_filename = gui_utils::Utf8Encode(this->gui_state.font_load_filename);
+
+            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"}, megamol::core::param::FilePathParam::Flag_File_RestrictExtension, false);
             ImGui::SameLine();
             ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_load_filename, ImGuiInputTextFlags_None);
             ImGui::PopItemWidth();
             // Validate font file before offering load button
             bool valid_file = megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
                 this->gui_state.font_load_filename, std::string("ttf"));
+
+            this->gui_state.font_load_filename = gui_utils::Utf8Decode(this->gui_state.font_load_filename);
+
             if (!valid_file) {
                 megamol::gui::gui_utils::PushReadOnly();
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -1579,7 +1597,7 @@ void megamol::gui::GUIManager::draw_popups() {
     std::string filename;
     this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
     if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load, {"lua", "png"},
-            megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
+            megamol::core::param::FilePathParam::Flag_File_RestrictExtension, false)) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
@@ -1590,7 +1608,7 @@ void megamol::gui::GUIManager::draw_popups() {
     auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
     if (this->file_browser.PopUp_Save("Filename for Screenshot", this->gui_state.screenshot_filepath,
             this->gui_state.open_popup_screenshot, {"png"},
-            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag)) {
+            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag, false)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
 }
@@ -1767,12 +1785,11 @@ bool megamol::gui::GUIManager::state_to_string(std::string& out_state) {
         out_state.clear();
         nlohmann::json json_state;
 
-        // Write GUI state
         json_state[GUI_JSON_TAG_GUI]["menu_visible"] = this->gui_state.menu_visible;
         json_state[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->gui_state.style);
-        gui_utils::Utf8Encode(this->gui_state.font_load_filename);
-        json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->gui_state.font_load_filename;
-        gui_utils::Utf8Decode(this->gui_state.font_load_filename);
+        /// XXX: UTF8 conversion required
+        auto font_load_filename_utf8enc = gui_utils::Utf8Encode(this->gui_state.font_load_filename);
+        json_state[GUI_JSON_TAG_GUI]["font_file_name"] = font_load_filename_utf8enc;
         json_state[GUI_JSON_TAG_GUI]["font_size"] = this->gui_state.font_load_size;
         json_state[GUI_JSON_TAG_GUI]["imgui_settings"] = this->save_imgui_settings_to_string();
 

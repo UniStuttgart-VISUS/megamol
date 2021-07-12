@@ -680,9 +680,9 @@ void TransferFunctionEditor::SpecificStateToJSON(nlohmann::json& inout_json) {
 
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_view_minimized"] = this->win_view_minimized;
     inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_view_vertical"] = this->win_view_vertical;
-    gui_utils::Utf8Encode(this->win_connected_param_name);
-    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_active_param"] = this->win_connected_param_name;
-    gui_utils::Utf8Decode(this->win_connected_param_name);
+    /// XXX: UTF8 conversion required
+    auto win_connected_param_name_utf8 = gui_utils::Utf8Encode(this->win_connected_param_name);
+    inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["tfe_active_param"] = win_connected_param_name_utf8;
 }
 
 
