@@ -65,9 +65,11 @@ bool megamol::core::utility::FileUtils::LoadRawFile(const std::string& filename,
 
 
 bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, const std::string& in_content, bool silent) {
+
     try {
         std::ofstream file;
-        file.open(filename);
+        auto filename_path = std::filesystem::u8path(megamol::core::utility::Utf8Encode(filename));
+        file.open(filename_path.generic_wstring());
         if (file.is_open() && file.good()) {
             file << in_content.c_str();
             file.close();
@@ -97,9 +99,11 @@ bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, c
 
 
 bool megamol::core::utility::FileUtils::ReadFile(const std::string& filename, std::string& out_content, bool silent) {
+
     try {
         std::ifstream file;
-        file.open(filename);
+        auto filename_path = std::filesystem::u8path(megamol::core::utility::Utf8Encode(filename));
+        file.open(filename_path.generic_wstring());
         if (file.is_open() && file.good()) {
             out_content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
             file.close();

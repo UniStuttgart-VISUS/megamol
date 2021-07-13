@@ -107,7 +107,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
         if (inout_open_popup) {
 
             /// XXX: UTF8 conversion required
-            auto filename_utf8enc = (utf8enc) ? (gui_utils::Utf8Encode(inout_filename)) : (inout_filename);
+            auto filename_utf8enc = (utf8enc) ? (megamol::core::utility::Utf8Encode(inout_filename)) : (inout_filename);
 
             this->validate_split_path(filename_utf8enc, this->current_directory_str, this->current_file_str);
             this->validate_directory(flags, this->current_directory_str);
@@ -330,8 +330,8 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 /// TODO tmp_path = std::filesystem::relative(tmp_path, std::filesystem::current_path());
 
                 /// XXX: UTF8 conversion required
-                inout_filename =
-                    (utf8enc) ? (gui_utils::Utf8Decode(tmp_path.generic_u8string())) : (tmp_path.generic_string());
+                inout_filename = (utf8enc) ? (megamol::core::utility::Utf8Decode(tmp_path.generic_u8string()))
+                                           : (tmp_path.generic_u8string());
 
                 inout_save_gui_state = this->save_gui_state;
                 ImGui::CloseCurrentPopup();

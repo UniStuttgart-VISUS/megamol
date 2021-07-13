@@ -100,23 +100,12 @@ namespace param {
         }
 
         /**
-         * Gets the value of the parameter utf8 decoded.
-         *
-         * @return The value of the parameter
-         */
-        inline vislib::TString ValueDecoded() const {
-            return this->ValueString();
-        }
-
-        /**
          * Returns the value of the parameter as utf8 decoded string.
          *
          * @return The value of the parameter as string.
          */
         vislib::TString ValueString() const override {
-            vislib::TString v_dec;
-            vislib::UTF8Encoder::Decode(v_dec, vislib::TString(this->value.c_str()));
-            return v_dec;
+            return vislib::TString(megamol::core::utility::Utf8Decode(this->value.generic_u8string()).c_str());
         }
 
         /**

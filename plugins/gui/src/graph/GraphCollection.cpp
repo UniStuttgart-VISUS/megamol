@@ -658,9 +658,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
 bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename) {
 
     std::string loaded_project;
-    /// XXX: UTF8 conversion required
-    std::string project_filename_utf8enc = gui_utils::Utf8Encode(project_filename);
-    if (!megamol::core::utility::FileUtils::ReadFile(project_filename_utf8enc, loaded_project)) {
+    if (!megamol::core::utility::FileUtils::ReadFile(project_filename, loaded_project)) {
         return false;
     }
 
@@ -1054,8 +1052,7 @@ bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid,
         graph_ptr->ResetDirty();
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[GUI] Successfully loaded project '%s' from file '%s'.\n", graph_ptr->Name().c_str(),
-            project_filename_utf8enc.c_str());
+            "[GUI] Successfully loaded project '%s'.\n", graph_ptr->Name().c_str());
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1133,12 +1130,9 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                              confParams.str() + "\n" + state_json;
 
                 graph_ptr->ResetDirty();
-                /// XXX: UTF8 conversion required
-                auto project_filename_utf8 = gui_utils::Utf8Encode(project_filename);
-                if (megamol::core::utility::FileUtils::WriteFile(project_filename_utf8, projectstr)) {
+                if (megamol::core::utility::FileUtils::WriteFile(project_filename, projectstr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                        "[GUI] Successfully saved project '%s' to file '%s'.\n", graph_ptr->Name().c_str(),
-                        project_filename_utf8.c_str());
+                        "[GUI] Successfully saved project '%s'.\n", graph_ptr->Name().c_str());
 
                     // Save filename for graph
                     graph_ptr->SetFilename(project_filename, true);
@@ -1496,9 +1490,7 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 
     // Try to load existing gui state from file
     std::string loaded_state;
-    /// XXX: UTF8 conversion required
-    auto filename_utf8 = gui_utils::Utf8Encode(filename);
-    if (megamol::core::utility::FileUtils::ReadFile(filename_utf8, loaded_state)) {
+    if (megamol::core::utility::FileUtils::ReadFile(filename, loaded_state)) {
         loaded_state =
             gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (!loaded_state.empty()) {
@@ -1545,9 +1537,7 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
 
     std::string loaded_state;
-    /// XXX: UTF8 conversion required
-    auto filename_utf8 = gui_utils::Utf8Encode(filename);
-    if (megamol::core::utility::FileUtils::ReadFile(filename_utf8, loaded_state)) {
+    if (megamol::core::utility::FileUtils::ReadFile(filename, loaded_state)) {
         loaded_state =
             gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (loaded_state.empty())

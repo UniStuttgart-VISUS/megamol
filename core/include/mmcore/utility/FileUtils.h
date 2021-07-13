@@ -35,6 +35,26 @@ namespace utility {
         return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
     }
 
+    static std::string Utf8Decode(const std::string& input) {
+        vislib::StringA dec_tmp;
+        if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(input.c_str()))) {
+            return std::string(dec_tmp.PeekBuffer());
+        }
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Utf8Decode Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return std::string();
+    }
+
+    static std::string Utf8Encode(const std::string& input) {
+        vislib::StringA enc_tmp;
+        if (vislib::UTF8Encoder::Encode(enc_tmp, vislib::StringA(input.c_str()))) {
+            return std::string(enc_tmp.PeekBuffer());
+        }
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "UTF8Encoder Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return std::string();
+    }
+
     // ##################################################################### //
     /**
      * File utility functions.

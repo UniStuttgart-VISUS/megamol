@@ -451,7 +451,7 @@ bool GUIManager::PostDraw() {
         bool load_success = false;
 
         if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
-            this->gui_state.font_load_filename, std::string("ttf"))) {
+                this->gui_state.font_load_filename, std::string("ttf"))) {
 
             ImFontConfig config;
             config.OversampleH = 4;
@@ -482,12 +482,13 @@ bool GUIManager::PostDraw() {
                     this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
                     __LINE__);
             }
-        } else if ((!this->gui_state.font_load_filename.empty()) && (this->gui_state.font_load_filename != "<unknown>")) {
+        } else if ((!this->gui_state.font_load_filename.empty()) &&
+                   (this->gui_state.font_load_filename != "<unknown>")) {
             std::string imgui_font_string =
                 this->gui_state.font_load_filename + ", " + std::to_string(this->gui_state.font_load_size) + "px";
             for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < (io.Fonts->Fonts.Size); n++) {
                 std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
-                font_name = gui_utils::Utf8Decode(font_name);
+                font_name = megamol::core::utility::Utf8Decode(font_name);
                 if (font_name == imgui_font_string) {
                     io.FontDefault = io.Fonts->Fonts[n];
                     load_success = true;
@@ -840,7 +841,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                 }
                 // Load GUI state from project file when project file changed
                 if (!script_filename.empty()) {
-                    script_filename = gui_utils::Utf8Decode(script_filename);
+                    script_filename = megamol::core::utility::Utf8Decode(script_filename);
                     synced_graph_ptr->SetFilename(script_filename, false);
                 }
             }
@@ -1747,7 +1748,8 @@ bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
                 this->gui_state.style_changed = true;
                 megamol::core::utility::get_json_value<std::string>(
                     state_str, {"font_file_name"}, &this->gui_state.font_load_filename);
-                this->gui_state.font_load_filename = gui_utils::Utf8Encode(this->gui_state.font_load_filename);
+                this->gui_state.font_load_filename =
+                    megamol::core::utility::Utf8Encode(this->gui_state.font_load_filename);
 
                 megamol::core::utility::get_json_value<int>(state_str, {"font_size"}, &this->gui_state.font_load_size);
                 this->gui_state.font_load = 2;
