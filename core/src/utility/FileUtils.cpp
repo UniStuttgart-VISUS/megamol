@@ -69,7 +69,7 @@ bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, c
     try {
         std::ofstream file;
         auto filename_path = std::filesystem::u8path(filename);
-#if defined(UNICODE) || defined(_UNICODE)
+#if defined(_MSC_VER) && (defined(UNICODE) || defined(_UNICODE))
         file.open(filename_path.generic_u8string());
 #else
         file.open(filename_path.generic_string());
@@ -106,7 +106,7 @@ bool megamol::core::utility::FileUtils::ReadFile(const std::string& filename, st
     try {
         std::ifstream file;
         auto filename_path = std::filesystem::u8path(filename);
-#if defined(UNICODE) || defined(_UNICODE)
+#if defined(_MSC_VER) && (defined(UNICODE) || defined(_UNICODE))
         file.open(filename_path.generic_u8string());
 #else
         file.open(filename_path.generic_string());
