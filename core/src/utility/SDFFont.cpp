@@ -389,21 +389,7 @@ float SDFFont::lineWidth(int *&run, bool iterate) const {
 
 int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
 
-    vislib::StringA txtutf8 = txt;
-    /*
-    if (!vislib::UTF8Encoder::Encode(txtutf8, txt)) {
-        // encoding failed ... how?
-        char* t = txtutf8.AllocateBuffer(vislib::CharTraitsA::SafeStringLength(txt));
-        for (; *txt != 0; txt++) {
-            if ((*txt & 0x80) == 0) {
-                *t = *txt;
-                t++;
-            }
-        }
-        *t = 0;
-    }
-    */
-
+    vislib::StringA txtutf8(txt);
     size_t txtlen = static_cast<size_t>(vislib::CharTraitsA::SafeStringLength(txtutf8));
     size_t pos = 0;
     bool knowLastWhite = false;
