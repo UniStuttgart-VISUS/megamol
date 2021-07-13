@@ -69,10 +69,10 @@ bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, c
     try {
         std::ofstream file;
         auto filename_path = std::filesystem::u8path(filename);
-#ifdef _MSC_VER
-        file.open(filename_path.generic_wstring());
-#else
+#if defined(UNICODE) || defined(_UNICODE)
         file.open(filename_path.generic_u8string());
+#else
+        file.open(filename_path.generic_string());
 #endif
         if (file.is_open() && file.good()) {
             file << in_content.c_str();
@@ -83,7 +83,6 @@ bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, c
                     "Unable to create file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
                     __LINE__);
             file.close();
-
             return false;
         }
     } catch (std::exception& e) {
@@ -107,10 +106,10 @@ bool megamol::core::utility::FileUtils::ReadFile(const std::string& filename, st
     try {
         std::ifstream file;
         auto filename_path = std::filesystem::u8path(filename);
-#ifdef _MSC_VER
-        file.open(filename_path.generic_wstring());
-#else
+#if defined(UNICODE) || defined(_UNICODE)
         file.open(filename_path.generic_u8string());
+#else
+        file.open(filename_path.generic_string());
 #endif
         if (file.is_open() && file.good()) {
             out_content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());

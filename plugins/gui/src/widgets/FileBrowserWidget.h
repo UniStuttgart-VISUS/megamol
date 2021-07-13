@@ -10,9 +10,9 @@
 #pragma once
 
 
-#include "mmcore/param/FilePathParam.h"
 #include "HoverToolTip.h"
 #include "StringSearchWidget.h"
+#include "mmcore/param/FilePathParam.h"
 
 
 using namespace megamol::core::param;
@@ -45,20 +45,18 @@ namespace gui {
         bool PopUp_Save(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
             const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
             vislib::math::Ternary& inout_save_gui_state) {
-            return this->popup(DIALOGMODE_SAVE, label, inout_filename, inout_open_popup, extensions, flags,
-                inout_save_gui_state);
+            return this->popup(
+                DIALOGMODE_SAVE, label, inout_filename, inout_open_popup, extensions, flags, inout_save_gui_state);
         }
         bool PopUp_Load(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
             const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
             auto tmp = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-            return this->popup(
-                DIALOGMODE_LOAD, label, inout_filename, inout_open_popup, extensions, flags, tmp);
+            return this->popup(DIALOGMODE_LOAD, label, inout_filename, inout_open_popup, extensions, flags, tmp);
         }
         bool PopUp_Select(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
             const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
             auto tmp = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-            return this->popup(
-                DIALOGMODE_SELECT, label, inout_filename, inout_open_popup, extensions, flags, tmp);
+            return this->popup(DIALOGMODE_SELECT, label, inout_filename, inout_open_popup, extensions, flags, tmp);
         }
 
         /**
@@ -72,8 +70,8 @@ namespace gui {
          *
          * @return True on success, false otherwise.
          */
-        bool Button_Select(std::string& inout_filename, const FilePathParam::Extensions_t& extensions,
-            FilePathParam::Flags_t flags);
+        bool Button_Select(
+            std::string& inout_filename, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags);
 
     private:
         typedef std::pair<std::filesystem::path, bool> ChildData_t;

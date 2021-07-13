@@ -500,7 +500,7 @@ void megamol::gui::Configurator::SpecificStateToJSON(nlohmann::json& inout_json)
             if (graph_ptr->IsRunning()) {
                 graph_ptr->StateToJSON(inout_json);
             } else {
-                auto graph_filename =graph_ptr->GetFilename();
+                auto graph_filename = graph_ptr->GetFilename();
                 if (!graph_filename.empty()) {
                     inout_json[GUI_JSON_TAG_GRAPHS][graph_filename] = nlohmann::json::object();
                 }

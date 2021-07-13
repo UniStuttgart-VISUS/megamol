@@ -6,12 +6,11 @@
  */
 
 
-
 #include "FileBrowserWidget.h"
 #include "gui_utils.h"
 #include "imgui_stdlib.h"
-#include "widgets/ButtonWidgets.h"
 #include "mmcore/utility/FileUtils.h"
+#include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol;
@@ -38,8 +37,8 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
 }
 
 
-bool megamol::gui::FileBrowserWidget::Button_Select(std::string& inout_filename,
-    const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
+bool megamol::gui::FileBrowserWidget::Button_Select(
+    std::string& inout_filename, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
