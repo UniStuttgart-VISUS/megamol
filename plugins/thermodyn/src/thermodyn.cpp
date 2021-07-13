@@ -36,6 +36,7 @@
 #include "ParticleSurface2.h"
 #include "MeshAddColor.h"
 #include "MeshExtrude.h"
+#include "ParticlesInsideMesh.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -90,6 +91,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticleSurface2>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::MeshAddColor>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::MeshExtrude>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticlesInsideMesh>();
         //
         // TODO: Register your plugin's modules here
         // like:
