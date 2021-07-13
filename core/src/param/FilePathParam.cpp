@@ -108,10 +108,10 @@ vislib::TString FilePathParam::ValueString() const {
 
 vislib::TString FilePathParam::Value() const {
 
-#if defined(_MSC_VER) && (defined(UNICODE) || defined(_UNICODE))
-    return vislib::TString(this->value.generic_u8string().c_str());
-#else
+#if defined(_MSC_VER) && !(defined(UNICODE) || defined(_UNICODE))
     return vislib::TString(this->value.generic_string().c_str());
+#else
+    return vislib::TString(this->value.generic_u8string().c_str());
 #endif
 }
 
