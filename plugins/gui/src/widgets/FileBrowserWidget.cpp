@@ -331,7 +331,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 
                 /// XXX: UTF8 conversion required
                 inout_filename =
-                    (utf8enc) ? (gui_utils::Utf8Decode(tmp_path.generic_u8string())) : (tmp_path.generic_u8string());
+                    (utf8enc) ? (gui_utils::Utf8Decode(tmp_path.generic_u8string())) : (tmp_path.generic_string());
 
                 inout_save_gui_state = this->save_gui_state;
                 ImGui::CloseCurrentPopup();
