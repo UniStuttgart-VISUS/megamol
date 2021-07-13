@@ -454,6 +454,7 @@ bool GUIManager::PostDraw() {
         auto font_load_filename_utf8enc = gui_utils::Utf8Encode(this->gui_state.font_load_filename);
         if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
                 font_load_filename_utf8enc, std::string("ttf"))) {
+
             ImFontConfig config;
             config.OversampleH = 4;
             config.OversampleV = 4;
@@ -893,14 +894,13 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                     if (p.Type() == ParamType_t::FILEPATH) {
                         if (auto* p_ptr = p.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
                             if (p_ptr->RegisterNotifications()) {
-                                p_ptr->RegisterNotifications(
-                                    [&, this](
-                                        const std::string& id, std::weak_ptr<bool> open, const std::string& message) {
-                                        const auto notification_name =
-                                            std::string("Parameter: ") + p.FullNameProject() + "##" + id;
-                                        this->notification_collection[notification_name] =
-                                            std::tuple<std::weak_ptr<bool>, bool, std::string>(open, false, message);
-                                    });
+                                p_ptr->RegisterNotifications([&, this](const std::string& id, std::weak_ptr<bool> open,
+                                                                 const std::string& message) {
+                                    const auto notification_name =
+                                        std::string("Parameter: ") + p.FullNameProject() + "##" + id;
+                                    this->notification_collection[notification_name] =
+                                        std::tuple<std::weak_ptr<bool>, bool, std::string>(open, false, message);
+                                });
                             }
                         }
                     }
@@ -1248,7 +1248,7 @@ void GUIManager::draw_menu() {
 
     // SCREENSHOT -------------------------------------------------------------
     if (ImGui::BeginMenu("Screenshot")) {
-        if (ImGui::MenuItem("Select Filename", this->gui_state.screenshot_filepath.c_str())) {
+        if (ImGui::MenuItem("Select File Name", this->gui_state.screenshot_filepath.c_str())) {
             this->gui_state.open_popup_screenshot = true;
         }
         if (ImGui::MenuItem("Trigger", this->hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
@@ -1353,7 +1353,8 @@ void GUIManager::draw_menu() {
                 for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < io.Fonts->Fonts.Size; n++) {
                     if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current))) {
                         io.FontDefault = io.Fonts->Fonts[n];
-                        this->gui_state.font_load_filename = gui_utils::Utf8Decode(this->extract_fontname(io.FontDefault->GetDebugName()));
+                        this->gui_state.font_load_filename =
+                            gui_utils::Utf8Decode(this->extract_fontname(io.FontDefault->GetDebugName()));
                         this->gui_state.font_load_size = static_cast<int>(io.FontDefault->FontSize);
                     }
                 }
@@ -1401,7 +1402,6 @@ void GUIManager::draw_menu() {
                 this->gui_state.font_load = 1;
                 // Close menu
                 ImGui::CloseCurrentPopup();
-
             }
             if (!valid_file) {
                 ImGui::PopItemFlag();
@@ -1606,7 +1606,7 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // File name for screenshot pop-up
     auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-    if (this->file_browser.PopUp_Save("Filename for Screenshot", this->gui_state.screenshot_filepath,
+    if (this->file_browser.PopUp_Save("File Name for Screenshot", this->gui_state.screenshot_filepath,
             this->gui_state.open_popup_screenshot, {"png"},
             megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag, false)) {
         this->gui_state.screenshot_filepath_id = 0;

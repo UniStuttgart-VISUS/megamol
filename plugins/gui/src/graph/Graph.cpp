@@ -1429,7 +1429,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
 
                 if (!this->GetFilename().empty()) {
                     ImGui::Separator();
-                    ImGui::TextDisabled("Filename");
+                    ImGui::TextDisabled("File Name");
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
                     /// XXX: UTF8 conversion required
                     std::string filename_utf8 = gui_utils::Utf8Encode(this->GetFilename());

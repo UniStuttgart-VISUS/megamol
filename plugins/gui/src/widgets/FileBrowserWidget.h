@@ -107,12 +107,12 @@ namespace gui {
             const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
             vislib::math::Ternary& inout_save_gui_state, bool utf8enc);
 
-        bool validate_split_path(const std::string& in_pathfile, std::string& out_path, std::string& out_file) const;
+        bool validate_split_path(const std::string& in_path, std::string& out_dir, std::string& out_file) const;
         void validate_directory(FilePathParam::Flags_t flags, const std::string& directory_str);
         void validate_file(DialogMode mode, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
             const std::string& file_str);
 
-        bool get_parent_path(std::string& dir) const;
+        std::string get_parent_path(const std::string& dir) const;
         std::string get_absolute_path(const std::string& dir) const;
     };
 
