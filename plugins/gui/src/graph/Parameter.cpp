@@ -705,6 +705,7 @@ bool megamol::gui::Parameter::WriteCoreParameterValue(
     } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::FilePathParam>()) {
         if (in_param.type == ParamType_t::FILEPATH) {
             p_ptr->SetValue(std::get<std::string>(in_param.GetValue()));
+            // Storage can not be changed
         } else {
             type_error = true;
         }

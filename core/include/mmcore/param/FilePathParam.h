@@ -91,7 +91,7 @@ namespace param {
         void SetValue(const vislib::TString& v, bool setDirty = true);
 
         /**
-         * Gets the value of the parameter utf8 encoded for normal file loading
+         * Gets the value of the parameter utf8 encoded for normal file loading.
          *
          * @return The value of the parameter
          */
@@ -109,7 +109,7 @@ namespace param {
         }
 
         /**
-         * Returns the value of the parameter as string.
+         * Returns the value of the parameter as utf8 decoded string.
          *
          * @return The value of the parameter as string.
          */
@@ -117,7 +117,6 @@ namespace param {
             vislib::TString v_dec;
             vislib::UTF8Encoder::Decode(v_dec, vislib::TString(this->value.c_str()));
             return v_dec;
-            /// return vislib::TString(this->value.c_str());
         }
 
         /**
