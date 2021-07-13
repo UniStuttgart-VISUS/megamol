@@ -35,6 +35,7 @@
 #include "IDBroker.h"
 #include "ParticleSurface2.h"
 #include "MeshAddColor.h"
+#include "MeshExtrude.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -88,6 +89,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::IDBroker>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticleSurface2>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::MeshAddColor>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::MeshExtrude>();
         //
         // TODO: Register your plugin's modules here
         // like:
