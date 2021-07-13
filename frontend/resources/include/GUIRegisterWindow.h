@@ -25,11 +25,11 @@ namespace frontend_resources {
 
         // Register GUI pop-up rendering callback
         // Parameters: Pop-up name, open opop-up flag, rendering callback function
-        std::function<void(const std::string&, std::shared_ptr<bool>, std::function<void(void)> )> register_popup;
+        std::function<void(const std::string&, std::weak_ptr<bool>, std::function<void(void)> )> register_popup;
 
         // Register GUI notification popup
         // Parameters: Pop-up name, message
-        std::function<void(const std::string&, std::shared_ptr<bool>, const std::string&)> register_notification;
+        std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&)> register_notification;
     };
 
 } /* end namespace frontend_resources */

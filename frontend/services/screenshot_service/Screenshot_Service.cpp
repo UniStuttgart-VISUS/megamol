@@ -236,7 +236,7 @@ void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> res
     guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(&resources[2].getResource<megamol::frontend_resources::GUIState>());
 
     auto &gui_window_request_resource = resources[4].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-    gui_window_request_resource.register_notification("Screenshot", service_open_popup, privacy_note);
+    gui_window_request_resource.register_notification("Screenshot", std::weak_ptr<bool>(service_open_popup), privacy_note);
 }
 
 void Screenshot_Service::updateProvidedResources() {

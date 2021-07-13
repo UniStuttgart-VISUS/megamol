@@ -59,17 +59,17 @@ void FilePathParam::SetValue(const std::string& v, bool setDirty) {
         auto error_flags = FilePathParam::ValidatePath(new_value, this->extensions, this->flags);
 
         if (error_flags & Flag_File) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting new value '%s'. Expected file but directory is given.", new_value.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting value '%s'. Expected file but directory is given.", new_value.c_str());
             if (this->open_notification[Flag_File] != nullptr)
                 *this->open_notification[Flag_File] = true;
         }
         if (error_flags & Flag_Directory) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting new value '%s'. Expected directory but file is given.", new_value.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting value '%s'. Expected directory but file is given.", new_value.c_str());
             if (this->open_notification[Flag_Directory] != nullptr)
                 *this->open_notification[Flag_Directory] = true;
         }
         if (error_flags & Flag_NoExistenceCheck) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting new value '%s'. File does not exist.", new_value.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[FilePathParam] Omitting value '%s'. File does not exist.", new_value.c_str());
             if (this->open_notification[Flag_NoExistenceCheck] != nullptr)
                 *this->open_notification[Flag_NoExistenceCheck] = true;
         }
@@ -79,7 +79,7 @@ void FilePathParam::SetValue(const std::string& v, bool setDirty) {
                 log_exts += "'." + ext + "' ";
             }
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[FilePathParam] Omitting new value '%s'. File does not have required extension: %s",
+                "[FilePathParam] Omitting value '%s'. File does not have required extension: %s",
                 new_value.c_str(), log_exts.c_str());
             if (this->open_notification[Flag_RestrictExtension] != nullptr)
                 *this->open_notification[Flag_RestrictExtension] = true;
@@ -130,15 +130,15 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
 bool FilePathParam::RegisterNotifications(const FilePathParam::RegisterNotificationCallback_t& pc) {
 
     if (!this->registered_notifications) {
-        const std::string prefix = "Omitting new value. ";
-        pc("file_is_dir", this->open_notification[Flag_File], prefix + "Expected file but directory is given.");
-        pc("dir_is_file", this->open_notification[Flag_Directory], prefix + "Expected directory but file is given.");
-        pc("file_not_exist", this->open_notification[Flag_NoExistenceCheck], prefix + "Path does not exist.");
+        const std::string prefix = "Omitting value. ";
+        pc("file_is_dir", std::weak_ptr<bool>(this->open_notification[Flag_File]), prefix + "Expected file but directory is given.");
+        pc("dir_is_file", std::weak_ptr<bool>(this->open_notification[Flag_Directory]), prefix + "Expected directory but file is given.");
+        pc("file_not_exist", std::weak_ptr<bool>(this->open_notification[Flag_NoExistenceCheck]), prefix + "Path does not exist.");
         std::string log_exts;
         for (auto& ext : this->extensions) {
             log_exts += "'." + ext + "' ";
         }
-        pc("file_wrong_ext", this->open_notification[Flag_RestrictExtension], prefix + "File does not have required extension: " + log_exts);
+        pc("file_wrong_ext", std::weak_ptr<bool>(this->open_notification[Flag_RestrictExtension]), prefix + "File does not have required extension: " + log_exts);
 
         this->registered_notifications = true;
         return true;

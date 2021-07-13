@@ -44,7 +44,7 @@ namespace param {
 
         typedef std::vector<std::string> Extensions_t;
 
-        typedef std::function<void(const std::string&, std::shared_ptr<bool>, const std::string&)> RegisterNotificationCallback_t;
+        typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&)> RegisterNotificationCallback_t;
 
         /**
          * Ctor.

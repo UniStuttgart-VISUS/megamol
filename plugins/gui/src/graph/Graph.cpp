@@ -1959,7 +1959,8 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     }
     ImGui::Separator();
 
-    if (ImGui::BeginMenu("Labels")) {
+    ImGui::Button("Labels");
+    if (ImGui::BeginPopupContextItem("param_present_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
         // MODULES
         if (ImGui::BeginMenu("Modules")) {
             if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.module_show_label)) {
@@ -1980,7 +1981,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
             }
             ImGui::EndMenu();
         }
-        ImGui::EndMenu();
+        ImGui::EndPopup();
     }
     ImGui::Separator();
 

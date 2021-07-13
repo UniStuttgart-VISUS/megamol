@@ -50,10 +50,7 @@ GUIManager::GUIManager()
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
-    if (this->win_configurator_ptr == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[GUI] BUG - Failed to get shortcut pointer to configurator.");
-    }
+    assert(this->win_configurator_ptr != nullptr);
 
     this->init_state();
 }
@@ -898,11 +895,11 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                             if (p_ptr->RegisterNotifications()) {
                                 p_ptr->RegisterNotifications(
                                     [&, this](
-                                        const std::string& id, std::shared_ptr<bool> open, const std::string& message) {
+                                        const std::string& id, std::weak_ptr<bool> open, const std::string& message) {
                                         const auto notification_name =
                                             std::string("Parameter: ") + p.FullNameProject() + "##" + id;
                                         this->notification_collection[notification_name] =
-                                            std::tuple<std::shared_ptr<bool>, bool, std::string>(open, false, message);
+                                            std::tuple<std::weak_ptr<bool>, bool, std::string>(open, false, message);
                                     });
                             }
                         }
@@ -1402,6 +1399,9 @@ void GUIManager::draw_menu() {
             }
             if (ImGui::Button("Add Font")) {
                 this->gui_state.font_load = 1;
+                // Close menu
+                ImGui::CloseCurrentPopup();
+
             }
             if (!valid_file) {
                 ImGui::PopItemFlag();
@@ -1460,13 +1460,13 @@ void megamol::gui::GUIManager::draw_popups() {
     // Externally registered pop-ups
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
     for (auto it = this->popup_collection.begin(); it != this->popup_collection.end(); it++) {
-        if (it->second.first == nullptr) {
+        if (it->second.first.expired() || (it->second.first.lock() == nullptr)) {
             this->popup_collection.erase(it);
             break;
         }
-        if (*(it->second.first)) {
+        if (*(it->second.first.lock())) {
+            *(it->second.first.lock()) = false;
             ImGui::OpenPopup(it->first.c_str());
-            *(it->second.first) = false;
         }
         if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
             it->second.second();
@@ -1479,12 +1479,12 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // Externally registered notifications
     for (auto it = this->notification_collection.begin(); it != this->notification_collection.end(); it++) {
-        if (std::get<0>(it->second) == nullptr) {
+        if (std::get<0>(it->second).expired() || std::get<0>(it->second).lock() == nullptr) {
             this->notification_collection.erase(it);
             break;
         }
-        if (*std::get<0>(it->second)) {
-            (*std::get<0>(it->second)) = false;
+        if (*std::get<0>(it->second).lock()) {
+            (*std::get<0>(it->second).lock()) = false;
             if (!std::get<1>(it->second)) {
                 ImGui::OpenPopup(it->first.c_str());
             }
@@ -1579,7 +1579,7 @@ void megamol::gui::GUIManager::draw_popups() {
         auto filename = graph_ptr->GetFilename();
         auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
         bool popup_failed = false;
-        if (this->file_browser.PopUp_Save("Save Project", filename, this->gui_state.open_popup_save, {"lua"},
+        if (this->file_browser.PopUp_Save("Save Running Project", filename, this->gui_state.open_popup_save, {"lua"},
                 megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
             std::string state_str;
             if (save_gui_state.IsTrue()) {
@@ -1855,16 +1855,16 @@ void GUIManager::RegisterWindow(
 
 
 void GUIManager::RegisterPopUp(
-    const std::string& name, std::shared_ptr<bool> open, const std::function<void()>& callback) {
+    const std::string& name, std::weak_ptr<bool> open, const std::function<void()>& callback) {
 
     this->popup_collection[name] =
-        std::pair<std::shared_ptr<bool>, std::function<void()>>(open, const_cast<std::function<void()>&>(callback));
+        std::pair<std::weak_ptr<bool>, std::function<void()>>(open, const_cast<std::function<void()>&>(callback));
 }
 
 
-void GUIManager::RegisterNotification(const std::string& name, std::shared_ptr<bool> open, const std::string& message) {
+void GUIManager::RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message) {
 
-    this->notification_collection[name] = std::tuple<std::shared_ptr<bool>, bool, std::string>(open, false, message);
+    this->notification_collection[name] = std::tuple<std::weak_ptr<bool>, bool, std::string>(open, false, message);
 }
 
 
