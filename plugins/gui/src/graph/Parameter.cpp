@@ -232,7 +232,8 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
         this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::FILEPATH): {
-        megamol::core::param::FilePathParam parameter(val_tstr.PeekBuffer());
+        auto file_storage = this->GetStorage<FilePathStorage_t>();
+        megamol::core::param::FilePathParam parameter(val_tstr.PeekBuffer(), file_storage.first, file_storage.second);
         retval = parameter.ParseValue(val_tstr);
         this->SetValue(std::string(parameter.Value().PeekBuffer()), set_default_val, set_dirty);
     } break;
@@ -329,7 +330,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param.type = ParamType_t::FILEPATH;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
-        out_param.storage = FilePathStorage_t({FilePathParam::Flag_File, {}});
+        out_param.storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FlexEnumParam>()) {
         out_param.type = ParamType_t::FLEXENUM;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
@@ -475,7 +476,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FILEPATH,
             FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()}), std::monostate(), std::monostate(),
             param_name, description);
-        out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
+        out_param->SetValue(std::string(p_ptr->ValueDecoded().PeekBuffer()), set_default_val, set_dirty);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found unknown parameter type. Please extend parameter types for the configurator. "
@@ -546,7 +547,9 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         }
     } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FilePathParam>()) {
         if (out_param.type == ParamType_t::FILEPATH) {
-            out_param.SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
+            out_param.SetValue(std::string(p_ptr->ValueDecoded().PeekBuffer()), set_default_val, set_dirty);
+            auto file_storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
+            out_param.SetStorage(file_storage);
         } else {
             type_error = true;
         }
