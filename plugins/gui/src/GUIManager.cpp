@@ -1353,7 +1353,7 @@ void GUIManager::draw_menu() {
                 for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < io.Fonts->Fonts.Size; n++) {
                     if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current))) {
                         io.FontDefault = io.Fonts->Fonts[n];
-                        this->gui_state.font_load_filename = this->extract_fontname(io.FontDefault->GetDebugName());
+                        this->gui_state.font_load_filename = gui_utils::Utf8Decode(this->extract_fontname(io.FontDefault->GetDebugName()));
                         this->gui_state.font_load_size = static_cast<int>(io.FontDefault->FontSize);
                     }
                 }

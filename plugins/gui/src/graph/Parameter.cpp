@@ -1564,7 +1564,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
         ImGui::PopItemWidth();
         ImGui::EndGroup();
 
-        this->gui_tooltip_text += "\n" + val;
+        this->gui_tooltip_text += "\n" + std::get<std::string>(this->gui_widget_store);
     }
     return retval;
 }

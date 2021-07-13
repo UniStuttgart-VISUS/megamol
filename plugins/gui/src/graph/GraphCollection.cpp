@@ -1135,7 +1135,6 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                 graph_ptr->ResetDirty();
                 /// XXX: UTF8 conversion required
                 auto project_filename_utf8 = gui_utils::Utf8Encode(project_filename);
-                ;
                 if (megamol::core::utility::FileUtils::WriteFile(project_filename_utf8, projectstr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "[GUI] Successfully saved project '%s' to file '%s'.\n", graph_ptr->Name().c_str(),

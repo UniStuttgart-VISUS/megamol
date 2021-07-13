@@ -105,7 +105,10 @@ namespace param {
          * @return The value of the parameter as string.
          */
         vislib::TString ValueString() const override {
-            return vislib::TString(this->value.c_str());
+            vislib::TString v_dec;
+            vislib::UTF8Encoder::Decode(v_dec, vislib::TString(this->value.c_str()));
+            return v_dec;
+            ///return vislib::TString(this->value.c_str());
         }
 
         /**
