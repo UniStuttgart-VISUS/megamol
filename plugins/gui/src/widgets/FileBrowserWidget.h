@@ -10,10 +10,10 @@
 #pragma once
 
 
+#include "mmcore/param/FilePathParam.h"
 #include "HoverToolTip.h"
 #include "StringSearchWidget.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/utility/FileUtils.h"
+
 
 using namespace megamol::core::param;
 

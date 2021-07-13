@@ -12,9 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/utility/FileUtils.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
+#include <filesystem>
 
 
 namespace megamol {
@@ -95,18 +95,14 @@ namespace param {
          *
          * @return The value of the parameter
          */
-        inline vislib::TString Value() const {
-            return vislib::TString(this->value.generic_u8string().c_str());
-        }
+        vislib::TString Value() const;
 
         /**
          * Returns the value of the parameter as utf8 decoded string.
          *
          * @return The value of the parameter as string.
          */
-        vislib::TString ValueString() const override {
-            return vislib::TString(megamol::core::utility::Utf8Decode(this->value.generic_u8string()).c_str());
-        }
+        vislib::TString ValueString() const override;
 
         /**
          * Gets the file path parameter flags

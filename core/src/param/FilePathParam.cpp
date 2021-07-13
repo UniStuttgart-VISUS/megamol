@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/utility/FileUtils.h"
 
 
 using namespace megamol::core::param;
@@ -96,6 +97,18 @@ void FilePathParam::SetValue(const std::string& v, bool setDirty) {
 void FilePathParam::SetValue(const vislib::TString& v, bool setDirty) {
 
     this->SetValue(std::string(v.PeekBuffer()), setDirty);
+}
+
+
+vislib::TString FilePathParam::ValueString() const {
+
+    return vislib::TString(megamol::core::utility::Utf8Decode(this->value.generic_u8string()).c_str());
+}
+
+
+vislib::TString FilePathParam::Value() const {
+
+    return vislib::TString(this->value.generic_u8string().c_str());
 }
 
 

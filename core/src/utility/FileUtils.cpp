@@ -69,7 +69,11 @@ bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, c
     try {
         std::ofstream file;
         auto filename_path = std::filesystem::u8path(megamol::core::utility::Utf8Encode(filename));
+#ifdef _MSC_VER
         file.open(filename_path.generic_wstring());
+#else
+        file.open(filename_path.generic_u8string());
+#endif
         if (file.is_open() && file.good()) {
             file << in_content.c_str();
             file.close();
@@ -103,7 +107,11 @@ bool megamol::core::utility::FileUtils::ReadFile(const std::string& filename, st
     try {
         std::ifstream file;
         auto filename_path = std::filesystem::u8path(megamol::core::utility::Utf8Encode(filename));
+#ifdef _MSC_VER
         file.open(filename_path.generic_wstring());
+#else
+        file.open(filename_path.generic_u8string());
+#endif
         if (file.is_open() && file.good()) {
             out_content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
             file.close();
