@@ -394,90 +394,97 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
     if (lhs_tc == NULL) return false;
     
     //if(call_input != NULL) { if (!(*call_input)(0)) return false; }
-    if(call_normal != NULL) { if (!(*call_normal)(0)) return false; }
-    if(call_depth != NULL) { if (!(*call_depth)(0)) return false; }
-    if(call_camera != NULL) { if (!(*call_camera)(0)) return false; }
+    if ((call_normal != NULL) && (call_depth != NULL) && (call_camera != NULL)) {
 
-    // something has changed in the neath...
+        if (!(*call_normal)(0))
+            return false;
+
+         if (!(*call_depth)(0))
+            return false;
+
+         if (!(*call_camera)(0))
+             return false;
+
+        // something has changed in the neath...
     //bool input_update = call_input->hasUpdate();
-    bool normal_update = call_normal->hasUpdate();
-    bool depth_update = call_depth->hasUpdate();
-    bool camera_update = call_camera->hasUpdate();
+        bool normal_update = call_normal->hasUpdate();
+        bool depth_update = call_depth->hasUpdate();
+        bool camera_update = call_camera->hasUpdate();
 
-    bool something_has_changed =
-        //(call_input != NULL ? input_update : false) || 
-        (call_normal != NULL ? normal_update : false) || 
-        (call_depth != NULL ? depth_update : false) || 
-        (call_camera != NULL ? camera_update : false);
+        bool something_has_changed =
+            //(call_input != NULL ? input_update : false) || 
+            (call_normal != NULL ? normal_update : false) || 
+            (call_depth != NULL ? depth_update : false) || 
+            (call_camera != NULL ? camera_update : false);
 
-    if (something_has_changed) {
-        ++m_version;
+        if (something_has_changed) {
+            ++m_version;
 
-        if (call_normal == NULL)
-            return false;
-        if (call_depth == NULL)
-            return false;
-        if (call_camera == NULL)
-            return false;
+            if (call_normal == NULL)
+                return false;
+            if (call_depth == NULL)
+                return false;
+            if (call_camera == NULL)
+                return false;
 
-        auto normal_tx2D = call_normal->getData();
-        auto depth_tx2D = call_depth->getData();
-        std::array<int, 2> tx_res_normal = {(int) normal_tx2D->getWidth(), (int) normal_tx2D->getHeight()};
-        std::array<int, 2> tx_res_depth = {(int) depth_tx2D->getWidth(), (int) depth_tx2D->getHeight()};
+            auto normal_tx2D = call_normal->getData();
+            auto depth_tx2D = call_depth->getData();
+            std::array<int, 2> tx_res_normal = {(int) normal_tx2D->getWidth(), (int) normal_tx2D->getHeight()};
+            std::array<int, 2> tx_res_depth = {(int) depth_tx2D->getWidth(), (int) depth_tx2D->getHeight()};
 
-        {
-            glowl::TextureLayout finalLy = glowl::TextureLayout(
-                GL_RGBA16F,
-                tx_res_depth[0],
-                tx_res_depth[1],
-                1,
-                GL_RGBA,
-                GL_HALF_FLOAT,
-                1);
-            m_finalOutput->reload(finalLy, nullptr);
-        }
+            {
+                glowl::TextureLayout finalLy = glowl::TextureLayout(
+                    GL_RGBA16F,
+                    tx_res_depth[0],
+                    tx_res_depth[1],
+                    1,
+                    GL_RGBA,
+                    GL_HALF_FLOAT,
+                    1);
+                m_finalOutput->reload(finalLy, nullptr);
+            }
 
-        // obtain camera information
-        core::view::Camera_2 cam = call_camera->getData();
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type view_tmp, proj_tmp;
-        cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-        glm::mat4 view_mx = view_tmp;
-        glm::mat4 proj_mx = proj_tmp;
-        
-        //float clipNear = cam.near_clipping_plane();
-        //float clipFar = cam.far_clipping_plane();
-        //float mul = (clipFar * clipNear) / (clipFar - clipNear);
-        //float add = clipFar / (clipFar - clipNear);
+            // obtain camera information
+            core::view::Camera_2 cam = call_camera->getData();
+            cam_type::snapshot_type snapshot;
+            cam_type::matrix_type view_tmp, proj_tmp;
+            cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
+            glm::mat4 view_mx = view_tmp;
+            glm::mat4 proj_mx = proj_tmp;
+            
+            //float clipNear = cam.near_clipping_plane();
+            //float clipFar = cam.far_clipping_plane();
+            //float mul = (clipFar * clipNear) / (clipFar - clipNear);
+            //float add = clipFar / (clipFar - clipNear);
 
-        //float tanHalfFOVY = tanf( cam.aperture_angle_radians() * 1.7f * 0.5f );
-        //float tanHalfFOVX = tanHalfFOVY * cam.resolution_gate_aspect();
+            //float tanHalfFOVY = tanf( cam.aperture_angle_radians() * 1.7f * 0.5f );
+            //float tanHalfFOVX = tanHalfFOVY * cam.resolution_gate_aspect();
 
-        if (normal_update || depth_update) {
+            if (normal_update || depth_update) {
 
-            m_inputs->ViewportWidth = tx_res_normal[0];
-            m_inputs->ViewportHeight = tx_res_normal[1];
-            m_inputs->generateNormals = normal_tx2D == nullptr;
-            // TODO: for now we won't use scissortests
-            // but the implementation still stays for a more easy migration
-            // can be removed or used if (not) needed
-            // scissor rectangle stays constant for now
-            m_inputs->ScissorLeft = 0;
-            m_inputs->ScissorRight = tx_res_normal[0];
-            m_inputs->ScissorTop = tx_res_normal[1];
-            m_inputs->ScissorBottom = 0;
-            m_inputs->ProjectionMatrix = proj_mx;
-            m_inputs->ViewMatrix = view_mx;
+                m_inputs->ViewportWidth = tx_res_normal[0];
+                m_inputs->ViewportHeight = tx_res_normal[1];
+                m_inputs->generateNormals = normal_tx2D == nullptr;
+                // TODO: for now we won't use scissortests
+                // but the implementation still stays for a more easy migration
+                // can be removed or used if (not) needed
+                // scissor rectangle stays constant for now
+                m_inputs->ScissorLeft = 0;
+                m_inputs->ScissorRight = tx_res_normal[0];
+                m_inputs->ScissorTop = tx_res_normal[1];
+                m_inputs->ScissorBottom = 0;
+                m_inputs->ProjectionMatrix = proj_mx;
+                m_inputs->ViewMatrix = view_mx;
 
 
-            updateTextures(m_inputs);
+                updateTextures(m_inputs);
 
-            updateConstants(m_settings, m_inputs, 0);
-        }
+                updateConstants(m_settings, m_inputs, 0);
+            }
 
-        {
-            // only required when scissors are used
-            /*if (m_requiresClear) {
+            {
+                // only required when scissors are used
+                /*if (m_requiresClear) {
                 m_halfDepths[0]->reload(m_halfDepths[0]->getTextureLayout(), nullptr);
                 m_halfDepths[1]->reload(m_halfDepths[1]->getTextureLayout(), nullptr);
                 m_halfDepths[2]->reload(m_halfDepths[2]->getTextureLayout(), nullptr);
@@ -492,50 +499,51 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
                     m_normals->reload(m_normals->getTextureLayout(), nullptr);
 
                 m_requiresClear = false;
-            }*/
+                }*/
 
-            prepareDepths(m_settings, m_inputs, depth_tx2D, normal_tx2D);
+                prepareDepths(m_settings, m_inputs, depth_tx2D, normal_tx2D);
+                 
+                generateSSAO(m_settings, m_inputs, false, depth_tx2D, normal_tx2D);
 
-            generateSSAO(m_settings, m_inputs, false, depth_tx2D, normal_tx2D);
-
-            /*if( inputs->OverrideOutputRTV != nullptr )
-            {
-                // drawing into OverrideOutputRTV
-                dx11Context->OMSetRenderTargets( 1, &inputs->OverrideOutputRTV, NULL );
-            }
-            else
-            {
-                // restore previous RTs
-                d3d11StatesBackup.RestoreRTs( );
-            }*/
-
-            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
-                {m_finalOutput, 0}
-            };
-
-            // Apply
-            {
-                TextureArraySamplerTuple inputFinals =
-                    {m_finalResults, "g_FinalSSAO", m_samplerStateLinearClamp};
-
-                // TODO: blending states
-
-                if (m_settings.QualityLevel < 0)
-                    fullscreenPassDraw <TextureSamplerTuple, glowl::Texture2D>(m_non_smart_half_apply_prgm, {}, outputTextures, true, inputFinals);
-                else if (m_settings.QualityLevel == 0)
-                    fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                        m_non_smart_apply_prgm, {}, outputTextures, true, inputFinals);
+                /*if( inputs->OverrideOutputRTV != nullptr )
+                {
+                    // drawing into OverrideOutputRTV
+                    dx11Context->OMSetRenderTargets( 1, &inputs->OverrideOutputRTV, NULL );
+                }
                 else
-                    fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
-                        m_apply_prgm, {}, outputTextures, true, inputFinals);
-            }
+                {
+                    // restore previous RTs
+                    d3d11StatesBackup.RestoreRTs( );
+                }*/
 
-            // TODO: presumably also unnecessary, see also a few lines above
-            // restore previous RTs again (because of the viewport hack)
-            // d3d11StatesBackup.RestoreRTs();
+                std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
+                    {m_finalOutput, 0}
+                };
+
+                // Apply
+                {
+                    TextureArraySamplerTuple inputFinals =
+                        {m_finalResults, "g_FinalSSAO", m_samplerStateLinearClamp};
+                
+                    // TODO: blending states
+                
+                    if (m_settings.QualityLevel < 0)
+                        fullscreenPassDraw <TextureSamplerTuple, glowl::Texture2D>(m_non_smart_half_apply_prgm, {}, outputTextures, true, inputFinals);
+                    else if (m_settings.QualityLevel == 0)
+                        fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                            m_non_smart_apply_prgm, {}, outputTextures, true, inputFinals);
+                    else
+                        fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
+                            m_apply_prgm, {}, outputTextures, true, inputFinals);
+                }
+
+                // TODO: presumably also unnecessary, see also a few lines above
+                // restore previous RTs again (because of the viewport hack)
+                // d3d11StatesBackup.RestoreRTs();
+            }
         }
+
     }
-        
 
     if (lhs_tc->version() < m_version) {
         /*std::vector<float> depthdata(4LL * m_finalOutput->getWidth() * m_finalOutput->getHeight());
@@ -677,13 +685,13 @@ void megamol::compositing::ASSAO::generateSSAO(const ASSAO_Settings& settings,
             if (blurPasses == 0) {
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2DView>, GLuint>> outputTextures = {
                     {m_finalResultsArrayViews[pass], binding}};
-
+            
                 fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2DView>(
                     m_generate_prgms[shaderIndex], inputTextures, outputTextures);
             } else {
                 std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputTextures = {
                     {m_pingPongHalfResultA, binding}};
-
+            
                 fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                     m_generate_prgms[shaderIndex], inputTextures, outputTextures);
             }
@@ -959,9 +967,7 @@ void megamol::compositing::ASSAO::updateConstants(
 #endif
 
     // probably do something with the ssbo? but could also just be done at this point
-    m_ssbo_constants->bind();
     m_ssbo_constants->rebuffer(&m_constants, sizeof(m_constants));
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 // only resets textures if needed

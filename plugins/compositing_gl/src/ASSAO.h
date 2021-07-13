@@ -403,6 +403,10 @@ void ASSAO::fullscreenPassDraw(
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE0);
+    for (int i = 0; i <= cnt; ++i) {
+        glBindSampler(i, 0);
+    }
 }
 
 } // namespace compositing

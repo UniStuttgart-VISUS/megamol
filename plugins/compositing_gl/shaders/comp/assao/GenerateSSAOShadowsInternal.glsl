@@ -98,10 +98,14 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     // Sharp normals also create edges - but this adds to the cost as well
     if( !adaptiveBase && (qualityLevel >= SSAO_NORMAL_BASED_EDGES_ENABLE_AT_QUALITY_PRESET ) )
     {
-        vec3 neighbourNormalL  = LoadNormal( ivec2(fullResCoord), ivec2( -2,  0 ) );
-        vec3 neighbourNormalR  = LoadNormal( ivec2(fullResCoord), ivec2(  2,  0 ) );
-        vec3 neighbourNormalT  = LoadNormal( ivec2(fullResCoord), ivec2(  0, -2 ) );
-        vec3 neighbourNormalB  = LoadNormal( ivec2(fullResCoord), ivec2(  0,  2 ) );
+        vec3 neighbourNormalL = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2(-2,  0 ) ).xyz );
+        vec3 neighbourNormalR = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 2,  0 ) ).xyz );
+        vec3 neighbourNormalT = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0, -2 ) ).xyz );
+        vec3 neighbourNormalB = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0,  2 ) ).xyz );
+        //vec3 neighbourNormalL  = LoadNormal( ivec2(fullResCoord), ivec2( -2,  0 ) );
+        //vec3 neighbourNormalR  = LoadNormal( ivec2(fullResCoord), ivec2(  2,  0 ) );
+        //vec3 neighbourNormalT  = LoadNormal( ivec2(fullResCoord), ivec2(  0, -2 ) );
+        //vec3 neighbourNormalB  = LoadNormal( ivec2(fullResCoord), ivec2(  0,  2 ) );
 
         const float dotThreshold = SSAO_NORMAL_BASED_EDGES_DOT_THRESHOLD;
 
