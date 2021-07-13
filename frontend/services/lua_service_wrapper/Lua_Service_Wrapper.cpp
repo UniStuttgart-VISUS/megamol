@@ -11,7 +11,7 @@
 #include "Lua_Service_Wrapper.hpp"
 
 #include "mmcore/utility/LuaHostService.h"
-
+#include "vislib/UTF8Encoder.h"
 #include "Screenshots.h"
 #include "FrameStatistics.h"
 #include "WindowManipulation.h"

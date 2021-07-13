@@ -7,7 +7,11 @@
  * This implementation is based on "vislib/graphics/OutlinetFont.h"
  */
 
+
 #include "mmcore/utility/SDFFont.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "glm/gtx/quaternion.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 
 using namespace megamol::core::utility;
@@ -385,7 +389,8 @@ float SDFFont::lineWidth(int *&run, bool iterate) const {
 
 int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
 
-    vislib::StringA txtutf8;
+    vislib::StringA txtutf8 = txt;
+    /*
     if (!vislib::UTF8Encoder::Encode(txtutf8, txt)) {
         // encoding failed ... how?
         char* t = txtutf8.AllocateBuffer(vislib::CharTraitsA::SafeStringLength(txt));
@@ -397,6 +402,7 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
         }
         *t = 0;
     }
+    */
 
     size_t txtlen = static_cast<size_t>(vislib::CharTraitsA::SafeStringLength(txtutf8));
     size_t pos = 0;
@@ -436,7 +442,6 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
         // -(Following variables are "unisgned" so that always zeros are shifted and not ones ...)
         // -! so far: THERE IS NO COMPLETE CHECK FOR INVALID UTF8 BYTE SEQUENCES ... (only slowing down performance)
         // - Therefore ASSUMING well formed utf8 encoding ...
-
         unsigned char byte = txtutf8[i];
         // If byte >= 0 -> ASCII-Byte: 0XXXXXXX = 0...127
         if (byte < 128) { 
@@ -463,7 +468,6 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
                 if (folBytes > 0)  continue;                                 // => else idx is complete
             }
         }
-
         // Check if glyph info is available
         if (idx > (unsigned int)this->glyphIdcs.size()) {
             /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] Glyph index greater than available: \"%i\" > max. Index = \"%i\".\n", idx, this->idxCnt);
@@ -473,7 +477,6 @@ int *SDFFont::buildGlyphRun(const char *txt, float maxWidth) const {
             /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] Glyph info not available for: \"%i\".\n", idx);
             continue;
         }
-
         // --------------------------------------------------------------------
 
         // add glyph to run

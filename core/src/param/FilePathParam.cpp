@@ -54,7 +54,7 @@ bool FilePathParam::ParseValue(const vislib::TString& v) {
 
 void FilePathParam::SetValue(const std::string& v, bool setDirty) {
 
-    auto new_value = std::filesystem::u8path(megamol::core::utility::Utf8Encode(v));
+    auto new_value = std::filesystem::u8path(v);
     if (this->value != new_value) {
         auto error_flags = FilePathParam::ValidatePath(new_value, this->extensions, this->flags);
 
@@ -102,7 +102,7 @@ void FilePathParam::SetValue(const vislib::TString& v, bool setDirty) {
 
 vislib::TString FilePathParam::ValueString() const {
 
-    return vislib::TString(megamol::core::utility::Utf8Decode(this->value.generic_u8string()).c_str());
+    return vislib::TString(this->value.generic_u8string().c_str());
 }
 
 

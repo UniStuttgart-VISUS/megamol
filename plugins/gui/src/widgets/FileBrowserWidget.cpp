@@ -39,7 +39,7 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
 
 
 bool megamol::gui::FileBrowserWidget::Button_Select(std::string& inout_filename,
-    const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool utf8enc) {
+    const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -78,13 +78,13 @@ bool megamol::gui::FileBrowserWidget::Button_Select(std::string& inout_filename,
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    return this->PopUp_Select("Select File", inout_filename, open_popup_select_file, extensions, flags, utf8enc);
+    return this->PopUp_Select("Select File", inout_filename, open_popup_select_file, extensions, flags);
 }
 
 
 bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, const std::string& label,
     std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions,
-    FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state, bool utf8enc) {
+    FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state) {
 
     bool retval = false;
 
@@ -107,11 +107,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
         popup_label += "###fbw" + this->label_uid_map[label];
 
         if (inout_open_popup) {
-
-            /// XXX: UTF8 conversion required
-            auto filename_utf8enc = (utf8enc) ? (megamol::core::utility::Utf8Encode(inout_filename)) : (inout_filename);
-
-            this->validate_split_path(filename_utf8enc, this->current_directory_str, this->current_file_str);
+            this->validate_split_path(inout_filename, this->current_directory_str, this->current_file_str);
             this->validate_directory(flags, this->current_directory_str);
             this->validate_file(mode, extensions, flags, this->current_file_str);
             this->path_changed = true;
@@ -331,10 +327,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                                 std::filesystem::u8path(this->current_file_str);
                 /// TODO tmp_path = std::filesystem::relative(tmp_path, std::filesystem::current_path());
 
-                /// XXX: UTF8 conversion required
-                inout_filename = (utf8enc) ? (megamol::core::utility::Utf8Decode(tmp_path.generic_u8string()))
-                                           : (tmp_path.generic_u8string());
-
+                inout_filename = tmp_path.generic_u8string();
                 inout_save_gui_state = this->save_gui_state;
                 ImGui::CloseCurrentPopup();
                 retval = true;

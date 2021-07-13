@@ -500,10 +500,9 @@ void megamol::gui::Configurator::SpecificStateToJSON(nlohmann::json& inout_json)
             if (graph_ptr->IsRunning()) {
                 graph_ptr->StateToJSON(inout_json);
             } else {
-                /// XXX: UTF8 conversion required
-                std::string filename_utf8 = megamol::core::utility::Utf8Encode(graph_ptr->GetFilename());
-                if (!filename_utf8.empty()) {
-                    inout_json[GUI_JSON_TAG_GRAPHS][filename_utf8] = nlohmann::json::object();
+                auto graph_filename =graph_ptr->GetFilename();
+                if (!graph_filename.empty()) {
+                    inout_json[GUI_JSON_TAG_GRAPHS][graph_filename] = nlohmann::json::object();
                 }
             }
         }
@@ -568,9 +567,6 @@ void megamol::gui::Configurator::SpecificStateFromJSON(const nlohmann::json& in_
             if (graph_header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& graph_item : graph_header_item.value().items()) {
                     std::string json_graph_id = graph_item.key();
-
-                    /// XXX: UTF8 conversion required
-                    json_graph_id = megamol::core::utility::Utf8Decode(json_graph_id);
                     if (json_graph_id != GUI_JSON_TAG_PROJECT) {
                         // Otherwise load additonal graph from given file name
                         this->GetGraphCollection().LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);

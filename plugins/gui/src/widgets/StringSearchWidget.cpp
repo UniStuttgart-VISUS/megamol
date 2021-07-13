@@ -46,10 +46,7 @@ bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::
     const float min_width = (50.0f * megamol::gui::gui_scaling.Get());
     width = (width < min_width) ? (min_width) : width;
     ImGui::PushItemWidth(width);
-    /// XXX: UTF8 conversion required
-    this->search_string = megamol::core::utility::Utf8Encode(this->search_string);
     ImGui::InputText("Search", &this->search_string, ImGuiInputTextFlags_AutoSelectAll);
-    this->search_string = megamol::core::utility::Utf8Decode(this->search_string);
     if (ImGui::IsItemActive()) {
         retval = true;
     }

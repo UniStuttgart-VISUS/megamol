@@ -296,9 +296,7 @@ void ParameterList::SpecificStateToJSON(nlohmann::json& inout_json) {
         for (auto& graph_ptr : this->win_configurator_ptr->GetGraphCollection().GetGraphs()) {
             for (auto& module_ptr : graph_ptr->Modules()) {
                 if (module_uid == module_ptr->UID()) {
-                    auto module_name = module_ptr->FullName();
-                    megamol::core::utility::Utf8Encode(module_name);
-                    module_names.emplace_back(module_name);
+                    module_names.emplace_back(module_ptr->FullName());
                 }
             }
         }

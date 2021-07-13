@@ -1090,9 +1090,6 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
             if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& content_item : header_item.value().items()) {
                     std::string json_graph_id = content_item.key();
-
-                    /// XXX: UTF8 conversion required
-                    json_graph_id = megamol::core::utility::Utf8Decode(json_graph_id);
                     if (json_graph_id == GUI_JSON_TAG_PROJECT) {
                         auto graph_state = content_item.value();
 
@@ -1255,9 +1252,7 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
 bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
 
     try {
-        /// XXX: UTF8 conversion required
-        auto name_utf8enc = megamol::core::utility::Utf8Encode(this->name);
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["project_name"] = name_utf8enc;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["project_name"] = this->name;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_parameter_sidebar"] =
             this->gui_show_parameter_sidebar;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["parameter_sidebar_width"] =
@@ -1295,9 +1290,6 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
                             callslot_fullname =
                                 callslot_ptr->GetParentModule()->FullName() + "::" + callslot_ptr->Name();
                         }
-
-                        /// XXX: UTF8 conversion NOT required
-                        /// callslot_fullname = megamol::core::utility::Utf8Encode(callslot_fullname);
                         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT][GUI_JSON_TAG_INTERFACES]
                                   [group_ptr->Name()][interface_label] += callslot_fullname;
                     }
@@ -1431,9 +1423,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                     ImGui::Separator();
                     ImGui::TextDisabled("File Name");
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
-                    /// XXX: UTF8 conversion required
-                    std::string filename_utf8 = megamol::core::utility::Utf8Encode(this->GetFilename());
-                    ImGui::TextUnformatted(filename_utf8.c_str());
+                    ImGui::TextUnformatted(this->GetFilename().c_str());
                     ImGui::PopTextWrapPos();
                 }
 

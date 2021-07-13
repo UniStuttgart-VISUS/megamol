@@ -68,7 +68,7 @@ bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, c
 
     try {
         std::ofstream file;
-        auto filename_path = std::filesystem::u8path(megamol::core::utility::Utf8Encode(filename));
+        auto filename_path = std::filesystem::u8path(filename);
 #ifdef _MSC_VER
         file.open(filename_path.generic_wstring());
 #else
@@ -106,7 +106,7 @@ bool megamol::core::utility::FileUtils::ReadFile(const std::string& filename, st
 
     try {
         std::ifstream file;
-        auto filename_path = std::filesystem::u8path(megamol::core::utility::Utf8Encode(filename));
+        auto filename_path = std::filesystem::u8path(filename);
 #ifdef _MSC_VER
         file.open(filename_path.generic_wstring());
 #else
