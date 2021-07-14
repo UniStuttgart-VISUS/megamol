@@ -101,3 +101,26 @@ jobs:
     displayName: 'Run File Checks'
     inputs:
       filePath: '.ci/check_files.sh'
+
+- job: ClangFormatCheck
+  displayName: 'Run ClangFormat Check'
+  pool:
+    name: 'default'
+    demands:
+    - Agent.OS -equals Linux
+    - cmake
+    - megamol_build_enabled
+  steps:
+  - task: CMake@1
+    displayName: 'CMake Configure'
+    inputs:
+      cmakeArgs: '..'
+  - task: CMake@1
+    displayName: 'CMake run ClangFormat'
+    inputs:
+      cmakeArgs: '--build . --target clangformat_all'
+  - task: Bash@3
+    displayName: 'Check for changes with git'
+    inputs:
+      targetType: 'inline'
+      script: git diff --exit-code

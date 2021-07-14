@@ -327,7 +327,7 @@ void Remote_Service::add_headnode_remote_command(HeadNodeRemoteControl::Command 
 
 void Remote_Service::remote_control_window() {
     auto &gui_window_request_resource = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-    gui_window_request_resource.register_window("Head Node Remote Control", [&](megamol::gui::WindowConfiguration::Basic& window_config) {
+    gui_window_request_resource.register_window("Head Node Remote Control", [&](megamol::gui::AbstractWindow::BasicConfig& window_config) {
         window_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
 
         static bool keep_sending_params = false;
