@@ -51,7 +51,7 @@ namespace gui {
         ~PickableTexture() = default;
 
         bool Draw(unsigned int picking_id, int selected_face_id, int& out_orientation_change, int& out_hovered_arrow_id,
-                  const megamol::core::utility::ManipVector_t& pending_manipulations);
+            const megamol::core::utility::ManipVector_t& pending_manipulations);
 
         megamol::core::utility::InteractVector_t GetInteractions(unsigned int id) const;
 
