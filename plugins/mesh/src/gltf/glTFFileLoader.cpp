@@ -98,9 +98,9 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         bbox[0] = std::numeric_limits<float>::max();
         bbox[1] = std::numeric_limits<float>::max();
         bbox[2] = std::numeric_limits<float>::max();
-        bbox[3] = std::numeric_limits<float>::min();
-        bbox[4] = std::numeric_limits<float>::min();
-        bbox[5] = std::numeric_limits<float>::min();
+        bbox[3] = std::numeric_limits<float>::lowest();
+        bbox[4] = std::numeric_limits<float>::lowest();
+        bbox[5] = std::numeric_limits<float>::lowest();
 
         auto model = m_gltf_model;
 

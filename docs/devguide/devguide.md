@@ -26,7 +26,9 @@ This guide is intended to give MegaMol developers a useful insight into the inte
         - [Adding new external dependencies](#adding-new-external-dependencies) 
           - [Header-only libraries](#header-only-libraries) 
           - [Built libraries](#built-libraries) 
-- [GUI Parameter Widgets](#gui-parameter-widgets)
+- [GUI](#gui)
+    - [Parameter Widgets](#parameter-widgets)
+    - [Window/PopUp/Notification for Frontend Service](#windowpopupnotification-for-frontend-service)
 
 <!-- TODO
 - Add section describing all available LUA commands
@@ -378,6 +380,12 @@ Additionally, information about the libraries can be queried with the command ``
 
 <!-- ###################################################################### -->
 -----
-## GUI Parameter Widgets
+## GUI
 
-See separate [developer information for GUI plugin](../../plugins/gui#information-for-developers).
+### Parameter Widgets
+
+See [developer information for GUI plugin](../../plugins/gui#new-parameter-widgets).
+
+### Window/PopUp/Notification for Frontend Service
+
+See [developer information for GUI plugin](../../plugins/gui#gui-windowpopupnotification-for-frontend-service).

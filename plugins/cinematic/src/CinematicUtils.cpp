@@ -7,12 +7,14 @@
 
 #include "stdafx.h"
 #include "CinematicUtils.h"
+#include "imgui.h"
+#include "imgui_internal.h"
 
 
 using namespace megamol::cinematic;
 
 
-CinematicUtils::CinematicUtils(void) : core::view::RenderUtils()
+CinematicUtils::CinematicUtils(void) : core::utility::RenderUtils()
     , font(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
     , init_once(false)
     , menu_font_size(20.0f)
@@ -182,19 +184,20 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
         auto column_flags = ImGuiTableColumnFlags_WidthStretch;
 
         if (ImGui::Begin("[Cinematic] HOTKEYS", &inout_show, window_flags)) {
-            if (ImGui::CollapsingHeader("  GLOBAL###cinematic_global_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  GLOBAL##cinematic_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_global_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + A", "Apply current settings to selected/new keyframe.");
                     this->gui_table_row("SHIFT + D", "Delete selected keyframe.");
                     this->gui_table_row("SHIFT + S", "Save keyframes to file.");
                     this->gui_table_row("SHIFT + L", "Load keyframes from file.");
-                    this->gui_table_row("SHIFT + Z", "Undo keyframe changes (US Keyboard).");
-                    this->gui_table_row("SHIFT + Y", "Redo keyframe changes (US Keyboard).");
+                    this->gui_table_row("SHIFT + Z", "Undo keyframe changes (QUERTY keyboard layout).");
+                    this->gui_table_row("SHIFT + Y", "Redo keyframe changes (QUERTY keyboard layout).");
+                    this->gui_table_row("LEFT Mouse Button", "Select keyframe or drag manipulator.");
                     ImGui::EndTable();
                 }
             }
-            if (ImGui::CollapsingHeader("  TRACKING SHOT###cinematic_tracking_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  TRACKING SHOT##cinematic_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_tracking_shot_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + Q", "Toggle different manipulators for the selected keyframe.");
@@ -203,7 +206,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     ImGui::EndTable();
                 }
             }
-            if (ImGui::CollapsingHeader("  CINEMATIC###cinematic_cineamtic_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  CINEMATIC##cinematic_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_cinematic_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + R", "Start/Stop rendering complete animation.");
@@ -211,7 +214,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     ImGui::EndTable();
                 }
             }
-            if (ImGui::CollapsingHeader("  TIMELINE###cinematic_timeline_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  TIMELINE##cinematic_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_timeline_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + RIGHT/LEFT Arrow", "Move selected keyframe on animation time axis.");

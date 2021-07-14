@@ -7,39 +7,39 @@
 
 #ifndef MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
 #define MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
+#include "mmcore/utility/RenderUtils.h"
 #include "widgets/HoverToolTip.h"
-
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/RenderUtils.h"
 
 
 namespace megamol {
 namespace gui {
 
 
-    /**
-     * OpenGL implementation of textured image widget.
+    /** ************************************************************************
+     * OpenGL implementation of textured image widget
      */
     class ImageWidget {
     public:
-        ImageWidget(void);
+        ImageWidget();
+        ~ImageWidget() = default;
 
-        ~ImageWidget(void) = default;
-
-        bool IsLoaded(void) {
+        bool IsLoaded() {
             if (this->tex_ptr == nullptr)
                 return false;
             return (this->tex_ptr->getName() != 0); // OpenGL texture id
         }
 
-        bool LoadTextureFromData(int width, int height, float* data) {
-            return megamol::core::view::RenderUtils::LoadTextureFromData(this->tex_ptr, width, height, data);
+        bool LoadTextureFromData(int width, int height, float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
+            GLint tex_max_filter = GL_LINEAR) {
+            return megamol::core::utility::RenderUtils::LoadTextureFromData(
+                this->tex_ptr, width, height, data, tex_min_filter, tex_max_filter);
         }
 
-        bool LoadTextureFromFile(const std::string& filename);
+        bool LoadTextureFromFile(const std::string& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
+            GLint tex_max_filter = GL_LINEAR);
 
         /**
          * Draw texture as simple image.
@@ -49,12 +49,12 @@ namespace gui {
         /**
          * Draw texture as button.
          */
-        bool Button(const std::string& tooltip, ImVec2 size);
+        bool Button(const std::string& tooltip_text, ImVec2 size);
 
         /**
          * Return texture id for external usage.
          */
-        GLuint GetTextureID(void) const {
+        GLuint GetTextureID() const {
             return ((this->tex_ptr != nullptr) ? (this->tex_ptr->getName()) : (0));
         }
 

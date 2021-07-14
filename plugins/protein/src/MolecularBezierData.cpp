@@ -242,19 +242,19 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
                 if (dat.Residues()[aai]->Identifier() != MolecularDataCall::Residue::AMINOACID) continue;
                 unsigned int ca = static_cast<const MolecularDataCall::AminoAcid*>(dat.Residues()[aai])->CAlphaIndex();
 
-                float rad = 0.3f; // Ångström
+                float rad = 0.3f; // Ã…ngstrÃ¶m
                 switch (dat.SecondaryStructures()[ssi].Type()) {
                 case MolecularDataCall::SecStructure::TYPE_HELIX:
-                    rad = 0.4f; // Ångström
+                    rad = 0.4f; // Ã…ngstrÃ¶m
                     break;
                 case MolecularDataCall::SecStructure::TYPE_SHEET:
-                    rad = 0.4f; // Ångström
+                    rad = 0.4f; // Ã…ngstrÃ¶m
                     break;
                 case MolecularDataCall::SecStructure::TYPE_TURN:
-                    rad = 0.2f; // Ångström
+                    rad = 0.2f; // Ã…ngstrÃ¶m
                     break;
                 case MolecularDataCall::SecStructure::TYPE_COIL: // fall through
-                default: rad = 0.3f; // Ångström
+                default: rad = 0.3f; // Ã…ngstrÃ¶m
                 }
 
                 poss.push_back(dat.AtomPositions() + (ca * 3));

@@ -7,23 +7,24 @@
 
 #ifndef MEGAMOL_GUI_HOVERTOOLTIP_INCLUDED
 #define MEGAMOL_GUI_HOVERTOOLTIP_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
+#include <string>
+#include "gui_utils.h"
 
 
 namespace megamol {
 namespace gui {
 
 
-    /**
-     * String search widget.
+    /** ************************************************************************
+     * Hover tooltip widget
      */
     class HoverToolTip {
     public:
-        HoverToolTip(void);
-
-        ~HoverToolTip(void) = default;
+        HoverToolTip();
+        ~HoverToolTip() = default;
 
         /**
          * Draw tooltip on hover.
@@ -42,15 +43,12 @@ namespace gui {
          * @param text   The help tooltip text.
          * @param label  The visible text for which the tooltip is enabled.
          */
-        bool Marker(const std::string& text, std::string label = "(?)");
+        bool Marker(const std::string& text, const std::string& label = "(?)");
 
         /**
          * Reset toopltip time and widget id.
          */
-        inline void Reset(void) {
-            this->tooltip_time = 0.0f;
-            this->tooltip_id = GUI_INVALID_ID;
-        }
+        void Reset();
 
     private:
         // VARIABLES --------------------------------------------------------------

@@ -1,7 +1,7 @@
 /*
  * DateTime.h
  *
- * Copyright (C) 2010 by Christoph Müller. Alle Rechte vorbehalten.
+ * Copyright (C) 2010 by Christoph MÃ¼ller. Alle Rechte vorbehalten.
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  * Copyright (C) 2005 by Christoph Mueller. Alle Rechte vorbehalten.
  */

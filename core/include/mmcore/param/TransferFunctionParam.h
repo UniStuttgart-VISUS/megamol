@@ -17,8 +17,6 @@
 
 #include "vislib/String.h"
 
-#include "json.hpp"
-
 
 #define TFP_VAL_CNT (6)
 
@@ -140,7 +138,7 @@ public:
 
     /**
      * Return texture data for given transfer function JSON string.
-     * 
+     *
      * @param in_tfs          The transfer function JSON string as input.
      * @param out_tex_data    The returned texture data.
      * @param out_width       The returned texture width.

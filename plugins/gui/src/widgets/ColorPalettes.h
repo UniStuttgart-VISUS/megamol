@@ -7,10 +7,12 @@
 
 #ifndef MEGAMOL_GUI_COLORMAPS_INCLUDED
 #define MEGAMOL_GUI_COLORMAPS_INCLUDED
+#pragma once
 
-/**
- * Colormaps by Nathaniel J.Smith, Stefan van der Walt, Eric Firing, and Kenneth Moreland.
- * CC0 license or public domain dedication.
+
+/** ************************************************************************
+ * Colormaps by Nathaniel J.Smith, Stefan van der Walt, Eric Firing, and Kenneth Moreland
+ * CC0 license or public domain dedication
  */
 
 const float CividisColorMap[256][3] = {{0.0000f, 0.1262f, 0.3015f}, {0.0000f, 0.1292f, 0.3077f},

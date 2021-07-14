@@ -23,10 +23,11 @@ This is the plugin that provides the GUI for MegaMol.
     - [OverlayRenderer](#overlayrenderer) 
         - [Parameters](#parameters) 
 - [Information for Developers](#information-for-developers) 
-    - [Using ImGui in Modules](#using-imgui-in-modules) 
+    - [Using ImGui in Modules](#using-imgui-in-modules)
     - [New Parameter Widgets](#new-parameter-widgets) 
         - [How to add a new parameter widget](#how-to-add-a-new-parameter-widget) 
         - [How to add a new parameter group widget](#how-to-add-a-new-parameter-group-widget) 
+    - [GUI Window/PopUp/Notification for Frontend Service](#gui-windowpopupnotification-for-frontend-service)
     - [Default GUI State ](#default-gui-state) 
     - [Graph Data Structure](#graph-data-structure) 
     - [Class Dependencies](#class-dependencies) 
@@ -39,8 +40,6 @@ This is the plugin that provides the GUI for MegaMol.
 The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui) *Version 1.82 (Docking Branch)*.  
 
 See the *Bug and Feature Tracker* [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress. 
-
-**DISCLAIMER: The following descriptions are no longer valid for the old frontend *mmconsole***   
 
 **NOTE**
 * Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considered or recognized. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
@@ -188,7 +187,7 @@ Interface slots are stored in project files as part of the configurators state p
 
 The following hotkeys are used in the GUI plugin:
 
-**Global *(in class GUIWindows)*:**
+**Global *(in class GUIManager)*:**
 * Trigger Screenshot:        **`F2`**
 * Toggle Graph Entry:        **`F3`**
 * Show/hide Windows:         **`F7-F11`**
@@ -213,10 +212,6 @@ The following hotkeys are used in the GUI plugin:
 ## Modules
 
 Additional modules provided by the GUI plugin:
-
-### GUIView
-
-The GUIView module is deprecated. It was required for using the GUI with the former MegaMol frontend provided by mmconsole.exe / mmconsole.sh.
 
 ### OverlayRenderer
 
@@ -299,6 +294,71 @@ The function should be named like: `bool check_group_widget_<NEW_WIDGET_NAME>(..
 * Add a new group widget data set of the type `GroupWidgetData` in the ctor and register above functions as callbacks. 
 * Identification of parameter widget groups. Currently by name of namespace and name and type of expected parameters.
 
+## GUI Window/PopUp/Notification for Frontend Service
+
+In order to register a GUI window, popup or notification within a frontend service, the following steps are required:
+
+- In the **frontend service source file (.cpp)** add the following header:
+
+        #include "GUIRegisterWindow.h"
+
+-  In the **init()** function add `"GUIRegisterWindow"` to `m_requestedResourcesNames` array.
+
+### GUI Window
+- (Optional) In the **frontend service header file (.h)** add a variable for one time window setup:
+
+        bool m_setup_window_once = true;
+
+- Since the registration of a GUI window is only required once, add the following code to the **setRequestedResources()** function. 
+    *Adjust the index in `resources`!*
+
+        auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+        gui_window_request_resource.register_window("TEST Window", [&](megamol::gui::WindowConfiguration::Basic &win_config) {
+            if (m_setup_window_once) {
+                win_config.flags = ImGuiWindowFlags_None;
+                win_config.size = ImVec2(300.0f, 300.0f);
+                win_config.reset_pos_size = true;
+
+                m_setup_window_once = false;
+            }
+
+            // Put your window content here ...
+            ImGui::TextUnformatted("Hello World ...");
+        });
+
+### GUI PopUp
+
+- In the **frontend service header file (.h)** add a variable for opening the popup. If this variable is set to `true`, the popup is opened.
+
+        bool m_open_popup = true;
+
+- Since the registration of a GUI popup is only required once, add the following code to the **setRequestedResources()** function. 
+    *Adjust the index in `resources`!*
+
+        auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+        gui_window_request_resource.register_popup("TEST PopUp", m_open_popup, [&]() {
+
+            // Put your popup content here ...
+            ImGui::TextUnformatted("Hello World ...");
+            if (ImGui::Button("Cancel")) {
+                ImGui::CloseCurrentPopup();
+            }            
+        });
+
+### GUI Notification
+
+- In the **frontend service header file (.h)** add a variable for opening the popup. If this variable is set to `true`, the popup is opened.
+
+        bool m_open_popup = true;
+
+- Since the registration of a GUI notification is only required once, add the following code to the **setRequestedResources()** function. 
+    *Adjust the index in `resources`!*
+
+        auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+        gui_window_request_resource.register_notification("TEST Notification", m_open_popup, "This is the notification ...");
+    
+  **NOTE:** The notification is also printed to the console. If the GUI resource is not available, there will be no console output of this message!
+
 ### Default GUI State 
 
 This is the default GUI state stored as JSON string in the lua project file:
@@ -306,13 +366,9 @@ This is the default GUI state stored as JSON string in the lua project file:
 ```lua
 mmSetGUIVisible(true)
 mmSetGUIScale(1.000000)
-mmSetGUIState([=[{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":true},"GUIState":{"font_file_name":"","font_size":13,"imgui_settings":"[Window][DockSpaceViewport_11111111]\nPos=0,18\nSize=1280,702\nCollapsed=0\n\n[Window][Debug##Default]\nPos=60,60\nSize=400,400\nCollapsed=0\n\n[Window][Parameters     F10]\nPos=0,18\nSize=400,500\nCollapsed=0\n\n[Window][Log Console     F9]\nPos=0,544\nSize=1280,176\nCollapsed=0\n\n[Window][Save Project (.lua)]\nPos=440,110\nSize=400,500\nCollapsed=0\n\n[Docking][Data]\nDockSpace ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,18 Size=1280,702 CentralNode=1\n\n","menu_visible":true,"style":2},"GraphStates":{"Project":{"canvas_scrolling":[0.0,0.0],"canvas_zooming":1.0,"param_extended_mode":false,"parameter_sidebar_width":300.0,"params_readonly":false,"params_visible":true,"project_name":"Project_1","show_call_label":true,"show_call_slots_label":false,"show_grid":false,"show_module_label":true,"show_parameter_sidebar":true,"show_slot_label":false}},"WindowConfigurations":{"Configurator":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[300,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[1280.0,720.0],"win_show":false,"win_size":[1280.0,720.0]},"Log Console":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[298,0],"win_position":[0.0,544.0],"win_reset_position":[0.0,544.0],"win_reset_size":[1280.0,176.0],"win_show":true,"win_size":[1280.0,176.0]},"Parameters":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[299,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,500.0],"win_show":true,"win_size":[400.0,500.0]},"Performance Metrics":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":3,"win_collapsed":false,"win_flags":65,"win_hotkey":[296,0],"win_position":[640.0,0.0],"win_reset_position":[640.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]},"Transfer Function Editor":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[400.0,0.0],"win_reset_position":[400.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]}}}]=])
+mmSetGUIState([=[{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":true},"GUIState":{"font_file_name":"","font_size":13,"imgui_settings":"[Window][Configurator     F11]\nCollapsed=0\nDockId=0x00000004\n\n[Window][Parameters     F10]\nPos=0,18\nSize=639,1422\nCollapsed=0\nDockId=0x00000003,0\n\n[Window][Log Console     F9]\nCollapsed=0\nDockId=0x00000002\n\n[Window][Transfer Function Editor     F8]\nCollapsed=0\nDockId=0x00000003\n\n[Window][DockSpaceViewport_11111111]\nPos=0,18\nSize=2560,1422\nCollapsed=0\n\n[Window][Debug##Default]\nPos=60,60\nSize=400,400\nCollapsed=0\n\n[Window][Save Project (.lua)]\nPos=1080,470\nSize=400,500\nCollapsed=0\n\n[Docking][Data]\nDockSpace     ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,18 Size=2560,1422 Split=Y\n  DockNode    ID=0x00000001 Parent=0x8B93E3BD SizeRef=2560,1078 Split=X\n    DockNode  ID=0x00000003 Parent=0x00000001 SizeRef=639,1078 Selected=0x75D4D3D8\n    DockNode  ID=0x00000004 Parent=0x00000001 SizeRef=1919,1078 CentralNode=1\n  DockNode    ID=0x00000002 Parent=0x8B93E3BD SizeRef=2560,360\n\n","menu_visible":true,"style":2},"GraphStates":{"Project":{"canvas_scrolling":[0.0,0.0],"canvas_zooming":1.0,"param_extended_mode":false,"parameter_sidebar_width":300.0,"params_readonly":false,"params_visible":true,"project_name":"Project_1","show_call_label":true,"show_call_slots_label":false,"show_grid":false,"show_module_label":true,"show_parameter_sidebar":true,"show_slot_label":false}},"WindowConfigurations":{"Configurator":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[300,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[2560.0,1440.0],"win_show":false,"win_size":[2560.0,1440.0]},"Log Console":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[298,0],"win_position":[0.0,1264.0],"win_reset_position":[0.0,1264.0],"win_reset_size":[2560.0,176.0],"win_show":false,"win_size":[2560.0,176.0]},"Parameters":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[299,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,500.0],"win_show":true,"win_size":[639.0,1422.0]},"Performance Metrics":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":3,"win_collapsed":false,"win_flags":2097217,"win_hotkey":[296,0],"win_position":[1280.0,0.0],"win_reset_position":[1280.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]},"Transfer Function Editor":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[400.0,0.0],"win_reset_position":[400.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]}}}]=])
 ```
 
 ### Graph Data Structure
 
 ![gui graph structure](graph_structure.png)
-
-### Class Dependencies
-
-![gui plugin class dependencies](class_dependencies.png)

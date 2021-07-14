@@ -7,16 +7,18 @@
 
 #ifndef MEGAMOL_GUI_DEFAULTSTYLE_INCLUDED
 #define MEGAMOL_GUI_DEFAULTSTYLE_INCLUDED
+#pragma once
 
-#include <imgui.h>
+
+#include "imgui.h"
 
 
-/**
+/** ************************************************************************
  * Default style
  *
  * See imgui.cpp line 953, section: USER FACING STRUCTURES (ImGuiStyle, ImGuiIO)
  */
-inline void DefaultStyle(void) {
+inline void DefaultStyle() {
 
     // Geometry
     ImGuiStyle& style = ImGui::GetStyle();

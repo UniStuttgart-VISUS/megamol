@@ -7,7 +7,7 @@
 
 #pragma once
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/RenderUtils.h"
+#include "mmcore/utility/RenderUtils.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
@@ -18,7 +18,7 @@ using INITFUNC = void(std::shared_ptr<vislib::graphics::gl::FramebufferObject>&,
 
 template<typename FBO>
 using RENFUNC = void(
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject>&, std::shared_ptr<FBO>&, RenderUtils&, int, int);
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject>&, std::shared_ptr<FBO>&, megamol::core::utility::RenderUtils&, int, int);
 
 template<typename CALL, INITFUNC<typename CALL::FBO_TYPE> init_func, RENFUNC<typename CALL::FBO_TYPE> ren_func,
     char const* CN, char const* DESC>
@@ -109,7 +109,7 @@ private:
 
     std::shared_ptr<typename CALL::FBO_TYPE> _framebuffer;
 
-    RenderUtils _utils;
+    megamol::core::utility::RenderUtils _utils;
 
     glm::uvec2 viewport = {0, 0};
 };

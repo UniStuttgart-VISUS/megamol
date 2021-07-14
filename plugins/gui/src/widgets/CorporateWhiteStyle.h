@@ -7,13 +7,14 @@
 
 #ifndef MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED
 #define MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED
+#pragma once
 
-#include <imgui.h>
+
 #include "DefaultStyle.h"
 
 
-/**
- * A "CorporateWhite"-Style.
+/** ************************************************************************
+ * A "CorporateWhite"-Style
  *
  * TODO Complete with more colors
  */

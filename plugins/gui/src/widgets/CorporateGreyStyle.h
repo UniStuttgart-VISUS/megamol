@@ -7,13 +7,14 @@
 
 #ifndef MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED
 #define MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED
+#pragma once
 
-#include <imgui.h>
+
 #include "DefaultStyle.h"
 
 
-/**
- * Slightly modified "CorporateGrey"-Style, as proposed by Aiden Koss.
+/** ************************************************************************
+ * Slightly modified "CorporateGrey"-Style, as proposed by Aiden Koss
  *
  * 0 = FLAT APPEARENCE, 1 = MORE "3D" LOOK
  */

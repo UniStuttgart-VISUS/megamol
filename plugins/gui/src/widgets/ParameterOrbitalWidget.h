@@ -7,11 +7,11 @@
 
 #ifndef MEGAMOL_GUI_PARAMETERORBITALWIDGET_INCLUDED
 #define MEGAMOL_GUI_PARAMETERORBITALWIDGET_INCLUDED
+#pragma once
 
-
-#include "GUIUtils.h"
 
 #define IMGUIZMO_IMGUI_FOLDER
+#include "glm/glm.hpp"
 #include "imGuIZMOquat.h"
 
 
@@ -19,14 +19,13 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * Orbital parameter widget.
+    /** ************************************************************************
+     * Orbital parameter widget
      */
     class ParameterOrbitalWidget {
     public:
-        ParameterOrbitalWidget(void);
-
-        ~ParameterOrbitalWidget(void) = default;
+        ParameterOrbitalWidget();
+        ~ParameterOrbitalWidget() = default;
 
         bool gizmo3D_rotation_axes(glm::vec4& inout_rotation);
         bool gizmo3D_rotation_direction(glm::vec3& inout_direction);

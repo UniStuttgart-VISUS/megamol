@@ -5,15 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
+
 #include "PopUps.h"
+#include "imgui_stdlib.h"
 
 
 using namespace megamol;
 using namespace megamol::gui;
 
 
-PopUps::PopUps(void) : rename_string(), rename_tooltip() {}
+PopUps::PopUps() : rename_string(), rename_tooltip() {}
 
 
 bool megamol::gui::PopUps::Rename(const std::string& label_id, bool open_popup, std::string& rename) {

@@ -9,9 +9,9 @@
 #define MEGAMOL_UTILITY_JSONHELPER_INCLUDED
 
 
-#include<string>
+#include <string>
 
-#include "json.hpp"
+#include <json.hpp>
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/UTF8Encoder.h"
