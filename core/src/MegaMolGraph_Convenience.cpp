@@ -62,8 +62,7 @@ std::string megamol::core::MegaMolGraph_Convenience::SerializeGraph() const {
         serCalls.append("mmCreateCall(\""
             + call.request.className + "\",\""
             + call.request.from + "\",\""
-            + call.request.to + "\",\""
-            + "\")\n");
+            + call.request.to + "\")\n");
     }
 
     return serViews + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
