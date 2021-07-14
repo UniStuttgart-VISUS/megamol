@@ -11,9 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/utility/FileUtils.h"
+
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
+#include <filesystem>
 
 
 namespace megamol {
@@ -27,16 +28,23 @@ namespace param {
     class MEGAMOLCORE_API FilePathParam : public AbstractParam {
     public:
 
-        typedef std::vector<std::string> FilePathExtensions_t;
-        typedef uint FilePathFlags_t;
         enum FilePathFlags_ : uint32_t {
-            Flag_File                 = 1 << 0,
-            Flag_Directory            = 1 << 1,
-            Flag_NoExistenceCheck     = 1 << 2,
-            Flag_NoChange             = 1 << 3,
-            Flag_RestrictedExtensions = 1 << 4,
-            Flag_ToBeCreated          = Flag_NoExistenceCheck | Flag_NoChange
+            Flag_File                           = 1 << 0,
+            Flag_Directory                      = 1 << 1,
+            Flag_NoExistenceCheck               = 1 << 2,
+            Flag_RestrictExtension              = 1 << 3,
+            /// Convenience flags:
+            Flag_File_RestrictExtension         = Flag_File | Flag_RestrictExtension,
+            Flag_File_ToBeCreated               = Flag_File | Flag_NoExistenceCheck,
+            Flag_File_ToBeCreatedWithRestrExts  = Flag_File | Flag_NoExistenceCheck | Flag_RestrictExtension,
+            Flag_Directory_ToBeCreated          = Flag_Directory | Flag_NoExistenceCheck
         };
+
+        typedef uint32_t Flags_t;
+
+        typedef std::vector<std::string> Extensions_t;
+
+        typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&)> RegisterNotificationCallback_t;
 
         /**
          * Ctor.
@@ -45,7 +53,7 @@ namespace param {
          * @param flags The flags for the parameter
          * @param exts The required file extensions for the parameter
          */
-        FilePathParam(const std::string& initVal, FilePathFlags_t flags = Flag_File, FilePathExtensions_t exts = {});
+        FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
 
         /**
          * Dtor.
@@ -83,29 +91,25 @@ namespace param {
         void SetValue(const vislib::TString& v, bool setDirty = true);
 
         /**
-         * Gets the value of the parameter
+         * Gets the value of the parameter utf8 encoded for loading of files.
          *
          * @return The value of the parameter
          */
-        inline vislib::TString Value() const {
-            return vislib::TString(this->value.generic_u8string().c_str());
-        }
+        vislib::TString Value() const;
 
         /**
-         * Returns the value of the parameter as string.
+         * Returns the value of the parameter as utf8 decoded string for storing in project file.
          *
          * @return The value of the parameter as string.
          */
-        vislib::TString ValueString() const override {
-            return vislib::TString(this->value.generic_u8string().c_str());
-        }
+        vislib::TString ValueString() const override;
 
         /**
          * Gets the file path parameter flags
          *
          * @return The flags
          */
-        inline FilePathFlags_t GetFlags() const {
+        inline Flags_t GetFlags() const {
             return this->flags;
         }
 
@@ -114,26 +118,44 @@ namespace param {
          *
          * @return The file extensions
          */
-        inline const FilePathExtensions_t& GetExtensions() const {
+        inline const Extensions_t& GetExtensions() const {
             return this->extensions;
         }
+
+        /**
+         * Register static notifications.
+         */
+        bool RegisterNotifications(const RegisterNotificationCallback_t& pc);
+        // Check if registration is required
+        inline bool RegisterNotifications() const {
+            return !this->registered_notifications;
+        }
+
+        /**
+         * Function checks if path is valid for given flags
+         *
+         * @return Return 0 for success, flags with failed check otherwise.
+         */
+        static Flags_t ValidatePath(const std::filesystem::path& p, const Extensions_t& , Flags_t f);
 
     private:
 
         /** The flags of the parameter */
-        FilePathFlags_t flags;
+        const Flags_t flags;
 
         /** The accepted file extension(s).
          * Leave empty to allow all extensions.
-         * Use with Flag_RestrictedExtensions flag.
+         * Only considered when Flag_RestrictExtension is set.
          */
-        FilePathExtensions_t extensions;
+        const Extensions_t extensions;
 
         /** The file or directory path */
         std::filesystem::path value;
 
-        /** Function checks if setting new file path value is valid depending on given flags */
-        bool valid_change(std::string v);
+        /** Indicates whether notifications are already registered or not (should be done only once) */
+        bool registered_notifications;
+        /** Flags for opening specific notifications */
+        std::map<Flags_t, std::shared_ptr<bool>> open_notification;
     };
 
 

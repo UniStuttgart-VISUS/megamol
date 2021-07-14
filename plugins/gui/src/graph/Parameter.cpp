@@ -232,9 +232,11 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
         this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::FILEPATH): {
-        megamol::core::param::FilePathParam parameter(val_tstr.PeekBuffer());
+        auto file_storage = this->GetStorage<FilePathStorage_t>();
+        megamol::core::param::FilePathParam parameter(val_tstr.PeekBuffer(), file_storage.first, file_storage.second);
         retval = parameter.ParseValue(val_tstr);
-        this->SetValue(std::string(parameter.Value().PeekBuffer()), set_default_val, set_dirty);
+        this->SetValue(std::string(parameter.ValueString().PeekBuffer()), set_default_val,
+            set_dirty); /// Use utf8 encoded value string
     } break;
     case (ParamType_t::FLEXENUM): {
         megamol::core::param::FlexEnumParam parameter(val_str);
@@ -329,6 +331,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param.type = ParamType_t::FILEPATH;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FlexEnumParam>()) {
         out_param.type = ParamType_t::FLEXENUM;
         out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
@@ -472,8 +475,10 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FILEPATH,
-            FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()}), std::monostate(), std::monostate(), param_name, description);
-        out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
+            FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()}), std::monostate(), std::monostate(),
+            param_name, description);
+        out_param->SetValue(std::string(p_ptr->ValueString().PeekBuffer()), set_default_val,
+            set_dirty); /// Use utf8 encoded value string
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found unknown parameter type. Please extend parameter types for the configurator. "
@@ -544,7 +549,10 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         }
     } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FilePathParam>()) {
         if (out_param.type == ParamType_t::FILEPATH) {
-            out_param.SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
+            out_param.SetValue(std::string(p_ptr->ValueString().PeekBuffer()), set_default_val,
+                set_dirty); /// Use utf8 encoded value string
+            auto file_storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
+            out_param.SetStorage(file_storage);
         } else {
             type_error = true;
         }
@@ -700,6 +708,7 @@ bool megamol::gui::Parameter::WriteCoreParameterValue(
     } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::FilePathParam>()) {
         if (in_param.type == ParamType_t::FILEPATH) {
             p_ptr->SetValue(std::get<std::string>(in_param.GetValue()));
+            // Storage can not be changed
         } else {
             type_error = true;
         }
@@ -854,17 +863,17 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                 }
 
                 /// PARAMETER VALUE WIDGET ---------------------------------
+
                 /// DEBUG ImGui::TextUnformatted(this->FullName().c_str());
                 if (this->draw_parameter(scope)) {
                     retval = true;
                 }
-
-                ImGui::SameLine();
-
-                /// POSTFIX ------------------------------------------------
                 if (!ImGui::IsItemActive()) {
                     this->gui_tooltip.ToolTip(this->gui_tooltip_text, ImGui::GetItemID(), 1.0f, 4.0f);
                 }
+
+                /// POSTFIX ------------------------------------------------
+                ImGui::SameLine();
                 this->gui_tooltip.Marker(this->gui_help);
 
                 ImGui::EndGroup();
@@ -1393,11 +1402,8 @@ bool megamol::gui::Parameter::widget_string(
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         ImGui::BeginGroup();
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
-            std::string utf8Str = val;
-            gui_utils::Utf8Encode(utf8Str);
-            this->gui_widget_store = utf8Str;
+            this->gui_widget_store = val;
         }
         std::string hidden_label = "###" + label;
 
@@ -1410,14 +1416,10 @@ bool megamol::gui::Parameter::widget_string(
         ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->gui_widget_store), multiline_size,
             ImGuiInputTextFlags_CtrlEnterForNewLine);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
-            std::string utf8Str = std::get<std::string>(this->gui_widget_store);
-            gui_utils::Utf8Decode(utf8Str);
-            val = utf8Str;
+            val = std::get<std::string>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            std::string utf8Str = val;
-            gui_utils::Utf8Encode(utf8Str);
-            this->gui_widget_store = utf8Str;
+            this->gui_widget_store = val;
         }
         ImGui::SameLine();
 
@@ -1453,16 +1455,11 @@ bool megamol::gui::Parameter::widget_enum(
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        std::string utf8Str = store[val];
-        gui_utils::Utf8Encode(utf8Str);
         auto combo_flags = ImGuiComboFlags_HeightRegular;
-        if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str(), combo_flags)) {
+        if (ImGui::BeginCombo(label.c_str(), store[val].c_str(), combo_flags)) {
             for (auto& pair : store) {
                 bool isSelected = (pair.first == val);
-                utf8Str = pair.second;
-                gui_utils::Utf8Encode(utf8Str);
-                if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
+                if (ImGui::Selectable(pair.second.c_str(), isSelected)) {
                     val = pair.first;
                     retval = true;
                 }
@@ -1480,22 +1477,16 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
             this->gui_widget_store = std::string();
         }
-        std::string utf8Str = val;
-        gui_utils::Utf8Encode(utf8Str);
         auto combo_flags = ImGuiComboFlags_HeightRegular;
-        if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str(), combo_flags)) {
+        if (ImGui::BeginCombo(label.c_str(), val.c_str(), combo_flags)) {
             bool one_present = false;
             for (auto& valueOption : store) {
                 bool isSelected = (valueOption == val);
-                utf8Str = valueOption;
-                gui_utils::Utf8Encode(utf8Str);
-                if (ImGui::Selectable(utf8Str.c_str(), isSelected)) {
-                    gui_utils::Utf8Decode(utf8Str);
-                    val = utf8Str;
+                if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
+                    val = valueOption;
                     retval = true;
                 }
                 if (isSelected) {
@@ -1518,10 +1509,9 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
                 "###flex_enum_text_edit", &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 if (!std::get<std::string>(this->gui_widget_store).empty()) {
-                    gui_utils::Utf8Decode(std::get<std::string>(this->gui_widget_store));
                     val = std::get<std::string>(this->gui_widget_store);
+                    std::get<std::string>(this->gui_widget_store).clear();
                     retval = true;
-                    std::get<std::string>(this->gui_widget_store) = std::string();
                 }
                 ImGui::CloseCurrentPopup();
             }
@@ -1535,18 +1525,15 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
 }
 
 
-bool megamol::gui::Parameter::widget_filepath(
-    megamol::gui::Parameter::WidgetScope scope, const std::string& label, std::string& val, const FilePathStorage_t& store) {
+bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
+    std::string& val, const FilePathStorage_t& store) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         ImGui::BeginGroup();
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
-            std::string utf8Str = val;
-            gui_utils::Utf8Encode(utf8Str);
-            this->gui_widget_store = utf8Str;
+            this->gui_widget_store = val;
         }
         ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1557,27 +1544,22 @@ bool megamol::gui::Parameter::widget_filepath(
 
         ImGui::PushItemWidth(widget_width);
 
-        /// TODO Provide path to file name of parent graph/project
-
-        /// TODO Propagate to fiel browser dialog (Button_Select)
         auto file_flags = store.first;
         auto file_extensions = store.second;
-
-        bool button_edit =
-            this->gui_file_browser.Button_Select({}, std::get<std::string>(this->gui_widget_store), false, "");
+        bool button_edit = this->gui_file_browser.Button_Select(
+            std::get<std::string>(this->gui_widget_store), file_extensions, file_flags);
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
-            gui_utils::Utf8Decode(std::get<std::string>(this->gui_widget_store));
             val = std::get<std::string>(this->gui_widget_store);
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            std::string utf8Str = val;
-            gui_utils::Utf8Encode(utf8Str);
-            this->gui_widget_store = utf8Str;
+            this->gui_widget_store = val;
         }
         ImGui::PopItemWidth();
         ImGui::EndGroup();
+
+        this->gui_tooltip_text += "\n" + std::get<std::string>(this->gui_widget_store);
     }
     return retval;
 }
