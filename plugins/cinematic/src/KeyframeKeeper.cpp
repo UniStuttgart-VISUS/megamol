@@ -143,7 +143,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->editCurrentApertureParam.SetParameter(new param::FloatParam(60.0f, 0.0f, 180.0f));
     this->MakeSlotAvailable(&this->editCurrentApertureParam);
 
-    this->fileNameParam.SetParameter(new param::FilePathParam(this->filename));
+    this->fileNameParam.SetParameter(new param::FilePathParam(this->filename, param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->fileNameParam);
 
     this->saveKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::SHIFT));

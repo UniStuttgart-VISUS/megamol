@@ -87,7 +87,7 @@ OverlayRenderer::OverlayRenderer()
     this->MakeSlotAvailable(&this->paramCustomPosition);
 
     // Texture Mode
-    this->paramFileName << new param::FilePathParam("");
+    this->paramFileName << new param::FilePathParam("", param::FilePathParam::Flag_File, { "png" });
     this->paramFileName.SetUpdateCallback(this, &OverlayRenderer::onTextureFileName);
     this->MakeSlotAvailable(&this->paramFileName);
 
