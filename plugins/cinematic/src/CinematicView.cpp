@@ -101,7 +101,7 @@ CinematicView::CinematicView(void)
     this->delayFirstRenderFrameParam.SetParameter(new param::FloatParam(1.0f));
     this->MakeSlotAvailable(&this->delayFirstRenderFrameParam);
 
-    this->frameFolderParam.SetParameter(new param::FilePathParam(""));
+    this->frameFolderParam.SetParameter(new param::FilePathParam("", param::FilePathParam::Flag_Directory_ToBeCreated));
     this->MakeSlotAvailable(&this->frameFolderParam);
 
     this->addSBSideToNameParam << new param::BoolParam(false);

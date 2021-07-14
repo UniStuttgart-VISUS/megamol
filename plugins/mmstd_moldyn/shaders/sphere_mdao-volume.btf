@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_mdao_volume">
+<btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_mdao-volume">
 
     <shader name="vertex">
         <snippet type="version">150</snippet>

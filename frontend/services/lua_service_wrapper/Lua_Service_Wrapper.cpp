@@ -12,6 +12,7 @@
 
 #include "LuaRemoteConnectionsBroker.h"
 
+#include "vislib/UTF8Encoder.h"
 #include "Screenshots.h"
 #include "FrameStatistics.h"
 #include "WindowManipulation.h"

@@ -83,7 +83,7 @@ bool MDAOVolumeGenerator::Init()
     if (computeAvailable) {
         // Try to initialize the compute shader
         vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet> mipmapSrc;
-        mipmapSrc = this->factory->MakeShaderSnippet("sphere_mdao_mipmap::Compute");
+        mipmapSrc = this->factory->MakeShaderSnippet("sphere_mdao-mipmap::Compute");
         try {
             mipmapShader.Compile(mipmapSrc->PeekCode());
             mipmapShader.Link();
@@ -107,19 +107,19 @@ bool MDAOVolumeGenerator::Init()
     }
     try {
         // Try to make the vertex shader
-        if (!this->factory->MakeShaderSource("sphere_mdao_volume::vertex", vert)) {
+        if (!this->factory->MakeShaderSource("sphere_mdao-volume::vertex", vert)) {
             std::cerr << "[MDAOVolumeGenerator] Error loading vertex shader!" << std::endl;
             return false;
         }
 
         // Try to make the geometry shader
-        if (!this->factory->MakeShaderSource("sphere_mdao_volume::geometry", geom)) {
+        if (!this->factory->MakeShaderSource("sphere_mdao-volume::geometry", geom)) {
             std::cerr << "[MDAOVolumeGenerator] Error loading geometry shader!" << std::endl;
             return false;
         }
 
         // Try to make the fragment shader
-        if (!this->factory->MakeShaderSource("sphere_mdao_volume::fragment", frag)) {
+        if (!this->factory->MakeShaderSource("sphere_mdao-volume::fragment", frag)) {
             std::cerr << "[MDAOVolumeGenerator] Error loading fragment shader!" << std::endl;
             return false;
         }

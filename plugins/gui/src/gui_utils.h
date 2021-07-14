@@ -19,7 +19,6 @@
 #include "mmcore/param/AbstractParamPresentation.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
-#include "vislib/UTF8Encoder.h"
 #include "vislib/math/Ternary.h"
 
 
@@ -204,7 +203,6 @@ namespace gui {
 
     typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;
     typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType_t;
-    typedef std::map<int, std::string> EnumStorage_t;
 
     typedef std::array<float, 5> FontScalingArray_t;
 
@@ -322,28 +320,6 @@ namespace gui {
                 }
             }
             return return_str;
-        }
-
-        /** Decode string from UTF-8. */
-        static bool Utf8Decode(std::string& str) {
-
-            vislib::StringA dec_tmp;
-            if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
-                str = std::string(dec_tmp.PeekBuffer());
-                return true;
-            }
-            return false;
-        }
-
-        /** Encode string into UTF-8. */
-        static bool Utf8Encode(std::string& str) {
-
-            vislib::StringA dec_tmp;
-            if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
-                str = std::string(dec_tmp.PeekBuffer());
-                return true;
-            }
-            return false;
         }
 
         /**

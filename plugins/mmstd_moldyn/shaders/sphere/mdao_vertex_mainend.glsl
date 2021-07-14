@@ -1,5 +1,5 @@
 
-    if (!(bool(flags_enabled)) || (bool(flags_enabled) && bitflag_isVisible(flag))) {
+    if (flag_visible) {
         // Set gl_Position depending on flags
         
         // Clipping

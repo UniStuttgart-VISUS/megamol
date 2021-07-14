@@ -69,37 +69,39 @@ namespace utility {
         // Call only once per frame
         bool DisableInteraction();
 
-        bool ProcessMouseMove(double x, double y);
-
-        bool ProcessMouseClick(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
-                               megamol::core::view::Modifiers mods);
-
+        // Call after EnableInteraction()
         void AddInteractionObject(unsigned int obj_id, std::vector<Interaction> const& interactions) {
             this->available_interactions.insert({obj_id, interactions});
         }
 
-        ManipVector_t& GetPendingManipulations() {
+        const ManipVector_t& GetPendingManipulations() {
             return this->pending_manipulations;
         }
+
+        bool ProcessMouseMove(double x, double y);
+
+        bool ProcessMouseClick(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
+                               megamol::core::view::Modifiers mods);
 
     private:
         // VARIABLES --------------------------------------------------------------
 
         double cursor_x, cursor_y;
         glm::ivec2 viewport_dim;
+        GLint previous_fbo;
 
         /**
          * Set to true if cursor is on interactable object during current frame with respective obj id as second value
          * Set to fale if cursor is on "background" during current frame with -1 as second value
          */
-        std::tuple<bool, int, float> cursor_on_interaction_obj;
+        std::tuple<bool, unsigned int> cursor_on_interaction_obj;
 
         /**
          * Set to true if cursor is on interactable object and mouse interaction (click, move) is ongoing with
          * respective obj id as second value Set to fale if cursor is on "background" during current frame with -1 as
          * second value
          */
-        std::tuple<bool, unsigned int, float> active_interaction_obj;
+        std::tuple<bool, unsigned int> active_interaction_obj;
 
         std::map<unsigned int, std::vector<Interaction>> available_interactions;
         ManipVector_t pending_manipulations;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_mdao_mipmap">
+<btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_mdao-mipmap">
 
     <snippet name="Compute" type="file">sphere/mdao_mipmap_compute_main.glsl</snippet>
 

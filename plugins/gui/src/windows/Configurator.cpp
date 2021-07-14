@@ -9,7 +9,6 @@
 #include "Configurator.h"
 
 
-using namespace megamol;
 using namespace megamol::gui;
 
 
@@ -168,9 +167,10 @@ void megamol::gui::Configurator::PopUps() {
     if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
         project_filename = graph_ptr->GetFilename();
     }
-    if (this->file_browser.PopUp_Load("Load Project", {"lua"}, this->open_popup_load, project_filename)) {
+    if (this->file_browser.PopUp_Load("Load Project", project_filename, this->open_popup_load, {"lua"},
+            megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
 
-        popup_failed = this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
+        popup_failed = !this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
     PopUps::Minimal("Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
@@ -500,10 +500,9 @@ void megamol::gui::Configurator::SpecificStateToJSON(nlohmann::json& inout_json)
             if (graph_ptr->IsRunning()) {
                 graph_ptr->StateToJSON(inout_json);
             } else {
-                std::string filename = graph_ptr->GetFilename();
-                gui_utils::Utf8Encode(filename);
-                if (!filename.empty()) {
-                    inout_json[GUI_JSON_TAG_GRAPHS][filename] = nlohmann::json::object();
+                auto graph_filename = graph_ptr->GetFilename();
+                if (!graph_filename.empty()) {
+                    inout_json[GUI_JSON_TAG_GRAPHS][graph_filename] = nlohmann::json::object();
                 }
             }
         }
@@ -568,7 +567,6 @@ void megamol::gui::Configurator::SpecificStateFromJSON(const nlohmann::json& in_
             if (graph_header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& graph_item : graph_header_item.value().items()) {
                     std::string json_graph_id = graph_item.key();
-                    gui_utils::Utf8Decode(json_graph_id);
                     if (json_graph_id != GUI_JSON_TAG_PROJECT) {
                         // Otherwise load additonal graph from given file name
                         this->GetGraphCollection().LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
