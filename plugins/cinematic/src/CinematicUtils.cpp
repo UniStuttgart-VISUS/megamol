@@ -288,7 +288,7 @@ const float CinematicUtils::lightness(glm::vec4 background) const {
 
 void megamol::cinematic::CinematicUtils::gui_update(void) {
 
-    this->menu_font_size   = ImGui::GetFontSize() * 1.5f;
+    this->menu_font_size = ImGui::GetFontSize() * 1.5f;
     this->menu_height = this->menu_font_size; // +ImGui::GetFrameHeightWithSpacing();
 }
 
