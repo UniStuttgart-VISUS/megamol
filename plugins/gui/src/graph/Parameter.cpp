@@ -235,7 +235,8 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
         auto file_storage = this->GetStorage<FilePathStorage_t>();
         megamol::core::param::FilePathParam parameter(val_tstr.PeekBuffer(), file_storage.first, file_storage.second);
         retval = parameter.ParseValue(val_tstr);
-        this->SetValue(std::string(parameter.ValueString().PeekBuffer()), set_default_val, set_dirty);  /// Use utf8 encoded value string
+        this->SetValue(std::string(parameter.ValueString().PeekBuffer()), set_default_val,
+            set_dirty); /// Use utf8 encoded value string
     } break;
     case (ParamType_t::FLEXENUM): {
         megamol::core::param::FlexEnumParam parameter(val_str);
@@ -476,7 +477,8 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FILEPATH,
             FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()}), std::monostate(), std::monostate(),
             param_name, description);
-        out_param->SetValue(std::string(p_ptr->ValueString().PeekBuffer()), set_default_val, set_dirty);  /// Use utf8 encoded value string
+        out_param->SetValue(std::string(p_ptr->ValueString().PeekBuffer()), set_default_val,
+            set_dirty); /// Use utf8 encoded value string
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found unknown parameter type. Please extend parameter types for the configurator. "
@@ -547,7 +549,8 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         }
     } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FilePathParam>()) {
         if (out_param.type == ParamType_t::FILEPATH) {
-            out_param.SetValue(std::string(p_ptr->ValueString().PeekBuffer()), set_default_val, set_dirty);  /// Use utf8 encoded value string
+            out_param.SetValue(std::string(p_ptr->ValueString().PeekBuffer()), set_default_val,
+                set_dirty); /// Use utf8 encoded value string
             auto file_storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
             out_param.SetStorage(file_storage);
         } else {
