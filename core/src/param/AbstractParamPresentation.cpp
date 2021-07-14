@@ -12,7 +12,7 @@
 using namespace megamol::core::param;
 
 
-const std::string AbstractParamPresentation::GetTypeName(ParamType type) {
+std::string AbstractParamPresentation::GetTypeName(ParamType type) {
     switch (type) {
     case(ParamType::BOOL): return "BoolParam";
     case(ParamType::BUTTON): return "ButtonParam";

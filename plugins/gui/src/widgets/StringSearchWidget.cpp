@@ -8,6 +8,7 @@
 
 #include "StringSearchWidget.h"
 #include "imgui_stdlib.h"
+#include "mmcore/utility/FileUtils.h"
 
 
 using namespace megamol;
@@ -45,10 +46,7 @@ bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::
     const float min_width = (50.0f * megamol::gui::gui_scaling.Get());
     width = (width < min_width) ? (min_width) : width;
     ImGui::PushItemWidth(width);
-    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-    gui_utils::Utf8Encode(this->search_string);
     ImGui::InputText("Search", &this->search_string, ImGuiInputTextFlags_AutoSelectAll);
-    gui_utils::Utf8Decode(this->search_string);
     if (ImGui::IsItemActive()) {
         retval = true;
     }

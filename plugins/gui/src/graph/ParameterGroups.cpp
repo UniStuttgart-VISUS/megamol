@@ -71,6 +71,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
                 found_group_widget = true;
                 group_widget_data->SetActive(true);
                 ImGui::PushID(group_widget_data->GetName().c_str());
+
                 if (in_scope == Parameter::WidgetScope::LOCAL) {
                     // LOCAL
 

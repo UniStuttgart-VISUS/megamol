@@ -15,25 +15,15 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "RenderUtils.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/utility/ResourceWrapper.h"
-
+#include "mmcore/utility/RenderUtils.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/CharTraits.h"
-#include "vislib/UTF8Encoder.h"
-
 #include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtx/quaternion.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <fstream>
 
-#define SDFFONT_DEPRECATED_DRAWSTRING [[DEPRECATED("Use DrawString version providing explicit matrices!")]]
 
 namespace megamol {
 namespace core {

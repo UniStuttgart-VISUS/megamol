@@ -17,7 +17,6 @@
 #include "windows/PerformanceMonitor.h"
 
 
-using namespace megamol;
 using namespace megamol::gui;
 
 
@@ -51,10 +50,7 @@ GUIManager::GUIManager()
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
-    if (this->win_configurator_ptr == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[GUI] BUG - Failed to get shortcut pointer to configurator.");
-    }
+    assert(this->win_configurator_ptr != nullptr);
 
     this->init_state();
 }
@@ -453,13 +449,15 @@ bool GUIManager::PostDraw() {
         this->gui_state.font_load--;
     } else if (this->gui_state.font_load == 1) {
         bool load_success = false;
+
         if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
                 this->gui_state.font_load_filename, std::string("ttf"))) {
+
             ImFontConfig config;
             config.OversampleH = 4;
             config.OversampleV = 4;
             config.GlyphRanges = this->gui_state.font_utf8_ranges.data();
-            gui_utils::Utf8Encode(this->gui_state.font_load_filename);
+
             if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_filename.c_str(),
                     static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
                 bool font_api_load_success = false;
@@ -478,27 +476,30 @@ bool GUIManager::PostDraw() {
                     load_success = true;
                 }
             }
-            gui_utils::Utf8Decode(this->gui_state.font_load_filename);
+            if (!load_success) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[GUI] Unable to load font from file '%s' with size %d. [%s, %s, line %d]\n",
+                    this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
+                    __LINE__);
+            }
         } else if ((!this->gui_state.font_load_filename.empty()) &&
                    (this->gui_state.font_load_filename != "<unknown>")) {
             std::string imgui_font_string =
                 this->gui_state.font_load_filename + ", " + std::to_string(this->gui_state.font_load_size) + "px";
             for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < (io.Fonts->Fonts.Size); n++) {
                 std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
-                gui_utils::Utf8Decode(font_name);
                 if (font_name == imgui_font_string) {
                     io.FontDefault = io.Fonts->Fonts[n];
                     load_success = true;
                 }
             }
+            if (!load_success) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[GUI] Unable to load font '%s' by name with size %d. [%s, %s, line %d]\n",
+                    this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
+                    __LINE__);
+            }
         }
-        // if (!load_success) {
-        //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        //        "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
-        //        "loaded with predefined size 13). [%s, %s, line %d]\n",
-        //        this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
-        //        __LINE__);
-        //}
         this->gui_state.font_load = 0;
     }
 
@@ -612,16 +613,16 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
             if (hotkeyPressed) {
                 break;
             }
-            for (auto& param : module_ptr->Parameters()) {
-                if (param.Type() == ParamType_t::BUTTON) {
-                    auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
+            for (auto& p : module_ptr->Parameters()) {
+                if (p.Type() == ParamType_t::BUTTON) {
+                    auto keyCode = p.GetStorage<megamol::core::view::KeyCode>();
                     if (this->is_hotkey_pressed(keyCode)) {
                         // Sync directly button action to parameter in core
                         /// Does not require syncing of graphs
-                        if (param.CoreParamPtr() != nullptr) {
-                            param.CoreParamPtr()->setDirty();
+                        if (p.CoreParamPtr() != nullptr) {
+                            p.CoreParamPtr()->setDirty();
                         }
-                        /// param.ForceSetValueDirty();
+                        /// p.ForceSetValueDirty();
                         hotkeyPressed = true;
                     }
                 }
@@ -767,7 +768,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
 
     bool synced = false;
     bool sync_success = false;
-    GraphPtr_t graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph();
+    auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph();
     // 2a) Either synchronize GUI Graph -> Core Graph ... ---------------------
     if (!synced && (graph_ptr != nullptr)) {
         bool graph_sync_success = true;
@@ -839,7 +840,11 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                 }
                 // Load GUI state from project file when project file changed
                 if (!script_filename.empty()) {
-                    synced_graph_ptr->SetFilename(script_filename, false);
+                    auto script_path = script_filename;
+#ifdef _MSC_VER
+                    script_path = megamol::core::utility::Utf8Encode(script_path);
+#endif
+                    synced_graph_ptr->SetFilename(script_path, false);
                 }
             }
         }
@@ -849,12 +854,13 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
 
     // 3) Synchronize parameter values -------------------------------------------
     if (graph_ptr != nullptr) {
+
         bool param_sync_success = true;
         for (auto& module_ptr : graph_ptr->Modules()) {
-            for (auto& param : module_ptr->Parameters()) {
+            for (auto& p : module_ptr->Parameters()) {
 
                 // Try to connect gui parameters to newly created parameters of core modules
-                if (param.CoreParamPtr().IsNull()) {
+                if (p.CoreParamPtr().IsNull()) {
                     auto module_name = module_ptr->FullName();
                     megamol::core::Module* core_module_ptr = nullptr;
                     core_module_ptr = megamol_graph.FindModule(module_name).get();
@@ -876,7 +882,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                         }
                     }
 #ifdef GUI_VERBOSE
-                    if (param.CoreParamPtr().IsNull()) {
+                    if (p.CoreParamPtr().IsNull()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] Unable to connect core parameter to gui parameter. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
@@ -884,22 +890,34 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
 #endif // GUI_VERBOSE
                 }
 
-                if (!param.CoreParamPtr().IsNull()) {
+                if (!p.CoreParamPtr().IsNull()) {
+                    // Register (new) parameter notifications from file path params
+                    if (p.Type() == ParamType_t::FILEPATH) {
+                        if (auto* p_ptr = p.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
+                            if (p_ptr->RegisterNotifications()) {
+                                p_ptr->RegisterNotifications([&, this](const std::string& id, std::weak_ptr<bool> open,
+                                                                 const std::string& message) {
+                                    const auto notification_name =
+                                        std::string("Parameter: ") + p.FullNameProject() + "##" + id;
+                                    this->notification_collection[notification_name] =
+                                        std::tuple<std::weak_ptr<bool>, bool, std::string>(open, false, message);
+                                });
+                            }
+                        }
+                    }
                     // Write changed gui state to core parameter
-                    if (param.IsGUIStateDirty()) {
-                        param_sync_success &=
-                            megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.CoreParamPtr());
-                        param.ResetGUIStateDirty();
+                    if (p.IsGUIStateDirty()) {
+                        param_sync_success &= megamol::gui::Parameter::WriteCoreParameterGUIState(p, p.CoreParamPtr());
+                        p.ResetGUIStateDirty();
                     }
                     // Write changed parameter value to core parameter
-                    if (param.IsValueDirty()) {
-                        param_sync_success &=
-                            megamol::gui::Parameter::WriteCoreParameterValue(param, param.CoreParamPtr());
-                        param.ResetValueDirty();
+                    if (p.IsValueDirty()) {
+                        param_sync_success &= megamol::gui::Parameter::WriteCoreParameterValue(p, p.CoreParamPtr());
+                        p.ResetValueDirty();
                     }
                     // Read current parameter value and GUI state fro core parameter
-                    param_sync_success &= megamol::gui::Parameter::ReadCoreParameterToParameter(
-                        param.CoreParamPtr(), param, false, false);
+                    param_sync_success &=
+                        megamol::gui::Parameter::ReadCoreParameterToParameter(p.CoreParamPtr(), p, false, false);
                 }
             }
         }
@@ -1231,7 +1249,7 @@ void GUIManager::draw_menu() {
 
     // SCREENSHOT -------------------------------------------------------------
     if (ImGui::BeginMenu("Screenshot")) {
-        if (ImGui::MenuItem("Select Filename", this->gui_state.screenshot_filepath.c_str())) {
+        if (ImGui::MenuItem("Select File Name", this->gui_state.screenshot_filepath.c_str())) {
             this->gui_state.open_popup_screenshot = true;
         }
         if (ImGui::MenuItem("Trigger", this->hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
@@ -1245,10 +1263,11 @@ void GUIManager::draw_menu() {
     if (ImGui::BeginMenu("Projects")) {
         for (auto& graph_ptr : this->win_configurator_ptr->GetGraphCollection().GetGraphs()) {
 
-            if (ImGui::BeginMenu(graph_ptr->Name().c_str())) {
+            const std::string label_id = "##" + std::to_string(graph_ptr->UID());
+            if (ImGui::BeginMenu((graph_ptr->Name() + label_id).c_str())) {
 
                 bool running = graph_ptr->IsRunning();
-                std::string button_label = "graph_running_button" + std::to_string(graph_ptr->UID());
+                std::string button_label = "graph_running_button" + label_id;
                 if (megamol::gui::ButtonWidgets::OptionButton(
                         button_label, ((running) ? ("Running") : ("Run")), running, running)) {
                     if (!running) {
@@ -1357,23 +1376,27 @@ void GUIManager::draw_menu() {
             }
 
             ImGui::BeginGroup();
+
             float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
             ImGui::PushItemWidth(widget_width);
-            this->file_browser.Button_Select({"ttf"}, this->gui_state.font_load_filename, true);
+
+            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"},
+                megamol::core::param::FilePathParam::Flag_File_RestrictExtension);
             ImGui::SameLine();
-            gui_utils::Utf8Encode(this->gui_state.font_load_filename);
             ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_load_filename, ImGuiInputTextFlags_None);
-            gui_utils::Utf8Decode(this->gui_state.font_load_filename);
             ImGui::PopItemWidth();
             // Validate font file before offering load button
             bool valid_file = megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
                 this->gui_state.font_load_filename, std::string("ttf"));
+
             if (!valid_file) {
                 megamol::gui::gui_utils::PushReadOnly();
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             if (ImGui::Button("Add Font")) {
                 this->gui_state.font_load = 1;
+                // Close menu
+                ImGui::CloseCurrentPopup();
             }
             if (!valid_file) {
                 ImGui::PopItemFlag();
@@ -1431,13 +1454,17 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // Externally registered pop-ups
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
-    for (auto& popup_map : this->popup_collection) {
-        if ((*popup_map.second.first)) {
-            ImGui::OpenPopup(popup_map.first.c_str());
-            (*popup_map.second.first) = false;
+    for (auto it = this->popup_collection.begin(); it != this->popup_collection.end(); it++) {
+        if (it->second.first.expired() || (it->second.first.lock() == nullptr)) {
+            this->popup_collection.erase(it);
+            break;
         }
-        if (ImGui::BeginPopupModal(popup_map.first.c_str(), nullptr, popup_flags)) {
-            popup_map.second.second();
+        if (*(it->second.first.lock())) {
+            *(it->second.first.lock()) = false;
+            ImGui::OpenPopup(it->first.c_str());
+        }
+        if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
+            it->second.second();
             if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 ImGui::CloseCurrentPopup();
             }
@@ -1446,15 +1473,19 @@ void megamol::gui::GUIManager::draw_popups() {
     }
 
     // Externally registered notifications
-    for (auto& popup_map : this->notification_collection) {
-        if (!std::get<1>(popup_map.second) && (*std::get<0>(popup_map.second))) {
-            ImGui::OpenPopup(popup_map.first.c_str());
-            (*std::get<0>(popup_map.second)) = false;
-            // Mirror message in console log with info level
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(std::get<2>(popup_map.second).c_str());
+    for (auto it = this->notification_collection.begin(); it != this->notification_collection.end(); it++) {
+        if (std::get<0>(it->second).expired() || std::get<0>(it->second).lock() == nullptr) {
+            this->notification_collection.erase(it);
+            break;
         }
-        if (ImGui::BeginPopupModal(popup_map.first.c_str(), nullptr, popup_flags)) {
-            ImGui::TextUnformatted(std::get<2>(popup_map.second).c_str());
+        if (*std::get<0>(it->second).lock()) {
+            (*std::get<0>(it->second).lock()) = false;
+            if (!std::get<1>(it->second)) {
+                ImGui::OpenPopup(it->first.c_str());
+            }
+        }
+        if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
+            ImGui::TextUnformatted(std::get<2>(it->second).c_str());
             bool close = false;
             if (ImGui::Button("Ok")) {
                 close = true;
@@ -1463,7 +1494,7 @@ void megamol::gui::GUIManager::draw_popups() {
             if (ImGui::Button("Ok - Disable further notifications.")) {
                 close = true;
                 // Disable further notifications
-                std::get<1>(popup_map.second) = true;
+                std::get<1>(it->second) = true;
             }
             if (close || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 ImGui::CloseCurrentPopup();
@@ -1543,8 +1574,8 @@ void megamol::gui::GUIManager::draw_popups() {
         auto filename = graph_ptr->GetFilename();
         auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
         bool popup_failed = false;
-        if (this->file_browser.PopUp_Save(
-                "Save Project", {"lua"}, this->gui_state.open_popup_save, filename, save_gui_state)) {
+        if (this->file_browser.PopUp_Save("Save Running Project", filename, this->gui_state.open_popup_save, {"lua"},
+                megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
             std::string state_str;
             if (save_gui_state.IsTrue()) {
                 state_str = this->project_to_lua_string(true);
@@ -1560,7 +1591,8 @@ void megamol::gui::GUIManager::draw_popups() {
     // Load project pop-up
     std::string filename;
     this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp_Load("Load Project", {"lua", "png"}, this->gui_state.open_popup_load, filename)) {
+    if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load, {"lua", "png"},
+            megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
@@ -1569,8 +1601,9 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // File name for screenshot pop-up
     auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-    if (this->file_browser.PopUp_Save("Filename for Screenshot", {"png"}, this->gui_state.open_popup_screenshot,
-            this->gui_state.screenshot_filepath, tmp_flag)) {
+    if (this->file_browser.PopUp_Save("File Name for Screenshot", this->gui_state.screenshot_filepath,
+            this->gui_state.open_popup_screenshot, {"png"},
+            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
 }
@@ -1747,12 +1780,9 @@ bool megamol::gui::GUIManager::state_to_string(std::string& out_state) {
         out_state.clear();
         nlohmann::json json_state;
 
-        // Write GUI state
         json_state[GUI_JSON_TAG_GUI]["menu_visible"] = this->gui_state.menu_visible;
         json_state[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->gui_state.style);
-        gui_utils::Utf8Encode(this->gui_state.font_load_filename);
         json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->gui_state.font_load_filename;
-        gui_utils::Utf8Decode(this->gui_state.font_load_filename);
         json_state[GUI_JSON_TAG_GUI]["font_size"] = this->gui_state.font_load_size;
         json_state[GUI_JSON_TAG_GUI]["imgui_settings"] = this->save_imgui_settings_to_string();
 
@@ -1817,16 +1847,17 @@ void GUIManager::RegisterWindow(
 }
 
 
-void GUIManager::RegisterPopUp(const std::string& name, bool& open, const std::function<void()>& callback) {
+void GUIManager::RegisterPopUp(
+    const std::string& name, std::weak_ptr<bool> open, const std::function<void()>& callback) {
 
     this->popup_collection[name] =
-        std::pair<bool*, std::function<void()>>(&open, const_cast<std::function<void()>&>(callback));
+        std::pair<std::weak_ptr<bool>, std::function<void()>>(open, const_cast<std::function<void()>&>(callback));
 }
 
 
-void GUIManager::RegisterNotification(const std::string& name, bool& open, const std::string& message) {
+void GUIManager::RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message) {
 
-    this->notification_collection[name] = std::tuple<bool*, bool, std::string>(&open, false, message);
+    this->notification_collection[name] = std::tuple<std::weak_ptr<bool>, bool, std::string>(open, false, message);
 }
 
 
