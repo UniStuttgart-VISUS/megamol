@@ -338,6 +338,10 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
             ImGui::EndPopup();
         }
 
+    } catch (std::filesystem::filesystem_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -464,28 +468,40 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
 
 std::string FileBrowserWidget::get_parent_path(const std::string& dir) const {
 
-    auto retdir = this->get_absolute_path(dir);
-    auto parent_dir = std::filesystem::u8path(retdir);
-    if (parent_dir.has_parent_path() && parent_dir.has_relative_path()) {
-        retdir = parent_dir.parent_path().generic_u8string();
+    try {
+        auto retdir = this->get_absolute_path(dir);
+        auto parent_dir = std::filesystem::u8path(retdir);
+        if (parent_dir.has_parent_path() && parent_dir.has_relative_path()) {
+            retdir = parent_dir.parent_path().generic_u8string();
+        }
+        return retdir;
+    } catch (std::filesystem::filesystem_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return std::string();
     }
-    return retdir;
 }
 
 
 std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string& dir) const {
 
-    auto retval = std::filesystem::u8path(dir);
-    if ((retval.generic_u8string() == "..") || (retval.generic_u8string() == ".")) {
-        retval = absolute(retval);
+    try {
+        auto retval = std::filesystem::u8path(dir);
+        if ((retval.generic_u8string() == "..") || (retval.generic_u8string() == ".")) {
+            retval = absolute(retval);
 #if (_MSC_VER < 1916) /// XXX Fixed/No more required since VS 2019
-        if (retval.has_parent_path()) {
-            retval = retval.parent_path();
-            if ((retval.generic_u8string() == "..") && retval.has_parent_path()) {
+            if (retval.has_parent_path()) {
                 retval = retval.parent_path();
+                if ((retval.generic_u8string() == "..") && retval.has_parent_path()) {
+                    retval = retval.parent_path();
+                }
             }
-        }
 #endif // _MSC_VER > 1916
+        }
+        return retval.generic_u8string();
+    } catch (std::filesystem::filesystem_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return std::string();
     }
-    return retval.generic_u8string();
 }

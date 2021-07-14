@@ -150,16 +150,25 @@ namespace utility {
             if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
                 return true;
             }
-        } catch (...) {}
+        } catch (std::filesystem::filesystem_error const& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        }
         return false;
     }
 
 
     template<typename T>
     bool megamol::core::utility::FileUtils::FileWithExtensionExists(const T& path_str, const std::string& ext) {
-        if (FileUtils::FileExists<T>(path_str)) {
-            auto path = std::filesystem::u8path(path_str);
-            return (path.extension().generic_u8string() == std::string("." + ext));
+        try {
+            if (FileUtils::FileExists<T>(path_str)) {
+                auto path = std::filesystem::u8path(path_str);
+                return (path.extension().generic_u8string() == std::string("." + ext));
+            }
+        }
+        catch (std::filesystem::filesystem_error const& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         }
         return false;
     }
@@ -174,27 +183,41 @@ namespace utility {
 
     template<typename T>
     std::string megamol::core::utility::FileUtils::GetFilenameStem(const T& path_str) {
-        auto path = std::filesystem::u8path(path_str);
-        std::string filename;
-        if (path.has_stem()) {
-            filename = path.stem().generic_u8string();
+        try {
+            auto path = std::filesystem::u8path(path_str);
+            std::string filename;
+            if (path.has_stem()) {
+                filename = path.stem().generic_u8string();
+            }
+            return filename;
         }
-        return filename;
+        catch (std::filesystem::filesystem_error const& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            return std::string();
+        }
     }
 
 
     template<typename T, typename S>
     std::string megamol::core::utility::FileUtils::SearchFileRecursive(const T& search_path_str, const S& search_file_str) {
-        auto search_path = std::filesystem::u8path(search_path_str);
-        auto file_path = std::filesystem::u8path(search_file_str);
-        std::string found_path;
-        for (const auto& entry : std::filesystem::recursive_directory_iterator(search_path)) {
-            if (entry.path().filename() == file_path) {
-                found_path = entry.path().generic_u8string();
-                break;
+        try {
+            auto search_path = std::filesystem::u8path(search_path_str);
+            auto file_path = std::filesystem::u8path(search_file_str);
+            std::string found_path;
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(search_path)) {
+                if (entry.path().filename() == file_path) {
+                    found_path = entry.path().generic_u8string();
+                    break;
+                }
             }
+            return found_path;
         }
-        return found_path;
+        catch (std::filesystem::filesystem_error const& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        }
+        return std::string();
     }
 
 
