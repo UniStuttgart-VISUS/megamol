@@ -53,8 +53,8 @@ namespace optix_hpg {
 
             const Ray ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
 
-            /*const float2 tmp_bary = optixGetTriangleBarycentrics();
-            const glm::vec2 bary = glm::vec2(tmp_bary.x, tmp_bary.y);*/
+            const float2 tmp_bary = optixGetTriangleBarycentrics();
+            const glm::vec3 bary = glm::vec3(1.0f - tmp_bary.x - tmp_bary.y, tmp_bary.x, tmp_bary.y);
             const glm::uvec3 indices = self.index_buffer[primID];
             const glm::vec3 v0 = self.vertex_buffer[indices.x];
             const glm::vec3 v1 = self.vertex_buffer[indices.y];
@@ -75,6 +75,30 @@ namespace optix_hpg {
             }*/
 
             glm::vec3 geo_col = glm::vec3(1.f, 1.f, 0.f);
+            if (self.got_color) {
+                // glm::vec3 geo_col = glm::vec3(1.f, 1.f, 0.f);
+                auto const geo_col_a = glm::vec3(self.color_buffer[indices.x]);
+                auto const geo_col_b = glm::vec3(self.color_buffer[indices.y]);
+                auto const geo_col_c = glm::vec3(self.color_buffer[indices.z]);
+                geo_col = bary.x * geo_col_a + bary.y * geo_col_b + bary.z * geo_col_c;
+            }
+
+            if (prd.countEmitted) {
+                for (int i = 0; i < self.num_events; ++i) {
+                    auto const event_pos = self.event_buffer[i];
+                    auto const event_fid = event_pos.w;
+                    //if (fabsf(event_fid-(float)(self.frame_id)) > 12.f)
+                    if (event_fid > (float) self.frame_id + 0.5f || event_fid < (float) self.frame_id - 0.5f)
+                        continue;
+                    auto const mean = static_cast<float>(self.time_slice) / 12.f * self.max_rad;
+                    //auto const a1 = glm::dot(glm::vec3(event_pos) - P, -ray.direction);
+                    auto const fac = gauss(glm::vec3(event_pos), P, mean, self.thickness);
+                    // printf("test %f\n", fac);
+                    if (!isnan(fac))
+                        geo_col += fac * glm::vec3(1.f, 0.f, 0.f);
+                }
+                prd.primID = primID;
+            }
 
             set_depth(prd, ray.tmax);
             lighting(prd, geo_col, P, ffN);
@@ -82,6 +106,14 @@ namespace optix_hpg {
 
         MM_OPTIX_CLOSESTHIT_KERNEL(mesh_closesthit_occlusion)() {
             optixSetPayload_0(1);
+        }
+
+        MM_OPTIX_CLOSESTHIT_KERNEL(mesh_closesthit_picking)() {
+            const int primID = optixGetPrimitiveIndex();
+            optixSetPayload_0(primID);
+            /*const auto& self = getProgramData<MeshGeoData>();
+            const glm::uvec3 indices = self.index_buffer[primID];
+            printf("index: %d %d %d\n", indices.x, indices.y, indices.z);*/
         }
     } // namespace device
 } // namespace optix_hpg

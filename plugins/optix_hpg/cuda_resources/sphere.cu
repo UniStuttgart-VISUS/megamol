@@ -144,6 +144,15 @@ namespace optix_hpg {
             // primBounds.lower.x, primBounds.lower.y, primBounds.lower.z, primBounds.upper.x, primBounds.upper.y,
             // primBounds.upper.z);
         }
+
+        MM_OPTIX_CLOSESTHIT_KERNEL(sphere_closesthit_picking)() {
+            const int primID = optixGetPrimitiveIndex();
+            optixSetPayload_0(primID);
+            /*const auto& self = getProgramData<MeshGeoData>();
+            const glm::uvec3 indices = self.index_buffer[primID];
+            printf("index: %d %d %d\n", indices.x, indices.y, indices.z);*/
+            //printf("picked id %d", primID);
+        }
     } // namespace device
 } // namespace optix_hpg
 } // namespace megamol

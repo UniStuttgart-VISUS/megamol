@@ -8,8 +8,8 @@ namespace megamol {
 namespace optix_hpg {
     namespace device {
         struct TransitionCalculatorData {
-            unsigned int* mesh_inbound_ctr_ptr;
-            unsigned int* mesh_outbound_ctr_ptr;
+            int* mesh_inbound_ctr_ptr;
+            int* mesh_outbound_ctr_ptr;
             unsigned char* ray_state;
 
             glm::uvec3* index_buffer;

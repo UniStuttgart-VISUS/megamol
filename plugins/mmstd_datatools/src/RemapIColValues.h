@@ -41,9 +41,9 @@ namespace datatools {
         core::CallerSlot inIColValuesSlot;
         core::CallerSlot inParticleMapSlot;
 
-        size_t dataHash;
-        size_t inIColHash;
-        size_t inMapHash;
+        size_t dataHash = std::numeric_limits<size_t>::max();
+        size_t inIColHash = std::numeric_limits<size_t>::max();
+        size_t inMapHash = std::numeric_limits<size_t>::max();
         size_t outDataHash;
         unsigned int frameId;
         std::vector<float> col;

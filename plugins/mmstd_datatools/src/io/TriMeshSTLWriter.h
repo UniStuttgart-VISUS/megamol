@@ -8,7 +8,7 @@
 #define MEGAMOL_DATATOOLS_IO_TRIMESHSTLWRITER_H_INCLUDED
 #pragma once
 
-#include "AbstractSTLWriter.h"
+#include "mmstd_datatools/io/AbstractSTLWriter.h"
 
 #include "mmcore/AbstractGetData3DCall.h"
 
@@ -25,7 +25,7 @@ namespace megamol
 				/// <summary>
 				/// Triangle STL writer for CallTriMeshData calls
 				/// </summary>
-				class TriMeshSTLWriter : public AbstractSTLWriter<geocalls::CallTriMeshDataDescription>
+				class TriMeshSTLWriter : public AbstractSTLWriter<geocalls::CallTriMeshData, geocalls::CallTriMeshDataDescription>
 				{
 				public:
 					/// <summary>
@@ -78,7 +78,7 @@ namespace megamol
 					/// <param name="caller">Incoming call</param>
 					/// <param name="callee">Outgoing call</param>
 					/// <returns>True on success; false otherwise</returns>
-					virtual bool copy_info_upstream(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee) override;
+					virtual bool copy_info_upstream(core::Call& caller, core::Call& callee) override;
 
 					/// <summary>
 					/// Copy information from the outgoing to the incoming call
@@ -86,7 +86,7 @@ namespace megamol
 					/// <param name="caller">Incoming call</param>
 					/// <param name="callee">Outgoing call</param>
 					/// <returns>True on success; false otherwise</returns>
-					virtual bool copy_info_downstream(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee) override;
+					virtual bool copy_info_downstream(core::Call& caller, core::Call& callee) override;
 
 					/// <summary>
 					/// Copy data to incoming call
@@ -94,14 +94,14 @@ namespace megamol
 					/// <param name="caller">Incoming call</param>
 					/// <param name="callee">Outgoing call</param>
 					/// <returns>True on success; false otherwise</returns>
-					virtual bool copy_data(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee) override;
+					virtual bool copy_data(core::Call& caller, core::Call& callee) override;
 
 					/// <summary>
 					/// Write data from outgoing call to file
 					/// </summary>
 					/// <param name="callee">Outgoing call</param>
 					/// <returns>True on success; false otherwise</returns>
-					virtual bool write_data(core::AbstractGetData3DCall& callee) override;
+					virtual bool write_data(core::Call& callee) override;
 
 					/// <summary>
 					/// Release the module

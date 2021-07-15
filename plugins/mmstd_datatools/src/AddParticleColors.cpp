@@ -3,6 +3,8 @@
 
 #include "mmcore/view/CallGetTransferFunction.h"
 
+#include "mmstd_datatools/TFUtils.h"
+
 
 megamol::stdplugin::datatools::AddParticleColors::AddParticleColors(void)
         : AbstractParticleManipulator("outData", "indata"), _tf_slot("inTF", "") {
@@ -16,25 +18,25 @@ megamol::stdplugin::datatools::AddParticleColors::~AddParticleColors(void) {
 }
 
 
-float megamol::stdplugin::datatools::AddParticleColors::lerp(float a, float b, float inter) {
-    return a * (1.0f - inter) + b * inter;
-}
-
-
-glm::vec4 megamol::stdplugin::datatools::AddParticleColors::sample_tf(
-    float const* tf, unsigned int tf_size, int base, float rest) {
-    if (base < 0 || tf_size == 0)
-        return glm::vec4(0);
-    auto const last_el = tf_size - 1;
-    if (base >= last_el)
-        return glm::vec4(tf[last_el * 4], tf[last_el * 4 + 1], tf[last_el * 4 + 2], tf[last_el * 4 + 3]);
-
-    auto const a = base;
-    auto const b = base + 1;
-
-    return glm::vec4(lerp(tf[a * 4], tf[b * 4], rest), lerp(tf[a * 4 + 1], tf[b * 4 + 1], rest),
-        lerp(tf[a * 4 + 2], tf[b * 4 + 2], rest), lerp(tf[a * 4 + 3], tf[b * 4 + 3], rest));
-}
+//float megamol::stdplugin::datatools::AddParticleColors::lerp(float a, float b, float inter) {
+//    return a * (1.0f - inter) + b * inter;
+//}
+//
+//
+//glm::vec4 megamol::stdplugin::datatools::AddParticleColors::sample_tf(
+//    float const* tf, unsigned int tf_size, int base, float rest) {
+//    if (base < 0 || tf_size == 0)
+//        return glm::vec4(0);
+//    auto const last_el = tf_size - 1;
+//    if (base >= last_el)
+//        return glm::vec4(tf[last_el * 4], tf[last_el * 4 + 1], tf[last_el * 4 + 2], tf[last_el * 4 + 3]);
+//
+//    auto const a = base;
+//    auto const b = base + 1;
+//
+//    return glm::vec4(lerp(tf[a * 4], tf[b * 4], rest), lerp(tf[a * 4 + 1], tf[b * 4 + 1], rest),
+//        lerp(tf[a * 4 + 2], tf[b * 4 + 2], rest), lerp(tf[a * 4 + 3], tf[b * 4 + 3], rest));
+//}
 
 
 bool megamol::stdplugin::datatools::AddParticleColors::manipulateData(

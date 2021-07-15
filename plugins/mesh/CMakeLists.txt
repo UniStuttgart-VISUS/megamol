@@ -7,6 +7,7 @@ megamol_plugin(mesh
   BUILD_DEFAULT ON
   DEPENDS_PLUGINS
     compositing_gl
+    mmstd_datatools
   DEPENDS_EXTERNALS PUBLIC
     quickhull
     tinyobjloader

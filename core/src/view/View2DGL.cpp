@@ -16,6 +16,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
+#include "json.hpp"
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix4.h"
@@ -140,7 +141,7 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
         bool fbo_update_needed = (_fbo->GetWidth() != w) || (_fbo->GetHeight() != h) || (!_fbo->IsValid());
 
         std::pair<int, int> tgt_res = tgt_res_ok ? std::make_pair<int, int>(static_cast<int>(w), static_cast<int>(h))
-                       : std::make_pair<int, int>(1, 1);
+                                                 : std::make_pair<int, int>(1, 1);
 
         if (fbo_update_needed) {
             this->_fbo->Release();

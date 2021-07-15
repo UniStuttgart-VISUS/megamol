@@ -174,7 +174,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
         // allocate nanoflann data structures for border
         assert(allpartcnt == totalParts);
 
-        this->myPts = std::make_shared<simplePointcloud>(inMpdc, allParts);
+        this->myPts = std::make_shared<simplePointcloud>(inMpdc, allParts.size());
         particleTree = std::make_shared<my_kd_tree_t>(3 /* dim */, *myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
         particleTree->buildIndex();
         this->datahash = in->DataHash();

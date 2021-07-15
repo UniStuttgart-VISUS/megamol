@@ -19,6 +19,7 @@ namespace optix_hpg {
             FrameState* frameStateBuffer;
             CUsurfObject col_surf;
             CUsurfObject depth_surf;
+            int* picking_buffer;
         };
     } // namespace device
 } // namespace optix_hpg

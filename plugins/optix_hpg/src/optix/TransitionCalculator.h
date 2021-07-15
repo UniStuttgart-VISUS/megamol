@@ -5,7 +5,10 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
+#include "mmcore/param/ParamSlot.h"
+
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 #include "mesh/MeshCalls.h"
 
@@ -50,19 +53,36 @@ protected:
     void release() override;
 
 private:
+    enum class output_type : std::uint8_t { outbound, inbound, diff };
+
     bool init();
 
-    bool assertData(mesh::CallMesh& mesh, core::moldyn::MultiParticleDataCall& particles, unsigned int frameID);
+    bool assertData(mesh::CallMesh& mesh, core::moldyn::MultiParticleDataCall& particles,
+        core::view::CallGetTransferFunction& tf, unsigned int frameID);
 
     bool get_data_cb(core::Call& c);
 
     bool get_extent_cb(core::Call& c);
+
+    bool get_arr_data_cb(core::Call& c);
+
+    bool get_arr_extent_cb(core::Call& c);
 
     core::CalleeSlot out_transitions_slot_;
 
     core::CallerSlot in_mesh_slot_;
 
     core::CallerSlot in_paths_slot_;
+
+    core::CallerSlot in_tf_slot_;
+
+    core::CalleeSlot out_arrows_slot_;
+
+    core::param::ParamSlot output_type_slot_;
+
+    core::param::ParamSlot frame_count_slot_;
+
+    core::param::ParamSlot frame_skip_slot_;
 
     OptixModule builtin_triangle_intersector_;
 
@@ -83,5 +103,25 @@ private:
     std::size_t _data_hash = std::numeric_limits<std::size_t>::max();
 
     std::unique_ptr<Context> optix_ctx_;
+
+    std::vector<std::vector<glm::vec4>> colors_;
+
+    std::vector<std::vector<glm::vec3>> positions_;
+
+    std::vector<std::vector<std::uint32_t>> indices_;
+
+    std::vector<std::vector<glm::vec3>> normals_;
+
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh_access_collection_;
+
+    std::size_t out_data_hash_ = 0;
+
+    // std::vector<std::vector<uint64_t>> ray_vec_ident_;
+
+    // std::vector<std::vector<uint8_t>> ray_vec_active_;
+
+    std::vector<std::vector<float>> out_arrows_pos_;
+
+    std::vector<std::vector<float>> out_arrows_dir_;
 };
 } // namespace megamol::optix_hpg

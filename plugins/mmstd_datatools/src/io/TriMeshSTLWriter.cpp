@@ -35,17 +35,17 @@ namespace megamol
 					return true;
 				}
 
-				bool TriMeshSTLWriter::copy_info_upstream(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee)
+				bool TriMeshSTLWriter::copy_info_upstream(core::Call& caller, core::Call& callee)
 				{
 					return true;
 				}
 
-				bool TriMeshSTLWriter::copy_info_downstream(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee)
+				bool TriMeshSTLWriter::copy_info_downstream(core::Call& caller, core::Call& callee)
 				{
 					return true;
 				}
 
-				bool TriMeshSTLWriter::copy_data(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee)
+				bool TriMeshSTLWriter::copy_data(core::Call& caller, core::Call& callee)
 				{
 					auto& incoming_call = dynamic_cast<geocalls::CallTriMeshData&>(caller);
 					auto& outgoing_call = dynamic_cast<geocalls::CallTriMeshData&>(callee);
@@ -55,7 +55,7 @@ namespace megamol
 					return true;
 				}
 
-				bool TriMeshSTLWriter::write_data(core::AbstractGetData3DCall& callee)
+				bool TriMeshSTLWriter::write_data(core::Call& callee)
 				{
 					auto& outgoing_call = dynamic_cast<geocalls::CallTriMeshData&>(callee);
 
