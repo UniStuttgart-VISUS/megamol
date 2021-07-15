@@ -104,6 +104,8 @@
 #include "ParticleIDDifference.h"
 #include "mmstd_datatools/StatisticsCall.h"
 #include "IColStatistics.h"
+#include "masking/CreateBaseMask.h"
+#include "mmstd_datatools/masking/CallMaskOffsets.h"
 
 namespace megamol::stdplugin::datatools {
 /** Implementing the instance class of this plugin */
@@ -219,6 +221,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticlesToNumberdensity>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIDDifference>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColStatistics>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::masking::CreateBaseMask>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
@@ -226,6 +229,7 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::GraphDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiIndexListDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::StatisticsCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::masking::CallMaskOffsets>();
     }
 };
 } // namespace megamol::stdplugin::datatools
