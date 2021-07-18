@@ -60,7 +60,7 @@ namespace infovis {
 
         bool makeShaders();
 
-        void setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera cam);
+        void setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam);
 
         void doReconstruction(int approach, int w, int h, int ssLevel);
 
@@ -88,6 +88,9 @@ namespace infovis {
         GLuint amortizedMsaaFboA = 0;
         GLuint amortizedPushFBO = 0;
         std::shared_ptr<glowl::FramebufferObject> glowlFBO;
+        std::unique_ptr<glowl::Texture2D> texA;
+        std::unique_ptr<glowl::Texture2D> texB;
+        glowl::TextureLayout texstore_layout;
         GLuint msImageArray = 0;
         GLuint pushImage = 0;
         GLuint imageArrayA = 0;
@@ -111,6 +114,8 @@ namespace infovis {
         int framesNeeded = 1;
         GLfloat modelViewMatrix_column[16];
         GLfloat projMatrix_column[16];
+        glm::mat4 projMatrix;
+        glm::mat4 mvMatrix;
         std::vector<glm::mat4> invMatrices;
         std::vector<glm::mat4> moveMatrices;
         std::vector<glm::fvec2> hammerPositions;
