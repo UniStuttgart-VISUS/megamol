@@ -11,11 +11,12 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "FEMDataCall.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+
+#include "ArchVisCalls.h"
 
 namespace megamol {
 namespace archvis {
@@ -69,6 +70,8 @@ protected:
     void release();
 
 private:
+    uint32_t m_version;
+
     std::shared_ptr<FEMModel> m_FEM_model;
 
     /** First FEM parameter */
@@ -94,8 +97,6 @@ private:
     uint64_t m_node_input_hash;
     uint64_t m_element_input_hash;
     uint64_t m_deform_input_hash;
-
-    uint64_t m_my_hash;
 };
 
 } // namespace archvis
