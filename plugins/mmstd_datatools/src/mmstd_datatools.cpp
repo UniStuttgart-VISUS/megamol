@@ -106,6 +106,7 @@
 #include "IColStatistics.h"
 #include "masking/CreateBaseMask.h"
 #include "mmstd_datatools/masking/CallMaskOffsets.h"
+#include "masking/IColMasking.h"
 
 namespace megamol::stdplugin::datatools {
 /** Implementing the instance class of this plugin */
@@ -222,6 +223,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIDDifference>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColStatistics>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::masking::CreateBaseMask>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::masking::IColMasking>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
