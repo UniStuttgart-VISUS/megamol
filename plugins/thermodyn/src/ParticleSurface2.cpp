@@ -4,7 +4,10 @@
 
 
 megamol::thermodyn::ParticleSurface2::ParticleSurface2()
-        : data_out_slot_("dataOut", ""), data_in_slot_("dataIn", ""), alpha_slot_("alpha", "") {
+        : data_out_slot_("dataOut", "")
+        , data_in_slot_("dataIn", "")
+        , flags_read_slot_("flagsRead", "")
+        , alpha_slot_("alpha", "") {
     data_out_slot_.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &ParticleSurface2::get_data_cb);
     data_out_slot_.SetCallback(
@@ -13,6 +16,9 @@ megamol::thermodyn::ParticleSurface2::ParticleSurface2()
 
     data_in_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
+
+    flags_read_slot_.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
+    MakeSlotAvailable(&flags_read_slot_);
 
     alpha_slot_ << new core::param::FloatParam(2.5f, std::numeric_limits<float>::min());
     MakeSlotAvailable(&alpha_slot_);
@@ -41,13 +47,20 @@ bool megamol::thermodyn::ParticleSurface2::get_data_cb(core::Call& c) {
     if (data_in == nullptr)
         return false;
 
+    auto flags_in = flags_read_slot_.CallAs<core::FlagCallRead_CPU>();
+
     auto meta = mesh_out->getMetaData();
     data_in->SetFrameID(meta.m_frame_ID);
     if (!(*data_in)(0))
         return false;
 
-    if (data_in->DataHash() != in_data_hash_ || data_in->FrameID() != frame_id_ || is_dirty()) {
-        if (!assert_data(*data_in))
+    if (flags_in) {
+        (*flags_in)();
+    }
+
+    if (data_in->DataHash() != in_data_hash_ || data_in->FrameID() != frame_id_ || is_dirty() ||
+        (flags_in != nullptr && flags_in->hasUpdate())) {
+        if (!assert_data(*data_in, flags_in))
             return false;
         in_data_hash_ = data_in->DataHash();
         frame_id_ = data_in->FrameID();
@@ -106,7 +119,8 @@ void conditionally_add_vertex(megamol::thermodyn::ParticleSurface2::vertex_con_t
 }
 
 
-bool megamol::thermodyn::ParticleSurface2::assert_data(core::moldyn::MultiParticleDataCall& particles) {
+bool megamol::thermodyn::ParticleSurface2::assert_data(
+    core::moldyn::MultiParticleDataCall& particles, core::FlagCallRead_CPU* flags) {
     auto const pl_count = particles.GetParticleListCount();
 
     auto const alpha = alpha_slot_.Param<core::param::FloatParam>()->Value();
@@ -118,6 +132,7 @@ bool megamol::thermodyn::ParticleSurface2::assert_data(core::moldyn::MultiPartic
     indices_.resize(pl_count);
     part_indices_.resize(pl_count);
 
+    uint64_t flag_idx = 0;
     for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
         auto const& parts = particles.AccessParticles(pl_idx);
 
@@ -142,9 +157,19 @@ bool megamol::thermodyn::ParticleSurface2::assert_data(core::moldyn::MultiPartic
 
         std::list<point_w_info_t> points;
 
-        for (std::decay_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
-            points.push_back(
-                std::make_pair(Point_3(x_acc->Get_f(p_idx), y_acc->Get_f(p_idx), z_acc->Get_f(p_idx)), p_idx));
+        if (flags) {
+            auto const flags_data = *(flags->getData()->flags);
+            for (std::decay_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx, ++flag_idx) {
+                if (flags_data[flag_idx] != core::FlagStorage::FILTERED) {
+                    points.push_back(
+                        std::make_pair(Point_3(x_acc->Get_f(p_idx), y_acc->Get_f(p_idx), z_acc->Get_f(p_idx)), p_idx));
+                }
+            }
+        } else {
+            for (std::decay_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
+                points.push_back(
+                    std::make_pair(Point_3(x_acc->Get_f(p_idx), y_acc->Get_f(p_idx), z_acc->Get_f(p_idx)), p_idx));
+            }
         }
 
         Triangulation_3 tri = Triangulation_3(points.begin(), points.end());

@@ -4,6 +4,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 
@@ -78,11 +79,13 @@ private:
 
     bool get_extent_cb(core::Call& c);
 
-    bool assert_data(core::moldyn::MultiParticleDataCall& particles);
+    bool assert_data(core::moldyn::MultiParticleDataCall& particles, core::FlagCallRead_CPU* flags);
 
     core::CalleeSlot data_out_slot_;
 
     core::CallerSlot data_in_slot_;
+
+    core::CallerSlot flags_read_slot_;
 
     core::param::ParamSlot alpha_slot_;
 
