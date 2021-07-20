@@ -6,7 +6,7 @@
 megamol::thermodyn::ParticleSurface2::ParticleSurface2()
         : data_out_slot_("dataOut", "")
         , data_in_slot_("dataIn", "")
-        , flags_read_slot_("flagsRead", "")
+        , mask_read_slot_("maskRead", "")
         , alpha_slot_("alpha", "") {
     data_out_slot_.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &ParticleSurface2::get_data_cb);
@@ -17,8 +17,8 @@ megamol::thermodyn::ParticleSurface2::ParticleSurface2()
     data_in_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
 
-    flags_read_slot_.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
-    MakeSlotAvailable(&flags_read_slot_);
+    mask_read_slot_.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
+    MakeSlotAvailable(&mask_read_slot_);
 
     alpha_slot_ << new core::param::FloatParam(2.5f, std::numeric_limits<float>::min());
     MakeSlotAvailable(&alpha_slot_);
@@ -47,7 +47,7 @@ bool megamol::thermodyn::ParticleSurface2::get_data_cb(core::Call& c) {
     if (data_in == nullptr)
         return false;
 
-    auto flags_in = flags_read_slot_.CallAs<core::FlagCallRead_CPU>();
+    auto flags_in = mask_read_slot_.CallAs<core::FlagCallRead_CPU>();
 
     auto meta = mesh_out->getMetaData();
     data_in->SetFrameID(meta.m_frame_ID);

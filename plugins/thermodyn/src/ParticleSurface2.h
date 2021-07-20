@@ -85,7 +85,7 @@ private:
 
     core::CallerSlot data_in_slot_;
 
-    core::CallerSlot flags_read_slot_;
+    core::CallerSlot mask_read_slot_;
 
     core::param::ParamSlot alpha_slot_;
 
