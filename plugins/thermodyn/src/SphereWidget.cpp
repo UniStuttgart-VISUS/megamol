@@ -77,8 +77,9 @@ bool megamol::thermodyn::SphereWidget::Render(core::view::CallRender3DGL& call) 
 
     core::view::Camera_2 cam;
     call.GetCamera(cam);
+    auto const bgc = call.BackgroundColor();
 
-    parse_data(*parts_in, temp_in, dens_in, *flags_read, cam);
+    parse_data(*parts_in, temp_in, dens_in, *flags_read, cam, bgc);
 
     return true;
 }
@@ -115,9 +116,9 @@ bool megamol::thermodyn::SphereWidget::GetExtents(core::view::CallRender3DGL& ca
 }
 
 
-bool megamol::thermodyn::SphereWidget::widget(float x, float y, std::size_t idx,
+bool megamol::thermodyn::SphereWidget::widget(float x, float y, uint64_t idx,
     core::moldyn::SimpleSphericalParticles const& parts, core::moldyn::SimpleSphericalParticles const* temps,
-    core::moldyn::SimpleSphericalParticles const* dens, glm::mat4 vp, glm::ivec2 res) {
+    core::moldyn::SimpleSphericalParticles const* dens, glm::mat4 vp, glm::ivec2 res, glm::vec4 i_bgc) {
     // ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_Appearing);
 
     auto const x_acc = parts.GetParticleStore().GetXAcc();
@@ -145,13 +146,7 @@ bool megamol::thermodyn::SphereWidget::widget(float x, float y, std::size_t idx,
     glVertex3f(x_acc->Get_f(idx), y_acc->Get_f(idx), z_acc->Get_f(idx));
     glEnd();
     glEnable(GL_PROGRAM_POINT_SIZE);*/
-
-    ImGui::SetNextWindowPos(ImVec2(new_x, new_y), ImGuiCond_Always);
-
-    // core::utility::log::Log::DefaultLog.WriteInfo("Coord %f %f for pos (%f, %f, %f)", new_x, new_y, pos.x, pos.y,
-    // pos.z);
-
-    ////ImGui::SetNextWindowPos(ImVec2(x, y), ImGuiCond_Appearing);
+    ImGui::SetNextWindowPos(ImVec2(new_x, new_y), ImGuiCond_Appearing);
 
     bool plot_open = true;
     ImGui::Begin((std::string("Test Plot ") + std::to_string(idx)).c_str(), &plot_open,
@@ -175,6 +170,13 @@ bool megamol::thermodyn::SphereWidget::widget(float x, float y, std::size_t idx,
         ImGui::Text("Density %f", dens_acc->Get_f(idx));
     }
 
+    auto draw_list = ImGui::GetBackgroundDrawList();
+    float offset = ImGui::GetWindowPos().x < new_x ? ImGui::GetWindowSize().x : 0.f;
+    std::array<ImVec2, 3> points = {ImVec2(new_x, new_y),
+        ImVec2(ImGui::GetWindowPos().x + offset, ImGui::GetWindowPos().y + 10.0f),
+        ImVec2(ImGui::GetWindowPos().x + offset, ImGui::GetWindowPos().y)};
+    draw_list->AddConvexPolyFilled(points.data(), points.size(), ImColor(i_bgc.x, i_bgc.y, i_bgc.z));
+
     ImGui::End();
 
     return true;
@@ -183,7 +185,7 @@ bool megamol::thermodyn::SphereWidget::widget(float x, float y, std::size_t idx,
 
 bool megamol::thermodyn::SphereWidget::parse_data(core::moldyn::MultiParticleDataCall& in_parts,
     core::moldyn::MultiParticleDataCall* in_temps, core::moldyn::MultiParticleDataCall* in_dens,
-    core::FlagCallRead_CPU& fcr, megamol::core::view::Camera_2 const& cam) {
+    core::FlagCallRead_CPU& fcr, megamol::core::view::Camera_2 const& cam, glm::vec4 bgc) {
     auto const pl_count = in_parts.GetParticleListCount();
 
     if (pl_count == 0)
@@ -217,15 +219,28 @@ bool megamol::thermodyn::SphereWidget::parse_data(core::moldyn::MultiParticleDat
     auto const res = cam.resolution_gate();
 
     auto const vp = projTemp * viewTemp;
+
+    auto const i_bgc = glm::vec4(1.f - bgc.x, 1.f - bgc.y, 1.f - bgc.z, 1.0f);
+
     for (decltype(selection_data->flags)::element_type::size_type i = 0; i < selection_data->flags->size(); ++i) {
         auto const el = (*selection_data->flags)[i];
         if (el == core::FlagStorage::SELECTED) {
-            widget(mouse_x_, mouse_y_, i, parts, temps, dens, vp, res);
+            widget(mouse_x_, mouse_y_, i, parts, temps, dens, vp, res, i_bgc);
         }
     }
 
     return true;
 }
+
+
+// bool megamol::thermodyn::SphereWidget::OnMouseButton(
+//    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+//    if (mods.test(core::view::Modifier::SHIFT) && button == core::view::MouseButton::BUTTON_LEFT &&
+//        action == core::view::MouseButtonAction::PRESS) {
+//        pressed_ = true;
+//    }
+//    return false;
+//}
 
 
 bool megamol::thermodyn::SphereWidget::OnMouseMove(double x, double y) {

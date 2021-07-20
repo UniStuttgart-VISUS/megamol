@@ -42,13 +42,16 @@ private:
 
     bool GetExtents(core::view::CallRender3DGL& call) override;
 
-    bool widget(float x, float y, std::size_t idx, core::moldyn::SimpleSphericalParticles const& parts,
+    bool widget(float x, float y, uint64_t idx, core::moldyn::SimpleSphericalParticles const& parts,
         core::moldyn::SimpleSphericalParticles const* temps, core::moldyn::SimpleSphericalParticles const* dens,
-        glm::mat4 vp, glm::ivec2 res);
+        glm::mat4 vp, glm::ivec2 res, glm::vec4 i_bgc);
 
     bool parse_data(core::moldyn::MultiParticleDataCall& in_parts, core::moldyn::MultiParticleDataCall* in_temps,
         core::moldyn::MultiParticleDataCall* in_dens, core::FlagCallRead_CPU& fcr,
-        megamol::core::view::Camera_2 const& cam);
+        megamol::core::view::Camera_2 const& cam, glm::vec4 bgc);
+
+    // bool OnMouseButton(
+    //    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
     bool OnMouseMove(double x, double y) override;
 
