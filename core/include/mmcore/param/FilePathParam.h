@@ -90,14 +90,14 @@ namespace param {
         void SetValue(const std::filesystem::path& v, bool setDirty = true);
 
         /**
-         * Gets the value of the parameter.
+         * Gets the value of the parameter
          *
          * @return The value of the parameter
          */
         std::filesystem::path Value() const;
 
         /**
-         * Returns the value of the parameter as string.
+         * Returns the value of the parameter.
          *
          * @return The value of the parameter as string.
          */

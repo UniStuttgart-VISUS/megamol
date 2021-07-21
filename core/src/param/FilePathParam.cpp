@@ -130,7 +130,7 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
         if (f & FilePathParam::Flag_RestrictExtension) {
             bool valid_ext = false;
             for (auto& ext : e) {
-                if (p.extension().string() == std::string("." + ext)) {
+                if (p.extension().generic_u8string() == std::string("." + ext)) {
                     valid_ext = true;
                 }
             }
