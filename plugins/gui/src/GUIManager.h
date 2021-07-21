@@ -137,7 +137,7 @@ namespace gui {
          * Return current screenshot file name and create new file name for next screenshot
          */
         inline std::string GetScreenshotFileName() {
-            auto screenshot_filepath = std::filesystem::path(this->gui_state.screenshot_filepath);
+            auto screenshot_filepath = std::filesystem::u8path(this->gui_state.screenshot_filepath);
             this->create_unique_screenshot_filename(this->gui_state.screenshot_filepath);
             return screenshot_filepath.string();
         }
@@ -147,7 +147,7 @@ namespace gui {
          * Request is consumed when calling this function.
          */
         std::string GetProjectLoadRequest() {
-            auto project_file_name = std::filesystem::path(this->gui_state.request_load_projet_file);
+            auto project_file_name = std::filesystem::u8path(this->gui_state.request_load_projet_file);
             this->gui_state.request_load_projet_file.clear();
             return project_file_name.string();
         }
