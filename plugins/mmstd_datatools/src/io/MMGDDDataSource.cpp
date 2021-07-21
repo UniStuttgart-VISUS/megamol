@@ -89,8 +89,10 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         file->Close();
     }
     assert(filename.Param<core::param::FilePathParam>() != nullptr);
-    if (!file->Open(filename.Param<core::param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMGDD-File \"%s\".", vislib::StringA(filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+    if (!file->Open(filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(), File::READ_ONLY,
+            File::SHARE_READ, File::OPEN_ONLY)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMGDD-File \"%s\".",
+            filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         SAFE_DELETE(file);
         this->setFrameCount(1);
         this->initFrameCache(1);

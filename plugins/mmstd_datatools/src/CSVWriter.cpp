@@ -14,7 +14,7 @@ megamol::stdplugin::datatools::CSVWriter::CSVWriter() : _data_in_slot("inData", 
     _data_in_slot.SetCompatibleCall<table::TableDataCallDescription>();
     MakeSlotAvailable(&_data_in_slot);
 
-    _filename_slot << new core::param::FilePathParam("out.csv");
+    _filename_slot << new core::param::FilePathParam(std::filesystem::u8path("out.csv"));
     MakeSlotAvailable(&_filename_slot);
 }
 
@@ -29,7 +29,7 @@ void megamol::stdplugin::datatools::CSVWriter::release() {}
 
 
 bool megamol::stdplugin::datatools::CSVWriter::run() {
-    auto filename = std::filesystem::path(std::string(_filename_slot.Param<core::param::FilePathParam>()->Value()));
+    auto filename = _filename_slot.Param<core::param::FilePathParam>()->Value();
     if (filename.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[CSVWriter]: No file name specified. Abort.");
         return false;

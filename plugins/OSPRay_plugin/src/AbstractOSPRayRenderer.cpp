@@ -339,9 +339,9 @@ namespace ospray {
         _renderer->setParam("pixelSamples", this->_rd_spp.Param<core::param::IntParam>()->Value());
         _renderer->setParam("maxPathLength", this->_rd_maxRecursion.Param<core::param::IntParam>()->Value());
 
-         if (this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
+         if (this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value() != "") {
             ::ospray::cpp::Texture bkgnd_tex =
-                this->TextureFromFile(this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value());
+                this->TextureFromFile(this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value().string().c_str());
             _renderer->setParam("map_backplate", bkgnd_tex);
         } else {
             _renderer->setParam("backgroundColor", convertToVec4f(bg_color));

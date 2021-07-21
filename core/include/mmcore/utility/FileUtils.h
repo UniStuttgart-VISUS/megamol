@@ -31,10 +31,6 @@ namespace utility {
          return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr);
     }
 
-    static inline std::wstring ToWString(const std::string& str) {
-        return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
-    }
-
     static inline std::string Utf8Decode(const std::string& input) {
         vislib::StringA dec_tmp;
         if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(input.c_str()))) {
@@ -45,30 +41,12 @@ namespace utility {
         return std::string();
     }
 
-    static inline std::string Utf8Encode(const std::string& input) {
-        vislib::StringA enc_tmp;
-        if (vislib::UTF8Encoder::Encode(enc_tmp, vislib::StringA(input.c_str()))) {
-            return std::string(enc_tmp.PeekBuffer());
-        }
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "UTF8Encoder Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return std::string();
-    }
-
     // ##################################################################### //
     /**
      * File utility functions.
      */
     class FileUtils {
     public:
-        /**
-         * Load raw data from file (e.g. texture data)
-         */
-        static bool LoadRawFile(const std::wstring& filename, std::vector<char>& out_data) {
-            return megamol::core::utility::FileUtils::LoadRawFile(megamol::core::utility::ToString(filename), out_data);
-        }
-
-        static bool LoadRawFile(const std::string& filename, std::vector<char>& out_data);
 
         /**
          * Check if file exists.
@@ -124,7 +102,8 @@ namespace utility {
          *
          * @return True on success, false otherwise.
          */
-        static bool WriteFile(const std::string& filename, const std::string& in_content, bool silent = false);
+        static bool WriteFile(
+            const std::filesystem::path& filename, const std::string& in_content, bool silent = false);
 
         /**
          * Read content from file.
@@ -135,7 +114,12 @@ namespace utility {
          *
          * @return True on success, false otherwise.
          */
-        static bool ReadFile(const std::string& filename, std::string& out_content, bool silent = false);
+        static bool ReadFile(const std::filesystem::path& filename, std::string& out_content, bool silent = false);
+
+        /**
+         * Load raw data from file (e.g. texture data)
+         */
+        static bool LoadRawFile(const std::filesystem::path& filename, std::vector<char>& out_data);
 
     private:
         FileUtils() = default;

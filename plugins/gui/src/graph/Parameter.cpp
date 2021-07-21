@@ -82,7 +82,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         this->value = int(0);
     } break;
     case (ParamType_t::FILEPATH): {
-        this->value = std::string();
+        this->value = std::filesystem::path();
     } break;
     case (ParamType_t::FLEXENUM): {
         this->value = std::string();
@@ -233,10 +233,10 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
     } break;
     case (ParamType_t::FILEPATH): {
         auto file_storage = this->GetStorage<FilePathStorage_t>();
-        megamol::core::param::FilePathParam parameter(val_tstr.PeekBuffer(), file_storage.first, file_storage.second);
+        megamol::core::param::FilePathParam parameter(
+            std::filesystem::u8path(val_str), file_storage.first, file_storage.second);
         retval = parameter.ParseValue(val_tstr);
-        this->SetValue(std::string(parameter.ValueString().PeekBuffer()), set_default_val,
-            set_dirty); /// Use utf8 encoded value string
+        this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::FLEXENUM): {
         megamol::core::param::FlexEnumParam parameter(val_str);
@@ -477,8 +477,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FILEPATH,
             FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()}), std::monostate(), std::monostate(),
             param_name, description);
-        out_param->SetValue(std::string(p_ptr->ValueString().PeekBuffer()), set_default_val,
-            set_dirty); /// Use utf8 encoded value string
+        out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found unknown parameter type. Please extend parameter types for the configurator. "
@@ -549,8 +548,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         }
     } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FilePathParam>()) {
         if (out_param.type == ParamType_t::FILEPATH) {
-            out_param.SetValue(std::string(p_ptr->ValueString().PeekBuffer()), set_default_val,
-                set_dirty); /// Use utf8 encoded value string
+            out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
             auto file_storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
             out_param.SetStorage(file_storage);
         } else {
@@ -707,7 +705,7 @@ bool megamol::gui::Parameter::WriteCoreParameterValue(
         }
     } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::FilePathParam>()) {
         if (in_param.type == ParamType_t::FILEPATH) {
-            p_ptr->SetValue(std::get<std::string>(in_param.GetValue()));
+            p_ptr->SetValue(std::get<std::filesystem::path>(in_param.GetValue()));
             // Storage can not be changed
         } else {
             type_error = true;
@@ -1122,7 +1120,7 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
         } break;
             // FILE PATH ///////////////////////////////////////////////
         case (Present_t::FilePath): {
-            if constexpr (std::is_same_v<T, std::string>) {
+            if constexpr (std::is_same_v<T, std::filesystem::path>) {
                 switch (this->type) {
                     // FILE PATH ---------------------------------------
                 case (ParamType_t::FILEPATH): {
@@ -1526,14 +1524,14 @@ bool megamol::gui::Parameter::widget_flexenum(megamol::gui::Parameter::WidgetSco
 
 
 bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetScope scope, const std::string& label,
-    std::string& val, const FilePathStorage_t& store) {
+    std::filesystem::path& val, const FilePathStorage_t& store) {
     bool retval = false;
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         ImGui::BeginGroup();
         if (!std::holds_alternative<std::string>(this->gui_widget_store)) {
-            this->gui_widget_store = val;
+            this->gui_widget_store = val.generic_u8string();
         }
         ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1551,10 +1549,10 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
-            val = std::get<std::string>(this->gui_widget_store);
+            val = std::filesystem::u8path(std::get<std::string>(this->gui_widget_store));
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            this->gui_widget_store = val;
+            this->gui_widget_store = val.generic_u8string();
         }
         ImGui::PopItemWidth();
         ImGui::EndGroup();

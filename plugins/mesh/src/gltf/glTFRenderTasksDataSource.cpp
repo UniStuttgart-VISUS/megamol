@@ -16,7 +16,7 @@ megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
     this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
 
-    this->m_btf_filename_slot << new core::param::FilePathParam("dfr_gltfExample");
+    this->m_btf_filename_slot << new core::param::FilePathParam(std::filesystem::u8path("dfr_gltfExample"));
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 }
 
@@ -70,8 +70,8 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
 
             if (this->m_btf_filename_slot.IsDirty()) {
                 m_btf_filename_slot.ResetDirty();
-                auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
-                std::string filename(vislib_filename.PeekBuffer());
+                auto filename =
+                    m_btf_filename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string();
                 m_material_collection->clear();
                 m_material_collection->addMaterial(this->instance(), filename, filename);
             }

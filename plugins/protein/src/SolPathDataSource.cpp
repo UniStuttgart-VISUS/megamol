@@ -158,19 +158,17 @@ void SolPathDataSource::loadData(void) {
 
     this->clear();
 
-    if (file.Open(this->filenameslot.Param<param::FilePathParam>()->Value(),
+    if (file.Open(this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
             File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY) == false) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to open data file %s", vislib::StringA(
-            this->filenameslot.Param<param::FilePathParam>()->Value()).PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open data file %s",
+            this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
         return;
     }
 
     vislib::StringA headerID;
     if (file.Read(headerID.AllocateBuffer(7), 7) != 7) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to read data file %s", vislib::StringA(
-            this->filenameslot.Param<param::FilePathParam>()->Value()).PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read data file %s",
+            this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
         return;
     }
 
@@ -180,15 +178,13 @@ void SolPathDataSource::loadData(void) {
     if (headerID.Equals("SolPath")) {
         unsigned int version;
         if (file.Read(&version, 4) != 4) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Unable to read data file %s", vislib::StringA(
-                this->filenameslot.Param<param::FilePathParam>()->Value()).PeekBuffer());
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read data file %s",
+                this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
             return;
         }
         if (version > 1) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Data file %s uses unsupported version %u", vislib::StringA(
-                this->filenameslot.Param<param::FilePathParam>()->Value()).PeekBuffer(),
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Data file %s uses unsupported version %u",
+                this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
                 version);
             return;
         }
@@ -222,9 +218,8 @@ void SolPathDataSource::loadData(void) {
         }
     }
     if (blockInfo == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "File %s does not contain a path line data block", vislib::StringA(
-            this->filenameslot.Param<param::FilePathParam>()->Value()).PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "File %s does not contain a path line data block",
+            this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
         return;
     }
     file.Seek(blockInfo->start, File::BEGIN);

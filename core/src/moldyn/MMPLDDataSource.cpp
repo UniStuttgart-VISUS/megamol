@@ -294,9 +294,10 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
     }
     ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".", vislib::StringA(
-            this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
+    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
+            File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".", 
+            this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
         this->setFrameCount(1);

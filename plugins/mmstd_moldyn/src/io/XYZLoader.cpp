@@ -152,8 +152,10 @@ void io::XYZLoader::assertData(void) {
     float rad = radiusSlot.Param<core::param::FloatParam>()->Value();
 
     vislib::sys::FastFile file;
-    if (!file.Open(filenameSlot.Param<core::param::FilePathParam>()->Value(), vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file \"%s\"", vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+    if (!file.Open(filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+            vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file \"%s\"",
+            filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return;
     }
     vislib::sys::TextFileReader reader(&file);
@@ -169,7 +171,7 @@ void io::XYZLoader::assertData(void) {
             partCnt = static_cast<size_t>(vislib::CharTraitsA::ParseUInt64(l.PeekBuffer()));
         } catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("Unable to parse atom count from first line in \"%s\"",
-                vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+                filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         }
     }
 
@@ -191,7 +193,7 @@ void io::XYZLoader::assertData(void) {
         if (parts.Count() != (hasEl ? 4 : 3)) {
             if (warning) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn("Problem parsing \"%s\":",
-                    vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+                    filenameSlot.Param<core::param::FilePathParam>()->Value());
                 warning = false;
             }
         }
@@ -213,7 +215,7 @@ void io::XYZLoader::assertData(void) {
         } catch (...) {
             if (warning) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn("Problem parsing \"%s\":",
-                    vislib::StringA(filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+                    filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
                 warning = false;
             }
             megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to parse coordinates at line %u: (%f, %f, %f); line will be ignored", lineNum, x, y, z);

@@ -79,7 +79,8 @@ bool SIFFWriter::run(void) {
     using megamol::core::utility::log::Log;
     using vislib::Exception;
 
-    vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+    vislib::TString filename(
+        this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
         return false;
