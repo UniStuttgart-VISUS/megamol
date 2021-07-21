@@ -11,7 +11,7 @@ namespace megamol::core::utility {
 
 // STATIC functions -------------------------------------------------------
 
-bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename, GLint tex_min_filter, GLint tex_max_filter) {
+bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::filesystem::path& filename, GLint tex_min_filter, GLint tex_max_filter) {
 
     if (filename.empty())
         return false;
@@ -196,7 +196,7 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
 }
 
 
-bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename, bool reload) {
+bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::filesystem::path& filename, bool reload) {
 
     if (reload) {
         auto texture_iter = std::find_if(this->textures.begin(), this->textures.end(), [&out_texture_id](std::shared_ptr<glowl::Texture2D> tex_ptr) {
@@ -449,51 +449,6 @@ void RenderUtils::sortPrimitiveQueue(Primitives primitive) {
     default:
         break;
     }
-}
-
-
-size_t RenderUtils::loadRawFile(std::wstring filename, BYTE** outData) {
-
-    // Reset out data
-    *outData = nullptr;
-
-    vislib::StringW name = static_cast<vislib::StringW>(filename.c_str());
-    if (name.IsEmpty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            " Unable to load texture file. No name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return 0;
-    }
-    if (!vislib::sys::File::Exists(name)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load not existing file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
-            __LINE__);
-        return 0;
-    }
-
-    size_t size = static_cast<size_t>(vislib::sys::File::GetSize(name));
-    if (size < 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load empty file \"%s\". [%s, %s, line %d]\n",
-            filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
-        return 0;
-    }
-
-    vislib::sys::FastFile f;
-    if (!f.Open(name, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to open file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
-        return 0;
-    }
-
-    *outData = new BYTE[size];
-    size_t num = static_cast<size_t>(f.Read(*outData, size));
-    if (num != size) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to read whole file \"%s\". [%s, %s, line %d]\n",
-            filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
-        ARY_SAFE_DELETE(*outData);
-        return 0;
-    }
-
-    return num;
 }
 
 

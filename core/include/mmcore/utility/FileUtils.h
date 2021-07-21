@@ -27,18 +27,8 @@ namespace utility {
 
     // #### Utility string conversion functions ############################ //
 
-    static inline std::string ToString(const std::wstring& wstr) {
+    static inline std::string WChar2Utf8String(const std::wstring& wstr) {
          return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr);
-    }
-
-    static inline std::string Utf8Decode(const std::string& input) {
-        vislib::StringA dec_tmp;
-        if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(input.c_str()))) {
-            return std::string(dec_tmp.PeekBuffer());
-        }
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Utf8Decode Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return std::string();
     }
 
     // ##################################################################### //

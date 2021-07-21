@@ -30,7 +30,7 @@ namespace param {
 
         /**  UTF-8 GUIDELINE:
         * - Convert your string object with std::filesystem::u8path() before passing to CTOR or SetValue()
-        * - Convert std::filesstem::path received via Value() with .generic_u8string() if string is required or use .generic_u8string().c_str() if char pointer is required
+        * - Convert std::filesystem::path received via Value() with .generic_u8string() if string is required or use .generic_u8string().c_str() if char pointer is required
         * - Pass std::filesystem::path to fopen with .native()
         */
 
