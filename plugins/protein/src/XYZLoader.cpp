@@ -84,9 +84,9 @@ bool XYZLoader::getData( core::Call& call) {
     if ( this->filenameSlot.IsDirty() ) {
         this->filenameSlot.ResetDirty();
         if (mpdc != NULL) {
-            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str(), false);
+            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value(), false);
         } else {
-            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
         }
     }
 
@@ -123,9 +123,9 @@ bool XYZLoader::getExtent( core::Call& call) {
     if ( this->filenameSlot.IsDirty() ) {
         this->filenameSlot.ResetDirty();
         if (mpdc != NULL) {
-            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str(), false);
+            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value(), false);
         } else {
-            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+            this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
         }
     }
 

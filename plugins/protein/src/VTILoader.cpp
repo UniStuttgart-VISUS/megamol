@@ -215,7 +215,7 @@ bool VTILoader::getExtent(core::Call& call) {
     // Check parameters
     if (this->filenameSlot.IsDirty()) { // Files have to be loaded first
         this->filenameSlot.ResetDirty();
-        if (!this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str())) {
+        if (!this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value())) {
             printf("Loading file failed");
             return false;
         }
@@ -387,7 +387,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
     this->setFrameCount(this->nFrames);
 
     vislib::sys::File::FileSize fileSize =
-            vislib::sys::File::GetSize(this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+            vislib::sys::File::GetSize(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
 
 #ifdef VERBOSE
     time_t t = clock(); // DEBUG
@@ -402,7 +402,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
 
     // Read data file to char buffer
     char *buffer = new char[(unsigned int)fileSize];
-    if(!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str(),
+    if(!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY)) return false;
     file.Read(buffer, fileSize);
     file.Close();
@@ -437,7 +437,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
             if(dataType != vislib::StringA("ImageData")) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load file '%s' (wrong 'type' attribute)",
                         this->ClassName(),
-                        this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str(),
+                        this->filenameSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer(),
                         fileSize); // DEBUG
                 return false;
             }
@@ -449,7 +449,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
             if(version.Length() > 3) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load file '%s' (wrong 'version' attribute)",
                         this->ClassName(),
-                        this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str(),
+                        this->filenameSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer(),
                         fileSize); // DEBUG
                 return false;
             }
@@ -469,7 +469,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
             else {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load file '%s' (wrong 'byte_order' attribute)",
                         this->ClassName(),
-                        this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str(),
+                        this->filenameSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer(),
                         fileSize); // DEBUG
                 return false;
             }
@@ -630,7 +630,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
     // Generate filename based on frame idx and pattern
     vislib::StringA frameFile;
     if(this->filenamesDigits == 0) {
-        frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str();
+        frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
     } else {
         std::stringstream ss;
         ss.width(this->filenamesDigits);
@@ -781,7 +781,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
             else {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load file '%s' (wrong data type in data array)",
                         this->ClassName(),
-                        this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str(),
+                        this->filenameSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer(),
                         fileSize); // DEBUG
                 return;
             }
@@ -806,7 +806,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
             else {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load file '%s' (unsupported data format %s)",
                         this->ClassName(),
-                        this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str(),
+                        this->filenameSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer(),
                         format.PeekBuffer()); // DEBUG
                 return;
             }

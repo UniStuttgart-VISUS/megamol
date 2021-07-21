@@ -667,7 +667,7 @@ bool io::VTFResDataSource::filenameChanged(param::ParamSlot& slot) {
     this->datahash++;
 
 	ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
-	getFrameFiles(this->filename.Param<param::FilePathParam>()->Value().c_str());
+	getFrameFiles(this->filename.Param<param::FilePathParam>()->Value());
 
 	/*
     if (this->file == NULL) {

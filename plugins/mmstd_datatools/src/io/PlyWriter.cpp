@@ -58,7 +58,7 @@ void io::PlyWriter::release(void) {
  */
 bool io::PlyWriter::run(void) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value().c_str());
+    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "No file name specified. Abort.");

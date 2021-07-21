@@ -592,11 +592,12 @@ bool VIMDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
     ASSERT(this->filename.Param<core::param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().c_str(),
+    if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::SystemMessage err(::GetLastError());
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to open VIM-File \"%s\": %s", this->filename.Param<core::param::FilePathParam>()->Value().c_str(),
+            "Unable to open VIM-File \"%s\": %s", vislib::StringA(
+            this->filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer(),
             static_cast<const char*>(err));
 
         SAFE_DELETE(this->file);
@@ -607,9 +608,10 @@ bool VIMDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
 
     this->buildFrameTable();
-    if (!this->readHeader(this->filename.Param<core::param::FilePathParam>()->Value().c_str())) {
+    if (!this->readHeader(this->filename.Param<core::param::FilePathParam>()->Value())) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to read VIM-Header from file \"%s\". Wrong format?", this->filename.Param<core::param::FilePathParam>()->Value().c_str());
+            "Unable to read VIM-Header from file \"%s\". Wrong format?", vislib::StringA(
+            this->filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
 
         this->file->Close();
         SAFE_DELETE(this->file);

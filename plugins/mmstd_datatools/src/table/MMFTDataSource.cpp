@@ -96,7 +96,7 @@ void MMFTDataSource::assertData() {
     columns_.clear();
     values_.clear();
 
-    auto filename = filenameSlot_.Param<core::param::FilePathParam>()->Value();
+    std::string filename(filenameSlot_.Param<core::param::FilePathParam>()->Value().PeekBuffer());
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file \"%s\". Abort.", filename.c_str());

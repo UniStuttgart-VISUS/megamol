@@ -63,7 +63,7 @@ void trisoup::WavefrontObjWriter::release(void) {
  */
 bool trisoup::WavefrontObjWriter::run(void) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value().c_str());
+    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "No file name specified. Abort.");
@@ -98,7 +98,7 @@ bool trisoup::WavefrontObjWriter::getCapabilities(DataWriterCtrlCall& call) {
 
 bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* ldc) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value().c_str());
+    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
     vislib::math::Cuboid<float> bbox;
     vislib::math::Cuboid<float> cbox;
     UINT32 frameCnt = 1;

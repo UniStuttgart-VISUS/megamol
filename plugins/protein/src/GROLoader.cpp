@@ -829,7 +829,7 @@ bool GROLoader::getData( core::Call& call) {
     if ( this->groFilenameSlot.IsDirty() || this->solventResidues.IsDirty() ) {
         this->groFilenameSlot.ResetDirty();
         this->solventResidues.ResetDirty();
-        this->loadFile(this->groFilenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+        this->loadFile( this->groFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
     if ( this->mDDHostAddressSlot.IsDirty() || this->mDDPortSlot.IsDirty() ) {
@@ -1014,7 +1014,7 @@ bool GROLoader::getExtent( core::Call& call) {
     if ( this->groFilenameSlot.IsDirty() || this->solventResidues.IsDirty() ) {
         this->groFilenameSlot.ResetDirty();
         this->solventResidues.ResetDirty();
-        this->loadFile(this->groFilenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+        this->loadFile( this->groFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
     if ( this->mDDHostAddressSlot.IsDirty() || this->mDDPortSlot.IsDirty() ) {
@@ -1330,7 +1330,7 @@ void GROLoader::loadFile( const vislib::TString& filename) {
 
 
         // if xtc-filename has been set
-        if( !this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value().empty() ) {
+        if( !this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() ) {
             // try to get the total number of frames and calculate the
             // bounding box
             this->readNumXTCFrames();

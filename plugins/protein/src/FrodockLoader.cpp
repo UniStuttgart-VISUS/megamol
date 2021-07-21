@@ -144,7 +144,7 @@ bool FrodockLoader::getData( core::Call& call) {
     // try to load the input file
     if ( this->filenameSlot.IsDirty() ) {
         this->filenameSlot.ResetDirty();
-        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
     // variables for parameter transfer
@@ -175,7 +175,7 @@ bool FrodockLoader::getData( core::Call& call) {
         paramSlotName += "::filename";
         paramSlot = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(paramSlotName, true).get());
         if( paramSlot ) {
-            paramSlot->Param<param::FilePathParam>()->SetValue(receptorFilename.PeekBuffer());
+            paramSlot->Param<param::FilePathParam>()->SetValue( A2T( receptorFilename));
         }
         // get and set stride param
         paramSlotName = receptor->PeekCalleeSlot()->Parent()->FullName();
@@ -215,7 +215,7 @@ bool FrodockLoader::getData( core::Call& call) {
         paramSlotName += "::filename";
         paramSlot = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(paramSlotName, true).get());
         if( paramSlot ) {
-            paramSlot->Param<param::FilePathParam>()->SetValue(ligandFilename.PeekBuffer());
+            paramSlot->Param<param::FilePathParam>()->SetValue( A2T( ligandFilename));
         }
         // get and set stride param
         paramSlotName = ligand->PeekCalleeSlot()->Parent()->FullName();
@@ -348,7 +348,7 @@ bool FrodockLoader::getExtent( core::Call& call) {
 
     if ( this->filenameSlot.IsDirty() ) {
         this->filenameSlot.ResetDirty();
-        this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
     // get pointer to ligand MolecularDataCall

@@ -94,7 +94,7 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::GetFilename(megamol
             vislib::StringA(this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
         return false;
     }
-    outName = (sp == NULL) ? vislib::TString(fpp->Value().c_str()) : sp->Value();
+    outName = (sp == NULL) ? fpp->Value() : sp->Value();
     if (outName.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
             "Value of parameter \"%s\" is empty.",
@@ -273,7 +273,7 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::SetFilename(core::p
         return false;
     }
     if (sp == NULL) {
-        fpp->SetValue(name.PeekBuffer());
+        fpp->SetValue(name);
     } else {
         sp->SetValue(name);
     }

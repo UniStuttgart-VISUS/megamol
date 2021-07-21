@@ -248,7 +248,7 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
 bool OverlayRenderer::onTextureFileName(param::ParamSlot& slot) {
 
     slot.ResetDirty();
-    std::string filename = this->paramFileName.Param<param::FilePathParam>()->Value().string();
+    std::string filename = std::string(this->paramFileName.Param<param::FilePathParam>()->Value().PeekBuffer());
     if (!this->LoadTextureFromFile(this->m_texture_id, filename, (this->m_texture_id != 0))) {
         return false;
     }

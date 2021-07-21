@@ -881,7 +881,7 @@ void MMSPDDataSource::release(void) {
 DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
     MMSPDDataSource *that = static_cast<MMSPDDataSource *>(userdata);
     vislib::sys::File f;
-    if (!f.Open(that->filename.Param<core::param::FilePathParam>()->Value().c_str(),
+    if (!f.Open(that->filename.Param<core::param::FilePathParam>()->Value(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         that->frameIdxLock.Lock();
         that->frameIdx[0] = 0;
@@ -1257,9 +1257,9 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
     ASSERT(this->filename.Param<core::param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().c_str(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMSPD-File \"%s\".",
-            this->filename.Param<core::param::FilePathParam>()->Value().c_str());
+    if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMSPD-File \"%s\".", vislib::StringA(
+            this->filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);
         this->setFrameCount(1);

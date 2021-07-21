@@ -71,7 +71,7 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
             if (this->m_btf_filename_slot.IsDirty()) {
                 m_btf_filename_slot.ResetDirty();
                 auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
-                std::string filename(vislib_filename.c_str());
+                std::string filename(vislib_filename.PeekBuffer());
                 m_material_collection->clear();
                 m_material_collection->addMaterial(this->instance(), filename, filename);
             }

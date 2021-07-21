@@ -235,7 +235,7 @@ bool megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
         m_glTFFilename_slot.ResetDirty();
 
         auto vislib_filename = m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.string());
+        std::string filename(vislib_filename.PeekBuffer());
         m_gltf_model = std::make_shared<tinygltf::Model>();
 
         if (filename != "") {

@@ -61,10 +61,10 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
     this->MakeSlotAvailable( &this->resCountPerRowParam);
     
     // fill color table with default values and set the filename param
-    std::string filename("colors.txt");
-    this->colorTableFileParam.SetParameter(new param::FilePathParam(filename));
+    vislib::StringA filename( "colors.txt");
+    this->colorTableFileParam.SetParameter(new param::FilePathParam( A2T( filename)));
     this->MakeSlotAvailable( &this->colorTableFileParam);
-    Color::ReadColorTableFromFile(this->colorTableFileParam.Param<param::FilePathParam>()->Value().c_str(), this->colorTable);
+    Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
     
     // param slot for key toggling
     this->toggleKeyParam.SetParameter( new param::BoolParam(true));
@@ -196,7 +196,7 @@ bool SequenceRenderer::Render(view::CallRender2DGL &call) {
 
     // read and update the color table, if necessary
     if( this->colorTableFileParam.IsDirty() ) {
-        Color::ReadColorTableFromFile(this->colorTableFileParam.Param<param::FilePathParam>()->Value().c_str(), this->colorTable);
+        Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
         this->colorTableFileParam.ResetDirty();
     }
     

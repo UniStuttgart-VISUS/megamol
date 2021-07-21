@@ -182,7 +182,7 @@ void CSVDataSource::assertData(void) {
 
         // 1. Load the whole file into memory (FAST!)
         //////////////////////////////////////////////////////////////////////
-        if (!file.LoadFile(filename.c_str(), vislib::sys::ASCIIFileBuffer::PARSING_LINES)) throw vislib::Exception(__FILE__, __LINE__);
+        if (!file.LoadFile(filename, vislib::sys::ASCIIFileBuffer::PARSING_LINES)) throw vislib::Exception(__FILE__, __LINE__);
         if (file.Count() < 2) throw vislib::Exception("No data in CSV file", __FILE__, __LINE__);
 
         // 2. Determine the first row, column separator, and decimal point
@@ -427,7 +427,7 @@ void CSVDataSource::assertData(void) {
             static_cast<unsigned int>(colCnt), static_cast<unsigned int>(rowCnt));
 
     } catch (const vislib::Exception& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Could not load \"%s\": %s [%s, %d]", filename.c_str(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Could not load \"%s\": %s [%s, %d]", filename.PeekBuffer(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
         this->columns.clear();
         this->values.clear();
     } catch (...) {

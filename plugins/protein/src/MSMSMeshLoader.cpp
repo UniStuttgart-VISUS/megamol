@@ -157,9 +157,9 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
     // load data on demand
     if (this->filenameSlot.IsDirty()) {
         this->filenameSlot.ResetDirty();
-        this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+        this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
     }
-    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty() &&
+    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() &&
         // this->prevTime != int(ctmd->FrameID())) {
         this->obj.Count() == ctmd->FrameCount() && this->obj[ctmd->FrameID()]->GetVertexCount() == 0) {
         this->load(vislib::StringA(""), ctmd->FrameID());
@@ -458,11 +458,11 @@ bool MSMSMeshLoader::getExtentCallback(core::Call& caller) {
     // load data on demand
     if (this->filenameSlot.IsDirty()) {
         this->filenameSlot.ResetDirty();
-        this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+        this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
     }
 
     ctmd->SetDataHash(this->datahash);
-    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
+    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
         MolecularDataCall* mol = this->molDataSlot.CallAs<MolecularDataCall>();
         if (mol) {
             // try to call for extent

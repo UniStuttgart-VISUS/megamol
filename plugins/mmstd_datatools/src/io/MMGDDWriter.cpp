@@ -42,7 +42,7 @@ void io::MMGDDWriter::release(void) {
 
 bool io::MMGDDWriter::run(void) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+    vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
         return false;

@@ -49,7 +49,7 @@ void AbstractTriMeshLoader::assertData(void) {
         this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         bool retval = false;
         try {
-            retval = this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+            retval = this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
         } catch(vislib::Exception ex) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
@@ -62,11 +62,11 @@ void AbstractTriMeshLoader::assertData(void) {
         if (retval) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                 "Loaded file \"%s\"",
-                this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+                vislib::StringA(this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Failed to load file \"%s\"",
-                this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str());
+                vislib::StringA(this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
             // ensure there is no partial data
             this->objs.Clear();
             this->mats.Clear();

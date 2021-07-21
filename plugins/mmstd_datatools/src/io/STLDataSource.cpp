@@ -92,7 +92,7 @@ namespace megamol
 
 						// Read data
 						const auto& vislib_filename = this->filename_slot.Param<core::param::FilePathParam>()->Value();
-						const std::string filename(vislib_filename.string());
+						const std::string filename(vislib_filename.PeekBuffer());
 
 						try
 						{

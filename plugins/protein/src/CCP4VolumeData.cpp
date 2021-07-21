@@ -115,7 +115,7 @@ bool protein::CCP4VolumeData::tryLoadFile(void) {
 
 
 	// open file for reading
-    vislib::StringA ccp4filename( this->filename.Param<param::FilePathParam>()->Value().c_str());
+    vislib::StringA ccp4filename( this->filename.Param<param::FilePathParam>()->Value());
 	const char *fn = ccp4filename.PeekBuffer();
     std::ifstream fin( fn, std::ios::binary | std::ios::in );
 

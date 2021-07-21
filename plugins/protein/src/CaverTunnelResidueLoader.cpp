@@ -103,10 +103,10 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
         }
         ASSERT(this->filenameSlot.Param<param::FilePathParam>() != nullptr);
 
-        if (!this->file->Open(this->filenameSlot.Param<param::FilePathParam>()->Value().c_str(), File::READ_ONLY,
+        if (!this->file->Open(this->filenameSlot.Param<param::FilePathParam>()->Value(), File::READ_ONLY,
                 File::SHARE_READ, File::OPEN_ONLY)) {
             Log::DefaultLog.WriteError("Unable to open residues-File \"%s\".",
-                this->filenameSlot.Param<param::FilePathParam>()->Value().c_str());
+                vislib::StringA(this->filenameSlot.Param<param::FilePathParam>()->Value()).PeekBuffer());
             SAFE_DELETE(this->file);
             return true;
         }
@@ -163,10 +163,10 @@ bool CaverTunnelResidueLoader::filenameChanged(core::param::ParamSlot& slot) {
         }
         ASSERT(this->tunnelFilenameSlot.Param<param::FilePathParam>() != nullptr);
 
-        if (!this->tunnelFile->Open(this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value().c_str(), File::READ_ONLY,
+        if (!this->tunnelFile->Open(this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value(), File::READ_ONLY,
                 File::SHARE_READ, File::OPEN_ONLY)) {
             Log::DefaultLog.WriteError("Unable to open tunnel-File \"%s\".",
-                this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value().c_str());
+                vislib::StringA(this->tunnelFilenameSlot.Param<param::FilePathParam>()->Value()).PeekBuffer());
             SAFE_DELETE(this->file);
             return true;
         }

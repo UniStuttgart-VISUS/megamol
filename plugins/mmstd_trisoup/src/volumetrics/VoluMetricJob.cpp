@@ -145,8 +145,8 @@ DWORD VoluMetricJob::Run(void *userData) {
     unsigned int frameCnt = datacall->FrameCount();
     Log::DefaultLog.WriteInfo("Data source with %u frame(s)", frameCnt);
 
-    if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
-        if (!this->statisticsFile.Open(metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().c_str(),
+    if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
+        if (!this->statisticsFile.Open(metricsFilenameSlot.Param<core::param::FilePathParam>()->Value(),
             vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ,
             vislib::sys::File::CREATE_OVERWRITE)) {
             Log::DefaultLog.WriteError("Could not open statistics file for writing");
@@ -387,7 +387,7 @@ DWORD VoluMetricJob::Run(void *userData) {
         // new code to eliminate enclosed surfaces
     }
 
-    if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
+    if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
         statisticsFile.Close();
     }
     return 0;
@@ -1011,7 +1011,7 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
         //numTriangles += countPerID[i];
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f, voidVol %f, entire volume %f", uniqueIDs[i],
             countPerID[i], surfPerID[i], volPerID[i], voidVolPerID[i], volPerID[i] + voidVolPerID[i]);
-        if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
+        if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
             vislib::sys::WriteFormattedLineToFile(this->statisticsFile, "%u\t%u\t%u\t%f\t%f\n",
                 frameNumber, uniqueIDs[i], countPerID[i], surfPerID[i], volPerID[i]);
         }
