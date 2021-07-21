@@ -137,9 +137,13 @@ namespace gui {
          * Return current screenshot file name and create new file name for next screenshot
          */
         inline std::string GetScreenshotFileName() {
-            auto screenshot_filepath = this->gui_state.screenshot_filepath;
+            auto screenshot_filepath = std::filesystem::u8path(this->gui_state.screenshot_filepath);
             this->create_unique_screenshot_filename(this->gui_state.screenshot_filepath);
-            return screenshot_filepath;
+#ifdef _MSC_VER
+            return screenshot_filepath.generic_string();
+#else
+            return screenshot_filepath.generic_u8string();
+#endif
         }
 
         /**
@@ -147,9 +151,13 @@ namespace gui {
          * Request is consumed when calling this function.
          */
         std::string GetProjectLoadRequest() {
-            auto project_file_name = this->gui_state.request_load_projet_file;
+            auto project_file_name = std::filesystem::u8path(this->gui_state.request_load_projet_file);
             this->gui_state.request_load_projet_file.clear();
-            return project_file_name;
+#ifdef _MSC_VER
+            return project_file_name.generic_string();
+#else
+            return project_file_name.generic_u8string();
+#endif
         }
 
         /**
@@ -224,9 +232,9 @@ namespace gui {
         void RegisterWindow(
             const std::string& window_name, std::function<void(AbstractWindow::BasicConfig&)> const& callback);
 
-        void RegisterPopUp(const std::string& name, bool& open, std::function<void()> const& callback);
+        void RegisterPopUp(const std::string& name, std::weak_ptr<bool> open, std::function<void()> const& callback);
 
-        void RegisterNotification(const std::string& name, bool& open, const std::string& message);
+        void RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message);
 
         /**
          * Synchronise changes between core graph <-> gui graph.
@@ -302,8 +310,11 @@ namespace gui {
 
         /** GUI element collections. */
         WindowCollection win_collection;
-        std::map<std::string, std::pair<bool*, std::function<void()>>> popup_collection;
-        std::map<std::string, std::tuple<bool*, bool, std::string>> notification_collection;
+        // Pop-up name, open pop-up flag held by pop-up caller, function drawing content of pop-up
+        std::map<std::string, std::pair<std::weak_ptr<bool>, std::function<void()>>> popup_collection;
+        // Pop-up name, open pop-up flag held by pop-up caller, flag to dismiss further pop-ups but print console log,
+        // message
+        std::map<std::string, std::tuple<std::weak_ptr<bool>, bool, std::string>> notification_collection;
 
         /** Shortcut pointer to configurator window */
         std::shared_ptr<Configurator> win_configurator_ptr;

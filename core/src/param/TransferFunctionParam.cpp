@@ -54,9 +54,6 @@ TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal)
 }
 
 
-TransferFunctionParam::~TransferFunctionParam(void) {}
-
-
 void TransferFunctionParam::Definition(vislib::RawStorage& outDef) const {
     outDef.AssertSize(6);
     memcpy(outDef.AsAt<char>(0), "MMTFFC", 6);
@@ -168,7 +165,7 @@ bool TransferFunctionParam::GetParsedTransferFunctionData(const std::string& in_
 
 
 bool TransferFunctionParam::GetDumpedTransferFunction(std::string& out_tfs, const NodeVector_t& in_nodes,
-    const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range,
+    InterpolationMode in_interpolmode, unsigned int in_texsize, const std::array<float, 2>& in_range,
     bool in_ignore_project_range) {
 
     try {
@@ -223,8 +220,7 @@ bool TransferFunctionParam::GetDumpedTransferFunction(std::string& out_tfs, cons
 }
 
 
-bool TransferFunctionParam::CheckTransferFunctionData(const NodeVector_t& nodes, const InterpolationMode interpolmode,
-    const unsigned int texsize, const std::array<float, 2> range) {
+bool TransferFunctionParam::CheckTransferFunctionData(const NodeVector_t &nodes, InterpolationMode interpolmode, unsigned int texsize, const std::array<float, 2>& range) {
 
     bool check = true;
 
