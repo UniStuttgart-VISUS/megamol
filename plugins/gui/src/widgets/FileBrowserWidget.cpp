@@ -322,8 +322,8 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 
                 // Assemble final file name
                 this->current_file_str += this->append_ending_str;
-                auto tmp_path = std::filesystem::u8path(this->current_directory_str) /
-                                std::filesystem::u8path(this->current_file_str);
+                auto tmp_path =
+                    std::filesystem::path(this->current_directory_str) / std::filesystem::path(this->current_file_str);
                 /// TODO tmp_path = std::filesystem::relative(tmp_path, std::filesystem::current_path());
 
                 inout_filename = tmp_path.generic_u8string();
