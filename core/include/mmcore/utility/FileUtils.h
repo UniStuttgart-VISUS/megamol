@@ -68,7 +68,7 @@ namespace utility {
             return megamol::core::utility::FileUtils::LoadRawFile(megamol::core::utility::ToString(filename), out_data);
         }
 
-        static bool LoadRawFile(const std::string& filename, std::vector<char>& out_data);
+        static bool LoadRawFile(const std::filesystem::path& filename, std::vector<char>& out_data);
 
         /**
          * Check if file exists.
@@ -124,7 +124,7 @@ namespace utility {
          *
          * @return True on success, false otherwise.
          */
-        static bool WriteFile(const std::string& filename, const std::string& in_content, bool silent = false);
+        static bool WriteFile(const std::filesystem::path& filename, const std::string& in_content, bool silent = false);
 
         /**
          * Read content from file.
@@ -135,7 +135,7 @@ namespace utility {
          *
          * @return True on success, false otherwise.
          */
-        static bool ReadFile(const std::string& filename, std::string& out_content, bool silent = false);
+        static bool ReadFile(const std::filesystem::path& filename, std::string& out_content, bool silent = false);
 
     private:
         FileUtils() = default;
@@ -145,7 +145,7 @@ namespace utility {
 
     template<typename T>
     bool megamol::core::utility::FileUtils::FileExists(const T& path_str) {
-        auto path = std::filesystem::u8path(path_str);
+        auto path = std::filesystem::path(path_str);
         try {
             if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
                 return true;
@@ -162,8 +162,8 @@ namespace utility {
     bool megamol::core::utility::FileUtils::FileWithExtensionExists(const T& path_str, const std::string& ext) {
         try {
             if (FileUtils::FileExists<T>(path_str)) {
-                auto path = std::filesystem::u8path(path_str);
-                return (path.extension().generic_u8string() == std::string("." + ext));
+                auto path = std::filesystem::path(path_str);
+                return (path.extension().string() == std::string("." + ext));
             }
         }
         catch (std::filesystem::filesystem_error const& e) {
@@ -176,18 +176,18 @@ namespace utility {
 
     template<typename T>
     bool megamol::core::utility::FileUtils::FileHasExtension(const T& path_str, const std::string& ext) {
-        auto path = std::filesystem::u8path(path_str);
-        return (path.extension().generic_u8string() == ext);
+        auto path = std::filesystem::path(path_str);
+        return (path.extension().string() == ext);
     }
 
 
     template<typename T>
     std::string megamol::core::utility::FileUtils::GetFilenameStem(const T& path_str) {
         try {
-            auto path = std::filesystem::u8path(path_str);
+            auto path = std::filesystem::path(path_str);
             std::string filename;
             if (path.has_stem()) {
-                filename = path.stem().generic_u8string();
+                filename = path.stem().string();
             }
             return filename;
         }
@@ -202,12 +202,12 @@ namespace utility {
     template<typename T, typename S>
     std::string megamol::core::utility::FileUtils::SearchFileRecursive(const T& search_path_str, const S& search_file_str) {
         try {
-            auto search_path = std::filesystem::u8path(search_path_str);
-            auto file_path = std::filesystem::u8path(search_file_str);
+            auto search_path = std::filesystem::path(search_path_str);
+            auto file_path = std::filesystem::path(search_file_str);
             std::string found_path;
             for (const auto& entry : std::filesystem::recursive_directory_iterator(search_path)) {
                 if (entry.path().filename() == file_path) {
-                    found_path = entry.path().generic_u8string();
+                    found_path = entry.path().string();
                     break;
                 }
             }

@@ -13,7 +13,7 @@
 using namespace megamol::core::param;
 
 
-FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, const Extensions_t& exts)
+FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags, const Extensions_t& exts)
     : AbstractParam()
     , flags(flags)
     , extensions(exts)
@@ -52,10 +52,10 @@ bool FilePathParam::ParseValue(const vislib::TString& v) {
 }
 
 
-void FilePathParam::SetValue(const std::string& v, bool setDirty) {
+void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
 
     try {
-        auto new_value = std::filesystem::u8path(v);
+        auto new_value = v;
         if (this->value != new_value) {
             auto error_flags = FilePathParam::ValidatePath(new_value, this->extensions, this->flags);
 
@@ -102,25 +102,15 @@ void FilePathParam::SetValue(const std::string& v, bool setDirty) {
 }
 
 
-void FilePathParam::SetValue(const vislib::TString& v, bool setDirty) {
-
-    this->SetValue(std::string(v.PeekBuffer()), setDirty);
-}
-
-
 vislib::TString FilePathParam::ValueString() const {
 
-    return vislib::TString(this->value.generic_u8string().c_str());
+    return vislib::TString(this->value.c_str());
 }
 
 
-vislib::TString FilePathParam::Value() const {
+std::filesystem::path FilePathParam::Value() const {
 
-#ifdef _MSC_VER
-    return vislib::TString(this->value.generic_string().c_str());
-#else
-    return vislib::TString(this->value.generic_u8string().c_str());
-#endif
+    return this->value;
 }
 
 

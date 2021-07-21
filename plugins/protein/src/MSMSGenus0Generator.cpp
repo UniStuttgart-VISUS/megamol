@@ -174,7 +174,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
         uint32_t genus = 1;
         uint32_t step = 1;
         while (genus != 0 && step <= maxSteps) {
-            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value(), probeRadius);
+            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str(), probeRadius);
             this->isGenus0(0, &genus);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
@@ -183,7 +183,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
         }
         if (genus != 0) return false;
     }
-    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty() &&
+    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty() &&
         // this->prevTime != int(ctmd->FrameID())) {
         this->obj.Count() == ctmd->FrameCount() && this->obj[ctmd->FrameID()]->GetVertexCount() == 0) {
 
@@ -500,7 +500,7 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
         uint32_t genus = 1;
         uint32_t step = 1;
         while (genus != 0 && step <= maxSteps) {
-            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value(), probeRadius);
+            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().c_str(), probeRadius);
             this->isGenus0(0, &genus);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
@@ -511,7 +511,7 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
     }
 
     ctmd->SetDataHash(this->datahash);
-    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
+    if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
         MolecularDataCall* mol = this->molDataSlot.CallAs<MolecularDataCall>();
         if (mol) {
             // try to call for extent

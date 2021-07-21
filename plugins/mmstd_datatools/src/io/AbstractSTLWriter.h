@@ -318,7 +318,7 @@ namespace megamol
 
 						// Get filename
 						const auto& vislib_filename = this->filename_slot.template Param<core::param::FilePathParam>()->Value();
-						std::string filename(vislib_filename.PeekBuffer());
+						std::string filename(vislib_filename.string());
 
 						// Modify file name suffix according to user's selection
 						const std::string leading_zeroes("0000000000");

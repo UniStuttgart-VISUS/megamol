@@ -53,7 +53,7 @@ namespace param {
          * @param flags The flags for the parameter
          * @param exts The required file extensions for the parameter
          */
-        FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
+        FilePathParam(const std::filesystem::path& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
 
         /**
          * Dtor.
@@ -87,18 +87,17 @@ namespace param {
          * @param setDirty If 'true' the dirty flag of the owning parameter
          *                 slot is set and the update callback might be called.
          */
-        void SetValue(const std::string& v, bool setDirty = true);
-        void SetValue(const vislib::TString& v, bool setDirty = true);
+        void SetValue(const std::filesystem::path& v, bool setDirty = true);
 
         /**
-         * Gets the value of the parameter utf8 encoded for loading of files.
+         * Gets the value of the parameter
          *
          * @return The value of the parameter
          */
-        vislib::TString Value() const;
+        std::filesystem::path Value() const;
 
         /**
-         * Returns the value of the parameter as utf8 decoded string for storing in project file.
+         * Returns the value of the parameter.
          *
          * @return The value of the parameter as string.
          */

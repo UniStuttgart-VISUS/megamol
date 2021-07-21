@@ -39,7 +39,7 @@ bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) 
         clearMaterialCollection();
 
         auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.PeekBuffer());
+        std::string filename(vislib_filename.string());
 
         m_material_collection.first->addMaterial(this->instance(), filename, filename);
         m_material_collection.second.push_back(filename);

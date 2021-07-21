@@ -283,9 +283,9 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
     }
     ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPGD-File \"%s\".", vislib::StringA(
-            this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
+    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().c_str(), File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPGD-File \"%s\".",
+            this->filename.Param<param::FilePathParam>()->Value().c_str());
 
         SAFE_DELETE(this->file);
         this->setFrameCount(1);
