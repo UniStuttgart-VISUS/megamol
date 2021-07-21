@@ -1195,7 +1195,7 @@ bool KeyframeKeeper::saveKeyframes() {
             std::setfill('0') << std::setw(2) << now->tm_min << 
             std::setfill('0') << std::setw(2) << now->tm_sec << ".kf";
         this->filename = stream.str();
-        this->fileNameParam.Param<param::FilePathParam>()->SetValue(vislib::StringA(this->filename.c_str()), false);
+        this->fileNameParam.Param<param::FilePathParam>()->SetValue(this->filename, false);
     } 
 
     try {

@@ -61,8 +61,8 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
     this->MakeSlotAvailable( &this->resCountPerRowParam);
     
     // fill color table with default values and set the filename param
-    vislib::StringA filename( "colors.txt");
-    this->colorTableFileParam.SetParameter(new param::FilePathParam( A2T( filename)));
+    std::string filename("colors.txt");
+    this->colorTableFileParam.SetParameter(new param::FilePathParam(filename));
     this->MakeSlotAvailable( &this->colorTableFileParam);
     Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
     
