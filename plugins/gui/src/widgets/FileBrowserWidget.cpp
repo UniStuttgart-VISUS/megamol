@@ -180,7 +180,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                     std::vector<ChildData_t> paths;
                     std::vector<ChildData_t> files;
                     try {
-                        auto tmp_file_path = std::filesystem::u8path(this->current_directory_str);
+                        auto tmp_file_path = std::filesystem::path(this->current_directory_str);
                         for (const auto& entry : std::filesystem::directory_iterator(tmp_file_path)) {
                             if (status_known(status(entry.path()))) {
                                 bool is_dir = std::filesystem::is_directory(entry.path());
@@ -322,8 +322,8 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 
                 // Assemble final file name
                 this->current_file_str += this->append_ending_str;
-                auto tmp_path = std::filesystem::u8path(this->current_directory_str) /
-                                std::filesystem::u8path(this->current_file_str);
+                auto tmp_path = std::filesystem::path(this->current_directory_str) /
+                                std::filesystem::path(this->current_file_str);
                 /// TODO tmp_path = std::filesystem::relative(tmp_path, std::filesystem::current_path());
 
                 inout_filename = tmp_path.string();
@@ -363,7 +363,7 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
         out_dir.clear();
         out_file.clear();
 
-        auto out_path = std::filesystem::u8path(in_path);
+        auto out_path = std::filesystem::path(in_path);
 
         if (out_path.empty()) {
             out_path = std::filesystem::current_path();
@@ -392,7 +392,7 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
 void megamol::gui::FileBrowserWidget::validate_directory(FilePathParam::Flags_t flags, const std::string& path_str) {
 
     try {
-        auto tmp_path = std::filesystem::u8path(path_str);
+        auto tmp_path = std::filesystem::path(path_str);
         this->valid_directory =
             (status_known(status(tmp_path)) && is_directory(tmp_path) && (tmp_path.root_name() != tmp_path));
     } catch (std::filesystem::filesystem_error& e) {
@@ -412,7 +412,7 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
         this->valid_file = true;
         this->append_ending_str.clear();
 
-        auto tmp_filepath = std::filesystem::u8path(this->current_directory_str) / std::filesystem::u8path(file_str);
+        auto tmp_filepath = std::filesystem::path(this->current_directory_str) / std::filesystem::path(file_str);
 
         auto error_flags = FilePathParam::ValidatePath(tmp_filepath, extensions, flags);
         if (error_flags != 0) {
@@ -451,8 +451,8 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
 
         if ((mode == DIALOGMODE_SAVE) && this->file_errors.empty()) {
             // Warn when file already exists
-            tmp_filepath = std::filesystem::u8path(this->current_directory_str) /
-                           std::filesystem::u8path(file_str + this->append_ending_str);
+            tmp_filepath = std::filesystem::path(this->current_directory_str) /
+                           std::filesystem::path(file_str + this->append_ending_str);
             if (std::filesystem::exists(tmp_filepath) && std::filesystem::is_regular_file(tmp_filepath)) {
                 this->file_warnings += "Overwriting existing file.\n";
             }
@@ -470,7 +470,7 @@ std::string FileBrowserWidget::get_parent_path(const std::string& dir) const {
 
     try {
         auto retdir = this->get_absolute_path(dir);
-        auto parent_dir = std::filesystem::u8path(retdir);
+        auto parent_dir = std::filesystem::path(retdir);
         if (parent_dir.has_parent_path() && parent_dir.has_relative_path()) {
             retdir = parent_dir.parent_path().string();
         }
@@ -486,7 +486,7 @@ std::string FileBrowserWidget::get_parent_path(const std::string& dir) const {
 std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string& dir) const {
 
     try {
-        auto retval = std::filesystem::u8path(dir);
+        auto retval = std::filesystem::path(dir);
         if ((retval.string() == "..") || (retval.string() == ".")) {
             retval = absolute(retval);
 #if (_MSC_VER < 1916) /// XXX Fixed/No more required since VS 2019
