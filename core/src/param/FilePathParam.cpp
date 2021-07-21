@@ -13,7 +13,7 @@
 using namespace megamol::core::param;
 
 
-FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags, const Extensions_t& exts)
+FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, const Extensions_t& exts)
     : AbstractParam()
     , flags(flags)
     , extensions(exts)
@@ -52,22 +52,22 @@ bool FilePathParam::ParseValue(const vislib::TString& v) {
 }
 
 
-void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
+void FilePathParam::SetValue(const std::string& v, bool setDirty) {
 
     try {
-        auto new_value = v;
+        auto new_value = std::filesystem::u8path(v);
         if (this->value != new_value) {
             auto error_flags = FilePathParam::ValidatePath(new_value, this->extensions, this->flags);
 
             if (error_flags & Flag_File) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[FilePathParam] Omitting value '%s'. Expected file but directory is given.", new_value.native().c_str());
+                    "[FilePathParam] Omitting value '%s'. Expected file but directory is given.", new_value.c_str());
                 if (this->open_notification[Flag_File] != nullptr)
                     *this->open_notification[Flag_File] = true;
             }
             if (error_flags & Flag_Directory) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[FilePathParam] Omitting value '%s'. Expected directory but file is given.", new_value.native().c_str());
+                    "[FilePathParam] Omitting value '%s'. Expected directory but file is given.", new_value.c_str());
                 if (this->open_notification[Flag_Directory] != nullptr)
                     *this->open_notification[Flag_Directory] = true;
             }
@@ -102,18 +102,24 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
 }
 
 
+void FilePathParam::SetValue(const vislib::TString& v, bool setDirty) {
+
+    this->SetValue(std::string(v.PeekBuffer()), setDirty);
+}
+
+
 vislib::TString FilePathParam::ValueString() const {
 
-    return vislib::TString(this->value.string().c_str());
+    return vislib::TString(this->value.generic_u8string().c_str());
 }
 
 
 vislib::TString FilePathParam::Value() const {
 
 #ifdef _MSC_VER
-    return vislib::TString(this->value.string().c_str());
+    return vislib::TString(this->value.generic_string().c_str());
 #else
-    return vislib::TString(this->value.string().c_str());
+    return vislib::TString(this->value.generic_u8string().c_str());
 #endif
 }
 
@@ -134,7 +140,7 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
         if (f & FilePathParam::Flag_RestrictExtension) {
             bool valid_ext = false;
             for (auto& ext : e) {
-                if (p.extension().string() == std::string("." + ext)) {
+                if (p.extension().generic_u8string() == std::string("." + ext)) {
                     valid_ext = true;
                 }
             }

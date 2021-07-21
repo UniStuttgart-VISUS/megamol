@@ -139,7 +139,11 @@ namespace gui {
         inline std::string GetScreenshotFileName() {
             auto screenshot_filepath = std::filesystem::u8path(this->gui_state.screenshot_filepath);
             this->create_unique_screenshot_filename(this->gui_state.screenshot_filepath);
-            return screenshot_filepath.string();
+#ifdef _MSC_VER
+            return screenshot_filepath.generic_string();
+#else
+            return screenshot_filepath.generic_u8string();
+#endif
         }
 
         /**
@@ -149,7 +153,11 @@ namespace gui {
         std::string GetProjectLoadRequest() {
             auto project_file_name = std::filesystem::u8path(this->gui_state.request_load_projet_file);
             this->gui_state.request_load_projet_file.clear();
-            return project_file_name.string();
+#ifdef _MSC_VER
+            return project_file_name.generic_string();
+#else
+            return project_file_name.generic_u8string();
+#endif
         }
 
         /**
