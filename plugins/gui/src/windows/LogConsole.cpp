@@ -66,7 +66,6 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , last_window_height(0.0f)
         , win_log_level(static_cast<int>(megamol::core::utility::log::Log::LEVEL_ALL))
         , win_log_force_open(true)
-        , log_popups()
         , tooltip() {
 
     this->echo_log_target = std::make_shared<megamol::core::utility::log::StreamTarget>(
@@ -109,34 +108,6 @@ bool megamol::gui::LogConsole::Update() {
                         this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
                     }
                     this->win_config.show = true;
-                }
-            }
-
-            // Check for tags indicating log message pop-up
-            auto start_tag_pos = entry.message.find(LOGMESSAGE_GUI_POPUP_START_TAG);
-            auto end_tag_pos = entry.message.find(LOGMESSAGE_GUI_POPUP_END_TAG, start_tag_pos);
-            if ((start_tag_pos != std::string::npos) && (end_tag_pos != std::string::npos)) {
-                start_tag_pos += std::string(LOGMESSAGE_GUI_POPUP_START_TAG).length();
-                auto title = entry.message.substr(start_tag_pos, (end_tag_pos - start_tag_pos));
-                entry.message = entry.message.substr(end_tag_pos + std::string(LOGMESSAGE_GUI_POPUP_END_TAG).length());
-                // Append to existing log pop-up with same title
-                bool found_existing_popup = false;
-                for (auto& log_popup : this->log_popups) {
-                    if (log_popup.title == title) {
-                        log_popup.show = true;
-                        log_popup.entries.push_back(entry);
-                        found_existing_popup = true;
-                        break;
-                    }
-                }
-                // .. else create new pop-up
-                if (!found_existing_popup) {
-                    LogPopUpData log_popup;
-                    log_popup.title = title;
-                    log_popup.show = true;
-                    log_popup.disable = false;
-                    log_popup.entries.push_back(entry);
-                    this->log_popups.push_back(log_popup);
                 }
             }
         }
@@ -231,14 +202,6 @@ bool megamol::gui::LogConsole::Draw() {
 }
 
 
-void megamol::gui::LogConsole::PopUps() {
-
-    for (auto& log_popup : log_popups) {
-        this->draw_popup(log_popup);
-    }
-}
-
-
 bool megamol::gui::LogConsole::connect_log() {
 
     auto current_echo_target = megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget();
@@ -269,48 +232,6 @@ void megamol::gui::LogConsole::print_message(const LogBuffer::LogEntry& entry, u
             ImGui::TextColored(GUI_COLOR_TEXT_ERROR, entry.message.c_str());
         }
     }
-}
-
-
-void megamol::gui::LogConsole::draw_popup(LogPopUpData& log_popup) {
-
-    assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    std::string popup_title = this->Name() + " -  [" + log_popup.title + "]";
-
-    if ((!log_popup.disable && log_popup.show) && !ImGui::IsPopupOpen(popup_title.c_str())) {
-        ImGui::OpenPopup(popup_title.c_str());
-    }
-
-    if (ImGui::BeginPopupModal(popup_title.c_str(), nullptr,
-            ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar)) {
-
-        for (auto& entry : log_popup.entries) {
-            this->print_message(entry, megamol::core::utility::log::Log::LEVEL_ALL);
-            ImGui::Separator();
-        }
-
-        bool close = false;
-        if (ImGui::Button("Ok")) {
-            close = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Ok, disable further notifications.")) {
-            log_popup.disable = true;
-            close = true;
-        }
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-            close = true;
-        }
-        if (close) {
-            log_popup.entries.clear();
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
-    log_popup.show = false;
 }
 
 
