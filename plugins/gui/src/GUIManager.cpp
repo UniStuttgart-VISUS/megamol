@@ -840,11 +840,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                 }
                 // Load GUI state from project file when project file changed
                 if (!script_filename.empty()) {
-                    auto script_path = script_filename;
-#ifdef _MSC_VER
-                    script_path = megamol::core::utility::Utf8Encode(script_path);
-#endif
-                    synced_graph_ptr->SetFilename(script_path, false);
+                    synced_graph_ptr->SetFilename(script_filename, false);
                 }
             }
         }
