@@ -13,7 +13,7 @@ parser.add_argument('--generate-neutral-test', action='count', help='generate a 
 args = parser.parse_args()
 
 resultname = 'result.png'
-istest = re.compile('.*\.test\.\d+\.lua')
+istest = re.compile(r'.*\.test\.\d+\.lua')
 
 if not args.directories:
     print("need at least one input directory")
@@ -40,7 +40,7 @@ for dir in args.directories:
                     for testfile in tests:
                         print(f"running test {testfile}")
                         refname = testfile + ".png"
-                        with subprocess.Popen(f'megamol.exe {entry} {testfile}') as proc:
+                        with subprocess.Popen(f'megamol.exe --nogui {entry} {testfile}') as proc:
                             proc.wait()
                             if args.generate_reference:
                                 try:
