@@ -11,7 +11,8 @@ namespace megamol::core::utility {
 
 // STATIC functions -------------------------------------------------------
 
-bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename, GLint tex_min_filter, GLint tex_max_filter) {
+bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr,
+    const std::filesystem::path& filename, GLint tex_min_filter, GLint tex_max_filter) {
 
     if (filename.empty())
         return false;
@@ -196,7 +197,7 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
 }
 
 
-bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename, bool reload) {
+bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::filesystem::path& filename, bool reload) {
 
     if (reload) {
         auto texture_iter = std::find_if(this->textures.begin(), this->textures.end(), [&out_texture_id](std::shared_ptr<glowl::Texture2D> tex_ptr) {

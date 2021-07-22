@@ -16,7 +16,7 @@ megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
     this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
 
-    this->m_btf_filename_slot << new core::param::FilePathParam(std::filesystem::u8path("dfr_gltfExample"));
+    this->m_btf_filename_slot << new core::param::FilePathParam("dfr_gltfExample");
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 }
 

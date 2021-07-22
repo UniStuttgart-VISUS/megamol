@@ -658,7 +658,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
 bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename) {
 
     std::string loaded_project;
-    if (!megamol::core::utility::FileUtils::ReadFile(project_filename, loaded_project)) {
+    if (!megamol::core::utility::FileUtils::ReadFile(std::filesystem::u8path(project_filename), loaded_project)) {
         return false;
     }
 
@@ -1130,7 +1130,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                              confParams.str() + "\n" + state_json;
 
                 graph_ptr->ResetDirty();
-                if (megamol::core::utility::FileUtils::WriteFile(project_filename, projectstr)) {
+                if (megamol::core::utility::FileUtils::WriteFile(
+                        std::filesystem::u8path(project_filename), projectstr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "[GUI] Successfully saved project '%s'.\n", graph_ptr->Name().c_str());
 
@@ -1492,7 +1493,7 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 
     // Try to load existing gui state from file
     std::string loaded_state;
-    if (megamol::core::utility::FileUtils::ReadFile(filename, loaded_state)) {
+    if (megamol::core::utility::FileUtils::ReadFile(std::filesystem::u8path(filename), loaded_state)) {
         loaded_state =
             gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (!loaded_state.empty()) {
@@ -1539,7 +1540,7 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
 
     std::string loaded_state;
-    if (megamol::core::utility::FileUtils::ReadFile(filename, loaded_state)) {
+    if (megamol::core::utility::FileUtils::ReadFile(std::filesystem::u8path(filename, loaded_state)) {
         loaded_state =
             gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (loaded_state.empty())

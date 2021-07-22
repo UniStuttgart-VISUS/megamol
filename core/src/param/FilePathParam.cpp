@@ -30,6 +30,16 @@ FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags
 }
 
 
+FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, const Extensions_t& exts)
+        : FilePathParam(std::filesystem::u8path(initVal), flags, exts){
+};
+
+
+FilePathParam::FilePathParam(const char * initVal, Flags_t flags, const Extensions_t& exts)
+        : FilePathParam(std::filesystem::u8path(initVal), flags, exts){
+};
+
+
 void FilePathParam::Definition(vislib::RawStorage& outDef) const {
 
     outDef.AssertSize(6);
@@ -99,6 +109,18 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
     }
+}
+
+
+void megamol::core::param::FilePathParam::SetValue(const std::string& v, bool setDirty) {
+
+    this->SetValue(v), setDirty);
+}
+
+
+void megamol::core::param::FilePathParam::SetValue(const char* v, bool setDirty) {
+
+    this->SetValue(v), setDirty);
 }
 
 

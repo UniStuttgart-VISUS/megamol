@@ -60,6 +60,8 @@ namespace param {
          * @param exts The required file extensions for the parameter
          */
         FilePathParam(const std::filesystem::path& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
+        FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
+        FilePathParam(const char* initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
 
         /**
          * Dtor.
@@ -94,6 +96,8 @@ namespace param {
          *                 slot is set and the update callback might be called.
          */
         void SetValue(const std::filesystem::path& v, bool setDirty = true);
+        void SetValue(const std::string& v, bool setDirty = true);
+        void SetValue(const char* v, bool setDirty = true);
 
         /**
          * Gets the value of the parameter utf8 encoded for loading of files.

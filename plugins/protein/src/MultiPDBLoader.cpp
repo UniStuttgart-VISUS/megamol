@@ -127,7 +127,7 @@ void MultiPDBLoader::assertData(void) {
         for (unsigned int i = 0; i < file.Count(); i++) {
             this->pdb[i] = new PDBLoader();
             this->datacall[i] = new MolecularDataCall();
-            this->pdb[i]->pdbFilenameSlot.Param<core::param::FilePathParam>()->SetValue(std::filesystem::u8path(file.Line(i).Pointer()), true);
+            this->pdb[i]->pdbFilenameSlot.Param<core::param::FilePathParam>()->SetValue(file.Line(i).Pointer()), true);
             this->datacall[i]->SetFrameID(0);
             if (this->pdb[i]->getExtent(*this->datacall[i])) {
                 this->pdb[i]->getData(*this->datacall[i]);

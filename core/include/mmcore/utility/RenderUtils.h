@@ -118,7 +118,9 @@ public:
     /**
      * Load textures.
      */
-    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
+    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr,
+        const std::filesystem::path& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
+        GLint tex_max_filter = GL_LINEAR);
 
     static bool LoadTextureFromData(
         std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
@@ -134,7 +136,7 @@ public:
     bool InitPrimitiveRendering(megamol::core::utility::ShaderSourceFactory& factory);
 
     // Keeps the texture object in render utils for later access via texture id
-    bool LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename, bool reload = false);
+    bool LoadTextureFromFile(GLuint& out_texture_id, const std::filesystem::path& filename, bool reload = false);
 
     void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view,
         const glm::vec3& cam_pos, const glm::vec4& color, bool sort = false);

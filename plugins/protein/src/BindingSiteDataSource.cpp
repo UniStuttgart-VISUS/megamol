@@ -34,7 +34,7 @@ BindingSiteDataSource::BindingSiteDataSource( void ) : megamol::core::Module(),
     this->MakeSlotAvailable( &this->dataOutSlot);
     
     // fill color table with default values and set the filename param
-    this->colorTableFileParam.SetParameter(new param::FilePathParam(std::filesystem::u8path("colors.txt")));
+    this->colorTableFileParam.SetParameter(new param::FilePathParam("colors.txt"));
     this->MakeSlotAvailable( &this->colorTableFileParam);
     Color::ReadColorTableFromFile(
         this->colorTableFileParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),

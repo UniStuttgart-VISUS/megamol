@@ -14,7 +14,7 @@ megamol::stdplugin::datatools::CSVWriter::CSVWriter() : _data_in_slot("inData", 
     _data_in_slot.SetCompatibleCall<table::TableDataCallDescription>();
     MakeSlotAvailable(&_data_in_slot);
 
-    _filename_slot << new core::param::FilePathParam(std::filesystem::u8path("out.csv"));
+    _filename_slot << new core::param::FilePathParam("out.csv");
     MakeSlotAvailable(&_filename_slot);
 }
 

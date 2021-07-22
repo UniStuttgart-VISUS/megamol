@@ -45,11 +45,11 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimData
         frameCnt(0)  {
 
     // Filename slots
-    this->fileFramesSlot << new core::param::FilePathParam(std::filesystem::u8path("/PathToFile/bto_625000at_500fr.bin"));
+    this->fileFramesSlot << new core::param::FilePathParam("/PathToFile/bto_625000at_500fr.bin");
     this->MakeSlotAvailable(&this->fileFramesSlot);
-    this->fileCellsSlot << new core::param::FilePathParam(std::filesystem::u8path("/PathToFile/bto_625000at_cells.bin"));
+    this->fileCellsSlot << new core::param::FilePathParam("/PathToFile/bto_625000at_cells.bin");
     this->MakeSlotAvailable(&this->fileCellsSlot);
-    this->fileAtomsSlot << new core::param::FilePathParam(std::filesystem::u8path("/PathToFile/bto_625000at.bin"));
+    this->fileAtomsSlot << new core::param::FilePathParam("/PathToFile/bto_625000at.bin");
     this->MakeSlotAvailable(&this->fileAtomsSlot);
 
     // Data caller slot for chkpt source

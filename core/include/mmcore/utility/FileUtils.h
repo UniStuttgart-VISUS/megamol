@@ -93,7 +93,7 @@ namespace utility {
          * @return True on success, false otherwise.
          */
         static bool WriteFile(
-            const std::string& filename, const std::string& in_content, bool silent = false);
+            const std::filesystem::path& filename, const std::string& in_content, bool silent = false);
 
         /**
          * Read content from file.
@@ -104,12 +104,12 @@ namespace utility {
          *
          * @return True on success, false otherwise.
          */
-        static bool ReadFile(const std::string& filename, std::string& out_content, bool silent = false);
+        static bool ReadFile(const std::filesystem::path& filename, std::string& out_content, bool silent = false);
 
         /**
          * Load raw data from file (e.g. texture data)
          */
-        static bool LoadRawFile(const std::string& filename, std::vector<char>& out_data);
+        static bool LoadRawFile(const std::filesystem::path& filename, std::vector<char>& out_data);
 
     private:
         FileUtils() = default;
