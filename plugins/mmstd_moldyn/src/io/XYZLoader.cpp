@@ -152,7 +152,7 @@ void io::XYZLoader::assertData(void) {
     float rad = radiusSlot.Param<core::param::FloatParam>()->Value();
 
     vislib::sys::FastFile file;
-    if (!file.Open(filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+    if (!file.Open(filenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file \"%s\"",
             filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());

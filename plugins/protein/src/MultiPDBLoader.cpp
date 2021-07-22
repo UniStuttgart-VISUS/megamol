@@ -119,7 +119,7 @@ void MultiPDBLoader::assertData(void) {
 
     // try to load the file
     vislib::sys::ASCIIFileBuffer file;
-    if (file.LoadFile(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_u8string().c_str())) {
+    if (file.LoadFile(this->filenameSlot.Param<param::FilePathParam>()->Value().native().c_str())) {
         // TODO test if line is really a valid file!
         this->pdb.SetCount(file.Count());
         this->datacall.SetCount(file.Count());

@@ -485,7 +485,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     }
     ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
+    if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::SystemMessage err(::GetLastError());
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,

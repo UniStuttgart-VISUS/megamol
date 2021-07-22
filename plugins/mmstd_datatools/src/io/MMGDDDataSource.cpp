@@ -89,7 +89,7 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         file->Close();
     }
     assert(filename.Param<core::param::FilePathParam>() != nullptr);
-    if (!file->Open(filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(), File::READ_ONLY,
+    if (!file->Open(filename.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMGDD-File \"%s\".",
             filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());

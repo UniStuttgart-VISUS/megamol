@@ -1125,14 +1125,12 @@ void IMDAtomDataSource::assertData(void) {
     this->clear();
 
     vislib::sys::FastFile file;
-    vislib::TString filename =
-        this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
+    auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
     //    Log::DefaultLog.WriteInfo(50, _T("Loading \"%s\""), filename.PeekBuffer());
     // this->datahash = static_cast<SIZE_T>(filename.HashCode());
     if (!file.Open(
-            filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open imd file %s\n",
-            this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+            filename.native().c_str(), vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open imd file %s\n", filename.generic_u8string().c_str());
         return;
     }
 

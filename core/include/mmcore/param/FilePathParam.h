@@ -21,18 +21,13 @@ namespace megamol {
 namespace core {
 namespace param {
 
+    /// See MegaMol development guide for utf8 related explanations ///
 
     /**
      * class for file path parameter objects
      */
     class MEGAMOLCORE_API FilePathParam : public AbstractParam {
     public:
-
-        /**  UTF-8 GUIDELINE:
-        * - Convert your string object with std::filesystem::u8path() before passing to CTOR or SetValue()
-        * - Convert std::filesystem::path received via Value() with .generic_u8string() if string is required or use .generic_u8string().c_str() if char pointer is required
-        * - Pass std::filesystem::path to fopen with .native()
-        */
 
         enum FilePathFlags_ : uint32_t {
             Flag_File                           = 1 << 0,
@@ -47,9 +42,7 @@ namespace param {
         };
 
         typedef uint32_t Flags_t;
-
         typedef std::vector<std::string> Extensions_t;
-
         typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&)> RegisterNotificationCallback_t;
 
         /**

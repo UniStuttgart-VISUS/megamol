@@ -147,7 +147,7 @@ DWORD VoluMetricJob::Run(void *userData) {
 
     if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
         if (!this->statisticsFile.Open(
-                metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+                metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ,
             vislib::sys::File::CREATE_OVERWRITE)) {
             Log::DefaultLog.WriteError("Could not open statistics file for writing");

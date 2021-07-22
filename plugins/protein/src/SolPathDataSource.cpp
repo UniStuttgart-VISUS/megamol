@@ -158,7 +158,7 @@ void SolPathDataSource::loadData(void) {
 
     this->clear();
 
-    if (file.Open(this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
+    if (file.Open(this->filenameslot.Param<param::FilePathParam>()->Value().native().c_str(),
             File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY) == false) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open data file %s",
             this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());

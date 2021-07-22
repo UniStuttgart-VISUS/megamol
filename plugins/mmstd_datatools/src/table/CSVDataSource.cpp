@@ -182,7 +182,7 @@ void CSVDataSource::assertData(void) {
 
         // 1. Load the whole file into memory (FAST!)
         //////////////////////////////////////////////////////////////////////
-        if (!file.LoadFile(filename.generic_u8string().c_str(), vislib::sys::ASCIIFileBuffer::PARSING_LINES))
+        if (!file.LoadFile(filename.native().c_str(), vislib::sys::ASCIIFileBuffer::PARSING_LINES))
             throw vislib::Exception(__FILE__, __LINE__);
         if (file.Count() < 2) throw vislib::Exception("No data in CSV file", __FILE__, __LINE__);
 

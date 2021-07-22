@@ -58,8 +58,8 @@ void io::PlyWriter::release(void) {
  */
 bool io::PlyWriter::run(void) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
-    if (filename.IsEmpty()) {
+    auto filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
+    if (filename.empty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "No file name specified. Abort.");
         return false;
@@ -238,10 +238,10 @@ bool io::PlyWriter::run(void) {
     ctd->Unlock();
     // write the ply file
     vislib::sys::FastFile file;
-    if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
+    if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to create output file \"%s\". Abort.",
-            vislib::StringA(filename).PeekBuffer());
+            filename.generic_u8string().c_str());
         return false;
     }
     

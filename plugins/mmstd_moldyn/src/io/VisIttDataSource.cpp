@@ -407,7 +407,7 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
     ASSERT(this->filename.Param<core::param::FilePathParam>() != NULL);
 
-    if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+    if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open VisItt-File \"%s\".",
             this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());

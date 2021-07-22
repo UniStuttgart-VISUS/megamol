@@ -387,7 +387,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
     this->setFrameCount(this->nFrames);
 
     vislib::sys::File::FileSize fileSize = vislib::sys::File::GetSize(
-        this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+        this->filenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str());
 
 #ifdef VERBOSE
     time_t t = clock(); // DEBUG
@@ -402,7 +402,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
 
     // Read data file to char buffer
     char *buffer = new char[(unsigned int)fileSize];
-    if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+    if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY)) return false;
     file.Read(buffer, fileSize);
     file.Close();

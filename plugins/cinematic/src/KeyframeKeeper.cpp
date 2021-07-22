@@ -1200,7 +1200,7 @@ bool KeyframeKeeper::saveKeyframes() {
 
     try {
         std::ofstream outfile;
-        outfile.open(this->filename.c_str(), std::ios::binary);
+        outfile.open(this->filename, std::ios::binary);
         if (!outfile.good()) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to create keyframe file.");
             return false;

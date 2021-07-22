@@ -63,8 +63,8 @@ void trisoup::WavefrontObjWriter::release(void) {
  */
 bool trisoup::WavefrontObjWriter::run(void) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
-    if (filename.IsEmpty()) {
+    auto filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
+    if (filename.empty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "No file name specified. Abort.");
         return false;
@@ -77,10 +77,10 @@ bool trisoup::WavefrontObjWriter::run(void) {
         return false;
     }
 
-    /*if (vislib::sys::File::Exists(filename)) {
+    /*if (vislib::sys::File::Exists(filename.native().c_str())) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
             "File %s already exists and will be overwritten.",
-            vislib::StringA(filename).PeekBuffer());
+            filename.generic_u8string().c_str());
     }*/
 
     return writeLines(ldc);
