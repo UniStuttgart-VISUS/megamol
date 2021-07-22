@@ -273,7 +273,7 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::SetFilename(core::p
         return false;
     }
     if (sp == NULL) {
-        fpp->SetValue(name.PeekBuffer()));
+        fpp->SetValue(name.PeekBuffer());
     } else {
         sp->SetValue(name);
     }

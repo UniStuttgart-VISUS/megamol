@@ -114,13 +114,13 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
 
 void megamol::core::param::FilePathParam::SetValue(const std::string& v, bool setDirty) {
 
-    this->SetValue(v), setDirty);
+    this->SetValue(std::filesystem::u8path(v), setDirty);
 }
 
 
 void megamol::core::param::FilePathParam::SetValue(const char* v, bool setDirty) {
 
-    this->SetValue(v), setDirty);
+    this->SetValue(std::filesystem::u8path(v), setDirty);
 }
 
 

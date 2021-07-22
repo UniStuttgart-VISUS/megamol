@@ -1540,7 +1540,7 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
 
     std::string loaded_state;
-    if (megamol::core::utility::FileUtils::ReadFile(std::filesystem::u8path(filename, loaded_state)) {
+    if (megamol::core::utility::FileUtils::ReadFile(std::filesystem::u8path(filename), loaded_state)) {
         loaded_state =
             gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (loaded_state.empty())
