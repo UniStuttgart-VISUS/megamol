@@ -226,7 +226,7 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
             std::wstring texture_filename(megamol::core::utility::ResourceWrapper::getFileName(
                 this->GetCoreInstance()->Configuration(), vislib::StringA(filename.c_str()))
                                               .PeekBuffer());
-            if (!this->LoadTextureFromFile(this->m_transpctrl_icons[i], texture_filename)) {
+            if (!this->LoadTextureFromFile(this->m_transpctrl_icons[i], megamol::core::utility::WChar2Utf8String(texture_filename))) {
                 return false;
             }
         }

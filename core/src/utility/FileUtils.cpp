@@ -13,18 +13,23 @@ using namespace megamol::core::utility;
 
 
 bool megamol::core::utility::FileUtils::WriteFile(
-    const std::filesystem::path& filename, const std::string& in_content, bool silent) {
+    const std::string& filename, const std::string& in_content, bool silent) {
 
     try {
         std::ofstream file;
-        file.open(filename);
+#ifdef _MSC_VER
+        auto u8filename = std::filesystem::u8path(filename).generic_string();
+#else
+        auto u8filename = std::filesystem::u8path(filename).generic_u8string();
+#endif
+        file.open(u8filename);
         if (file.is_open() && file.good()) {
             file << in_content.c_str();
             file.close();
         } else {
             if (!silent)
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Unable to create file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                    "Unable to create file '%s'. [%s, %s, line %d]\n", u8filename.c_str(), __FILE__, __FUNCTION__,
                     __LINE__);
             file.close();
             return false;
@@ -49,20 +54,23 @@ bool megamol::core::utility::FileUtils::WriteFile(
 }
 
 
-bool megamol::core::utility::FileUtils::ReadFile(
-    const std::filesystem::path& filename, std::string& out_content, bool silent) {
+bool megamol::core::utility::FileUtils::ReadFile(const std::string& filename, std::string& out_content, bool silent) {
 
     try {
         std::ifstream file;
-        file.open(filename);
+#ifdef _MSC_VER
+        auto u8filename = std::filesystem::u8path(filename).generic_string();
+#else
+        auto u8filename = std::filesystem::u8path(filename).generic_u8string();
+#endif
+        file.open(u8filename);
         if (file.is_open() && file.good()) {
             out_content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
             file.close();
         } else {
             if (!silent)
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file '%s'. [%s, %s, line %d]\n",
-                    filename.c_str(), __FILE__, __FUNCTION__,
-                    __LINE__);
+                    u8filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
             file.close();
             return false;
         }
@@ -86,8 +94,7 @@ bool megamol::core::utility::FileUtils::ReadFile(
 }
 
 
-bool megamol::core::utility::FileUtils::LoadRawFile(
-    const std::filesystem::path& filename, std::vector<char>& out_data) {
+bool megamol::core::utility::FileUtils::LoadRawFile(const std::string& filename, std::vector<char>& out_data) {
 
     out_data.clear();
     try {
@@ -97,17 +104,22 @@ bool megamol::core::utility::FileUtils::LoadRawFile(
             return false;
         }
 
-        if (!(std::filesystem::exists(filename) && std::filesystem::is_regular_file(filename))) {
+#ifdef _MSC_VER
+        auto u8filename = std::filesystem::u8path(filename).generic_string();
+#else
+        auto u8filename = std::filesystem::u8path(filename).generic_u8string();
+#endif
+        if (!megamol::core::utility::FileUtils::FileExists<std::string>(u8filename)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
+                "Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", u8filename.c_str(), __FILE__,
                 __FUNCTION__, __LINE__);
             return false;
         }
 
-        std::ifstream input_file(filename, std::ifstream::binary);
+        std::ifstream input_file(u8filename, std::ifstream::binary);
         if (!input_file.is_open() || !input_file.good()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to open file \"%s\": Bad file. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                "Unable to open file \"%s\": Bad file. [%s, %s, line %d]\n", u8filename.c_str(), __FILE__, __FUNCTION__,
                 __LINE__);
             return false;
         }
@@ -118,7 +130,7 @@ bool megamol::core::utility::FileUtils::LoadRawFile(
         input_file.seekg(0, input_file.beg);
         if (size < 1) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
+                "Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", u8filename.c_str(), __FILE__,
                 __FUNCTION__, __LINE__);
             return false;
         }
@@ -127,7 +139,7 @@ bool megamol::core::utility::FileUtils::LoadRawFile(
         input_file.read(out_data.data(), size);
         if (!input_file.good()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", filename.c_str(),
+                "Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", u8filename.c_str(),
                 __FILE__, __FUNCTION__, __LINE__);
             out_data.clear();
             return false;

@@ -1138,6 +1138,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                     graph_ptr->SetFilename(project_filename, true);
 
                     return true;
+                } else {
+                    return false;
                 }
             }
         }
