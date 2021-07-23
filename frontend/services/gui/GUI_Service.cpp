@@ -219,7 +219,7 @@ void GUI_Service::digestChangedRequestedResources() {
     if (gui->GetTriggeredScreenshot()) {
         auto& screenshot_to_file_trigger =
             this->m_requestedResourceReferences[6].getResource<std::function<bool(std::string const&)>>();
-        screenshot_to_file_trigger(gui->GetScreenshotFileName());
+        screenshot_to_file_trigger(gui->GetScreenshotFileName().generic_u8string());
     }
 
     /// Pipe lua script paths to gui = resource index 7

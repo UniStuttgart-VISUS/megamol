@@ -111,7 +111,7 @@ namespace gui {
         /**
          * Pass current GUI scale.
          */
-        float GetScale() const {
+        inline float GetScale() const {
             return megamol::gui::gui_scaling.Get();
         }
 
@@ -127,7 +127,7 @@ namespace gui {
         /**
          * Pass triggered Screenshot.
          */
-        bool GetTriggeredScreenshot() {
+        inline bool GetTriggeredScreenshot() {
             bool trigger_screenshot = this->gui_state.screenshot_triggered;
             this->gui_state.screenshot_triggered = false;
             return trigger_screenshot;
@@ -136,20 +136,20 @@ namespace gui {
         /**
          * Return current screenshot file name and create new file name for next screenshot
          */
-        inline std::string GetScreenshotFileName() {
+        inline std::filesystem::path GetScreenshotFileName() {
             auto screenshot_filepath = std::filesystem::u8path(this->gui_state.screenshot_filepath);
             this->create_unique_screenshot_filename(this->gui_state.screenshot_filepath);
-            return screenshot_filepath.generic_u8string();
+            return screenshot_filepath;
         }
 
         /**
          * Pass project load request.
          * Request is consumed when calling this function.
          */
-        std::string GetProjectLoadRequest() {
+        inline std::filesystem::path GetProjectLoadRequest() {
             auto project_file_name = std::filesystem::u8path(this->gui_state.request_load_projet_file);
             this->gui_state.request_load_projet_file.clear();
-            return project_file_name.generic_u8string();
+            return project_file_name;
         }
 
         /**
@@ -160,7 +160,7 @@ namespace gui {
          *
          * @return Retured mouse cursor is in range [ImGuiMouseCursor_None=-1, (ImGuiMouseCursor_COUNT-1)=8]
          */
-        int GetMouseCursor() const {
+        inline int GetMouseCursor() const {
             return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
         }
 
@@ -169,14 +169,14 @@ namespace gui {
         /**
          * Set GUI state.
          */
-        void SetState(const std::string& json_state) {
+        inline void SetState(const std::string& json_state) {
             this->gui_state.new_gui_state = json_state;
         }
 
         /**
          * Set GUI visibility.
          */
-        void SetVisibility(bool visible) {
+        inline void SetVisibility(bool visible) {
             // In order to take immediate effect, the GUI visibility directly is set (and not indirectly via hotkey)
             this->gui_state.gui_visible = visible;
         }
@@ -189,14 +189,14 @@ namespace gui {
         /**
          * Set project script paths.
          */
-        void SetProjectScriptPaths(const std::vector<std::string>& script_paths) {
+        inline void SetProjectScriptPaths(const std::vector<std::string>& script_paths) {
             this->gui_state.project_script_paths = script_paths;
         }
 
         /**
          * Set current frame statistics.
          */
-        void SetFrameStatistics(double last_averaged_fps, double last_averaged_ms, size_t frame_count) {
+        inline void SetFrameStatistics(double last_averaged_fps, double last_averaged_ms, size_t frame_count) {
             this->gui_state.stat_averaged_fps = static_cast<float>(last_averaged_fps);
             this->gui_state.stat_averaged_ms = static_cast<float>(last_averaged_ms);
             this->gui_state.stat_frame_count = frame_count;
@@ -205,7 +205,7 @@ namespace gui {
         /**
          * Set resource directories.
          */
-        void SetResourceDirectories(const std::vector<std::string>& resource_directories) {
+        inline void SetResourceDirectories(const std::vector<std::string>& resource_directories) {
             megamol::gui::gui_resource_paths = resource_directories;
         }
 
