@@ -1807,9 +1807,10 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
     // Check for existing file
     bool created_filepath = false;
     if (!inout_filepath.empty()) {
+        auto ret_filepath = inout_filepath;
         do {
             // Create new filename with iterating suffix
-            std::string filename = megamol::core::utility::FileUtils::GetFilenameStem<std::string>(inout_filepath);
+            std::string filename = megamol::core::utility::FileUtils::GetFilePathStem<std::string>(ret_filepath);
             std::string id_separator = "_";
             bool new_separator = false;
             auto separator_index = filename.find_last_of(id_separator);
@@ -1820,17 +1821,18 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
                 } catch (...) { new_separator = true; }
                 this->gui_state.screenshot_filepath_id++;
                 if (new_separator) {
-                    this->gui_state.screenshot_filepath =
+                    ret_filepath =
                         filename + id_separator + std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
                 } else {
-                    inout_filepath = filename.substr(0, separator_index + 1) +
-                                     std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
+                    ret_filepath = filename.substr(0, separator_index + 1) +
+                                   std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
                 }
             } else {
-                inout_filepath =
+                ret_filepath =
                     filename + id_separator + std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
             }
-        } while (megamol::core::utility::FileUtils::FileExists<std::string>(inout_filepath));
+        } while (megamol::core::utility::FileUtils::FileExists<std::string>(ret_filepath));
+        inout_filepath = std::filesystem::u8path(ret_filepath).generic_u8string();
         created_filepath = true;
     }
     return created_filepath;
