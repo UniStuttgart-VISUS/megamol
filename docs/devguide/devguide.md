@@ -53,8 +53,8 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 4. Open the `CMakeLists.txt` file and to the following changes:
     1. Set the name of the target at the beginning of `megamol_plugin()`. (style guide: same as folder name)
     2. List the targets of other plugin dependencies after `DEPENDS_PLUGINS`[*].
-    3. List the targets of external dependencies after `DEPENDS_EXTERNALS`[*]. Do not define new externals within the plugin CMake! Use the global externals file.
-    4. If additional custom CMake settings are required they can be done within `if (megamolplugin_PLUGIN_ENABLED)`. The variable defined t the beginning of `megamol_plugin()` is a regular CMake target that can be used.
+    3. List the targets of external dependencies after `DEPENDS_EXTERNALS`[*]. Do not define new externals within the plugin CMake! Use the global externals file `externals/CMakeExternals.cmake`.
+    4. If additional custom CMake settings are required they can be put within `if (megamolplugin_PLUGIN_ENABLED)`. The variable defined at the beginning of `megamol_plugin()` is a regular CMake target that can be used.
 5. Add libraries/dependencies to `CMakeLists.txt` (optional, see [external dependencies](#external-dependencies)).
 6. Implement the content of your plugin.
     1. The private implementation should be in the `<pluginname>/src` directory. Source files are added automatically within CMake.
