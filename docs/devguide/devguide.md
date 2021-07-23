@@ -43,26 +43,27 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 ## Create new Plugin
 
 ### Add own plugin using the template
+
 1. Copy the template folder `plugins/doc_template`.
-2. Rename the copied folder to the intended plugin name (style guide: all lower case, no space!).
+2. Rename the copied folder to the intended plugin name (style guide: only lower case letters, numbers, and underscore).
 3. Rename the `src/MegaMolPlugin.cpp` to your plugin name (file name can be arbitrary). Within the file change the following:
     1. Use a unique namespace `megamol::pluginname`. (style guide: same as folder name)
-    2. Change the name and description parameters of the constructor.
+    2. Change the plugin name and description in the parameters of the constructor.
     3. The class name can be changed to any name, but it must be set accordingly in the `REGISTERPLUGIN()` macro.
 4. Open the `CMakeLists.txt` file and to the following changes:
     1. Set the name of the target at the beginning of `megamol_plugin()`. (style guide: same as folder name)
-    2. List the target of plugin names the new plugin depends on after `DEPENDS_PLUGINS`[*].
-    3. List the external names the new plugin depends on after `DEPENDS_EXTERNALS`[*]. Do not define new externals within the plugin CMake! Use the global externals file.
-    4. If additional custom CMake settings are required they can be done within `if (megamolplugin_PLUGIN_ENABLED)`. The plugin name is regular CMake target variable which can be used to do things with.
+    2. List the targets of other plugin dependencies after `DEPENDS_PLUGINS`[*].
+    3. List the targets of external dependencies after `DEPENDS_EXTERNALS`[*]. Do not define new externals within the plugin CMake! Use the global externals file.
+    4. If additional custom CMake settings are required they can be done within `if (megamolplugin_PLUGIN_ENABLED)`. The variable defined t the beginning of `megamol_plugin()` is a regular CMake target that can be used.
 5. Add libraries/dependencies to `CMakeLists.txt` (optional, see [external dependencies](#external-dependencies)).
 6. Implement the content of your plugin.
-    1. The private implementation should be in the `plugindir/src`folder. Source files are added autoamtically.
-    2. If the plugin has a public interface, add the headers in the `plugindir/include` folder (set visibility of dependencies accordingly[*]).
-    3. If the plugin uses shaders, add them into the `plugindir/shaders/pluginname` folder (see shader guide for more details).
-    4. If the plugin uses resources, add them into `plugindir/resources`.
+    1. The private implementation should be in the `<pluginname>/src` directory. Source files are added automatically within CMake.
+    2. If the plugin has a public interface, add the headers in the `<pluginname>/include` directory (set visibility of dependencies accordingly, see [*]).
+    3. If the plugin uses shaders, add them into the `<pluginname>/shaders/<pluginname>` directory (see shader guide for more details).
+    4. If the plugin uses resources, add them to `<pluginname>/resources`.
 7. Write a `README.md` for your plugin (mandatory).
 
-[*] You can prefix the plugins with the keywords `PUBLIC`, `PRIVATE` or `INTERFACE` the same way `target_link_libraries()` works. Defaults to `PRIVATE` if nothing is set.
+[*] You can prefix the dependency targets with the keywords `PUBLIC`, `PRIVATE`, or `INTERFACE` the same way `target_link_libraries()` works. Defaults to `PRIVATE` if nothing is set.
 
 <!-- ###################################################################### -->
 -----
@@ -71,31 +72,31 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 ### Shader files
 
-Shaders are stored as text files containing GLSL code, but we additionally are using a shader factory which supports and include directives similar to C/C++.
-This allows a better organisation of large shaders and reusing of common shader snippets.
+Shaders are stored as regular text files containing GLSL code, but we additionally are using a shader factory that supports and include directives similar to C/C++.
+This allows a better organization of large shaders and reusing of common shader snippets.
 
 Shader files must be located either in the `core/shaders/core` directory or in the shader directory of the corresponding plugin `<pluginname>/shaders/<pluginname>`.
 Please note the additional subfolder within each `shaders` directory!
-It is required for our include system and to avoid collision when installing all shaders to a single shader installation directory.
+It is required for our include system and to avoid collision when installing all shaders to a single shader-installation-directory.
 
-Complete shaders must use the filename pattern `<path>/<name>.<type>.glsl`.
-We use the file to determine the type of a shader.
+Full shaders must use the filename pattern `<path>/<name>.<type>.glsl`.
+We use the filename to determine the type of a shader.
 The following types are allowed:
 
 | Type | Shader Stage            |
 | ---- | ----------------------- |
 | vert | Vertex                  |
-| geom | Geometry                |
 | tesc | Tessellation Control    |
 | tese | Tessellation Evaluation |
+| geom | Geometry                |
 | frag | Fragment                |
 | comp | Compute                 |
 
-Shader snippets meant for inclusion within other shaders must not use type in their filename, but they should still have a `.glsl` extension.
+Shader snippets meant for inclusion within other shaders must not use a type in their extension, but they should still have a `.glsl` extension.
 
 Within shader files, includes can be defined in standard C style: `#include "common.h"`.
 Thereby, `core/shaders` and all `<pluginname>/shaders` directories are added as include search paths.
-Therefore, shaders can be included with a path relative to these directores (and you may see the reasoning for the additional subdirectories above).
+Therefore, shaders can be included with a path relative to these directories. (This is also the reason why we need the additional subdirectories as mentioned above).
 Some examples:
 ```glsl
 #include "core/phong.glsl"
@@ -110,9 +111,9 @@ Required headers:
 - `mmcore/CoreInstance.h`
 - `mmcore/utility/ShaderFactory.h`
 
-Before creating a shader program with this wrapper, `compiler_options` need to be retrieved from `CoreInstance`.
+Before creating a shader program with this wrapper, `compiler_options` need to be retrieved from the `CoreInstance`.
 This `compiler_options` instance contains default shader paths and default options.
-Additional include paths and definitions can be added prior to program creation.
+Additional include paths and definitions can be added before program creation.
 The constructor of the wrapper requires paths to source files of all shader stages in the form: `<path>/<name>.<type>.glsl`.
 
 Here is a full example:
@@ -120,6 +121,10 @@ Here is a full example:
 const auto shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 auto program = core::utility::make_glowl_shader("name", shader_options, "pluginname/shader.comp.glsl");
 ```
+
+The `make_glowl_shader()` helper function returns a glowl `GLSLProgram` wrapped in a unique pointer.
+A variant `make_shared_glowl_shader()` exists to use a shared pointer instead.
+Both functions are variadic, so any number of shaders can be combined into a single program (as long as the shader combination makes sense from the OpenGL perspective).
 
 ## Bi-Directional Communication across Modules
 
