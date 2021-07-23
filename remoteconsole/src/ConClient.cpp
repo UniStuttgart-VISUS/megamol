@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
         if (parseRes.count("exec")) script = parseRes["exec"].as<std::string>();
         if (parseRes.count("keep-open")) keepOpen = parseRes["keep-open"].as<bool>();
         if (parseRes.count("hammer")) hammerFactor = parseRes["hammer"].as<int>();
-        if (parseRes.count("timeout")) timeOutSeconds = parseRes["timeout"].as<int>();
+        timeOutSeconds = parseRes["timeout"].as<int>();
         if (parseRes.count("single")) singleSend = parseRes["single"].as<bool>();
         
         if (!parseRes.count("exec") && !parseRes.count("source")) {
