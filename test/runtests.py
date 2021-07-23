@@ -16,6 +16,8 @@ args = parser.parse_args()
 resultname = 'result.png'
 istest = re.compile(r'.*\.test\.\d+\.lua')
 testresults = []
+capture_stdout = True
+capture_stderr = False
 
 ssim_threshold = 0.95
 class TestResult:
@@ -50,10 +52,10 @@ for dir in args.directories:
                         stderrfile = f'{testfile}.stderr'
                         if os.path.isfile(resultname):
                             os.remove(resultname)
-                        if os.path.isfile(stdoutfile):
+                        if capture_stdout and os.path.isfile(stdoutfile):
                             os.remove(stdoutfile)
-                        # if os.path.isfile(stderrfile):
-                        #     os.remove(stderrfile)
+                        if capture_stderr and os.path.isfile(stderrfile):
+                            os.remove(stderrfile)
                         print(f"running test {testfile}... ", end='')
                         tr = TestResult()
                         tr.testfile=testfile
@@ -88,14 +90,19 @@ for dir in args.directories:
                                 else:
                                     print(f'failed ({ssim})')
                                     tr.passed = False
-                                    with open(stdoutfile, "wb") as outfile:
-                                        outfile.write(compl.stdout)
-                                    # with open(stderrfile, "wb") as outfile:
-                                    #     outfile.write(compl.stderr)
+                                    if capture_stdout:
+                                        with open(stdoutfile, "wb") as outfile:
+                                            outfile.write(compl.stdout)
+                                    if capture_stderr:
+                                        with open(stderrfile, "wb") as outfile:
+                                            outfile.write(compl.stderr)
 
                                 tr.result = f'SSIM = {ssim}'
                                 testresults.append(tr)
                             except Exception as e:
+                                tr.result = e
+                                tr.passed = False
+                                testresults.append(tr)
                                 print(f'unexpected exception: {e}')
 
 for tr in testresults:
