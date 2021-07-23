@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "HistogramRenderer2D.h"
+#include "TableHistogramRenderer2D.h"
 
 #include <algorithm>
 #include <limits>

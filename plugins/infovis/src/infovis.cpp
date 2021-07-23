@@ -21,10 +21,10 @@
 
 // Use extra block for renderer, so clang format does not change include order. Eigen3 (used in MDSProjection)
 // does not compile when X11 header (used in SDFFont, which is used in renderers) is included before.
-#include "HistogramRenderer2D.h"
 #include "InfovisAmortizedRenderer.h"
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
+#include "TableHistogramRenderer2D.h"
 
 namespace megamol::infovis {
 /** Implementing the instance class of this plugin */
