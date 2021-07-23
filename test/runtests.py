@@ -14,7 +14,7 @@ parser.add_argument('--generate-neutral-test', action='count', help='generate a 
 args = parser.parse_args()
 
 resultname = 'result.png'
-istest = re.compile(r'.*\.test\.\d+\.lua')
+istest = re.compile(r'.*/test/.*\d+\.lua')
 testresults = []
 capture_stdout = True
 capture_stderr = False
@@ -33,18 +33,21 @@ for dir in args.directories:
         for file in files:
             entry = os.path.join(subdir, file)
             if (entry.endswith('.lua') and not istest.match(entry)):
-                #print(f'found {entry}')
                 testname, _ = os.path.splitext(entry)
-                #print(f'using {testname}')
+                testdir = os.path.join(subdir, "tests")
+                testprefix = os.path.join(testdir, os.path.basename(testname))
+                #print(f'testprefix = {testprefix}')
                 if args.generate_neutral_test:
-                    tfname = f'{testname}.test.1.lua'
+                    if not os.path.isdir(testdir):
+                        os.makedirs(testdir)
+                    tfname = f'{testprefix}.1.lua'
                     if not os.path.isfile(tfname):
                         with open(tfname, "w") as outfile:
                             print(f'generating neutral test {tfname}')
                             outfile.write('mmRenderNextFrame()\nmmScreenshot("result.png")\nmmQuit()\n')
                     continue
 
-                tests = list(glob.iglob(f'{testname}.test.*.lua'))
+                tests = list(glob.iglob(f'{testprefix}.*.lua'))
                 if len(tests) > 0:
                     print(f'found tests for {file}')
                     for testfile in tests:
@@ -105,6 +108,9 @@ for dir in args.directories:
                                 testresults.append(tr)
                                 print(f'unexpected exception: {e}')
 
-print("\nSummary:")
-for tr in testresults:
-    print(f'{tr.testfile}: {"passed" if tr.passed else "failed"} {tr.result}')
+if (len(testresults) > 0):
+    print("\nSummary:")
+    for tr in testresults:
+        print(f'{tr.testfile}: {"passed" if tr.passed else "failed"} {tr.result}')
+else:
+    print("no tests found.")
