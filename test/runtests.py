@@ -30,7 +30,7 @@ for dir in args.directories:
     for subdir, dirs, files in os.walk(dir, topdown=True):
         for file in files:
             entry = os.path.join(subdir, file)
-            if (not istest.match(entry)):
+            if (entry.endswith('.lua') and not istest.match(entry)):
                 #print(f'found {entry}')
                 testname, _ = os.path.splitext(entry)
                 #print(f'using {testname}')
@@ -63,6 +63,7 @@ for dir in args.directories:
                         if args.generate_reference:
                             try:
                                 os.rename(resultname, refname)
+                                print('generated reference')
                             except:
                                 print(f'could not move {resultname} to {refname}')
                         else:
