@@ -105,5 +105,6 @@ for dir in args.directories:
                                 testresults.append(tr)
                                 print(f'unexpected exception: {e}')
 
+print("\nSummary:")
 for tr in testresults:
     print(f'{tr.testfile}: {"passed" if tr.passed else "failed"} {tr.result}')
