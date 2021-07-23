@@ -11,7 +11,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::gui;
+using namespace megamol::cinematic;
 
 
 OverlayRenderer::OverlayRenderer()
@@ -87,7 +87,7 @@ OverlayRenderer::OverlayRenderer()
     this->MakeSlotAvailable(&this->paramCustomPosition);
 
     // Texture Mode
-    this->paramFileName << new param::FilePathParam("");
+    this->paramFileName << new param::FilePathParam("", param::FilePathParam::Flag_File, { "png" });
     this->paramFileName.SetUpdateCallback(this, &OverlayRenderer::onTextureFileName);
     this->MakeSlotAvailable(&this->paramFileName);
 
@@ -451,6 +451,9 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     // Create 2D orthographic mvp matrix
     glm::mat4 ortho = glm::ortho(0.0f, this->m_viewport.x, 0.0f, this->m_viewport.y, -1.0f, 1.0f);
 
+    auto const lhsFBO = call.GetFramebufferObject();
+    lhsFBO->Enable();
+
     // Draw mode dependent stuff
     auto mode = this->paramMode.Param<param::EnumParam>()->Value();
     switch (mode) {
@@ -585,6 +588,8 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     } break;
     }
 
+    lhsFBO->Disable();
+
     return true;
 }
 
@@ -592,10 +597,10 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
 void OverlayRenderer::drawScreenSpaceBillboard(
     glm::mat4 ortho, glm::vec2 viewport, Rectangle rectangle, GLuint texture_id, glm::vec4 overwrite_color) {
 
-    glm::vec3 pos_bottom_left = {rectangle.left, rectangle.bottom, 0.0f};
-    glm::vec3 pos_upper_left = {rectangle.left, rectangle.top, 0.0f};
-    glm::vec3 pos_upper_right = {rectangle.right, rectangle.top, 0.0f};
-    glm::vec3 pos_bottom_right = {rectangle.right, rectangle.bottom, 0.0f};
+    glm::vec3 pos_bottom_left = {rectangle.left, rectangle.bottom, 1.0f};
+    glm::vec3 pos_upper_left = {rectangle.left, rectangle.top, 1.0f};
+    glm::vec3 pos_upper_right = {rectangle.right, rectangle.top, 1.0f};
+    glm::vec3 pos_bottom_right = {rectangle.right, rectangle.bottom, 1.0f};
     this->Push2DColorTexture(
         texture_id, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, overwrite_color);
     this->DrawTextures(ortho, viewport);

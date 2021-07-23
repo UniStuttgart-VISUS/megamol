@@ -20,6 +20,8 @@
 #include "KeyframeKeeper.h"
 #include "CinematicView.h"
 #include "ReplacementRenderer.h"
+#include "OverlayRenderer.h"
+
 
 namespace megamol::cinematic {
     /** Implementing the instance class of this plugin */
@@ -48,14 +50,15 @@ namespace megamol::cinematic {
         virtual void registerClasses(void) {
 			
             // register modules here:
-			this->module_descriptions.RegisterAutoDescription<megamol::cinematic::TrackingShotRenderer>();
-			this->module_descriptions.RegisterAutoDescription<megamol::cinematic::TimeLineRenderer>();
-			this->module_descriptions.RegisterAutoDescription<megamol::cinematic::KeyframeKeeper>();
-			this->module_descriptions.RegisterAutoDescription<megamol::cinematic::CinematicView>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::TrackingShotRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::TimeLineRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::KeyframeKeeper>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::CinematicView>();
             this->module_descriptions.RegisterAutoDescription<megamol::cinematic::ReplacementRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::OverlayRenderer>();
 
             // register calls here:
-			this->call_descriptions.RegisterAutoDescription < megamol::cinematic::CallKeyframeKeeper>();
+            this->call_descriptions.RegisterAutoDescription < megamol::cinematic::CallKeyframeKeeper>();
 
         }
     };

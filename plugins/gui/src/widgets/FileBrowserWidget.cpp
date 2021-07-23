@@ -9,35 +9,36 @@
 #include "FileBrowserWidget.h"
 #include "gui_utils.h"
 #include "imgui_stdlib.h"
+#include "mmcore/utility/FileUtils.h"
 #include "widgets/ButtonWidgets.h"
 
 
 using namespace megamol;
 using namespace megamol::gui;
+using namespace megamol::core::param;
 
 
 megamol::gui::FileBrowserWidget::FileBrowserWidget()
-        : search_widget()
-        , file_name_str()
-        , file_path_str()
+        : current_directory_str()
+        , current_file_str()
         , path_changed(false)
         , valid_directory(false)
         , valid_file(false)
-        , valid_ending()
-        , file_error()
-        , file_warning()
-        , child_paths()
+        , append_ending_str()
+        , file_errors()
+        , file_warnings()
+        , child_directories()
         , save_gui_state(vislib::math::Ternary::TRI_UNKNOWN)
         , label_uid_map()
-        , return_path(PATHMODE_ABSOLUTE)
+        , search_widget()
         , tooltip() {
 
     std::srand(std::time(nullptr));
 }
 
 
-bool megamol::gui::FileBrowserWidget::Button_Select(const std::vector<std::string>& extensions,
-    std::string& inout_filename, bool force_absolute, const std::string& project_path) {
+bool megamol::gui::FileBrowserWidget::Button_Select(
+    std::string& inout_filename, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -76,35 +77,13 @@ bool megamol::gui::FileBrowserWidget::Button_Select(const std::vector<std::strin
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    return this->PopUp_Select(
-        "Select File", extensions, open_popup_select_file, inout_filename, force_absolute, project_path);
+    return this->PopUp_Select("Select File", inout_filename, open_popup_select_file, extensions, flags);
 }
 
 
-std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string& in_path_str) const {
-
-    auto retval_str = in_path_str;
-    if ((in_path_str == "..") || (in_path_str == ".")) {
-        stdfs::path retval = static_cast<stdfs::path>(in_path_str);
-        retval = stdfs::absolute(retval);
-#if (_MSC_VER < 1916) /// XXX Fixed/No more required since VS 2019
-        if (retval.has_parent_path()) {
-            retval = retval.parent_path();
-            if ((in_path_str == "..") && retval.has_parent_path()) {
-                retval = retval.parent_path();
-            }
-        }
-#endif // _MSC_VER > 1916
-        retval_str = retval.generic_u8string();
-        gui_utils::Utf8Decode(retval_str);
-    }
-    return retval_str;
-}
-
-
-bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& label,
-    const std::vector<std::string>& extensions, bool& inout_open_popup, std::string& inout_filename,
-    bool force_absolute_path, const std::string& project_path, vislib::math::Ternary& inout_save_gui_state) {
+bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, const std::string& label,
+    std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions,
+    FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state) {
 
     bool retval = false;
 
@@ -127,11 +106,9 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
         popup_label += "###fbw" + this->label_uid_map[label];
 
         if (inout_open_popup) {
-
-            // Browse to given file name path
-            this->validate_split_path(inout_filename, this->file_path_str, this->file_name_str);
-            this->validate_directory(this->file_path_str);
-            this->validate_file(this->file_name_str, extensions, mode);
+            this->validate_split_path(inout_filename, this->current_directory_str, this->current_file_str);
+            this->validate_directory(flags, this->current_directory_str);
+            this->validate_file(mode, extensions, flags, this->current_file_str);
             this->path_changed = true;
 
             ImGui::OpenPopup(popup_label.c_str());
@@ -148,30 +125,24 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
         if (ImGui::BeginPopupModal(popup_label.c_str(), &open, ImGuiWindowFlags_None)) {
 
             bool apply = false;
-            bool opt_relabspath = false; /// XXX (!force_absolute_path && (mode == DIALOGMODE_SELECT));
 
             // Path ---------------------------------------------------
-            auto last_file_path_str = this->file_path_str;
-            if (ImGui::ArrowButton("###arrow_home", ImGuiDir_Right)) {
-                this->file_path_str = stdfs::current_path().generic_u8string();
+            auto last_file_path_str = this->current_directory_str;
+            if (ImGui::ArrowButton("arrow_home_dir", ImGuiDir_Right)) {
+                this->current_directory_str = std::filesystem::current_path().generic_u8string();
             }
-            this->tooltip.ToolTip("Working Directory", ImGui::GetID("###arrow_home"), 0.5f, 5.0f);
+            this->tooltip.ToolTip("Working Directory", ImGui::GetID("arrow_home_dir"), 0.5f, 5.0f);
             ImGui::SameLine();
-            if (ImGui::ArrowButton("###arrow_up_directory", ImGuiDir_Up)) {
-                stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str);
-                if (tmp_file_path.has_parent_path() && tmp_file_path.has_relative_path()) {
-                    // Assuming that parent is still valid directory
-                    this->file_path_str = tmp_file_path.parent_path().generic_u8string();
-                }
+            if (ImGui::ArrowButton("arrow_up_dir", ImGuiDir_Up)) {
+                this->current_directory_str = this->get_parent_path(this->current_directory_str);
             }
+            this->tooltip.ToolTip("Up", ImGui::GetID("arrow_up_dir"), 0.5f, 5.0f);
             ImGui::SameLine();
-            /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            gui_utils::Utf8Encode(this->file_path_str);
-            ImGui::InputText("Directory", &this->file_path_str, ImGuiInputTextFlags_AutoSelectAll);
-            gui_utils::Utf8Decode(this->file_path_str);
-            if (last_file_path_str != this->file_path_str) {
+            ImGui::InputText("Directory", &this->current_directory_str, ImGuiInputTextFlags_AutoSelectAll);
+            this->tooltip.ToolTip(this->current_directory_str);
+            if (last_file_path_str != this->current_directory_str) {
+                this->validate_directory(flags, this->current_directory_str);
                 this->path_changed = true;
-                this->validate_directory(this->file_path_str);
             }
             // Error message when path is no valid directory
             if (!this->valid_directory) {
@@ -185,84 +156,71 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
 
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
+            // Footer Height: 1x save gui state line + 2x line for button + 2x max log lines
             float footer_height =
-                ImGui::GetFrameHeightWithSpacing() * ((inout_save_gui_state.IsUnknown())
-                                                             ? (2.0f)
-                                                             : (3.0f)) + // 1x save gui state line + 2x line for button
-                (ImGui::GetTextLineHeightWithSpacing() * 2.0f);          // 2x max log lines
-            if (opt_relabspath) {
-                footer_height += ImGui::GetTextLineHeightWithSpacing() * ((project_path.empty()) ? (4.5f) : (6.0f));
-            }
+                ImGui::GetFrameHeightWithSpacing() * ((inout_save_gui_state.IsUnknown()) ? (2.0f) : (3.0f)) +
+                (ImGui::GetTextLineHeightWithSpacing() * 2.0f);
             float child_select_height = (ImGui::GetContentRegionAvail().y - footer_height);
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);
 
             if (this->valid_directory) {
                 // Parent directory selectable
-                std::string tag_parent("..");
-                if (ImGui::Selectable(tag_parent.c_str(), false, select_flags)) {
-                    stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str);
-                    if (tmp_file_path.has_parent_path() && tmp_file_path.has_relative_path()) {
-                        // Assuming that parent is still valid directory
-                        this->file_path_str = tmp_file_path.parent_path().generic_u8string();
-                        this->path_changed = true;
-                    }
+                if (ImGui::Selectable("..", false, select_flags)) {
+                    this->current_directory_str = this->get_parent_path(this->current_directory_str);
+                    this->path_changed = true;
                 }
 
                 // Only update child paths when path changed.
                 if (this->path_changed) {
                     // Reset scrolling
                     ImGui::SetScrollY(0.0f);
-
-                    this->file_path_str = this->get_absolute_path(this->file_path_str);
-
                     // Update child paths
-                    this->child_paths.clear();
-
+                    this->child_directories.clear();
                     std::vector<ChildData_t> paths;
                     std::vector<ChildData_t> files;
                     try {
-                        stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str);
-                        for (const auto& entry : stdfs::directory_iterator(tmp_file_path)) {
-                            if (stdfs::status_known(stdfs::status(entry.path()))) {
-                                bool is_directory = stdfs::is_directory(entry.path());
-                                if (is_directory) {
-                                    paths.emplace_back(ChildData_t(entry.path(), is_directory));
+                        auto tmp_file_path = std::filesystem::u8path(this->current_directory_str);
+                        for (const auto& entry : std::filesystem::directory_iterator(tmp_file_path)) {
+                            if (status_known(status(entry.path()))) {
+                                bool is_dir = std::filesystem::is_directory(entry.path());
+                                if (is_dir) {
+                                    paths.emplace_back(ChildData_t(entry.path(), is_dir));
                                 } else {
-                                    files.emplace_back(ChildData_t(entry.path(), is_directory));
+                                    files.emplace_back(ChildData_t(entry.path(), is_dir));
                                 }
                             }
                         }
                     } catch (...) {}
 
-                    // Sort path case insensitive alphabetically ascending
+                    // Sort path and file names case insensitive alphabetically ascending
                     std::sort(paths.begin(), paths.end(), [&](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_u8string();
-                        megamol::gui::gui_utils::StringToUpperCase(a_str);
+                        gui_utils::StringToUpperCase(a_str);
                         std::string b_str = b.first.filename().generic_u8string();
-                        megamol::gui::gui_utils::StringToUpperCase(b_str);
+                        gui_utils::StringToUpperCase(b_str);
                         return (a_str < b_str);
                     });
                     std::sort(files.begin(), files.end(), [&](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_u8string();
-                        megamol::gui::gui_utils::StringToUpperCase(a_str);
+                        gui_utils::StringToUpperCase(a_str);
                         std::string b_str = b.first.filename().generic_u8string();
-                        megamol::gui::gui_utils::StringToUpperCase(b_str);
+                        gui_utils::StringToUpperCase(b_str);
                         return (a_str < b_str);
                     });
 
                     for (auto& path : paths) {
-                        this->child_paths.emplace_back(path);
+                        this->child_directories.emplace_back(path);
                     }
                     for (auto& file : files) {
-                        this->child_paths.emplace_back(file);
+                        this->child_directories.emplace_back(file);
                     }
 
                     this->path_changed = false;
                 }
 
                 // Files and directories ----------------
-                for (const auto& path_pair : this->child_paths) {
+                for (const auto& path_pair : this->child_directories) {
 
                     auto select_label = path_pair.first.filename().generic_u8string();
                     bool showSearchedParameter = true;
@@ -277,13 +235,12 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                         }
 
                         if (ImGui::Selectable(
-                                select_label.c_str(), (select_label == this->file_name_str), select_flags)) {
-                            last_file_path_str = this->file_path_str;
+                                select_label.c_str(), (select_label == this->current_file_str), select_flags)) {
+                            last_file_path_str = this->current_directory_str;
                             auto new_path = path_pair.first.generic_u8string();
-                            gui_utils::Utf8Decode(new_path);
-                            this->validate_split_path(new_path, this->file_path_str, this->file_name_str);
-                            this->validate_file(this->file_name_str, extensions, mode);
-                            if (last_file_path_str != this->file_path_str) {
+                            this->validate_split_path(new_path, this->current_directory_str, this->current_file_str);
+                            this->validate_file(mode, extensions, flags, this->current_file_str);
+                            if (last_file_path_str != this->current_directory_str) {
                                 this->path_changed = true;
                             }
                         }
@@ -303,12 +260,13 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
             ImGui::BeginGroup();
 
             auto cursor_pos = ImGui::GetCursorScreenPos();
+
             // Error and warn messages ----------
-            if (!this->file_warning.empty()) {
-                ImGui::TextColored(GUI_COLOR_TEXT_WARN, this->file_warning.c_str());
+            if (!this->file_warnings.empty()) {
+                ImGui::TextColored(GUI_COLOR_TEXT_WARN, this->file_warnings.c_str());
             }
-            if (!this->file_error.empty()) {
-                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, this->file_error.c_str());
+            if (!this->file_errors.empty()) {
+                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, this->file_errors.c_str());
             }
             float max_log_lines = 2.0f;
             ImGui::SetCursorScreenPos(cursor_pos + ImVec2(0.0f, max_log_lines * ImGui::GetTextLineHeightWithSpacing()));
@@ -317,19 +275,16 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
             if (mode == DIALOGMODE_LOAD) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
-            auto last_file_name_str = this->file_name_str;
-            /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            gui_utils::Utf8Encode(this->file_name_str);
-            if (ImGui::InputText("File Name", &this->file_name_str,
+            auto last_file_name_str = this->current_file_str;
+            if (ImGui::InputText("File Name", &this->current_file_str,
                     ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                 apply = true;
             }
-            gui_utils::Utf8Decode(this->file_name_str);
             if (mode == DIALOGMODE_LOAD) {
                 ImGui::PopItemFlag();
             }
-            if (last_file_name_str != this->file_name_str) {
-                this->validate_file(this->file_name_str, extensions, mode);
+            if (last_file_name_str != this->current_file_str) {
+                this->validate_file(mode, extensions, flags, this->current_file_str);
             }
 
             // Optional save GUI state option ------------
@@ -339,30 +294,6 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
                 this->save_gui_state =
                     ((check) ? (vislib::math::Ternary::TRI_TRUE) : (vislib::math::Ternary::TRI_FALSE));
                 this->tooltip.Marker("Check this option to also save all settings affecting the GUI.");
-            }
-
-            // Relative output path options
-            if (opt_relabspath) {
-                ImGui::Separator();
-                ImGui::TextUnformatted("Return Path: ");
-                ImGui::AlignTextToFramePadding();
-                // ImGui::SameLine();
-                if (ImGui::RadioButton("Absolute", (this->return_path == PATHMODE_ABSOLUTE))) {
-                    this->return_path = PATHMODE_ABSOLUTE;
-                }
-                // ImGui::SameLine();
-                if (ImGui::RadioButton(
-                        "Relative to Working Directory", (this->return_path == PATHMODE_RELATIVE_WORKING))) {
-                    this->return_path = PATHMODE_RELATIVE_WORKING;
-                }
-                // ImGui::SameLine();
-                if (!project_path.empty()) {
-                    if (ImGui::RadioButton(
-                            "Relative to Project File", (this->return_path == PATHMODE_RELATIVE_PROJECT))) {
-                        this->return_path = PATHMODE_RELATIVE_PROJECT;
-                    }
-                }
-                ImGui::Separator();
             }
 
             // Buttons --------------------------
@@ -390,31 +321,12 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
             if (apply && this->valid_directory && this->valid_file) {
 
                 // Assemble final file name
-                this->file_name_str += this->valid_ending;
-                stdfs::path tmp_file_path =
-                    static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(this->file_name_str);
+                this->current_file_str += this->append_ending_str;
+                auto tmp_path = std::filesystem::u8path(this->current_directory_str) /
+                                std::filesystem::u8path(this->current_file_str);
+                /// TODO tmp_path = std::filesystem::relative(tmp_path, std::filesystem::current_path());
 
-                // Check for desired path format
-                if (opt_relabspath) {
-                    if (this->return_path == PATHMODE_RELATIVE_PROJECT) {
-                        if (!project_path.empty()) {
-                            auto relative_project_dir = stdfs::path(project_path);
-                            tmp_file_path = stdfs::relative(tmp_file_path, relative_project_dir);
-                        }
-                    } else if (this->return_path == PATHMODE_RELATIVE_WORKING) {
-                        tmp_file_path = stdfs::relative(
-                            tmp_file_path, stdfs::current_path()); /// XXX requires non-experimental filesystem support
-                    } else {
-                        tmp_file_path = stdfs::absolute(tmp_file_path);
-                    }
-                    if (tmp_file_path.empty()) {
-                        tmp_file_path = static_cast<stdfs::path>(this->file_path_str) /
-                                        static_cast<stdfs::path>(this->file_name_str);
-                    }
-                }
-
-                inout_filename = tmp_file_path.generic_u8string();
-                gui_utils::Utf8Decode(inout_filename);
+                inout_filename = tmp_path.generic_u8string();
                 inout_save_gui_state = this->save_gui_state;
                 ImGui::CloseCurrentPopup();
                 retval = true;
@@ -426,6 +338,10 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
             ImGui::EndPopup();
         }
 
+    } catch (std::filesystem::filesystem_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -441,38 +357,31 @@ bool megamol::gui::FileBrowserWidget::popup(DialogMode mode, const std::string& 
 
 
 bool megamol::gui::FileBrowserWidget::validate_split_path(
-    const std::string& in_path_file, std::string& out_path, std::string& out_file) const {
+    const std::string& in_path, std::string& out_dir, std::string& out_file) const {
 
-    // Splitting file path into path string and file string
     try {
-        out_path.clear();
+        out_dir.clear();
         out_file.clear();
-        stdfs::path out_path_file(in_path_file.c_str());
-        if (out_path_file.empty()) {
-            out_path_file = stdfs::current_path();
-            out_path = out_path_file.generic_u8string();
-        } else if ((stdfs::status_known(stdfs::status(out_path_file)) && stdfs::is_directory(out_path_file))) {
-            out_path = out_path_file.generic_u8string();
-        } else if (stdfs::status_known(stdfs::status(out_path_file)) && stdfs::is_regular_file(out_path_file)) {
-            out_path = out_path_file.parent_path().generic_u8string();
-            out_file = out_path_file.filename().generic_u8string();
-            if (out_path.empty()) {
-                out_path = ".";
-            }
+
+        auto out_path = std::filesystem::u8path(in_path);
+
+        if (out_path.empty()) {
+            out_path = std::filesystem::current_path();
+            out_dir = out_path.generic_u8string();
+        } else if ((status_known(status(out_path)) && is_directory(out_path))) {
+            out_dir = out_path.generic_u8string();
         } else {
-            out_path = out_path_file.parent_path().generic_u8string();
-            out_file = out_path_file.filename().generic_u8string();
-            if (out_path.empty()) {
-                out_path = ".";
+            out_dir = out_path.parent_path().generic_u8string();
+            out_file = out_path.filename().generic_u8string();
+            if (out_dir.empty()) {
+                out_dir = ".";
             }
         }
-        gui_utils::Utf8Decode(out_path);
-        gui_utils::Utf8Decode(out_file);
 
-    } catch (stdfs::filesystem_error& e) {
+    } catch (std::filesystem::filesystem_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-        out_path.clear();
+        out_dir.clear();
         out_file.clear();
         return false;
     }
@@ -480,14 +389,13 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
 }
 
 
-void megamol::gui::FileBrowserWidget::validate_directory(const std::string& path_str) {
+void megamol::gui::FileBrowserWidget::validate_directory(FilePathParam::Flags_t flags, const std::string& path_str) {
 
-    // Validating existing directory
     try {
-        stdfs::path tmp_path = static_cast<stdfs::path>(path_str);
-        this->valid_directory = (stdfs::status_known(stdfs::status(tmp_path)) && stdfs::is_directory(tmp_path) &&
-                                 (tmp_path.root_name() != tmp_path));
-    } catch (stdfs::filesystem_error& e) {
+        auto tmp_path = std::filesystem::u8path(path_str);
+        this->valid_directory =
+            (status_known(status(tmp_path)) && is_directory(tmp_path) && (tmp_path.root_name() != tmp_path));
+    } catch (std::filesystem::filesystem_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
@@ -495,97 +403,105 @@ void megamol::gui::FileBrowserWidget::validate_directory(const std::string& path
 }
 
 
-void megamol::gui::FileBrowserWidget::validate_file(const std::string& file_str,
-    const std::vector<std::string>& extensions, megamol::gui::FileBrowserWidget::DialogMode mode) {
+void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMode mode,
+    const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, const std::string& file_str) {
 
-    // Validating given path
     try {
-        std::string file_lower = file_str;
-        megamol::gui::gui_utils::StringToLowerCase(file_lower);
-
-        std::vector<std::string> exts_lower;
-        for (auto& ext : extensions) {
-            exts_lower.emplace_back("." + ext);
-            megamol::gui::gui_utils::StringToLowerCase(exts_lower.back());
-        }
-
-        this->file_error.clear();
-        this->file_warning.clear();
+        this->file_errors.clear();
+        this->file_warnings.clear();
         this->valid_file = true;
-        this->valid_ending.clear();
+        this->append_ending_str.clear();
 
-        stdfs::path tmp_file_path =
-            static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(file_lower);
+        auto tmp_filepath = std::filesystem::u8path(this->current_directory_str) / std::filesystem::u8path(file_str);
 
-        if (mode == DIALOGMODE_SAVE) {
-
-            // Warn when no file name is given
-            if (file_lower.empty()) {
-                this->file_warning += "Enter file name.\n";
-                this->valid_file = false;
+        auto error_flags = FilePathParam::ValidatePath(tmp_filepath, extensions, flags);
+        if (error_flags != 0) {
+            this->valid_file = false;
+        }
+        if (error_flags & FilePathParam::Flag_File) {
+            this->file_errors += "Expecting file.\n";
+        }
+        if (error_flags & FilePathParam::Flag_Directory) {
+            this->file_errors += "Expecting directory.\n";
+        }
+        if (error_flags & FilePathParam::Flag_NoExistenceCheck) {
+            this->file_errors += "Path does not exist.\n";
+        }
+        if (error_flags & FilePathParam::Flag_RestrictExtension) {
+            std::string log_exts;
+            FilePathParam::Extensions_t tmp_exts;
+            for (auto& ext : extensions) {
+                tmp_exts.emplace_back("." + ext);
+                gui_utils::StringToLowerCase(tmp_exts.back());
+                log_exts += "'" + tmp_exts.back() + "' ";
+            }
+            if ((mode == DIALOGMODE_SAVE) && tmp_filepath.extension().empty()) {
+                // Automatically append first extension
+                if (this->file_errors.empty()) {
+                    if (!tmp_exts.empty()) {
+                        this->file_warnings += "Appending required file extension '" + tmp_exts[0] + "'\n";
+                        this->append_ending_str = tmp_exts[0];
+                    }
+                    this->valid_file = true;
+                }
             } else {
-                // Warn when file has not required extension
-                if (!exts_lower.empty()) {
-                    if (!megamol::core::utility::FileUtils::FileHasExtension<std::string>(file_lower, exts_lower[0])) {
-                        this->file_warning += "Appending required file extension '" + exts_lower[0] + "'\n";
-                        this->valid_ending = exts_lower[0];
-                    }
-                }
-                std::string actual_filename = file_lower;
-                actual_filename += this->valid_ending;
-                tmp_file_path =
-                    static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(actual_filename);
-
-                // Warn when file already exists
-                if (stdfs::exists(tmp_file_path) && stdfs::is_regular_file(tmp_file_path)) {
-                    this->file_warning += "Overwriting existing file.\n";
-                }
-            }
-
-            // Error when file is directory
-            if (stdfs::is_directory(tmp_file_path)) {
-                this->file_error += "Input is directory.\n";
-                this->valid_file = false;
-            }
-        } else if (mode == DIALOGMODE_LOAD) {
-
-            // Error when file has not required extension
-            if (!exts_lower.empty()) {
-                bool extension_found = false;
-                for (auto& ext : exts_lower) {
-                    if (megamol::core::utility::FileUtils::FileHasExtension<std::string>(file_lower, ext)) {
-                        extension_found = true;
-                    }
-                }
-                if (!extension_found) {
-                    this->file_error += "Require file with extension: ";
-                    for (auto ei = exts_lower.begin(); ei != exts_lower.end(); ei++) {
-                        this->file_error += "'" + (*ei) + "'";
-                        if (ei + 1 != extensions.end()) {
-                            this->file_error += " ";
-                        }
-                    }
-                    this->valid_ending.clear();
-                    this->valid_file = false;
-                }
-            }
-
-            // Error when file is directory
-            if (stdfs::is_directory(tmp_file_path)) {
-                this->file_error += "Selection is directory.\n";
-                this->valid_file = false;
-            }
-        } else if (mode == DIALOGMODE_SELECT) {
-
-            // Warning when file is directory
-            if (stdfs::is_directory(tmp_file_path)) {
-                this->file_warning += "Selection is directory.\n";
+                this->file_errors += "File does not have required extension: " + log_exts + "\n";
             }
         }
 
-    } catch (stdfs::filesystem_error& e) {
+        if ((mode == DIALOGMODE_SAVE) && this->file_errors.empty()) {
+            // Warn when file already exists
+            tmp_filepath = std::filesystem::u8path(this->current_directory_str) /
+                           std::filesystem::u8path(file_str + this->append_ending_str);
+            if (std::filesystem::exists(tmp_filepath) && std::filesystem::is_regular_file(tmp_filepath)) {
+                this->file_warnings += "Overwriting existing file.\n";
+            }
+        }
+
+    } catch (std::filesystem::filesystem_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
+    }
+}
+
+
+std::string FileBrowserWidget::get_parent_path(const std::string& dir) const {
+
+    try {
+        auto retdir = this->get_absolute_path(dir);
+        auto parent_dir = std::filesystem::u8path(retdir);
+        if (parent_dir.has_parent_path() && parent_dir.has_relative_path()) {
+            retdir = parent_dir.parent_path().generic_u8string();
+        }
+        return retdir;
+    } catch (std::filesystem::filesystem_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return std::string();
+    }
+}
+
+
+std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string& dir) const {
+
+    try {
+        auto retval = std::filesystem::u8path(dir);
+        if ((retval.generic_u8string() == "..") || (retval.generic_u8string() == ".")) {
+            retval = absolute(retval);
+#if (_MSC_VER < 1916) /// XXX Fixed/No more required since VS 2019
+            if (retval.has_parent_path()) {
+                retval = retval.parent_path();
+                if ((retval.generic_u8string() == "..") && retval.has_parent_path()) {
+                    retval = retval.parent_path();
+                }
+            }
+#endif // _MSC_VER > 1916
+        }
+        return retval.generic_u8string();
+    } catch (std::filesystem::filesystem_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return std::string();
     }
 }

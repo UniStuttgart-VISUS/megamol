@@ -154,12 +154,6 @@ bool PerformanceMonitor::Draw() {
 }
 
 
-void PerformanceMonitor::PopUps() {
-
-    // UNUSED
-}
-
-
 void PerformanceMonitor::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
     for (auto& header_item : in_json.items()) {

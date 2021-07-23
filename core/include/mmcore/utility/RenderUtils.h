@@ -120,7 +120,7 @@ public:
      */
     static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
     static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR) {
-        return megamol::core::utility::RenderUtils::LoadTextureFromFile(out_texture_ptr, megamol::core::utility::to_string(filename), tex_min_filter, tex_max_filter);
+        return megamol::core::utility::RenderUtils::LoadTextureFromFile(out_texture_ptr, megamol::core::utility::ToString(filename), tex_min_filter, tex_max_filter);
     }
 
     static bool LoadTextureFromData(
@@ -138,7 +138,7 @@ public:
 
     // Keeps the texture object in render utils for later access via texture id
     bool LoadTextureFromFile(GLuint& out_texture_id, const std::wstring& filename, bool reload = false) {
-        return this->LoadTextureFromFile(out_texture_id, megamol::core::utility::to_string(filename), reload);
+        return this->LoadTextureFromFile(out_texture_id, megamol::core::utility::ToString(filename), reload);
     }
     bool LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename, bool reload = false);
 
@@ -159,10 +159,6 @@ public:
         const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false,
         const glm::vec4& color = glm::vec4(0.0f), bool force_opaque = false);
 
-    void Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left,
-        const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false,
-        const glm::vec4& color = glm::vec4(0.0f));
-
     inline void DrawPointPrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
         this->drawPrimitives(RenderUtils::Primitives::POINTS, mat_mvp, dim_vp);
         this->clearQueue(Primitives::POINTS);
@@ -179,10 +175,8 @@ public:
     }
 
     inline void DrawTextures(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
-        this->drawPrimitives(RenderUtils::Primitives::DEPTH_TEXTURE, mat_mvp, dim_vp);
         this->drawPrimitives(RenderUtils::Primitives::COLOR_TEXTURE, mat_mvp, dim_vp);
         this->clearQueue(Primitives::COLOR_TEXTURE);
-        this->clearQueue(Primitives::DEPTH_TEXTURE);
     }
 
     inline void DrawAllPrimitives(const glm::mat4& mat_mvp, glm::vec2 dim_vp) {
@@ -213,7 +207,7 @@ public:
 
 private:
 
-    enum Primitives : size_t { LINES = 0, POINTS = 1, QUADS = 2, COLOR_TEXTURE = 3, DEPTH_TEXTURE = 4, PRIM_COUNT = 5 };
+    enum Primitives : size_t { LINES = 0, POINTS = 1, QUADS = 2, COLOR_TEXTURE = 3, PRIM_COUNT = 4 };
 
     enum Buffers : GLuint { POSITION = 0, COLOR = 1, TEXTURE_COORD = 2, ATTRIBUTES = 3, BUFF_COUNT = 4 };
 
