@@ -57,7 +57,6 @@ bool megamol::infovis::InfovisAmortizedRenderer::create(void) {
     if (!makeShaders()) {
         return false;
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("?");
     setupBuffers();
     return true;
 }
@@ -127,14 +126,12 @@ bool InfovisAmortizedRenderer::makeShaders() {
 }
 
 void InfovisAmortizedRenderer::setupBuffers() {
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("setup");
     glGenFramebuffers(1, &amortizedFboA);
     glGenFramebuffers(1, &amortizedMsaaFboA);
     //glGenFramebuffers(1, &amortizedPushFBO);
     if (glowlFBO == nullptr) {
         glowlFBO = std::make_shared<glowl::FramebufferObject>(1, 1);
         glowlFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("shade");
     }
     
     glGenTextures(1, &imageArrayA);
@@ -154,7 +151,6 @@ void InfovisAmortizedRenderer::setupBuffers() {
             {});
         texA = std::make_unique<glowl::Texture2D>("texStoreA", texstore_layout, nullptr);
         texB = std::make_unique<glowl::Texture2D>("texStoreB", texstore_layout, nullptr);
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("bsetup error: %i", glGetError());
     }
     glGenBuffers(1, &ssboMatrices);
 
@@ -288,7 +284,6 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
         const float tbl[2] = {(1.0 + (frametype % a) * 2.0) / (2.0 * a), (1.0 + int(frametype / a) * 2.0) / (2.0 * a)};
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("%f , %f", tbl[0], tbl[1]);
         glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 1, tbl);
     }
     if (approach == 6) {
@@ -314,7 +309,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, glowlFBO->getColorAttachment(0)->getName(), 0);
     }
     glClear(GL_COLOR_BUFFER_BIT);
-    //glViewport(0, 0, w, h);
+    //glViewport(0, 0, ow, oh);
     
     //glMatrixMode(GL_MODELVIEW);
     //glLoadMatrixf(modelViewMatrix_column);
@@ -326,8 +321,6 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
     //glDeleteTextures(1, &imStoreA);
     //glDeleteTextures(1, &imStoreB);
     
-
-
     if (approach == 0) {
         framesNeeded = 2;
         if (invMatrices.size() != framesNeeded) {
@@ -437,11 +430,10 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
 
         texstore_layout.width = w;
         texstore_layout.height = h;
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("yes");
+
         texA = std::make_unique<glowl::Texture2D>("texStoreA", texstore_layout, nullptr);
         texB = std::make_unique<glowl::Texture2D>("texStoreB", texstore_layout, nullptr);
 
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("no");
     }
 }
 
@@ -465,8 +457,13 @@ bool InfovisAmortizedRenderer::OnMouseMove(double x, double y) {
     if (cr) {
         megamol::core::view::InputEvent evt;
         evt.tag = megamol::core::view::InputEvent::Tag::MouseMove;
-        evt.mouseMoveData.x = x;
-        evt.mouseMoveData.y = y;
+        if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+            evt.mouseMoveData.x = x / float(amortLevel.Param<core::param::IntParam>()->Value());
+            evt.mouseMoveData.y = y / float(amortLevel.Param<core::param::IntParam>()->Value());
+        } else {
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
+        }
         cr->SetInputEvent(evt);
         if ((*cr)(megamol::core::view::CallRender2DGL::FnOnMouseMove))
             return true;
@@ -482,7 +479,7 @@ bool InfovisAmortizedRenderer::OnMouseScroll(double dx, double dy) {
         evt.mouseScrollData.dx = dx;
         evt.mouseScrollData.dy = dy;
         cr->SetInputEvent(evt);
-        if (!(*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll))
+        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll))
             return true;
     }
     return false;
@@ -572,7 +569,6 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
             texB->bindImage(6, GL_READ_ONLY);
             amort_reconstruction_shdr_array[approach]->setUniform("StoreB", 6);
         }
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("recon error: %i", glGetError());
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, glowlFBO->getColorAttachment(0)->getName());
         //glowlFBO->bindColorbuffer(0);
@@ -580,8 +576,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
     }
     amort_reconstruction_shdr_array[approach]->setUniform("moveM", movePush);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
-    // glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0]);
-    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("errorCode: %s", glGetError());
+
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -640,13 +635,8 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         if (approach != oldApp || w != oldW || h != oldH || ssLevel != oldssLevel || a != oldaLevel) {
             resizeArrays(approach, w, h, ssLevel);
         }
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("before %f, %f, %f",
-            cam.get<core::view::Camera::Pose>().position.x, cam.get<core::view::Camera::Pose>().position.y,
-            cam.get<core::view::Camera::Pose>().position.z);
         setupAccel(approach, w, h, ssLevel, &cam);
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("after %f, %f, %f",
-            cam.get<core::view::Camera::Pose>().position.x, cam.get<core::view::Camera::Pose>().position.y,
-            cam.get<core::view::Camera::Pose>().position.z);
+
         cr2d->SetFramebuffer(glowlFBO);
         cr2d->SetCamera(cam);
 
