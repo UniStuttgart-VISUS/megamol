@@ -35,7 +35,7 @@ moldyn::MMPLDWriter::MMPLDWriter(void)
     , endFrameSlot("endFrame", "the last frame to write")
     , subsetSlot("writeSubset", "use the specified start and end"){
 
-    this->filenameSlot << new param::FilePathParam("");
+    this->filenameSlot << new param::FilePathParam("", param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"mmpld"});
     this->MakeSlotAvailable(&this->filenameSlot);
 
     param::EnumParam* verPar = new param::EnumParam(100);
