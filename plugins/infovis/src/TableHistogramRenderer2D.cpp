@@ -1,4 +1,9 @@
-#include "stdafx.h"
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "TableHistogramRenderer2D.h"
 
 #include <algorithm>
@@ -15,8 +20,8 @@ using namespace megamol::stdplugin::datatools;
 
 using megamol::core::utility::log::Log;
 
-HistogramRenderer2D::HistogramRenderer2D()
-        : Renderer2D()
+TableHistogramRenderer2D::TableHistogramRenderer2D()
+        : BaseHistogramRenderer2D()
         , tableDataCallerSlot("getData", "Float table input")
         , transferFunctionCallerSlot("getTransferFunction", "Transfer function input")
         , flagStorageReadCallerSlot("readFlagStorage", "Flag storage read input")
@@ -60,11 +65,11 @@ HistogramRenderer2D::HistogramRenderer2D()
     this->MakeSlotAvailable(&this->selectionColorParam);
 }
 
-HistogramRenderer2D::~HistogramRenderer2D() {
+TableHistogramRenderer2D::~TableHistogramRenderer2D() {
     this->Release();
 }
 
-bool HistogramRenderer2D::create() {
+bool TableHistogramRenderer2D::create() {
     if (!this->font.Initialise(this->GetCoreInstance()))
         return false;
     this->font.SetBatchDrawMode(true);
@@ -73,21 +78,21 @@ bool HistogramRenderer2D::create() {
 
     try {
         calcHistogramProgram =
-            core::utility::make_glowl_shader("histo_calc", shader_options, "infovis/histo_calc.comp.glsl");
-        calcTexHistogramProgram =
-            core::utility::make_glowl_shader("tex_histo_calc", shader_options, "infovis/tex_histo_calc.comp.glsl");
+            core::utility::make_glowl_shader("histo_table_calc", shader_options, "infovis/histo/table_calc.comp.glsl");
+        calcTexHistogramProgram = core::utility::make_glowl_shader(
+            "histo_tex_histo_calc", shader_options, "infovis/histo/tex_calc.comp.glsl");
         calcTexHistogramMaxProgram =
-            core::utility::make_glowl_shader("tex_histo_max", shader_options, "infovis/tex_histo_max.comp.glsl");
-        calcTexLineMinMaxProgram =
-            core::utility::make_glowl_shader("tex_line_minmax", shader_options, "infovis/tex_minmax_lines.comp.glsl");
-        calcTexGlobalMinMaxProgram =
-            core::utility::make_glowl_shader("tex_global_minmax", shader_options, "infovis/tex_minmax_all.comp.glsl");
-        selectionProgram =
-            core::utility::make_glowl_shader("histo_select", shader_options, "infovis/histo_select.comp.glsl");
-        histogramProgram = core::utility::make_glowl_shader(
-            "histo_draw", shader_options, "infovis/histo_draw.vert.glsl", "infovis/histo_draw.frag.glsl");
-        axesProgram = core::utility::make_glowl_shader(
-            "histo_axes", shader_options, "infovis/histo_axes.vert.glsl", "infovis/histo_axes.frag.glsl");
+            core::utility::make_glowl_shader("histo_tex_histo_max", shader_options, "infovis/histo/tex_max.comp.glsl");
+        calcTexLineMinMaxProgram = core::utility::make_glowl_shader(
+            "histo_tex_line_minmax", shader_options, "infovis/histo/tex_minmax_lines.comp.glsl");
+        calcTexGlobalMinMaxProgram = core::utility::make_glowl_shader(
+            "histo_tex_global_minmax", shader_options, "infovis/histo/tex_minmax_all.comp.glsl");
+        selectionProgram = core::utility::make_glowl_shader(
+            "histo_table_select", shader_options, "infovis/histo/table_select.comp.glsl");
+        histogramProgram = core::utility::make_glowl_shader("histo_base_draw", shader_options,
+            "infovis/histo/base_draw.vert.glsl", "infovis/histo/base_draw.frag.glsl");
+        axesProgram = core::utility::make_glowl_shader("histo_base_axes", shader_options,
+            "infovis/histo/base_axes.vert.glsl", "infovis/histo/base_axes.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, ("HistogramRenderer2D: " + std::string(e.what())).c_str());
@@ -112,7 +117,7 @@ bool HistogramRenderer2D::create() {
     return true;
 }
 
-void HistogramRenderer2D::release() {
+void TableHistogramRenderer2D::release() {
     glDeleteBuffers(1, &this->floatDataBuffer);
     glDeleteBuffers(1, &this->minBuffer);
     glDeleteBuffers(1, &this->maxBuffer);
@@ -123,7 +128,7 @@ void HistogramRenderer2D::release() {
     glDeleteBuffers(1, &this->maxBinValueBuffer);
 }
 
-bool HistogramRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
+bool TableHistogramRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
     if (!handleCall(call)) {
         return false;
     }
@@ -134,7 +139,7 @@ bool HistogramRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
     return true;
 }
 
-bool HistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
+bool TableHistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
     if (!handleCall(call)) {
         return false;
     }
@@ -246,7 +251,7 @@ bool HistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
     return true;
 }
 
-bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
+bool TableHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     auto floatTableCall = this->tableDataCallerSlot.CallAs<table::TableDataCall>();
     auto textureCall = this->tableDataCallerSlot.CallAs<compositing::CallTexture2D>();
     if (floatTableCall == nullptr && textureCall == nullptr) {
@@ -498,7 +503,7 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     return true;
 }
 
-bool HistogramRenderer2D::OnMouseButton(
+bool TableHistogramRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
     // Ctrl goes to the view and ignore everything than press event.
     if (mods.test(core::view::Modifier::CTRL) || action != core::view::MouseButtonAction::PRESS) {
@@ -545,7 +550,7 @@ bool HistogramRenderer2D::OnMouseButton(
     return true;
 }
 
-bool HistogramRenderer2D::OnMouseMove(double x, double y) {
+bool TableHistogramRenderer2D::OnMouseMove(double x, double y) {
     this->mouseX = static_cast<float>(x);
     this->mouseY = static_cast<float>(y);
     return false;

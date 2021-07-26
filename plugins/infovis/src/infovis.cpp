@@ -25,6 +25,7 @@
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
 #include "TableHistogramRenderer2D.h"
+#include "TextureHistogramRenderer2D.h"
 
 namespace megamol::infovis {
 /** Implementing the instance class of this plugin */
@@ -51,7 +52,8 @@ public:
         // register modules here:
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
-        this->module_descriptions.RegisterAutoDescription<megamol::infovis::HistogramRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::TableHistogramRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::TextureHistogramRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::InfovisAmortizedRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::PCAProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::TSNEProjection>();

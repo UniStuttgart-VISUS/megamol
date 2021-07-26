@@ -1,5 +1,11 @@
-#ifndef MEGAMOL_INFOVIS_HISTOGRAMRENDERER2D_H_INCLUDED
-#define MEGAMOL_INFOVIS_HISTOGRAMRENDERER2D_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#ifndef MEGAMOL_INFOVIS_TABLEHISTOGRAMRENDERER2D_H_INCLUDED
+#define MEGAMOL_INFOVIS_TABLEHISTOGRAMRENDERER2D_H_INCLUDED
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -9,11 +15,11 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
-#include "Renderer2D.h"
+#include "BaseHistogramRenderer2D.h"
 
 namespace megamol::infovis {
 
-class HistogramRenderer2D : public Renderer2D {
+class TableHistogramRenderer2D : public BaseHistogramRenderer2D {
 public:
     /**
      * Answer the name of this module.
@@ -21,7 +27,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName() {
-        return "HistogramRenderer2D";
+        return "TableHistogramRenderer2D";
     }
 
     /**
@@ -45,12 +51,12 @@ public:
     /**
      * Initialises a new instance.
      */
-    HistogramRenderer2D();
+    TableHistogramRenderer2D();
 
     /**
      * Finalises an instance.
      */
-    ~HistogramRenderer2D() override;
+    ~TableHistogramRenderer2D() override;
 
 protected:
     /**
@@ -146,4 +152,4 @@ private:
 
 } // namespace megamol::infovis
 
-#endif // MEGAMOL_INFOVIS_HISTOGRAMRENDERER2D_H_INCLUDED
+#endif // MEGAMOL_INFOVIS_TABLEHISTOGRAMRENDERER2D_H_INCLUDED
