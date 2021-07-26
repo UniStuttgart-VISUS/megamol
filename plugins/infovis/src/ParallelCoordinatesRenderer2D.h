@@ -140,9 +140,10 @@ namespace infovis {
 
         void drawAxes(glm::mat4 ortho);
 
-        void drawDiscrete(const float otherColor[4], const float selectedColor[4], float tfColorFactor);
+        void drawDiscrete(const float otherColor[4], const float selectedColor[4], float tfColorFactor, glm::ivec2 const& viewRes);
 
-        void drawItemsDiscrete(uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor);
+        void drawItemsDiscrete(
+            uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor, glm::ivec2 const& viewRes);
 
         void drawPickIndicator(float x, float y, float pickRadius, const float color[4]);
 
@@ -158,7 +159,7 @@ namespace infovis {
 
         void doFragmentCount();
 
-        void drawParcos(void);
+        void drawParcos(glm::ivec2 const& viewRes);
         void store_filters();
         void load_filters();
 
@@ -233,6 +234,7 @@ namespace infovis {
         core::BoundingBoxes_2 bounds;
         core::view::Camera camera_cpy; //< local copy of last used camera
         std::shared_ptr<glowl::FramebufferObject> fbo; //< last used framebuffer
+        glm::ivec2 viewRes; //< last used view resolution
         unsigned int lastTimeStep;
 
         GLuint columnCount;

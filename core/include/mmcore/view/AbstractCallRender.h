@@ -236,6 +236,28 @@ namespace view {
         }
 
         /**
+         * Returns the resoltuion used by the last-called view along a render chain call.
+         * Renderers can assume this to be the display resoltion.
+         * Note that it can differ from the current framebuffer resolution if the internal
+         * rendering resoltion is up- or down-scaled. 
+         *
+         * @return 2D integer vector with horizontal (width) und vertical (height) resolution in x and y respectively 
+         */
+        inline const glm::ivec2 GetViewResolution(void) const { 
+            return this->_viewResoltion;
+        }
+
+        /**
+         * Sets the resoltuion used by a view. This has to be set by a view before calling 'Render'.
+         * Renderers should NOT changes this value.
+         *
+         * @param viewResolution 2D integer vector with horizontal (width) und vertical (height) resolution in x and y respectively 
+         */
+        inline void SetViewResolution(glm::ivec2 const& viewResoltion) {
+            this->_viewResoltion = viewResoltion;
+        }
+
+        /**
          * Assignment operator
          *
          * @param rhs The right hand side operand
@@ -269,7 +291,16 @@ namespace view {
         /** The number of milliseconds required to render the last frame */
         double _lastFrameTime;
 
+        /** View background colour */
         glm::vec4 _backgroundCol;
+
+        /**
+         * 'Native' resolution of the last-called view along a render chain call.
+         * Renderers can assume this to be the display resoltion.
+         * Note that it can differ from the current framebuffer resolution if the internal
+         * rendering resoltion is up- or down-scaled. 
+         */
+        glm::ivec2 _viewResoltion;
 
         /** The transferred camera state */
         Camera _camera;

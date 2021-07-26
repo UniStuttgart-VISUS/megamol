@@ -457,13 +457,8 @@ bool InfovisAmortizedRenderer::OnMouseMove(double x, double y) {
     if (cr) {
         megamol::core::view::InputEvent evt;
         evt.tag = megamol::core::view::InputEvent::Tag::MouseMove;
-        if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
-            evt.mouseMoveData.x = x / float(amortLevel.Param<core::param::IntParam>()->Value());
-            evt.mouseMoveData.y = y / float(amortLevel.Param<core::param::IntParam>()->Value());
-        } else {
-            evt.mouseMoveData.x = x;
-            evt.mouseMoveData.y = y;
-        }
+        evt.mouseMoveData.x = x;
+        evt.mouseMoveData.y = y;
         cr->SetInputEvent(evt);
         if ((*cr)(megamol::core::view::CallRender2DGL::FnOnMouseMove))
             return true;
@@ -619,6 +614,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     fbo = call.GetFramebuffer();
     cr2d->SetBackgroundColor(call.BackgroundColor());
     cr2d->AccessBoundingBoxes() = call.GetBoundingBoxes();
+    cr2d->SetViewResolution(call.GetViewResolution());
 
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
         int a = amortLevel.Param<core::param::IntParam>()->Value();

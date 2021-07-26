@@ -84,6 +84,7 @@ view::ImageWrapper view::View2DGL::Render(double time, double instanceTime) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+        cr2d->SetViewResolution({_fbo->getWidth(), _fbo->getHeight()});
         cr2d->SetFramebuffer(_fbo);
         cr2d->SetCamera(_camera);
 

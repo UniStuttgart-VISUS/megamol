@@ -141,7 +141,7 @@ namespace view {
         void setPose(Pose pose);
     
     private:
-        
+
         glm::mat4 _view_matrix;
         glm::mat4 _projection_matrix;
 

@@ -42,7 +42,8 @@ ImageWrapper View3D::Render(double time, double instanceTime) {
         cr3d->SetFramebuffer(_fbo);
     
         BaseView::beforeRender(time, instanceTime);
-    
+
+        cr3d->SetViewResolution({_fbo->getWidth(), _fbo->getHeight()});
         cr3d->SetCamera(this->_camera);
         (*cr3d)(view::CallRender3D::FnRender);
     

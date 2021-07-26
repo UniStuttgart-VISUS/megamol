@@ -73,6 +73,7 @@ ImageWrapper megamol::core::view::View3DGL::Render(double time, double instanceT
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // set camera and fbo in rendering call
+        cr3d->SetViewResolution({_fbo->getWidth(), _fbo->getHeight()});
         cr3d->SetFramebuffer(_fbo);
         cr3d->SetCamera(this->_camera);
 

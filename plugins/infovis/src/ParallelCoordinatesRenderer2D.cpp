@@ -578,8 +578,8 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
     auto cam_pose = camera_cpy.get<core::view::Camera::Pose>();
     auto cam_intrinsics = camera_cpy.get<core::view::Camera::OrthographicParameters>();
     float world_x, world_y;
-    world_x = ((x * 2.0f / fbo->getWidth()) - 1.0f);
-    world_y = 1.0f - (y * 2.0f / fbo->getHeight());
+    world_x = ((x * 2.0f / static_cast<float>(viewRes.x)) - 1.0f);
+    world_y = 1.0f - (y * 2.0f / static_cast<float>(viewRes.y));
     world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
     world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
 
@@ -726,19 +726,19 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
 }
 
 void ParallelCoordinatesRenderer2D::drawDiscrete(
-    const float otherColor[4], const float selectedColor[4], float tfColorFactor) {
+    const float otherColor[4], const float selectedColor[4], float tfColorFactor, glm::ivec2 const& viewRes) {
     if (this->drawOtherItemsSlot.Param<core::param::BoolParam>()->Value()) {
         this->drawItemsDiscrete(core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED,
-            core::FlagStorage::ENABLED, otherColor, tfColorFactor);
+            core::FlagStorage::ENABLED, otherColor, tfColorFactor, viewRes);
     }
     if (this->drawSelectedItemsSlot.Param<core::param::BoolParam>()->Value()) {
         this->drawItemsDiscrete(core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED,
-            core::FlagStorage::ENABLED | core::FlagStorage::SELECTED, selectedColor, tfColorFactor);
+            core::FlagStorage::ENABLED | core::FlagStorage::SELECTED, selectedColor, tfColorFactor, viewRes);
     }
 }
 
 void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
-    uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor) {
+    uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor, glm::ivec2 const& viewRes) {
     auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tf == nullptr)
         return;
@@ -761,8 +761,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
     glUniform4fv(prog->getUniformLocation("color"), 1, color);
     glUniform1f(prog->getUniformLocation("tfColorFactor"), tfColorFactor);
-    glUniform1f(prog->getUniformLocation("widthR"),fbo->getWidth());
-    glUniform1f(prog->getUniformLocation("heightR"), fbo->getHeight());
+    glUniform1i(prog->getUniformLocation("widthR"), viewRes.x);
+    glUniform1i(prog->getUniformLocation("heightR"), viewRes.y);
     try {
         auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
         glUniform1i(prog->getUniformLocation("colorColumn"), colcol);
@@ -943,7 +943,7 @@ void ParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
     debugPop();
 }
 
-void ParallelCoordinatesRenderer2D::drawParcos(void) {
+void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
 
     // TODO only when filters changed!
     GLuint groups = this->itemCount / (filterWorkgroupSize[0] * filterWorkgroupSize[1] * filterWorkgroupSize[2]);
@@ -960,7 +960,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
     switch (drawmode) {
     case DRAW_DISCRETE:
         this->drawDiscrete(this->otherItemsColorSlot.Param<core::param::ColorParam>()->Value().data(),
-            this->selectedItemsColorSlot.Param<core::param::ColorParam>()->Value().data(), 1.0f);
+            this->selectedItemsColorSlot.Param<core::param::ColorParam>()->Value().data(), 1.0f, viewRes);
         break;
     case DRAW_CONTINUOUS:
     case DRAW_HISTOGRAM:
@@ -980,7 +980,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
             glBlendEquation(GL_FUNC_ADD);
-            this->drawDiscrete(red, moreRed, 0.0f);
+            this->drawDiscrete(red, moreRed, 0.0f, viewRes);
             densityFBO.Disable();
             glDisable(GL_BLEND);
 
@@ -1035,6 +1035,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     auto cam_intrinsics = cam.get<core::view::Camera::OrthographicParameters>(); // don't you dare using a perspective cam here...
     fbo = call.GetFramebuffer();
     camera_cpy = cam;
+    viewRes = call.GetViewResolution();
 
     // maintainer comment: assuming this wants to know the aspect of the full window, i.e. not onlyof the current image tile
     
@@ -1093,7 +1094,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
 
         this->needFlagsUpdate = true;
     }
-    drawParcos();
+    drawParcos(call.GetViewResolution());
 
     // Draw stroking/picking indicator
     if (this->drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
