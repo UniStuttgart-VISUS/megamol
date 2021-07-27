@@ -655,8 +655,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         glUniform4fv(this->drawAxesProgram->getUniformLocation("color"), 1,
             this->axesColorSlot.Param<core::param::ColorParam>()->Value().data());
         glUniform1i(this->drawAxesProgram->getUniformLocation("pickedAxis"), pickedAxis);
-        glUniform1i(this->drawAxesProgram->getUniformLocation("width"), fbo->getWidth());
-        glUniform1i(this->drawAxesProgram->getUniformLocation("height"), fbo->getHeight());
+        glUniform1i(this->drawAxesProgram->getUniformLocation("width"), viewRes.x);
+        glUniform1i(this->drawAxesProgram->getUniformLocation("height"), viewRes.y);
         glUniform1f(this->drawAxesProgram->getUniformLocation("axesThickness"),
             axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount);
@@ -668,8 +668,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         glUniform1ui(this->drawScalesProgram->getUniformLocation("numTicks"), this->numTicks);
         glUniform1f(this->drawScalesProgram->getUniformLocation("axisHalfTick"), 2.0f);
         glUniform1i(this->drawScalesProgram->getUniformLocation("pickedAxis"), pickedAxis);
-        glUniform1i(this->drawScalesProgram->getUniformLocation("width"), fbo->getWidth());
-        glUniform1i(this->drawScalesProgram->getUniformLocation("height"), fbo->getHeight());
+        glUniform1i(this->drawScalesProgram->getUniformLocation("width"), viewRes.x);
+        glUniform1i(this->drawScalesProgram->getUniformLocation("height"), viewRes.y);
         glUniform1f(this->drawScalesProgram->getUniformLocation("axesThickness"),
             axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount * this->numTicks);
@@ -681,8 +681,8 @@ void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
         glUniform1f(this->drawFilterIndicatorsProgram->getUniformLocation("axisHalfTick"), 2.0f);
         glUniform2i(this->drawFilterIndicatorsProgram->getUniformLocation("pickedIndicator"), pickedIndicatorAxis,
             pickedIndicatorIndex);
-        glUniform1i(this->drawFilterIndicatorsProgram->getUniformLocation("width"), fbo->getWidth());
-        glUniform1i(this->drawFilterIndicatorsProgram->getUniformLocation("height"), fbo->getHeight());
+        glUniform1i(this->drawFilterIndicatorsProgram->getUniformLocation("width"), viewRes.x);
+        glUniform1i(this->drawFilterIndicatorsProgram->getUniformLocation("height"), viewRes.y);
         glUniform1f(this->drawFilterIndicatorsProgram->getUniformLocation("axesThickness"),
             axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_TRIANGLES, 0, 12, this->columnCount * 2);
@@ -823,8 +823,8 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
     glUniform2f(prog->getUniformLocation("mousePressed"), x0, y0);
     glUniform2f(prog->getUniformLocation("mouseReleased"), x1, y1);
 
-    glUniform1i(prog->getUniformLocation("width"), fbo->getWidth());
-    glUniform1i(prog->getUniformLocation("height"), fbo->getHeight());
+    glUniform1i(prog->getUniformLocation("width"), viewRes.x);
+    glUniform1i(prog->getUniformLocation("height"), viewRes.y);
     glUniform1f(prog->getUniformLocation("thickness"), axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
 
     glUniform4fv(prog->getUniformLocation("indicatorColor"), 1, color);
