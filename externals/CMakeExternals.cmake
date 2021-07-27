@@ -458,6 +458,48 @@ function(require_external NAME)
     add_external_library(imguizmoquat
         LIBRARY ${IMGUIZMOQUAT_LIB})
 
+  # implot
+  elseif(NAME STREQUAL "implot")
+    if(TARGET implot)
+      return()
+    endif()
+    
+    require_external(imgui)
+    
+    if(WIN32)
+      set(IMPLOT_LIB "lib/implot.lib")
+    else()
+      set(IMPLOT_LIB "lib/libimplot.a")
+    endif()
+    
+    if(WIN32)
+      set(IMGUI_LIB "lib/imgui.lib")
+    else()
+      set(IMGUI_LIB "lib/libimgui.a")
+    endif()
+    
+    external_get_property(imgui INSTALL_DIR)
+    
+    add_external_project(implot STATIC
+      GIT_REPOSITORY https://github.com/epezent/implot.git
+      GIT_TAG "v0.8"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMPLOT_LIB}"
+      DEPENDS imgui
+      CMAKE_ARGS
+        -DIMGUI_LIBRARY:PATH=${INSTALL_DIR}/${IMGUI_LIB}
+        -DIMGUI_INCLUDE_DIR:PATH=${INSTALL_DIR}/include
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+          "${CMAKE_SOURCE_DIR}/externals/implot/CMakeLists.txt"
+          "<SOURCE_DIR>/CMakeLists.txt")
+    
+    add_external_library(implot
+        LIBRARY ${IMPLOT_LIB})
+    
+    external_get_property(implot SOURCE_DIR)
+    target_include_directories(implot INTERFACE "${SOURCE_DIR}")
+
   # libpng
   elseif(NAME STREQUAL "libpng")
     if(TARGET libpng)

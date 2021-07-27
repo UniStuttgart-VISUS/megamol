@@ -20,6 +20,7 @@
 
 #include "miss.h"
 #include "raygen.h"
+#include "picking.h"
 
 #include "SBT.h"
 
@@ -32,6 +33,8 @@
 #include "optix/Context.h"
 
 #include "CallRender3DCUDA.h"
+
+#include "mmcore/UniFlagCalls.h"
 
 namespace megamol::optix_hpg {
 class Renderer : public core::view::RendererModule<CallRender3DCUDA> {
@@ -70,6 +73,11 @@ protected:
 private:
     void setup();
 
+    bool OnMouseButton(
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+    bool OnMouseMove(double x, double y) override;
+
     bool is_dirty() {
         return spp_slot_.IsDirty() || max_bounces_slot_.IsDirty() || accumulate_slot_.IsDirty() ||
                intensity_slot_.IsDirty();
@@ -84,6 +92,10 @@ private:
 
     core::CallerSlot _in_geo_slot;
 
+    /*core::CallerSlot flags_write_slot_;
+
+    core::CallerSlot flags_read_slot_;*/
+
     core::param::ParamSlot spp_slot_;
 
     core::param::ParamSlot max_bounces_slot_;
@@ -92,15 +104,27 @@ private:
 
     core::param::ParamSlot intensity_slot_;
 
+    core::param::ParamSlot enable_picking_slot_;
+
+    float mouse_x_;
+
+    float mouse_y_;
+
     SBTRecord<device::RayGenData> _sbt_raygen_record;
+
+    SBTRecord<device::PickingData> sbt_picking_record_;
 
     std::array<SBTRecord<device::MissData>, 2> sbt_miss_records_;
 
     MMOptixSBT sbt_;
 
+    MMOptixSBT picking_sbt_;
+
     OptixPipeline _pipeline;
 
     MMOptixModule raygen_module_;
+
+    MMOptixModule picking_module_;
 
     MMOptixModule miss_module_;
 
@@ -108,7 +132,13 @@ private:
 
     CUdeviceptr _frame_state_buffer;
 
+    CUdeviceptr pick_state_buffer_;
+
+    CUdeviceptr picking_pixel_buffer_ = 0;
+
     device::FrameState _frame_state;
+
+    device::PickState pick_state_;
 
     vislib::math::Rectangle<int> _current_fb_size;
 

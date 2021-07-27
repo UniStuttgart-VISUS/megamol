@@ -12,6 +12,9 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include <vector>
 
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
@@ -25,15 +28,19 @@ class simplePointcloud {
 private:
 
     megamol::core::moldyn::MultiParticleDataCall *dat;
-    std::vector<size_t> &indices;
+    //std::vector<size_t> &indices;
+    std::size_t num_points;
     bool cycleX, cycleY, cycleZ;
 
 public:
 
     typedef float coord_t;
 
-    simplePointcloud(megamol::core::moldyn::MultiParticleDataCall *dat, std::vector<size_t> &indices)
-        : dat(dat), indices(indices) {
+    simplePointcloud()
+            : dat(nullptr), num_points(0) {}
+
+    simplePointcloud(megamol::core::moldyn::MultiParticleDataCall *dat, std::size_t num_points)
+            : dat(dat), num_points(num_points) {
         // intentionally empty
     }
     ~simplePointcloud() {
@@ -42,7 +49,7 @@ public:
 
     // Must return the number of data points
     inline size_t kdtree_get_point_count() const {
-        return indices.size();
+        return num_points;
     }
 
     // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
@@ -226,6 +233,90 @@ private:
     std::array<T, 2 * DIM> _bbox;
 
     std::array<T, DIM> _weights;
+};
+
+
+class glmPointcloud {
+public:
+    using coord_t = float;
+
+    glmPointcloud(
+        std::vector<glm::vec3> const& data, std::array<glm::vec3, 2> const& bbox, glm::vec3 const& weights)
+            : _point_data(data), _bbox(bbox), _weights(weights) {}
+
+    ~glmPointcloud() = default;
+
+    // Must return the number of data points
+    inline size_t kdtree_get_point_count() const {
+        return _point_data.size();
+    }
+
+    // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the
+    // class:
+    inline coord_t kdtree_distance(const coord_t* p1, const size_t idx_p2, size_t /*size*/) const {
+        auto const p2 = get_position(idx_p2);
+
+        coord_t res = 0;
+
+        for (int d = 0; d < 3; ++d) {
+            res += _weights[d] * (p1[d] - p2[d]) * (p1[d] - p2[d]);
+        }
+
+        return res;
+    }
+
+    // Returns the dim'th component of the idx'th point in the class:
+    // Since this is inlined and the "dim" argument is typically an immediate value, the
+    //  "if/else's" are actually solved at compile time.
+    inline coord_t kdtree_get_pt(const size_t idx, int dim) const {
+        return get_position(idx)[dim];
+    }
+
+    // Optional bounding-box computation: return false to default to a standard bbox computation loop.
+    //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it
+    //   again. Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
+    template<typename BBOX>
+    bool kdtree_get_bbox(BBOX& bb) const {
+        for (int d = 0; d < 3; ++d) {
+            bb[d].low = _bbox[0][d];
+            bb[d].high = _bbox[1][d];
+        }
+
+        return true;
+    }
+
+    coord_t const* get_position(std::size_t idx) const {
+        return glm::value_ptr(_point_data[idx]);
+    }
+
+    /*void normalize_data() {
+        std::array<T, DIM> mins;
+        std::array<T, DIM> divs;
+        for (int d = 0; d < DIM; ++d) {
+            mins[d] = _bbox[d * 2];
+            divs[d] = static_cast<T>(1.0f) / (_bbox[d * 2 + 1] - _bbox[d * 2] + static_cast<T>(1e-8f));
+        }
+
+        auto const num_points = kdtree_get_point_count();
+        for (std::size_t pidx = 0; pidx < num_points; ++pidx) {
+            for (int d = 0; d < DIM; ++d) {
+                _point_data[pidx * DIM + d] -= mins[d];
+                _point_data[pidx * DIM + d] *= divs[d];
+            }
+        }
+
+        for (int d = 0; d < DIM; ++d) {
+            _bbox[d * 2] = 0.0f;
+            _bbox[d * 2 + 1] = 1.0f;
+        }
+    }*/
+
+private:
+    std::vector<glm::vec3> _point_data;
+
+    std::array<glm::vec3, 2> _bbox;
+
+    glm::vec3 _weights;
 };
 
 } /* end namespace datatools */

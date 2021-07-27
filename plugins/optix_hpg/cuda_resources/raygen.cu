@@ -57,17 +57,16 @@ namespace optix_hpg {
                     (OptixVisibilityMask) -1,
                     /*rayFlags     */ OPTIX_RAY_FLAG_DISABLE_ANYHIT,
                     /*SBToffset    */ 0,
-                    /*SBTstride    */ 2,
+                    /*SBTstride    */ MM_OPTIX_SBT_STRIDE,
                     /*missSBTIndex */ 0, p0, p1);
 
-
+                prd.countEmitted = false;
                 /*if (prd.depth > 0) {
                     col += prd.attenuation * prd.result;
                 } else {
                     col += prd.result;
                 }*/
 
-                // col += prd.emitted;
                 col += prd.radiance * prd.beta;
 
                 if (prd.done || prd.depth >= maxBounces)
@@ -118,6 +117,8 @@ namespace optix_hpg {
 
             float depth = FLT_MAX;
 
+            int first_prim_ID = -1;
+
             do {
                 PerRayData prd;
 
@@ -131,7 +132,6 @@ namespace optix_hpg {
 
                 prd.beta = glm::vec3(1.f);
 
-                prd.seed = seed;
                 prd.done = false;
 
                 prd.world = self.world;
@@ -141,6 +141,8 @@ namespace optix_hpg {
 
                 prd.intensity = fs->intensity;
 
+                prd.primID = -1;
+
                 // Random rnd(pixelIdx, 0);
 
                 float u = -fs->rw + (fs->rw + fs->rw) * float(pixelID.x + rnd(seed)) / self.fbSize.x;
@@ -148,6 +150,8 @@ namespace optix_hpg {
                 /*float u = -fs->rw + (fs->rw + fs->rw) * float(pixelID.x) / self.fbSize.x;
                 float v = -(fs->th + (-fs->th - fs->th) * float(pixelID.y) / self.fbSize.y);*/
                 auto ray = generateRay(*fs, u, v);
+
+                prd.seed = seed;
 
                 prd.origin = ray.origin;
                 prd.direction = ray.direction;
@@ -158,17 +162,23 @@ namespace optix_hpg {
                 col += traceRay(self, ray /*, rnd*/, prd, bg, fs->maxBounces);
 
                 depth = fminf(depth, prd.ray_depth);
+
+                first_prim_ID = prd.primID;
             } while (--i);
             col /= (float) fs->samplesPerPixel;
             // col.w = frame_idx + 1;
             //++col.w;
 
-            if (fs->frameIdx > 0) {
+            if (fs->frameIdx > 0 && fs->accumulate) {
                 const float a = 1.0f / static_cast<float>(fs->frameIdx + 1);
                 col = lerp(glm::vec4(static_cast<float>(old_col.x), static_cast<float>(old_col.y),
                                static_cast<float>(old_col.z), static_cast<float>(old_col.w)),
                     col, a);
                 // col.w = frame_idx + 1;
+            }
+
+            if (isnan(col.x) || isnan(col.y) || isnan(col.z) || isnan(col.w)) {
+                col = glm::vec4(0.f, 0.f, 1.f, 1.f);
             }
 
             surf2Dwrite(make_float4(col.r, col.g, col.b, col.a), self.col_surf, pixelID.x * sizeof(float4), pixelID.y,
@@ -181,6 +191,8 @@ namespace optix_hpg {
                 depth = 1.f;
             }
             surf2Dwrite(depth, self.depth_surf, pixelID.x * sizeof(float), pixelID.y, cudaBoundaryModeZero);
+
+            self.picking_buffer[pixelIdx] = first_prim_ID;
         }
     } // namespace device
 } // namespace optix_hpg

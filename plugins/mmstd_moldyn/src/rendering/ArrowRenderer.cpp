@@ -21,6 +21,7 @@ ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModuleGL()
     , getFlagsSlot("getflags", "connects to a FlagStorage")
     , getClipPlaneSlot("getclipplane", "Connects to a clipping plane module")
     , lengthScaleSlot("lengthScale", ""), lengthFilterSlot("lengthFilter", "Filters the arrows by length")
+    , widthScaleSlot("widthScale", "")
     , arrowShader()
     , greyTF(0) 
     , getLightsSlot("lights", "Lights are retrieved over this slot.") {
@@ -45,6 +46,9 @@ ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModuleGL()
     
     this->lengthFilterSlot << new param::FloatParam( 0.0f, 0.0);
     this->MakeSlotAvailable(&this->lengthFilterSlot);
+
+    this->widthScaleSlot << new param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->widthScaleSlot);
 }
 
 
@@ -343,7 +347,9 @@ bool ArrowRenderer::Render(view::CallRender3DGL& call) {
                     continue;
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4f(this->arrowShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+                    glUniform4f(this->arrowShader.ParameterLocation("inConsts1"),
+                        parts.GetGlobalRadius() * widthScaleSlot.Param<core::param::FloatParam>()->Value(), minC, maxC,
+                        float(colTabSize));
                     glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                     break;
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:

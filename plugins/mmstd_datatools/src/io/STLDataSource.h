@@ -14,6 +14,8 @@
 
 #include "mmcore/param/ParamSlot.h"
 
+#include "mmstd_datatools/io/AbstractSTLDataSource.h"
+
 #include "geometry_calls/CallTriMeshData.h"
 
 #ifdef MEGAMOL_NG_MESH
@@ -32,7 +34,7 @@ namespace megamol
 		{
 			namespace io
 			{
-				class STLDataSource : public core::Module
+				class STLDataSource : public AbstractSTLDataSource<geocalls::CallTriMeshData>
 				{
 				public:
 					/// <summary>
@@ -70,7 +72,7 @@ namespace megamol
 					/// <summary>
 					/// Destructor
 					/// </summary>
-					~STLDataSource();
+					virtual ~STLDataSource();
 
 				protected:
 
@@ -78,7 +80,7 @@ namespace megamol
 					/// Create the module
 					/// </summary>
 					/// <returns>True on success; false otherwise</returns>
-					virtual bool create() override;
+					//virtual bool create() override;
 
 					/// <summary>
 					/// Callback function for requesting information
@@ -106,13 +108,13 @@ namespace megamol
 					/// <summary>
 					/// Release the module
 					/// </summary>
-					virtual void release() override;
+					//virtual void release() override;
 
 				private:
 					/// <summary>
 					/// States for the ascii parser
 					/// </summary>
-					enum parser_states_t
+					/*enum parser_states_t
 					{
 						EXPECT_SOLID, EXPECT_NAME,
 						EXPECT_FACET_OR_ENDSOLID,
@@ -123,37 +125,37 @@ namespace megamol
 						EXPECT_VERTEX_3, EXPECT_VERTEX_3_X, EXPECT_VERTEX_3_Y, EXPECT_VERTEX_3_Z,
 						EXPECT_ENDLOOP, EXPECT_ENDFACET,
 						EXPECT_ENDNAME, EXPECT_EOF
-					};
+					};*/
 
 					/// <summary>
 					/// Read an STL file
 					/// </summary>
 					/// <param name="filename">File name of the STL file</param>
-					void read(const std::string& filename);
+					//void read(const std::string& filename);
 
 					/// <summary>
 					/// Read a binary file
 					/// </summary>
 					/// <param name="filename">File name of the STL file</param>
-					void read_binary(const std::string& filename);
+					//void read_binary(const std::string& filename);
 
 					/// <summary>
 					/// Read a textual file
 					/// </summary>
 					/// <param name="filename">File name of the STL file</param>
-					void read_ascii(const std::string& filename);
+					//void read_ascii(const std::string& filename);
 
 					/// <summary>
 					/// Calculate the data hash
 					/// </summary>
 					/// <returns>Data hash</returns>
-					uint32_t hash() const;
+					//uint32_t hash() const;
 
 					/// File name
-					core::param::ParamSlot filename_slot;
+					//core::param::ParamSlot filename_slot;
 
 					/// Output
-					core::CalleeSlot mesh_output_slot;
+					//core::CalleeSlot mesh_output_slot;
 
 					/// Mesh data
 					geocalls::CallTriMeshData::Mesh mesh;
@@ -170,12 +172,12 @@ namespace megamol
 #endif
 
 					/// Buffers to store vertices and normals, and indices
-					uint32_t num_triangles;
+					//uint32_t num_triangles;
 
-					float min_x, min_y, min_z, max_x, max_y, max_z;
+					//float min_x, min_y, min_z, max_x, max_y, max_z;
 					
-					std::vector<uint8_t> vertex_normal_buffer;
-					std::vector<unsigned int> index_buffer;
+					//std::vector<uint8_t> vertex_normal_buffer;
+					//std::vector<unsigned int> index_buffer;
 				};
 			}
 		}

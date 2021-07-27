@@ -55,13 +55,19 @@ private:
 
     core::CallerSlot _in_data_slot;
 
+    core::CallerSlot flags_read_slot_;
+
+    core::CallerSlot flags_write_slot_;
+
     MMOptixModule sphere_module_;
 
     MMOptixModule sphere_occlusion_module_;
 
+    MMOptixModule sphere_picking_module_;
+
     std::vector<SBTRecord<device::SphereGeoData>> sbt_records_;
 
-    std::array<OptixProgramGroup, 2> program_groups_;
+    std::array<OptixProgramGroup, 3> program_groups_;
 
     CUdeviceptr _geo_buffer = 0;
 
@@ -74,5 +80,9 @@ private:
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 
     std::size_t _data_hash = std::numeric_limits<std::size_t>::max();
+
+    std::vector<uint64_t> prefix_count_;
+
+    uint32_t flags_version_ = 0;
 };
-} // namespace megamol::hpg::optix
+} // namespace megamol::optix_hpg

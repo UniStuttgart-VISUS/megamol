@@ -10,7 +10,7 @@ using namespace megamol::stdplugin::datatools;
 RemapIColValues::RemapIColValues() : AbstractParticleManipulator("outData", "inData"),
         inIColValuesSlot("inIColData", "The particles holding the ICol data to be used"),
         inParticleMapSlot("inMapData", "The particle index mapping data"),
-        dataHash(0), inIColHash(0), inMapHash(0), outDataHash(0), frameId(0), col(), minCol(0.0f), maxCol(1.0f) {
+        outDataHash(0), frameId(0), col(), minCol(0.0f), maxCol(1.0f) {
 
     inIColValuesSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&inIColValuesSlot);
@@ -37,11 +37,13 @@ bool RemapIColValues::manipulateData(
 
     // get color data
     inIColData->SetFrameID(inData.FrameID(), true);
+    if (!(*inIColData)(1))
+        return false;
     if (!(*inIColData)(0)) return false;
 
-    if ((dataHash != inData.DataHash()) || (inData.DataHash() == 0)
-            || (inIColHash != inIColData->DataHash()) || (inIColData->DataHash() == 0)
-            || (inMapHash != nimh) || (nimh == 0)
+    if ((dataHash != inData.DataHash()) 
+            || (inIColHash != inIColData->DataHash())
+            || (inMapHash != nimh)
             || (frameId != inData.FrameID())) {
         // Update data
         outDataHash++;

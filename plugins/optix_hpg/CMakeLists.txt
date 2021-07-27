@@ -8,6 +8,7 @@ megamol_plugin(optix_hpg
   DEPENDS_CUDA
   DEPENDS_PLUGINS
     mesh
+    thermodyn
   DEPENDS_EXTERNALS
     glm)
 
@@ -36,12 +37,17 @@ if (optix_hpg_PLUGIN_ENABLED)
 
   include_directories(${GLM_INCLUDES} "${CMAKE_CURRENT_SOURCE_DIR}/src")
   cuda_compile_and_embed(embedded_raygen_programs cuda_resources/raygen.cu)
+  cuda_compile_and_embed(embedded_picking_programs cuda_resources/picking.cu)
   cuda_compile_and_embed(embedded_miss_programs cuda_resources/miss.cu)
   cuda_compile_and_embed(embedded_sphere_programs cuda_resources/sphere.cu)
   cuda_compile_and_embed(embedded_mesh_programs cuda_resources/mesh.cu)
   cuda_compile_and_embed(embedded_transitioncalculator_programs cuda_resources/transitioncalculator.cu)
+  cuda_compile_and_embed(embedded_particlemeshdistance_programs cuda_resources/particlemeshdistance.cu)
+  cuda_compile_and_embed(embedded_particlemeshdistance2_programs cuda_resources/particlemeshdistance2.cu)
 
-  target_sources(optix_hpg PRIVATE ${cuda_resource_include_files} ${embedded_raygen_programs} ${embedded_miss_programs} ${embedded_sphere_programs} ${embedded_mesh_programs} ${embedded_transitioncalculator_programs})
+  target_sources(optix_hpg PRIVATE ${cuda_resource_include_files} ${embedded_raygen_programs} ${embedded_picking_programs}
+    ${embedded_miss_programs} ${embedded_sphere_programs} ${embedded_mesh_programs} ${embedded_transitioncalculator_programs}
+    ${embedded_particlemeshdistance_programs} ${embedded_particlemeshdistance2_programs})
 
   target_include_directories(optix_hpg PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/cuda_resources/")
   target_link_libraries(optix_hpg PRIVATE CUDA::cuda_driver)

@@ -1,24 +1,24 @@
 /*
  * IsoSurface.cpp
  *
- * Copyright (C) 2011 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2011 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #include "volumetrics/IsoSurface.h"
-#include "mmcore/CallVolumeData.h"
-#include "geometry_calls/CallTriMeshData.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/FloatParam.h"
-#include <climits>
+
 #include <cfloat>
+#include <climits>
 #include <cmath>
+
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/RawStorageWriter.h"
-#include "volumetrics/MarchingCubeTables.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Vector.h"
+#include "volumetrics/MarchingCubeTables.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -29,34 +29,34 @@ using namespace megamol::trisoup::volumetrics;
  * IsoSurface::tets
  */
 const unsigned int IsoSurface::tets[6][4] = {
-    {0, 2, 3, 7}, {0, 2, 6, 7},
-    {0, 4, 6 ,7}, {0, 6, 1, 2},
-    {0, 6, 1, 4}, {5, 6, 1, 4} };
+    {0, 2, 3, 7}, {0, 2, 6, 7}, {0, 4, 6, 7}, {0, 6, 1, 2}, {0, 6, 1, 4}, {5, 6, 1, 4}};
 
 
 /*
  * IsoSurface::IsoSurface
  */
-IsoSurface::IsoSurface(void) : 
-        inDataSlot("inData", "The slot for requesting input data"),
-        outDataSlot("outData", "Gets the data"), 
-        attributeSlot("attr", "The attribute to show"),
-        isoValueSlot("isoval", "The iso value"),
-        dataHash(0), frameIdx(0), index(), vertex(), normal(), mesh() {
+IsoSurface::IsoSurface(void)
+        : inDataSlot("inData", "The slot for requesting input data")
+        , outDataSlot("outData", "Gets the data")
+        , isoValueSlot("isoval", "The iso value")
+        , dataHash(0)
+        , frameIdx(0)
+        , index()
+        , vertex()
+        , normal()
+        , mesh() {
 
-    this->inDataSlot.SetCompatibleCall<core::CallVolumeDataDescription>();
+    this->inDataSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
-    this->outDataSlot.SetCallback("CallTriMeshData", "GetData", &IsoSurface::outDataCallback);
-    this->outDataSlot.SetCallback("CallTriMeshData", "GetExtent", &IsoSurface::outExtentCallback);
+    this->outDataSlot.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &IsoSurface::outDataCallback);
+    this->outDataSlot.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &IsoSurface::outExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
-
-    this->attributeSlot << new core::param::StringParam("0");
-    this->MakeSlotAvailable(&this->attributeSlot);
 
     this->isoValueSlot << new core::param::FloatParam(0.5f);
     this->MakeSlotAvailable(&this->isoValueSlot);
-
 }
 
 
@@ -91,10 +91,11 @@ void IsoSurface::release(void) {
  * IsoSurface::outDataCallback
  */
 bool IsoSurface::outDataCallback(core::Call& caller) {
-    megamol::geocalls::CallTriMeshData *tmd = dynamic_cast<megamol::geocalls::CallTriMeshData*>(&caller);
-    if (tmd == NULL) return false;
+    auto tmd = dynamic_cast<mesh::CallMesh*>(&caller);
+    if (tmd == NULL)
+        return false;
 
-    core::CallVolumeData *cvd = this->inDataSlot.CallAs<core::CallVolumeData>();
+    auto cvd = this->inDataSlot.CallAs<core::misc::VolumetricDataCall>();
     if (cvd != NULL) {
 
         bool recalc = false;
@@ -104,13 +105,11 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
             recalc = true;
         }
 
-        if (this->attributeSlot.IsDirty()) {
-            this->attributeSlot.ResetDirty();
-            recalc = true;
-        }
-
-        cvd->SetFrameID(tmd->FrameID(), tmd->IsFrameForced());
-        if (!(*cvd)(0)) {
+        auto mesh_meta = tmd->getMetaData();
+        cvd->SetFrameID(mesh_meta.m_frame_ID);
+        if (!(*cvd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS) ||
+            !(*cvd)(core::misc::VolumetricDataCall::IDX_GET_METADATA) ||
+            !(*cvd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
             recalc = false;
         } else {
             if ((this->dataHash != cvd->DataHash()) || (this->frameIdx != cvd->FrameID())) {
@@ -118,16 +117,14 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
             }
         }
 
-        unsigned int attrIdx = UINT_MAX;
+        /*unsigned int attrIdx = UINT_MAX;
         if (recalc) {
             vislib::StringA attrName(this->attributeSlot.Param<core::param::StringParam>()->Value());
             attrIdx = cvd->FindAttribute(attrName);
             if (attrIdx == UINT_MAX) {
                 try {
                     attrIdx = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(attrName));
-                } catch(...) {
-                    attrIdx = UINT_MAX;
-                }
+                } catch (...) { attrIdx = UINT_MAX; }
             }
             if (attrIdx >= cvd->AttributeCount()) {
                 recalc = false;
@@ -135,10 +132,23 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Only float volumes are supported ATM");
                 recalc = false;
             }
-        }
+        }*/
 
         if (recalc) {
             float isoVal = this->isoValueSlot.Param<core::param::FloatParam>()->Value();
+
+            auto const metadata = cvd->GetMetadata();
+
+            if (metadata->ScalarType != core::misc::FLOATING_POINT) {
+                core::utility::log::Log::DefaultLog.WriteError("[IsoSurface] Only floating point data allowed");
+                return false;
+            }
+
+            auto const data = reinterpret_cast<float const*>(cvd->GetData());
+
+            auto const x_res = metadata->Resolution[0];
+            auto const y_res = metadata->Resolution[1];
+            auto const z_res = metadata->Resolution[2];
 
             this->index.EnforceSize(0);
             this->vertex.EnforceSize(0);
@@ -165,7 +175,7 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
 #ifdef WITH_COLOUR_DATA
                 c,
 #endif /* WITH_COLOUR_DATA */
-                n, isoVal, cvd->Attribute(attrIdx).Floats(), cvd->XSize(), cvd->YSize(), cvd->ZSize());
+                n, isoVal, data, x_res, y_res, z_res);
 
             this->index.EnforceSize(i.End(), true);
             this->vertex.EnforceSize(v.End(), true);
@@ -174,29 +184,33 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
 #endif /* WITH_COLOUR_DATA */
             this->normal.EnforceSize(n.End(), true);
 
-            this->mesh.SetMaterial(NULL);
-            this->mesh.SetVertexData(static_cast<unsigned int>(this->vertex.GetSize() / (3 * sizeof(float))),
-                this->vertex.As<float>(), this->normal.As<float>(),
-#ifdef WITH_COLOUR_DATA
-                this->colour.As<float>(),
-#else /* WITH_COLOUR_DATA */
-                NULL,
-#endif /* WITH_COLOUR_DATA */
-                NULL, false);
-            this->mesh.SetTriangleData(static_cast<unsigned int>(this->index.GetSize() / (3 * sizeof(unsigned int))), this->index.As<unsigned int>(), false);
+            mesh = std::make_shared<mesh::MeshDataAccessCollection>();
+            mesh::MeshDataAccessCollection::IndexData index_data;
+            index_data.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+            index_data.byte_size = index.GetSize();
+            index_data.data = index.AsAt<uint8_t>(0);
+
+            std::vector<mesh::MeshDataAccessCollection::VertexAttribute> attributes;
+            attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{vertex.AsAt<uint8_t>(0),
+                vertex.GetSize(), 3, mesh::MeshDataAccessCollection::ValueType::FLOAT, 3 * sizeof(float), 0,
+                mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION});
+            attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{normal.AsAt<uint8_t>(0),
+                normal.GetSize(), 3, mesh::MeshDataAccessCollection::ValueType::FLOAT, 3 * sizeof(float), 0,
+                mesh::MeshDataAccessCollection::AttributeSemanticType::NORMAL});
+
+            mesh->addMesh("isosurface", attributes, index_data);
 
             this->dataHash = cvd->DataHash();
             this->frameIdx = cvd->FrameID();
         }
     }
 
-    tmd->SetDataHash(this->dataHash);
-    tmd->SetFrameID(this->frameIdx);
-    tmd->SetObjects(1, &this->mesh);
-    tmd->SetUnlocker(NULL);
+    tmd->setData(mesh, dataHash);
+    auto mesh_meta = tmd->getMetaData();
+    mesh_meta.m_frame_ID = frameIdx;
+    tmd->setMetaData(mesh_meta);
 
     return true;
-
 }
 
 
@@ -204,24 +218,26 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
  * IsoSurface::outExtentCallback
  */
 bool IsoSurface::outExtentCallback(megamol::core::Call& caller) {
-    megamol::geocalls::CallTriMeshData *tmd = dynamic_cast<megamol::geocalls::CallTriMeshData*>(&caller);
-    if (tmd == NULL) return false;
+    auto tmd = dynamic_cast<mesh::CallMesh*>(&caller);
+    if (tmd == NULL)
+        return false;
 
-    tmd->AccessBoundingBoxes().Clear();
-    core::CallVolumeData *cvd = this->inDataSlot.CallAs<core::CallVolumeData>();
-    cvd->SetFrameID(tmd->FrameID(), tmd->IsFrameForced());
-    if ((cvd == NULL) || (!(*cvd)(1))) {
+    auto mesh_meta = tmd->getMetaData();
+    auto cvd = this->inDataSlot.CallAs<core::misc::VolumetricDataCall>();
+    cvd->SetFrameID(mesh_meta.m_frame_ID);
+    if ((cvd == NULL) || (!(*cvd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))) {
         // no input data
-        tmd->SetDataHash(0);
-        tmd->SetFrameCount(1);
+        mesh_meta.m_frame_cnt = 1;
+        tmd->setMetaData(mesh_meta);
 
     } else {
         // input data in cvd
-        tmd->SetDataHash(cvd->DataHash());
-        tmd->SetExtent(cvd->FrameCount(), cvd->AccessBoundingBoxes());
+        mesh_meta.m_frame_cnt = cvd->FrameCount();
+        mesh_meta.m_bboxs.SetBoundingBox(cvd->AccessBoundingBoxes().ObjectSpaceBBox());
+        mesh_meta.m_bboxs.SetClipBox(cvd->AccessBoundingBoxes().ClipBox());
+        tmd->setMetaData(mesh_meta);
         this->osbb = cvd->AccessBoundingBoxes().ObjectSpaceBBox();
     }
-    tmd->SetUnlocker(NULL);
 
     return true;
 }
@@ -232,10 +248,9 @@ bool IsoSurface::outExtentCallback(megamol::core::Call& caller) {
  */
 void IsoSurface::buildMesh(vislib::RawStorageWriter& i, vislib::RawStorageWriter& v,
 #ifdef WITH_COLOUR_DATA
-        vislib::RawStorageWriter& c,
+    vislib::RawStorageWriter& c,
 #endif /* WITH_COLOUR_DATA */
-        vislib::RawStorageWriter& n,
-        float val, const float *vol, unsigned int sx, unsigned int sy, unsigned int sz) {
+    vislib::RawStorageWriter& n, float val, const float* vol, unsigned int sx, unsigned int sy, unsigned int sz) {
 
     // DEBUG: though all voxel
     float cubeValues[8];
@@ -244,9 +259,10 @@ void IsoSurface::buildMesh(vislib::RawStorageWriter& i, vislib::RawStorageWriter
     const float cellSizeY = this->osbb.Height() / static_cast<float>(sy);
     const float cellSizeZ = this->osbb.Depth() / static_cast<float>(sz);
 
+    unsigned int baseIdx = 0;
+
     for (unsigned int z = 0; z < sz - 1; z++) {
-        vislib::math::Point<float, 3> p(0.0f, 0.0f,
-            (static_cast<float>(z) + 0.5f) / static_cast<float>(sz));
+        vislib::math::Point<float, 3> p(0.0f, 0.0f, (static_cast<float>(z) + 0.5f) / static_cast<float>(sz));
         p[2] = p[2] * this->osbb.Depth() + this->osbb.Back();
 
         for (unsigned int y = 0; y < sy - 1; y++) {
@@ -260,22 +276,25 @@ void IsoSurface::buildMesh(vislib::RawStorageWriter& i, vislib::RawStorageWriter
                 bool bigger = false;
                 bool smaller = false;
                 for (unsigned int j = 0; j < 8; j++) {
-                    cubeValues[j] = vol[
-                        (x + MarchingCubeTables::a2fVertexOffset[j][0])
-                        + sx * ((y + MarchingCubeTables::a2fVertexOffset[j][1])
-                        + sy * (z + MarchingCubeTables::a2fVertexOffset[j][2]))
-                        ];
+                    cubeValues[j] = vol[(x + MarchingCubeTables::a2fVertexOffset[j][0]) +
+                                        sx * ((y + MarchingCubeTables::a2fVertexOffset[j][1]) +
+                                                 sy * (z + MarchingCubeTables::a2fVertexOffset[j][2]))];
                     bigger = bigger || (cubeValues[j] >= val);
                     smaller = smaller || (cubeValues[j] < val);
                 }
-                if (!bigger || !smaller) continue;
+                if (!bigger || !smaller)
+                    continue;
 
                 for (unsigned int tetIdx = 0; tetIdx < 6; tetIdx++) {
                     unsigned int triIdx = 0;
-                    if (cubeValues[tets[tetIdx][0]] < val) triIdx |= 1;
-                    if (cubeValues[tets[tetIdx][1]] < val) triIdx |= 2;
-                    if (cubeValues[tets[tetIdx][2]] < val) triIdx |= 4;
-                    if (cubeValues[tets[tetIdx][3]] < val) triIdx |= 8;
+                    if (cubeValues[tets[tetIdx][0]] < val)
+                        triIdx |= 1;
+                    if (cubeValues[tets[tetIdx][1]] < val)
+                        triIdx |= 2;
+                    if (cubeValues[tets[tetIdx][2]] < val)
+                        triIdx |= 4;
+                    if (cubeValues[tets[tetIdx][3]] < val)
+                        triIdx |= 8;
 
 #if 0
                     for (unsigned int j = 0; j < 4; j++) {
@@ -293,12 +312,11 @@ void IsoSurface::buildMesh(vislib::RawStorageWriter& i, vislib::RawStorageWriter
                         val, i, v, n);
 #else
                     for (unsigned int j = 0; j < 8; j++) {
-                        pts[j].Set(
-                            p.X() + static_cast<float>(MarchingCubeTables::a2fVertexOffset[j][0]) * cellSizeX,
+                        pts[j].Set(p.X() + static_cast<float>(MarchingCubeTables::a2fVertexOffset[j][0]) * cellSizeX,
                             p.Y() + static_cast<float>(MarchingCubeTables::a2fVertexOffset[j][1]) * cellSizeY,
                             p.Z() + static_cast<float>(MarchingCubeTables::a2fVertexOffset[j][2]) * cellSizeZ);
                     }
-                    this->makeTet(triIdx, tetIdx, pts, cubeValues, val, i, v, n);
+                    this->makeTet(triIdx, tetIdx, pts, cubeValues, val, i, v, n, baseIdx);
 #endif
                 }
             }
@@ -306,7 +324,7 @@ void IsoSurface::buildMesh(vislib::RawStorageWriter& i, vislib::RawStorageWriter
     }
 
 #ifdef WITH_COLOUR_DATA
-    float *vd = this->vertex.As<float>();
+    float* vd = this->vertex.As<float>();
     SIZE_T vc = v.End() / (3 * sizeof(float));
     for (SIZE_T j = 0; j < vc; j++, vd += 3) {
         float r, g, b;
@@ -330,16 +348,22 @@ void IsoSurface::buildMesh(vislib::RawStorageWriter& i, vislib::RawStorageWriter
         float vv[8];
         for (int ox = 0; ox < 2; ox++) {
             int px = ix + ox;
-            if (px < 0) px = 0;
-            if (px >= static_cast<int>(sx)) px = static_cast<int>(sx) - 1;
+            if (px < 0)
+                px = 0;
+            if (px >= static_cast<int>(sx))
+                px = static_cast<int>(sx) - 1;
             for (int oy = 0; oy < 2; oy++) {
                 int py = iy + oy;
-                if (py < 0) py = 0;
-                if (py >= static_cast<int>(sy)) py = static_cast<int>(sy) - 1;
+                if (py < 0)
+                    py = 0;
+                if (py >= static_cast<int>(sy))
+                    py = static_cast<int>(sy) - 1;
                 for (int oz = 0; oz < 2; oz++) {
                     int pz = iz + oz;
-                    if (pz < 0) pz = 0;
-                    if (pz >= static_cast<int>(sz)) pz = static_cast<int>(sz) - 1;
+                    if (pz < 0)
+                        pz = 0;
+                    if (pz >= static_cast<int>(sz))
+                        pz = static_cast<int>(sz) - 1;
 
                     vv[ox + 2 * (oy + 2 * oz)] = vol[px + sx * (py + sy * pz)];
                 }
@@ -369,7 +393,8 @@ void IsoSurface::buildMesh(vislib::RawStorageWriter& i, vislib::RawStorageWriter
         }
         vv[0] *= 1000.0f;
         ASSERT(vv[0] >= 0.0f);
-        if (vv[0] > 1.0f) vv[0] = 1.0f;
+        if (vv[0] > 1.0f)
+            vv[0] = 1.0f;
         vv[1] = 1.0f - vv[0];
         r = vv[1] + vv[0] * r;
         g = vv[1] + vv[0] * g;
@@ -395,14 +420,11 @@ float IsoSurface::getOffset(float fValue1, float fValue2, float fValueDesired) {
 }
 
 
-float getValue(float *cv, unsigned int idx0, unsigned int idx1, float a) {
+float getValue(float* cv, unsigned int idx0, unsigned int idx1, float a) {
     float b = 1.0f - a;
-    float x = b * MarchingCubeTables::a2fVertexOffset[idx0][0]
-            + a * MarchingCubeTables::a2fVertexOffset[idx1][0];
-    float y = b * MarchingCubeTables::a2fVertexOffset[idx0][1]
-            + a * MarchingCubeTables::a2fVertexOffset[idx1][1];
-    float z = b * MarchingCubeTables::a2fVertexOffset[idx0][2]
-            + a * MarchingCubeTables::a2fVertexOffset[idx1][2];
+    float x = b * MarchingCubeTables::a2fVertexOffset[idx0][0] + a * MarchingCubeTables::a2fVertexOffset[idx1][0];
+    float y = b * MarchingCubeTables::a2fVertexOffset[idx0][1] + a * MarchingCubeTables::a2fVertexOffset[idx1][1];
+    float z = b * MarchingCubeTables::a2fVertexOffset[idx0][2] + a * MarchingCubeTables::a2fVertexOffset[idx1][2];
     float vv[4];
 
     vv[0] = (1.0f - x) * cv[0] + x * cv[1];
@@ -420,13 +442,16 @@ float getValue(float *cv, unsigned int idx0, unsigned int idx1, float a) {
 /*
  * IsoSurface::interpolate
  */
-vislib::math::Point<float, 3> IsoSurface::interpolate(vislib::math::Point<float, 3>* pts, float *cv, float val, unsigned int idx0, unsigned int idx1) {
+vislib::math::Point<float, 3> IsoSurface::interpolate(
+    vislib::math::Point<float, 3>* pts, float* cv, float val, unsigned int idx0, unsigned int idx1) {
     float a0 = 0.0f;
     float v0 = getValue(cv, idx0, idx1, a0);
-    if (vislib::math::IsEqual(v0, val)) return pts[idx0];
+    if (vislib::math::IsEqual(v0, val))
+        return pts[idx0];
     float a1 = 1.0f;
     float v1 = getValue(cv, idx0, idx1, a1);
-    if (vislib::math::IsEqual(v1, val)) return pts[idx1];
+    if (vislib::math::IsEqual(v1, val))
+        return pts[idx1];
     float a = getOffset(cv[idx0], cv[idx1], val);
     float v = getValue(cv, idx0, idx1, a);
     unsigned int maxStep = 100;
@@ -449,15 +474,15 @@ vislib::math::Point<float, 3> IsoSurface::interpolate(vislib::math::Point<float,
     }
 
     return pts[idx0].Interpolate(pts[idx1], a);
-
 }
 
 
 /*
  * IsoSurface::makeTet
  */
-void IsoSurface::makeTet(unsigned int triIdx, vislib::math::Point<float, 3>* pts, float v0, float v1, float v2, float v3, float val,
-        vislib::RawStorageWriter& idxWrtr, vislib::RawStorageWriter& vrtWrtr, vislib::RawStorageWriter& nrlWrtr) {
+void IsoSurface::makeTet(unsigned int triIdx, vislib::math::Point<float, 3>* pts, float v0, float v1, float v2,
+    float v3, float val, vislib::RawStorageWriter& idxWrtr, vislib::RawStorageWriter& vrtWrtr,
+    vislib::RawStorageWriter& nrlWrtr, unsigned int& baseIdx) {
     vislib::math::Point<float, 3> tri[3];
     vislib::math::Point<float, 3> tri2[3];
     vislib::math::Point<float, 3>& p0 = pts[0];
@@ -470,97 +495,99 @@ void IsoSurface::makeTet(unsigned int triIdx, vislib::math::Point<float, 3>* pts
     bool flip = (pln.Halfspace(p0) == vislib::math::HALFSPACE_POSITIVE);
 
     unsigned int triOffset = 0;
-    switch(triIdx) {
-        case 0x00:
-        case 0x0F:
-            break;
-        case 0x01:
-            flip = !flip;
-        case 0x0E:
-            tri[0] = p0.Interpolate(p1, getOffset(v0, v1, val));
-            tri[flip ? 2 : 1] = p0.Interpolate(p2, getOffset(v0, v2, val));
-            tri[flip ? 1 : 2] = p0.Interpolate(p3, getOffset(v0, v3, val));
-            triOffset++;
-            break;
-        case 0x02:
-            flip = !flip;
-        case 0x0D:
-            tri[0] = p1.Interpolate(p0, getOffset(v1, v0, val));
-            tri[flip ? 2 : 1] = p1.Interpolate(p3, getOffset(v1, v3, val));
-            tri[flip ? 1 : 2] = p1.Interpolate(p2, getOffset(v1, v2, val));
-            triOffset++;
-            break;
-        case 0x0C:
-            flip = !flip;
-        case 0x03:
-            // tetrahedron 1: around p1: p1->p2, p0->p2, p1->p3
-            // tetrahedron 2: around p0: p0->p3, p1->p3, p0->p2
-            // tetrahedron 3: around p1: p0, p1->p3, p0->p2
-            tri[0] = p0.Interpolate(p3, getOffset(v0, v3, val));
-            tri[flip ? 2 : 1] = p0.Interpolate(p2, getOffset(v0, v2, val));
-            tri[flip ? 1 : 2] = p1.Interpolate(p3, getOffset(v1, v3, val));
-            triOffset++;
-            tri2[0] = tri[flip ? 1 : 2];
-            tri2[flip ? 1 : 2] = p1.Interpolate(p2, getOffset(v1, v2, val));
-            tri2[flip ? 2 : 1] = tri[flip ? 2 : 1];
-            triOffset++;
-            break;
-        case 0x04:
-            flip = !flip;
-        case 0x0B:
-            tri[0] = p2.Interpolate(p0, getOffset(v2, v0, val));
-            tri[flip ? 2 : 1] = p2.Interpolate(p1, getOffset(v2, v1, val));
-            tri[flip ? 1 : 2] = p2.Interpolate(p3, getOffset(v2, v3, val));
-            triOffset++;
-            break;
-        case 0x05:
-            flip = !flip;
-        case 0x0A:
-            // WARNING: per analogy = 3, subst 1 with 2
-            // tetrahedron 1: around p2: p1->p2, p0->p1, p2->p3
-            // tetrahedron 2: around p0: p0->p3, p2->p3, p0->p1
-            // tetrahedron 3: around p2: p0, p2->p3, p0->p1
-            tri[0] = p0.Interpolate(p1, getOffset(v0, v1, val));
-            tri[flip ? 2 : 1] = p2.Interpolate(p3, getOffset(v2, v3, val));
-            tri[flip ? 1 : 2] = p0.Interpolate(p3, getOffset(v0, v3, val));
-            triOffset++;
-            tri2[0] = tri[0];
-            tri2[flip ? 2 : 1] = p1.Interpolate(p2, getOffset(v1, v2, val));
-            tri2[flip ? 1 : 2] = tri[flip ? 2 : 1];
-            triOffset++;
-            break;
-        case 0x06:
-            flip = !flip;
-        case 0x09:
-            // WARNING: per analogy = 3, subst 0 with 2
-            // tetrahedron 1: around p1: p1->p0, p0->p2, p1->p3
-            // tetrahedron 2: around p2: p2->p3, p1->p3, p0->p2
-            // tetrahedron 3: around p1: p2, p1->p3, p0->p2
-            tri[0] = p0.Interpolate(p1, getOffset(v0, v1, val));
-            tri[flip ? 2 : 1] = p1.Interpolate(p3, getOffset(v1, v3, val));
-            tri[flip ? 1 : 2] = p2.Interpolate(p3, getOffset(v2, v3, val));
-            triOffset++;
-            tri2[0] = tri[0];
-            tri2[flip ? 1 : 2] = p0.Interpolate(p2, getOffset(v0, v2, val));
-            tri2[flip ? 2 : 1] = tri[flip ? 1 : 2];
-            triOffset++;
-            break;
-        case 0x08:
-            flip = !flip;
-        case 0x07:
-            tri[0] = p3.Interpolate(p0, getOffset(v3, v0, val));
-            tri[flip ? 2 : 1] = p3.Interpolate(p2, getOffset(v3, v2, val));
-            tri[flip ? 1 : 2] = p3.Interpolate(p1, getOffset(v3, v1, val));
-            triOffset++;
-            break;
+    switch (triIdx) {
+    case 0x00:
+    case 0x0F:
+        break;
+    case 0x01:
+        flip = !flip;
+    case 0x0E:
+        tri[0] = p0.Interpolate(p1, getOffset(v0, v1, val));
+        tri[flip ? 2 : 1] = p0.Interpolate(p2, getOffset(v0, v2, val));
+        tri[flip ? 1 : 2] = p0.Interpolate(p3, getOffset(v0, v3, val));
+        triOffset++;
+        break;
+    case 0x02:
+        flip = !flip;
+    case 0x0D:
+        tri[0] = p1.Interpolate(p0, getOffset(v1, v0, val));
+        tri[flip ? 2 : 1] = p1.Interpolate(p3, getOffset(v1, v3, val));
+        tri[flip ? 1 : 2] = p1.Interpolate(p2, getOffset(v1, v2, val));
+        triOffset++;
+        break;
+    case 0x0C:
+        flip = !flip;
+    case 0x03:
+        // tetrahedron 1: around p1: p1->p2, p0->p2, p1->p3
+        // tetrahedron 2: around p0: p0->p3, p1->p3, p0->p2
+        // tetrahedron 3: around p1: p0, p1->p3, p0->p2
+        tri[0] = p0.Interpolate(p3, getOffset(v0, v3, val));
+        tri[flip ? 2 : 1] = p0.Interpolate(p2, getOffset(v0, v2, val));
+        tri[flip ? 1 : 2] = p1.Interpolate(p3, getOffset(v1, v3, val));
+        triOffset++;
+        tri2[0] = tri[flip ? 1 : 2];
+        tri2[flip ? 1 : 2] = p1.Interpolate(p2, getOffset(v1, v2, val));
+        tri2[flip ? 2 : 1] = tri[flip ? 2 : 1];
+        triOffset++;
+        break;
+    case 0x04:
+        flip = !flip;
+    case 0x0B:
+        tri[0] = p2.Interpolate(p0, getOffset(v2, v0, val));
+        tri[flip ? 2 : 1] = p2.Interpolate(p1, getOffset(v2, v1, val));
+        tri[flip ? 1 : 2] = p2.Interpolate(p3, getOffset(v2, v3, val));
+        triOffset++;
+        break;
+    case 0x05:
+        flip = !flip;
+    case 0x0A:
+        // WARNING: per analogy = 3, subst 1 with 2
+        // tetrahedron 1: around p2: p1->p2, p0->p1, p2->p3
+        // tetrahedron 2: around p0: p0->p3, p2->p3, p0->p1
+        // tetrahedron 3: around p2: p0, p2->p3, p0->p1
+        tri[0] = p0.Interpolate(p1, getOffset(v0, v1, val));
+        tri[flip ? 2 : 1] = p2.Interpolate(p3, getOffset(v2, v3, val));
+        tri[flip ? 1 : 2] = p0.Interpolate(p3, getOffset(v0, v3, val));
+        triOffset++;
+        tri2[0] = tri[0];
+        tri2[flip ? 2 : 1] = p1.Interpolate(p2, getOffset(v1, v2, val));
+        tri2[flip ? 1 : 2] = tri[flip ? 2 : 1];
+        triOffset++;
+        break;
+    case 0x06:
+        flip = !flip;
+    case 0x09:
+        // WARNING: per analogy = 3, subst 0 with 2
+        // tetrahedron 1: around p1: p1->p0, p0->p2, p1->p3
+        // tetrahedron 2: around p2: p2->p3, p1->p3, p0->p2
+        // tetrahedron 3: around p1: p2, p1->p3, p0->p2
+        tri[0] = p0.Interpolate(p1, getOffset(v0, v1, val));
+        tri[flip ? 2 : 1] = p1.Interpolate(p3, getOffset(v1, v3, val));
+        tri[flip ? 1 : 2] = p2.Interpolate(p3, getOffset(v2, v3, val));
+        triOffset++;
+        tri2[0] = tri[0];
+        tri2[flip ? 1 : 2] = p0.Interpolate(p2, getOffset(v0, v2, val));
+        tri2[flip ? 2 : 1] = tri[flip ? 1 : 2];
+        triOffset++;
+        break;
+    case 0x08:
+        flip = !flip;
+    case 0x07:
+        tri[0] = p3.Interpolate(p0, getOffset(v3, v0, val));
+        tri[flip ? 2 : 1] = p3.Interpolate(p2, getOffset(v3, v2, val));
+        tri[flip ? 1 : 2] = p3.Interpolate(p1, getOffset(v3, v1, val));
+        triOffset++;
+        break;
     }
 
-    if (triOffset == 0) return;
+    if (triOffset == 0)
+        return;
     // norm?
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             vrtWrtr.Write(tri[i][j]);
         }
+        idxWrtr.Write(baseIdx++);
     }
     norm = (tri[1] - tri[0]).Cross(tri[2] - tri[0]);
     norm.Normalise();
@@ -569,11 +596,13 @@ void IsoSurface::makeTet(unsigned int triIdx, vislib::math::Point<float, 3>* pts
             nrlWrtr.Write(norm[j]);
         }
     }
-    if (triOffset == 1) return;
+    if (triOffset == 1)
+        return;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             vrtWrtr.Write(tri2[i][j]);
         }
+        idxWrtr.Write(baseIdx++);
     }
     norm = (tri2[1] - tri2[0]).Cross(tri2[2] - tri2[0]);
     norm.Normalise();
@@ -582,21 +611,15 @@ void IsoSurface::makeTet(unsigned int triIdx, vislib::math::Point<float, 3>* pts
             nrlWrtr.Write(norm[j]);
         }
     }
-
 }
 
 
 /*
  * IsoSurface::makeTet
  */
-void IsoSurface::makeTet(unsigned int triIdx,
-        unsigned int tetIdx,
-        vislib::math::Point<float, 3>* pts,
-        float *cv,
-        float val,
-        vislib::RawStorageWriter& idxWrtr,
-        vislib::RawStorageWriter& vrtWrtr,
-        vislib::RawStorageWriter& nrlWrtr) {
+void IsoSurface::makeTet(unsigned int triIdx, unsigned int tetIdx, vislib::math::Point<float, 3>* pts, float* cv,
+    float val, vislib::RawStorageWriter& idxWrtr, vislib::RawStorageWriter& vrtWrtr, vislib::RawStorageWriter& nrlWrtr,
+    unsigned int& baseIdx) {
     vislib::math::Point<float, 3> tri[3];
     vislib::math::Point<float, 3> tri2[3];
     vislib::math::Point<float, 3>& p0 = pts[tets[tetIdx][0]];
@@ -609,97 +632,99 @@ void IsoSurface::makeTet(unsigned int triIdx,
     bool flip = (pln.Halfspace(p0) == vislib::math::HALFSPACE_POSITIVE);
 
     unsigned int triOffset = 0;
-    switch(triIdx) {
-        case 0x00:
-        case 0x0F:
-            break;
-        case 0x01:
-            flip = !flip;
-        case 0x0E:
-            tri[0] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][1]);
-            tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][2]);
-            tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][3]);
-            triOffset++;
-            break;
-        case 0x02:
-            flip = !flip;
-        case 0x0D:
-            tri[0] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][0]);
-            tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][3]);
-            tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][2]);
-            triOffset++;
-            break;
-        case 0x0C:
-            flip = !flip;
-        case 0x03:
-            // tetrahedron 1: around p1: p1->p2, p0->p2, p1->p3
-            // tetrahedron 2: around p0: p0->p3, p1->p3, p0->p2
-            // tetrahedron 3: around p1: p0, p1->p3, p0->p2
-            tri[0] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][3]);
-            tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][2]);
-            tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][3]);
-            triOffset++;
-            tri2[0] = tri[flip ? 1 : 2];
-            tri2[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][2]);
-            tri2[flip ? 2 : 1] = tri[flip ? 2 : 1];
-            triOffset++;
-            break;
-        case 0x04:
-            flip = !flip;
-        case 0x0B:
-            tri[0] = interpolate(pts, cv, val, tets[tetIdx][2], tets[tetIdx][0]);
-            tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][2], tets[tetIdx][1]);
-            tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][2], tets[tetIdx][3]);
-            triOffset++;
-            break;
-        case 0x05:
-            flip = !flip;
-        case 0x0A:
-            // WARNING: per analogy = 3, subst 1 with 2
-            // tetrahedron 1: around p2: p1->p2, p0->p1, p2->p3
-            // tetrahedron 2: around p0: p0->p3, p2->p3, p0->p1
-            // tetrahedron 3: around p2: p0, p2->p3, p0->p1
-            tri[0] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][1]);
-            tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][2], tets[tetIdx][3]);
-            tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][3]);
-            triOffset++;
-            tri2[0] = tri[0];
-            tri2[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][2]);
-            tri2[flip ? 1 : 2] = tri[flip ? 2 : 1];
-            triOffset++;
-            break;
-        case 0x06:
-            flip = !flip;
-        case 0x09:
-            // WARNING: per analogy = 3, subst 0 with 2
-            // tetrahedron 1: around p1: p1->p0, p0->p2, p1->p3
-            // tetrahedron 2: around p2: p2->p3, p1->p3, p0->p2
-            // tetrahedron 3: around p1: p2, p1->p3, p0->p2
-            tri[0] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][1]);
-            tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][3]);
-            tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][2], tets[tetIdx][3]);
-            triOffset++;
-            tri2[0] = tri[0];
-            tri2[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][2]);
-            tri2[flip ? 2 : 1] = tri[flip ? 1 : 2];
-            triOffset++;
-            break;
-        case 0x08:
-            flip = !flip;
-        case 0x07:
-            tri[0] = interpolate(pts, cv, val, tets[tetIdx][3], tets[tetIdx][0]);
-            tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][3], tets[tetIdx][2]);
-            tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][3], tets[tetIdx][1]);
-            triOffset++;
-            break;
+    switch (triIdx) {
+    case 0x00:
+    case 0x0F:
+        break;
+    case 0x01:
+        flip = !flip;
+    case 0x0E:
+        tri[0] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][1]);
+        tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][2]);
+        tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][3]);
+        triOffset++;
+        break;
+    case 0x02:
+        flip = !flip;
+    case 0x0D:
+        tri[0] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][0]);
+        tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][3]);
+        tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][2]);
+        triOffset++;
+        break;
+    case 0x0C:
+        flip = !flip;
+    case 0x03:
+        // tetrahedron 1: around p1: p1->p2, p0->p2, p1->p3
+        // tetrahedron 2: around p0: p0->p3, p1->p3, p0->p2
+        // tetrahedron 3: around p1: p0, p1->p3, p0->p2
+        tri[0] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][3]);
+        tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][2]);
+        tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][3]);
+        triOffset++;
+        tri2[0] = tri[flip ? 1 : 2];
+        tri2[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][2]);
+        tri2[flip ? 2 : 1] = tri[flip ? 2 : 1];
+        triOffset++;
+        break;
+    case 0x04:
+        flip = !flip;
+    case 0x0B:
+        tri[0] = interpolate(pts, cv, val, tets[tetIdx][2], tets[tetIdx][0]);
+        tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][2], tets[tetIdx][1]);
+        tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][2], tets[tetIdx][3]);
+        triOffset++;
+        break;
+    case 0x05:
+        flip = !flip;
+    case 0x0A:
+        // WARNING: per analogy = 3, subst 1 with 2
+        // tetrahedron 1: around p2: p1->p2, p0->p1, p2->p3
+        // tetrahedron 2: around p0: p0->p3, p2->p3, p0->p1
+        // tetrahedron 3: around p2: p0, p2->p3, p0->p1
+        tri[0] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][1]);
+        tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][2], tets[tetIdx][3]);
+        tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][3]);
+        triOffset++;
+        tri2[0] = tri[0];
+        tri2[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][2]);
+        tri2[flip ? 1 : 2] = tri[flip ? 2 : 1];
+        triOffset++;
+        break;
+    case 0x06:
+        flip = !flip;
+    case 0x09:
+        // WARNING: per analogy = 3, subst 0 with 2
+        // tetrahedron 1: around p1: p1->p0, p0->p2, p1->p3
+        // tetrahedron 2: around p2: p2->p3, p1->p3, p0->p2
+        // tetrahedron 3: around p1: p2, p1->p3, p0->p2
+        tri[0] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][1]);
+        tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][1], tets[tetIdx][3]);
+        tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][2], tets[tetIdx][3]);
+        triOffset++;
+        tri2[0] = tri[0];
+        tri2[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][0], tets[tetIdx][2]);
+        tri2[flip ? 2 : 1] = tri[flip ? 1 : 2];
+        triOffset++;
+        break;
+    case 0x08:
+        flip = !flip;
+    case 0x07:
+        tri[0] = interpolate(pts, cv, val, tets[tetIdx][3], tets[tetIdx][0]);
+        tri[flip ? 2 : 1] = interpolate(pts, cv, val, tets[tetIdx][3], tets[tetIdx][2]);
+        tri[flip ? 1 : 2] = interpolate(pts, cv, val, tets[tetIdx][3], tets[tetIdx][1]);
+        triOffset++;
+        break;
     }
 
-    if (triOffset == 0) return;
+    if (triOffset == 0)
+        return;
     // norm?
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             vrtWrtr.Write(tri[i][j]);
         }
+        idxWrtr.Write(baseIdx++);
     }
     norm = (tri[1] - tri[0]).Cross(tri[2] - tri[0]);
     norm.Normalise();
@@ -708,11 +733,13 @@ void IsoSurface::makeTet(unsigned int triIdx,
             nrlWrtr.Write(norm[j]);
         }
     }
-    if (triOffset == 1) return;
+    if (triOffset == 1)
+        return;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             vrtWrtr.Write(tri2[i][j]);
         }
+        idxWrtr.Write(baseIdx++);
     }
     norm = (tri2[1] - tri2[0]).Cross(tri2[2] - tri2[0]);
     norm.Normalise();

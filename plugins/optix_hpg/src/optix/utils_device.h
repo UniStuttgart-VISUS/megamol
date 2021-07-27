@@ -14,6 +14,8 @@
 #error "CUDA device-only include"
 #endif
 
+#define MM_OPTIX_SBT_STRIDE 3
+
 #define MMO_INV_PI 0.318309886183f
 #define MMO_PI 3.141592653589f
 #define MMO_PI_2 9.869604401084f
@@ -64,6 +66,15 @@ namespace optix_hpg {
             float tmax;
         } Ray;
 
+        inline __device__ float gauss(glm::vec3 const& a, glm::vec3 const& b, float mean, float var) {
+            auto const dis = glm::distance(a, b);
+            return expf(-powf(dis - mean, 2.f) / (2.f * var * var)) / (sqrtf(2.f * MMO_PI * var * var));
+        }
+
+        inline __device__ float gauss(float dis, float mean, float var) {
+            return expf(-powf(dis - mean, 2.f) / (2.f * var * var)) / (sqrtf(2.f * MMO_PI * var * var));
+        }
+
         // OptiX SDK
 
         //
@@ -101,6 +112,11 @@ namespace optix_hpg {
         template<typename T>
         inline __device__ T const& getProgramData() {
             return *(T const*) optixGetSbtDataPointer();
+        }
+
+        template<typename T>
+        inline __device__ T& getModifiableProgramData() {
+            return *(T*) optixGetSbtDataPointer();
         }
 
 
@@ -298,10 +314,10 @@ namespace optix_hpg {
                 float3 Ln = make_float3(L.x, L.y, L.z);
                 unsigned int occluded = 0;
                 optixTrace(prd.world, Pn, Ln, 0.01f, Ldist - 0.01f, 0.0f, (OptixVisibilityMask) -1,
-                    OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT, 1, 2, 1, occluded);
+                    OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT, 1, MM_OPTIX_SBT_STRIDE, 1, occluded);
 
                 if (!occluded) {
-                    weight = nDl /* LnDl*/ / (MMO_PI * Ldist * Ldist);
+                    weight = nDl /* LnDl*/ / (MMO_PI /* * Ldist * Ldist*/);
                 }
             }
 
