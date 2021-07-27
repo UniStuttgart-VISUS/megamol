@@ -38,6 +38,7 @@
 #include "MeshExtrude.h"
 #include "ParticlesInsideMesh.h"
 #include "ParticleMeshTracking.h"
+#include "ParticleSurfaceRefinement.h"
 
 #include "thermodyn/BoxDataCall.h"
 #include "thermodyn/CallStatsInfo.h"
@@ -94,6 +95,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::MeshExtrude>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticlesInsideMesh>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticleMeshTracking>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::ParticleSurfaceRefinement>();
         //
         // TODO: Register your plugin's modules here
         // like:
