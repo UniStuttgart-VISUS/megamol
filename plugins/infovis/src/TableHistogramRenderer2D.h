@@ -7,14 +7,6 @@
 #ifndef MEGAMOL_INFOVIS_TABLEHISTOGRAMRENDERER2D_H_INCLUDED
 #define MEGAMOL_INFOVIS_TABLEHISTOGRAMRENDERER2D_H_INCLUDED
 
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/UniFlagCalls.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/SDFFont.h"
-#include "mmcore/view/CallGetTransferFunction.h"
-#include "mmstd_datatools/table/TableDataCall.h"
-
 #include "BaseHistogramRenderer2D.h"
 
 namespace megamol::infovis {
@@ -58,96 +50,30 @@ public:
      */
     ~TableHistogramRenderer2D() override;
 
-protected:
-    /**
-     * Implementation of 'Create'.
-     *
-     * @return 'true' on success, 'false' otherwise.
-     */
-    bool create() override;
-
-    /**
-     * Implementation of 'Release'.
-     */
-    void release() override;
-
-    /**
-     * The get extents callback. The module should set the members of
-     * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times).
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    bool GetExtents(core::view::CallRender2DGL& call) override;
-
-    /**
-     * The OpenGL Render callback.
-     *
-     * @param call The calling call.
-     * @return The return value of the function.
-     */
-    bool Render(core::view::CallRender2DGL& call) override;
-
-    bool handleCall(core::view::CallRender2DGL& call);
-
-    bool OnMouseButton(
-        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
-
-    bool OnMouseMove(double x, double y) override;
-
 private:
-    core::CallerSlot tableDataCallerSlot;
-    core::CallerSlot transferFunctionCallerSlot;
-    core::CallerSlot flagStorageReadCallerSlot;
-    core::CallerSlot flagStorageWriteCallerSlot;
+    bool createHistoImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) override;
 
-    core::param::ParamSlot numberOfBinsParam;
-    core::param::ParamSlot logPlotParam;
-    core::param::ParamSlot selectionColorParam;
+    void releaseHistoImpl() override;
 
-    size_t currentTableDataHash;
-    unsigned int currentTableFrameId;
+    bool handleCall(core::view::CallRender2DGL& call) override;
 
-    size_t bins;
-    size_t colCount;
-    size_t rowCount;
-    std::vector<float> colMinimums;
-    std::vector<float> colMaximums;
-    std::vector<std::string> colNames;
-    GLint maxBinValue;
+    void updateSelection(int selectionMode, int selectedCol, int selectedBin) override;
 
-    std::unique_ptr<glowl::GLSLProgram> calcHistogramProgram;
-    std::unique_ptr<glowl::GLSLProgram> calcTexHistogramProgram;
-    std::unique_ptr<glowl::GLSLProgram> calcTexHistogramMaxProgram;
-    std::unique_ptr<glowl::GLSLProgram> calcTexLineMinMaxProgram;
-    std::unique_ptr<glowl::GLSLProgram> calcTexGlobalMinMaxProgram;
-    std::unique_ptr<glowl::GLSLProgram> selectionProgram;
-    std::unique_ptr<glowl::GLSLProgram> histogramProgram;
-    std::unique_ptr<glowl::GLSLProgram> axesProgram;
+    core::CallerSlot tableDataCallerSlot_;
+    core::CallerSlot flagStorageReadCallerSlot_;
+    core::CallerSlot flagStorageWriteCallerSlot_;
 
-    GLuint floatDataBuffer = 0;
-    GLuint minBuffer = 0;
-    GLuint maxBuffer = 0;
-    GLuint lineMinBuffer = 0;
-    GLuint lineMaxBuffer = 0;
-    GLuint histogramBuffer = 0;
-    GLuint selectedHistogramBuffer = 0;
-    GLuint maxBinValueBuffer = 0;
+    std::unique_ptr<glowl::GLSLProgram> calcHistogramProgram_;
+    std::unique_ptr<glowl::GLSLProgram> selectionProgram_;
 
-    megamol::core::utility::SDFFont font;
+    std::size_t numRows_;
+    std::size_t currentTableDataHash_;
+    unsigned int currentTableFrameId_;
 
-    float mouseX;
-    float mouseY;
+    GLuint floatDataBuffer_ = 0;
 
-    bool needSelectionUpdate;
-    int selectionMode;
-    int selectedCol;
-    int selectedBin;
-
-    GLint selectionWorkgroupSize[3];
-    GLint maxWorkgroupCount[3];
+    GLint selectionWorkgroupSize_[3];
+    GLint maxWorkgroupCount_[3];
 };
 
 } // namespace megamol::infovis

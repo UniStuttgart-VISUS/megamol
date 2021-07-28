@@ -45,14 +45,27 @@ public:
      */
     TextureHistogramRenderer2D();
 
-protected:
-    bool create() override;
+    /**
+     * Finalises an instance.
+     */
+    ~TextureHistogramRenderer2D() override;
 
-    void release() override;
+private:
+    bool createHistoImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) override;
 
-    bool GetExtents(core::view::CallRender2DGL& call) override;
+    void releaseHistoImpl() override;
 
-    bool Render(core::view::CallRender2DGL& call) override;
+    bool handleCall(core::view::CallRender2DGL& call) override;
+
+    void updateSelection(int selectionMode, int selectedCol, int selectedBin) override;
+
+    core::CallerSlot textureDataCallerSlot_;
+
+    std::unique_ptr<glowl::GLSLProgram> calcMinMaxLinesProgram_;
+    std::unique_ptr<glowl::GLSLProgram> calcMinMaxAllProgram_;
+    std::unique_ptr<glowl::GLSLProgram> calcHistogramProgram_;
+
+    size_t numRows_;
 };
 
 } // namespace megamol::infovis
