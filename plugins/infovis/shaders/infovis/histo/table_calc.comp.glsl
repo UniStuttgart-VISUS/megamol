@@ -18,18 +18,18 @@ uniform uint numRows = 0;
 layout(local_size_x = 1024) in;
 
 void main() {
-    uint col = gl_GlobalInvocationID.x;
-    if (col >= numCols) {
+    uint component = gl_GlobalInvocationID.x;
+    if (component >= numComponents) {
         return;
     }
 
     for (uint r = 0; r < numRows; r++) {
         if (bitflag_isVisible(flags[r])) {
-            float val = (floatData[r * numCols + col] - minimums[col]) / (maximums[col] - minimums[col]);
+            float val = (floatData[r * numComponents + component] - minimums[component]) / (maximums[component] - minimums[component]);
             int bin_idx = clamp(int(val * numBins), 0, int(numBins) - 1);
-            histogram[bin_idx * numCols + col] += 1;
+            histogram[bin_idx * numComponents + component] += 1;
             if (bitflag_isVisibleSelected(flags[r])) {
-                selectedHistogram[bin_idx * numCols + col] += 1;
+                selectedHistogram[bin_idx * numComponents + component] += 1;
             }
         }
     }

@@ -11,7 +11,7 @@ layout(local_size_x = 1024) in;
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
-    uint bufSize = numCols * numBins;
+    uint bufSize = numComponents * numBins;
 
     // divide size of histogram buffer by number of local threads to distribute work evenly.
     uint localSize = (bufSize > 0 ? bufSize - 1 : 0) / 1024 + 1;

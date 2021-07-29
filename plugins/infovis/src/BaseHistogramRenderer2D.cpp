@@ -24,15 +24,15 @@ BaseHistogramRenderer2D::BaseHistogramRenderer2D()
         , logPlotParam_("logPlot", "Logarithmic scale")
         , selectionColorParam_("selectionColorParam", "Color of selection")
         , numBins_(10)
-        , numCols_(0)
+        , numComponents_(0)
         , maxBinValue_(0)
         , needMaxBinValueUpdate_(true)
         , font_(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL)
         , mouseX_(0.0f)
         , mouseY_(0.0f)
         , needSelectionUpdate_(false)
-        , selectionMode_(0)
-        , selectedCol_(-1)
+        , selectionMode_(SelectionMode::PICK)
+        , selectedComponent_(-1)
         , selectedBin_(-1) {
     transferFunctionCallerSlot_.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     MakeSlotAvailable(&transferFunctionCallerSlot_);
@@ -60,19 +60,19 @@ bool BaseHistogramRenderer2D::create() {
             "histo_base_draw", shaderOptions, "infovis/histo/base_draw.vert.glsl", "infovis/histo/base_draw.frag.glsl");
         drawAxesProgram_ = core::utility::make_glowl_shader(
             "histo_base_axes", shaderOptions, "infovis/histo/base_axes.vert.glsl", "infovis/histo/base_axes.frag.glsl");
-        maxBinProgram_ =
+        calcMaxBinProgram_ =
             core::utility::make_glowl_shader("histo_base_axes", shaderOptions, "infovis/histo/base_max_bin.comp.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("HistogramRenderer2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BaseHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
 
     glGenBuffers(1, &histogramBuffer_);
     glGenBuffers(1, &selectedHistogramBuffer_);
-    glGenBuffers(1, &minBuffer_);
-    glGenBuffers(1, &maxBuffer_);
+    glGenBuffers(1, &componentMinBuffer_);
+    glGenBuffers(1, &componentMaxBuffer_);
 
-    createHistoImpl(shaderOptions);
+    createImpl(shaderOptions);
 
     return true;
 }
@@ -80,10 +80,10 @@ bool BaseHistogramRenderer2D::create() {
 void BaseHistogramRenderer2D::release() {
     glDeleteBuffers(1, &histogramBuffer_);
     glDeleteBuffers(1, &selectedHistogramBuffer_);
-    glDeleteBuffers(1, &minBuffer_);
-    glDeleteBuffers(1, &maxBuffer_);
+    glDeleteBuffers(1, &componentMinBuffer_);
+    glDeleteBuffers(1, &componentMaxBuffer_);
 
-    releaseHistoImpl();
+    releaseImpl();
 }
 
 bool BaseHistogramRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
@@ -92,7 +92,7 @@ bool BaseHistogramRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
     }
 
     // Draw histogram within 10.0 x 10.0 quads, left + right margin 1.0, top and bottom 2.0 for title and axes
-    float sizeX = static_cast<float>(std::max<std::size_t>(1, numCols_)) * 12.0f;
+    float sizeX = static_cast<float>(std::max<std::size_t>(1, numComponents_)) * 12.0f;
     call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0, sizeX, 14.0f, 0);
     return true;
 }
@@ -104,7 +104,7 @@ bool BaseHistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
 
     auto tfCall = transferFunctionCallerSlot_.CallAs<core::view::CallGetTransferFunction>();
     if (tfCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "HistogramRenderer2D requires a transfer function!");
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "BaseHistogramRenderer2D requires a transfer function!");
         return false;
     }
     (*tfCall)(0);
@@ -119,8 +119,8 @@ bool BaseHistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
         GLint zero = 0;
         glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32I, GL_RED, GL_INT, &zero);
 
-        maxBinProgram_->use();
-        bindCommon(maxBinProgram_);
+        calcMaxBinProgram_->use();
+        bindCommon(calcMaxBinProgram_);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, maxBinValueBuffer);
         glDispatchCompute(1, 1, 1);
         glUseProgram(0);
@@ -137,7 +137,7 @@ bool BaseHistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
     // Update selection
     if (needSelectionUpdate_) {
         needSelectionUpdate_ = false;
-        updateSelection(selectionMode_, selectedCol_, selectedBin_);
+        updateSelection(selectionMode_, selectedComponent_, selectedBin_);
     }
 
     // this is the apex of suck and must die
@@ -160,7 +160,7 @@ bool BaseHistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
     glUniform4fv(drawHistogramProgram_->getUniformLocation("selectionColor"), 1,
         selectionColorParam_.Param<core::param::ColorParam>()->Value().data());
 
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, numBins_ * numCols_);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(numBins_ * numComponents_));
 
     tfCall->UnbindConvenience();
     glBindVertexArray(0);
@@ -169,12 +169,12 @@ bool BaseHistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
     drawAxesProgram_->use();
     glUniformMatrix4fv(drawAxesProgram_->getUniformLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
     glUniformMatrix4fv(drawAxesProgram_->getUniformLocation("projection"), 1, GL_FALSE, projMatrix_column);
-    drawAxesProgram_->setUniform("colTotalSize", 12.0f, 14.0f);
-    drawAxesProgram_->setUniform("colDrawSize", 10.0f, 10.0f);
-    drawAxesProgram_->setUniform("colDrawOffset", 1.0f, 2.0f);
+    drawAxesProgram_->setUniform("componentTotalSize", 12.0f, 14.0f);
+    drawAxesProgram_->setUniform("componentDrawSize", 10.0f, 10.0f);
+    drawAxesProgram_->setUniform("componentDrawOffset", 1.0f, 2.0f);
 
     drawAxesProgram_->setUniform("mode", 0);
-    glDrawArraysInstanced(GL_LINES, 0, 2, numCols_);
+    glDrawArraysInstanced(GL_LINES, 0, 2, static_cast<GLsizei>(numComponents_));
 
     drawAxesProgram_->setUniform("mode", 1);
     glDrawArrays(GL_LINES, 0, 2);
@@ -187,13 +187,13 @@ bool BaseHistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
 
     glm::mat4 ortho = glm::make_mat4(projMatrix_column) * glm::make_mat4(modelViewMatrix_column);
 
-    for (std::size_t c = 0; c < numCols_; ++c) {
+    for (std::size_t c = 0; c < numComponents_; ++c) {
         float posX = 12.0f * static_cast<float>(c) + 6.0f;
-        font_.DrawString(
-            ortho, white, posX, 13.0f, 1.0f, false, colNames_[c].c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
-        font_.DrawString(ortho, white, posX - 5.0f, 2.0f, 1.0f, false, std::to_string(colMinimums_[c]).c_str(),
+        font_.DrawString(ortho, white, posX, 13.0f, 1.0f, false, componentNames_[c].c_str(),
+            core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
+        font_.DrawString(ortho, white, posX - 5.0f, 2.0f, 1.0f, false, std::to_string(componentMinimums_[c]).c_str(),
             core::utility::SDFFont::ALIGN_LEFT_TOP);
-        font_.DrawString(ortho, white, posX + 5.0f, 2.0f, 1.0f, false, std::to_string(colMaximums_[c]).c_str(),
+        font_.DrawString(ortho, white, posX + 5.0f, 2.0f, 1.0f, false, std::to_string(componentMaximums_[c]).c_str(),
             core::utility::SDFFont::ALIGN_RIGHT_TOP);
     }
     font_.DrawString(ortho, white, 1.0f, 12.0f, 1.0f, false, std::to_string(maxBinValue_).c_str(),
@@ -217,26 +217,26 @@ bool BaseHistogramRenderer2D::OnMouseButton(
     bool shift = mods.test(core::view::Modifier::SHIFT);
 
     if (left && !shift) {
-        selectionMode_ = 0;
+        selectionMode_ = SelectionMode::PICK;
     } else if (left && shift) {
-        selectionMode_ = 1;
+        selectionMode_ = SelectionMode::APPEND;
     } else if (right && shift) {
-        selectionMode_ = 2;
+        selectionMode_ = SelectionMode::REMOVE;
     } else {
         return false;
     }
 
     needSelectionUpdate_ = true;
-    selectedCol_ = -1;
+    selectedComponent_ = -1;
     selectedBin_ = -1;
 
     if (mouseY_ < 2.0f || mouseY_ > 12.0f) {
         return true;
     }
 
-    selectedCol_ = static_cast<int>(std::floor(mouseX_ / 12.0f));
-    if (selectedCol_ < 0 || selectedCol_ >= numCols_) {
-        selectedCol_ = -1;
+    selectedComponent_ = static_cast<int>(std::floor(mouseX_ / 12.0f));
+    if (selectedComponent_ < 0 || selectedComponent_ >= numComponents_) {
+        selectedComponent_ = -1;
         return true;
     }
 
@@ -244,7 +244,7 @@ bool BaseHistogramRenderer2D::OnMouseButton(
     if (posX < 0.0f || posX >= 1.0f) {
         return true;
     }
-    selectedBin_ = static_cast<int>(posX * numBins_);
+    selectedBin_ = static_cast<int>(posX * static_cast<float>(numBins_));
     if (selectedBin_ < 0 || selectedBin_ >= numBins_) {
         selectedBin_ = -1;
     }
@@ -261,35 +261,35 @@ bool BaseHistogramRenderer2D::OnMouseMove(double x, double y) {
 void BaseHistogramRenderer2D::bindCommon(std::unique_ptr<glowl::GLSLProgram>& program) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, histogramBuffer_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, selectedHistogramBuffer_);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, minBuffer_);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, maxBuffer_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, componentMinBuffer_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, componentMaxBuffer_);
 
     program->setUniform("numBins", static_cast<GLuint>(numBins_));
-    program->setUniform("numCols", static_cast<GLuint>(numCols_));
+    program->setUniform("numComponents", static_cast<GLuint>(numComponents_));
 }
 
-void BaseHistogramRenderer2D::setColHeaders(
-    std::vector<std::string> colNames, std::vector<float> colMinimums, std::vector<float> colMaximums) {
-    auto numCols = colNames.size();
-    if (colMinimums.size() != numCols || colMaximums.size() != numCols) {
+void BaseHistogramRenderer2D::setComponentHeaders(
+    std::vector<std::string> names, std::vector<float> minimums, std::vector<float> maximums) {
+    auto numComponents = names.size();
+    if (minimums.size() != numComponents || maximums.size() != numComponents) {
         throw std::invalid_argument("Name, minimum and maximum lists must have the same size!");
     }
-    numCols_ = numCols;
-    colNames_ = std::move(colNames);
-    colMinimums_ = std::move(colMinimums);
-    colMaximums_ = std::move(colMaximums);
+    numComponents_ = numComponents;
+    componentNames_ = std::move(names);
+    componentMinimums_ = std::move(minimums);
+    componentMaximums_ = std::move(maximums);
 
-    auto bufSize = static_cast<GLsizeiptr>(numCols_ * sizeof(float));
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, minBuffer_);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufSize, colMinimums_.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxBuffer_);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufSize, colMaximums_.data(), GL_STATIC_DRAW);
+    auto bufSize = static_cast<GLsizeiptr>(numComponents_ * sizeof(float));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, componentMinBuffer_);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufSize, componentMinimums_.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, componentMaxBuffer_);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufSize, componentMaximums_.data(), GL_STATIC_DRAW);
 }
 
-void BaseHistogramRenderer2D::resizeAndClearHistoBuffers() {
+void BaseHistogramRenderer2D::resetHistogramBuffers() {
     numBins_ = static_cast<std::size_t>(binsParam_.Param<core::param::IntParam>()->Value());
     GLint zero = 0;
-    auto bufSize = static_cast<GLsizeiptr>(numCols_ * numBins_ * sizeof(GLint));
+    auto bufSize = static_cast<GLsizeiptr>(numComponents_ * numBins_ * sizeof(GLint));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, histogramBuffer_);
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufSize, nullptr, GL_STATIC_COPY);
     glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32I, GL_RED, GL_INT, &zero);

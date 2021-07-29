@@ -15,7 +15,7 @@ layout(std430, binding = 5) buffer Flags
 
 uniform uint numRows = 0;
 uniform int selectionMode = 0; // 0 = pick with replace, 1 = append, 2 = remove
-uniform int selectedCol = -1;
+uniform int selectedComponent = -1;
 uniform int selectedBin = -1;
 
 layout(local_size_x = 32, local_size_y = 32) in;
@@ -27,14 +27,14 @@ void main() {
         return;
     }
 
-    if (selectedCol < 0 || selectedBin < 0) {
+    if (selectedComponent < 0 || selectedBin < 0) {
         if (selectionMode == 0) {
             bitflag_set(flags[rowId], FLAG_SELECTED, false);
         }
         return;
     }
 
-    float val = (floatData[rowId * numCols + selectedCol] - minimums[selectedCol]) / (maximums[selectedCol] - minimums[selectedCol]);
+    float val = (floatData[rowId * numComponents + selectedComponent] - minimums[selectedComponent]) / (maximums[selectedComponent] - minimums[selectedComponent]);
     int bin_idx = clamp(int(val * numBins), 0, int(numBins) - 1);
 
     bool isSelected = bin_idx == selectedBin;

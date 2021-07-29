@@ -51,13 +51,13 @@ public:
     ~TableHistogramRenderer2D() override;
 
 private:
-    bool createHistoImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) override;
+    bool createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) override;
 
-    void releaseHistoImpl() override;
+    void releaseImpl() override;
 
     bool handleCall(core::view::CallRender2DGL& call) override;
 
-    void updateSelection(int selectionMode, int selectedCol, int selectedBin) override;
+    void updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) override;
 
     core::CallerSlot tableDataCallerSlot_;
     core::CallerSlot flagStorageReadCallerSlot_;

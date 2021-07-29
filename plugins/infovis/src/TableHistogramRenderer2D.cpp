@@ -38,14 +38,14 @@ TableHistogramRenderer2D::~TableHistogramRenderer2D() {
     this->Release();
 }
 
-bool TableHistogramRenderer2D::createHistoImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
+bool TableHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) {
     try {
         calcHistogramProgram_ =
             core::utility::make_glowl_shader("histo_table_calc", shaderOptions, "infovis/histo/table_calc.comp.glsl");
         selectionProgram_ = core::utility::make_glowl_shader(
             "histo_table_select", shaderOptions, "infovis/histo/table_select.comp.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("HistogramRenderer2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("TableHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -60,7 +60,7 @@ bool TableHistogramRenderer2D::createHistoImpl(const msf::ShaderFactoryOptionsOp
     return true;
 }
 
-void TableHistogramRenderer2D::releaseHistoImpl() {
+void TableHistogramRenderer2D::releaseImpl() {
     glDeleteBuffers(1, &floatDataBuffer_);
 }
 
@@ -71,12 +71,12 @@ bool TableHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     }
     auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core::FlagCallRead_GL>();
     if (readFlagsCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "HistogramRenderer2D requires a read flag storage!");
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TableHistogramRenderer2D requires a read flag storage!");
         return false;
     }
     auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core::FlagCallWrite_GL>();
     if (writeFlagsCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "HistogramRenderer2D requires a write flag storage!");
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TableHistogramRenderer2D requires a write flag storage!");
         return false;
     }
 
@@ -90,31 +90,31 @@ bool TableHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     auto frameId = floatTableCall->GetFrameID();
     bool dataChanged = currentTableDataHash_ != hash || currentTableFrameId_ != frameId;
     if (dataChanged) {
-        auto numCols = floatTableCall->GetColumnsCount();
+        auto numComponents = floatTableCall->GetColumnsCount();
 
-        std::vector<std::string> colNames(numCols);
-        std::vector<float> colMinimums(numCols);
-        std::vector<float> colMaximums(numCols);
+        std::vector<std::string> names(numComponents);
+        std::vector<float> minimums(numComponents);
+        std::vector<float> maximums(numComponents);
 
-        for (std::size_t i = 0; i < numCols; ++i) {
+        for (std::size_t i = 0; i < numComponents; ++i) {
             const auto& colInfo = floatTableCall->GetColumnsInfos()[i];
-            colNames[i] = colInfo.Name();
-            colMinimums[i] = colInfo.MinimumValue();
-            colMaximums[i] = colInfo.MaximumValue();
+            names[i] = colInfo.Name();
+            minimums[i] = colInfo.MinimumValue();
+            maximums[i] = colInfo.MaximumValue();
         }
 
-        setColHeaders(std::move(colNames), std::move(colMinimums), std::move(colMaximums));
+        setComponentHeaders(std::move(names), std::move(minimums), std::move(maximums));
 
         numRows_ = floatTableCall->GetRowsCount();
+        const GLsizeiptr bufSize = numComponents * numRows_ * sizeof(float);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, floatDataBuffer_);
-        glBufferData(
-            GL_SHADER_STORAGE_BUFFER, numCols * numRows_ * sizeof(float), floatTableCall->GetData(), GL_STATIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, bufSize, floatTableCall->GetData(), GL_STATIC_DRAW);
     }
 
     if (dataChanged || readFlagsCall->hasUpdate() || binsChanged()) {
         // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Calculate Histogram");
 
-        resizeAndClearHistoBuffers();
+        resetHistogramBuffers();
 
         readFlagsCall->getData()->validateFlagCount(numRows_);
 
@@ -138,7 +138,7 @@ bool TableHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     return true;
 }
 
-void TableHistogramRenderer2D::updateSelection(int selectionMode, int selectedCol, int selectedBin) {
+void TableHistogramRenderer2D::updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) {
     auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core::FlagCallRead_GL>();
     auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core::FlagCallWrite_GL>();
     if (readFlagsCall != nullptr && writeFlagsCall != nullptr) {
@@ -149,8 +149,9 @@ void TableHistogramRenderer2D::updateSelection(int selectionMode, int selectedCo
         readFlagsCall->getData()->flags->bind(5);
 
         selectionProgram_->setUniform("numRows", static_cast<GLuint>(numRows_));
-        selectionProgram_->setUniform("selectionMode", selectionMode);
-        selectionProgram_->setUniform("selectedCol", selectedCol);
+        selectionProgram_->setUniform(
+            "selectionMode", static_cast<std::underlying_type_t<SelectionMode>>(selectionMode));
+        selectionProgram_->setUniform("selectedComponent", selectedComponent);
         selectionProgram_->setUniform("selectedBin", selectedBin);
 
         GLuint groupCounts[3];

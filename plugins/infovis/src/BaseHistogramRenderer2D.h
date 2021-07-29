@@ -26,6 +26,12 @@ public:
     ~BaseHistogramRenderer2D() override = default;
 
 protected:
+    enum class SelectionMode {
+        PICK = 0,
+        APPEND = 1,
+        REMOVE = 2,
+    };
+
     /**
      * Implementation of 'Create'.
      *
@@ -72,22 +78,21 @@ protected:
         return numBins_;
     }
 
-    std::size_t numCols() const {
-        return numCols_;
+    std::size_t numComponents() const {
+        return numComponents_;
     }
 
-    void setColHeaders(
-        std::vector<std::string> colNames, std::vector<float> colMinimums, std::vector<float> colMaximums);
+    void setComponentHeaders(std::vector<std::string> names, std::vector<float> minimums, std::vector<float> maximums);
 
-    void resizeAndClearHistoBuffers();
+    void resetHistogramBuffers();
 
-    virtual bool createHistoImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) = 0;
+    virtual bool createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) = 0;
 
-    virtual void releaseHistoImpl() = 0;
+    virtual void releaseImpl() = 0;
 
     virtual bool handleCall(core::view::CallRender2DGL& call) = 0;
 
-    virtual void updateSelection(int selectionMode, int selectedCol, int selectedBin) = 0;
+    virtual void updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) = 0;
 
 private:
     core::CallerSlot transferFunctionCallerSlot_;
@@ -97,19 +102,19 @@ private:
     core::param::ParamSlot selectionColorParam_;
 
     std::size_t numBins_;
-    std::size_t numCols_;
-    std::vector<std::string> colNames_;
-    std::vector<float> colMinimums_;
-    std::vector<float> colMaximums_;
+    std::size_t numComponents_;
+    std::vector<std::string> componentNames_;
+    std::vector<float> componentMinimums_;
+    std::vector<float> componentMaximums_;
 
     std::unique_ptr<glowl::GLSLProgram> drawHistogramProgram_;
     std::unique_ptr<glowl::GLSLProgram> drawAxesProgram_;
-    std::unique_ptr<glowl::GLSLProgram> maxBinProgram_;
+    std::unique_ptr<glowl::GLSLProgram> calcMaxBinProgram_;
 
     GLuint histogramBuffer_ = 0;
     GLuint selectedHistogramBuffer_ = 0;
-    GLuint minBuffer_ = 0;
-    GLuint maxBuffer_ = 0;
+    GLuint componentMinBuffer_ = 0;
+    GLuint componentMaxBuffer_ = 0;
 
     std::size_t maxBinValue_;
     bool needMaxBinValueUpdate_;
@@ -120,8 +125,8 @@ private:
     float mouseY_;
 
     bool needSelectionUpdate_;
-    int selectionMode_;
-    int selectedCol_;
+    SelectionMode selectionMode_;
+    int selectedComponent_;
     int selectedBin_;
 };
 

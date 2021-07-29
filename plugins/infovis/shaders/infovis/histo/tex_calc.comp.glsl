@@ -10,11 +10,11 @@ layout(local_size_x = 256, local_size_y = 4, local_size_z = 1) in;
 
 void main() {
     const uint texY = gl_GlobalInvocationID.x;
-    const uint col = gl_GlobalInvocationID.y;
+    const uint component = gl_GlobalInvocationID.y;
 
     const ivec2 texSize = textureSize(tex, 0);
 
-    if (texY >= texSize.y || col > numCols) {
+    if (texY >= texSize.y || component > numComponents) {
         return;
     }
 
@@ -26,16 +26,16 @@ void main() {
         local_histo[i] = 0;
     }
 
-    const float minVal = minimums[col];
-    const float maxVal = maximums[col];
+    const float minVal = minimums[component];
+    const float maxVal = maximums[component];
 
     for (int x = 0; x < texSize.x; x++) {
-        float val = (texelFetch(tex, ivec2(x, texY), 0)[col] - minVal) / (maxVal - minVal);
+        float val = (texelFetch(tex, ivec2(x, texY), 0)[component] - minVal) / (maxVal - minVal);
         int bin_idx = clamp(int(val * overwriteNumBin), 0, int(overwriteNumBin) - 1);
         local_histo[bin_idx] += 1;
     }
 
     for (int i = 0; i < overwriteNumBin; i++) {
-        atomicAdd(histogram[i * numCols + col], local_histo[i]);
+        atomicAdd(histogram[i * numComponents + component], local_histo[i]);
     }
 }

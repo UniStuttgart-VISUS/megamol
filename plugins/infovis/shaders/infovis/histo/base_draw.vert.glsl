@@ -12,11 +12,11 @@ out float binColor;
 out float selection;
 
 void main() {
-    int binId = gl_InstanceID / int(numCols);
-    int colId = gl_InstanceID - int(numCols) * binId; // integer modulo
+    int binId = gl_InstanceID / int(numComponents);
+    int componentId = gl_InstanceID - int(numComponents) * binId; // integer modulo
 
-    float histoVal = float(histogram[binId * numCols + colId]);
-    float selectedHistoVal = float(selectedHistogram[binId * numCols + colId]);
+    float histoVal = float(histogram[binId * numComponents + componentId]);
+    float selectedHistoVal = float(selectedHistogram[binId * numComponents + componentId]);
     float maxHistoVal = float(maxBinValue);
     if (logPlot > 0) {
         histoVal = max(0.0, log(histoVal));
@@ -27,7 +27,7 @@ void main() {
 
     float width = 10.0 / float(numBins);
     float height = 10.0 * histoVal / maxHistoVal;
-    float posX = 12.0 * float(colId) + 1.0 + float(binId) * width;
+    float posX = 12.0 * float(componentId) + 1.0 + float(binId) * width;
     float posY = 2.0;
 
     vec2 pos = vec2(0.0);

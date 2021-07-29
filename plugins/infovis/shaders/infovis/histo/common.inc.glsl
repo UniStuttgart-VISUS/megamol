@@ -19,4 +19,4 @@ layout(std430, binding = 3) buffer Maximums
 };
 
 uniform uint numBins = 0;
-uniform uint numCols = 0;
+uniform uint numComponents = 0;
