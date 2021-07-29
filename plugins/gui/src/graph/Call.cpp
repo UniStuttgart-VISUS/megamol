@@ -283,10 +283,10 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                                     profstream << "\n--- Callback #" << i
                                                << " ---\nLastCPUTime : " << this->profiling[i].lcput
                                                << "\nAverageCPUTime: " << this->profiling[i].acput
-                                               << "\nNumCPUSamples: " << this->profiling[i].ncpus
-                                               << "\nLastGPUTime: " << this->profiling[i].lgput
-                                               << "\nAverageGPUTime: " << this->profiling[i].agput
-                                               << "\nNumGPUSamples: " << this->profiling[i].ngpus;
+                                               << "\nNumCPUSamples: " << this->profiling[i].ncpus;
+                                    //<< "\nLastGPUTime: " << this->profiling[i].lgput
+                                    //<< "\nAverageGPUTime: " << this->profiling[i].agput
+                                    //<< "\nNumGPUSamples: " << this->profiling[i].ngpus;
                                 }
                                 tooltip_text += profstream.str();
                                 this->gui_tooltip.ToolTip(tooltip_text);

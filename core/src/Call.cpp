@@ -111,8 +111,8 @@ bool Call::operator()(unsigned int func) {
         res = this->callee->InCall(this->funcMap[func], *this);
 #ifdef PROFILING
         const std::clock_t c_end = std::clock();
-        last_cpu_time[func] = 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC;
-        avg_cpu_time[func] = (avg_cpu_time[func] * num_cpu_time_samples[func] + last_cpu_time[func]) / ++num_cpu_time_samples[func];
+        last_cpu_time[func] = 1000.0 * (static_cast<double>(c_end-c_start) / CLOCKS_PER_SEC);
+        avg_cpu_time[func] = (avg_cpu_time[func] * num_cpu_time_samples[func] + last_cpu_time[func]) / (++num_cpu_time_samples[func]);
         if (gl_1 || gl_2) {
             //GLuint64 time;
             //auto& q = queries[query_read_buffer][func];
