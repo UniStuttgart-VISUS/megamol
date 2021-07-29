@@ -1096,10 +1096,10 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                 for (auto& module_ptr : graph_ptr->Modules()) {
                     if (module_ptr->IsGraphEntry()) {
                         confInstances << "mmCreateView(\"" << module_ptr->GraphEntryName() << "\",\""
-                                      << module_ptr->ClassName() << "\",\"" << module_ptr->FullName() << "\") \n";
+                                      << module_ptr->ClassName() << "\",\"" << module_ptr->FullName() << "\")\n";
                     } else {
                         confModules << "mmCreateModule(\"" << module_ptr->ClassName() << "\",\""
-                                    << module_ptr->FullName() << "\") \n";
+                                    << module_ptr->FullName() << "\")\n";
                     }
 
                     for (auto& parameter : module_ptr->Parameters()) {
