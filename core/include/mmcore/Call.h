@@ -165,11 +165,19 @@ namespace core {
         public:
             my_query_id();
             ~my_query_id();
-            uint32_t Get() {
+            my_query_id(const my_query_id&);
+            uint32_t Get() const {
                 return the_id;
+            }
+            bool Started() const {
+                return started;
+            }
+            void Start() {
+                started = true;
             }
         private:
             uint32_t the_id = 0;
+            bool started = false;
         };
         std::array<std::vector<my_query_id>, 2> queries;
         uint32_t query_start_buffer = 1;
