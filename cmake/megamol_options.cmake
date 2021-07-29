@@ -45,6 +45,11 @@ if(ENABLE_CUDA)
   set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif()
 
+option(ENABLE_PROFILING "Enable profiling code" OFF)
+if (ENABLE_PROFILING)
+  add_compile_definitions(PROFILING)
+endif()
+
 # GLFW
 option(USE_GLFW "Use GLFW" ON)
 

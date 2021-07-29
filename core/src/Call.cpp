@@ -16,6 +16,11 @@
 #    include "mmcore/view/Renderer3DModuleGL.h"
 #    include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
+#ifdef PROFILING
+#    include "mmcore/view/Renderer3DModuleGL.h"
+#    include "mmcore/view/Renderer2DModule.h"
+#    include <ctime>
+#endif
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
@@ -66,7 +71,30 @@ bool Call::operator()(unsigned int func) {
             // megamol::core::utility::log::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
         }
 #endif
+#ifdef PROFILING
+        const auto f = this->callee->GetCallbackFuncName(func);
+        const auto parent = this->callee->Parent().get();
+        const auto gl_1 = dynamic_cast<core::view::Renderer2DModule*>(parent);
+        const auto gl_2 = dynamic_cast<core::view::Renderer3DModuleGL*>(parent);
+        const std::clock_t c_start = std::clock();
+        const auto paranoid_size = std::max(static_cast<unsigned int>(last_cpu_time.size()), func + 1);
+        last_cpu_time.resize(paranoid_size, 0.0);
+        avg_cpu_time.resize(paranoid_size, 0.0);
+        num_cpu_time_samples.resize(paranoid_size, 0);
+        last_gpu_time.resize(paranoid_size, 0.0);
+        avg_gpu_time.resize(paranoid_size, 0.0);
+        num_gpu_time_samples.resize(paranoid_size, 0);
+
+        if (gl_1 || gl_2) {
+            // todo gl query and stuff
+        }
+#endif
         res = this->callee->InCall(this->funcMap[func], *this);
+#ifdef PROFILING
+        const std::clock_t c_end = std::clock();
+        last_cpu_time[func] = 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC;
+        avg_cpu_time[func] = (avg_cpu_time[func] * num_cpu_time_samples[func] + last_cpu_time[func]) / ++num_cpu_time_samples[func];
+#endif
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         if (p2 || p3 || p3_2) glPopDebugGroup();
 #endif

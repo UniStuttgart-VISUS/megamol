@@ -12,6 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <memory>
+#ifdef PROFILING
+#include <vector>
+#endif
 
 #include "mmcore/api/MegaMolCore.std.h"
 
@@ -108,6 +111,16 @@ namespace core {
 
         /** The function id mapping */
         unsigned int *funcMap;
+
+#ifdef PROFILING
+        std::vector<double> last_cpu_time;
+        std::vector<double> avg_cpu_time;
+        std::vector<uint32_t> num_cpu_time_samples;
+
+        std::vector<double> last_gpu_time;
+        std::vector<double> avg_gpu_time;
+        std::vector<uint32_t> num_gpu_time_samples;
+#endif PROFILING
 
     };
 
