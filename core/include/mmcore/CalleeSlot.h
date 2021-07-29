@@ -335,6 +335,7 @@ namespace core {
             virtual bool CallMe(Module *owner, Call& call) {
                 C *c = dynamic_cast<C*>(owner);
                 if (c == NULL) return false;
+                // TODO alternatively, profiling could be done here and data stored in the module?
                 return (c->*func)(call);
             }
 

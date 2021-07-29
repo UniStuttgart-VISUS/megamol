@@ -99,6 +99,45 @@ namespace core {
             return this->className;
         }
 
+#ifdef PROFILING
+        inline double GetLastCPUTime(uint32_t func) const {
+            if (func < last_cpu_time.size())
+                return last_cpu_time[func];
+            else
+                return -1.0;
+        }
+        inline double GetAverageCPUTime(uint32_t func) const {
+            if (func < avg_cpu_time.size())
+                return avg_cpu_time[func];
+            else
+                return -1.0;
+        }
+        inline uint32_t GetNumCPUSamples(uint32_t func) const {
+            if (func < num_cpu_time_samples.size())
+                return num_cpu_time_samples[func];
+            else
+                return 0;
+        }
+        inline double GetLastGPUTime(uint32_t func) const {
+            if (func < last_gpu_time.size())
+                return last_gpu_time[func];
+            else
+                return -1.0;
+        }
+        inline double GetAverageGPUTime(uint32_t func) const {
+            if (func < avg_gpu_time.size())
+                return avg_gpu_time[func];
+            else
+                return -1.0;
+        }
+        inline uint32_t GetNumGPUSamples(uint32_t func) const {
+            if (func < num_gpu_time_samples.size())
+                return num_gpu_time_samples[func];
+            else
+                return 0;
+        }        
+#endif
+
     private:
 
         /** The callee connected by this call */
