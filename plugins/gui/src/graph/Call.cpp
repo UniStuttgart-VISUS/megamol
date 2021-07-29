@@ -267,32 +267,67 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                             ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
                             ImGui::TextUnformatted(this->description.c_str());
                             ImGui::PopTextWrapPos();
-
+#ifdef PROFILING
+                            ImGui::Separator();
+                            ImGui::TextUnformatted("Profiling");
+                            ImGui::SameLine();
+                            ImGui::TextDisabled("[Callback #:]");
+                            ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs);
+                            auto func_cnt = this->profiling.size();
+                            for (size_t i = 0; i < func_cnt; i++) {
+                                auto tab_label = std::to_string(i);
+                                if (ImGui::BeginTabItem(tab_label.c_str(), nullptr, ImGuiTabItemFlags_None)) {
+                                    if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
+                                            ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders |
+                                                ImGuiTableColumnFlags_NoResize,
+                                            ImVec2(ImGui::GetTextLineHeightWithSpacing() * 15.0f, 0.0f))) {
+                                        ImGui::TableSetupColumn(
+                                            ("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
+                                        ImGui::TableNextRow();
+                                        ImGui::TableNextColumn();
+                                        ImGui::TextUnformatted("LastCPUTime");
+                                        ImGui::TableNextColumn();
+                                        ImGui::Text("%f", this->profiling[i].lcput);
+                                        ImGui::TableNextRow();
+                                        ImGui::TableNextColumn();
+                                        ImGui::TextUnformatted("AverageCPUTime");
+                                        ImGui::TableNextColumn();
+                                        ImGui::Text("%f", this->profiling[i].acput);
+                                        ImGui::TableNextRow();
+                                        ImGui::TableNextColumn();
+                                        ImGui::TextUnformatted("NumCPUSamples");
+                                        ImGui::TableNextColumn();
+                                        ImGui::Text("%i", this->profiling[i].ncpus);
+                                        ImGui::TableNextRow();
+                                        ImGui::TableNextColumn();
+                                        ImGui::TextUnformatted("LastGPUTime");
+                                        ImGui::TableNextColumn();
+                                        ImGui::Text("%f", this->profiling[i].lgput);
+                                        ImGui::TableNextRow();
+                                        ImGui::TableNextColumn();
+                                        ImGui::TextUnformatted("AverageGPUTime");
+                                        ImGui::TableNextColumn();
+                                        ImGui::Text("%f", this->profiling[i].agput);
+                                        ImGui::TableNextRow();
+                                        ImGui::TableNextColumn();
+                                        ImGui::TextUnformatted("NumGPUSamples");
+                                        ImGui::TableNextColumn();
+                                        ImGui::Text("%i", this->profiling[i].ngpus);
+                                        ImGui::EndTable();
+                                    }
+                                    ImGui::EndTabItem();
+                                }
+                            }
+                            ImGui::EndTabBar();
+#endif // PROFILING
                             ImGui::EndPopup();
                         }
 
                         // Hover Tooltip
                         if (!state.interact.call_show_slots_label) {
                             if (state.interact.call_hovered_uid == this->uid) {
-#ifdef PROFILING
-                                auto tooltip_text = slots_label;
-                                std::stringstream profstream;
-                                profstream << std::fixed << std::setprecision(15);
-                                auto func_cnt = this->profiling.size();
-                                for (size_t i = 0; i < func_cnt; i++) {
-                                    profstream << "\n--- Callback #" << i
-                                               << " ---\nLastCPUTime : " << this->profiling[i].lcput
-                                               << "\nAverageCPUTime: " << this->profiling[i].acput
-                                               << "\nNumCPUSamples: " << this->profiling[i].ncpus
-                                               << "\nLastGPUTime: " << this->profiling[i].lgput
-                                               << "\nAverageGPUTime: " << this->profiling[i].agput
-                                               << "\nNumGPUSamples: " << this->profiling[i].ngpus;
-                                }
-                                tooltip_text += profstream.str();
-                                this->gui_tooltip.ToolTip(tooltip_text);
-#else
                                 this->gui_tooltip.ToolTip(slots_label, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
-#endif // PROFILING
+
                             } else {
                                 this->gui_tooltip.Reset();
                             }
