@@ -3,7 +3,7 @@
 EXIT_CODE=0
 
 # Store a list of files which are changed in the current branch compared to the common merge base with master.
-changed_files=$(git diff --name-only master...HEAD)
+changed_files=$(git diff --name-only origin/master...HEAD)
 git_root=$(git rev-parse --show-toplevel)
 
 find . -type f -print0 | while read -d $'\0' file; do
