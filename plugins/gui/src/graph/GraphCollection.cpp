@@ -634,6 +634,31 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
             }
         }
 
+
+#ifdef PROFILING
+
+        // Sync profiling values from core calls to gui calls ...
+        for (auto& ccall : megamol_graph.ListCalls()) {
+            for (auto& gcall : graph_ptr->Calls()) {
+                if (gcall->ClassName() == ccall.request.className) {
+                    auto func_count = ccall.callPtr->GetFuncCount();
+                    std::vector<gui::Call::Profiling> prof;
+                    prof.resize(func_count);
+                    for (uint32_t i = 0; i < func_count; i++) {
+                        prof[i].lcput = ccall.callPtr->GetLastCPUTime(i);
+                        prof[i].acput = ccall.callPtr->GetAverageCPUTime(i);
+                        prof[i].ncpus = ccall.callPtr->GetNumCPUSamples(i);
+                        prof[i].lgput = ccall.callPtr->GetLastGPUTime(i);
+                        prof[i].agput = ccall.callPtr->GetAverageGPUTime(i);
+                        prof[i].ngpus = ccall.callPtr->GetNumGPUSamples(i);
+                    }
+                    gcall->SetProfilingValues(prof);
+                }
+            }
+        }
+
+#endif // PROFILING
+
         if (gui_graph_changed) {
             graph_ptr->ClearSyncQueue();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(

@@ -68,6 +68,23 @@ namespace gui {
             return std::string(this->caller_slot_name + this->slot_name_separator + this->callee_slot_name);
         }
 
+#ifdef PROFILING
+
+        struct Profiling {
+            double lcput;
+            double acput;
+            uint32_t ncpus;
+            double lgput;
+            double agput;
+            uint32_t ngpus;
+        };
+
+        void SetProfilingValues(const std::vector<Profiling>& p) {
+            this->profiling = p;
+        }
+
+#endif // PROFILING
+
     private:
         // VARIABLES --------------------------------------------------------------
 
@@ -85,6 +102,12 @@ namespace gui {
         std::string callee_slot_name;
 
         HoverToolTip gui_tooltip;
+
+#ifdef PROFILING
+
+        std::vector<Profiling> profiling;
+
+#endif // PROFILING
     };
 
 

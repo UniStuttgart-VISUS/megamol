@@ -136,7 +136,13 @@ namespace core {
                 return num_gpu_time_samples[func];
             else
                 return 0;
-        }        
+        }
+
+        inline uint32_t GetFuncCount() const {
+            /// XXX assert(last_cpu_time.size() == avg_cpu_time.size() == num_cpu_time_samples.size() == last_gpu_time.size() ==
+            ///       avg_gpu_time.size() == num_gpu_time_samples.size());
+            return static_cast<uint32_t>(last_cpu_time.size());
+        }
 #endif
 
     private:

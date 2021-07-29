@@ -26,7 +26,11 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , gui_selected(false)
         , caller_slot_name()
         , callee_slot_name()
-        , gui_tooltip() {
+        , gui_tooltip()
+#ifdef PROFILING
+        , profiling()
+#endif // PROFILING
+{
 
     this->connected_callslots.emplace(CallSlotType::CALLER, nullptr);
     this->connected_callslots.emplace(CallSlotType::CALLEE, nullptr);
@@ -270,7 +274,25 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         // Hover Tooltip
                         if (!state.interact.call_show_slots_label) {
                             if (state.interact.call_hovered_uid == this->uid) {
+#ifdef PROFILING
+                                auto tooltip_text = slots_label;
+                                std::stringstream profstream;
+                                profstream << std::fixed << std::setprecision(15);
+                                auto func_cnt = this->profiling.size();
+                                for (size_t i = 0; i < func_cnt; i++) {
+                                    profstream << "\n--- Callback #" << i
+                                               << " ---\nLastCPUTime : " << this->profiling[i].lcput
+                                               << "\nAverageCPUTime: " << this->profiling[i].acput
+                                               << "\nNumCPUSamples: " << this->profiling[i].ncpus
+                                               << "\nLastGPUTime: " << this->profiling[i].lgput
+                                               << "\nAverageGPUTime: " << this->profiling[i].agput
+                                               << "\nNumGPUSamples: " << this->profiling[i].ngpus;
+                                }
+                                tooltip_text += profstream.str();
+                                this->gui_tooltip.ToolTip(tooltip_text);
+#else
                                 this->gui_tooltip.ToolTip(slots_label, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
+#endif // PROFILING
                             } else {
                                 this->gui_tooltip.Reset();
                             }
