@@ -14,6 +14,7 @@
 #include <memory>
 #ifdef PROFILING
 #include <vector>
+#include <array>
 #endif
 
 #include "mmcore/api/MegaMolCore.std.h"
@@ -159,6 +160,20 @@ namespace core {
         std::vector<double> last_gpu_time;
         std::vector<double> avg_gpu_time;
         std::vector<uint32_t> num_gpu_time_samples;
+
+        class my_query_id {
+        public:
+            my_query_id();
+            ~my_query_id();
+            uint32_t Get() {
+                return the_id;
+            }
+        private:
+            uint32_t the_id = 0;
+        };
+        std::array<std::vector<my_query_id>, 2> queries;
+        uint32_t query_start_buffer = 1;
+        uint32_t query_read_buffer = 0;
 #endif PROFILING
 
     };

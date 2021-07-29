@@ -51,6 +51,18 @@ Call::~Call(void) {
 }
 
 
+#ifdef PROFILING
+Call::my_query_id::my_query_id() {
+    glGenQueries(1, &the_id);
+    glBeginQuery(GL_TIME_ELAPSED, the_id);
+}
+Call::my_query_id::~my_query_id() {
+    glDeleteQueries(1, &the_id);
+}
+
+#endif
+
+
 /*
  * Call::operator()
  */
@@ -86,7 +98,9 @@ bool Call::operator()(unsigned int func) {
         num_gpu_time_samples.resize(paranoid_size, 0);
 
         if (gl_1 || gl_2) {
-            // todo gl query and stuff
+            queries[query_start_buffer].resize(paranoid_size);
+            queries[query_read_buffer].resize(paranoid_size);
+            glBeginQuery(GL_TIME_ELAPSED, queries[query_start_buffer][func].Get());
         }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
@@ -94,6 +108,13 @@ bool Call::operator()(unsigned int func) {
         const std::clock_t c_end = std::clock();
         last_cpu_time[func] = 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC;
         avg_cpu_time[func] = (avg_cpu_time[func] * num_cpu_time_samples[func] + last_cpu_time[func]) / ++num_cpu_time_samples[func];
+        if (gl_1 || gl_2) {
+            GLuint64 time;
+            glGetQueryObjectui64v(queries[query_read_buffer][func].Get(), GL_QUERY_RESULT, &time);
+            last_gpu_time[func] = time / 1000000.0;
+            avg_gpu_time[func] = (avg_gpu_time[func] * num_gpu_time_samples[func] + last_gpu_time[func]) / ++num_gpu_time_samples[func];
+            std::swap(query_start_buffer, query_read_buffer);
+        }
 #endif
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         if (p2 || p3 || p3_2) glPopDebugGroup();
