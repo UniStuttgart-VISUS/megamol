@@ -9,12 +9,8 @@ layout (binding=7, rgba32f) uniform image2D target;
 //layout (binding = 4, rgba32f) uniform image2DArray StoreArray;
 
 uniform int frametype;
-uniform int parity;
 uniform int h;
 uniform int w;
-uniform int oh;
-uniform int ow;
-uniform int approach;
 uniform int amortLevel;
 uniform mat4 moveM;
 

@@ -203,8 +203,9 @@ void InfovisAmortizedRenderer::setupBuffers() {
 }
 
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam) {
-    int w = ceil(float(ow) / float(this->amortLevel.Param<core::param::IntParam>()->Value()));
-    int h = ceil(float(oh) / float(this->amortLevel.Param<core::param::IntParam>()->Value()));
+    int a = this->amortLevel.Param<core::param::IntParam>()->Value();
+    int w = ceil(float(ow) / a);
+    int h = ceil(float(oh) / a);
     glm::mat4 pm;
     glm::mat4 mvm;
     auto pmvm = projMatrix * mvMatrix;
@@ -290,10 +291,8 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         auto intrinsics = cam->get<core::view::Camera::OrthographicParameters>();
         glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets[frametype].x,
             -intrinsics.frustrum_height * camOffsets[frametype].y, 0.0);
-        glm::mat4 jit;
-        int a = this->amortLevel.Param<core::param::IntParam>()->Value();
 
-        jit = glm::translate(glm::mat4(1.0f), adj_offset);
+        glm::mat4 jit = glm::translate(glm::mat4(1.0f), adj_offset);
         movePush = lastPmvm * inverse(pmvm);
         //movePush = glm::mat4(1.0);
         lastPmvm = pmvm;
@@ -301,20 +300,9 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         auto p = cam->get<core::view::Camera::Pose>();
         p.position = p.position + 0.5f * adj_offset;
         cam->setPose(p);
-        //glBindFramebuffer(GL_FRAMEBUFFER, glowlFBO->getColorAttachment());
         glowlFBO->bind();   
-
-        //glActiveTexture(GL_TEXTURE4);
-
-        //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, glowlFBO->getColorAttachment(0)->getName(), 0);
     }
     glClear(GL_COLOR_BUFFER_BIT);
-    //glViewport(0, 0, ow, oh);
-    
-    //glMatrixMode(GL_MODELVIEW);
-    //glLoadMatrixf(modelViewMatrix_column);
-    //glMatrixMode(GL_PROJECTION);
-    //glLoadMatrixf(projMatrix_column);
 }
 
 void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLevel) {
@@ -521,17 +509,15 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
 
     amort_reconstruction_shdr_array[approach]->setUniform("h", h);
     amort_reconstruction_shdr_array[approach]->setUniform("w", w);
-    amort_reconstruction_shdr_array[approach]->setUniform("ow", windowWidth);
-    amort_reconstruction_shdr_array[approach]->setUniform("oh", windowHeight);
-    amort_reconstruction_shdr_array[approach]->setUniform("approach", approach);
-    amort_reconstruction_shdr_array[approach]->setUniform("frametype", frametype);
-    amort_reconstruction_shdr_array[approach]->setUniform("ssLevel", ssLevel);
-    amort_reconstruction_shdr_array[approach]->setUniform(
-        "amortLevel", this->amortLevel.Param<core::param::IntParam>()->Value());
-    amort_reconstruction_shdr_array[approach]->setUniform("parity", parity);
+    amort_reconstruction_shdr_array[approach]->setUniform("amortLevel", this->amortLevel.Param<core::param::IntParam>()->Value());
 
-    if (approach == 0 || approach == 1 || approach == 2 || approach == 3)
+    if (approach == 0 || approach == 1 || approach == 2 || approach == 3) {
         amort_reconstruction_shdr_array[approach]->setUniform("src_tex2D", 10);
+        amort_reconstruction_shdr_array[approach]->setUniform("ssLevel", ssLevel);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    }
     if (approach == 4) {
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
         glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->getUniformLocation("moveMatrices"), a * a,
@@ -541,6 +527,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
             &moveMatrices[0][0][0]);
     }
     if (approach == 5) {
+        amort_reconstruction_shdr_array[approach]->setUniform("frametype", frametype);
         amort_reconstruction_shdr_array[approach]->setUniform("src_tex2D", 10);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, imStoreA);
@@ -551,6 +538,8 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         glBindTexture(GL_TEXTURE_2D, imStoreB);
         glBindImageTexture(6, imStoreB, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
         amort_reconstruction_shdr_array[approach]->setUniform("StoreB", 6);
+
+        amort_reconstruction_shdr_array[approach]->setUniform("moveM", movePush);
     }
     if (approach == 6) {
         if (parity == 0) {
@@ -565,15 +554,13 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
             amort_reconstruction_shdr_array[approach]->setUniform("StoreB", 6);
         }
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, glowlFBO->getColorAttachment(0)->getName());
-        //glowlFBO->bindColorbuffer(0);
+        //glBindTexture(GL_TEXTURE_2D, glowlFBO->getColorAttachment(0)->getName());
+        glowlFBO->bindColorbuffer(0);
         amort_reconstruction_shdr_array[approach]->setUniform("src_tex2D", 4);
+        amort_reconstruction_shdr_array[approach]->setUniform("moveM", movePush);
+        amort_reconstruction_shdr_array[approach]->setUniform("frametype", frametype);
     }
-    amort_reconstruction_shdr_array[approach]->setUniform("moveM", movePush);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
 
@@ -600,7 +587,6 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     mvMatrix = cam.getViewMatrix();
     projMatrix = cam.getProjectionMatrix();
     
-
     cr2d->SetTime(call.Time());
     cr2d->SetInstanceTime(call.InstanceTime());
     cr2d->SetLastFrameTime(call.LastFrameTime());
@@ -620,14 +606,10 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         int a = amortLevel.Param<core::param::IntParam>()->Value();
         int w = fbo->getWidth();
         int h = fbo->getHeight();
-        windowWidth = w;
-        windowHeight = h;
         int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
         int approach = this->approachEnumSlot.Param<core::param::EnumParam>()->Value();
+
         // check if amortization mode changed
-
-        //glowlFBO->bindColorbuffer(0);
-
         if (approach != oldApp || w != oldW || h != oldH || ssLevel != oldssLevel || a != oldaLevel) {
             resizeArrays(approach, w, h, ssLevel);
         }
@@ -635,12 +617,10 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
 
         cr2d->SetFramebuffer(glowlFBO);
         cr2d->SetCamera(cam);
-
         cr2d->SetBackgroundColor(call.BackgroundColor());
 
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
-        glClearColor(0.2, 0.0, 0.0, 0.0);
 
         doReconstruction(approach, w, h, ssLevel);
 

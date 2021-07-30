@@ -8,7 +8,6 @@ uniform int frametype;
 uniform int h;
 uniform int w;
 uniform int parity;
-uniform int approach;
 uniform int amortLevel;
 uniform mat4 moveM;
 
