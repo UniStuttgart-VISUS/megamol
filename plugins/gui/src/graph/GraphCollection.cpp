@@ -515,10 +515,12 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
             std::string from;
             std::string to;
             ImGuiID uid = GUI_INVALID_ID;
+            std::weak_ptr<Call> ptr;
         };
         std::vector<CallInfo> gui_graph_call_info;
         for (auto& call_ptr : graph_ptr->Calls()) {
             CallInfo call_info;
+            call_info.ptr = call_ptr;
             call_info.class_name = call_ptr->ClassName();
             call_info.uid = call_ptr->UID();
             bool valid_callslot = false;
@@ -602,6 +604,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
         // REMOVE deleted calls from GUI graph ------------------------------------------
         for (auto& call_info : gui_graph_call_info) {
             if (!megamol_graph.FindCall(call_info.from, call_info.to)) {
+                call_info.ptr.reset();
                 graph_ptr->DeleteCall(call_info.uid);
                 gui_graph_changed = true;
             }
@@ -639,8 +642,10 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
 
         // Sync profiling values from core calls to gui calls ...
         for (auto& ccall : megamol_graph.ListCalls()) {
-            for (auto& gcall : graph_ptr->Calls()) {
-                if (gcall->ClassName() == ccall.request.className) {
+            for (auto& gcall : gui_graph_call_info) {
+                if (gcall.class_name == ccall.request.className &&
+                    gui_utils::CaseInsensitiveStringCompare(gcall.from, ccall.request.from) &&
+                    gui_utils::CaseInsensitiveStringCompare(gcall.to, ccall.request.to)) {
                     auto func_count = ccall.callPtr->GetFuncCount();
                     std::vector<gui::Call::Profiling> prof;
                     prof.resize(func_count);
@@ -652,7 +657,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                         prof[i].agput = ccall.callPtr->GetAverageGPUTime(i);
                         prof[i].ngpus = ccall.callPtr->GetNumGPUSamples(i);
                     }
-                    gcall->SetProfilingValues(prof);
+                    gcall.ptr.lock()->SetProfilingValues(prof);
                 }
             }
         }

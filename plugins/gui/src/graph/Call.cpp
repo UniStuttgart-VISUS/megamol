@@ -29,6 +29,7 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , gui_tooltip()
 #ifdef PROFILING
         , profiling()
+        , show_profiling_data(false)
 #endif // PROFILING
 {
 
@@ -228,8 +229,18 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                     if (state.interact.call_show_label && state.interact.call_show_slots_label) {
                         rect_size.y += (ImGui::GetFontSize() + style.ItemSpacing.y);
                     }
+#ifdef PROFILING
+                    rect_size.x += ImGui::GetFrameHeightWithSpacing();
+                    rect_size.y = ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.y;
+#endif
                     ImVec2 call_rect_min =
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
+#ifdef PROFILING
+                    if (this->show_profiling_data) {
+                        rect_size = ImVec2((ImGui::GetFrameHeight() * 10.0f + style.ItemSpacing.x * 2.0f),
+                            (ImGui::GetFrameHeight() * 9.0f + style.ItemSpacing.x));
+                    }
+#endif
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
 
                     std::string button_label = "call_" + std::to_string(this->uid);
@@ -267,59 +278,6 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                             ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
                             ImGui::TextUnformatted(this->description.c_str());
                             ImGui::PopTextWrapPos();
-#ifdef PROFILING
-                            ImGui::Separator();
-                            ImGui::TextUnformatted("Profiling");
-                            ImGui::SameLine();
-                            ImGui::TextDisabled("[Callback #:]");
-                            ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs);
-                            auto func_cnt = this->profiling.size();
-                            for (size_t i = 0; i < func_cnt; i++) {
-                                auto tab_label = std::to_string(i);
-                                if (ImGui::BeginTabItem(tab_label.c_str(), nullptr, ImGuiTabItemFlags_None)) {
-                                    if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
-                                            ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders |
-                                                ImGuiTableColumnFlags_NoResize,
-                                            ImVec2(ImGui::GetTextLineHeightWithSpacing() * 15.0f, 0.0f))) {
-                                        ImGui::TableSetupColumn(
-                                            ("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
-                                        ImGui::TableNextRow();
-                                        ImGui::TableNextColumn();
-                                        ImGui::TextUnformatted("LastCPUTime");
-                                        ImGui::TableNextColumn();
-                                        ImGui::Text("%f", this->profiling[i].lcput);
-                                        ImGui::TableNextRow();
-                                        ImGui::TableNextColumn();
-                                        ImGui::TextUnformatted("AverageCPUTime");
-                                        ImGui::TableNextColumn();
-                                        ImGui::Text("%f", this->profiling[i].acput);
-                                        ImGui::TableNextRow();
-                                        ImGui::TableNextColumn();
-                                        ImGui::TextUnformatted("NumCPUSamples");
-                                        ImGui::TableNextColumn();
-                                        ImGui::Text("%i", this->profiling[i].ncpus);
-                                        ImGui::TableNextRow();
-                                        ImGui::TableNextColumn();
-                                        ImGui::TextUnformatted("LastGPUTime");
-                                        ImGui::TableNextColumn();
-                                        ImGui::Text("%f", this->profiling[i].lgput);
-                                        ImGui::TableNextRow();
-                                        ImGui::TableNextColumn();
-                                        ImGui::TextUnformatted("AverageGPUTime");
-                                        ImGui::TableNextColumn();
-                                        ImGui::Text("%f", this->profiling[i].agput);
-                                        ImGui::TableNextRow();
-                                        ImGui::TableNextColumn();
-                                        ImGui::TextUnformatted("NumGPUSamples");
-                                        ImGui::TableNextColumn();
-                                        ImGui::Text("%i", this->profiling[i].ngpus);
-                                        ImGui::EndTable();
-                                    }
-                                    ImGui::EndTabItem();
-                                }
-                            }
-                            ImGui::EndTabBar();
-#endif // PROFILING
                             ImGui::EndPopup();
                         }
 
@@ -377,6 +335,27 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         // Draw Text
                         ImVec2 text_pos_left_upper =
                             (call_center + ImVec2(-(class_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
+#ifdef PROFILING
+                        // ImGui::PushFont(state.canvas.gui_font_ptr);
+                        text_pos_left_upper = call_rect_min + style.ItemSpacing;
+                        ImGui::SetCursorScreenPos(text_pos_left_upper);
+                        if (ImGui::ArrowButton(
+                                "###profiling", ((this->show_profiling_data) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                            this->show_profiling_data = !this->show_profiling_data;
+                        }
+                        this->gui_tooltip.ToolTip("Profiling");
+                        if (this->show_profiling_data) {
+                            text_pos_left_upper.y += ImGui::GetFrameHeight();
+                            ImGui::SetCursorScreenPos(text_pos_left_upper);
+                            this->draw_profiling_data();
+                        }
+                        text_pos_left_upper.x += ImGui::GetFrameHeightWithSpacing();
+                        text_pos_left_upper.y += (ImGui::GetFrameHeight() - ImGui::GetFontSize()) * 0.5f;
+                        if (this->show_profiling_data) {
+                            text_pos_left_upper.y -= ImGui::GetFrameHeight();
+                        }
+                        // ImGui::PopFont();
+#endif
                         if (state.interact.call_show_label && state.interact.call_show_slots_label) {
                             text_pos_left_upper.y -= (0.5f * ImGui::GetFontSize());
                         }
@@ -417,3 +396,66 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
         return;
     }
 }
+
+#ifdef PROFILING
+
+void megamol::gui::Call::draw_profiling_data() {
+
+    const float width = ImGui::GetFrameHeight() * 10.0f;
+    const float height = ImGui::GetFrameHeight() * 8.0f;
+
+    ImGui::BeginChild("call_profiling_info", ImVec2(width, height), false, ImGuiWindowFlags_NoMove);
+
+    ImGui::TextUnformatted("Profiling");
+    ImGui::SameLine();
+    ImGui::TextDisabled("[Callback #:]");
+    ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs);
+    auto func_cnt = this->profiling.size();
+    for (size_t i = 0; i < func_cnt; i++) {
+        auto tab_label = std::to_string(i);
+        if (ImGui::BeginTabItem(tab_label.c_str(), nullptr, ImGuiTabItemFlags_None)) {
+            if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
+                    ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
+                    ImVec2(0.0f, 0.0f))) {
+                ImGui::TableSetupColumn(("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("LastCPUTime");
+                ImGui::TableNextColumn();
+                ImGui::Text("%f", this->profiling[i].lcput);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("AverageCPUTime");
+                ImGui::TableNextColumn();
+                ImGui::Text("%f", this->profiling[i].acput);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("NumCPUSamples");
+                ImGui::TableNextColumn();
+                ImGui::Text("%i", this->profiling[i].ncpus);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("LastGPUTime");
+                ImGui::TableNextColumn();
+                ImGui::Text("%f", this->profiling[i].lgput);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("AverageGPUTime");
+                ImGui::TableNextColumn();
+                ImGui::Text("%f", this->profiling[i].agput);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("NumGPUSamples");
+                ImGui::TableNextColumn();
+                ImGui::Text("%i", this->profiling[i].ngpus);
+                ImGui::EndTable();
+            }
+            ImGui::EndTabItem();
+        }
+    }
+    ImGui::EndTabBar();
+
+    ImGui::EndChild();
+}
+
+#endif // PROFILING

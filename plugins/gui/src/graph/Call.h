@@ -106,8 +106,11 @@ namespace gui {
 #ifdef PROFILING
 
         std::vector<Profiling> profiling;
+        bool show_profiling_data;
+        void draw_profiling_data();
 
 #endif // PROFILING
+
     };
 
 
