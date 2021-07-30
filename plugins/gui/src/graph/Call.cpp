@@ -237,8 +237,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
 #ifdef PROFILING
                     if (this->show_profiling_data) {
-                        rect_size = ImVec2((ImGui::GetFrameHeight() * 10.0f + style.ItemSpacing.x * 2.0f),
-                            (ImGui::GetFrameHeight() * 9.0f + style.ItemSpacing.x));
+                        rect_size = ImVec2((ImGui::GetFrameHeight() * 12.0f + style.ItemSpacing.x * 2.0f),
+                            (ImGui::GetFrameHeight() * 9.5f + style.ItemSpacing.x));
                     }
 #endif
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
@@ -401,10 +401,11 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
 void megamol::gui::Call::draw_profiling_data() {
 
-    const float width = ImGui::GetFrameHeight() * 10.0f;
-    const float height = ImGui::GetFrameHeight() * 8.0f;
+    const float width = ImGui::GetFrameHeight() * 12.0f;
+    const float height = ImGui::GetFrameHeight() * 8.5f;
 
-    ImGui::BeginChild("call_profiling_info", ImVec2(width, height), false, ImGuiWindowFlags_NoMove);
+    ImGui::BeginChild("call_profiling_info", ImVec2(width, height), false,
+        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove);
 
     ImGui::TextUnformatted("Profiling");
     ImGui::SameLine();
@@ -422,12 +423,12 @@ void megamol::gui::Call::draw_profiling_data() {
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("LastCPUTime");
                 ImGui::TableNextColumn();
-                ImGui::Text("%f", this->profiling[i].lcput);
+                ImGui::Text("%.12f", this->profiling[i].lcput);
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("AverageCPUTime");
                 ImGui::TableNextColumn();
-                ImGui::Text("%f", this->profiling[i].acput);
+                ImGui::Text("%.12f", this->profiling[i].acput);
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("NumCPUSamples");
@@ -437,17 +438,17 @@ void megamol::gui::Call::draw_profiling_data() {
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("LastGPUTime");
                 ImGui::TableNextColumn();
-                ImGui::Text("%f", this->profiling[i].lgput);
+                ImGui::Text("%.12f", this->profiling[i].lgput);
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("AverageGPUTime");
                 ImGui::TableNextColumn();
-                ImGui::Text("%f", this->profiling[i].agput);
+                ImGui::Text("%.12f", this->profiling[i].agput);
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("NumGPUSamples");
                 ImGui::TableNextColumn();
-                ImGui::Text("%i", this->profiling[i].ngpus);
+                ImGui::Text("%.12i", this->profiling[i].ngpus);
                 ImGui::EndTable();
             }
             ImGui::EndTabItem();

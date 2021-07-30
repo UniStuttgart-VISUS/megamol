@@ -110,7 +110,6 @@ namespace gui {
         void draw_profiling_data();
 
 #endif // PROFILING
-
     };
 
 
