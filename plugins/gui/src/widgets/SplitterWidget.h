@@ -14,14 +14,13 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * Splitter widget.
+    /** ************************************************************************
+     * Splitter widget
      */
     class SplitterWidget {
     public:
-        SplitterWidget(void);
-
-        ~SplitterWidget(void) = default;
+        SplitterWidget();
+        ~SplitterWidget() = default;
 
         enum FixedSplitterSide { LEFT, RIGHT };
 

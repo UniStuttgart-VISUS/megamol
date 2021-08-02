@@ -17,25 +17,22 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * Animation widget for parameter group.
+    /** ************************************************************************
+     * Animation widget for parameter group
      */
     class ParameterGroupAnimationWidget : public AbstractParameterGroupWidget {
     public:
-        ParameterGroupAnimationWidget(void);
+        ParameterGroupAnimationWidget();
+        ~ParameterGroupAnimationWidget() override = default;
 
-        ~ParameterGroupAnimationWidget(void) = default;
-
-        bool Check(bool only_check, ParamPtrVector_t& params);
+        bool Check(bool only_check, ParamPtrVector_t& params) override;
 
         bool Draw(ParamPtrVector_t params, const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
-            PickingBuffer* inout_picking_buffer);
+            megamol::core::utility::PickingBuffer* inout_picking_buffer) override;
 
     private:
         // VARIABLES --------------------------------------------------------------
 
-        ImVec2 speed_knob_pos;
-        ImVec2 time_knob_pos;
         struct {
             ImageWidget play;
             ImageWidget pause;

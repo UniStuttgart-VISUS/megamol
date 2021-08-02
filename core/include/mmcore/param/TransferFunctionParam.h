@@ -17,8 +17,6 @@
 
 #include "vislib/String.h"
 
-#include "nlohmann/json.hpp"
-
 
 #define TFP_VAL_CNT (6)
 
@@ -45,6 +43,7 @@ public:
 
     // Example JSON output format (empty string is also excepted for initialisation):
     //{
+    //   "IgnoreProjectRange" : false,
     //    "Interpolation": "LINEAR",
     //    "Nodes" : [
     //        [
@@ -67,9 +66,8 @@ public:
     //    "TextureSize": 128,
     //    "ValueRange": [
     //        0.0,        // = minimum value of node range
-    //        1.0         // = maxiumum value of node range
+    //        1.0         // = maximum value of node range
     //   ],
-    //   "IgnoreRangeOnProjectLoad" : true  // Only read once and stored in parameter
     //}
 
     /**
@@ -97,7 +95,7 @@ public:
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
     static bool GetDumpedTransferFunction(std::string& out_tfs, const NodeVector_t& in_nodes,
-        const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range,
+        InterpolationMode in_interpolmode, unsigned int in_texsize, const std::array<float, 2>& in_range,
         bool in_ignore_project_range = true);
 
     /**
@@ -109,7 +107,7 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionData(const NodeVector_t &nodes, const InterpolationMode interpolmode, const unsigned int texsize, const std::array<float, 2> range);
+    static bool CheckTransferFunctionData(const NodeVector_t &nodes, InterpolationMode interpolmode, unsigned int texsize, const std::array<float, 2>& range);
 
     /**
      * Check given transfer function JSON string.
@@ -140,7 +138,7 @@ public:
 
     /**
      * Return texture data for given transfer function JSON string.
-     * 
+     *
      * @param in_tfs          The transfer function JSON string as input.
      * @param out_tex_data    The returned texture data.
      * @param out_width       The returned texture width.
@@ -175,27 +173,14 @@ public:
      *
      * @param initVal The initial value
      */
-    TransferFunctionParam(const std::string& initVal = "");
-
-    /**
-     * Ctor.
-     *
-     * @param initVal The initial value
-     */
-    TransferFunctionParam(const char *initVal);
-
-    /**
-     * Ctor.
-     *
-     * @param initVal The initial value
-     * @param visible If 'true' the parameter is visible in the gui.
-     */
-    TransferFunctionParam(const vislib::StringA& initVal);
+    explicit TransferFunctionParam(const std::string& initVal = "");
+    explicit TransferFunctionParam(const char *initVal);
+    explicit TransferFunctionParam(const vislib::StringA& initVal);
 
     /**
      * Dtor.
      */
-    virtual ~TransferFunctionParam(void);
+    ~TransferFunctionParam(void) override = default;
 
     /**
      * Returns a machine-readable definition of the parameter.
@@ -203,7 +188,7 @@ public:
      * @param outDef A memory block to receive a machine-readable
      *               definition of the parameter.
      */
-    virtual void Definition(vislib::RawStorage& outDef) const override;
+    void Definition(vislib::RawStorage& outDef) const override;
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -214,7 +199,7 @@ public:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool ParseValue(const vislib::TString& v) override;
+    bool ParseValue(const vislib::TString& v) override;
 
     /**
     * Sets the value of the parameter and optionally sets the dirty flag
@@ -231,7 +216,7 @@ public:
     *
     * @return The value of the parameter as string.
     */
-    virtual vislib::TString ValueString(void) const override;
+    vislib::TString ValueString(void) const override;
 
     /**
     * Gets the value of the parameter
@@ -256,7 +241,7 @@ public:
      *
      * @return The hash of the parameter value
      */
-    inline const size_t ValueHash(void) const {
+    inline size_t ValueHash(void) const {
         return this->hash;
     }
 

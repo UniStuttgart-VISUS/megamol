@@ -7,6 +7,8 @@
 
 #include "stdafx.h"
 #include "KeyframeKeeper.h"
+#include "imgui.h"
+#include "imgui_internal.h"
 
 
 using namespace megamol;
@@ -55,7 +57,9 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     , simTangentStatus(false)
     , splineTangentLength(0.5f)
     , undoQueue()
-    , undoQueueIndex(0) {
+    , undoQueueIndex(0)
+    , pendingTotalAnimTime(-1.0f)
+    , frameId (0) {
 
     // init callbacks
     this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
@@ -139,7 +143,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->editCurrentApertureParam.SetParameter(new param::FloatParam(60.0f, 0.0f, 180.0f));
     this->MakeSlotAvailable(&this->editCurrentApertureParam);
 
-    this->fileNameParam.SetParameter(new param::FilePathParam(vislib::StringA(this->filename.c_str())));
+    this->fileNameParam.SetParameter(new param::FilePathParam(this->filename, param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->fileNameParam);
 
     this->saveKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::SHIFT));
@@ -349,16 +353,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     // setTotalAnimTimeParam --------------------------------------------------
     if (this->setTotalAnimTimeParam.IsDirty()) {
         this->setTotalAnimTimeParam.ResetDirty();
-
-        float tt = this->setTotalAnimTimeParam.Param<param::FloatParam>()->Value();
-        if (!this->keyframes.empty()) {
-            if (tt < this->keyframes.back().GetAnimTime()) {
-                tt = this->keyframes.back().GetAnimTime();
-                this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(tt, false);
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
-            }
-        }
-        this->totalAnimTime = tt;
+        // pendingTotalAnimTime >= 0 triggers GUI popup, see pendingTotalAnimTimePopUp()
+        this->pendingTotalAnimTime = this->setTotalAnimTimeParam.Param<param::FloatParam>()->Value();
     }
     // setKeyframesToSameSpeed ------------------------------------------------
     if (this->setKeyframesToSameSpeed.IsDirty()) {
@@ -414,7 +410,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
-            glm::vec3 pos_v = view::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
+            glm::vec3 pos_v = utility::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
             std::array<float, 3> pos = { pos_v.x, pos_v.y, pos_v.z };
             auto cam_state = this->selectedKeyframe.GetCameraState();
             cam_state.position = pos;
@@ -441,7 +437,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
             glm::vec3 up = static_cast<glm::vec3>(cam_up);
             glm::vec3 new_view = this->modelBboxCenter - static_cast<glm::vec3>(cam_pos);
-            glm::quat new_orientation = view::quaternion_from_vectors(new_view, up);
+            glm::quat new_orientation = utility::quaternion_from_vectors(new_view, up);
             camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
@@ -466,8 +462,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             glm::vec4 cam_up = snapshot.up_vector;
             glm::vec3 up = static_cast<glm::vec3>(cam_up);
 
-            glm::vec3 new_view = view::vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
-            glm::quat new_orientation = view::quaternion_from_vectors(new_view, up);
+            glm::vec3 new_view = utility::vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
+            glm::quat new_orientation = utility::quaternion_from_vectors(new_view, up);
             camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
@@ -492,8 +488,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             glm::vec4 cam_view = snapshot.view_vector;
             glm::vec3 view = static_cast<glm::vec3>(cam_view);
 
-            glm::vec3 new_up= view::vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
-            glm::quat new_orientation = view::quaternion_from_vectors(view, new_up);
+            glm::vec3 new_up= utility::vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
+            glm::quat new_orientation = utility::quaternion_from_vectors(view, new_up);
             camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
@@ -573,6 +569,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     ccc->SetTotalSimTime(this->totalSimTime);
     ccc->SetControlPointPosition(this->startCtrllPos, this->endCtrllPos);
     ccc->SetFps(this->fps);
+
+
+    this->pendingTotalAnimTimePopUp(this->GetCoreInstance()->GetFrameID());
 
     return true;
 }
@@ -1298,6 +1297,7 @@ bool KeyframeKeeper::loadKeyframes() {
                     this->selectedKeyframe = this->interpolateKeyframe(0.0f);
                     this->updateEditParameters(this->selectedKeyframe);
                     this->refreshInterpolCamPos(this->interpolSteps);
+                    this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(this->totalAnimTime, false);
                 }
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
                 return true;
@@ -1330,9 +1330,9 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     glm::vec3 up = static_cast<glm::vec3>(cam_up);
     this->editCurrentAnimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetAnimTime(), false);
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
-    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(view::glm_to_vislib_vector(pos), false);
-    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(view::glm_to_vislib_vector(view), false);
-    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(view::glm_to_vislib_vector(up), false);
+    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(pos), false);
+    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(view), false);
+    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(up), false);
     this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(camera.aperture_angle(), false);
     
 }
@@ -1347,4 +1347,63 @@ int KeyframeKeeper::getKeyframeIndex(std::vector<Keyframe>& keyframes, Keyframe 
         }
     }
     return -1;
+}
+
+
+void megamol::cinematic::KeyframeKeeper::pendingTotalAnimTimePopUp(uint32_t frame_id) {
+
+    // Call only once per frame
+    if ((this->pendingTotalAnimTime > 0.0f) && (this->frameId != frame_id)) {
+
+        bool valid_imgui_scope =
+            ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
+        if (valid_imgui_scope) {
+            const std::string popup_label = "Changed Total Animation Time##" + std::string(this->FullName());
+            if (!ImGui::IsPopupOpen(popup_label.c_str())) {
+                ImGui::OpenPopup(popup_label.c_str());
+            }
+            if (ImGui::BeginPopupModal(popup_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+                ImGui::TextUnformatted("Scale animation time of keyframes \nwith new total animation time:");
+                if (ImGui::Button("Yes")) {
+                    for (auto& kf : this->keyframes) {
+                        float at = kf.GetAnimTime() / this->totalAnimTime * this->pendingTotalAnimTime;
+                        kf.SetAnimTime(at);
+                    }
+                    this->totalAnimTime = this->pendingTotalAnimTime;
+                    this->pendingTotalAnimTime = -1.0f;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("No")) {
+                    if (!this->keyframes.empty()) {
+                        if (this->pendingTotalAnimTime < this->keyframes.back().GetAnimTime()) {
+                            this->pendingTotalAnimTime = this->keyframes.back().GetAnimTime();
+                            this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(
+                                this->pendingTotalAnimTime, false);
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                                "[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of "
+                                "last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
+                        }
+                    }
+                    this->totalAnimTime = this->pendingTotalAnimTime;
+                    this->pendingTotalAnimTime = -1.0f;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+        } else {
+            // Default does not change animation time of keyframes
+            if (!this->keyframes.empty()) {
+                if (this->pendingTotalAnimTime < this->keyframes.back().GetAnimTime()) {
+                    this->pendingTotalAnimTime = this->keyframes.back().GetAnimTime();
+                    this->setTotalAnimTimeParam.Param<param::FloatParam>()->SetValue(this->pendingTotalAnimTime, false);
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
+                }
+            }
+            this->totalAnimTime = this->pendingTotalAnimTime;
+            this->pendingTotalAnimTime = -1.0f;
+        }
+
+        this->frameId = frame_id;
+    }
 }

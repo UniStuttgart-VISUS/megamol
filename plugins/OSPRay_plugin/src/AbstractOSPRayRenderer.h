@@ -40,6 +40,10 @@ inline rkcommon::math::vec3f convertToVec3f(std::array<float, 3> inp) {
         return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
 }
 
+inline rkcommon::math::vec3f convertToVec3f(std::array<float, 4> inp) {
+    return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
+}
+
 inline rkcommon::math::vec4f convertToVec4f(std::array<float, 4> inp) {
     return rkcommon::math::vec4f(inp[0], inp[1], inp[2], inp[3]);
 }
