@@ -656,6 +656,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                         prof[i].lgput = ccall.callPtr->GetLastGPUTime(i);
                         prof[i].agput = ccall.callPtr->GetAverageGPUTime(i);
                         prof[i].ngpus = ccall.callPtr->GetNumGPUSamples(i);
+                        prof[i].name = ccall.callPtr->GetFuncName(i);
                     }
                     gcall.ptr.lock()->SetProfilingValues(prof);
                 }

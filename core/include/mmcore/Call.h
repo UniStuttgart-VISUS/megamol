@@ -15,6 +15,8 @@
 #ifdef PROFILING
 #include <vector>
 #include <array>
+#include <map>
+#include <string>
 #endif
 
 #include "mmcore/api/MegaMolCore.std.h"
@@ -143,6 +145,13 @@ namespace core {
             ///       avg_gpu_time.size() == num_gpu_time_samples.size());
             return static_cast<uint32_t>(last_cpu_time.size());
         }
+        inline std::string GetFuncName(uint32_t i) const {
+            if (i < last_cpu_time.size()) {
+                return callback_names[i];
+            } else {
+                return "out of bounds";
+            }
+        }
 #endif
 
     private:
@@ -159,6 +168,18 @@ namespace core {
         unsigned int *funcMap;
 
 #ifdef PROFILING
+        friend class MegaMolGraph;
+        void setProfilingInfo(std::vector<std::string> names, bool usesGL) {
+            callback_names = std::move(names);
+            last_cpu_time.resize(callback_names.size());
+            avg_cpu_time.resize(callback_names.size());
+            num_cpu_time_samples.resize(callback_names.size());
+            last_gpu_time.resize(callback_names.size());
+            avg_gpu_time.resize(callback_names.size());
+            num_gpu_time_samples.resize(callback_names.size());
+            uses_gl = true;
+        }
+
         std::vector<double> last_cpu_time;
         std::vector<double> avg_cpu_time;
         std::vector<uint32_t> num_cpu_time_samples;
@@ -166,6 +187,8 @@ namespace core {
         std::vector<double> last_gpu_time;
         std::vector<double> avg_gpu_time;
         std::vector<uint32_t> num_gpu_time_samples;
+        std::vector<std::string> callback_names;
+        bool uses_gl = false;
 
         class my_query_id {
         public:
@@ -188,6 +211,7 @@ namespace core {
         std::array<std::vector<my_query_id>, 2> queries;
         uint32_t query_start_buffer = 1;
         uint32_t query_read_buffer = 0;
+        static std::map<Call*, uint32_t> glCalls;
 #endif PROFILING
 
     };

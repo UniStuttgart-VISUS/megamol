@@ -77,6 +77,7 @@ namespace gui {
             double lgput;
             double agput;
             uint32_t ngpus;
+            std::string name;
         };
 
         void SetProfilingValues(const std::vector<Profiling>& p) {

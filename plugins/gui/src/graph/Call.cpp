@@ -410,10 +410,10 @@ void megamol::gui::Call::draw_profiling_data() {
     ImGui::TextUnformatted("Profiling");
     ImGui::SameLine();
     ImGui::TextDisabled("[Callback #:]");
-    ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs);
+    ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);
     auto func_cnt = this->profiling.size();
     for (size_t i = 0; i < func_cnt; i++) {
-        auto tab_label = std::to_string(i);
+        auto& tab_label = this->profiling[i].name;
         if (ImGui::BeginTabItem(tab_label.c_str(), nullptr, ImGuiTabItemFlags_None)) {
             if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
                     ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,

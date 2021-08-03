@@ -12,6 +12,10 @@
 #include <string>
 #include <numeric> // std::accumulate
 
+// TODO if GL enabled
+#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
+
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
     std::vector<std::string> result;
@@ -357,6 +361,17 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         // callee->DisconnectCalls();
         return false;
     }
+
+#ifdef PROFILING
+    std::vector<std::string> callbacks(call_description->FunctionCount());
+    for (uint32_t x = 0; x < call_description->FunctionCount(); ++x) {
+        callbacks[x] = call_description->FunctionName(x);
+    }
+    // TODO if gl enabled, else both vars = false
+    const auto gl_1 = dynamic_cast<core::view::Renderer2DModule*>(to_slot.second.get());
+    const auto gl_2 = dynamic_cast<core::view::Renderer3DModuleGL*>(to_slot.second.get());
+    call->setProfilingInfo(callbacks, gl_1 || gl_2);
+#endif
 
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
     this->call_list_.emplace_front(CallInstance_t{call, request});

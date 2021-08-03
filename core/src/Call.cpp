@@ -85,20 +85,8 @@ bool Call::operator()(unsigned int func) {
         }
 #endif
 #ifdef PROFILING
-        const auto f = this->callee->GetCallbackFuncName(func);
-        const auto parent = this->callee->Parent().get();
-        const auto gl_1 = dynamic_cast<core::view::Renderer2DModule*>(parent);
-        const auto gl_2 = dynamic_cast<core::view::Renderer3DModuleGL*>(parent);
         const std::clock_t c_start = std::clock();
-        const auto paranoid_size = std::max(static_cast<unsigned int>(last_cpu_time.size()), func + 1);
-        last_cpu_time.resize(paranoid_size, 0.0);
-        avg_cpu_time.resize(paranoid_size, 0.0);
-        num_cpu_time_samples.resize(paranoid_size, 0);
-        last_gpu_time.resize(paranoid_size, 0.0);
-        avg_gpu_time.resize(paranoid_size, 0.0);
-        num_gpu_time_samples.resize(paranoid_size, 0);
-
-        if (gl_1 || gl_2) {
+        if (uses_gl) {
             // you can only have one query per target in flight. no idea what to do really.
             
             //queries[query_start_buffer].resize(paranoid_size);
@@ -115,7 +103,7 @@ bool Call::operator()(unsigned int func) {
         const auto total = (avg_cpu_time[func] * num_cpu_time_samples[func] + last_cpu_time[func]);
         num_cpu_time_samples[func]++;
         avg_cpu_time[func] = total / static_cast<double>(num_cpu_time_samples[func]);
-        if (gl_1 || gl_2) {
+        if (uses_gl) {
             //GLuint64 time;
             //auto& q = queries[query_read_buffer][func];
             //if (q.Started()) {
