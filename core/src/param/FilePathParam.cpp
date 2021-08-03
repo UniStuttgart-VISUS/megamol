@@ -128,10 +128,10 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
 
     try {
         FilePathParam::Flags_t retval = 0;
-        if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(p)) { /// !std::filesystem::is_regular_file(p)
+        if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(p)) { 
             retval |= FilePathParam::Flag_File;
         }
-        if ((f & FilePathParam::Flag_Directory) && !std::filesystem::is_directory(p)) {
+        if ((f & FilePathParam::Flag_Directory) && std::filesystem::is_regular_file(p)) {
             retval |= FilePathParam::Flag_Directory;
         }
         if (!(f & Flag_NoExistenceCheck) && !std::filesystem::exists(p)) {
