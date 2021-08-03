@@ -214,9 +214,9 @@ int main(const int argc, const char** argv) {
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
         }
 
-        services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
-
         imagepresentation_service.PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
+
+        services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
 
         return true;
     };
