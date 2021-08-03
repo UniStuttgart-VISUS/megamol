@@ -17,10 +17,14 @@
 #include <array>
 #include <map>
 #include <string>
+namespace megamol {
+namespace frontend {
+    class OpenGL_GLFW_Service;
+}
+}
 #endif
 
 #include "mmcore/api/MegaMolCore.std.h"
-
 
 namespace megamol {
 namespace core {
@@ -169,6 +173,8 @@ namespace core {
 
 #ifdef PROFILING
         friend class MegaMolGraph;
+        friend class megamol::frontend::OpenGL_GLFW_Service;
+
         void setProfilingInfo(std::vector<std::string> names, bool usesGL) {
             callback_names = std::move(names);
             last_cpu_time.resize(callback_names.size());
@@ -178,6 +184,24 @@ namespace core {
             avg_gpu_time.resize(callback_names.size());
             num_gpu_time_samples.resize(callback_names.size());
             uses_gl = true;
+            all_calls.push_back(this);
+            resetGLProfiling();
+        }
+        static void resetGLProfiling() {
+            if (!all_calls.empty()) {
+                starting_call = 0;
+                starting_func = 0;
+            } else {
+                starting_call = -1;
+                starting_func = -1;
+            }
+        }
+        static void advanceGLProfiling() {
+            starting_func = (starting_func + 1) % all_calls[starting_call]->GetFuncCount();
+            if (starting_func == 0) {
+                // we wrapped, advance to next call!
+                starting_call = (starting_call + 1) % all_calls.size();
+            }
         }
 
         std::vector<double> last_cpu_time;
@@ -204,14 +228,23 @@ namespace core {
             void Start() {
                 started = true;
             }
+            void Stop() {
+                started = false;
+            }
         private:
             uint32_t the_id = 0;
             bool started = false;
         };
-        std::array<std::vector<my_query_id>, 2> queries;
-        uint32_t query_start_buffer = 1;
-        uint32_t query_read_buffer = 0;
-        static std::map<Call*, uint32_t> glCalls;
+
+        // todo these are so slow, we need double buffering all the same. best wrap starting_call and func inside the query and vary across the current frame
+
+        // there is only one query. it needs to be fetched and the result assigned
+        // to starting_call at the end of the frame.
+        static my_query_id *query;
+        // who can use the query this frame?
+        static std::vector<Call*> all_calls;
+        static int32_t starting_call, starting_func;
+
 #endif PROFILING
 
     };

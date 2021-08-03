@@ -25,6 +25,11 @@
 
 using namespace megamol::core;
 
+std::vector<Call*> Call::all_calls;
+int32_t Call::starting_call = -1;
+int32_t Call::starting_func = -1;
+Call::my_query_id *Call::query = nullptr;
+
 /*
  * Call::Call
  */
@@ -48,6 +53,8 @@ Call::~Call(void) {
     }
     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
     ARY_SAFE_DELETE(this->funcMap);
+    all_calls.erase(std::remove(all_calls.begin(), all_calls.end(), this));
+    resetGLProfiling();
 }
 
 
@@ -87,35 +94,24 @@ bool Call::operator()(unsigned int func) {
 #ifdef PROFILING
         const std::clock_t c_start = std::clock();
         if (uses_gl) {
-            // you can only have one query per target in flight. no idea what to do really.
-            
-            //queries[query_start_buffer].resize(paranoid_size);
-            //queries[query_read_buffer].resize(paranoid_size);
-            //auto& q = queries[query_start_buffer][func];
-            //glBeginQuery(GL_TIME_ELAPSED, q.Get());
-            //q.Start();
+            if (this == all_calls[starting_call] && func == starting_func) {
+                glBeginQuery(GL_TIME_ELAPSED, query->Get());
+                query->Start();
+            }
         }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
 #ifdef PROFILING
+        if (uses_gl) {
+            if (this == all_calls[starting_call] && func == starting_func) {
+                glEndQuery(GL_TIME_ELAPSED);
+            }
+        }
         const std::clock_t c_end = std::clock();
         last_cpu_time[func] = 1000.0 * (static_cast<double>(c_end-c_start) / CLOCKS_PER_SEC);
         const auto total = (avg_cpu_time[func] * num_cpu_time_samples[func] + last_cpu_time[func]);
         num_cpu_time_samples[func]++;
         avg_cpu_time[func] = total / static_cast<double>(num_cpu_time_samples[func]);
-        if (uses_gl) {
-            //GLuint64 time;
-            //auto& q = queries[query_read_buffer][func];
-            //if (q.Started()) {
-            //    int done = 0;
-            //    glGetQueryObjectiv(q.Get(), GL_QUERY_RESULT_AVAILABLE, &done);
-            //    ASSERT(done);
-            //    glGetQueryObjectui64v(q.Get(), GL_QUERY_RESULT, &time);
-            //    last_gpu_time[func] = static_cast<double>(time / 1000000.0);
-            //    avg_gpu_time[func] = (avg_gpu_time[func] * num_gpu_time_samples[func] + last_gpu_time[func]) / ++num_gpu_time_samples[func];
-            //}
-            //std::swap(query_start_buffer, query_read_buffer);
-        }
 #endif
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         if (p2 || p3 || p3_2) glPopDebugGroup();

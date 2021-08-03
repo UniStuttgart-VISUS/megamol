@@ -37,6 +37,10 @@
 #include <functional>
 #include <iostream>
 
+#ifdef PROFILING
+#include <cassert>
+#include "mmcore/Call.h"
+#endif
 #include "mmcore/utility/log/Log.h"
 
 static const std::string service_name = "OpenGL_GLFW_Service: ";
@@ -781,6 +785,24 @@ void OpenGL_GLFW_Service::postGraphRender() {
     // update window name
 
     ::glfwSwapBuffers(m_pimpl->glfwContextWindowPtr);
+
+#ifdef PROFILING
+    GLuint64 time;
+    auto q = core::Call::query;
+    if (q->Started()) {
+        int done = 0;
+        glGetQueryObjectiv(q->Get(), GL_QUERY_RESULT_AVAILABLE, &done);
+        assert(done);
+        glGetQueryObjectui64v(q->Get(), GL_QUERY_RESULT, &time);
+        q->Stop();
+        auto& c = core::Call::all_calls[core::Call::starting_call];
+        c->last_gpu_time[core::Call::starting_func] = static_cast<double>(time / 1000000.0);
+        const auto total = c->avg_gpu_time[core::Call::starting_func] * c->num_gpu_time_samples[core::Call::starting_func] + c->last_gpu_time[core::Call::starting_func];
+        c->num_gpu_time_samples[core::Call::starting_func]++;
+        c->avg_gpu_time[core::Call::starting_func] = total / c->num_gpu_time_samples[core::Call::starting_func];
+    }
+    core::Call::advanceGLProfiling(); // important! regardless of whether the last call was actually profiled!
+#endif
 
     //::glfwMakeContextCurrent(window_ptr);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);

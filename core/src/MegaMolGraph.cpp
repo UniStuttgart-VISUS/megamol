@@ -370,6 +370,9 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     // TODO if gl enabled, else both vars = false
     const auto gl_1 = dynamic_cast<core::view::Renderer2DModule*>(to_slot.second.get());
     const auto gl_2 = dynamic_cast<core::view::Renderer3DModuleGL*>(to_slot.second.get());
+    if ((gl_1 || gl_2) && core::Call::query == nullptr) {
+        core::Call::query = new core::Call::my_query_id();
+    }
     call->setProfilingInfo(callbacks, gl_1 || gl_2);
 #endif
 
