@@ -236,7 +236,7 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
     this->tileHeightSlot << new param::IntParam(1080, 1);
     this->MakeSlotAvailable(&this->tileHeightSlot);
 
-    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png", param::FilePathParam::FLAG_TOBECREATED);
+    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png", param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, { "png" });
     if (!reducedParameters) this->MakeSlotAvailable(&this->imageFilenameSlot);
 
     param::EnumParam* bkgnd = new param::EnumParam(0);
@@ -932,7 +932,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
  * view::special::ScreenShooter::createScreenshot
  */
 void view::special::ScreenShooter::createScreenshot(const std::string& filename) {
-    this->imageFilenameSlot.Param<param::FilePathParam>()->SetValue(filename.c_str());
+    this->imageFilenameSlot.Param<param::FilePathParam>()->SetValue(filename);
 
     triggerButtonClicked(this->triggerButtonSlot);
 }

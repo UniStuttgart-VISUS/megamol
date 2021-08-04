@@ -9,7 +9,7 @@
 #define MEGAMOL_CINEMATIC_CINEMATICUTILS_H_INCLUDED
 
 
-#include "mmcore/view/RenderUtils.h"
+#include "mmcore/utility/RenderUtils.h"
 
 
 // #### Utility minimal camera state ################################### //
@@ -23,7 +23,7 @@ namespace cinematic {
 /*
  * Cinematic utility functionality (colors, text, menu, ...).
  */
-class CinematicUtils : public core::view::RenderUtils {
+class CinematicUtils : public core::utility::RenderUtils {
 
 public:
     CinematicUtils(void);

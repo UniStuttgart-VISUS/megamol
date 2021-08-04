@@ -119,12 +119,12 @@ void KeyframeManipulators::UpdateExtents(vislib::math::Cuboid<float>& inout_bbox
     glm::vec3 pos; 
     for (auto& m : this->manipulators) {
         pos = this->getActualManipulatorPosition(m);
-        inout_bbox.GrowToPoint(view::glm_to_vislib_point(pos));
+        inout_bbox.GrowToPoint(utility::glm_to_vislib_point(pos));
     }
     for (auto& s : this->selectors) {
         pos = s.vector;
         pos = pos + glm::normalize(pos) * (this->state.point_radius * 2.0f);
-        inout_bbox.GrowToPoint(view::glm_to_vislib_point(pos));
+        inout_bbox.GrowToPoint(utility::glm_to_vislib_point(pos));
     }
 }
 
@@ -487,7 +487,7 @@ glm::vec3 KeyframeManipulators::getActualManipulatorPosition(Manipulator& manipu
 
     if (this->toggleOusideBbox && (this->state.line_length > 0.0f) && (glm::length(manipulator.vector) > 0.0f) && (!this->state.bbox.IsEmpty())) {
         float offset = 0.0f;
-        while (this->state.bbox.Contains(view::glm_to_vislib_point(manipulator_position))) {
+        while (this->state.bbox.Contains(utility::glm_to_vislib_point(manipulator_position))) {
             offset += this->state.line_length / 4.0f;
             manipulator_position += manipulator.vector * offset;
         }

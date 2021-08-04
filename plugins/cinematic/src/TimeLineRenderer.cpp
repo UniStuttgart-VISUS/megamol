@@ -19,7 +19,7 @@ using namespace vislib;
 
 
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
-	, keyframeKeeperSlot("keyframeData", "Connects to the KeyframeKeeper")
+    , keyframeKeeperSlot("keyframeData", "Connects to the KeyframeKeeper")
     , moveRightFrameParam("gotoRightFrame", "Move to right animation time frame.")
     , moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame.")
     , resetPanScaleParam("resetAxes", "Reset shifted and scaled time axes.")
@@ -31,7 +31,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
     , dragDropActive(false)
     , axisDragDropMode(0)
     , axisScaleMode(0)
-    , keyframeMarkHeight(1.0f)
+    , keyframeMarkSize(1.0f)
     , rulerMarkHeight(1.0f)
     , viewport(1.0f, 1.0f)
     , fps(24)
@@ -40,7 +40,8 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
     , lastMouseX(0.0f)
     , lastMouseY(0.0f)
     , mouseButton(MouseButton::BUTTON_LEFT)
-    , mouseAction(MouseButtonAction::RELEASE) {
+    , mouseAction(MouseButtonAction::RELEASE)
+    , lineHeight(1.0f) {
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -130,6 +131,9 @@ bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
 
 bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
 
+    auto const lhsFBO = call.GetFramebufferObject();
+    lhsFBO->Enable();
+
     view::Camera_2 cam;
     call.GetCamera(cam);
     glm::vec2 current_viewport;
@@ -137,8 +141,9 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     current_viewport.y = static_cast<float>(cam.resolution_gate().height());
     glm::mat4 ortho = glm::ortho(0.0f, current_viewport.x, 0.0f, current_viewport.y, -1.0f, 1.0f);
 
-    if (current_viewport != this->viewport) {
+    if ((current_viewport != this->viewport) || (this->lineHeight != this->utils.GetTextLineHeight())) {
         this->viewport = current_viewport;
+        this->lineHeight = this->utils.GetTextLineHeight();
 
         // Set axes position depending on font size
         vislib::StringA tmpStr;
@@ -147,14 +152,13 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         } else {
             tmpStr.Format("%.6f ", this->axes[Axis::X].maxValue);
         }
-        float strHeight = this->utils.GetTextLineHeight();
         float strWidth = this->utils.GetTextLineWidth(std::string(tmpStr.PeekBuffer()));
-        this->rulerMarkHeight = strHeight / 2.0f;
-        this->keyframeMarkHeight = strHeight * 1.5f;
-        this->axes[Axis::X].startPos = glm::vec2(strWidth + strHeight * 1.5f, (strHeight * 2.5f));
+        this->rulerMarkHeight = this->lineHeight / 2.0f;
+        this->keyframeMarkSize = this->lineHeight * 1.5f;
+        this->axes[Axis::X].startPos = glm::vec2(strWidth + this->lineHeight * 1.5f, (this->lineHeight * 2.5f));
         this->axes[Axis::Y].startPos = this->axes[Axis::X].startPos;
-        this->axes[Axis::X].endPos = glm::vec2(this->viewport.x - strWidth, strHeight * 2.5f);
-        this->axes[Axis::Y].endPos = glm::vec2(strWidth + strHeight * 1.5f, this->viewport.y - (this->keyframeMarkHeight * 1.1f) - strHeight);
+        this->axes[Axis::X].endPos = glm::vec2(this->viewport.x - strWidth, this->lineHeight * 2.5f);
+        this->axes[Axis::Y].endPos = glm::vec2(strWidth + this->lineHeight * 1.5f, this->viewport.y - (this->keyframeMarkSize * 1.1f) - this->lineHeight);
         for (size_t i = 0; i < Axis::COUNT; ++i) {
             this->axes[i].length = glm::length(this->axes[i].endPos - this->axes[i].startPos);
             this->axes[i].scaleFactor = 1.0f;
@@ -335,7 +339,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
             if ((*keyframes)[i] == skf) {
                 color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SELECTED);
             }
-            this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkHeight, color);
+            this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkSize, color);
         }
     }
 
@@ -349,7 +353,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
     if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
         color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SELECTED);
-        this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, (this->keyframeMarkHeight*0.75f), color);
+        this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, (this->keyframeMarkSize*0.75f), color);
         start = origin + glm::vec3(x, 0.0f, 0.0f);
         end = origin + glm::vec3(x, y, 0.0f);
         this->utils.PushLinePrimitive(start, end, 1.0f, cam_view, cam_pos, color);
@@ -368,13 +372,12 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         }
         y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
         if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
-            this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkHeight, this->utils.Color(CinematicUtils::Colors::KEYFRAME_DRAGGED));
+            this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkSize, this->utils.Color(CinematicUtils::Colors::KEYFRAME_DRAGGED));
         }
     }
 
     // Push text --------------------------------------------------------------
     vislib::StringA tmpStr;
-    float strHeight = this->utils.GetTextLineHeight();
     // X axis time steps
     float timeStep = 0.0f;
     tmpStr.Format(this->axes[Axis::X].formatStr.c_str(), this->axes[Axis::X].maxValue);
@@ -398,7 +401,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
             tmpStr.Format(this->axes[Axis::Y].formatStr.c_str(), timeStep);
             this->utils.Push2DText(ortho, std::string(tmpStr.PeekBuffer()),
                 this->axes[Axis::X].startPos.x - this->rulerMarkHeight - strWidth, // x
-                this->axes[Axis::X].startPos.y + strHeight / 2.0f + f); // y
+                this->axes[Axis::X].startPos.y + this->lineHeight / 2.0f + f); // y
         }
         timeStep += this->axes[Axis::Y].segmValue;
     }
@@ -407,7 +410,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     strWidth = this->utils.GetTextLineWidth(caption);
     this->utils.Push2DText(ortho, caption,
         this->axes[Axis::X].startPos.x + this->axes[Axis::X].length / 2.0f - strWidth / 2.0f, // x
-        this->axes[Axis::X].startPos.y - this->utils.GetTextLineHeight() - this->rulerMarkHeight); // y
+        this->axes[Axis::X].startPos.y - this->lineHeight - this->rulerMarkHeight); // y
     caption = " ";
     switch (this->yAxisParam) {
         case (ActiveParam::SIMULATION_TIME): caption = "Simulation Time "; break;
@@ -417,7 +420,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     this->utils.SetTextRotation(90.0f, 0.0f, 0.0f, 1.0f);
     this->utils.Push2DText(ortho, caption,
         this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, // x
-        (-1.0f) * this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f * strHeight); // y
+        (-1.0f) * this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f * this->lineHeight); // y
     this->utils.SetTextRotation(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Push menu --------------------------------------------------------------
@@ -438,17 +441,18 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     // Draw all ---------------------------------------------------------------
     this->utils.DrawAll(ortho, this->viewport);
 
+    lhsFBO->Disable();
 
-	return true;
+    return true;
 }
 
 void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color) {
 
     // Push texture markers
-    glm::vec3 pos_bottom_left  = { pos_x - (size / 2.0f), pos_y, 0.0f };
-    glm::vec3 pos_upper_left   = { pos_x - (size / 2.0f), pos_y + size, 0.0f };
-    glm::vec3 pos_upper_right  = { pos_x + (size / 2.0f), pos_y + size, 0.0f };
-    glm::vec3 pos_bottom_right = { pos_x + (size / 2.0f), pos_y, 0.0f };
+    glm::vec3 pos_bottom_left  = { pos_x - (size / 2.0f), pos_y, 1.0f };
+    glm::vec3 pos_upper_left   = { pos_x - (size / 2.0f), pos_y + size, 1.0f };
+    glm::vec3 pos_upper_right  = { pos_x + (size / 2.0f), pos_y + size, 1.0f };
+    glm::vec3 pos_bottom_right = { pos_x + (size / 2.0f), pos_y, 1.0f };
     this->utils.Push2DColorTexture(
         this->texture_id, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
 }
@@ -492,7 +496,7 @@ bool TimeLineRenderer::recalcAxesData(void) {
                     maxSegmSize = this->utils.GetTextLineWidth(stream.str()) * 1.25f;
                 } break;
                 case (Axis::Y): {
-                    maxSegmSize = this->utils.GetTextLineHeight() * 1.25f;
+                    maxSegmSize = this->lineHeight * 1.25f;
                 } break;
                 default: break;
             }
@@ -547,7 +551,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
     // LEFT-CLICK --- keyframe selection
     if (button == MouseButton::BUTTON_LEFT) {
         // Do not snap to keyframe when mouse movement is continuous
-        float offset = this->keyframeMarkHeight / 2.0f;
+        float offset = this->keyframeMarkSize / 2.0f;
         float xAxisX, yAxisY, posX, posY;
         //Check all keyframes if they are hit
         bool hit = false;
@@ -558,7 +562,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                 case (ActiveParam::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
                 default: break;
             }
-            yAxisY  = this->axes[Axis::Y].scaleOffset  + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
+            yAxisY = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
             if ((xAxisX >= 0.0f) && (xAxisX <= this->axes[Axis::X].length)) {
                 posX = this->axes[Axis::X].startPos.x + xAxisX;
                 posY = this->axes[Axis::X].startPos.y + yAxisY;
@@ -600,7 +604,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
         if (down) {
             //Check all keyframes if they are hit
             this->dragDropActive = false;
-            float offset = this->keyframeMarkHeight / 2.0f;
+            float offset = this->keyframeMarkSize / 2.0f;
             float xAxisX, yAxisY, posX, posY;
             bool hit = false;
             for (unsigned int i = 0; i < keyframes->size(); i++) {
@@ -772,7 +776,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
             }
             else {
                 // Pan axes ...
-                float panFac = 0.5f;
+                float panFac = 0.4f;
                 this->axes[Axis::X].scaleOffset += (this->mouseX - this->lastMouseX) * panFac;
                 this->axes[Axis::Y].scaleOffset  += (this->mouseY - this->lastMouseY) * panFac;
 
@@ -798,7 +802,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
     else if (this->mouseButton == MouseButton::BUTTON_MIDDLE) {
         if (down) {
             float sensitivityX = 0.01f;
-            float sensitivityY = 0.03f;
+            float sensitivityY = 0.01f;
             float diffX = (this->mouseX - this->lastMouseX);
             float diffY = (this->mouseY - this->lastMouseY);
 

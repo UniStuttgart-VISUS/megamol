@@ -169,7 +169,7 @@ namespace cinematic {
         bool                              dragDropActive;
         unsigned int                      axisDragDropMode;
         unsigned int                      axisScaleMode;
-        float                             keyframeMarkHeight;
+        float                             keyframeMarkSize;
         float                             rulerMarkHeight;
         glm::vec2                         viewport;
         unsigned int                      fps;
@@ -179,6 +179,7 @@ namespace cinematic {
         float                             lastMouseY;
         core::view::MouseButton           mouseButton;
         core::view::MouseButtonAction     mouseAction;
+        float                             lineHeight;
 
         /**********************************************************************
         * functions

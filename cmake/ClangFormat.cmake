@@ -1,5 +1,8 @@
 include(CMakeParseArguments)
 
+# bundle target for all clangformat runs
+add_custom_target(clangformat_all)
+
 function(add_clang_format TARGET)
   cmake_parse_arguments(args "" "STYLE" "FILES" ${ARGN})
 
@@ -33,6 +36,7 @@ function(add_clang_format TARGET)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         VERBATIM)
       add_dependencies(${TARGET} "${TARGET}_clangformat")
+      add_dependencies(clangformat_all "${TARGET}_clangformat")
     else()
       message(WARNING "clang-format version ${CLANG_FORMAT_VERSION} is too old.\n"
         "Please download and install a current version from http://releases.llvm.org/download.html\n"

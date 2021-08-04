@@ -19,6 +19,7 @@
 #include "Screenshot_Service.hpp"
 #include "ProjectLoader_Service.hpp"
 #include "ImagePresentation_Service.hpp"
+#include "Remote_Service.hpp"
 
 
 static void log(std::string const& text) {
@@ -155,6 +156,14 @@ int main(const int argc, const char** argv) {
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
 #endif
+
+    megamol::frontend::Remote_Service remote_service;
+    megamol::frontend::Remote_Service::Config remoteConfig;
+    if (auto remote_session_role = handle_remote_session_config(config, remoteConfig); !remote_session_role.empty()) {
+        openglConfig.windowTitlePrefix += remote_session_role;
+        remote_service.setPriority(lua_service_wrapper.getPriority() - 1); // remote does stuff before everything else, even before lua
+        services.add(remote_service, &remoteConfig);
+    }
 
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 

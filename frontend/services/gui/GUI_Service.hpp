@@ -72,6 +72,7 @@ private:
     double m_time;
     glm::vec2 m_framebuffer_size;
     glm::vec2 m_window_size;
+    Config m_config;
     megamol::core::MegaMolGraph* m_megamol_graph;
     std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;
     std::vector<std::string> m_queuedProjectFiles;
@@ -91,9 +92,9 @@ private:
     void resource_provide_gui_scale(float scale);
     void resource_provide_gui_render();
 
-    void resource_register_window(const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func);
-    void resource_register_popup(const std::string& name, bool& open, std::function<void(void)>& func);
-    void resource_register_notification(const std::string& name, bool& open, const std::string& message);
+    void resource_register_window(const std::string& name, std::function<void(megamol::gui::AbstractWindow::BasicConfig&)>& func);
+    void resource_register_popup(const std::string& name, std::weak_ptr<bool> open, std::function<void(void)>& func);
+    void resource_register_notification(const std::string& name, std::weak_ptr<bool> open, const std::string& message);
 };
 
 } // namespace frontend
