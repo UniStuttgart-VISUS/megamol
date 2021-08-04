@@ -26,7 +26,9 @@
 
 using namespace megamol::core;
 
+#ifdef PROFILING
 PerformanceQueryManager *Call::qm = nullptr;
+#endif
 
 /*
  * Call::Call
@@ -51,7 +53,9 @@ Call::~Call(void) {
     }
     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
     ARY_SAFE_DELETE(this->funcMap);
+#ifdef PROFILING
     qm->RemoveCall(this);
+#endif
 }
 
 
