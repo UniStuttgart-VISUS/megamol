@@ -25,10 +25,12 @@
 
 using namespace megamol::core;
 
+#ifdef PROFILING
 std::vector<Call*> Call::all_calls;
 int32_t Call::starting_call = -1;
 int32_t Call::starting_func = -1;
 Call::my_query_id *Call::query = nullptr;
+#endif
 
 /*
  * Call::Call
@@ -53,8 +55,10 @@ Call::~Call(void) {
     }
     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
     ARY_SAFE_DELETE(this->funcMap);
+#ifdef PROFILING
     all_calls.erase(std::remove(all_calls.begin(), all_calls.end(), this));
     resetGLProfiling();
+#endif
 }
 
 
