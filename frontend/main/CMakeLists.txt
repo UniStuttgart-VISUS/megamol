@@ -7,7 +7,7 @@ option(BUILD_FRONTEND "build (new) frontend" ON)
 
 if(BUILD_FRONTEND)
   project(frontend)
-  set(BINANRY_NAME megamol)
+  set(BINARY_NAME megamol)
 
   require_external(libcxxopts)
 
@@ -22,21 +22,25 @@ if(BUILD_FRONTEND)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
 
   # Add target
-  add_executable(${BINANRY_NAME} ${header_files} ${source_files})
-  target_include_directories(${BINANRY_NAME} PRIVATE "src" "include")
-  target_link_libraries(${BINANRY_NAME} PRIVATE core frontend_services libcxxopts)
-  target_link_libraries(${BINANRY_NAME} PRIVATE ${CMAKE_DL_LIBS})
+  add_executable(${BINARY_NAME} ${header_files} ${source_files})
+  target_include_directories(${BINARY_NAME} PRIVATE "src" "include")
+  target_link_libraries(${BINARY_NAME} PRIVATE core frontend_services libcxxopts)
+  target_link_libraries(${BINARY_NAME} PRIVATE ${CMAKE_DL_LIBS})
+
+  if(MSVC)
+    set_property(TARGET ${BINARY_NAME} APPEND PROPERTY LINK_FLAGS /STACK:8388608)
+  endif()
 
   # Grouping in Visual Studio
-  set_target_properties(${BINANRY_NAME} PROPERTIES FOLDER base)
+  set_target_properties(${BINARY_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
 
    # Installation rules for generated files
-  install(TARGETS ${BINANRY_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
+  install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
   if (WIN32)
     if(MSVC)
-      install(FILES $<TARGET_PDB_FILE:${BINANRY_NAME}> DESTINATION bin OPTIONAL)
+      install(FILES $<TARGET_PDB_FILE:${BINARY_NAME}> DESTINATION bin OPTIONAL)
     endif()
   endif ()
   
