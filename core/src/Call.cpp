@@ -43,7 +43,9 @@ Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap
  */
 Call::~Call(void) {
 #ifdef PROFILING
-    qm->RemoveCall(this);
+    if (uses_gl) {
+        qm->RemoveCall(this);
+    }
 #endif
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
