@@ -242,7 +242,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
         "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.",
         {[&](std::string file) -> VoidResult
         {
-            m_requestedResourceReferences[1].getResource<std::function<bool(std::string const&)> >()(file);
+            m_requestedResourceReferences[1].getResource<std::function<bool(std::filesystem::path const&)> >()(std::filesystem::u8path(file));
             return VoidResult{};
         }});
 

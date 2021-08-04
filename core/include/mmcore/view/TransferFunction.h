@@ -16,11 +16,9 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 #include "vislib/sys/sysfunctions.h"
 #include "mmcore/utility/log/Log.h"

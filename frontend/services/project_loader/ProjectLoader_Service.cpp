@@ -45,7 +45,7 @@ bool ProjectLoader_Service::init(void* configPtr) {
 
 bool ProjectLoader_Service::init(const Config& config) {
 
-    m_loader.load_filename = [&](std::string const& filename) {
+    m_loader.load_filename = [&](std::filesystem::path const& filename) {
         return this->load_file(filename);
     };
 
@@ -65,9 +65,9 @@ bool ProjectLoader_Service::init(const Config& config) {
     return true;
 }
 
-bool ProjectLoader_Service::load_file(std::string const& filename) const {
+bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) const {
     // file loaders
-    const auto load_lua = [](std::string const& filename, std::string& script) -> bool {
+    const auto load_lua = [](std::filesystem::path const& filename, std::string& script) -> bool {
         std::ifstream input(filename, std::ios::in);
 
         if (input.fail())
@@ -79,7 +79,7 @@ bool ProjectLoader_Service::load_file(std::string const& filename) const {
         return true;
     };
 
-    const auto load_png = [](std::string const& filename, std::string& script) -> bool {
+    const auto load_png = [](std::filesystem::path const& filename, std::string& script) -> bool {
         script = megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(filename);
 
         if(script.empty())
@@ -89,7 +89,8 @@ bool ProjectLoader_Service::load_file(std::string const& filename) const {
     };
 
     // do we support the file type?
-    std::vector<std::tuple<const char*, std::function<bool(std::string const&,std::string&)>>> supported_filetypes =
+    std::vector<std::tuple<const char*, std::function<bool(std::filesystem::path const&, std::string&)>>>
+        supported_filetypes =
         {
             std::make_tuple(".lua", load_lua),
             std::make_tuple(".png", load_png)
@@ -97,13 +98,11 @@ bool ProjectLoader_Service::load_file(std::string const& filename) const {
 
     auto found_it = std::find_if(supported_filetypes.begin(), supported_filetypes.end(), [&](auto& item){
         const std::string suffix = std::get<0>(item);
-        return megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(filename, suffix);
+        return megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(filename.generic_u8string(), suffix);
     });
 
     if (found_it == supported_filetypes.end()) {
-        auto found_dot = filename.find_last_of('.');
-        auto type = (found_dot != std::string::npos) ? filename.substr(found_dot) : filename;
-        log_error("unsupported file type: " + type);
+        log_error("unsupported file type: " + filename.extension().generic_u8string());
         return false;
     }
 
@@ -113,7 +112,7 @@ bool ProjectLoader_Service::load_file(std::string const& filename) const {
     bool file_ok = file_opener(filename, script);
 
     if (!file_ok) {
-        log_error("error opening file: " + filename);
+        log_error("error opening file: " + filename.generic_u8string());
         return false;
     }
 
@@ -130,12 +129,12 @@ bool ProjectLoader_Service::load_file(std::string const& filename) const {
     const SetScriptPath& set_script_path = m_requestedResourceReferences[1].getResource<SetScriptPath>();
 
     if (!script_ok) {
-        log_error("failed to load file " + filename + "\n\t" + script_error);
+        log_error("failed to load file " + filename.generic_u8string() + "\n\t" + script_error);
         return false;
     }
-    set_script_path(filename);
+    set_script_path(filename.generic_u8string());
 
-    log("loaded file " + filename + ((script_error.size()) ? "\n\t" + script_error : ""));
+    log("loaded file " + filename.generic_u8string() + ((script_error.size()) ? "\n\t" + script_error : ""));
     return true;
 }
 

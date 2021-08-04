@@ -54,7 +54,7 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3DGL& call) {
         m_deferred_shading_prgm = std::make_unique<GLSLShader>();
 
         auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.PeekBuffer());
+        std::string filename(vislib_filename.generic_u8string());
 
         vislib::graphics::gl::ShaderSource vert_shader_src;
         vislib::graphics::gl::ShaderSource frag_shader_src;

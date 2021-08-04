@@ -65,17 +65,17 @@ static void PNGAPI pngFlushFileFunc(png_structp pngPtr) {
     f->Flush();
 }
 
-static bool write_png_to_file(megamol::frontend_resources::ImageData const& image, std::string const& filename) {
+static bool write_png_to_file(megamol::frontend_resources::ImageData const& image, std::filesystem::path const& filename) {
     vislib::sys::FastFile file;
     try {
         // open final image file
-        if (!file.Open(filename.c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE))
+        if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE))
         {
-            log("Cannot open output file" + filename);
+            log("Cannot open output file" + filename.generic_u8string());
             return false;
         }
     } catch (...) {
-        log("Error/Exception opening output file" + filename);
+        log("Error/Exception opening output file" + filename.generic_u8string());
         return false;
     }
 
@@ -168,7 +168,7 @@ megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshot
     return std::move(result);
 }
 
-bool megamol::frontend_resources::ImageDataToPNGWriter::write_image(ImageData image, std::string const& filename) const {
+bool megamol::frontend_resources::ImageDataToPNGWriter::write_image(ImageData image, std::filesystem::path const& filename) const {
     return write_png_to_file(std::move(image), filename);
 }
 
@@ -198,9 +198,9 @@ bool Screenshot_Service::init(const Config& config) {
         "GUIRegisterWindow"
     };
 
-    this->m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
+    this->m_frontbufferToPNG_trigger = [&](std::filesystem::path const& filename) -> bool
     {
-        log("write screenshot to " + filename);
+        log("write screenshot to " + filename.generic_u8string());
         return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
     };
 

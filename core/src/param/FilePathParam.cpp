@@ -13,7 +13,7 @@
 using namespace megamol::core::param;
 
 
-FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, const Extensions_t& exts)
+FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags, const Extensions_t& exts)
     : AbstractParam()
     , flags(flags)
     , extensions(exts)
@@ -28,6 +28,16 @@ FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, const Ex
     this->open_notification[Flag_NoExistenceCheck] = std::make_shared<bool>(false);
     this->open_notification[Flag_RestrictExtension] = std::make_shared<bool>(false);
 }
+
+
+FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, const Extensions_t& exts)
+        : FilePathParam(std::filesystem::u8path(initVal), flags, exts){
+};
+
+
+FilePathParam::FilePathParam(const char * initVal, Flags_t flags, const Extensions_t& exts)
+        : FilePathParam(std::filesystem::u8path(initVal), flags, exts){
+};
 
 
 void FilePathParam::Definition(vislib::RawStorage& outDef) const {
@@ -52,10 +62,10 @@ bool FilePathParam::ParseValue(const vislib::TString& v) {
 }
 
 
-void FilePathParam::SetValue(const std::string& v, bool setDirty) {
+void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
 
     try {
-        auto new_value = std::filesystem::u8path(v);
+        auto new_value = v;
         if (this->value != new_value) {
             auto error_flags = FilePathParam::ValidatePath(new_value, this->extensions, this->flags);
 
@@ -102,25 +112,15 @@ void FilePathParam::SetValue(const std::string& v, bool setDirty) {
 }
 
 
-void FilePathParam::SetValue(const vislib::TString& v, bool setDirty) {
+void megamol::core::param::FilePathParam::SetValue(const std::string& v, bool setDirty) {
 
-    this->SetValue(std::string(v.PeekBuffer()), setDirty);
+    this->SetValue(std::filesystem::u8path(v), setDirty);
 }
 
 
-vislib::TString FilePathParam::ValueString() const {
+void megamol::core::param::FilePathParam::SetValue(const char* v, bool setDirty) {
 
-    return vislib::TString(this->value.generic_u8string().c_str());
-}
-
-
-vislib::TString FilePathParam::Value() const {
-
-#ifdef _MSC_VER
-    return vislib::TString(this->value.generic_string().c_str());
-#else
-    return vislib::TString(this->value.generic_u8string().c_str());
-#endif
+    this->SetValue(std::filesystem::u8path(v), setDirty);
 }
 
 
@@ -128,10 +128,10 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
 
     try {
         FilePathParam::Flags_t retval = 0;
-        if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(p)) { /// !std::filesystem::is_regular_file(p)
+        if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(p)) { 
             retval |= FilePathParam::Flag_File;
         }
-        if ((f & FilePathParam::Flag_Directory) && !std::filesystem::is_directory(p)) {
+        if ((f & FilePathParam::Flag_Directory) && std::filesystem::is_regular_file(p)) {
             retval |= FilePathParam::Flag_Directory;
         }
         if (!(f & Flag_NoExistenceCheck) && !std::filesystem::exists(p)) {
