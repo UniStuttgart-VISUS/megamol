@@ -80,9 +80,12 @@ function(require_external NAME)
       return()
     endif()
 
+    # The repo at https://github.com/nlohmann/json is too big, add local copy to avoid very slow download!
     add_external_headeronly_project(json
-      GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
-      GIT_TAG "v3.5.0")
+      SOURCE_DIR json)
+    if(MSVC)
+      target_sources(json INTERFACE "${CMAKE_SOURCE_DIR}/externals/json/nlohmann_json.natvis")
+    endif()
 
   # libcxxopts
   elseif(NAME STREQUAL "libcxxopts")
@@ -106,6 +109,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(mmpld_io
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mmpld_io.git
+      GIT_TAG 0002c64e0be4dddc137e4fe37db4b96361bc79bd
       INCLUDE_DIR "include")
 
   # nanoflann
@@ -127,7 +131,8 @@ function(require_external NAME)
 
     add_external_headeronly_project(tinygltf
       GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-      GIT_TAG "v2.2.0")
+      GIT_TAG "v2.5.0")
+    target_compile_definitions(tinygltf INTERFACE TINYGLTF_NO_INCLUDE_JSON)
 
   elseif(NAME STREQUAL "sim_sort")
     if(TARGET sim_sort)
@@ -136,6 +141,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(sim_sort
       GIT_REPOSITORY https://github.com/alexstraub1990/simultaneous-sort.git
+      GIT_TAG 220fdf37fec2d9d3e3f7674194544ee70eb93ee7 # master on 2021-07-26, because nothing was specified here.
       INCLUDE_DIR "include")
 
   # Built libraries #####################################################
@@ -155,7 +161,7 @@ function(require_external NAME)
 
     add_external_project(adios2 STATIC
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-      GIT_TAG "v2.4.0"
+      GIT_TAG "v2.5.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
@@ -397,6 +403,7 @@ function(require_external NAME)
 
     add_external_project(IceT STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
+      GIT_TAG abf5bf2b92c0531170c8db2621b375065c7da7c4 # master on 2021-07-26, because nothing was specified here.
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
@@ -613,50 +620,36 @@ function(require_external NAME)
       require_external(glad)
 
       if(WIN32)
-        set(MEGAMOL_SHADER_FACTORY_LIB "lib/megamol-shader-factory.lib")
-        set(GLSLANG_LIB "lib/glslang$<$<CONFIG:Debug>:d>.lib")
-        set(GENERICCODEGEN_LIB "lib/GenericCodeGen$<$<CONFIG:Debug>:d>.lib")
-        set(MACHINEINDEPENDENT_LIB "lib/MachineIndependent$<$<CONFIG:Debug>:d>.lib")
-        set(OSDEPENDENT_LIB "lib/OSDependent$<$<CONFIG:Debug>:d>.lib")
-        set(OGLCOMPILER_LIB "lib/OGLCompiler$<$<CONFIG:Debug>:d>.lib")
-        set(SPIRV_LIB "lib/SPIRV$<$<CONFIG:Debug>:d>.lib")
+        set(MEGAMOL_SHADER_FACTORY_LIB "lib/msf_combined.lib")
       else()
-        include(GNUInstallDirs)
-        set(MEGAMOL_SHADER_FACTORY_LIB "${CMAKE_INSTALL_LIBDIR}/libmegamol-shader-factory.a")
-        set(GLSLANG_LIB "${CMAKE_INSTALL_LIBDIR}/libglslang.a")
-        set(GENERICCODEGEN_LIB "lib/libGenericCodeGen.a")
-        set(MACHINEINDEPENDENT_LIB "lib/libMachineIndependent.a")
-        set(OSDEPENDENT_LIB "lib/libOSDependent.a")
-        set(OGLCOMPILER_LIB "lib/libOGLCompiler.a")
-        set(SPIRV_LIB "lib/libSPIRV.a")
+        set(MEGAMOL_SHADER_FACTORY_LIB "lib/libmsf_combined.a")
       endif()
-
-      external_get_property(glad INSTALL_DIR)
 
       add_external_project(megamol-shader-factory STATIC
         GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        GIT_TAG "v0.3"
+        GIT_TAG "v0.4"
         BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
-        "<INSTALL_DIR>/${GLSLANG_LIB}"
-        "<INSTALL_DIR>/${GENERICCODEGEN_LIB}"
-        "<INSTALL_DIR>/${MACHINEINDEPENDENT_LIB}"
-        "<INSTALL_DIR>/${OSDEPENDENT_LIB}"
-        "<INSTALL_DIR>/${OGLCOMPILER_LIB}"
-        "<INSTALL_DIR>/${SPIRV_LIB}"
-        DEPENDS glad
-        CMAKE_ARGS
-          -DGLAD_IS_SHARED=OFF
-          -DGLAD_PATH=${INSTALL_DIR})
-
-      external_get_property(megamol-shader-factory INSTALL_DIR)
+        DEPENDS glad)
 
       add_external_library(megamol-shader-factory
         LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB}
-        INTERFACE_LIBRARIES glad ${INSTALL_DIR}/$<CONFIG>/${GLSLANG_LIB} ${INSTALL_DIR}/$<CONFIG>/${SPIRV_LIB} ${INSTALL_DIR}/$<CONFIG>/${MACHINEINDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${OGLCOMPILER_LIB} ${INSTALL_DIR}/$<CONFIG>/${OSDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${GENERICCODEGEN_LIB})
+        INTERFACE_LIBRARIES glad)
       if(UNIX)
         target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
       endif()
+      target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD)
+
+  # obj-io
+  elseif (NAME STREQUAL "obj-io")
+    if(TARGET obj-io)
+      return()
+    endif()
+
+    add_external_headeronly_project(obj-io INTERFACE
+      GIT_REPOSITORY https://github.com/thinks/obj-io.git
+      GIT_TAG bfe835200fdff49b45a6de4561741203f85ad028 # master on 2021-07-26, because nothing was specified here.
+      INCLUDE_DIR "include/thinks")
 
   # qhull
   elseif(NAME STREQUAL "qhull")
@@ -696,6 +689,7 @@ function(require_external NAME)
 
     add_external_project(quickhull STATIC
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
+      GIT_TAG 4f65e0801b8f60c9a97da2dadbe63c2b46397694 # master on 2021-07-26, because nothing was specified here.
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/quickhull/CMakeLists.txt"
@@ -926,52 +920,57 @@ function(require_external NAME)
     endif()
 
     set(VTKM_VER 1.4)
+    set(LIB_VER 1)
 
     if(WIN32)
-      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
-      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
-      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
-      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
-      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
-      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
+      set(VTKM_CONT_LIB "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_RENDERER_LIB "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_WORKLET_LIB "lib/vtkm_worklet-${VTKM_VER}.lib")
     else()
       include(GNUInstallDirs)
-      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.a")
-      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.a")
-      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
-      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
-      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
-      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
+      set(VTKM_CONT_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_cont-${VTKM_VER}.a")
+      set(VTKM_RENDERER_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_rendering-${VTKM_VER}.a")
+      set(VTKM_WORKLET_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_worklet-${VTKM_VER}.a")
     endif()
 
-    option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
-
-    add_external_project(vtkm
+    add_external_project(vtkm STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
-      GIT_TAG "v1.4.0"
+      GIT_TAG "v${VTKM_VER}.0"
+      BUILD_BYPRODUCTS
+        "<INSTALL_DIR>/${VTKM_CONT_LIB}"
+	    "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
+	    "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS:BOOL=OFF
-        -DVTKm_ENABLE_TESTING:BOOL=OFF
-        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
         -DBUILD_TESTING:BOOL=OFF
-        -VTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
-        -DCMAKE_BUILD_TYPE=Release
+        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
+        -DVTKm_ENABLE_TESTING:BOOL=OFF
+        -DVTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
+        -DVTKm_ENABLE_EXAMPLES:BOOL=OFF
+        -DVTKm_INSTALL_ONLY_LIBRARIES:BOOL=ON
+        -DVTKm_USE_64BIT_IDS:BOOL=OFF
+        #-DCMAKE_BUILD_TYPE=Release
         )
 
-    add_external_library(vtkm_cont STATIC
+    add_external_library(vtkm
       PROJECT vtkm
-      LIBRARY_RELEASE "${VTKM_LIB_CONT}"
-      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_CONT}")
+      LIBRARY ${VTKM_CONT_LIB})
 
-    add_external_library(vtkm_renderer STATIC
+    add_external_library(vtkm_renderer
       PROJECT vtkm
-      LIBRARY_RELEASE "${VTKM_LIB_RENDERER}"
-      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_RENDERER}")
+      LIBRARY ${VTKM_RENDERER_LIB})
 
-    add_external_library(vtkm_worklet STATIC
+    add_external_library(vtkm_worklet
       PROJECT vtkm
-      LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
-      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
+      LIBRARY ${VTKM_WORKLET_LIB})
+  elseif (NAME STREQUAL "obj-io")
+    if(TARGET obj-io)
+      return()
+    endif()
+
+    add_external_headeronly_project(obj-io INTERFACE
+      GIT_REPOSITORY https://github.com/thinks/obj-io.git
+      INCLUDE_DIR "include/thinks")
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()

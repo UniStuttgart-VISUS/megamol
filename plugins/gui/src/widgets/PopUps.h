@@ -7,9 +7,9 @@
 
 #ifndef MEGAMOL_GUI_MINIMALPOPUP_INCLUDED
 #define MEGAMOL_GUI_MINIMALPOPUP_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
 #include "HoverToolTip.h"
 
 
@@ -17,14 +17,13 @@ namespace megamol {
 namespace gui {
 
 
-    /**
-     * Pup-ups.
+    /** ************************************************************************
+     * Different pup-up widgets
      */
     class PopUps {
     public:
-        PopUps(void);
-
-        ~PopUps(void) = default;
+        PopUps();
+        ~PopUps() = default;
 
         // Rename pop-up
         bool Rename(const std::string& caption, bool open_popup, std::string& rename);

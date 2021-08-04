@@ -47,6 +47,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
 , curMVP()
 , curMVPinv()
 , curMVPtransp()
+, init_resources(true)
 , renderMode(RenderMode::SIMPLE)
 , greyTF(0)
 , range()
@@ -113,12 +114,15 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
     , outlineWidthSlot("outline::width", "Width of the outline in pixels") {
 
     this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
+    this->getDataSlot.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
+    this->getTFSlot.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->getLightsSlot.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getLightsSlot);
 
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
@@ -278,11 +282,6 @@ bool SphereRenderer::create(void) {
             (this->getRenderModeString(this->renderMode)).c_str(), (this->getRenderModeString(RenderMode::SIMPLE)).c_str());
         // Always available fallback render mode
         this->renderMode = RenderMode::SIMPLE;
-    }
-
-    // Create resources for initial render mode
-    if (!this->createResources()) {
-        return false;
     }
 
     // timer.SetNumRegions(4);
@@ -1028,6 +1027,8 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 
 
 bool SphereRenderer::Render(view::CallRender3DGL& call) {
+    auto const lhsFBO = call.GetFramebufferObject();
+    lhsFBO->Enable();
 
     // timer.BeginFrame();
 
@@ -1044,8 +1045,9 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
 
     // Checking for changed render mode
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
-    if (currentRenderMode != this->renderMode) {
+    if (this->init_resources || (currentRenderMode != this->renderMode)) {
         this->renderMode = currentRenderMode;
+        init_resources = false;
         if (!this->createResources()) {
             return false;
         }
@@ -1205,6 +1207,8 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // timer.EndFrame();
+
+    lhsFBO->Disable();
 
     return retval;
 }

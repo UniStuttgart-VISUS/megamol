@@ -19,7 +19,14 @@
 
 #include "mmcore/utility/log/Log.h"
 
+#include "GUIRegisterWindow.h"
+
 static const std::string service_name = "Screenshot_Service: ";
+static const std::string privacy_note("--- PRIVACY NOTE ---\n"
+    "Please note that the complete MegaMol project is stored in the header of the screenshot image file. \n"
+    "Before giving away the screenshot, clear privacy relevant information in the project file before taking a screenshot (e.g. user name in file paths). \n"
+    ">>> In the file [megamol_config.lua] set mmSetCliOption(\"privacynote\", \"off\") to permanently turn off privacy notifications for screenshots.");
+static std::shared_ptr<bool> service_open_popup = std::make_shared<bool>(false);
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
@@ -105,12 +112,9 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
     png_destroy_write_struct(&pngPtr, &pngInfoPtr);
 
     if (screenshot_show_privacy_note) {
-        // Push log message to GUI pop-up
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("%sScreenshot%s--- PRIVACY NOTE ---\n"
-            "Please note that the complete MegaMol project is stored in the header of the screenshot image file. \n"
-            "Before giving away the screenshot, clear privacy relevant information in project file before taking screenshot (e.g. user name in file paths). \n"
-            ">>> In [megamol_config.lua] set mmSetCliOption(\"privacynote\", \"off\") to permanently turn off privacy notification for screenshots. \n"
-            , LOGMESSAGE_GUI_POPUP_START_TAG, LOGMESSAGE_GUI_POPUP_END_TAG);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Screenshot: %s", privacy_note.c_str());
+        if (service_open_popup != nullptr)
+            *service_open_popup = true;
     }
     return true;
 }
@@ -173,7 +177,9 @@ namespace frontend {
 
 Screenshot_Service::Screenshot_Service() {}
 
-Screenshot_Service::~Screenshot_Service() {}
+Screenshot_Service::~Screenshot_Service() {
+    service_open_popup.reset();
+}
 
 bool Screenshot_Service::init(void* configPtr) {
     if (configPtr == nullptr) return false;
@@ -187,8 +193,9 @@ bool Screenshot_Service::init(const Config& config) {
     {
         "IOpenGL_Context",
         "MegaMolGraph",
-        "GUIResource",
-        "RuntimeConfig"
+        "GUIState",
+        "RuntimeConfig",
+        "GUIRegisterWindow"
     };
 
     this->m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
@@ -227,6 +234,9 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
     guistate_resources_ptr = const_cast<megamol::frontend_resources::GUIState*>(&resources[2].getResource<megamol::frontend_resources::GUIState>());
+
+    auto &gui_window_request_resource = resources[4].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+    gui_window_request_resource.register_notification("Screenshot", std::weak_ptr<bool>(service_open_popup), privacy_note);
 }
 
 void Screenshot_Service::updateProvidedResources() {

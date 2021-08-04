@@ -26,7 +26,9 @@ This guide is intended to give MegaMol developers a useful insight into the inte
         - [Adding new external dependencies](#adding-new-external-dependencies) 
           - [Header-only libraries](#header-only-libraries) 
           - [Built libraries](#built-libraries) 
-- [GUI Parameter Widgets](#gui-parameter-widgets)
+- [GUI](#gui)
+    - [Parameter Widgets](#parameter-widgets)
+    - [Window/PopUp/Notification for Frontend Service](#windowpopupnotification-for-frontend-service)
 
 <!-- TODO
 - Add section describing all available LUA commands
@@ -40,50 +42,89 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 -----
 ## Create new Plugin
 
-<!-- TODO: UPDATE -->
-
 ### Add own plugin using the template
-1. Copy the template folder `../megamol/plugins/template`.
-2. Rename the copied folder to the intended plugin name.
-3. Execute the `instawiz.pl` script inside the new folder.
-    1. The script detects the plugin name.
-    2. Autogenerate the GUID.
-4. Remove `instawiz.pl`from the new plugins folder.
+
+1. Copy the template folder `plugins/doc_template`.
+2. Rename the copied folder to the intended plugin name (style guide: only lower case letters, numbers, and underscore).
+3. Rename the `src/MegaMolPlugin.cpp` to your plugin name (file name can be arbitrary). Within the file change the following:
+    1. Use a unique namespace `megamol::pluginname`. (style guide: same as folder name)
+    2. Change the plugin name and description in the parameters of the constructor.
+    3. The class name can be changed to any name, but it must be set accordingly in the `REGISTERPLUGIN()` macro.
+4. Open the `CMakeLists.txt` file and to the following changes:
+    1. Set the name of the target at the beginning of `megamol_plugin()`. (style guide: same as folder name)
+    2. List the targets of other plugin dependencies after `DEPENDS_PLUGINS`[*].
+    3. List the targets of external dependencies after `DEPENDS_EXTERNALS`[*]. Do not define new externals within the plugin CMake! Use the global externals file `externals/CMakeExternals.cmake`.
+    4. If additional custom CMake settings are required they can be put within `if (megamolplugin_PLUGIN_ENABLED)`. The variable defined at the beginning of `megamol_plugin()` is a regular CMake target that can be used.
 5. Add libraries/dependencies to `CMakeLists.txt` (optional, see [external dependencies](#external-dependencies)).
 6. Implement the content of your plugin.
-7. Write a `Readme.md` for your plugin (mandatory).
-8. Add the folder to your local git.
+    1. The private implementation should be in the `<pluginname>/src` directory. Source files are added automatically within CMake.
+    2. If the plugin has a public interface, add the headers in the `<pluginname>/include` directory (set visibility of dependencies accordingly, see [*]).
+    3. If the plugin uses shaders, add them into the `<pluginname>/shaders/<pluginname>` directory (see shader guide for more details).
+    4. If the plugin uses resources, add them to `<pluginname>/resources`.
+7. Write a `README.md` for your plugin (mandatory).
 
+[*] You can prefix the dependency targets with the keywords `PUBLIC`, `PRIVATE`, or `INTERFACE` the same way `target_link_libraries()` works. Defaults to `PRIVATE` if nothing is set.
 
 <!-- ###################################################################### -->
 -----
 
 ## Create GLSL Shader with utility classes
 
-Required headers:
-- ```mmcore/utility/graphics/GLSLShader.h```
-- ```mmcore/CoreInstance.h```
-  
-Before creating a shader program with this wrapper, ```compiler_options``` need to be retrieved from ```CoreInstance```.
-This ```compiler_options``` instance contains default shader paths and default options.
-Additional include paths and definitions can be added prior to program creation.
-The constructor of the wrapper requires paths to source files of all shader stages in the form: ```<path>/<name>.<type>.glsl```.
+### Shader files
 
-Allowed types are:   
+Shaders are stored as regular text files containing GLSL code, but we additionally are using a shader factory that supports and include directives similar to C/C++.
+This allows a better organization of large shaders and reusing of common shader snippets.
+
+Shader files must be located either in the `core/shaders/core` directory or in the shader directory of the corresponding plugin `<pluginname>/shaders/<pluginname>`.
+Please note the additional subfolder within each `shaders` directory!
+It is required for our include system and to avoid collision when installing all shaders to a single shader-installation-directory.
+
+Full shaders must use the filename pattern `<path>/<name>.<type>.glsl`.
+We use the filename to determine the type of a shader.
+The following types are allowed:
+
 | Type | Shader Stage            |
 | ---- | ----------------------- |
 | vert | Vertex                  |
-| geom | Geometry                |
 | tesc | Tessellation Control    |
 | tese | Tessellation Evaluation |
+| geom | Geometry                |
 | frag | Fragment                |
 | comp | Compute                 |
 
-Uniform locations are retrieved at construction of GLSLShader instance.
+Shader snippets meant for inclusion within other shaders must not use a type in their extension, but they should still have a `.glsl` extension.
 
-Within source files, includes can be defined in standard C style: ```#include "common.h"```
+Within shader files, includes can be defined in standard C style: `#include "common.h"`.
+Thereby, `core/shaders` and all `<pluginname>/shaders` directories are added as include search paths.
+Therefore, shaders can be included with a path relative to these directories. (This is also the reason why we need the additional subdirectories as mentioned above).
+Some examples:
+```glsl
+#include "core/phong.glsl"
+#include "pluginname/foo/bar.glsl"
+```
 
-Shader program can be created manually by calling ```megamol::core::utility::make_program``` from ```mmcore/utility/ShaderFactory.h``` (same parameter set as GLSLShader ctor).
+In addition, inclusion relative to the current shader file is supported, but only for snippets within the same shader directory.
+
+### C++ Code
+
+Required headers:
+- `mmcore/CoreInstance.h`
+- `mmcore/utility/ShaderFactory.h`
+
+Before creating a shader program with this wrapper, `compiler_options` need to be retrieved from the `CoreInstance`.
+This `compiler_options` instance contains default shader paths and default options.
+Additional include paths and definitions can be added before program creation.
+The constructor of the wrapper requires paths to source files of all shader stages in the form: `<path>/<name>.<type>.glsl`.
+
+Here is a full example:
+```cpp
+const auto shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+auto program = core::utility::make_glowl_shader("name", shader_options, "pluginname/shader.comp.glsl");
+```
+
+The `make_glowl_shader()` helper function returns a glowl `GLSLProgram` wrapped in a unique pointer.
+A variant `make_shared_glowl_shader()` exists to use a shared pointer instead.
+Both functions are variadic, so any number of shaders can be combined into a single program (as long as the shader combination makes sense from the OpenGL perspective).
 
 ## Bi-Directional Communication across Modules
 
@@ -378,6 +419,12 @@ Additionally, information about the libraries can be queried with the command ``
 
 <!-- ###################################################################### -->
 -----
-## GUI Parameter Widgets
+## GUI
 
-See separate [developer information for GUI plugin](../../plugins/gui#information-for-developers).
+### Parameter Widgets
+
+See [developer information for GUI plugin](../../plugins/gui#new-parameter-widgets).
+
+### Window/PopUp/Notification for Frontend Service
+
+See [developer information for GUI plugin](../../plugins/gui#gui-windowpopupnotification-for-frontend-service).

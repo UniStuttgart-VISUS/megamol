@@ -125,7 +125,7 @@ bool megamol::probe::TessellateBoundingBox::getMeshDataCallback(core::Call& call
 
             // get data from adios
             for (auto var : toInq) {
-                if (!bboxc->inquire(var)) {
+                if (!bboxc->inquireVar(var)) {
                     return false;
                 }
             }

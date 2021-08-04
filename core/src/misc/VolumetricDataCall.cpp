@@ -294,6 +294,7 @@ const float megamol::core::misc::VolumetricDataCall::GetAbsoluteVoxelValue(
         uint64_t idx =
             z * this->metadata->Resolution[0] * this->metadata->Resolution[1] + y * this->metadata->Resolution[0] + x;
         idx *= this->metadata->Components;
+        assert(idx < metadata->Resolution[0] * metadata->Resolution[1] * metadata->Resolution[2]);
         switch (this->metadata->ScalarType) {
         case UNKNOWN:
         case BITS:

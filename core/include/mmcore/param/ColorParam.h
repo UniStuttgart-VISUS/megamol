@@ -111,6 +111,16 @@ public:
     }
 
     /**
+     * Gets the color array
+     *
+     * @return The array of values
+     */
+    inline const std::array<float,4> GetArray() const {
+        return val;
+    }
+
+
+    /**
     * Gets the value of the parameter
     *
     * @return The value of the parameter

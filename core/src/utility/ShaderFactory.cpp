@@ -6,16 +6,17 @@
 #include "stdafx.h"
 #include "mmcore/utility/ShaderFactory.h"
 
-#include "msf/compiler.h"
-#include "msf/compiler_utils.h"
+#include "msf/LineTranslator.h"
+#include "msf/ShaderFactory.h"
+#include "msf/ShaderFactoryUtils.h"
 
-
-static megamol::shaderfactory::compiler msf_cp;
+static msf::ShaderFactory msf_factory;
 
 glowl::GLSLProgram::ShaderSourceList::value_type megamol::core::utility::make_glowl_shader_source(
-    std::filesystem::path const& shader_source_path, megamol::shaderfactory::compiler_options const& options) {
-    auto const shader_string = msf_cp.preprocess(shader_source_path, options);
-    auto const type = megamol::shaderfactory::get_shader_type_ogl(shader_source_path);
+    std::filesystem::path const& shader_source_path, msf::ShaderFactoryOptionsOpenGL const& options,
+    msf::LineTranslator& translator) {
+    auto const shader_string = translator.cleanupShader(msf_factory.preprocess(shader_source_path, options));
+    auto const type = msf::getShaderTypeInt(shader_source_path);
 
     return std::make_pair(static_cast<glowl::GLSLProgram::ShaderType>(type), shader_string);
 }

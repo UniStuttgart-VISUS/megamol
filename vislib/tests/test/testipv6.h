@@ -2,7 +2,7 @@
  * testipv6.h
  *
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
- * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
+ * Copyright (C) 2008 by Christoph MÃ¼ller. Alle Rechte vorbehalten.
  */
 
 #ifndef VISLIBTEST_TESTIPV6_H_INCLUDED

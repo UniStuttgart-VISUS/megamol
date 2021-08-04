@@ -89,6 +89,7 @@
     </snippet>
 
     <!-- POINTS ########################################################### -->
+
     <namespace name="points">
 
         <shader name="vertex">
@@ -235,6 +236,7 @@
     </namespace>     
 
     <!-- COLOR TEXTURE #################################################### -->
+
     <namespace name="color_texture">
 
         <shader name="vertex">
@@ -283,52 +285,6 @@
                 if ((forced_alpha <= 0.0) && (color.a > 0.0)) {
                     outColor = vec4(color.rgb, alpha);
                 }
-            }
-
-            ]]>
-            </snippet>
-        </shader>
-
-    </namespace>
-
-    <!-- DEPTH TEXTURE #################################################### -->
-    <namespace name="depth_texture">
-
-        <shader name="vertex">
-            <snippet type="version">130</snippet>
-            <snippet name="vertex_attributes"/>
-            <snippet name="screenspace"/>
-
-            <snippet name="main" type="string">
-            <![CDATA[            
-                
-            void main(void) {
-
-                vec4 inPos = mvp * vec4(inPosition, 1.0);
-                inPos /= inPos.w;
-                gl_Position = inPos; 
-                color = inColor;
-                texcoord = inTexture;
-            }
-
-            ]]>
-            </snippet>
-        </shader>
-
-        <shader name="fragment">
-            <snippet type="version">130</snippet>
-            <snippet name="fragment_attributes"/>
-            <snippet name="smoothing"/>
-            
-            <snippet name="main" type="string">
-            <![CDATA[
-
-            void main() {
-                
-                vec2 uvcoord = vec2(gl_FragCoord.x / viewport.x, gl_FragCoord.y / viewport.y);
-                float depth = texture2D(tex, uvcoord).x;
-                gl_FragDepth = depth; 
-                outColor = vec4(0.0, 0.0, 0.0, 0.0);
             }
 
             ]]>

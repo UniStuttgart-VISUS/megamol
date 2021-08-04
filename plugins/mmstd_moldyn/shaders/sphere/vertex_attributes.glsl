@@ -11,8 +11,10 @@ out float pointSize;
 #endif // DEFERRED_SHADING
 
 // OUTLINE / ifdef RETICLE
-out float fragmentRadius;
-out vec2 centerFragment;
+out float sphere_frag_radius;
+out vec2 sphere_frag_center;
+// OUTLINE
+uniform float outlineWidth = 0.0;
 
 uniform vec4 viewAttr;
 uniform vec4 lightDir;

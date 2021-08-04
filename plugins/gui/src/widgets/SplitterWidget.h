@@ -7,23 +7,20 @@
 
 #ifndef MEGAMOL_GUI_SPLITTERWIDGET_INCLUDED
 #define MEGAMOL_GUI_SPLITTERWIDGET_INCLUDED
-
-
-#include "GUIUtils.h"
+#pragma once
 
 
 namespace megamol {
 namespace gui {
 
 
-    /**
-     * Splitter widget.
+    /** ************************************************************************
+     * Splitter widget
      */
     class SplitterWidget {
     public:
-        SplitterWidget(void);
-
-        ~SplitterWidget(void) = default;
+        SplitterWidget();
+        ~SplitterWidget() = default;
 
         enum FixedSplitterSide { LEFT, RIGHT };
 

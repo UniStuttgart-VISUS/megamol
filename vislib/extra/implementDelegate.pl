@@ -94,7 +94,7 @@ sub WriteClass {
     }
 
     # class implementation
-    print $out qq§
+    print $out qqÂ§
     public:
 
         /**
@@ -576,7 +576,7 @@ sub WriteClass {
         /** The callee target */
         AbstractCallee *callee;
 
-§;
+Â§;
 
     # class footer
     print $out "    };\n\n";
@@ -585,7 +585,7 @@ sub WriteClass {
 #
 # Header
 ##############################################################################
-print $out qq§/*
+print $out qqÂ§/*
  * Delegate.h
  *
  * Copyright (C) 2006 - 2011 by Visualisierungsinstitut Universitaet Stuttgart. 
@@ -613,13 +613,13 @@ print $out qq§/*
 
 namespace vislib {
 
-§;
+Â§;
 
 
 #
 # full class
 ##############################################################################
-print $out qq§
+print $out qqÂ§
     /**
      * Class representing a single callback target, which can either be a
      * function (c or static member) or a member-object pair, both with an
@@ -629,41 +629,41 @@ print $out qq§
      * The other template parameters define the parameter list of the
      * callback, while void is used to (implicitly) terminate the list.
      * The parameter list may only have a maximum of $paramCnt elements.
-     */§;
+     */Â§;
 WriteClass($out, $paramCnt, $paramCnt);
 
 #
 # specialization classes for smaller parameter lists
 ##############################################################################
 for (my $pcnt = $paramCnt - 1; $pcnt >= 0; $pcnt--) {
-    print $out qq§
+    print $out qqÂ§
     /**
      * Template specialication for delegate functions with $pcnt parameters
-     */§;
+     */Â§;
     WriteClass($out, $paramCnt, $pcnt);
 }
 
 #
 # specialization class for empty parameter lists
 ##############################################################################
-print $out qq§
+print $out qqÂ§
     /**
      * Template specialication for delegate functions without parameters and
      * without return value.
-     */§;
+     */Â§;
 WriteClass($out, $paramCnt, -1);
 
 
 #
 # footer
 ##############################################################################
-print $out qq§} /* end namespace vislib */
+print $out qqÂ§} /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_DELEGATE_H_INCLUDED */
-§;
+Â§;
 
 
 close ($out);

@@ -25,6 +25,7 @@ namespace probe {
             , _probes_per_unit_slot("Probes_per_unit", "Sets the average probe count per unit area")
             , _probe_positions_slot("deployProbePositions", "Safe probe positions to a file")
             , _load_probe_positions_slot("loadProbePositions", "Load saved probe positions")
+            , _scale_probe_begin_slot("distanceFromSurfaceFactor", "")
             , _longest_edge_index(0) {
 
         this->_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &PlaceProbes::getData);
@@ -54,9 +55,15 @@ namespace probe {
         ep->SetTypePair(4, "vertices+normals");
         ep->SetTypePair(5, "face+normals");
         this->_method_slot << ep;
+        this->_method_slot.SetUpdateCallback(&PlaceProbes::parameterChanged);
         this->MakeSlotAvailable(&this->_method_slot);
 
+
         this->_probes_per_unit_slot << new core::param::FloatParam(1, 0);
+
+        this->_scale_probe_begin_slot << new core::param::FloatParam(1.0f);
+        this->_scale_probe_begin_slot.SetUpdateCallback(&PlaceProbes::parameterChanged);
+        this->MakeSlotAvailable(&this->_scale_probe_begin_slot);
 
         /* Feasibility test */
         _probes = std::make_shared<ProbeCollection>();
@@ -117,7 +124,7 @@ namespace probe {
         }
 
         // here something really happens
-        if (something_changed) {
+        if (something_changed || _recalc) {
             ++_version;
 
             if (mesh_meta_data.m_bboxs.IsBoundingBoxValid()) {
@@ -136,6 +143,7 @@ namespace probe {
         pc->setData(this->_probes, _version);
 
         pc->setMetaData(probe_meta_data);
+        _recalc = false;
         return true;
     }
 
@@ -523,7 +531,7 @@ namespace probe {
                 vertex_accessor[vertex_step * i + 2]};
             probe.m_direction = {-normal_accessor[normal_step * i + 0], -normal_accessor[normal_step * i + 1],
                 -normal_accessor[normal_step * i + 2]};
-            probe.m_begin = -2.0;
+            probe.m_begin = -2.0 * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
             probe.m_end = 50.0;
             probe.m_cluster_id = -1;
 
@@ -584,7 +592,7 @@ namespace probe {
 
             probe.m_position = {p_c.x, p_c.y, p_c.z};
             probe.m_direction = {-n_c.x,-n_c.y,-n_c.z};
-            probe.m_begin = -2.0;
+            probe.m_begin = -2.0 * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
             probe.m_end = 50.0;
             probe.m_cluster_id = -1;
 
@@ -701,12 +709,14 @@ namespace probe {
         uint32_t probe_count = _probePositions.size();
         // uint32_t probe_count = 1;
         uint32_t centerline_vert_count = centerline.byte_size / centerline.stride;
+        //uint32_t centerline_vert_count = 0.5 * centerline.byte_size / centerline.stride;
 
         auto vertex_accessor = reinterpret_cast<float*>(_probePositions.data()->data());
         auto centerline_accessor = reinterpret_cast<float*>(centerline.data);
 
         auto vertex_step = 4;
         auto centerline_step = centerline.stride / sizeof(centerline.component_type);
+        //auto centerline_step = 2 * centerline.stride / sizeof(centerline.component_type);
 
         std::string mesh_id;
         if (_mesh->accessMeshes().size() == 1) {
@@ -726,15 +736,34 @@ namespace probe {
                 //    vertex_accessor[vertex_step * i + 2] - centerline_accessor[centerline_step * j + 2]};
                 // distances[j] = std::sqrt(diffvec[0] * diffvec[0] + diffvec[1] * diffvec[1] + diffvec[2] *
                 // diffvec[2]);
-                distances[j] =
-                    std::abs(vertex_accessor[vertex_step * i + lei] - centerline_accessor[centerline_step * j + lei]);
+                auto vert = glm::vec3(vertex_accessor[vertex_step * i + 0], vertex_accessor[vertex_step * i + 1],
+                    vertex_accessor[vertex_step * i + 2]);
+                auto centerline_vert = glm::vec3(centerline_accessor[centerline_step * j + 0],
+                    centerline_accessor[centerline_step * j + 1], centerline_accessor[centerline_step * j + 2]);
+                distances[j] = glm::length(vert - centerline_vert);
             }
 
             auto min_iter = std::min_element(distances.begin(), distances.end());
             auto min_index = std::distance(distances.begin(), min_iter);
             distances[min_index] = std::numeric_limits<float>::max();
 
-            auto second_min_iter = std::min_element(distances.begin(), distances.end());
+            auto second_min_iter = distances.begin();
+
+            if (min_iter == distances.begin()) {
+                second_min_iter = std::next(distances.begin());
+            } else if (min_iter == std::prev(distances.end())) {
+                second_min_iter = std::prev(min_iter);
+            } else {
+                auto left = std::prev(min_iter);
+                auto right = std::next(min_iter);
+                if (*left < *right) {
+                    second_min_iter = left;
+                } else {
+                    second_min_iter = right;
+                }
+            }
+    
+            //auto second_min_iter = std::min_element(distances.begin(), distances.end());
             auto second_min_index = std::distance(distances.begin(), second_min_iter);
 
             // calc normal in plane between vert, min and second_min
@@ -817,8 +846,9 @@ namespace probe {
             probe.m_position = {vertex_accessor[vertex_step * i + 0], vertex_accessor[vertex_step * i + 1],
                 vertex_accessor[vertex_step * i + 2]};
             probe.m_direction = normal;
-            probe.m_begin = -0.1 * final_dist;
-            probe.m_end = final_dist;
+            auto begin = -0.1 * final_dist * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
+            probe.m_begin = std::isfinite(begin) ? begin : 0.0f;
+            probe.m_end = std::isfinite(final_dist) ? final_dist : 0.0f;
             probe.m_cluster_id = -1;
             if (!mesh_id.empty()) {
                 probe.m_geo_ids.emplace_back(mesh_id);
@@ -832,8 +862,13 @@ namespace probe {
     }
 
     bool megamol::probe::PlaceProbes::placeByCenterpoint() {
-        std::array<float, 3> center = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(),
-            _bbox.BoundingBox().CalcCenter().GetZ()};
+        float z_center;
+        if (std::copysign(1.0, _bbox.BoundingBox().Front()) == std::copysign(1.0, _bbox.BoundingBox().Back())) {
+            z_center = _bbox.BoundingBox().Front() - _bbox.BoundingBox().Back();
+        } else {
+            z_center = _bbox.BoundingBox().Front() + _bbox.BoundingBox().Back();
+        }
+        std::array<float, 3> center = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(), z_center};
 
         uint32_t probe_count = _probePositions.size();
 
@@ -865,7 +900,7 @@ namespace probe {
             probe.m_position = {probe_accessor[probe_step * i + 0], probe_accessor[probe_step * i + 1],
                 probe_accessor[probe_step * i + 2]};
             probe.m_direction = normal;
-            probe.m_begin = -0.02 * normal_length;
+            probe.m_begin = -0.02 * normal_length * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
             probe.m_end = normal_length;
             probe.m_cluster_id = -1;
             if (!mesh_id.empty()) {
@@ -983,7 +1018,7 @@ namespace probe {
         auto availVars = cd->getAvailableVars();
         if (availVars.empty())
             return false;
-        cd->inquire(availVars[0]);
+        cd->inquireVar(availVars[0]);
         if (!(*cd)(0))
             return false;
 
@@ -998,6 +1033,12 @@ namespace probe {
 
         return true;
     }
+
+bool PlaceProbes::parameterChanged(core::param::ParamSlot& p) {
+    _recalc = true;
+
+    return true;
+}
 
 } // namespace probe
 } // namespace megamol

@@ -70,11 +70,12 @@ SampleAlongPobes::SampleAlongPobes()
     this->_sampling_mode << new megamol::core::param::EnumParam(0);
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Scalar");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Vector");
-    this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Volume");
+    this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "VolumeTrilin");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "Tetrahedral");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "Nearest");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(5, "TetrahedralVector");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(6, "ScalarDistribution");
+    this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(7, "VolumeRadius");
     this->_sampling_mode.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_sampling_mode);
 
@@ -110,139 +111,6 @@ SampleAlongPobes::~SampleAlongPobes() { this->Release(); }
 bool SampleAlongPobes::create() { return true; }
 
 void SampleAlongPobes::release() {}
-
-void SampleAlongPobes::doVolumeSampling() {
-    const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
-    const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
-
-    glm::vec3 origin = {_vol_metadata->Origin[0], _vol_metadata->Origin[1], _vol_metadata->Origin[2]};
-    glm::vec3 spacing = {*_vol_metadata->SliceDists[0], *_vol_metadata->SliceDists[1], *_vol_metadata->SliceDists[2]};
-    float min_spacing = std::min(std::min(spacing.x, spacing.y), spacing.z);
-
-    float global_min = std::numeric_limits<float>::max();
-    float global_max = -std::numeric_limits<float>::max();
-    //#pragma omp parallel for
-    for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
-
-        FloatProbe probe;
-
-        auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe>) {
-
-                probe.m_timestamp = arg.m_timestamp;
-                probe.m_value_name = arg.m_value_name;
-                probe.m_position = arg.m_position;
-                probe.m_direction = arg.m_direction;
-                probe.m_begin = arg.m_begin;
-                probe.m_end = arg.m_end;
-                probe.m_cluster_id = arg.m_cluster_id;
-
-                auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
-                auto radius = 0.5 * sample_step * sample_radius_factor;
-                probe.m_sample_radius = radius;
-
-                _probes->setProbe(i, probe);
-
-            } else if constexpr (std::is_same_v<T, probe::FloatProbe>) {
-                probe = arg;
-
-            } else {
-                // unknown/incompatible probe type, throw error? do nothing?
-            }
-        };
-
-        auto generic_probe = _probes->getGenericProbe(i);
-        std::visit(visitor, generic_probe);
-
-        auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
-        auto radius = 0.5 * sample_step * sample_radius_factor;
-        auto grid_radius = glm::vec3(radius) / spacing;
-        std::array<int, 3> num_grid_points_per_dim = {grid_radius.x * 2, grid_radius.y * 2, grid_radius.z * 2};
-
-        bool get_nearest = false;
-        for (int i = 0; i < num_grid_points_per_dim.size(); ++i) {
-            if (num_grid_points_per_dim[i] < 1) {
-                num_grid_points_per_dim[i] = 1;
-                get_nearest = true;
-            }
-        }
-
-        std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
-        float min_value = std::numeric_limits<float>::max();
-        float max_value = -std::numeric_limits<float>::max();
-        float min_data = std::numeric_limits<float>::max();
-        float max_data = -std::numeric_limits<float>::max();
-        float avg_value = 0.0f;
-        samples->samples.resize(samples_per_probe);
-        
-
-        for (int j = 0; j < samples_per_probe; j++) {
-
-            glm::vec3 sample_point;
-            sample_point.x = probe.m_position[0] + j * sample_step * probe.m_direction[0];
-            sample_point.y = probe.m_position[1] + j * sample_step * probe.m_direction[1];
-            sample_point.z = probe.m_position[2] + j * sample_step * probe.m_direction[2];
-
-            // calculate in which cell (i,j,k) the point resides in
-            glm::vec3 grid_point = (sample_point - origin) / spacing;
-
-            glm::vec3 start = {std::roundf(grid_point.x - grid_radius.x),
-                std::roundf(grid_point.y - grid_radius.y),
-                std::roundf(grid_point.z - grid_radius.z)};
-            auto end = grid_point + grid_radius;
-
-            float value = 0;
-            int num_samples = 0;
-            for (int k = 0; k < num_grid_points_per_dim[0]; ++k) {
-                for (int l = 0; l < num_grid_points_per_dim[1]; ++l) {
-                    for (int m = 0; m < num_grid_points_per_dim[2]; ++m) {
-                        auto pos = start + glm::vec3(k,l,m);
-                        auto dif = pos - grid_point;
-                        if ((std::abs(dif.x) <= grid_radius.x && std::abs(dif.y) <= grid_radius.y &&
-                            std::abs(dif.z) <= grid_radius.z) || get_nearest) {
-                            int index = pos.x + _vol_metadata->Resolution[1] *
-                                                 (pos.y + _vol_metadata->Resolution[2] * pos.z);
-                            auto current_data =
-                                _volume_data[index];
-                            value += current_data;
-                            min_data = std::min(min_data, current_data);
-                            max_data = std::max(max_data, current_data);
-
-                            num_samples++;
-                        }
-                    }
-                }
-            }
-            if (value != 0) value /= num_samples;
-            if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
-                samples->samples[j] = value;
-            } else {
-                samples->samples[j] = max_data;
-            }
-            min_value = std::min(min_value, value);
-            max_value = std::max(max_value, value);
-            avg_value += value;
-        }
-        if (avg_value != 0) avg_value /= samples_per_probe;
-        if (!std::isfinite(avg_value)) {
-            core::utility::log::Log::DefaultLog.WriteError(
-                "[SampleAlongProbes] Non-finite value in sampled.");
-        }
-        if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
-            samples->average_value = avg_value;
-            samples->max_value = max_value;
-            samples->min_value = min_value;
-        } else {
-            samples->average_value = max_data;
-            samples->max_value = max_data;
-            samples->min_value = max_data;
-        }
-        global_min = std::min(global_min, samples->min_value);
-        global_max = std::max(global_max, samples->max_value);
-    } // end for probes
-    _probes->setGlobalMinMax(global_min, global_max);
-}
 
 bool SampleAlongPobes::getData(core::Call& call) {
 
@@ -297,7 +165,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
 
         // get data from adios
         for (auto var : toInq) {
-            if (!cd->inquire(var)) return false;
+            if (!cd->inquireVar(var))
+                return false;
         }
 
         if (cd->getDataHash() != _old_datahash || _trigger_recalc) {
@@ -324,8 +193,6 @@ bool SampleAlongPobes::getData(core::Call& call) {
                 "[SampleAlongProbes] Volume data has more than one component. Not supported.");
             return false;
         }
-
-        _volume_data = static_cast<float*>(cv->GetData());
 
         something_has_changed = something_has_changed || (cv->DataHash() != _old_volume_datahash);
     } else {
@@ -413,14 +280,69 @@ bool SampleAlongPobes::getData(core::Call& call) {
                     doTetrahedralVectorSamling(tree, data_x, data_y, data_z, data_w);
                 }
             }
-        } else {
+        } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 2) {
             if (cv == nullptr) {
                 core::utility::log::Log::DefaultLog.WriteError(
                     "[SampleAlongProbes] Volume mode selected but no volume data connected.");
                 return false;
             }
 
-            doVolumeSampling();
+            auto type = _vol_metadata->ScalarType;
+            auto type_length = _vol_metadata->ScalarLength;
+
+            if (type == core::misc::FLOATING_POINT) {
+                auto data = reinterpret_cast<float*>(cv->GetData());
+                doVolumeTrilinSampling(data);
+            } else if (type == core::misc::UNSIGNED_INTEGER) {
+                if (type_length < 4) {
+                    auto data = reinterpret_cast<unsigned char*>(cv->GetData());
+                    doVolumeTrilinSampling(data);
+                } else {
+                    auto data = reinterpret_cast<unsigned int*>(cv->GetData());
+                    doVolumeTrilinSampling(data);  
+                }
+            } else if (type == core::misc::SIGNED_INTEGER) {
+                if (type_length < 4) {
+                    auto data = reinterpret_cast<char*>(cv->GetData());
+                    doVolumeTrilinSampling(data);
+                } else {
+                    auto data = reinterpret_cast<int*>(cv->GetData());
+                    doVolumeTrilinSampling(data);
+                }
+            }
+        } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 7) {
+            if (cv == nullptr) {
+                core::utility::log::Log::DefaultLog.WriteError(
+                    "[SampleAlongProbes] Volume mode selected but no volume data connected.");
+                return false;
+            }
+
+            auto type = _vol_metadata->ScalarType;
+            auto type_length = _vol_metadata->ScalarLength;
+
+            if (type == core::misc::FLOATING_POINT) {
+                auto data = reinterpret_cast<float*>(cv->GetData());
+                doVolumeRadiusSampling(data);
+            } else if (type == core::misc::UNSIGNED_INTEGER) {
+                if (type_length < 4) {
+                    auto data = reinterpret_cast<unsigned char*>(cv->GetData());
+                    doVolumeRadiusSampling(data);
+                } else {
+                    auto data = reinterpret_cast<unsigned int*>(cv->GetData());
+                    doVolumeRadiusSampling(data);
+                }
+            } else if (type == core::misc::SIGNED_INTEGER) {
+                if (type_length < 4) {
+                    auto data = reinterpret_cast<char*>(cv->GetData());
+                    doVolumeRadiusSampling(data);
+                } else {
+                    auto data = reinterpret_cast<int*>(cv->GetData());
+                    doVolumeRadiusSampling(data);
+                }
+            } else {
+                core::utility::log::Log::DefaultLog.WriteError("[SampleAlongProbes]: Volume data type not supported.");
+                return false;
+            }
         }
     }
 

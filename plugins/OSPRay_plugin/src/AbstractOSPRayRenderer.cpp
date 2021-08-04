@@ -32,6 +32,10 @@ namespace ospray {
         megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
     }
 
+    void ospStatusCallback(const char* msg) {
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("OSPRay Device Status: %s", msg);
+    };
+
     AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
             : core::view::Renderer3DModule()
             , _lightSlot("lights",
@@ -127,6 +131,18 @@ namespace ospray {
                 }
             }
             }
+            _device->setErrorCallback([](void *, OSPError error, const char *errorDetails) {
+                ospErrorCallback(error, errorDetails);
+                exit(error);
+                }
+            );
+            _device->setStatusCallback([](void*, const char* msg) { ospStatusCallback(msg); });
+#ifdef _DEBUG
+            _device->setParam("logLevel",OSP_LOG_DEBUG);
+#else
+            _device->setParam("logLevel", OSP_LOG_INFO);
+#endif
+            _device->setParam("warnAsError", true);
             _device->commit();
             _device->setCurrent();
         }
@@ -271,7 +287,7 @@ namespace ospray {
                 }
             light.setParam("angularDiameter", dl.angularDiameter);
             light.setParam("intensity", dl.intensity);
-            light.setParam("color", convertToVec4f(dl.colour));
+            light.setParam("color", convertToVec3f(dl.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -281,7 +297,7 @@ namespace ospray {
             light.setParam("position", convertToVec3f(pl.position));
             light.setParam("radius", pl.radius);
             light.setParam("intensity", pl.intensity);
-            light.setParam("color", convertToVec4f(pl.colour));
+            light.setParam("color", convertToVec3f(pl.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -294,7 +310,7 @@ namespace ospray {
             light.setParam("penumbraAngle", sl.penumbraAngle);
             light.setParam("radius", sl.radius);
             light.setParam("intensity", sl.intensity);
-            light.setParam("color", convertToVec4f(sl.colour));
+            light.setParam("color", convertToVec3f(sl.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -305,7 +321,7 @@ namespace ospray {
             light.setParam("edge1", convertToVec3f(ql.edgeOne));
             light.setParam("edge2", convertToVec3f(ql.edgeTwo));
             light.setParam("intensity", ql.intensity);
-            light.setParam("color", convertToVec4f(ql.colour));
+            light.setParam("color", convertToVec3f(ql.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -319,7 +335,7 @@ namespace ospray {
                 _renderer->setParam("map_backplate", hdri_tex);
             }
             light.setParam("intensity", hl.intensity);
-            light.setParam("color", convertToVec4f(hl.colour));
+            light.setParam("color", convertToVec3f(hl.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -327,7 +343,8 @@ namespace ospray {
         for (auto al : ambient_lights) {
             light =::ospray::cpp::Light("ambient");
             light.setParam("intensity", al.intensity);
-            light.setParam("color", convertToVec4f(al.colour));
+            //light.setParam("color", convertToVec4f(al.colour));
+            light.setParam("color", convertToVec3f(al.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -459,11 +476,11 @@ namespace ospray {
             {
             auto& container = std::get<objMaterial>(element.materialContainer->material);
             _materials[entry_first] = ::ospray::cpp::Material(this->_rd_type_string.c_str(), "obj");
-            _materials[entry_first].setParam("Kd", convertToVec3f(container.Kd));
-            _materials[entry_first].setParam("Ks", convertToVec3f(container.Ks));
-            _materials[entry_first].setParam("Ns", container.Ns);
+            _materials[entry_first].setParam("kd", convertToVec3f(container.Kd));
+            _materials[entry_first].setParam("ks", convertToVec3f(container.Ks));
+            _materials[entry_first].setParam("ns", container.Ns);
             _materials[entry_first].setParam("d", container.d);
-            _materials[entry_first].setParam("Tf", convertToVec3f(container.Tf));
+            _materials[entry_first].setParam("tf", convertToVec3f(container.Tf));
             }
             break;
         case LUMINOUS:
@@ -573,6 +590,8 @@ namespace ospray {
                 if (element.type == structureTypeEnum::GEOMETRY) {
                     _geometricModels[entry.first].back().setParam("material", ::ospray::cpp::CopiedData(_materials[entry.first]));
                     _geometricModels[entry.first].back().commit();
+                    _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
+                    _groups[entry.first].commit();
                 }
             }
         }

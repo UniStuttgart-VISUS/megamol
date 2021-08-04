@@ -498,7 +498,7 @@ namespace probe {
 
         // get data from adios
         for (auto var : toInq) {
-            if (!cd->inquire(var))
+            if (!cd->inquireVar(var))
                 return false;
         }
 
@@ -603,7 +603,7 @@ namespace probe {
 
         // get data from adios
         for (auto var : toInq) {
-            if (!cd->inquire(var))
+            if (!cd->inquireVar(var))
                 return false;
         }
         if (cd->getDataHash() != _old_datahash)
@@ -694,7 +694,7 @@ namespace probe {
 
         // get data from adios
         for (auto var : toInq) {
-            if (!cd->inquire(var))
+            if (!cd->inquireVar(var))
                 return false;
         }
 
@@ -807,7 +807,7 @@ namespace probe {
 
         // get data from adios
         for (auto var : toInq) {
-            if (!cd->inquire(var))
+            if (!cd->inquireVar(var))
                 return false;
         }
 

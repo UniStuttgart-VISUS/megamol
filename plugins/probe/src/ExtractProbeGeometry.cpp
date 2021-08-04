@@ -77,6 +77,16 @@ std::shared_ptr<megamol::mesh::MeshDataAccessCollection> megamol::probe::Extract
                 position = arg.m_position;
                 begin = arg.m_begin;
                 end = arg.m_end;
+            } else if constexpr (std::is_same_v<T, probe::FloatDistributionProbe>) {
+                direction = arg.m_direction;
+                position = arg.m_position;
+                begin = arg.m_begin;
+                end = arg.m_end;
+            } else if constexpr (std::is_same_v<T, probe::BaseProbe>) {
+                direction = arg.m_direction;
+                position = arg.m_position;
+                begin = arg.m_begin;
+                end = arg.m_end;
             } else {
                 // unknown probe type, throw error? do nothing?
             }

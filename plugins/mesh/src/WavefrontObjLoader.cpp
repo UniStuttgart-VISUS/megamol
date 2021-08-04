@@ -82,9 +82,9 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
         bbox[0] = std::numeric_limits<float>::max();
         bbox[1] = std::numeric_limits<float>::max();
         bbox[2] = std::numeric_limits<float>::max();
-        bbox[3] = std::numeric_limits<float>::min();
-        bbox[4] = std::numeric_limits<float>::min();
-        bbox[5] = std::numeric_limits<float>::min();
+        bbox[3] = -std::numeric_limits<float>::max();
+        bbox[4] = -std::numeric_limits<float>::max();
+        bbox[5] = -std::numeric_limits<float>::max();
 
         m_indices.resize(m_obj_model->shapes.size());
         m_positions.resize(m_obj_model->shapes.size());
@@ -97,27 +97,75 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
 
         // Loop over shapes
         for (size_t s = 0; s < m_obj_model->shapes.size(); s++) {
-            // Loop over faces(polygon)
-            size_t index_offset = 0;
+            auto& mesh = m_obj_model->shapes[s].mesh;
+            auto& lines = m_obj_model->shapes[s].lines;
 
-            m_indices[s].resize(m_obj_model->shapes[s].mesh.num_face_vertices.size() * 3);
-            m_positions[s].reserve(m_obj_model->shapes[s].mesh.num_face_vertices.size() * 3 * 3);
-            if (has_normals) {
-                this->m_normals[s].reserve(m_obj_model->shapes[s].mesh.num_face_vertices.size() * 3 * 3);
-            }
-            if (has_texcoords) {
-                this->m_texcoords[s].reserve(m_obj_model->shapes[s].mesh.num_face_vertices.size() * 3 * 2);
-            }
+            uint64_t vertex_cnt = 0;
+            if (!mesh.indices.empty()) { 
+                // Loop over faces(polygon)
+                size_t index_offset = 0;
 
-            for (size_t f = 0; f < m_obj_model->shapes[s].mesh.num_face_vertices.size(); f++) {
-                int fv = m_obj_model->shapes[s].mesh.num_face_vertices[f];
+                m_indices[s].resize(mesh.num_face_vertices.size() * 3);
+                m_positions[s].reserve(mesh.num_face_vertices.size() * 3 * 3);
+                if (has_normals) {
+                    this->m_normals[s].reserve(mesh.num_face_vertices.size() * 3 * 3);
+                }
+                if (has_texcoords) {
+                    this->m_texcoords[s].reserve(mesh.num_face_vertices.size() * 3 * 2);
+                }
 
-                assert(fv == 3); // assume that triangulation was forced
+                for (size_t f = 0; f < mesh.num_face_vertices.size(); f++) {
+                    int fv = mesh.num_face_vertices[f];
 
-                // Loop over vertices in the face.
-                for (size_t v = 0; v < fv; v++) {
+                    assert(fv == 3); // assume that triangulation was forced
+
+                    // Loop over vertices in the face.
+                    for (size_t v = 0; v < fv; v++) {
+                        // access to vertex
+                        tinyobj::index_t idx = mesh.indices[index_offset + v];
+                        tinyobj::real_t vx = m_obj_model->attrib.vertices[3 * idx.vertex_index + 0];
+                        tinyobj::real_t vy = m_obj_model->attrib.vertices[3 * idx.vertex_index + 1];
+                        tinyobj::real_t vz = m_obj_model->attrib.vertices[3 * idx.vertex_index + 2];
+
+                        bbox[0] = std::min(bbox[0], static_cast<float>(vx));
+                        bbox[1] = std::min(bbox[1], static_cast<float>(vy));
+                        bbox[2] = std::min(bbox[2], static_cast<float>(vz));
+                        bbox[3] = std::max(bbox[3], static_cast<float>(vx));
+                        bbox[4] = std::max(bbox[4], static_cast<float>(vy));
+                        bbox[5] = std::max(bbox[5], static_cast<float>(vz));
+
+                        m_indices[s][index_offset + v] = index_offset + v;
+
+                        auto current_position_ptr = &(m_obj_model->attrib.vertices[3 * idx.vertex_index]);
+                        m_positions[s].insert(m_positions[s].end(), current_position_ptr, current_position_ptr + 3);
+
+                        if (has_normals && idx.normal_index >= 0) {
+                            auto current_normal_ptr = &(m_obj_model->attrib.normals[3 * idx.normal_index]);
+                            m_normals[s].insert(m_normals[s].end(), current_normal_ptr, current_normal_ptr + 3);
+                        }
+
+                        if (has_texcoords && idx.texcoord_index >= 0) {
+                            auto current_texcoords_ptr = &(m_obj_model->attrib.texcoords[2 * idx.texcoord_index]);
+                            m_texcoords[s].insert(m_texcoords[s].end(), current_texcoords_ptr, current_texcoords_ptr + 2);
+                        }
+                    }
+                    index_offset += fv;
+                    // per-face material
+                    // m_obj_model->shapes[s].mesh.material_ids[f];
+                }
+
+                vertex_cnt = mesh.num_face_vertices.size() * 3;
+
+            } else {
+                // Loop over line
+                size_t index_offset = 0;
+
+                m_indices[s].resize(lines.num_line_vertices.size() * 2);
+                m_positions[s].reserve(lines.num_line_vertices.size() * 3);
+
+                for (size_t f = 0; f < lines.num_line_vertices.size(); f++) {
                     // access to vertex
-                    tinyobj::index_t idx = m_obj_model->shapes[s].mesh.indices[index_offset + v];
+                    tinyobj::index_t idx = lines.indices[index_offset];
                     tinyobj::real_t vx = m_obj_model->attrib.vertices[3 * idx.vertex_index + 0];
                     tinyobj::real_t vy = m_obj_model->attrib.vertices[3 * idx.vertex_index + 1];
                     tinyobj::real_t vz = m_obj_model->attrib.vertices[3 * idx.vertex_index + 2];
@@ -129,29 +177,23 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
                     bbox[4] = std::max(bbox[4], static_cast<float>(vy));
                     bbox[5] = std::max(bbox[5], static_cast<float>(vz));
 
-                    m_indices[s][index_offset + v] = index_offset + v;
-
                     auto current_position_ptr = &(m_obj_model->attrib.vertices[3 * idx.vertex_index]);
                     m_positions[s].insert(m_positions[s].end(), current_position_ptr, current_position_ptr + 3);
 
-                    if (has_normals) {
-                        auto current_normal_ptr = &(m_obj_model->attrib.normals[3 * idx.normal_index]);
-                        m_normals[s].insert(m_normals[s].end(), current_normal_ptr, current_normal_ptr + 3);
+                    // Loop over line segments
+                    int fv = lines.num_line_vertices[f];
+                    for (size_t v = 0; v < fv; v++) {
+                        m_indices[s][index_offset + v] = lines.indices[index_offset + v].vertex_index;
                     }
-
-                    if (has_texcoords) {
-                        auto current_texcoords_ptr = &(m_obj_model->attrib.texcoords[2 * idx.texcoord_index]);
-                        m_texcoords[s].insert(m_texcoords[s].end(), current_texcoords_ptr, current_texcoords_ptr + 2);
-                    }
+                    index_offset += fv;
+                    // per-face material
+                    // m_obj_model->shapes[s].mesh.material_ids[f];
                 }
-                index_offset += fv;
-                // per-face material
-                // m_obj_model->shapes[s].mesh.material_ids[f];
+
+                vertex_cnt = lines.num_line_vertices.size();
             }
 
             const auto pos_ptr = m_positions[s].data();
-            const auto vertex_cnt = m_obj_model->shapes[s].mesh.num_face_vertices.size() * 3;
-
             std::vector<MeshDataAccessCollection::VertexAttribute> mesh_attributes;
 
             mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(pos_ptr),
@@ -183,7 +225,12 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
 
             // TODO add file name?
             std::string identifier = m_obj_model->shapes[s].name;
-            m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
+            if (!mesh.indices.empty()) {
+                m_mesh_access_collection.first->addMesh(
+                    identifier, mesh_attributes, mesh_indices, MeshDataAccessCollection::PrimitiveType::LINES);
+            } else {
+                m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
+            }
             m_mesh_access_collection.second.push_back(identifier);
         }
 

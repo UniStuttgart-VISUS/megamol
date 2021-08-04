@@ -7,87 +7,111 @@
 
 #ifndef MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
 #define MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
+#pragma once
 
 
-#include "GUIUtils.h"
 #include "HoverToolTip.h"
 #include "StringSearchWidget.h"
+#include "mmcore/param/FilePathParam.h"
 
-#include "mmcore/utility/FileUtils.h"
+
+using namespace megamol::core::param;
 
 
 namespace megamol {
 namespace gui {
 
 
-    /**
-     * String search widget.
+    /** ************************************************************************
+     * File browser widget
      */
     class FileBrowserWidget {
     public:
         FileBrowserWidget();
-
         ~FileBrowserWidget() = default;
 
-        enum FileBrowserFlag { SAVE, LOAD, SELECT };
-
         /**
-         * Draw file browser pop-up.
+         * Show file browser pop-up.
          *
-         * @param inout_filename      The file name of the file.
-         * @param flag                Flag inidicating intention of file browser dialog.
-         * @param label               File browser label.
-         * @param open_popup          Flag once(!) indicates opening of pop-up.
-         * @param extension           The file name extension.
+         * @param label                 The pop-up label.
+         * @param inout_filename        The user selected file name. Provide file name to use as initial value.
+         * @param inout_open_popup      Indicates whether to open the pop-up or not.
+         * @param extensions            The required file extensions. Leave emtpy to allow all file extensions.
+         * @param flags                 The flags defining the required file path.
+         * @param inout_save_gui_state  The flag indicating whether to save the gui state or not.
          *
          * @return True on success, false otherwise.
          */
-        bool PopUp(std::string& inout_filename, FileBrowserFlag flag, const std::string& label, bool open_popup,
-            const std::string& extension, vislib::math::Ternary& inout_save_gui_state);
-
-        bool PopUp(std::string& inout_filename, FileBrowserFlag flag, const std::string& label, bool open_popup,
-            const std::string& extension) {
-            vislib::math::Ternary tmp_save_gui_state(vislib::math::Ternary::TRI_UNKNOWN);
-            return this->PopUp(inout_filename, flag, label, open_popup, extension, tmp_save_gui_state);
+        bool PopUp_Save(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
+            const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
+            vislib::math::Ternary& inout_save_gui_state) {
+            return this->popup(
+                DIALOGMODE_SAVE, label, inout_filename, inout_open_popup, extensions, flags, inout_save_gui_state);
+        }
+        bool PopUp_Load(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
+            const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
+            auto tmp = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
+            return this->popup(DIALOGMODE_LOAD, label, inout_filename, inout_open_popup, extensions, flags, tmp);
+        }
+        bool PopUp_Select(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
+            const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
+            auto tmp = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
+            return this->popup(DIALOGMODE_SELECT, label, inout_filename, inout_open_popup, extensions, flags, tmp);
         }
 
         /**
          * ImGui file browser button opening this file browser pop-up.
          *
-         * @param inout_filename    The file name of the file.
+         * @param extensions       The filtered file extensions. Leave emtpy to allow all file extensions.
+         * @param inout_filename   The user selected file name.
+         * @param force_absolute   The flag that indicates to whether to return the absolute file path or to enable
+         * relative path selection.
+         * @param project_path     The path to the current project file that is used for determine relative path.
          *
          * @return True on success, false otherwise.
          */
-        bool Button(std::string& inout_filename, FileBrowserFlag flag, const std::string& extension);
+        bool Button_Select(
+            std::string& inout_filename, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags);
 
     private:
-        typedef std::pair<stdfs::path, bool> ChildData_t;
+        typedef std::pair<std::filesystem::path, bool> ChildData_t;
+
+        enum DialogMode { DIALOGMODE_SAVE, DIALOGMODE_LOAD, DIALOGMODE_SELECT };
 
         // VARIABLES --------------------------------------------------------------
 
-        StringSearchWidget search_widget;
-        std::string file_name_str;
-        std::string file_path_str;
+        std::string current_directory_str;
+        std::string current_file_str;
+
         bool path_changed;
         bool valid_directory;
         bool valid_file;
-        bool valid_ending;
-        std::string file_error;
-        std::string file_warning;
-        // Keeps child path and flag whether child is director or not
-        std::vector<ChildData_t> child_paths;
-        vislib::math::Ternary save_gui_state;
+        std::string append_ending_str;
 
+        std::string file_errors;
+        std::string file_warnings;
+
+        // Keeps child paths and flag whether child is directors or not
+        std::vector<ChildData_t> child_directories;
+        vislib::math::Ternary save_gui_state;
+        std::map<std::string, std::string> label_uid_map;
+
+        StringSearchWidget search_widget;
         HoverToolTip tooltip;
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool validate_split_path(const std::string& in_path_file, std::string& out_path, std::string& out_file);
-        void validate_directory(const std::string& path_str);
-        void validate_file(const std::string& file_str, const std::string& extension, FileBrowserFlag flag);
-        std::string get_absolute_path(const std::string& in_path_str) const;
+        bool popup(DialogMode mode, const std::string& label, std::string& inout_filename, bool& inout_open_popup,
+            const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
+            vislib::math::Ternary& inout_save_gui_state);
 
-        void string_to_lower_case(std::string& str);
+        bool validate_split_path(const std::string& in_path, std::string& out_dir, std::string& out_file) const;
+        void validate_directory(FilePathParam::Flags_t flags, const std::string& directory_str);
+        void validate_file(DialogMode mode, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
+            const std::string& file_str);
+
+        std::string get_parent_path(const std::string& dir) const;
+        std::string get_absolute_path(const std::string& dir) const;
     };
 
 

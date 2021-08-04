@@ -2080,7 +2080,7 @@ void PDBLoader::resetAllData() {
     this->chainType.Clear();
 
 	// friessfn
-	// kroneml: "es w‰re gut, wenn die Standard-Aminos‰uren immer reingeschrieben werden (irgendwo im PDBLoader gibt es eine Liste, welche es gibt...)"
+	// kroneml: "es w√§re gut, wenn die Standard-Aminos√§uren immer reingeschrieben werden (irgendwo im PDBLoader gibt es eine Liste, welche es gibt...)"
 	residueTypeName.Add("ALA");
 	residueTypeName.Add("ARG");
 	residueTypeName.Add("ASN");

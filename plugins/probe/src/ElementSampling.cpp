@@ -115,7 +115,8 @@ bool ElementSampling::getData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var)) return false;
+        if (!cd->inquireVar(var))
+            return false;
     }
 
     if (cd->getDataHash() != _old_datahash || _trigger_recalc) {
@@ -230,7 +231,7 @@ bool ElementSampling::readElements() {
 
     // get data from adios
     for (auto var : vars) {
-        if (!celements->inquire(var)) {
+        if (!celements->inquireVar(var)) {
             core::utility::log::Log::DefaultLog.WriteError(
                 (std::string("[ReconstructSurface] Could not inquire ") + var).c_str());
             return false;

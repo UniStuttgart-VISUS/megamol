@@ -20,6 +20,7 @@
 #include "TableToADIOS.h"
 #include "ADIOSFlexConvert.h"
 #include "ADIOStoTable.h"
+#include "ls1ParticleFormat.h"
 
 #include "SignalPeaks.h"
 #include "Clustering.h"
@@ -59,6 +60,7 @@ namespace megamol::adios {
             this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoTable>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::SignalPeaks>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::Clustering>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::ls1ParticleFormat>();
 
             // register calls here:
 

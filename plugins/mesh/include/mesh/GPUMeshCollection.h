@@ -15,6 +15,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/Mesh.hpp"
@@ -164,7 +165,7 @@ namespace mesh {
             batched_mesh->mesh = std::make_shared<glowl::Mesh>(alloc_data, alloc_vb_byte_sizes, nullptr,
                 new_allocation_index_cnt * glowl::computeByteSize(index_type), vertex_descriptor, index_type, usage,
                 primitive_type);
-            
+
         } else {
             batched_mesh = (*query);
         }
@@ -276,6 +277,14 @@ namespace mesh {
 
         if (query != m_sub_mesh_data.end()) {
             m_sub_mesh_data.erase(query);
+        }
+
+        // (Memory) Optimization: check for batch meshes without reference by any submesh,
+        // i.e., shared_ptr ref cnt == 1, and delete it from vector
+        for (size_t i = 0; i < m_batched_meshes.size(); ++i) {
+            if (m_batched_meshes[i].use_count() < 2) {
+                m_batched_meshes.erase(m_batched_meshes.begin() + i);
+            }
         }
     }
 
