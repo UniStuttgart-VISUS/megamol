@@ -1027,9 +1027,6 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 
 
 bool SphereRenderer::Render(view::CallRender3DGL& call) {
-    auto const lhsFBO = call.GetFramebufferObject();
-    lhsFBO->Enable();
-
     // timer.BeginFrame();
 
     auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
@@ -1204,8 +1201,6 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // timer.EndFrame();
-
-    lhsFBO->Disable();
 
     return retval;
 }

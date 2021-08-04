@@ -411,7 +411,9 @@ bool GUIManager::PostDraw() {
     // Render the current ImGui frame ------------------------------------------
     glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
     ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    draw_data = ImGui::GetDrawData();
+    DrawUiToScreen();
+    //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Reset all hotkeys ------------------------------------------------------
     for (auto& hotkey : this->hotkeys) {
@@ -930,6 +932,17 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
         sync_success &= param_sync_success;
     }
     return sync_success;
+}
+
+
+void megamol::gui::GUIManager::DrawUiToScreen() {
+    if (!draw_data)
+        return;
+
+    // draw_data is filled in PostDraw() and should have a valid value here
+    ImGuiIO& io = ImGui::GetIO();
+    glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
+    ImGui_ImplOpenGL3_RenderDrawData(draw_data);
 }
 
 

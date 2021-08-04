@@ -352,12 +352,12 @@ void GUI_Service::resource_provide_gui_render() {
 
 
 void GUI_Service::resource_register_window(
-    const std::string& name, std::function<void(megamol::gui::WindowConfiguration::Basic&)>& func) {
+    const std::string& name, std::function<void(megamol::gui::AbstractWindow::BasicConfig&)>& func) {
     VALIDATE_GUI_PTR()
     gui->RegisterWindow(name,func);
 }
 
-void GUI_Service::resource_register_popup(const std::string& name, bool& open, std::function<void(void)>& func) {
+void GUI_Service::resource_register_popup(const std::string& name, std::weak_ptr<bool> open, std::function<void(void)>& func) {
 
     VALIDATE_GUI_PTR()
     gui->RegisterPopUp(name, open, func);

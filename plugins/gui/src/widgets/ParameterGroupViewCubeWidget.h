@@ -13,7 +13,7 @@
 #include "AbstractParameterGroupWidget.h"
 #include "ImageWidget_gl.h"
 #include "mmcore/view/CameraControllers.h"
-#include "mmcore/view/RenderUtils.h"
+#include "mmcore/utility/RenderUtils.h"
 
 
 namespace megamol {
