@@ -34,10 +34,11 @@ BindingSiteDataSource::BindingSiteDataSource( void ) : megamol::core::Module(),
     this->MakeSlotAvailable( &this->dataOutSlot);
     
     // fill color table with default values and set the filename param
-    vislib::StringA filename( "colors.txt");
-    this->colorTableFileParam.SetParameter(new param::FilePathParam( A2T( filename)));
+    this->colorTableFileParam.SetParameter(new param::FilePathParam("colors.txt"));
     this->MakeSlotAvailable( &this->colorTableFileParam);
-    Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorLookupTable);
+    Color::ReadColorTableFromFile(
+        this->colorTableFileParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
+        this->colorLookupTable);
 
     this->enzymeModeParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->enzymeModeParam);
@@ -78,7 +79,9 @@ bool BindingSiteDataSource::getData( Call& call) {
 
     // read and update the color table, if necessary
     if( this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorLookupTable);
+        Color::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
+            this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
         this->enzymeModeParam.ResetDirty();
         this->gxTypeFlag.ResetDirty();
@@ -87,7 +90,7 @@ bool BindingSiteDataSource::getData( Call& call) {
     // try to load file, if necessary
     if ( this->pdbFilenameSlot.IsDirty()) {
         this->pdbFilenameSlot.ResetDirty();
-        this->loadPDBFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
+        this->loadPDBFile(this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     }
 
     // pass data to call, if available

@@ -60,7 +60,7 @@ SIFFDataSource::~SIFFDataSource(void) {
  * SIFFDataSource::create
  */
 bool SIFFDataSource::create(void) {
-    if (!this->filenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
+    if (!this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
         this->filenameChanged(this->filenameSlot);
     }
     return true;
@@ -93,11 +93,10 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
     using megamol::core::utility::log::Log;
     vislib::sys::FastFile file;
 
-    if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value(),
+    if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str(),
             File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to open file \"%s\"", vislib::StringA(
-            this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open file \"%s\"",
+            this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return true; // reset dirty flag!
     }
 
