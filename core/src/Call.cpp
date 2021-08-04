@@ -82,7 +82,7 @@ bool Call::operator()(unsigned int func) {
         }
 #endif
 #ifdef PROFILING
-        const std::clock_t c_start = std::clock();
+        const auto startTime = std::chrono::high_resolution_clock::now();
         bool gl_started = false;
         if (uses_gl) {
             gl_started = qm->Start(this, this->callee->GetCoreInstance()->GetFrameID(), func);
@@ -93,8 +93,9 @@ bool Call::operator()(unsigned int func) {
         if (gl_started) {
             qm->Stop(this->callee->GetCoreInstance()->GetFrameID());
         }
-        const std::clock_t c_end = std::clock();
-        last_cpu_time[func] = 1000.0 * (static_cast<double>(c_end-c_start) / CLOCKS_PER_SEC);
+        const auto endTime = std::chrono::high_resolution_clock::now();
+        const std::chrono::duration<double, std::milli> diffMillis = endTime - startTime;
+        last_cpu_time[func] = diffMillis.count();
         const auto total = (avg_cpu_time[func] * num_cpu_time_samples[func] + last_cpu_time[func]);
         num_cpu_time_samples[func]++;
         avg_cpu_time[func] = total / static_cast<double>(num_cpu_time_samples[func]);
