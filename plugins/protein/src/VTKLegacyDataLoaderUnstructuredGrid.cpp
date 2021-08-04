@@ -71,9 +71,8 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid()
         core::moldyn::MultiParticleDataCall::FunctionName(1), &VTKLegacyDataLoaderUnstructuredGrid::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
-    this->filenameSlot.SetParameter(new core::param::FilePathParam("/Path/to/file"));
+    this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
     this->MakeSlotAvailable(&this->filenameSlot);
-    this->filenameSlot.Param<core::param::FilePathParam>()->SetValue("");
 
     this->maxFramesSlot.SetParameter(new core::param::IntParam(11, 1));
     this->MakeSlotAvailable(&this->maxFramesSlot);
@@ -279,7 +278,8 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
     // Check parameters
     if (this->filenameSlot.IsDirty()) { // Files have to be loaded first
         this->filenameSlot.ResetDirty();
-        if (!this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value())) {
+        if (!this->loadFile(
+                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str())) {
             printf("Loading file failed");
             return false;
         }
@@ -644,7 +644,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::loadFrame(core::view::AnimDataModule::
     // Generate filename based on frame idx and pattern
     vislib::StringA frameFile;
     if (this->filenamesDigits == 0) {
-        frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
+        frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
     } else {
         std::stringstream ss;
         ss.width(this->filenamesDigits);

@@ -43,7 +43,7 @@ void AbstractSimpleStoringParticleDataSource::assertData(bool needLoad) {
     }
     if (needLoad) {
         try {
-            if (!this->loadData(this->filenameSlot.Param<param::FilePathParam>()->Value())) {
+            if (!this->loadData(this->filenameSlot.Param<param::FilePathParam>()->Value().string().c_str())) {
                 throw vislib::Exception("Failed to load data from file", __FILE__, __LINE__);
             }
             this->datahash++;

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <functional>
 #include <string>
 
@@ -14,7 +15,7 @@ namespace megamol {
 namespace frontend_resources {
 
 struct ProjectLoader {
-    std::function<bool(std::string const& /*filename*/)> load_filename; // returns false if loading failed
+    std::function<bool(std::filesystem::path const& /*filename*/)> load_filename; // returns false if loading failed
 };
 
 } /* end namespace frontend_resources */

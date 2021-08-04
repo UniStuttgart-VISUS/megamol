@@ -39,7 +39,7 @@ public:
     void preGraphRender() override;
     void postGraphRender() override;
 
-    bool load_file(std::string const& filename) const;
+    bool load_file(std::filesystem::path const& filename) const;
 
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
