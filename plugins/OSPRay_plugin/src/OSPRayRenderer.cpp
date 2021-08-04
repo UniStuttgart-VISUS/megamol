@@ -166,6 +166,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         // triggered = true;
         // Breakpoint for Screenshooter debugging
         // if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
+        if (_cam.resolution_gate().width() * _cam.resolution_gate().height() <= 0) return false;
         _imgSize[0] = _cam.resolution_gate().width();
         _imgSize[1] = _cam.resolution_gate().height();
         _framebuffer = std::make_shared<::ospray::cpp::FrameBuffer>(_imgSize[0], _imgSize[1], OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
