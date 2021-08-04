@@ -5,6 +5,8 @@ layout(std430, binding = 1) readonly buffer PerFrameDataBuffer { PerFrameData[] 
 
 layout(location = 0) flat in int draw_id;
 layout(location = 1) in vec2 uv_coords;
+layout(location = 2) in vec3 pixel_vector;
+layout(location = 3) in vec3 cam_vector;
 
 layout(location = 0) out vec4 albedo_out;
 layout(location = 1) out vec3 normal_out;
@@ -23,6 +25,10 @@ vec3 fakeViridis(float lerp)
 
 void main() {
 
+    if(dot(cam_vector,mesh_shader_params[draw_id].probe_direction.xyz) < 0.0 ){
+        discard;
+    }
+
     vec4 glyph_border_color = vec4(0.0,0.0,0.0,1.0);
 
     if(mesh_shader_params[draw_id].state == 1) {
@@ -33,17 +39,17 @@ void main() {
     }
 
     // Highlight glyph up and glyph right directions
-    if( (uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) ||
-        (uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9) ||
-        (uv_coords.x < 0.01 && uv_coords.x < uv_coords.y && uv_coords.y < 0.05) ||
-        (uv_coords.y < 0.01 && uv_coords.x > uv_coords.y && uv_coords.x < 0.05) )
-    {
-        albedo_out = glyph_border_color;
-        normal_out = vec3(0.0,0.0,1.0);
-        depth_out = gl_FragCoord.z;
-        objID_out = mesh_shader_params[draw_id].probe_id;
-        return;
-    }
+    //  if( (uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) ||
+    //      (uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9) ||
+    //      (uv_coords.x < 0.01 && uv_coords.x < uv_coords.y && uv_coords.y < 0.05) ||
+    //      (uv_coords.y < 0.01 && uv_coords.x > uv_coords.y && uv_coords.x < 0.05) )
+    //  {
+    //      albedo_out = glyph_border_color;
+    //      normal_out = vec3(0.0,0.0,1.0);
+    //      depth_out = gl_FragCoord.z;
+    //      objID_out = mesh_shader_params[draw_id].probe_id;
+    //      return;
+    //  }
 
     float pixel_diag_width = 1.5 * max(dFdx(uv_coords.x),dFdy(uv_coords.y));
 
@@ -75,8 +81,8 @@ void main() {
 
     vec3 out_colour = vec3(0.0,0.0,0.0);
 
-    float min_value = mesh_shader_params[draw_id].min_value;
-    float max_value = mesh_shader_params[draw_id].max_value;
+    float min_value = per_frame_data[0].tf_min;
+    float max_value = per_frame_data[0].tf_max;
     float value_range = max_value - min_value;
 
     float zero_value_radius = -min_value / value_range;
@@ -96,7 +102,7 @@ void main() {
 
         if( isnan(sample_0) || isnan(sample_1)) discard;
 
-        sampler2D tf_tx = sampler2D(mesh_shader_params[draw_id].tf_texture_handle);
+        sampler2D tf_tx = sampler2D(per_frame_data[0].tf_texture_handle);
 
         bool interpolate = bool(per_frame_data[0].use_interpolation);
         
@@ -123,10 +129,24 @@ void main() {
         out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
         if( sample_value_normalized >= zero_value_radius && radius < (1.0 - border_circle_width)){
-            if( radius < (zero_value_radius) || radius > sample_value_normalized ) discard;
+            if( radius < (zero_value_radius) || radius > sample_value_normalized ){
+                if(per_frame_data[0].show_canvas){
+                    out_colour = per_frame_data[0].canvas_color.rgb;
+                }
+                else{
+                    discard;
+                }
+            }
         }
         else if(sample_value_normalized < zero_value_radius && radius < (1.0 - border_circle_width)){
-            if( radius > (zero_value_radius) || radius < sample_value_normalized ) discard;
+            if( radius > (zero_value_radius) || radius < sample_value_normalized ){
+                if(per_frame_data[0].show_canvas){
+                    out_colour = per_frame_data[0].canvas_color.rgb;
+                }
+                else{
+                    discard;
+                }
+            }
         }
 
     }

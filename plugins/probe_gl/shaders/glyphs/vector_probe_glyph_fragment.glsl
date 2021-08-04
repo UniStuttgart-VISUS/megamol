@@ -48,17 +48,17 @@ void main() {
     }
 
     // Highlight glyph up and glyph right directions
-    if( (uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) ||
-        (uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9) ||
-        (uv_coords.x < 0.01 && uv_coords.x < uv_coords.y && uv_coords.y < 0.05) ||
-        (uv_coords.y < 0.01 && uv_coords.x > uv_coords.y && uv_coords.x < 0.05) )
-    {
-        albedo_out = glyph_border_color;
-        normal_out = vec3(0.0,0.0,1.0);
-        depth_out = gl_FragCoord.z;
-        objID_out = mesh_shader_params[draw_id].probe_id;
-        return;
-    }
+    //  if( (uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) ||
+    //      (uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9) ||
+    //      (uv_coords.x < 0.01 && uv_coords.x < uv_coords.y && uv_coords.y < 0.05) ||
+    //      (uv_coords.y < 0.01 && uv_coords.x > uv_coords.y && uv_coords.x < 0.05) )
+    //  {
+    //      albedo_out = glyph_border_color;
+    //      normal_out = vec3(0.0,0.0,1.0);
+    //      depth_out = gl_FragCoord.z;
+    //      objID_out = mesh_shader_params[draw_id].probe_id;
+    //      return;
+    //  }
     
     float r = length(uv_coords - vec2(0.5)) * 2.0;
 
@@ -87,7 +87,7 @@ void main() {
     float radar_sections_cnt = mesh_shader_params[draw_id].sample_cnt;
     vec3 proj_pv = normalize(projectOntoPlane(pixel_vector,mesh_shader_params[draw_id].probe_direction.xyz));
     
-    vec3 out_colour = vec3(0.0,0.0,0.0);
+    vec3 out_colour = per_frame_data[0].canvas_color.rgb;
     bool interpolate = bool(per_frame_data[0].use_interpolation);
 
     vec3 sample_vector = vec3(0.0);
@@ -122,30 +122,38 @@ void main() {
         sample_magnitude = mesh_shader_params[draw_id].samples[radar_section].w;
     }
 
-    if( isnan(sample_magnitude) ) discard;
+    bool sample_is_valid = ( !isnan(sample_magnitude) && (sample_magnitude > 0.005 || sample_magnitude < -0.005));
+        //discard invalid samples
+        //if( isnan(sample_magnitude) ) discard;
+        //if(sample_magnitude < 0.005 && sample_magnitude > -0.005) discard;
 
-    //discard invalid samples
-    if(sample_magnitude < 0.005 && sample_magnitude > -0.005) discard;
+    if(sample_is_valid){
+        vec3 proj_sv =  normalize(projectOntoPlane(sample_vector,mesh_shader_params[draw_id].probe_direction.xyz));
 
-    vec3 proj_sv =  normalize(projectOntoPlane(sample_vector,mesh_shader_params[draw_id].probe_direction.xyz));
+        float proj_sample_dot_pixel = dot(proj_sv,proj_pv);
+        float sample_dot_probe = dot(sample_vector,mesh_shader_params[draw_id].probe_direction.xyz);
 
-    float proj_sample_dot_pixel = dot(proj_sv,proj_pv);
-    float sample_dot_probe = dot(sample_vector,mesh_shader_params[draw_id].probe_direction.xyz);
+        float circumference = 2.0 * PI * r;
+        float inner_angle = acos(proj_sample_dot_pixel);
 
-    float circumference = 2.0 * PI * r;
-    float inner_angle = acos(proj_sample_dot_pixel);
+        float arc_length = (inner_angle / (2.0*PI)) * 2.0 * circumference;
+        float tgt_arc_length = ( 1.0 - (acos(abs(sample_dot_probe)) / (0.5*PI)) ) * circumference;
 
-    float arc_length = (inner_angle / (2.0*PI)) * 2.0 * circumference;
-    float tgt_arc_length = ( 1.0 - (acos(abs(sample_dot_probe)) / (0.5*PI)) ) * circumference;
-
-    float eps = -max(0.05,pixel_diag_width);
-    if( (arc_length + eps) > tgt_arc_length ) discard;
-
-    sampler2D tf_tx = sampler2D(mesh_shader_params[draw_id].tf_texture_handle);
-    float tf_min = mesh_shader_params[draw_id].tf_min;
-    float tf_max = mesh_shader_params[draw_id].tf_max;
-    out_colour = texture(tf_tx, vec2((sample_magnitude - tf_min) / (tf_max-tf_min), 0.5) ).rgb;
-    //out_colour = fakeViridis( (sample_magnitude + 2.0) / 16.0);
+        float eps = -max(0.05,pixel_diag_width);
+        if( (arc_length + eps) < tgt_arc_length ){
+            sampler2D tf_tx = sampler2D(per_frame_data[0].tf_texture_handle);
+            float tf_min = per_frame_data[0].tf_min;
+            float tf_max = per_frame_data[0].tf_max;
+            out_colour = texture(tf_tx, vec2((sample_magnitude - tf_min) / (tf_max-tf_min), 0.5) ).rgb;
+            //out_colour = fakeViridis( (sample_magnitude + 2.0) / 16.0);
+        }
+        else{
+            if(per_frame_data[0].show_canvas == 0) discard;
+        }
+    }
+    else{
+        if(per_frame_data[0].show_canvas == 0) discard;
+    }
 
     albedo_out = vec4(out_colour,1.0);
     normal_out = vec3(0.0,0.0,1.0);
