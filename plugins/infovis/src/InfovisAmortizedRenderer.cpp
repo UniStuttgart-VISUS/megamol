@@ -26,8 +26,6 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
     this->nextRendererSlot.SetCompatibleCall<megamol::core::view::CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->nextRendererSlot);
 
-    setupBuffers();
-
     this->halveRes << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&halveRes);
 
@@ -159,7 +157,7 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glEnable(GL_MULTISAMPLE);
     
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
-    glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 2, GL_RGB, 1, 1, 2, GL_TRUE);
+    glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGB, 1, 1, 2, GL_TRUE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -199,7 +197,11 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-    
+
+    auto err = glGetError();
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("GL_ERROR in InfovisAmortizedRenderer: "+err);
+    }
 }
 
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam) {
