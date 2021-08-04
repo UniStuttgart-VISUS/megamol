@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
-#define MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
+#ifndef MEGAMOL_CINEMATIC_OVERLAYRENDERER_H_INCLUDED
+#define MEGAMOL_CINEMATIC_OVERLAYRENDERER_H_INCLUDED
 #pragma once
 
 
@@ -38,7 +38,7 @@
 
 
 namespace megamol {
-namespace gui {
+namespace cinematic {
 
 
     /** ************************************************************************
@@ -217,7 +217,7 @@ namespace gui {
     };
 
 
-} /* end namespace gui */
+} /* end namespace cinematic */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED */
+#endif /* MEGAMOL_CINEMATIC_OVERLAYRENDERER_H_INCLUDED */

@@ -114,12 +114,15 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
     , outlineWidthSlot("outline::width", "Width of the outline in pixels") {
 
     this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
+    this->getDataSlot.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
+    this->getTFSlot.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->getLightsSlot.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getLightsSlot);
 
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
@@ -1024,6 +1027,8 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 
 
 bool SphereRenderer::Render(view::CallRender3DGL& call) {
+    auto const lhsFBO = call.GetFramebufferObject();
+    lhsFBO->Enable();
 
     // timer.BeginFrame();
 
@@ -1202,6 +1207,8 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // timer.EndFrame();
+
+    lhsFBO->Disable();
 
     return retval;
 }

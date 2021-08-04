@@ -11,7 +11,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::gui;
+using namespace megamol::cinematic;
 
 
 OverlayRenderer::OverlayRenderer()
@@ -87,7 +87,7 @@ OverlayRenderer::OverlayRenderer()
     this->MakeSlotAvailable(&this->paramCustomPosition);
 
     // Texture Mode
-    this->paramFileName << new param::FilePathParam("");
+    this->paramFileName << new param::FilePathParam("", param::FilePathParam::Flag_File, { "png" });
     this->paramFileName.SetUpdateCallback(this, &OverlayRenderer::onTextureFileName);
     this->MakeSlotAvailable(&this->paramFileName);
 
@@ -451,6 +451,9 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     // Create 2D orthographic mvp matrix
     glm::mat4 ortho = glm::ortho(0.0f, this->m_viewport.x, 0.0f, this->m_viewport.y, -1.0f, 1.0f);
 
+    auto const lhsFBO = call.GetFramebufferObject();
+    lhsFBO->Enable();
+
     // Draw mode dependent stuff
     auto mode = this->paramMode.Param<param::EnumParam>()->Value();
     switch (mode) {
@@ -584,6 +587,8 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
             ortho, (*this->m_font_ptr), text, color, font_size, anchor, this->m_current_rectangle);
     } break;
     }
+
+    lhsFBO->Disable();
 
     return true;
 }

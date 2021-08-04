@@ -298,10 +298,10 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
 
 bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
-    ImGuiID& inout_graph_uid, megamol::core::MegaMolGraph& megamol_graph) {
+    ImGuiID in_graph_uid, megamol::core::MegaMolGraph& megamol_graph) {
 
     bool created_new_graph = false;
-    ImGuiID valid_graph_id = inout_graph_uid;
+    ImGuiID valid_graph_id = in_graph_uid;
 
     if (valid_graph_id == GUI_INVALID_ID) {
         // Create new graph
@@ -322,7 +322,6 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
     }
 
     if (this->add_update_project_from_core(valid_graph_id, megamol_graph, false)) {
-        inout_graph_uid = valid_graph_id;
         if (created_new_graph) {
             graph_ptr->SetLayoutGraph();
             graph_ptr->ResetDirty();
@@ -658,11 +657,10 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
 
 bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename) {
 
-    std::string projectstr;
-    if (!megamol::core::utility::FileUtils::ReadFile(project_filename, projectstr)) {
+    std::string loaded_project;
+    if (!megamol::core::utility::FileUtils::ReadFile(project_filename, loaded_project)) {
         return false;
     }
-    gui_utils::Utf8Decode(projectstr);
 
     const std::string luacmd_view("mmCreateView");
     const std::string luacmd_module("mmCreateModule");
@@ -691,7 +689,7 @@ bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid,
     }
 
     try {
-        std::stringstream content(projectstr);
+        std::stringstream content(loaded_project);
         std::vector<std::string> lines;
 
         // Prepare and read lines
@@ -1054,8 +1052,7 @@ bool megamol::gui::GraphCollection::LoadAddProjectFromFile(ImGuiID in_graph_uid,
         graph_ptr->ResetDirty();
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[GUI] Successfully loaded project '%s' from file '%s'.\n", graph_ptr->Name().c_str(),
-            project_filename.c_str());
+            "[GUI] Successfully loaded project '%s'.\n", graph_ptr->Name().c_str());
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1111,12 +1108,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         // - Ignore button parameters
                         if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
                             (parameter.Type() != ParamType_t::BUTTON)) {
-                            // Encode to UTF-8 string
-                            vislib::StringA valueString;
-                            vislib::UTF8Encoder::Encode(
-                                valueString, vislib::StringA(parameter.GetValueString().c_str()));
                             confParams << "mmSetParamValue(\"" << parameter.FullNameProject() << "\",[=["
-                                       << std::string(valueString.PeekBuffer()) << "]=])\n";
+                                       << parameter.GetValueString() << "]=])\n";
                         }
                     }
 
@@ -1139,8 +1132,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                 graph_ptr->ResetDirty();
                 if (megamol::core::utility::FileUtils::WriteFile(project_filename, projectstr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                        "[GUI] Successfully saved project '%s' to file '%s'.\n", graph_ptr->Name().c_str(),
-                        project_filename.c_str());
+                        "[GUI] Successfully saved project '%s'.\n", graph_ptr->Name().c_str());
 
                     // Save filename for graph
                     graph_ptr->SetFilename(project_filename, true);
@@ -1497,11 +1489,12 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
     nlohmann::json state_json;
 
     // Try to load existing gui state from file
-    std::string state_str;
-    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str)) {
-        state_str = gui_utils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
-        if (!state_str.empty()) {
-            state_json = nlohmann::json::parse(state_str);
+    std::string loaded_state;
+    if (megamol::core::utility::FileUtils::ReadFile(filename, loaded_state)) {
+        loaded_state =
+            gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
+        if (!loaded_state.empty()) {
+            state_json = nlohmann::json::parse(loaded_state);
             if (!state_json.is_object()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -1530,12 +1523,12 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
                 param.StateToJSON(state_json, param.FullNameProject());
             }
         }
-        state_str = state_json.dump(); // No line feed
+        loaded_state = state_json.dump(); // No line feed
 
-        state_str =
-            std::string(GUI_START_TAG_SET_GUI_STATE) + state_str + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
+        loaded_state =
+            std::string(GUI_START_TAG_SET_GUI_STATE) + loaded_state + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
 
-        return state_str;
+        return loaded_state;
     }
     return std::string("");
 }
@@ -1543,13 +1536,14 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
 
 bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
 
-    std::string state_str;
-    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str)) {
-        state_str = gui_utils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
-        if (state_str.empty())
+    std::string loaded_state;
+    if (megamol::core::utility::FileUtils::ReadFile(filename, loaded_state)) {
+        loaded_state =
+            gui_utils::ExtractTaggedString(loaded_state, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
+        if (loaded_state.empty())
             return false;
         nlohmann::json json;
-        json = nlohmann::json::parse(state_str);
+        json = nlohmann::json::parse(loaded_state);
         if (!json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -1675,7 +1669,8 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& o
     }
     // Default for option asking for saving gui state
     auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
-    if (this->gui_file_browser.PopUp_Save("Save Project", {"lua"}, open_dialog, project_filename, save_gui_state)) {
+    if (this->gui_file_browser.PopUp_Save("Save Configurator Project", project_filename, open_dialog, {"lua"},
+            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
 
         std::string gui_state;
         if (save_gui_state.IsTrue()) {
