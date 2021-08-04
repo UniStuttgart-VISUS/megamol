@@ -74,8 +74,8 @@ protected:
             auto const shdr_cp_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
             shader_ = core::utility::make_shared_glowl_shader("simple_compositing", shdr_cp_options,
-                std::filesystem::path("simple_compositing.vert.glsl"),
-                std::filesystem::path("simple_compositing.frag.glsl"));
+                std::filesystem::path("core/simple_compositing.vert.glsl"),
+                std::filesystem::path("core/simple_compositing.frag.glsl"));
         } catch (glowl::GLSLProgramException const& ex) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_ERROR, "[ContextToGL] %s", ex.what());
