@@ -42,6 +42,9 @@ Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap
  * Call::~Call
  */
 Call::~Call(void) {
+#ifdef PROFILING
+    qm->RemoveCall(this);
+#endif
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
         this->caller = nullptr; // DO NOT DELETE
@@ -53,9 +56,6 @@ Call::~Call(void) {
     }
     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
     ARY_SAFE_DELETE(this->funcMap);
-#ifdef PROFILING
-    qm->RemoveCall(this);
-#endif
 }
 
 

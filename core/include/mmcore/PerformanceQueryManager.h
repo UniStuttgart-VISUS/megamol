@@ -36,7 +36,8 @@ private:
     std::vector<megamol::core::Call*> all_calls;
     int32_t starting_call = -1, starting_func = -1;
     
-    uint32_t next_query = 0;
+    int32_t next_query = 0;
+    int32_t running_query = -1;
 };
 
 #endif
