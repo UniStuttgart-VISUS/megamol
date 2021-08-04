@@ -158,7 +158,9 @@ namespace core {
             }
         }
         static void CollectGPUPerformance() {
-            qm->Collect();
+            if (qm != nullptr) {
+                qm->Collect();
+            }
         }
 #endif
 
