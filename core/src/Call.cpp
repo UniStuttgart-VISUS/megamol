@@ -19,16 +19,14 @@
 #ifdef PROFILING
 #    include "mmcore/view/Renderer3DModuleGL.h"
 #    include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/CoreInstance.h"
 #    include <ctime>
 #endif
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 
-std::vector<Call*> Call::all_calls;
-int32_t Call::starting_call = -1;
-int32_t Call::starting_func = -1;
-Call::my_query_id *Call::query = nullptr;
+PerformanceQueryManager *Call::qm = nullptr;
 
 /*
  * Call::Call
@@ -53,22 +51,8 @@ Call::~Call(void) {
     }
     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
     ARY_SAFE_DELETE(this->funcMap);
-    all_calls.erase(std::remove(all_calls.begin(), all_calls.end(), this));
-    resetGLProfiling();
+    qm->RemoveCall(this);
 }
-
-
-#ifdef PROFILING
-Call::my_query_id::my_query_id() {
-    glGenQueries(1, &the_id);
-}
-Call::my_query_id::~my_query_id() {
-    glDeleteQueries(1, &the_id);
-}
-Call::my_query_id::my_query_id(const my_query_id&) {
-    glGenQueries(1, &the_id);
-}
-#endif
 
 
 /*
@@ -93,19 +77,15 @@ bool Call::operator()(unsigned int func) {
 #endif
 #ifdef PROFILING
         const std::clock_t c_start = std::clock();
+        bool gl_started = false;
         if (uses_gl) {
-            if (this == all_calls[starting_call] && func == starting_func) {
-                glBeginQuery(GL_TIME_ELAPSED, query->Get());
-                query->Start();
-            }
+            gl_started = qm->Start(this, this->callee->GetCoreInstance()->GetFrameID(), func);
         }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
 #ifdef PROFILING
-        if (uses_gl) {
-            if (this == all_calls[starting_call] && func == starting_func) {
-                glEndQuery(GL_TIME_ELAPSED);
-            }
+        if (gl_started) {
+            qm->Stop(this->callee->GetCoreInstance()->GetFrameID());
         }
         const std::clock_t c_end = std::clock();
         last_cpu_time[func] = 1000.0 * (static_cast<double>(c_end-c_start) / CLOCKS_PER_SEC);
