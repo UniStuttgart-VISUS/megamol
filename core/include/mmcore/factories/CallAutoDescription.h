@@ -8,7 +8,7 @@
 #define MEGAMOLCORE_FACTORIES_CALLAUTODESCRIPTION_H_INCLUDED
 #pragma once
 
-#include "mmcore/factories/CallDescription.h"
+#include "CallDescription.h"
 
 namespace megamol::core::factories {
 
@@ -18,8 +18,6 @@ namespace megamol::core::factories {
     template<class T>
     class CallAutoDescription : public CallDescription {
     public:
-        typedef T CallT;
-
         /** Ctor. */
         CallAutoDescription() : CallDescription() {}
 

@@ -144,7 +144,7 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
             // manager)
             auto plugins = core_instance.GetPlugins();
             for (auto& plugin : plugins) {
-                plugin_name = plugin->GetAssemblyName();
+                plugin_name = plugin->GetObjectFactoryName();
                 for (auto& c_desc : plugin->GetCallDescriptionManager()) {
                     Call::StockCall call;
                     call.plugin_name = plugin_name;
@@ -154,7 +154,7 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
             }
 
             // Get core calls
-            plugin_name = "Core"; // (core_instance->GetAssemblyName() = "")
+            plugin_name = "Core"; // (core_instance->GetObjectFactoryName() = "")
             for (auto& c_desc : core_instance.GetCallDescriptionManager()) {
                 std::string class_name(c_desc->ClassName());
                 if (std::find_if(this->calls_stock.begin(), this->calls_stock.end(),
@@ -223,7 +223,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             // desc. manager)
             auto plugins = core_instance.GetPlugins();
             for (auto& plugin : plugins) {
-                plugin_name = plugin->GetAssemblyName();
+                plugin_name = plugin->GetObjectFactoryName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
                     Module::StockModule mod;
                     mod.plugin_name = plugin_name;
@@ -242,7 +242,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             }
 
             // Get core modules
-            plugin_name = "Core"; // (core_instance->GetAssemblyName() = "")
+            plugin_name = "Core"; // (core_instance->GetObjectFactoryName() = "")
             for (auto& m_desc : core_instance.GetModuleDescriptionManager()) {
                 std::string class_name(m_desc->ClassName());
                 if (std::find_if(this->modules_stock.begin(), this->modules_stock.end(),

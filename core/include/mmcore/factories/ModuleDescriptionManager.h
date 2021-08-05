@@ -8,9 +8,9 @@
 #define MEGAMOLCORE_FACTORIES_MODULEDESCRIPTIONMANAGER_H_INCLUDED
 #pragma once
 
-#include "mmcore/factories/ModuleAutoDescription.h"
-#include "mmcore/factories/ModuleDescription.h"
-#include "mmcore/factories/ObjectDescriptionManager.h"
+#include "ModuleAutoDescription.h"
+#include "ModuleDescription.h"
+#include "ObjectDescriptionManager.h"
 
 namespace megamol::core::factories {
 

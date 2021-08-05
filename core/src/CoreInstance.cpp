@@ -3193,14 +3193,14 @@ void megamol::core::CoreInstance::loadPlugin(const std::shared_ptr<utility::plug
         for (auto md : new_plugin->GetModuleDescriptionManager()) {
             try {
                 this->all_module_descriptions.Register(md);
-            } catch (const vislib::AlreadyExistsException&) {
+            } catch (const std::invalid_argument&) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load module description \"%s\": Naming conflict", md->ClassName());
             }
         }
         for (auto cd : new_plugin->GetCallDescriptionManager()) {
             try {
                 this->all_call_descriptions.Register(cd);
-            } catch (const vislib::AlreadyExistsException&) {
+            } catch (const std::invalid_argument&) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load call description \"%s\": Naming conflict", cd->ClassName());
             }
         }

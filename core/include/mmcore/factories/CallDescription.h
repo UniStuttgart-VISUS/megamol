@@ -10,11 +10,11 @@
 
 #include <memory>
 
-#include "mmcore/factories/ObjectDescription.h"
+#include "ObjectDescription.h"
 
 namespace megamol::core {
     class Call;
-} // namespace megamol::core
+}
 
 namespace megamol::core::factories {
 

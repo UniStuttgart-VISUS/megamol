@@ -6,6 +6,8 @@
 
 #include "mmcore/factories/CallDescriptionManager.h"
 
+#include "mmcore/Call.h"
+
 /*
  * megamol::core::factories::CallDescriptionManager::AssignmentCrowbar
  */

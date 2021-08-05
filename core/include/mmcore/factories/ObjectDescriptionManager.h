@@ -9,13 +9,16 @@
 #pragma once
 
 #include <algorithm>
+#include <exception>
 #include <memory>
 #include <vector>
 
-#include "vislib/AlreadyExistsException.h"
-#include "vislib/IllegalParamException.h"
-#include "vislib/String.h"
-#include "vislib/macro_utils.h"
+namespace {
+    bool strEqualIgnoreCase(const std::string& a, const std::string& b) {
+        return std::equal(a.begin(), a.end(), b.begin(), b.end(),
+            [](const char& a, const char& b) { return std::tolower(a) == std::tolower(b); });
+    }
+} // namespace
 
 namespace megamol::core::factories {
 
@@ -49,7 +52,7 @@ namespace megamol::core::factories {
          * @param objDesc A pointer to the object description object to be
          *                registered.
          *
-         * @throws vislib::IllegalParamException if there already is an object
+         * @throws std::invalid_argument if there already is an object
          *         registered with the same name (case insensitive).
          */
         void Register(description_ptr_type objDesc);
@@ -139,9 +142,9 @@ namespace megamol::core::factories {
     template<class T>
     void ObjectDescriptionManager<T>::Register(description_ptr_type objDesc) {
         if (!objDesc)
-            throw vislib::IllegalParamException("objDesc", __FILE__, __LINE__);
+            throw std::runtime_error("No object description given!");
         if (this->Find(objDesc->ClassName()) != nullptr) {
-            throw vislib::AlreadyExistsException("objDesc", __FILE__, __LINE__);
+            throw std::invalid_argument("Class name of object description is already registered!");
         }
         descriptions_.push_back(objDesc);
     }
@@ -151,10 +154,10 @@ namespace megamol::core::factories {
      */
     template<class T>
     void ObjectDescriptionManager<T>::Unregister(const char* classname) {
-        vislib::StringA nameA(classname);
+        std::string name(classname);
         descriptions_.erase(
             std::remove_if(descriptions_.begin(), descriptions_.end(),
-                [&nameA](const description_ptr_type& d) { return nameA.Equals(d->ClassName(), false); }),
+                [&name](const description_ptr_type& d) { return strEqualIgnoreCase(name, d->ClassName()); }),
             descriptions_.end());
     }
 
@@ -180,11 +183,9 @@ namespace megamol::core::factories {
     template<class T>
     typename ObjectDescriptionManager<T>::description_ptr_type ObjectDescriptionManager<T>::Find(
         const char* classname) const {
-        vislib::StringA nameA(classname);
-        auto d_end = descriptions_.cend();
-        for (auto d_i = descriptions_.cbegin(); d_i != d_end; ++d_i) {
-            if (nameA.Equals((*d_i)->ClassName(), false)) {
-                return *d_i;
+        for (auto& desc : descriptions_) {
+            if (strEqualIgnoreCase(std::string(classname), std::string(desc->ClassName()))) {
+                return desc;
             }
         }
         return nullptr;

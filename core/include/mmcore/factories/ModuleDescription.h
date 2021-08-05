@@ -10,8 +10,8 @@
 
 #include <memory>
 
+#include "ObjectDescription.h"
 #include "mmcore/Module.h"
-#include "mmcore/factories/ObjectDescription.h"
 #include "vislib/String.h"
 
 namespace megamol::core::factories {

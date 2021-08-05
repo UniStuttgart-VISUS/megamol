@@ -8,10 +8,13 @@
 #define MEGAMOLCORE_FACTORIES_CALLDESCRIPTIONMANAGER_H_INCLUDED
 #pragma once
 
-#include "mmcore/Call.h"
-#include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/factories/CallDescription.h"
-#include "mmcore/factories/ObjectDescriptionManager.h"
+#include "CallAutoDescription.h"
+#include "CallDescription.h"
+#include "ObjectDescriptionManager.h"
+
+namespace megamol::core {
+    class Call;
+}
 
 namespace megamol::core::factories {
 

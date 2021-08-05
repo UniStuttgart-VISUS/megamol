@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "mmcore/factories/CallDescriptionManager.h"
-#include "mmcore/factories/ModuleDescriptionManager.h"
+#include "CallDescriptionManager.h"
+#include "ModuleDescriptionManager.h"
 
 namespace megamol::core::factories {
 

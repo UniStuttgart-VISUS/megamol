@@ -10,7 +10,7 @@
 
 #include <typeinfo>
 
-#include "mmcore/factories/ModuleDescription.h"
+#include "ModuleDescription.h"
 #include "mmcore/utility/log/Log.h"
 
 using megamol::core::utility::log::Log;
