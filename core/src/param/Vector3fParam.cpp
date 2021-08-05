@@ -18,7 +18,8 @@ using namespace megamol::core;
 /*
  * param::Vector3fParam::Vector3fParam
  */
-param::Vector3fParam::Vector3fParam(const vislib::math::Vector<float, 3>& initVal) : AbstractParam(), val(), minVal(-FLT_MAX, -FLT_MAX, -FLT_MAX), maxVal(FLT_MAX, FLT_MAX, FLT_MAX) {
+param::Vector3fParam::Vector3fParam(const vislib::math::Vector<float, 3>& initVal)
+    : AbstractParam(), val(), minVal(-FLT_MAX, -FLT_MAX, -FLT_MAX), maxVal(FLT_MAX, FLT_MAX, FLT_MAX) {
     this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR3F);
     this->SetValue(initVal);
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
@@ -32,7 +33,8 @@ param::Vector3fParam::Vector3fParam(const vislib::math::Vector<float, 3>& initVa
  * param::Vector3fParam::Vector3fParam
  */
 param::Vector3fParam::Vector3fParam(
-    const vislib::math::Vector<float, 3>& initVal, const vislib::math::Vector<float, 3>& minVal) : AbstractParam(), val(), minVal(minVal), maxVal(FLT_MAX, FLT_MAX, FLT_MAX) {
+    const vislib::math::Vector<float, 3>& initVal, const vislib::math::Vector<float, 3>& minVal)
+    : AbstractParam(), val(), minVal(minVal), maxVal(FLT_MAX, FLT_MAX, FLT_MAX) {
     this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR3F);
     this->SetValue(initVal);
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
@@ -44,7 +46,8 @@ param::Vector3fParam::Vector3fParam(
 /*
  * param::Vector3fParam::Vector3fParam
  */
-param::Vector3fParam::Vector3fParam(const vislib::math::Vector<float, 3>& initVal, const vislib::math::Vector<float, 3>& minVal, const vislib::math::Vector<float, 3>& maxVal) : AbstractParam(), val(), minVal(minVal), maxVal(maxVal) {
+param::Vector3fParam::Vector3fParam(const vislib::math::Vector<float, 3>& initVal, const vislib::math::Vector<float, 3>& minVal, const vislib::math::Vector<float, 3>& maxVal)
+    : AbstractParam(), val(), minVal(minVal), maxVal(maxVal) {
     this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR3F);
     this->SetValue(initVal);
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
