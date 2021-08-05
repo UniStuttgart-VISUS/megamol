@@ -135,7 +135,10 @@ if (EXAMPLES)
       ERROR_QUIET
       OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif ()
-  install(DIRECTORY "${EXAMPLES_DIR}" DESTINATION "${CMAKE_INSTALL_PREFIX}" PATTERN ".git" EXCLUDE)
+  option(EXAMPLES_INSTALL "Install examples" ON)
+  if (EXAMPLES_INSTALL)
+    install(DIRECTORY "${EXAMPLES_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/examples" PATTERN ".git" EXCLUDE)
+  endif ()
 endif ()
 
 # Validate dependencies
