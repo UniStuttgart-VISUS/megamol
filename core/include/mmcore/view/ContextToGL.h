@@ -6,10 +6,10 @@
  */
 
 #pragma once
+#include "mmcore/CoreInstance.h"
+#include "mmcore/utility/ShaderFactory.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/RenderUtils.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol::core::view {
 
@@ -17,8 +17,8 @@ template<typename FBO>
 using INITFUNC = void(std::shared_ptr<vislib::graphics::gl::FramebufferObject>&, std::shared_ptr<FBO>&, int, int);
 
 template<typename FBO>
-using RENFUNC = void(
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject>&, std::shared_ptr<FBO>&, RenderUtils&, int, int);
+using RENFUNC = void(std::shared_ptr<glowl::GLSLProgram>&, std::shared_ptr<vislib::graphics::gl::FramebufferObject>&,
+    std::shared_ptr<FBO>&, int, int);
 
 template<typename CALL, INITFUNC<typename CALL::FBO_TYPE> init_func, RENFUNC<typename CALL::FBO_TYPE> ren_func,
     char const* CN, char const* DESC>
@@ -48,13 +48,13 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+        return true;
     }
 
     /** Ctor. */
     ContextToGL(void) : Renderer3DModuleGL(), _getContextSlot("getContext", "Slot for non-GL context") {
 
-        this->_getContextSlot. template SetCompatibleCall<core::factories::CallAutoDescription<CALL>>();
+        this->_getContextSlot.template SetCompatibleCall<core::factories::CallAutoDescription<CALL>>();
         this->MakeSlotAvailable(&this->_getContextSlot);
     }
 
@@ -70,10 +70,19 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     virtual bool create(void) {
-        if (!_utils.isInitialized()) {
-            if (!_utils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
-                core::utility::log::Log::DefaultLog.WriteError("[ContextToGL] Unable to initialize RenderUtility.");
-            }
+        try {
+            auto const shdr_cp_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+
+            shader_ = core::utility::make_shared_glowl_shader("simple_compositing", shdr_cp_options,
+                std::filesystem::path("core/simple_compositing.vert.glsl"),
+                std::filesystem::path("core/simple_compositing.frag.glsl"));
+        } catch (glowl::GLSLProgramException const& ex) {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "[ContextToGL] %s", ex.what());
+        } catch (...) {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "[ContextToGL] Unable to compile shader: Unknown exception");
+            return false;
         }
 
         return true;
@@ -109,9 +118,9 @@ private:
 
     std::shared_ptr<typename CALL::FBO_TYPE> _framebuffer;
 
-    RenderUtils _utils;
-
     glm::uvec2 viewport = {0, 0};
+
+    std::shared_ptr<glowl::GLSLProgram> shader_;
 };
 
 template<typename CALL, INITFUNC<typename CALL::FBO_TYPE> init_func, RENFUNC<typename CALL::FBO_TYPE> ren_func,
@@ -184,12 +193,51 @@ bool ContextToGL<CALL, init_func, ren_func, CN, DESC>::Render(CallRender3DGL& ca
 
     if (lhs_fbo != nullptr) {
 
-        ren_func(lhs_fbo, _framebuffer, _utils, width, height);
+        ren_func(shader_, lhs_fbo, _framebuffer, width, height);
 
     } else {
         return false;
     }
     return true;
+}
+
+inline void renderToFBO(std::shared_ptr<glowl::GLSLProgram>& shader,
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject>& lhs_fbo, GLuint color_tex, GLuint depth_tex, int width,
+    int height) {
+    // draw into lhs fbo
+    if ((lhs_fbo->GetWidth() != width) || (lhs_fbo->GetHeight() != height)) {
+        lhs_fbo->Release();
+        lhs_fbo->Create(width, height);
+    }
+    if (lhs_fbo->IsValid() && !lhs_fbo->IsEnabled()) {
+        lhs_fbo->Enable();
+    }
+    shader->use();
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, color_tex);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, depth_tex);
+    shader->setUniform("viewport", glm::vec2(width, height));
+    shader->setUniform("color_tex", 0);
+    shader->setUniform("depth_tex", 1);
+    glm::mat4 ortho = glm::ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -1.0f, 1.0f);
+    shader->setUniform("mvp", ortho);
+
+    glDrawArrays(GL_QUADS, 0, 4);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
+
+    glUseProgram(0);
+    if (lhs_fbo->IsValid()) {
+        lhs_fbo->Disable();
+    }
 }
 
 } // namespace megamol::core::view

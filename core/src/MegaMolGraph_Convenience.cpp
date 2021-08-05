@@ -20,13 +20,9 @@ static void err(std::string text) {
 
 MegaMolGraph_Convenience::MegaMolGraph_Convenience(void* graph_ptr) : m_graph_ptr{graph_ptr} {}
 
-#include "mmcore/param/ButtonParam.h"
-std::string megamol::core::MegaMolGraph_Convenience::SerializeGraph() const {
-
+std::string megamol::core::MegaMolGraph_Convenience::SerializeModules() const {
     std::string serViews;
     std::string serModules;
-    std::string serCalls;
-    std::string serParams;
 
     for (auto& module : get(m_graph_ptr).ListModules()) {
         if (module.isGraphEntryPoint) {
@@ -44,29 +40,60 @@ std::string megamol::core::MegaMolGraph_Convenience::SerializeGraph() const {
         }
     }
 
-    for (auto& module : get(m_graph_ptr).ListModules()) {
-        for (auto& paramSlot : get(m_graph_ptr).EnumerateModuleParameterSlots(module.request.id)) {
-            // it seems serialiing button params is illegal
-            if (auto* p_ptr = paramSlot->template Param<core::param::ButtonParam>()) {
-                continue;
-            }
-            auto name = std::string{paramSlot->FullName()};
-            // as FullName() prepends :: to module names, normalize multiple leading :: in parameter name path
-            name = "::" + name.substr(name.find_first_not_of(':'));
-            auto value = std::string{paramSlot->Parameter()->ValueString().PeekBuffer()};
-            serParams.append("mmSetParamValue(\"" + name + "\",[=[" + value + "]=])\n");
-        }
-    }
+    return serViews + '\n' + serModules + '\n';
+}
+
+std::string megamol::core::MegaMolGraph_Convenience::SerializeCalls() const {
+    std::string serCalls;
 
     for (auto& call : get(m_graph_ptr).ListCalls()) {
-        serCalls.append("mmCreateCall(\""
-            + call.request.className + "\",\""
-            + call.request.from + "\",\""
-            + call.request.to + "\",\""
-            + "\")\n");
+        serCalls.append("mmCreateCall("
+           "\"" + call.request.className + "\","
+            "\"" + call.request.from + "\","
+            "\"" + call.request.to + "\""
+            + ")\n");
     }
 
-    return serViews + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
+    return serCalls + '\n';
+}
+
+#include "mmcore/param/ButtonParam.h"
+std::string megamol::core::MegaMolGraph_Convenience::SerializeModuleParameters(std::string const& module_name) const {
+    std::string serParams;
+
+    for (auto& paramSlot : get(m_graph_ptr).EnumerateModuleParameterSlots(module_name)) {
+        // it seems serialiing button params is illegal
+        if (auto* p_ptr = paramSlot->template Param<core::param::ButtonParam>()) {
+            continue;
+        }
+        auto name = std::string{paramSlot->FullName()};
+        // as FullName() prepends :: to module names, normalize multiple leading :: in parameter name path
+        name = "::" + name.substr(name.find_first_not_of(':'));
+        auto value = std::string{paramSlot->Parameter()->ValueString().PeekBuffer()};
+        serParams.append("mmSetParamValue(\"" + name + "\",[=[" + value + "]=])\n");
+    }
+
+    return serParams + '\n';
+}
+
+std::string megamol::core::MegaMolGraph_Convenience::SerializeAllParameters() const {
+    std::string serAllParams;
+
+    for (auto& module : get(m_graph_ptr).ListModules()) {
+        serAllParams += SerializeModuleParameters(module.request.id);
+    }
+
+    return serAllParams + '\n';
+}
+
+std::string megamol::core::MegaMolGraph_Convenience::SerializeGraph() const {
+    std::string serialization;
+
+    serialization += SerializeModules();
+    serialization += SerializeCalls();
+    serialization += SerializeAllParameters();
+
+    return serialization;
 }
 
 MegaMolGraph_Convenience::ParameterGroup& MegaMolGraph_Convenience::CreateParameterGroup(

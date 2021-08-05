@@ -10,8 +10,9 @@
 #define _WINSOCKAPI_
 #include "Lua_Service_Wrapper.hpp"
 
-#include "mmcore/utility/LuaHostService.h"
+#include "LuaRemoteConnectionsBroker.h"
 
+#include "vislib/UTF8Encoder.h"
 #include "Screenshots.h"
 #include "FrameStatistics.h"
 #include "WindowManipulation.h"
@@ -57,7 +58,7 @@ bool Lua_Service_Wrapper::init(void* configPtr) {
 }
 
 #define luaAPI (*m_config.lua_api_ptr)
-#define m_network_host reinterpret_cast<megamol::core::utility::LuaHostNetworkConnectionsBroker*>(m_network_host_pimpl.get())
+#define m_network_host reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(m_network_host_pimpl.get())
 
 bool Lua_Service_Wrapper::init(const Config& config) {
     if (!config.lua_api_ptr) {
@@ -103,8 +104,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
-        new megamol::core::utility::LuaHostNetworkConnectionsBroker{},
-        [](void* ptr) { delete reinterpret_cast<megamol::core::utility::LuaHostNetworkConnectionsBroker*>(ptr); }
+        new megamol::frontend_resources::LuaRemoteConnectionsBroker{},
+        [](void* ptr) { delete reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(ptr); }
     );
 
     bool host_ok = m_network_host->spawn_connection_broker(m_config.host_address, m_config.retry_socket_port);
@@ -241,7 +242,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
         "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.",
         {[&](std::string file) -> VoidResult
         {
-            m_requestedResourceReferences[1].getResource<std::function<bool(std::string const&)> >()(file);
+            m_requestedResourceReferences[1].getResource<std::function<bool(std::filesystem::path const&)> >()(std::filesystem::u8path(file));
             return VoidResult{};
         }});
 
@@ -629,6 +630,15 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             }
 
             return StringResult{answer.str().c_str()};
+        }});
+
+    callbacks.add<VoidResult>(
+        "mmClearGraph",
+        "()\n\tClear the MegaMol Graph from all Modules and Calls",
+        {[&]() -> VoidResult
+        {
+            graph.Clear();
+            return VoidResult{};
         }});
 
     callbacks.add<StringResult>(

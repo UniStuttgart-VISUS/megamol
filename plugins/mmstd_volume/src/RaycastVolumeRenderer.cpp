@@ -181,6 +181,8 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3DGL& cr) 
 }
 
 bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
+    auto const lhsFBO = cr.GetFramebufferObject();
+
     // Chain renderer
     auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3DGL>();
 
@@ -309,6 +311,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
         }
     }
 
+    lhsFBO->Enable();
+
     // setup
     compute_shdr->use();
 
@@ -350,18 +354,15 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     compute_shdr->setUniform("light", curlight.direction[0], curlight.direction[1], curlight.direction[2]);
     compute_shdr->setUniform("ambient_col", this->m_ambient_color.Param<core::param::ColorParam>()->Value()[0],
         this->m_ambient_color.Param<core::param::ColorParam>()->Value()[1],
-        this->m_ambient_color.Param<core::param::ColorParam>()->Value()[2],
-        this->m_ambient_color.Param<core::param::ColorParam>()->Value()[3]);
+        this->m_ambient_color.Param<core::param::ColorParam>()->Value()[2]);
     compute_shdr->setUniform("specular_col", this->m_specular_color.Param<core::param::ColorParam>()->Value()[0],
         this->m_specular_color.Param<core::param::ColorParam>()->Value()[1],
-        this->m_specular_color.Param<core::param::ColorParam>()->Value()[2],
-        this->m_specular_color.Param<core::param::ColorParam>()->Value()[3]);
+        this->m_specular_color.Param<core::param::ColorParam>()->Value()[2]);
     compute_shdr->setUniform(
-        "light_col", curlight.colour[0], curlight.colour[1], curlight.colour[2], curlight.colour[3]);
+        "light_col", curlight.colour[0], curlight.colour[1], curlight.colour[2]);
     compute_shdr->setUniform("material_col", this->m_material_color.Param<core::param::ColorParam>()->Value()[0],
         this->m_material_color.Param<core::param::ColorParam>()->Value()[1],
-        this->m_material_color.Param<core::param::ColorParam>()->Value()[2],
-        this->m_material_color.Param<core::param::ColorParam>()->Value()[3]);
+        this->m_material_color.Param<core::param::ColorParam>()->Value()[2]);
 
     /*    auto const arv = std::dynamic_pointer_cast<core::view::AbstractView const>(cr.PeekCallerSlot()->Parent());
     std::array<float, 4> bkgndCol = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -570,6 +571,10 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     else
         glDisable(GL_DEPTH_TEST);
 
+    glUseProgram(0);
+
+    lhsFBO->Disable();
+
     return true;
 }
 
@@ -647,7 +652,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             format = GL_RED;
             type = GL_UNSIGNED_BYTE;
         } else if (metadata->ScalarLength == 2) {
-            internal_format = GL_R16UI;
+            internal_format = GL_R16;
             format = GL_RED;
             type = GL_UNSIGNED_SHORT;
         } else {
@@ -658,7 +663,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
         break;
     case core::misc::SIGNED_INTEGER:
         if (metadata->ScalarLength == 2) {
-            internal_format = GL_R16I;
+            internal_format = GL_R16;
             format = GL_RED;
             type = GL_SHORT;
         } else {
@@ -683,7 +688,16 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
 
+    GLint unpackAlignmentOrig = 0;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &unpackAlignmentOrig);
+
+    // Pixel data rows must be aligned to 4 bytes by default, this is may not guarantied by all datasets.
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // for upload to GPU
+    //glPixelStorei(GL_PACK_ALIGNMENT, 1); // for download from GPU
+
     m_volume_texture = std::make_unique<glowl::Texture3D>("raycast_volume_texture", volume_layout, volumedata);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignmentOrig);
 
     return true;
 }

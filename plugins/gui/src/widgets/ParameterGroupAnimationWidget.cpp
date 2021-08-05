@@ -13,15 +13,12 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core::utility;
 using namespace megamol::gui;
 
 
-megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget(void)
-        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
-        , speed_knob_pos()
-        , time_knob_pos()
-        , image_buttons()
-        , tooltip() {
+megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget()
+        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID()), image_buttons(), tooltip() {
 
     this->InitPresentation(ParamType_t::GROUP_ANIMATION);
     this->name = "anim";
@@ -50,7 +47,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
     megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
+        log::Log::DefaultLog.WriteError(
             "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -82,9 +79,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
 
         if (in_scope == Parameter::WidgetScope::LOCAL) {
 
-            ParameterGroups::DrawGroupedParameters(
-                this->name, params, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
-
+            ParameterGroups::DrawGroupedParameters(this->name, params, in_search, in_scope, nullptr, GUI_INVALID_ID);
             return true;
 
         } else if (in_scope == Parameter::WidgetScope::GLOBAL) {
@@ -99,7 +94,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         if (in_scope == Parameter::WidgetScope::LOCAL) {
             // LOCAL
 
-            ImGui::PushID(this->uid);
+            ImGui::PushID(static_cast<int>(this->uid));
             ImGui::TextDisabled(this->name.c_str());
             ImGui::PopID();
 
@@ -129,7 +124,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         }
 
         // DRAW -------------------------------------------------------------------
-        ImGui::PushID(this->uid);
+        ImGui::PushID(static_cast<int>(this->uid));
 
         const ImVec2 button_size =
             ImVec2(1.5f * ImGui::GetFrameHeightWithSpacing(), 1.5f * ImGui::GetFrameHeightWithSpacing());
@@ -224,9 +219,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
             // GLOBAL
 
             ImGui::End();
-        }
-
-        else if (in_scope == Parameter::WidgetScope::LOCAL) {
+        } else if (in_scope == Parameter::WidgetScope::LOCAL) {
             /// LOCAL
             // Alternative LOCAL presentation
 

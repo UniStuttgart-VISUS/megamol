@@ -157,6 +157,8 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     if (this->draw_replacement) {
         // Render bounding box as replacement
+        auto const lhsFBO = call.GetFramebufferObject();
+        lhsFBO->Enable();
 
         glm::mat4 proj = projTemp;
         glm::mat4 view = viewTemp;
@@ -193,6 +195,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
         this->utils.DrawQuadPrimitives(mvp, glm::vec2(vp_fw, vp_fh));
 
+        lhsFBO->Disable();
     } else {
 
         auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();

@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <filesystem>
 #include "mmcore/CoreInstance.h"
 #include "png.h"
 
@@ -34,7 +35,7 @@ public:
      * 
      * @return the lua project
      */
-    static std::string GetProjectFromPNG(std::string filename);
+    static std::string GetProjectFromPNG(std::filesystem::path filename);
 
     static bool EndsWith(const std::string& filename, const std::string& suffix);
 

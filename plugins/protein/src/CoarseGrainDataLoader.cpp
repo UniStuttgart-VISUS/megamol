@@ -68,7 +68,7 @@ bool CoarseGrainDataLoader::getData( core::Call& call) {
 
     if ( this->filenameSlot.IsDirty() ) {
         this->filenameSlot.ResetDirty();
-        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+        this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     }
 
     if ( dc->FrameID() >= this->data.Count() ) return false;
@@ -98,7 +98,7 @@ bool CoarseGrainDataLoader::getExtent( core::Call& call) {
 
     if ( this->filenameSlot.IsDirty() ) {
         this->filenameSlot.ResetDirty();
-        this->loadFile( this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+        this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     }
 
     dc->AccessBoundingBoxes().Clear();
