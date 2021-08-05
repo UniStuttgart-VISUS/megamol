@@ -21,6 +21,7 @@ namespace megamol {
 namespace core {
 namespace param {
 
+    /// See MegaMol development guide for utf8 related explanations ///
 
     /**
      * class for file path parameter objects
@@ -41,9 +42,7 @@ namespace param {
         };
 
         typedef uint32_t Flags_t;
-
         typedef std::vector<std::string> Extensions_t;
-
         typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&)> RegisterNotificationCallback_t;
 
         /**
@@ -53,7 +52,9 @@ namespace param {
          * @param flags The flags for the parameter
          * @param exts The required file extensions for the parameter
          */
+        FilePathParam(const std::filesystem::path& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
         FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
+        FilePathParam(const char* initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
 
         /**
          * Dtor.
@@ -87,22 +88,27 @@ namespace param {
          * @param setDirty If 'true' the dirty flag of the owning parameter
          *                 slot is set and the update callback might be called.
          */
+        void SetValue(const std::filesystem::path& v, bool setDirty = true);
         void SetValue(const std::string& v, bool setDirty = true);
-        void SetValue(const vislib::TString& v, bool setDirty = true);
+        void SetValue(const char* v, bool setDirty = true);
 
         /**
          * Gets the value of the parameter utf8 encoded for loading of files.
          *
          * @return The value of the parameter
          */
-        vislib::TString Value() const;
+        std::filesystem::path Value() const {
+            return this->value;
+        }
 
         /**
          * Returns the value of the parameter as utf8 decoded string for storing in project file.
          *
          * @return The value of the parameter as string.
          */
-        vislib::TString ValueString() const override;
+        vislib::TString ValueString() const override {
+            return vislib::TString(this->value.generic_u8string().c_str());
+        }
 
         /**
          * Gets the file path parameter flags

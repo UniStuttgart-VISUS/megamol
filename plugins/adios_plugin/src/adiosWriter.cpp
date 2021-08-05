@@ -199,7 +199,7 @@ bool adiosWriter::run() {
 
         try {
             if (!this->writer) {
-                std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
+                auto fname = this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string();
 #ifdef _WIN32
                 std::replace(fname.begin(), fname.end(), '/', '\\');
 #endif

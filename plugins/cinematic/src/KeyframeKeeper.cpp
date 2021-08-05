@@ -509,7 +509,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->fileNameParam.IsDirty()) {
         this->fileNameParam.ResetDirty();
 
-        this->filename = std::string(this->fileNameParam.Param<param::FilePathParam>()->Value().PeekBuffer());
+        this->filename = this->fileNameParam.Param<param::FilePathParam>()->Value().generic_u8string();
     }
     // saveKeyframesParam -----------------------------------------------------
     if (this->saveKeyframesParam.IsDirty()) {
@@ -1180,12 +1180,12 @@ bool KeyframeKeeper::saveKeyframes() {
             std::setfill('0') << std::setw(2) << now->tm_min << 
             std::setfill('0') << std::setw(2) << now->tm_sec << ".kf";
         this->filename = stream.str();
-        this->fileNameParam.Param<param::FilePathParam>()->SetValue(vislib::StringA(this->filename.c_str()), false);
+        this->fileNameParam.Param<param::FilePathParam>()->SetValue(this->filename, false);
     } 
 
     try {
         std::ofstream outfile;
-        outfile.open(this->filename.c_str(), std::ios::binary);
+        outfile.open(this->filename, std::ios::binary);
         if (!outfile.good()) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to create keyframe file.");
             return false;

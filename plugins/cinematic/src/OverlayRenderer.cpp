@@ -226,7 +226,7 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
             std::wstring texture_filename(megamol::core::utility::ResourceWrapper::getFileName(
                 this->GetCoreInstance()->Configuration(), vislib::StringA(filename.c_str()))
                                               .PeekBuffer());
-            if (!this->LoadTextureFromFile(this->m_transpctrl_icons[i], texture_filename)) {
+            if (!this->LoadTextureFromFile(this->m_transpctrl_icons[i], megamol::core::utility::WChar2Utf8String(texture_filename))) {
                 return false;
             }
         }
@@ -248,7 +248,7 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
 bool OverlayRenderer::onTextureFileName(param::ParamSlot& slot) {
 
     slot.ResetDirty();
-    std::string filename = std::string(this->paramFileName.Param<param::FilePathParam>()->Value().PeekBuffer());
+    auto filename = this->paramFileName.Param<param::FilePathParam>()->Value();
     if (!this->LoadTextureFromFile(this->m_texture_id, filename, (this->m_texture_id != 0))) {
         return false;
     }

@@ -94,7 +94,7 @@ bool TimeLineRenderer::create(void) {
         auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(
             this->GetCoreInstance()->Configuration(), vislib::StringA(texture_shortfilename.c_str()));
         std::wstring texture_filename = std::wstring(fullfilename.PeekBuffer());
-        loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filename);
+        loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, megamol::core::utility::WChar2Utf8String(texture_filename));
     } else {
         std::string texture_filepath;
         auto resource_directories = frontend_resources.get<megamol::frontend_resources::RuntimeConfig>().resource_directories;
