@@ -234,9 +234,9 @@ megamol::core::CoreInstance::~CoreInstance(void) {
 
 
 /*
- * megamol::core::CoreInstance::GetAssemblyName
+ * megamol::core::CoreInstance::GetObjectFactoryName
  */
-const std::string& megamol::core::CoreInstance::GetAssemblyName(void) const {
+const std::string& megamol::core::CoreInstance::GetObjectFactoryName() const {
     static std::string noname("");
     return noname;
 }
@@ -3186,7 +3186,7 @@ void megamol::core::CoreInstance::loadPlugin(const std::shared_ptr<utility::plug
 
         // report success
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("Plugin \"%s\" loaded: %u Modules, %u Calls",
-                                                               new_plugin->GetAssemblyName().c_str(),
+                                                               new_plugin->GetObjectFactoryName().c_str(),
                                                                new_plugin->GetModuleDescriptionManager().Count(),
                                                                new_plugin->GetCallDescriptionManager().Count());
 

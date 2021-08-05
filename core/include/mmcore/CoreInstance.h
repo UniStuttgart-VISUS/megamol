@@ -105,7 +105,7 @@ public:
      *
      * @return The (machine-readable) name of the assembly
      */
-    virtual const std::string& GetAssemblyName(void) const;
+    virtual const std::string& GetObjectFactoryName() const;
 
     /**
      * Answer the call description manager of the assembly.

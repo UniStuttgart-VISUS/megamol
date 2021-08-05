@@ -12,12 +12,12 @@ using namespace megamol::core::utility::plugins;
 /*
  * AbstractPluginInstance::AbstractPluginInstance
  */
-AbstractPluginInstance::AbstractPluginInstance(const char* asm_name, const char* description)
+AbstractPluginInstance::AbstractPluginInstance(const char* name, const char* description)
         : factories::AbstractObjectFactoryInstance()
-        , asm_name(asm_name)
+        , name(name)
         , description(description)
         , classes_registered(false) {
-    if (asm_name == nullptr) {
+    if (name == nullptr) {
         throw std::runtime_error("Empty plugin name!");
     }
 }

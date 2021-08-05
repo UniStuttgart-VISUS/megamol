@@ -37,8 +37,8 @@ namespace megamol::core::utility::plugins {
          *
          * @return The (machine-readable) name of the plugin
          */
-        const std::string& GetAssemblyName() const override {
-            return asm_name;
+        const std::string& GetObjectFactoryName() const override {
+            return name;
         }
 
         /**
@@ -66,7 +66,7 @@ namespace megamol::core::utility::plugins {
 
     protected:
         /** Ctor. */
-        AbstractPluginInstance(const char* asm_name, const char* description);
+        AbstractPluginInstance(const char* name, const char* description);
 
         /** Dtor. */
         ~AbstractPluginInstance() override;
@@ -84,10 +84,10 @@ namespace megamol::core::utility::plugins {
         /** Ensures that registered classes was called */
         void ensureRegisterClassesWrapper() const;
 
-        /** The (machine-readable) name of the assembly */
-        std::string asm_name;
+        /** The (machine-readable) name of the plugin */
+        std::string name;
 
-        /** The (human-readable) description of the plugin assembly */
+        /** The (human-readable) description of the plugin */
         std::string description;
 
         /** Flag whether or not the module and call classes have been registered */

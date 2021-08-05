@@ -35,7 +35,7 @@ namespace megamol::core::factories {
          *
          * @return The (machine-readable) name of the factory.
          */
-        virtual const std::string& GetAssemblyName() const = 0;
+        virtual const std::string& GetObjectFactoryName() const = 0;
 
         /**
          * Answer the call description manager of the factory.
