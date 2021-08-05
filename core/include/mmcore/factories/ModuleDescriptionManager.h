@@ -1,40 +1,35 @@
-/*
- * ModuleDescriptionManager.h
- * Copyright (C) 2008 - 2015 by MegaMol Consortium
- * All rights reserved. Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #ifndef MEGAMOLCORE_FACTORIES_MODULEDESCRIPTIONMANAGER_H_INCLUDED
 #define MEGAMOLCORE_FACTORIES_MODULEDESCRIPTIONMANAGER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-
-#include "mmcore/factories/ObjectDescriptionManager.h"
-#include "mmcore/factories/ModuleDescription.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
-#include "vislib/SmartPtr.h"
+#include "mmcore/factories/ModuleDescription.h"
+#include "mmcore/factories/ObjectDescriptionManager.h"
 
-
-namespace megamol {
-namespace core {
-namespace factories {
-
-    /** exporting template specialization */
-    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API ObjectDescriptionManager<ModuleDescription>;
+namespace megamol::core::factories {
 
     /**
      * Class of rendering graph module description manager
      */
-    class MEGAMOLCORE_API ModuleDescriptionManager : public ObjectDescriptionManager<ModuleDescription> {
+    class ModuleDescriptionManager : public ObjectDescriptionManager<ModuleDescription> {
     public:
-
         /** ctor */
-        ModuleDescriptionManager();
+        ModuleDescriptionManager() : ObjectDescriptionManager<megamol::core::factories::ModuleDescription>() {}
 
         /** dtor */
-        virtual ~ModuleDescriptionManager();
+        ~ModuleDescriptionManager() override = default;
+
+        /* deleted copy ctor */
+        ModuleDescriptionManager(const ModuleDescriptionManager& src) = delete;
+
+        /* deleted assignment operator */
+        ModuleDescriptionManager& operator=(const ModuleDescriptionManager& rhs) = delete;
 
         /**
          * Registers a module description
@@ -53,21 +48,10 @@ namespace factories {
          */
         template<class Cp>
         void RegisterAutoDescription() {
-            this->RegisterDescription<ModuleAutoDescription<Cp> >();
+            this->RegisterDescription<ModuleAutoDescription<Cp>>();
         }
-
-    private:
-
-        /* deleted copy ctor */
-        ModuleDescriptionManager(const ModuleDescriptionManager& src) = delete;
-
-        /* deleted assignment operator */
-        ModuleDescriptionManager& operator=(const ModuleDescriptionManager& rhs) = delete;
-
     };
 
-} /* end namespace factories */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::factories
 
-#endif /* MEGAMOLCORE_FACTORIES_MODULEDESCRIPTIONMANAGER_H_INCLUDED */
+#endif // MEGAMOLCORE_FACTORIES_MODULEDESCRIPTIONMANAGER_H_INCLUDED

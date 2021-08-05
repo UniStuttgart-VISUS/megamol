@@ -25,7 +25,7 @@
 #include "mmcore/ViewInstanceRequest.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/factories/AbstractAssemblyInstance.h"
+#include "mmcore/factories/AbstractObjectFactoryInstance.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/ModuleDescription.h"
@@ -79,7 +79,7 @@ class ServiceManager;
 /**
  * class of core instances.
  */
-class MEGAMOLCORE_API CoreInstance : public ApiHandle, public factories::AbstractAssemblyInstance {
+class MEGAMOLCORE_API CoreInstance : public ApiHandle, public factories::AbstractObjectFactoryInstance {
 public:
     friend class megamol::core::LuaState;
 

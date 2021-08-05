@@ -123,7 +123,7 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void* data, megamol::core:
  */
 megamol::core::CoreInstance::CoreInstance(void)
     : ApiHandle()
-    , factories::AbstractAssemblyInstance()
+    , factories::AbstractObjectFactoryInstance()
     , preInit(new PreInit)
     , config()
     , shaderSourceFactory(config)

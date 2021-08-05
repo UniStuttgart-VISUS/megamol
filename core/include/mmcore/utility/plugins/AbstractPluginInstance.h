@@ -11,7 +11,7 @@
 #include <memory>
 #include <string>
 
-#include "mmcore/factories/AbstractAssemblyInstance.h"
+#include "mmcore/factories/AbstractObjectFactoryInstance.h"
 
 namespace megamol::core::utility::plugins {
 
@@ -21,7 +21,7 @@ namespace megamol::core::utility::plugins {
      * An object is described using a unique name. This name is compared case
      * insensitive!
      */
-    class AbstractPluginInstance : public factories::AbstractAssemblyInstance {
+    class AbstractPluginInstance : public factories::AbstractObjectFactoryInstance {
     public:
         /** The shared pointer type to be used */
         typedef std::shared_ptr<AbstractPluginInstance const> ptr_type;

@@ -13,7 +13,7 @@ using namespace megamol::core::utility::plugins;
  * AbstractPluginInstance::AbstractPluginInstance
  */
 AbstractPluginInstance::AbstractPluginInstance(const char* asm_name, const char* description)
-        : factories::AbstractAssemblyInstance()
+        : factories::AbstractObjectFactoryInstance()
         , asm_name(asm_name)
         , description(description)
         , classes_registered(false) {
@@ -36,7 +36,7 @@ AbstractPluginInstance::~AbstractPluginInstance() {
  */
 const factories::CallDescriptionManager& AbstractPluginInstance::GetCallDescriptionManager() const {
     this->ensureRegisterClassesWrapper();
-    return AbstractAssemblyInstance::GetCallDescriptionManager();
+    return AbstractObjectFactoryInstance::GetCallDescriptionManager();
 }
 
 /*
@@ -44,7 +44,7 @@ const factories::CallDescriptionManager& AbstractPluginInstance::GetCallDescript
  */
 const factories::ModuleDescriptionManager& AbstractPluginInstance::GetModuleDescriptionManager() const {
     this->ensureRegisterClassesWrapper();
-    return AbstractAssemblyInstance::GetModuleDescriptionManager();
+    return AbstractObjectFactoryInstance::GetModuleDescriptionManager();
 }
 
 /*
