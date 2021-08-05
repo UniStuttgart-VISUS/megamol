@@ -27,7 +27,7 @@ namespace megamol::core::utility::plugins {
         PluginRegister& operator=(PluginRegister&&) = delete;
 
         template<class C>
-        static bool add() {
+        static bool add() noexcept {
             plugins_.emplace_back(std::make_shared<PluginDescriptor<C>>());
             return true;
         }
