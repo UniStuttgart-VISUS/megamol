@@ -18,41 +18,36 @@ using namespace megamol::core;
 /*
  * param::Vector4fParam::Vector4fParam
  */
-param::Vector4fParam::Vector4fParam(const vislib::math::Vector<float, 4>& initVal)
-    : AbstractParam()
-    , val(initVal)
-    , minVal(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX)
-    , maxVal(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX) {
+param::Vector4fParam::Vector4fParam(const vislib::math::Vector<float, 4>& initVal) : AbstractParam() , val() , minVal(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX), maxVal(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR4F);
+    this->SetValue(initVal);
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
-    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR4F);
 }
 
 
 /*
  * param::Vector4fParam::Vector4fParam
  */
-param::Vector4fParam::Vector4fParam(
-    const vislib::math::Vector<float, 4>& initVal, const vislib::math::Vector<float, 4>& minVal)
-    : AbstractParam(), val(initVal), minVal(minVal), maxVal(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX) {
+param::Vector4fParam::Vector4fParam(const vislib::math::Vector<float, 4>& initVal, const vislib::math::Vector<float, 4>& minVal) : AbstractParam(), val(), minVal(minVal), maxVal(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR4F);
+    this->SetValue(initVal);
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
-    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR4F);
 }
 
 
 /*
  * param::Vector4fParam::Vector4fParam
  */
-param::Vector4fParam::Vector4fParam(const vislib::math::Vector<float, 4>& initVal,
-    const vislib::math::Vector<float, 4>& minVal, const vislib::math::Vector<float, 4>& maxVal)
-    : AbstractParam(), val(initVal), minVal(minVal), maxVal(maxVal) {
+param::Vector4fParam::Vector4fParam(const vislib::math::Vector<float, 4>& initVal, const vislib::math::Vector<float, 4>& minVal, const vislib::math::Vector<float, 4>& maxVal) : AbstractParam(), val(), minVal(minVal), maxVal(maxVal) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR4F);
+    this->SetValue(initVal);
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
-    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR4F);
 }
 
 
