@@ -154,15 +154,15 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     if (this->draw_replacement) {
         // Render bounding box as replacement
-        auto const lhsFBO = call.GetFramebufferObject();
-        lhsFBO->Enable();
+        auto const lhsFBO = call.GetFramebuffer();
+        lhsFBO->bind();
 
         glm::mat4 proj = cam.getProjectionMatrix();
         glm::mat4 view = cam.getViewMatrix();
         glm::mat4 mvp = proj * view;
         
-        float vp_fw = call.GetFramebufferObject()->getWidth();
-        float vp_fh = call.GetFramebufferObject()->getHeight();
+        float vp_fw = call.GetFramebuffer()->getWidth();
+        float vp_fh = call.GetFramebuffer()->getHeight();
 
         float alpha = alphaParam.Param<param::FloatParam>()->Value();
 
@@ -191,7 +191,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
         this->utils.DrawQuadPrimitives(mvp, glm::vec2(vp_fw, vp_fh));
 
-        lhsFBO->Disable();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     } else {
 
         auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();

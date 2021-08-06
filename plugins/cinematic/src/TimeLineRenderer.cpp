@@ -18,7 +18,7 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
+TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModuleGL()
     , keyframeKeeperSlot("keyframeData", "Connects to the KeyframeKeeper")
     , moveRightFrameParam("gotoRightFrame", "Move to right animation time frame.")
     , moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame.")
@@ -131,8 +131,8 @@ bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
 
 bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
 
-    auto const lhsFBO = call.GetFramebufferObject();
-    lhsFBO->Enable();
+    auto const lhsFBO = call.GetFramebuffer();
+    lhsFBO->bind();
 
     view::Camera_2 cam;
     call.GetCamera(cam);
@@ -441,7 +441,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     // Draw all ---------------------------------------------------------------
     this->utils.DrawAll(ortho, this->viewport);
 
-    lhsFBO->Disable();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }

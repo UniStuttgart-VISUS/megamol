@@ -378,6 +378,13 @@ bool protein::SolventVolumeRenderer::create ( void ) {
     if( !loadShader( this->solTypeCountShader, "protein::std::solventTypeCountVertex", "protein::std::visibleSolventMoleculeFragment" ) )
         return false;
 
+    // Initialize render utils
+    if (!renderUtils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
     return true;
 }
 
@@ -1541,7 +1548,18 @@ bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3DGL *
 
     //glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glEnable( GL_BLEND);
-    this->proteinFBO->DrawColourTexture();
+    // Create 2D orthographic mvp matrix
+    call->GetFramebuffer()->bind();
+    // Create 2D orthographic mvp matrix
+    glm::mat4 ortho = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
+    glm::vec3 pos_bottom_left = {0.0, 0.0, 1.0f};
+    glm::vec3 pos_upper_left = {0.0, 1.0, 1.0f};
+    glm::vec3 pos_upper_right = {1.0, 1.0, 1.0f};
+    glm::vec3 pos_bottom_right = {1.0, 0.0, 1.0f};
+    renderUtils.Push2DColorTexture(this->proteinFBO->getColorAttachment(0)->getName(), pos_bottom_left, pos_upper_left,
+        pos_upper_right, pos_bottom_right);
+    renderUtils.DrawTextures(ortho, {call->GetFramebuffer()->getWidth(), call->GetFramebuffer()->getHeight()});
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //glDisable( GL_BLEND);
     CHECK_FOR_OGL_ERROR();
 

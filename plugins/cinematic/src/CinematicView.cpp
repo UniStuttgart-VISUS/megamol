@@ -130,21 +130,12 @@ CinematicView::CinematicView(void)
 
 
 CinematicView::~CinematicView(void) {
-
-    if (this->_fbo != nullptr) {
-        if (this->_fbo->IsEnabled()) {
-            this->_fbo->Disable();
-        }
-        this->_fbo->Release();
-        this->_fbo.reset();
-    }
     this->render_to_file_cleanup();
     this->Release();
 }
 
 
-
-void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call) {
+ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
     // Get update data from keyframe keeper -----------------------------------
     auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
@@ -326,12 +317,6 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
         texWidth = static_cast<int>(vp_fh_reduced * cineRatio);
     }
 
-    // Set camera settings ----------------------------------------------------
-    auto res = cam_type::screen_size_type(glm::ivec2(fboWidth, fboHeight));
-    this->_camera.resolution_gate(res);
-    auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, fboHeight, fboWidth, 0}); // left, top, right, bottom!
-    this->_camera.image_tile(tile);
-
     // Set camera parameters of selected keyframe for this view.
     // But only if selected keyframe differs to last locally stored and shown keyframe.
     if (this->shownKeyframe != skf) {
@@ -339,41 +324,40 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
 
         // Apply selected keyframe parameters only, if at least one valid keyframe exists.
         if (!ccc->GetKeyframes()->empty()) {
-            // ! Using only a subset of the keyframe camera state !
-            auto pos = skf.GetCamera().position;
-            this->_camera.position(glm::vec4(pos[0], pos[1], pos[2], 1.0f));
-            auto ori = skf.GetCamera().orientation;
-            this->_camera.orientation(glm::quat(ori[3], ori[0], ori[1], ori[2]));
-            auto aper = skf.GetCamera().half_aperture_angle_radians;
-            this->_camera.half_aperture_angle_radians(aper);
+            // ! Using only a subset of the keyframe camera state (pose and fov/frustrum height)!
+            auto pose = skf.GetCamera().get<Camera::Pose>();
+            if (skf.GetCamera().get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                auto skf_intrinsics = skf.GetCamera().get<Camera::PerspectiveParameters>();
+                auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+                cam_intrinsics.fovy = skf_intrinsics.fovy;
+                _camera = Camera(pose, cam_intrinsics);
+            } else if (skf.GetCamera().get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
+                auto skf_intrinsics = skf.GetCamera().get<Camera::OrthographicParameters>();
+                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                cam_intrinsics.frustrum_height = skf_intrinsics.frustrum_height;
+                _camera = Camera(pose, cam_intrinsics);
+            }
         } else {
             this->ResetView();
         }
     }
 
     // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
-    cam_type::minimal_state_type camera_state;
-    this->_camera.get_minimal_state(camera_state);
-    ccc->SetCameraState(std::make_shared<camera_state_type>(camera_state));
+    ccc->SetCameraState(std::make_shared<Camera>(_camera));
     if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe))
         return;
 
     // Apply showing skybox side ONLY if new camera parameters are set.
     // Non-permanent overwrite of selected keyframe camera by skybox camera settings.
     if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
-        cam_type::snapshot_type snapshot;
-        this->_camera.take_snapshot(snapshot, thecam::snapshot_content::all);
+        auto pose = _camera.get<Camera::Pose>();
 
-        glm::vec4 snap_pos = snapshot.position;
-        glm::vec4 snap_right = snapshot.right_vector;
-        glm::vec4 snap_up = snapshot.up_vector;
-        glm::vec4 snap_view = snapshot.view_vector;
+        const glm::vec3 snap_pos = pose.position;
+        const glm::vec3 cam_right = pose.right;
+        const glm::vec3 cam_up = pose.up;
+        const glm::vec3 cam_view = pose.position;
 
-        glm::vec3 cam_right = static_cast<glm::vec3>(snap_right);
-        glm::vec3 cam_up = static_cast<glm::vec3>(snap_up);
-        glm::vec3 cam_view = static_cast<glm::vec3>(snap_view);
-
-        glm::vec4 new_pos = snap_pos;
+        glm::vec3 new_pos = snap_pos;
         glm::quat new_orientation;
         const float Rad180Degrees = glm::radians(180.0f);
         const float Rad90Degrees = glm::radians(90.0f);
@@ -393,34 +377,41 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
             }
         } else {
             auto const center_ = cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter();
-            const glm::vec4 center = glm::vec4(center_.X(), center_.Y(), center_.Z(), 1.0f);
+            const glm::vec3 center = glm::vec4(center_.X(), center_.Y(), center_.Z(), 1.0f);
             const float width = cr3d->AccessBoundingBoxes().BoundingBox().Width();
             const float height = cr3d->AccessBoundingBoxes().BoundingBox().Height();
             const float depth = cr3d->AccessBoundingBoxes().BoundingBox().Depth();
             if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_FRONT) {
-                new_pos = center - depth * snap_view;
+                new_pos = center - depth * cam_view;
             } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
-                new_pos = center + depth * snap_view;
+                new_pos = center + depth * cam_view;
                 new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_right);
                 new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_view);
             } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
-                new_pos = center + width * snap_right;
+                new_pos = center + width * cam_right;
                 new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_up);
             } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
-                new_pos = center - width * snap_right;
+                new_pos = center - width * cam_right;
                 new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_up);
             } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
-                new_pos = center + height * snap_up;
+                new_pos = center + height * cam_up;
                 new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_right);
             } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
-                new_pos = center - height * snap_up;
+                new_pos = center - height * cam_up;
                 new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_right);
             }
         }
         // Apply new position, orientation and aperture angle to current camera.
-        this->_camera.position(new_pos);
-        this->_camera.orientation(new_orientation);
-        this->_camera.aperture_angle(90.0f);
+if (_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+            auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+            cam_intrinsics.fovy = 90.0f / 180.0f * 3.14f; //TODO proper conversion deg to rad
+
+            _camera = Camera(Camera::Pose(new_pos, new_orientation),cam_intrinsics);
+        } else {
+            //TODO what about ortho?
+        }
+
+        // TODO orthographic case?
     }
 
     // Render to texture ------------------------------------------------------------

@@ -17,6 +17,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/utility/RenderUtils.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -308,6 +309,9 @@ namespace protein {
 
         float *p;
         float *c;
+
+        // Render utility class used for drawing texture to framebuffer
+        core::utility::RenderUtils renderUtils;
     };
 
 

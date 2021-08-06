@@ -415,6 +415,9 @@ private:
     GLuint molVisVbo;
     // framebuffer object for molecule type counting
     std::shared_ptr<glowl::FramebufferObject> solTypeCountFbo;
+
+    // Render utility class used for drawing texture to framebuffer
+    core::utility::RenderUtils renderUtils;
 };
 
 

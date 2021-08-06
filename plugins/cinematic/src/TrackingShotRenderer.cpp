@@ -159,8 +159,8 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     }
 
     // Init rendering ---------------------------------------------------------
-    auto const lhsFBO = call.GetFramebufferObject();
-    lhsFBO->Enable();
+    auto const lhsFBO = call.GetFramebuffer();
+    lhsFBO->bind();
 
     glm::vec4 back_color;
     glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
@@ -171,7 +171,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
-    auto fbo = call.GetFramebufferObject();
+    auto fbo = call.GetFramebuffer();
 
     glm::vec3 cam_pos = cam_pose.position;
     glm::vec3 cam_view = cam_pose.direction;
@@ -224,7 +224,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     // Draw 2D ---------------------------------------------------------------
     this->utils.DrawAll(ortho, {vp_fw, vp_fh});
 
-    lhsFBO->Disable();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }

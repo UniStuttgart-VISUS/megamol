@@ -39,6 +39,8 @@
 #include <time.h>
 #include <iostream>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -88,7 +90,8 @@ protein::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
         , volIsoOpacity(0.4f)
         , volClipPlaneFlag(false)
         , volClipPlaneOpacity(0.4f)
-        , forceUpdateVolumeTexture(true) {
+        , forceUpdateVolumeTexture(true)
+        , renderUtils () {
     this->protDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
 
@@ -391,6 +394,13 @@ bool protein::GLSLVolumeRenderer::create ( void ) {
         }
     } catch ( vislib::Exception e ) {
         Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create color writing shader: %s\n", this->ClassName(), e.GetMsgA() );
+        return false;
+    }
+
+    // Initialize render utils
+    if (!renderUtils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -705,7 +715,17 @@ bool protein::GLSLVolumeRenderer::RenderMolecularData( view::CallRender3DGL *cal
     }
 
     if( this->renderProteinParam.Param<param::BoolParam>()->Value() ) {
-        this->proteinFBO->DrawColourTexture();
+        call->GetFramebuffer()->bind();
+        // Create 2D orthographic mvp matrix
+        glm::mat4 ortho = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
+        glm::vec3 pos_bottom_left = {0.0, 0.0, 1.0f};
+        glm::vec3 pos_upper_left = {0.0, 1.0, 1.0f};
+        glm::vec3 pos_upper_right = {1.0, 1.0, 1.0f};
+        glm::vec3 pos_bottom_right = {1.0, 0.0, 1.0f};
+        renderUtils.Push2DColorTexture(
+            this->proteinFBO->getColorAttachment(0)->getName(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
+        renderUtils.DrawTextures(ortho, {call->GetFramebuffer()->getWidth(), call->GetFramebuffer()->getHeight()});
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         CHECK_FOR_OGL_ERROR();
     }
 
