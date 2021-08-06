@@ -53,7 +53,8 @@ namespace core {
     }
 
     std::pair<bool, std::string> AbstractWriterParams::getNextFilename() {
-        const std::string filepath_param = this->filePathSlot.template Param<param::FilePathParam>()->Value().PeekBuffer();
+        const std::string filepath_param =
+            this->filePathSlot.template Param<param::FilePathParam>()->Value().generic_u8string().c_str();
 
         const std::string filepath = filepath_param.find_last_of("/\\") != std::string::npos ? filepath_param.substr(0, filepath_param.find_last_of("/\\") + 1) : "";
         const std::string filename = filepath_param.find_last_of("/\\") != std::string::npos ? filepath_param.substr(filepath_param.find_last_of("/\\") + 1) : filepath_param;

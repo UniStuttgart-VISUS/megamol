@@ -63,7 +63,7 @@ megamol::stdplugin::volume::VolumetricDataSource::VolumetricDataSource(void)
     this->paramBuffers.SetParameter(new core::param::IntParam(2, 2));
     this->MakeSlotAvailable(&this->paramBuffers);
 
-    this->paramFileName.SetParameter(new core::param::FilePathParam(_T("")));
+    this->paramFileName.SetParameter(new core::param::FilePathParam(""));
     this->paramFileName.SetUpdateCallback(&VolumetricDataSource::onFileNameChanged);
     this->MakeSlotAvailable(&this->paramFileName);
 
@@ -127,7 +127,7 @@ size_t megamol::stdplugin::volume::VolumetricDataSource::calcFrameSize(void) con
  * megamol::stdplugin::volume::VolumetricDataSource::create
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::create(void) {
-    if (!this->paramFileName.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
+    if (!this->paramFileName.Param<core::param::FilePathParam>()->Value().empty()) {
         this->onFileNameChanged(this->paramFileName);
     }
     return true;
@@ -234,7 +234,8 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onFileNameChanged(core::p
     }
 
     /* Read the header. */
-    vislib::StringA fileName(this->paramFileName.Param<core::param::FilePathParam>()->Value());
+    vislib::StringA fileName(
+        this->paramFileName.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     if (::datRaw_readHeader(fileName.PeekBuffer(), this->fileInfo, nullptr) != FALSE) {
         Log::DefaultLog.WriteInfo(_T("Successfully loaded dat file %hs."), fileName.PeekBuffer());
 

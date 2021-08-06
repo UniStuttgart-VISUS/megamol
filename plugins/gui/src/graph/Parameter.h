@@ -54,11 +54,12 @@ namespace gui {
             bool,                            // BOOL
             float,                           // FLOAT
             int,                             // INT      ENUM
-            std::string,                     // STRING   TRANSFERFUNCTION    FILEPATH    FLEXENUM
+            std::string,                     // STRING   TRANSFERFUNCTION   FLEXENUM
+            std::filesystem::path,           // FILEPATH
             vislib::math::Ternary,           // TERNARY
             glm::vec2,                       // VECTOR2F
             glm::vec3,                       // VECTOR3F
-            glm::vec4                        // VECTOR4F, COLOR
+            glm::vec4                        // VECTOR4F COLOR
             >
             Value_t;
 
@@ -318,7 +319,7 @@ namespace gui {
         bool widget_flexenum(WidgetScope scope, const std::string& label, std::string& val,
             const megamol::core::param::FlexEnumParam::Storage_t& store);
         bool widget_filepath(
-            WidgetScope scope, const std::string& label, std::string& val, const FilePathStorage_t& store);
+            WidgetScope scope, const std::string& label, std::filesystem::path& val, const FilePathStorage_t& store);
         bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& val);
         bool widget_int(WidgetScope scope, const std::string& label, int& val, int minv, int maxv);
         bool widget_float(WidgetScope scope, const std::string& label, float& val, float minv, float maxv);
