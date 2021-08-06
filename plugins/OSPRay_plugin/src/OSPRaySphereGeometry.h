@@ -56,15 +56,11 @@ namespace ospray {
         virtual bool getExtends(core::Call& call);
 
         bool InterfaceIsDirty();
-        void getClipData(float* clipDat, float* clipCol);
 
         core::param::ParamSlot particleList;
 
         /** The call for data */
         core::CallerSlot getDataSlot;
-
-        /** The call for clipping plane */
-        core::CallerSlot getClipPlaneSlot;
 
     private:
         // data objects

@@ -281,7 +281,7 @@ namespace ospray {
         for (auto dl : distant_lights) {
             light = ::ospray::cpp::Light("distant");
                 if (dl.eye_direction == true) {
-                    light.setParam("direction", convertToVec4f(eyeDir));
+                    light.setParam("direction", convertToVec3f(eyeDir));
                 } else {
                     light.setParam("direction", convertToVec3f(dl.direction));
                 }
