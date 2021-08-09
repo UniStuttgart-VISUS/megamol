@@ -134,11 +134,10 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     auto const lhsFBO = call.GetFramebuffer();
     lhsFBO->bind();
 
-    view::Camera_2 cam;
-    call.GetCamera(cam);
+    view::Camera cam = call.GetCamera();
     glm::vec2 current_viewport;
-    current_viewport.x = static_cast<float>(cam.resolution_gate().width());
-    current_viewport.y = static_cast<float>(cam.resolution_gate().height());
+    current_viewport.x = static_cast<float>(call.GetFramebuffer()->getWidth());
+    current_viewport.y = static_cast<float>(call.GetFramebuffer()->getHeight());
     glm::mat4 ortho = glm::ortho(0.0f, current_viewport.x, 0.0f, current_viewport.y, -1.0f, 1.0f);
 
     if ((current_viewport != this->viewport) || (this->lineHeight != this->utils.GetTextLineHeight())) {

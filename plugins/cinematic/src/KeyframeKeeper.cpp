@@ -435,7 +435,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             auto cam_pose = camera.get<megamol::core::view::Camera::Pose>();
 
             glm::vec3 new_view = this->modelBboxCenter - cam_pose.position;
-            glm::quat new_orientation = view::quaternion_from_vectors(new_view, cam_pose.up);
+            glm::quat new_orientation = glm::quat(new_view, cam_pose.up);
 
             //megamol::core::view::Camera::Pose new_cam_pose(cam_pose.position, new_orientation);
             camera.setPose({cam_pose.position, new_orientation});
@@ -457,8 +457,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
             auto cam_pose = camera.get<megamol::core::view::Camera::Pose>();
 
-            glm::vec3 new_view = view::vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
-            glm::quat new_orientation = view::quaternion_from_vectors(new_view, cam_pose.up);
+            auto vislib_view = this->editCurrentViewParam.Param<param::Vector3fParam>()->Value();
+            glm::vec3 new_view = glm::vec3(vislib_view.X(), vislib_view.Y(), vislib_view.Z());
+            glm::quat new_orientation = glm::quat(new_view, cam_pose.up);
             camera.setPose({cam_pose.position, new_orientation});
 
             this->selectedKeyframe.SetCameraState(camera);
@@ -478,8 +479,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
             auto cam_pose = camera.get<megamol::core::view::Camera::Pose>();
 
-            glm::vec3 new_up= view::vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
-            glm::quat new_orientation = view::quaternion_from_vectors(cam_pose.direction, new_up);
+            auto vislib_up = this->editCurrentUpParam.Param<param::Vector3fParam>()->Value();
+            glm::vec3 new_up = glm::vec3(vislib_up.X(),vislib_up.Y(),vislib_up.Z());
+            glm::quat new_orientation = glm::quat(cam_pose.direction, new_up);
             camera.setPose({cam_pose.position, new_orientation});
 
             this->selectedKeyframe.SetCameraState(camera);
@@ -496,9 +498,17 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
             float aperture = this->editCurrentApertureParam.Param<param::FloatParam>()->Value();
-            auto cam_state = this->selectedKeyframe.GetCamera();
-            cam_state.half_aperture_angle_radians = glm::radians(aperture/2.0f);
-            this->selectedKeyframe.SetCameraState(cam_state);
+            try {
+                auto cam = this->selectedKeyframe.GetCamera();
+                auto cam_pose = cam.get<view::Camera::Pose>();
+                auto cam_intrinsics = cam.get<view::Camera::PerspectiveParameters>();
+                cam_intrinsics.fovy = glm::radians(aperture / 2.0f);
+                this->selectedKeyframe.SetCameraState(view::Camera(cam_pose, cam_intrinsics));
+            } catch (...) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[KEYFRAME KEEPER] Exception - Failed to set aperature angle to camera: %s",
+                    this->filename.c_str());
+            }
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
@@ -1015,9 +1025,11 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         Keyframe kf = Keyframe();
         kf.SetAnimTime(t);
         kf.SetSimTime(0.0f);
-        auto state = this->cameraState;
-        state.half_aperture_angle_radians = glm::radians(30.0f); // = 60° aperture angle
-        kf.SetCameraState(state);
+        auto cam = this->cameraState;
+        auto cam_pose = cam.get<view::Camera::Pose>();
+        auto cam_intrinsics = cam.get<view::Camera::PerspectiveParameters>();
+        cam_intrinsics.fovy = glm::radians(30.0f); // = 60° aperture angle
+        kf.SetCameraState(view::Camera(cam_pose,cam_intrinsics));
         return kf;
     }
     else if (t < this->keyframes.front().GetAnimTime()) {
@@ -1095,17 +1107,26 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
             cam_kf_pose.position = pk;
         }
 
-        //interpolate aperture angle ------------------------------------------
-        float a0 = c0.aperture_angle();
-        float a1 = c1.aperture_angle();
-        float a2 = c2.aperture_angle();
-        float a3 = c3.aperture_angle();
-        if (a1 == a2) {
-            cam_kf.aperture_angle(a1);
+        try {
+            // interpolate aperture angle ------------------------------------------
+            float a0 = c0.get<view::Camera::FieldOfViewY>();
+            float a1 = c1.get<view::Camera::FieldOfViewY>();
+            float a2 = c2.get<view::Camera::FieldOfViewY>();
+            float a3 = c3.get<view::Camera::FieldOfViewY>();
+            if (a1 == a2) {
+                auto cam_intrinsics = cam_kf.get<view::Camera::PerspectiveParameters>();
+                cam_intrinsics.fovy = a1;
+                cam_kf.setPerspectiveProjection(cam_intrinsics);
+            } else {
+                float ak = this->float_interpolation(iT, a0, a1, a2, a3);
+                auto cam_intrinsics = cam_kf.get<view::Camera::PerspectiveParameters>();
+                cam_intrinsics.fovy = ak;
+                cam_kf.setPerspectiveProjection(cam_intrinsics);
+            }
         }
-        else {
-            float ak = this->float_interpolation(iT, a0, a1, a2, a3);
-            cam_kf.aperture_angle(ak);
+        catch (const std::exception&) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[KEYFRAME KEEPER] Exception - Failed to interpolate aperature angle: %s", this->filename.c_str());
         }
 
         //interpolate orientation ---------------------------------------------
@@ -1215,7 +1236,7 @@ bool KeyframeKeeper::saveKeyframes() {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.c_str());
     } 
     catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.Write6Error("[KEYFRAME KEEPER] Unknown Exception - Failed to store keyframes to file: %s", this->filename.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] Unknown Exception - Failed to store keyframes to file: %s", this->filename.c_str());
         return false;
     }
 
@@ -1305,21 +1326,18 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
 
     // Set new parameter values of changed selected keyframe
     megamol::core::view::Camera camera(kf.GetCamera());
-    cam_type::snapshot_type snapshot;
-    camera.take_snapshot(snapshot, thecam::snapshot_content::up_vector | thecam::snapshot_content::view_vector | thecam::snapshot_content::camera_coordinate_system);
-    glm::vec4 cam_pos = snapshot.position;
-    glm::vec4 cam_up = snapshot.up_vector;
-    glm::vec4 cam_view = snapshot.view_vector;
-    glm::vec3 pos = static_cast<glm::vec3>(cam_pos);
-    glm::vec3 view = static_cast<glm::vec3>(cam_view);
-    glm::vec3 up = static_cast<glm::vec3>(cam_up);
+    auto cam_pose = camera.getPose();
+    glm::vec3 pos = cam_pose.position;
+    glm::vec3 view = cam_pose.direction;
+    glm::vec3 up = cam_pose.up;
     this->editCurrentAnimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetAnimTime(), false);
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
     this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(pos), false);
     this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(view), false);
     this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(up), false);
-    this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(camera.aperture_angle(), false);
-    
+    if (camera.getProjectionType() == view::Camera::PERSPECTIVE) {
+        this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(camera.get<view::Camera::FieldOfViewY>(), false);
+    }
 }
 
 

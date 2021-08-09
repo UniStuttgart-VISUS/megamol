@@ -10,7 +10,6 @@
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/Camera_2.h"
 
 #include "Keyframe.h"
 

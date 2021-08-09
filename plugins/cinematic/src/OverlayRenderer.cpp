@@ -446,8 +446,8 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     // Create 2D orthographic mvp matrix
     glm::mat4 ortho = glm::ortho(0.0f, this->m_viewport.x, 0.0f, this->m_viewport.y, -1.0f, 1.0f);
 
-    auto const lhsFBO = call.GetFramebufferObject();
-    lhsFBO->Enable();
+    auto const lhsFBO = call.GetFramebuffer();
+    lhsFBO->bind();
 
     // Draw mode dependent stuff
     auto mode = this->paramMode.Param<param::EnumParam>()->Value();
@@ -583,7 +583,7 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     } break;
     }
 
-    lhsFBO->Disable();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }

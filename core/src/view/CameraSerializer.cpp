@@ -112,7 +112,7 @@ void CameraSerializer::addCamToJsonObject(nlohmann::json& outObj, Camera const& 
         // Serialize intrinsics
         if (cam_type == Camera::PERSPECTIVE) {
             auto cam_intrinsics = cam.get<Camera::PerspectiveParameters>();
-            outObj["fovy"] = cam_intrinsics.fovy;
+            outObj["fovy"] = cam_intrinsics.fovy.value();
             outObj["aspect"] = cam_intrinsics.aspect.value();
             outObj["near_plane"] = cam_intrinsics.near_plane.value();
             outObj["far_plane"] = cam_intrinsics.far_plane.value();
@@ -124,7 +124,7 @@ void CameraSerializer::addCamToJsonObject(nlohmann::json& outObj, Camera const& 
         } else if (cam_type == Camera::ORTHOGRAPHIC) {
             auto cam_intrinsics = cam.get<Camera::OrthographicParameters>();
 
-            outObj["frustrum_height"] = cam_intrinsics.frustrum_height;
+            outObj["frustrum_height"] = cam_intrinsics.frustrum_height.value();
             outObj["aspect"] = cam_intrinsics.aspect.value();
             outObj["near_plane"] = cam_intrinsics.near_plane.value();
             outObj["far_plane"] = cam_intrinsics.far_plane.value();
