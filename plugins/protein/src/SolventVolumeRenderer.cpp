@@ -1149,7 +1149,8 @@ void protein::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataC
     glPopMatrix();
 
     float *counter = new float[mol->AtomSolventResidueCount()];
-    this->solTypeCountFbo.GetColourTexture( counter, 0, GL_RED, GL_FLOAT);
+    glGetTextureImage(this->solTypeCountFbo->getColorAttachment(0)->getName(), 0, GL_RED, GL_FLOAT,
+        mol->AtomSolventResidueCount() * sizeof(float), counter);
     vislib::StringA str, tmpStr;
     for( unsigned int i = 0; i < mol->AtomSolventResidueCount(); i++ ) {
         tmpStr.Format( "Solvent Molecule Type %i, count: %i; ", i, int( counter[i]));

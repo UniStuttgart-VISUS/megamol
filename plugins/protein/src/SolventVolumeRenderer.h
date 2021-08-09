@@ -18,6 +18,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/utility/RenderUtils.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "slicing.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
