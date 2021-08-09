@@ -752,8 +752,8 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(glm::mat4 ortho) {
     glDisable(GL_DEPTH_TEST);
 
     // Transformation uniform.
-    glUniformMatrix4fv(
-        this->scientificAxisShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE, glm::value_ptr(screenLastMVP));
+    glUniformMatrix4fv(this->scientificAxisShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE,
+        glm::value_ptr(screenLastMVP));
 
     // Other uniforms.
     glUniform1ui(this->scientificAxisShader->getUniformLocation("depth"), recursiveDepth);
@@ -869,8 +869,8 @@ void ScatterplotMatrixRenderer2D::drawPoints() {
 
     // Transformation uniforms.
     glUniform4fv(this->pointShader->getUniformLocation("viewport"), 1, viewport);
-    glUniformMatrix4fv(this->pointShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE,
-        glm::value_ptr(screenLastMVP));
+    glUniformMatrix4fv(
+        this->pointShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE, glm::value_ptr(screenLastMVP));
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
@@ -927,8 +927,8 @@ void ScatterplotMatrixRenderer2D::drawLines() {
 
     // Transformation uniforms.
     glUniform4fv(this->lineShader->getUniformLocation("viewport"), 1, viewport);
-    glUniformMatrix4fv(this->lineShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE,
-        glm::value_ptr(screenLastMVP));
+    glUniformMatrix4fv(
+        this->lineShader->getUniformLocation("modelViewProjection"), 1, GL_FALSE, glm::value_ptr(screenLastMVP));
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();

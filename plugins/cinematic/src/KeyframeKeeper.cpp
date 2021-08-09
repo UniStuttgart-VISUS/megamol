@@ -9,6 +9,15 @@
 #include "KeyframeKeeper.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/EnumParam.h"
 
 
 using namespace megamol;
@@ -37,7 +46,9 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     , resetViewParam("editSelected::resetLookAt", "Reset the 'look at' vector of the selected keyframe to the center of the model boundng box.")
     , editCurrentViewParam("editSelected::lookAtVector", "Edit 'look at' vector of the selected keyframe.")
     , editCurrentUpParam("editSelected::upVector", "Edit up vector direction relative to 'look at' vector of the selected keyframe.")
-    , editCurrentApertureParam("editSelected::apertureAngle", "Edit apperture angle of the selected keyframe.")
+    , editCurrentProjectionParam("editSelected::Projection", "Edit the camera projection of the selected keyframe.")
+    , editCurrentFovyParam("editSelected::Fovy", "Edit field of view y value of the selected keyframe (only for perspective perspective).")
+    , editCurrentFrustumHeightParam("editSelected::furstumHeight", "Edit the frustum height of the selected keyframe (only for orthographic perspective).")
     , fileNameParam("storage::filename", "The name of the file to load or save keyframes.")
     , saveKeyframesParam("storage::save", "Save keyframes to file.")
     , loadKeyframesParam("storage::load", "Load keyframes from file.")
@@ -140,8 +151,18 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->editCurrentUpParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f)));
     this->MakeSlotAvailable(&this->editCurrentUpParam);
 
-    this->editCurrentApertureParam.SetParameter(new param::FloatParam(60.0f, 0.0f, 180.0f));
-    this->MakeSlotAvailable(&this->editCurrentApertureParam);
+    param::EnumParam* pe = new param::EnumParam(view::Camera::PERSPECTIVE);
+    pe->SetTypePair(view::Camera::PERSPECTIVE, "Perspective");
+    pe->SetTypePair(view::Camera::ORTHOGRAPHIC, "Orthographic");
+    this->editCurrentProjectionParam << pe;
+    this->MakeSlotAvailable(&this->editCurrentProjectionParam);
+    pe = nullptr;
+
+    this->editCurrentFovyParam.SetParameter(new param::FloatParam(1.0f, 0.0f)); /// sane default value?
+    this->MakeSlotAvailable(&this->editCurrentFovyParam);
+
+    this->editCurrentFrustumHeightParam.SetParameter(new param::FloatParam(1.0f, 0.0f)); /// sane default value?
+    this->MakeSlotAvailable(&this->editCurrentFrustumHeightParam);
 
     this->fileNameParam.SetParameter(new param::FilePathParam(this->filename, param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->fileNameParam);
@@ -152,6 +173,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->loadKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_L, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->loadKeyframesParam);
     this->loadKeyframesParam.ForceSetDirty(); // Try to load keyframe file at program start
+
 }
 
 
@@ -431,13 +453,13 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
   
-            megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
-            auto cam_pose = camera.get<megamol::core::view::Camera::Pose>();
+            view::Camera camera(this->selectedKeyframe.GetCamera());
+            auto cam_pose = camera.get<view::Camera::Pose>();
 
             glm::vec3 new_view = this->modelBboxCenter - cam_pose.position;
             glm::quat new_orientation = glm::quat(new_view, cam_pose.up);
 
-            //megamol::core::view::Camera::Pose new_cam_pose(cam_pose.position, new_orientation);
+            //view::Camera::Pose new_cam_pose(cam_pose.position, new_orientation);
             camera.setPose({cam_pose.position, new_orientation});
 
             this->selectedKeyframe.SetCameraState(camera);
@@ -454,8 +476,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
 
-            megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
-            auto cam_pose = camera.get<megamol::core::view::Camera::Pose>();
+            view::Camera camera(this->selectedKeyframe.GetCamera());
+            auto cam_pose = camera.get<view::Camera::Pose>();
 
             auto vislib_view = this->editCurrentViewParam.Param<param::Vector3fParam>()->Value();
             glm::vec3 new_view = glm::vec3(vislib_view.X(), vislib_view.Y(), vislib_view.Z());
@@ -476,8 +498,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
 
-            megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
-            auto cam_pose = camera.get<megamol::core::view::Camera::Pose>();
+            view::Camera camera(this->selectedKeyframe.GetCamera());
+            auto cam_pose = camera.get<view::Camera::Pose>();
 
             auto vislib_up = this->editCurrentUpParam.Param<param::Vector3fParam>()->Value();
             glm::vec3 new_up = glm::vec3(vislib_up.X(),vislib_up.Y(),vislib_up.Z());
@@ -491,28 +513,80 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentUpParam] No existing keyframe selected.");
         }
     }
-    // editCurrentApertureParam -----------------------------------------------------
-    if (this->editCurrentApertureParam.IsDirty()) {
-        this->editCurrentApertureParam.ResetDirty();
+    // editCurrentProjectionParam -----------------------------------------------------
+    if (this->editCurrentProjectionParam.IsDirty()) {
+        this->editCurrentProjectionParam.ResetDirty();
+
+        auto proj = static_cast<view::Camera::ProjectionType>(this->editCurrentProjectionParam.Param<param::EnumParam>()->Value());
+        if (proj == view::Camera::PERSPECTIVE) {
+            this->editCurrentFovyParam.Parameter()->SetGUIVisible(true);
+            this->editCurrentFrustumHeightParam.Parameter()->SetGUIVisible(false);
+        } else if (proj == view::Camera::PERSPECTIVE) {
+            this->editCurrentFovyParam.Parameter()->SetGUIVisible(false);
+            this->editCurrentFrustumHeightParam.Parameter()->SetGUIVisible(true);
+        }
 
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
-            float aperture = this->editCurrentApertureParam.Param<param::FloatParam>()->Value();
-            try {
-                auto cam = this->selectedKeyframe.GetCamera();
-                auto cam_pose = cam.get<view::Camera::Pose>();
-                auto cam_intrinsics = cam.get<view::Camera::PerspectiveParameters>();
-                cam_intrinsics.fovy = glm::radians(aperture / 2.0f);
-                this->selectedKeyframe.SetCameraState(view::Camera(cam_pose, cam_intrinsics));
-            } catch (...) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[KEYFRAME KEEPER] Exception - Failed to set aperature angle to camera: %s",
-                    this->filename.c_str());
+
+            view::Camera camera(this->selectedKeyframe.GetCamera());
+            if (proj == view::Camera::PERSPECTIVE) {
+                auto cam_param = camera.get<view::Camera::PerspectiveParameters>();
+                cam_param.fovy = this->editCurrentFovyParam.Param<param::FloatParam>()->Value();
+                camera.setPerspectiveProjection(cam_param);
+            } else if (proj == view::Camera::ORTHOGRAPHIC) {
+                auto cam_param = camera.get<view::Camera::OrthographicParameters>();
+                cam_param.frustrum_height = this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->Value();
+                camera.setOrthographicProjection(cam_param);
             }
+
+            this->selectedKeyframe.SetCameraState(camera);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[KEYFRAME KEEPER] [editCurrentFovyParam] No existing keyframe selected.");
         }
-        else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentApertureParam] No existing keyframe selected.");
+    }
+    // editCurrentFovyParam -----------------------------------------------------
+    if (this->editCurrentFovyParam.IsDirty()) {
+        this->editCurrentFovyParam.ResetDirty();
+
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
+            Keyframe tmp_kf = this->selectedKeyframe;
+
+            view::Camera camera(this->selectedKeyframe.GetCamera());
+            if (camera.getProjectionType() == view::Camera::PERSPECTIVE) {
+                auto cam_param = camera.get<view::Camera::PerspectiveParameters>();
+                cam_param.fovy = this->editCurrentFovyParam.Param<param::FloatParam>()->Value();
+                camera.setPerspectiveProjection(cam_param);
+            }
+
+            this->selectedKeyframe.SetCameraState(camera);
+            this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[KEYFRAME KEEPER] [editCurrentFovyParam] No existing keyframe selected.");
+        }
+    }
+    // editCurrentFrustumHeightParam -----------------------------------------------------
+    if (this->editCurrentFrustumHeightParam.IsDirty()) {
+        this->editCurrentFrustumHeightParam.ResetDirty();
+
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
+            Keyframe tmp_kf = this->selectedKeyframe;
+
+            view::Camera camera(this->selectedKeyframe.GetCamera());
+            if (camera.getProjectionType() == view::Camera::ORTHOGRAPHIC) {
+                auto cam_param = camera.get<view::Camera::OrthographicParameters>();
+                cam_param.frustrum_height = this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->Value();
+                camera.setOrthographicProjection(cam_param);
+            }
+
+            this->selectedKeyframe.SetCameraState(camera);
+            this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[KEYFRAME KEEPER] [editCurrentFovyParam] No existing keyframe selected.");
         }
     }
     // fileNameParam ----------------------------------------------------------
@@ -1047,8 +1121,8 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
 
         // New default keyframe
         Keyframe kf = Keyframe();
-        megamol::core::view::Camera cam_kf = kf.GetCamera();
-        auto cam_kf_pose = cam_kf.get<megamol::core::view::Camera::Pose>();
+        view::Camera cam_kf = kf.GetCamera();
+        auto cam_kf_pose = cam_kf.get<view::Camera::Pose>();
 
         // Nothing to do for animation time
         kf.SetAnimTime(t);
@@ -1073,10 +1147,10 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         i0 = (i1 > 0) ? (i1 - 1) : (0);
         i3 = (i2 < kfIdxCnt) ? (i2 + 1) : (kfIdxCnt);
 
-        megamol::core::view::Camera c0 = this->keyframes[i0].GetCamera();
-        megamol::core::view::Camera c1 = this->keyframes[i1].GetCamera();
-        megamol::core::view::Camera c2 = this->keyframes[i2].GetCamera();
-        megamol::core::view::Camera c3 = this->keyframes[i3].GetCamera();
+        view::Camera c0 = this->keyframes[i0].GetCamera();
+        view::Camera c1 = this->keyframes[i1].GetCamera();
+        view::Camera c2 = this->keyframes[i2].GetCamera();
+        view::Camera c3 = this->keyframes[i3].GetCamera();
 
         // Interpolate simulation time linear between i1 and i2
         float simT1 = this->keyframes[i1].GetSimTime();
@@ -1088,10 +1162,10 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         // => Prevent interpolation loops if time of keyframes is different, but cam params are the same.
 
         //interpolate position ------------------------------------------------
-        glm::vec3 p0 = c0.get<megamol::core::view::Camera::Pose>().position;
-        glm::vec3 p1 = c1.get<megamol::core::view::Camera::Pose>().position;
-        glm::vec3 p2 = c2.get<megamol::core::view::Camera::Pose>().position;
-        glm::vec3 p3 = c3.get<megamol::core::view::Camera::Pose>().position;
+        glm::vec3 p0 = c0.get<view::Camera::Pose>().position;
+        glm::vec3 p1 = c1.get<view::Camera::Pose>().position;
+        glm::vec3 p2 = c2.get<view::Camera::Pose>().position;
+        glm::vec3 p3 = c3.get<view::Camera::Pose>().position;
         /// Use additional control point positions to manipulate interpolation curve for first and last keyframe
         if (p0 == p1) {
             p0 = this->startCtrllPos;
@@ -1130,9 +1204,9 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         }
 
         //interpolate orientation ---------------------------------------------
-        glm::quat c1_orient = c1.get<megamol::core::view::Camera::Pose>().to_quat();
-        glm::quat c2_orient = c2.get<megamol::core::view::Camera::Pose>().to_quat();
-        cam_kf_pose = megamol::core::view::Camera::Pose(
+        glm::quat c1_orient = c1.get<view::Camera::Pose>().to_quat();
+        glm::quat c2_orient = c2.get<view::Camera::Pose>().to_quat();
+        cam_kf_pose = view::Camera::Pose(
             cam_kf_pose.position, this->quaternion_interpolation(iT, c1_orient, c2_orient));
 
         // Finally set new interpoated camera for keyframe
@@ -1325,7 +1399,7 @@ bool KeyframeKeeper::loadKeyframes() {
 void KeyframeKeeper::updateEditParameters(Keyframe kf) {
 
     // Set new parameter values of changed selected keyframe
-    megamol::core::view::Camera camera(kf.GetCamera());
+    view::Camera camera(kf.GetCamera());
     auto cam_pose = camera.getPose();
     glm::vec3 pos = cam_pose.position;
     glm::vec3 view = cam_pose.direction;
@@ -1335,9 +1409,10 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(pos), false);
     this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(view), false);
     this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(up), false);
-    if (camera.getProjectionType() == view::Camera::PERSPECTIVE) {
-        this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(camera.get<view::Camera::FieldOfViewY>(), false);
-    }
+    this->editCurrentProjectionParam.Param<param::EnumParam>()->SetValue(static_cast<int>(camera.getProjectionType()), false);
+    this->editCurrentFovyParam.Param<param::FloatParam>()->SetValue(camera.get<view::Camera::FieldOfViewY>(), false);
+    this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->SetValue(
+        camera.get<view::Camera::FrustrumHeight>(), false);
 }
 
 

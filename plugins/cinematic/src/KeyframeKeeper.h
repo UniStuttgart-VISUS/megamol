@@ -12,17 +12,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/Vector3fParam.h"
 #include "mmcore/view/Camera.h"
 #include "mmcore/AbstractSlot.h"
-#include "mmcore/utility/xml/XmlParser.h"
-#include "mmcore/utility/xml/XmlReader.h"
 
 #include "vislib/math/Cuboid.h"
 #include "vislib/assert.h"
@@ -254,7 +245,9 @@ namespace cinematic {
         core::param::ParamSlot resetViewParam;
         core::param::ParamSlot editCurrentViewParam;
 		core::param::ParamSlot editCurrentUpParam;
-        core::param::ParamSlot editCurrentApertureParam;
+        core::param::ParamSlot editCurrentProjectionParam;
+        core::param::ParamSlot editCurrentFovyParam;
+        core::param::ParamSlot editCurrentFrustumHeightParam;
         core::param::ParamSlot fileNameParam;
         core::param::ParamSlot saveKeyframesParam;
         core::param::ParamSlot loadKeyframesParam;

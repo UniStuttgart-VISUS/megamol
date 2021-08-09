@@ -111,7 +111,8 @@ CinematicView::CinematicView(void)
     enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::centre), "Center");
     enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::right), "Right");
     this->eyeParam << enp;
-    this->MakeSlotAvailable(&this->eyeParam);
+    /// TODO implement
+    // this->MakeSlotAvailable(&this->eyeParam);
     enp = nullptr;
 
     param::EnumParam* pep = new param::EnumParam(static_cast<int>(megamol::core::thecam::Projection_type::perspective));
@@ -122,7 +123,8 @@ CinematicView::CinematicView(void)
     pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::toe_in), "Stereo Toe-In");
     pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::converged), "Converged");
     this->projectionParam << pep;
-    this->MakeSlotAvailable(&this->projectionParam);
+    /// TODO implement
+    // this->MakeSlotAvailable(&this->projectionParam);
     pep = nullptr;
 }
 
@@ -139,15 +141,13 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
     auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
 
-    if (cr3d != nullptr && ccc != nullptr) {
+    if ((cr3d != nullptr) && (ccc != nullptr)) {
 
         bool ccc_success = (*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData);
         ccc_success &= (*ccc)(CallKeyframeKeeper::CallForSetSimulationData);
 
-        bool utils_success = false;
-
-
         // Initialise render utils once
+        bool utils_success = false;
         if (!this->utils.Initialized()) {
             if (this->utils.Initialise(this->GetCoreInstance())) {
                 utils_success = true;
