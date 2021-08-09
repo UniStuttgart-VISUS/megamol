@@ -9,8 +9,10 @@
 #pragma once
 
 #include <algorithm>
+#include <cctype>
 #include <exception>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace {
