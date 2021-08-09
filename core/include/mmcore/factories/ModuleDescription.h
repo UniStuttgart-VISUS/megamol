@@ -9,10 +9,10 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "ObjectDescription.h"
 #include "mmcore/Module.h"
-#include "vislib/String.h"
 
 namespace megamol::core::factories {
 
@@ -78,7 +78,7 @@ namespace megamol::core::factories {
          * @return The newly created module object or 'NULL' in case of an
          *         error.
          */
-        Module::ptr_type CreateModule(const vislib::StringA& name) const;
+        Module::ptr_type CreateModule(const std::string& name) const;
 
     protected:
         /**

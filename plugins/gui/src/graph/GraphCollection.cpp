@@ -1186,7 +1186,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //    "[GUI] [DEBUG] Temporary creating module '%s'...", mod_desc->ClassName());
 
-        megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(nullptr));
+        megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(""));
         if (new_mod == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Unable to create module '%s'. [%s, %s, line %d]\n", mod_desc->ClassName(), __FILE__,

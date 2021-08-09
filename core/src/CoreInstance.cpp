@@ -2817,7 +2817,7 @@ megamol::core::Module::ptr_type megamol::core::CoreInstance::instantiateModule(
         return Module::ptr_type(nullptr);
     }
 
-    Module::ptr_type mod = Module::ptr_type(desc->CreateModule(modName));
+    Module::ptr_type mod = Module::ptr_type(desc->CreateModule(std::string(modName.PeekBuffer())));
     if (!mod) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "Unable to construct module \"%s\" (%s)", desc->ClassName(), path.PeekBuffer());

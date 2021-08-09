@@ -18,11 +18,11 @@ bool factories::ModuleDescription::IsAvailable() const {
 /*
  * factories::ModuleDescription::CreateModule
  */
-Module::ptr_type factories::ModuleDescription::CreateModule(const vislib::StringA& name) const {
+Module::ptr_type factories::ModuleDescription::CreateModule(const std::string& name) const {
     Module::ptr_type m = this->createModuleImpl();
     if (m) {
         m->fixParentBackreferences();
-        m->setModuleName(name);
+        m->setModuleName(vislib::StringA(name.c_str()));
     }
     return m;
 }
