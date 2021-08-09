@@ -1,61 +1,31 @@
-/*
- * imageviewer2.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "imageviewer2/ImageRenderer.h"
 
 namespace megamol::imageviewer2 {
-    /** Implementing the instance class of this plugin */
-    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-        REGISTERPLUGIN(plugin_instance)
+    class Imaggeviewer2PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+        REGISTERPLUGIN(Imaggeviewer2PluginInstance)
+
     public:
-        /** ctor */
-        plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
+        Imaggeviewer2PluginInstance()
+                : megamol::core::utility::plugins::AbstractPluginInstance("imageviewer2", "The imageviewer2 plugin."){};
 
-                /* machine-readable plugin assembly name */
-                "imageviewer2", // TODO: Change this!
+        ~Imaggeviewer2PluginInstance() override = default;
 
-                /* human-readable plugin description */
-                "Describing imageviewer2 (TODO: Change this!)") {
+        // Registers modules and calls
+        void registerClasses() override {
 
-            // here we could perform addition initialization
-        };
-        /** Dtor */
-        virtual ~plugin_instance(void) {
-            // here we could perform addition de-initialization
-        }
-        /** Registers modules and calls */
-        virtual void registerClasses(void) {
-
-            // register modules here:
-
+            // register modules
             this->module_descriptions.RegisterAutoDescription<megamol::imageviewer2::ImageRenderer>();
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::imageviewer2::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::imageviewer2::MyModule2>();
-            //   ...
-            //
 
-            // register calls here:
-
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::imageviewer2::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::imageviewer2::MyCall2>();
-            //   ...
-            //
-
+            // register calls
         }
     };
 } // namespace megamol::imageviewer2

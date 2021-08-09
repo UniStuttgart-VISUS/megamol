@@ -1,13 +1,10 @@
-/*
- * mmstd_volume.cpp
- *
- * Copyright (C) 2009-2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
  * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "BuckyBall.h"
@@ -18,29 +15,20 @@
 #include "VolumetricDataSource.h"
 
 namespace megamol::stdplugin::volume {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class VolumePluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(VolumePluginInstance)
+
 public:
-    /** ctor */
-    plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
+    VolumePluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "mmstd_volume", "Provides modules for volume rendering"){};
 
-              /* machine-readable plugin assembly name */
-              "mmstd_volume",
+    ~VolumePluginInstance() override = default;
 
-              /* human-readable plugin description */
-              "Provides modules for volume rendering"){
-          };
+    // Registers modules and calls
+    void registerClasses() override {
 
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-    }
-
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-
-        // register modules here:
+        // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::BuckyBall>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::DifferenceVolume>();
@@ -48,8 +36,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::VolumeSliceRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
 
-        // register calls here:
-
+        // register calls
     }
 };
 } // namespace megamol::stdplugin::volume

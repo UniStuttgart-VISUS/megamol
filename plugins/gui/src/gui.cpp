@@ -1,37 +1,23 @@
-/*
- * gui.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
-#include "stdafx.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-
 namespace megamol::gui {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class GuiPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(GuiPluginInstance)
+
 public:
-    /** ctor */
-    plugin_instance()
-            : ::megamol::core::utility::plugins::Plugin200Instance(
+    GuiPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("gui", "Graphical User Interface Plugin"){};
 
-                  /* machine-readable plugin assembly name */
-                  "gui",
+    ~GuiPluginInstance() override = default;
 
-                  /* human-readable plugin description */
-                  "Graphical User Interface Plugin"){
-
-                  // here we could perform addition initialization
-              };
-    /** Dtor */
-    virtual ~plugin_instance() {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses() {}
+    // Registers modules and calls
+    void registerClasses() override {}
 };
 } // namespace megamol::gui

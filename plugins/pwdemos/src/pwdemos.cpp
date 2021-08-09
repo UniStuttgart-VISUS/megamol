@@ -1,57 +1,43 @@
-/*
- * pwdemos.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "AOSphereRenderer.h"
 #include "BezierCPUMeshRenderer.h"
-#include "QuartzCrystalDataSource.h"
 #include "CrystalStructureVolumeRenderer.h"
+#include "PoreNetExtractor.h"
+#include "QuartzCrystalDataSource.h"
 #include "QuartzCrystalRenderer.h"
 #include "QuartzDataGridder.h"
-#include "QuartzRenderer.h"
 #include "QuartzParticleFortLoader.h"
-#include "QuartzTexRenderer.h"
-#include "QuartzPlaneTexRenderer.h"
 #include "QuartzPlaneRenderer.h"
-#include "PoreNetExtractor.h"
+#include "QuartzPlaneTexRenderer.h"
+#include "QuartzRenderer.h"
+#include "QuartzTexRenderer.h"
 
 #include "QuartzCrystalDataCall.h"
 #include "QuartzParticleDataCall.h"
 #include "QuartzParticleGridDataCall.h"
 
 namespace megamol::demos {
-    /** Implementing the instance class of this plugin */
-    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-        REGISTERPLUGIN(plugin_instance)
+    class PwdemosPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+        REGISTERPLUGIN(PwdemosPluginInstance)
+
     public:
-        /** ctor */
-        plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
+        PwdemosPluginInstance()
+                : megamol::core::utility::plugins::AbstractPluginInstance("pwdemos", "The pwdemos plugin."){};
 
-                /* machine-readable plugin assembly name */
-                "pwdemos", // TODO: Change this!
+        ~PwdemosPluginInstance() override = default;
 
-                /* human-readable plugin description */
-                "Describing pwdemos (TODO: Change this!)") {
+        // Registers modules and calls
+        void registerClasses() override {
 
-            // here we could perform addition initialization
-        };
-        /** Dtor */
-        virtual ~plugin_instance(void) {
-            // here we could perform addition de-initialization
-        }
-        /** Registers modules and calls */
-        virtual void registerClasses(void) {
-
-            // register modules here:
-
+            // register modules
             this->module_descriptions.RegisterAutoDescription<megamol::demos::AOSphereRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::demos::BezierCPUMeshRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::demos::CrystalDataSource>();
@@ -69,12 +55,10 @@ namespace megamol::demos {
             this->module_descriptions.RegisterAutoDescription<megamol::demos::CrystalStructureVolumeRenderer>();
 #endif
 
-            // register calls here:
-
+            // register calls
             this->call_descriptions.RegisterAutoDescription<megamol::demos::CrystalDataCall>();
             this->call_descriptions.RegisterAutoDescription<megamol::demos::ParticleDataCall>();
             this->call_descriptions.RegisterAutoDescription<megamol::demos::ParticleGridDataCall>();
-
         }
     };
 } // namespace megamol::demos

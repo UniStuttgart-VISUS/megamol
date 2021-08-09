@@ -1,17 +1,16 @@
-/*
- * mmstd_datatools.cpp
- *
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "table/TableManipulator.h"
+#include "AddParticleColors.h"
 #include "CSVFileSequence.h"
+#include "CSVWriter.h"
+#include "ColorToDir.h"
 #include "DataFileSequence.h"
 #include "DataFileSequenceStepper.h"
 #include "DataSetTimeRewriteModule.h"
@@ -27,6 +26,7 @@
 #include "IColToIdentity.h"
 #include "IndexListIndexColor.h"
 #include "LocalBoundingBoxExtractor.h"
+#include "MPDCGrid.h"
 #include "MPDCListsConcatenate.h"
 #include "MPIParticleCollector.h"
 #include "MPIVolumeAggregator.h"
@@ -47,6 +47,7 @@
 #include "ParticleIColFilter.h"
 #include "ParticleIColGradientField.h"
 #include "ParticleIdentitySort.h"
+#include "ParticleInstantiator.h"
 #include "ParticleListMergeModule.h"
 #include "ParticleListSelector.h"
 #include "ParticleNeighborhood.h"
@@ -59,18 +60,18 @@
 #include "ParticleVelocities.h"
 #include "ParticleVisibilityFromVolume.h"
 #include "ParticlesToDensity.h"
-#include "ParticleInstantiator.h"
 #include "RemapIColValues.h"
 #include "SphereDataUnifier.h"
 #include "StaticMMPLDProvider.h"
 #include "SyncedMMPLDProvider.h"
+#include "clustering/ParticleIColClustering.h"
+#include "io/CPERAWDataSource.h"
 #include "io/MMGDDDataSource.h"
 #include "io/MMGDDWriter.h"
 #include "io/PLYDataSource.h"
 #include "io/PlyWriter.h"
 #include "io/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
-#include "io/CPERAWDataSource.h"
 #include "mmstd_datatools/GraphDataCall.h"
 #include "mmstd_datatools/MultiIndexListDataCall.h"
 #include "mmstd_datatools/ParticleFilterMapDataCall.h"
@@ -82,41 +83,31 @@
 #include "table/TableColumnScaler.h"
 #include "table/TableFlagFilter.h"
 #include "table/TableJoin.h"
+#include "table/TableManipulator.h"
 #include "table/TableObserverPlane.h"
 #include "table/TableSampler.h"
 #include "table/TableSelectionTx.h"
 #include "table/TableSort.h"
-#include "table/TableWhere.h"
+#include "table/TableSplit.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
-#include "MPDCGrid.h"
-#include "table/TableSplit.h"
-#include "CSVWriter.h"
-#include "clustering/ParticleIColClustering.h"
-#include "AddParticleColors.h"
-#include "ColorToDir.h"
+#include "table/TableWhere.h"
 
 namespace megamol::stdplugin::datatools {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class DatatoolsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(DatatoolsPluginInstance)
+
 public:
-    /** ctor */
-    plugin_instance(void)
-        : megamol::core::utility::plugins::Plugin200Instance(
-              /* machine-readable plugin assembly name */
-              "mmstd_datatools",
-              /* human-readable plugin description */
-              "MegaMol Standard-Plugin containing data manipulation and conversion modules"){
-              // here we could perform addition initialization
-          };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-        // register modules here:
+    DatatoolsPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "mmstd_datatools", "MegaMol Standard-Plugin containing data manipulation and conversion modules"){};
+
+    ~DatatoolsPluginInstance() override = default;
+
+    // Registers modules and calls
+    void registerClasses() override {
+
+        // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataSetTimeRewriteModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataFileSequenceStepper>();
@@ -202,11 +193,12 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCGrid>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSplit>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVWriter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::clustering::ParticleIColClustering>();
+        this->module_descriptions
+            .RegisterAutoDescription<megamol::stdplugin::datatools::clustering::ParticleIColClustering>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::AddParticleColors>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ColorToDir>();
 
-        // register calls here:
+        // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleFilterMapDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::GraphDataCall>();

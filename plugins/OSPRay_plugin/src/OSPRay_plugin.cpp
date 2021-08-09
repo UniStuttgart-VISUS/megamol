@@ -1,67 +1,53 @@
-/*
- * OSPRay_plugin.cpp
- * Copyright (C) 2009-2017 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "OSPRayRenderer.h"
 #include "OSPRayToGL.h"
 
 #include "CallOSPRayTransformation.h"
-#include "OSPRayAPIStructure.h"
-#include "OSPRayLineGeometry.h"
-#include "OSPRayNHSphereGeometry.h"
-#include "OSPRaySphereGeometry.h"
-#include "OSPRayStructuredVolume.h"
-#include "OSPRayMeshGeometry.h"
-#include "OSPRay_plugin/CallOSPRayAPIObject.h"
-#include "OSPRay_plugin/CallOSPRayStructure.h"
 #include "OSPRayAOVSphereGeometry.h"
+#include "OSPRayAPIStructure.h"
+#include "OSPRayGeometryTest.h"
 #include "OSPRayGlassMaterial.h"
+#include "OSPRayLineGeometry.h"
 #include "OSPRayLuminousMaterial.h"
 #include "OSPRayMatteMaterial.h"
+#include "OSPRayMeshGeometry.h"
 #include "OSPRayMetalMaterial.h"
 #include "OSPRayMetallicPaintMaterial.h"
+#include "OSPRayNHSphereGeometry.h"
 #include "OSPRayOBJMaterial.h"
 #include "OSPRayPKDGeometry.h"
 #include "OSPRayPlasticMaterial.h"
+#include "OSPRaySphereGeometry.h"
+#include "OSPRayStructuredVolume.h"
 #include "OSPRayThinGlassMaterial.h"
 #include "OSPRayTransform.h"
 #include "OSPRayVelvetMaterial.h"
+#include "OSPRay_plugin/CallOSPRayAPIObject.h"
 #include "OSPRay_plugin/CallOSPRayMaterial.h"
+#include "OSPRay_plugin/CallOSPRayStructure.h"
 #include "Pkd.h"
-#include "OSPRayGeometryTest.h"
 
 namespace megamol::ospray {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class OsprayPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(OsprayPluginInstance)
+
 public:
-    /** ctor */
-    plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
+    OsprayPluginInstance(void) : megamol::core::utility::plugins::AbstractPluginInstance("ospray", "CPU Raytracing"){};
 
-              /* machine-readable plugin assembly name */
-              "OSPRay_plugin",
+    ~OsprayPluginInstance() override = default;
 
-              /* human-readable plugin description */
-              "CPU Raytracing"){
+    // Registers modules and calls
+    void registerClasses() override {
 
-              // here we could perform addition initialization
-          };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-
-        // register modules here:
+        // register modules
 
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayToGL>();
@@ -89,13 +75,12 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAOVSphereGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTransform>();
 
-        // register calls here:
+        // register calls
 
         this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayStructure>();
         this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayAPIObject>();
         this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayMaterial>();
         this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayTransformation>();
-
     }
 };
 } // namespace megamol::ospray

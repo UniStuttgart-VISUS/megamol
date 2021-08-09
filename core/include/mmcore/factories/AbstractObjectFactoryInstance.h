@@ -23,11 +23,17 @@ namespace megamol::core::factories {
      */
     class AbstractObjectFactoryInstance {
     public:
-        /** deleted copy ctor */
+        /** delete copy constructor */
         AbstractObjectFactoryInstance(const AbstractObjectFactoryInstance& other) = delete;
 
-        /** deleted assignment operator */
+        /** delete move constructor */
+        AbstractObjectFactoryInstance(AbstractObjectFactoryInstance&& other) = delete;
+
+        /** delete copy assignment */
         AbstractObjectFactoryInstance& operator=(const AbstractObjectFactoryInstance& other) = delete;
+
+        /** delete move assignment */
+        AbstractObjectFactoryInstance& operator=(AbstractObjectFactoryInstance&& other) = delete;
 
         /**
          * Answer the (machine-readable) name of the factory. This usually is
