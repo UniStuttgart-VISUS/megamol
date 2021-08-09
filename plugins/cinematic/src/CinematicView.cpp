@@ -9,9 +9,7 @@
 #include "CinematicView.h"
 
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/thecam/utility/types.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
-#include "mmcore/MegaMolGraph.h"
 
 
 using namespace megamol;
@@ -402,7 +400,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
             }
         }
         // Apply new position, orientation and aperture angle to current camera.
-if (_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+        if (_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
             auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
             cam_intrinsics.fovy = 90.0f / 180.0f * 3.14f; //TODO proper conversion deg to rad
 
@@ -436,7 +434,7 @@ if (_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
         return;
     }
 
-    Base::Render(context, call);
+    Base::Render(time, instanceTime);
 
     // Write frame to file
     if (this->rendering) {

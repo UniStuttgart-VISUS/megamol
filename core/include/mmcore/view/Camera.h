@@ -18,6 +18,28 @@ namespace megamol {
 namespace core {
 namespace view {
 
+    namespace {
+        class FloatValue {
+        public:
+            FloatValue() : _value(0.0f) {}
+            FloatValue(float value) : _value(value) {}
+            ~FloatValue() = default;
+
+            float value() const {
+                return _value;
+            }
+            operator float&() {
+                return _value;
+            }
+            operator float() const {
+                return _value;
+            }
+
+        private:
+            float _value;
+        };
+    }
+
     class Camera {
     public:
 
@@ -45,55 +67,34 @@ namespace view {
 
         enum ProjectionType { PERSPECTIVE, ORTHOGRAPHIC, UNKNOWN };
 
-        class AspectRatio {
-            float _aspect_ratio;
-
+        class FieldOfViewY : public FloatValue{
         public:
-            AspectRatio() : _aspect_ratio(0.0f) {}
-            AspectRatio(float aspect_ratio) : _aspect_ratio(aspect_ratio) {}
-            float value() const {
-                return _aspect_ratio;
-            }
-            operator float&() {
-                return _aspect_ratio;
-            }
-            operator float() const {
-                return _aspect_ratio;
-            }
+            FieldOfViewY() = default;
+            FieldOfViewY(float fovy) : FloatValue(fovy) {}
         };
 
-        class NearPlane {
-            float _near_plane_distance; // double?
-
+        class FrustrumHeight : public FloatValue {
         public:
-            NearPlane() : _near_plane_distance(0.0f) {}
-            NearPlane(float aspect_ratio) : _near_plane_distance(aspect_ratio) {}
-            float value() const {
-                return _near_plane_distance;
-            }
-            operator float&() {
-                return _near_plane_distance;
-            }
-            operator float() const {
-                return _near_plane_distance;
-            }
+            FrustrumHeight() = default;
+            FrustrumHeight(float frustrum_height) : FloatValue(frustrum_height) {}
         };
 
-        class FarPlane {
-            float _far_plane_distance; // double?
-
+        class AspectRatio : public FloatValue {
         public:
-            FarPlane() : _far_plane_distance(0.0f) {}
-            FarPlane(float aspect_ratio) : _far_plane_distance(aspect_ratio) {}
-            float value() const {
-                return _far_plane_distance;
-            }
-            operator float&() {
-                return _far_plane_distance;
-            }
-            operator float() const {
-                return _far_plane_distance;
-            }
+            AspectRatio() = default;
+            AspectRatio(float aspect_ratio) : FloatValue(aspect_ratio) {}
+        };
+
+        class NearPlane : public FloatValue {
+        public:
+            NearPlane() = default;
+            NearPlane(float aspect_ratio) : FloatValue(aspect_ratio) {}
+        };
+
+        class FarPlane : public FloatValue {
+        public:
+            FarPlane() = default;
+            FarPlane(float aspect_ratio) : FloatValue(aspect_ratio) {}
         };
 
         // Use image plane tile defintion to shift the image plane
@@ -108,19 +109,19 @@ namespace view {
         };
 
         struct PerspectiveParameters {
-            float fovy; //< vertical field of view
-            AspectRatio aspect; //< aspect ratio of the camera frustrum
+            FieldOfViewY fovy;    //< vertical field of view
+            AspectRatio aspect;   //< aspect ratio of the camera frustrum
             NearPlane near_plane; //< near clipping plane
-            FarPlane far_plane; //< far clipping plane
+            FarPlane far_plane;   //< far clipping plane
 
             ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
         };
 
         struct OrthographicParameters {
-            float frustrum_height; //< vertical size of the orthographic frustrum in world space
-            AspectRatio aspect;    //< aspect ratio of the camera frustrum
-            NearPlane near_plane; //< near clipping plane
-            FarPlane far_plane;  //< far clipping plane
+            FrustrumHeight frustrum_height; //< vertical size of the orthographic frustrum in world space
+            AspectRatio aspect;             //< aspect ratio of the camera frustrum
+            NearPlane near_plane;           //< near clipping plane
+            FarPlane far_plane;             //< far clipping plane
 
             ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
         };
@@ -134,9 +135,21 @@ namespace view {
         template<typename CameraInfoType>
         CameraInfoType get() const;
 
+        // future work: type-based setter
+        //template<typename CameraInfoType>
+        //void set(CameraInfoType value);
+
         glm::mat4 getViewMatrix() const;
 
         glm::mat4 getProjectionMatrix() const;
+
+        ProjectionType getProjectionType() const;
+
+        void setPerspectiveProjection(PerspectiveParameters const& intrinsics);
+
+        void setOrthographicProjection(OrthographicParameters const& intrinsics);
+
+        Pose getPose() const;
 
         void setPose(Pose pose);
     
@@ -150,6 +163,8 @@ namespace view {
         std::variant<std::monostate, PerspectiveParameters, OrthographicParameters> _intrinsics;
 
         friend bool operator==(Camera const& lhs, Camera const& rhs);
+
+        void updateProjectionMatrix();
     };
 
 
@@ -218,85 +233,15 @@ namespace view {
         // compute view matrix from pose
         _view_matrix = glm::lookAt(_pose.position, _pose.position + _pose.direction, _pose.up);
 
-        // compute projection matrix from intrinsics
-        //_projection_matrix =
-        //    glm::perspective(intrinsics.fovy, intrinsics.aspect, intrinsics.near_plane, intrinsics.far_plane);
-        //return;
-
-        // check image_tile and compute projection matrix with adjusted fovy and/or off-center
-        // all values normalized at distance 1 from camera
-        #undef near // some header already defines near?
-        const float near   = intrinsics.near_plane;
-        const float global_height = glm::tan(intrinsics.fovy * 0.5f) * 2.0f; // fovy is whole frustum but tan takes only half
-        const float global_width  = global_height * intrinsics.aspect;
-
-        // https://docs.microsoft.com/en-us/windows/win32/opengl/glfrustum
-        // https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glFrustum.xml
-        // note that these values need to be multiplied by near_distance to be fed into glFrustum
-        const glm::vec2 global_left_bottom = {0, 0};
-        const glm::vec2 global_right_top = {global_width, global_height};
-
-        const auto normalized_tile_to_frustum = [&](glm::vec2 const& tile_point) {
-            return tile_point * global_right_top;
-        };
-
-        const auto left_bottom_tile = normalized_tile_to_frustum(intrinsics.image_plane_tile.tile_start);
-        const auto right_top_tile   = normalized_tile_to_frustum(intrinsics.image_plane_tile.tile_end);
-
-        // center at (0,0) and map onto near plane
-        const auto center_and_map = [&](glm::vec2 const& point) {
-            const glm::vec2 global_half_frustum = {global_width * 0.5f, global_height * 0.5f};
-            return (point - global_half_frustum) * near;
-        };
-
-        const auto local_frustum_left_bottom = center_and_map(left_bottom_tile);
-        const auto local_frustum_right_top   = center_and_map(right_top_tile);
-
-        _projection_matrix =
-            glm::frustum<float>(
-                local_frustum_left_bottom.x, // left
-                local_frustum_right_top.x,   // right
-                local_frustum_left_bottom.y, // botom
-                local_frustum_right_top.y,   // top
-                intrinsics.near_plane, intrinsics.far_plane);
+        updateProjectionMatrix();
     }
 
     inline Camera::Camera(Pose const& pose, OrthographicParameters const& intrinsics)
             : _pose(pose), _intrinsics(intrinsics) {
         // compute view matrix from pose
         _view_matrix = glm::lookAt(_pose.position, _pose.position + _pose.direction, _pose.up);
-        // compute projection matrix from intrinsics
-        auto l = -1.0f * (intrinsics.frustrum_height / 2.0f) * intrinsics.aspect;
-        auto r = (intrinsics.frustrum_height / 2.0f) * intrinsics.aspect;
-        auto t = (intrinsics.frustrum_height / 2.0f);
-        auto b = -1.0f * (intrinsics.frustrum_height / 2.0f);
-        //_projection_matrix = glm::ortho(l, r, b, t, intrinsics.near_plane, intrinsics.far_plane);
-        // return;
 
-        // check image_tile and compute projection matrix with adjusted fovy and/or off-center
-        const auto global_height = intrinsics.frustrum_height;
-        const auto global_width  = intrinsics.frustrum_height * intrinsics.aspect;
-
-        const glm::vec2 global_frustum_size = {global_width, global_height};
-        const glm::vec2 global_left_bottom  = -global_frustum_size * 0.5f;
-        const glm::vec2 global_right_top    =  global_frustum_size * 0.5f;
-
-        // tile specified in (0,1) - can use for linear interpolation
-        const glm::vec2 tile_start = intrinsics.image_plane_tile.tile_start;
-        const glm::vec2 tile_end   = intrinsics.image_plane_tile.tile_end;
-
-        const auto normalized_tile_to_frustum = [&](glm::vec2 const& point) {
-            return point * global_frustum_size + global_left_bottom;
-        };
-
-        const glm::vec2 local_frustum_left_bottom = normalized_tile_to_frustum(tile_start);
-        const glm::vec2 local_frustum_right_top   = normalized_tile_to_frustum(tile_end);
-        _projection_matrix = glm::ortho<float>(
-            local_frustum_left_bottom.x, // left
-            local_frustum_right_top.x,   // right
-            local_frustum_left_bottom.y, // bottom
-            local_frustum_right_top.y,   // top
-            intrinsics.near_plane, intrinsics.far_plane);
+        updateProjectionMatrix();
     }
 
     template<typename CameraInfoType>
@@ -343,10 +288,30 @@ namespace view {
             } else if (_intrinsics.index() == 2) {
                 return std::get<OrthographicParameters>(_intrinsics).far_plane;
             }
+        } else if constexpr (std::is_same_v<CameraInfoType, FieldOfViewY>) {
+            if (_intrinsics.index() == 0) {
+                throw std::exception(); // How dare you
+            } else if (_intrinsics.index() == 1) {
+                return std::get<PerspectiveParameters>(_intrinsics).fovy;
+            } else if (_intrinsics.index() == 2) {
+                throw std::exception(); // How dare you
+            }
+        } else if constexpr (std::is_same_v<CameraInfoType, FrustrumHeight>) {
+            if (_intrinsics.index() == 0) {
+                throw std::exception(); // How dare you
+            } else if (_intrinsics.index() == 1) {
+                throw std::exception(); // How dare you
+            } else if (_intrinsics.index() == 2) {
+                return std::get<OrthographicParameters>(_intrinsics).frustrum_height;
+            }
         } else {
             return std::get<CameraInfoType>(_intrinsics);
         }
     }
+
+    //template<typename CameraInfoType>
+    //inline void Camera::set(CameraInfoType value) {
+    //}
 
     inline glm::mat4 Camera::getViewMatrix() const {
         return _view_matrix;
@@ -356,9 +321,114 @@ namespace view {
         return _projection_matrix;
     }
 
+    inline Camera::ProjectionType Camera::getProjectionType() const {
+        return get<ProjectionType>();
+    }
+
+    inline void Camera::setPerspectiveProjection(PerspectiveParameters const& intrinsics) {
+        _intrinsics = intrinsics;
+        updateProjectionMatrix();
+    }
+
+    inline void Camera::setOrthographicProjection(OrthographicParameters const& intrinsics) {
+        _intrinsics = intrinsics;
+        updateProjectionMatrix();
+    }
+
+    inline Camera::Pose Camera::getPose() const {
+        return get<Pose>();
+    }
+
     inline void Camera::setPose(Pose pose) {
         _pose = pose;
         _view_matrix = glm::lookAt(_pose.position, _pose.position + _pose.direction, _pose.up);
+    }
+
+    inline void Camera::updateProjectionMatrix() {
+        if (_intrinsics.index() == 0) {
+            // Oi!
+        } else if (_intrinsics.index() == 1) {
+
+            // compute projection matrix from intrinsics
+//_projection_matrix =
+//    glm::perspective(intrinsics.fovy, intrinsics.aspect, intrinsics.near_plane, intrinsics.far_plane);
+// return;
+
+// check image_tile and compute projection matrix with adjusted fovy and/or off-center
+// all values normalized at distance 1 from camera
+#undef near // some header already defines near?
+                PerspectiveParameters const& intrinsics = get<PerspectiveParameters>();
+
+                const float near = intrinsics.near_plane;
+                const float global_height =
+                    glm::tan(intrinsics.fovy * 0.5f) * 2.0f; // fovy is whole frustum but tan takes only half
+                const float global_width = global_height * intrinsics.aspect;
+
+                // https://docs.microsoft.com/en-us/windows/win32/opengl/glfrustum
+                // https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glFrustum.xml
+                // note that these values need to be multiplied by near_distance to be fed into glFrustum
+                const glm::vec2 global_left_bottom = {0, 0};
+                const glm::vec2 global_right_top = {global_width, global_height};
+
+                const auto normalized_tile_to_frustum = [&](glm::vec2 const& tile_point) {
+                    return tile_point * global_right_top;
+                };
+
+                const auto left_bottom_tile = normalized_tile_to_frustum(intrinsics.image_plane_tile.tile_start);
+                const auto right_top_tile = normalized_tile_to_frustum(intrinsics.image_plane_tile.tile_end);
+
+                // center at (0,0) and map onto near plane
+                const auto center_and_map = [&](glm::vec2 const& point) {
+                    const glm::vec2 global_half_frustum = {global_width * 0.5f, global_height * 0.5f};
+                    return (point - global_half_frustum) * near;
+                };
+
+                const auto local_frustum_left_bottom = center_and_map(left_bottom_tile);
+                const auto local_frustum_right_top = center_and_map(right_top_tile);
+
+                _projection_matrix = glm::frustum<float>(local_frustum_left_bottom.x, // left
+                    local_frustum_right_top.x,                                        // right
+                    local_frustum_left_bottom.y,                                      // botom
+                    local_frustum_right_top.y,                                        // top
+                    intrinsics.near_plane, intrinsics.far_plane);
+
+        } else if (_intrinsics.index() == 2) {
+
+            OrthographicParameters const& intrinsics = get<OrthographicParameters>();
+
+             // compute projection matrix from intrinsics
+            auto l = -1.0f * (intrinsics.frustrum_height / 2.0f) * intrinsics.aspect;
+            auto r = (intrinsics.frustrum_height / 2.0f) * intrinsics.aspect;
+            auto t = (intrinsics.frustrum_height / 2.0f);
+            auto b = -1.0f * (intrinsics.frustrum_height / 2.0f);
+            //_projection_matrix = glm::ortho(l, r, b, t, intrinsics.near_plane, intrinsics.far_plane);
+            // return;
+
+            // check image_tile and compute projection matrix with adjusted fovy and/or off-center
+            const auto global_height = intrinsics.frustrum_height;
+            const auto global_width = intrinsics.frustrum_height * intrinsics.aspect;
+
+            const glm::vec2 global_frustum_size = {global_width, global_height};
+            const glm::vec2 global_left_bottom = -global_frustum_size * 0.5f;
+            const glm::vec2 global_right_top = global_frustum_size * 0.5f;
+
+            // tile specified in (0,1) - can use for linear interpolation
+            const glm::vec2 tile_start = intrinsics.image_plane_tile.tile_start;
+            const glm::vec2 tile_end = intrinsics.image_plane_tile.tile_end;
+
+            const auto normalized_tile_to_frustum = [&](glm::vec2 const& point) {
+                return point * global_frustum_size + global_left_bottom;
+            };
+
+            const glm::vec2 local_frustum_left_bottom = normalized_tile_to_frustum(tile_start);
+            const glm::vec2 local_frustum_right_top = normalized_tile_to_frustum(tile_end);
+            _projection_matrix = glm::ortho<float>(local_frustum_left_bottom.x, // left
+                local_frustum_right_top.x,                                      // right
+                local_frustum_left_bottom.y,                                    // bottom
+                local_frustum_right_top.y,                                      // top
+                intrinsics.near_plane, intrinsics.far_plane);
+
+        }
     }
 
 } // namespace view
