@@ -19,5 +19,6 @@ void SSAOTapInner( const int qualityLevel, inout float obscuranceSum, inout floa
     }
     weight *= weightMod;
     obscuranceSum += obscurance * weight;
+    //obscuranceSum = viewspaceSampleZ / 5.f;
     weightSum += weight;
 }

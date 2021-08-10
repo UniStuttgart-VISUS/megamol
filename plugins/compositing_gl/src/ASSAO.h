@@ -178,6 +178,8 @@ struct ASSAO_Constants {
     float DetailAOStrength;
     float Dummy0;
 
+    glm::mat4 viewMX;
+
 #if SSAO_ENABLE_NORMAL_WORLD_TO_VIEW_CONVERSION
     ASSAO_Float4x4 NormalsWorldToViewspaceMatrix;
 #endif
@@ -394,8 +396,8 @@ void ASSAO::fullscreenPassDraw(
 
     // all textures in output_textures should have the same size, so we just use the first
     // TODO: adjust dispatch size
-    prgm->Dispatch(static_cast<int>(std::ceil(output_textures[0].first->getWidth() / 8)),
-        static_cast<int>(std::ceil(output_textures[0].first->getHeight() / 8)), 1);
+    prgm->Dispatch(static_cast<int>(std::ceil(output_textures[0].first->getWidth() / 8.f)),
+        static_cast<int>(std::ceil(output_textures[0].first->getHeight() / 8.f)), 1);
 
     prgm->Disable();
 
@@ -404,6 +406,7 @@ void ASSAO::fullscreenPassDraw(
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE0);
+
     for (int i = 0; i <= cnt; ++i) {
         glBindSampler(i, 0);
     }

@@ -1,4 +1,7 @@
-void SSAOTap( const int qualityLevel, inout float obscuranceSum, inout float weightSum, const int tapIndex, const mat2 rotScale, const vec3 pixCenterPos, const vec3 negViewspaceDir, vec3 pixelNormal, const vec2 normalizedScreenPos, const float mipOffset, const float falloffCalcMulSq, float weightMod, vec2 normXY, float normXYLength )
+void SSAOTap( const int qualityLevel, inout float obscuranceSum, inout float weightSum, const int tapIndex,
+const mat2 rotScale, const vec3 pixCenterPos, const vec3 negViewspaceDir, vec3 pixelNormal,
+const vec2 normalizedScreenPos, const float mipOffset, const float falloffCalcMulSq,
+float weightMod, vec2 normXY, float normXYLength )
 {
     vec2  sampleOffset;
     float   samplePow2Len;
@@ -37,5 +40,6 @@ void SSAOTap( const int qualityLevel, inout float obscuranceSum, inout float wei
     // snap to pixel center (more correct obscurance math, avoids artifacts)
     vec2 samplingMirroredUV = sampleOffsetMirroredUV * g_ASSAOConsts.Viewport2xPixelSize + normalizedScreenPos;
 
-    SSAOTapInner( qualityLevel, obscuranceSum, weightSum, samplingMirroredUV, mipLevel, pixCenterPos, negViewspaceDir, pixelNormal, falloffCalcMulSq, weightMod, tapIndex * 2 + 1 );
+    SSAOTapInner( qualityLevel, obscuranceSum, weightSum, samplingMirroredUV, mipLevel,
+        pixCenterPos, negViewspaceDir, pixelNormal, falloffCalcMulSq, weightMod, tapIndex * 2 + 1 );
 }

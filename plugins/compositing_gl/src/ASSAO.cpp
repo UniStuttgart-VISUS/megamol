@@ -321,7 +321,7 @@ bool megamol::compositing::ASSAO::create() {
     }
 
     m_depthBufferViewspaceLinearLayout = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
-    m_AOResultLayout = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_UNSIGNED_BYTE, 1);
+    m_AOResultLayout = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1);
     m_halfDepths[0] = std::make_shared<glowl::Texture2D>("m_halfDepths0", m_depthBufferViewspaceLinearLayout, nullptr);
     m_halfDepths[1] = std::make_shared<glowl::Texture2D>("m_halfDepths1", m_depthBufferViewspaceLinearLayout, nullptr);
     m_halfDepths[2] = std::make_shared<glowl::Texture2D>("m_halfDepths2", m_depthBufferViewspaceLinearLayout, nullptr);
@@ -356,7 +356,7 @@ bool megamol::compositing::ASSAO::create() {
     // TODO: check for correctness
     std::vector<std::pair<GLenum, GLint>> int_params = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST},
         {GL_TEXTURE_MAG_FILTER, GL_NEAREST}, {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
-        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
+        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE}};
 
     m_samplerStatePointClamp = std::make_shared<glowl::Sampler>("samplerStatePointClamp", int_params);
 
@@ -373,8 +373,9 @@ bool megamol::compositing::ASSAO::create() {
     m_samplerStateLinearClamp = std::make_shared<glowl::Sampler>("samplerStateLinearClamp", int_params);
 
     int_params.clear();
-    int_params = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
-        {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
+    int_params = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST},
+        {GL_TEXTURE_MAG_FILTER, GL_NEAREST}, {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
+        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE}};
 
     m_samplerStateViewspaceDepthTap =
         std::make_shared<glowl::Sampler>("samplerStateViewspaceDepthTap", int_params);
@@ -612,8 +613,8 @@ void megamol::compositing::ASSAO::prepareDepths(
             // dx11Context->RSSetViewports( 1, &viewport ); --> TODO: problem if not set?
             // i dont think so, because we launch a compute shader specifically made for this case
 
-            //fullscreenPassDraw<TextureViewSamplerTuple, glowl::Texture2DView>(
-            //    m_prepare_depth_mip_prgms[i - 1LL], inputFourDepthMipsM1, outputFourDepthMips);
+            fullscreenPassDraw<TextureViewSamplerTuple, glowl::Texture2DView>(
+                m_prepare_depth_mip_prgms[i - 1LL], inputFourDepthMipsM1, outputFourDepthMips);
         }
         #else
         for (int i = 0; i < 4; ++i) {
@@ -955,6 +956,8 @@ void megamol::compositing::ASSAO::updateConstants(
     }
     consts.DetailAOStrength = settings.DetailShadowStrength;
     consts.Dummy0 = 0.0f;
+
+    consts.viewMX = inputs->ViewMatrix;
 
 #if SSAO_ENABLE_NORMAL_WORLD_TO_VIEW_CONVERSION
     if (!generateNormals) {

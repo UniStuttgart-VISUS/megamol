@@ -8,11 +8,12 @@ void main()
     float outShadowTerm;
     float outWeight;
     vec4  outEdges;
-    GenerateSSAOShadowsInternal( outShadowTerm, outEdges, outWeight, inPos.xy/*, inUV*/, 2, false );
+	vec3 normal;
+    GenerateSSAOShadowsInternal( outShadowTerm, outEdges, outWeight, inPos.xy/*, inUV*/, 2, false, normal );
 
     vec2 out0 = vec2(0.f);
     out0.x = outShadowTerm;
-    out0.y = PackEdges( outEdges );
+    out0.y = 0.f;//PackEdges( outEdges );
 
     imageStore(g_PingPongHalfResultA, ivec2(inPos.xy), vec4(out0, 0.f, 0.f));
 }

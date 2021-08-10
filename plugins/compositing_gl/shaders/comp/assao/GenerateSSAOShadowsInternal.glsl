@@ -1,5 +1,5 @@
 // this function is designed to only work with half/half depth at the moment - there's a couple of hardcoded paths that expect pixel/texel size, so it will not work for full res
-void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, out float outWeight, const vec2 SVPos/*, const vec2 normalizedScreenPos*/, /*uniform*/ int qualityLevel, bool adaptiveBase )
+void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, out float outWeight, const vec2 SVPos/*, const vec2 normalizedScreenPos*/, /*uniform*/ int qualityLevel, bool adaptiveBase, out vec3 normal )
 {
     vec2 SVPosRounded = trunc( SVPos );
     uvec2 SVPosui = uvec2( SVPosRounded ); //same as uvec2( SVPos )
@@ -8,10 +8,12 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     const int numberOfTaps = int(g_numTaps[qualityLevel]);
     float pixZ, pixLZ, pixTZ, pixRZ, pixBZ;
 
+#ifdef true
     vec4 valuesBL = textureGather(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize );
     vec4 valuesUR = textureGatherOffset(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize, ivec2( 1, 1 ) );
 
-    // TODO: is this correct?
+    // TODO: is this correct? - TEST WITH DIFFERENT DIRECTION: FROM TOP LEFT TO BOTTOM RIGHT
+    // see 'else'
     // get this pixel's viewspace depth
     pixZ = valuesBL.y; //float pixZ = g_ViewspaceDepthSource.SampleLevel( g_PointMirrorSampler, normalizedScreenPos, 0.0 ).x; // * g_ASSAOConsts.MaxViewspaceDepth;
 
@@ -20,6 +22,18 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     pixTZ   = valuesUR.x;
     pixRZ   = valuesUR.z;
     pixBZ   = valuesBL.z;
+#else
+    // going from top left to bottom right to mimic intels direct3d version
+    vec4 valuesUL = textureGather(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize );
+    vec4 valuesBR = textureGatherOffset(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize, ivec2( 1, -1 ) );
+    pixZ = valuesUL.z; //float pixZ = g_ViewspaceDepthSource.SampleLevel( g_PointMirrorSampler, normalizedScreenPos, 0.0 ).x; // * g_ASSAOConsts.MaxViewspaceDepth;
+
+    // get left right top bottom neighbouring pixels for edge detection (gets compiled out on qualityLevel == 0)
+    pixLZ   = valuesUL.w;
+    pixTZ   = valuesUL.y;
+    pixRZ   = valuesBR.y;
+    pixBZ   = valuesBR.w;
+#endif
 
     vec2 normalizedScreenPos = SVPosRounded * g_ASSAOConsts.Viewport2xPixelSize + g_ASSAOConsts.Viewport2xPixelSize_x_025;
     vec3 pixCenterPos = NDCToViewspace( normalizedScreenPos, pixZ ); // g
@@ -27,6 +41,10 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     // Load this pixel's viewspace normal
     uvec2 fullResCoord = SVPosui * 2 + g_ASSAOConsts.PerPassFullResCoordOffset.xy;
     vec3 pixelNormal = LoadNormal( ivec2(fullResCoord) );
+	//vec3 pixelNormal = texelFetch(g_NormalmapSource, ivec2(fullResCoord), 0 ).xyz;
+    pixelNormal = transpose(inverse(mat3(g_ASSAOConsts.viewMX))) * (pixelNormal);
+	normal = pixelNormal;
+    //pixelNormal = -pixelNormal;
 
     const vec2 pixelDirRBViewspaceSizeAtCenterZ = pixCenterPos.z * g_ASSAOConsts.NDCToViewMul * g_ASSAOConsts.Viewport2xPixelSize;  // optimized approximation of:  vec2 pixelDirRBViewspaceSizeAtCenterZ = NDCToViewspace( normalizedScreenPos.xy + g_ASSAOConsts.ViewportPixelSize.xy, pixCenterPos.z ).xy - pixCenterPos.xy;
 
@@ -51,7 +69,10 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
         // load & update pseudo-random rotation matrix
         uint pseudoRandomIndex = uint( SVPosRounded.y * 2 + SVPosRounded.x ) % 5;
         vec4 rs = g_ASSAOConsts.PatternRotScaleMatrices[ pseudoRandomIndex ];
+        // TODO: does this need to be transposed? original is not transposed
+        // but opengl (column-major) and direct3d (row-major) have different matrix orders
         rotScale = mat2( rs.x * pixLookupRadiusMod, rs.y * pixLookupRadiusMod, rs.z * pixLookupRadiusMod, rs.w * pixLookupRadiusMod );
+        //rotScale = mat2( rs.x * pixLookupRadiusMod, rs.z * pixLookupRadiusMod, rs.y * pixLookupRadiusMod, rs.w * pixLookupRadiusMod );
     }
 
     // the main obscurance & sample weight storage
@@ -98,10 +119,11 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     // Sharp normals also create edges - but this adds to the cost as well
     if( !adaptiveBase && (qualityLevel >= SSAO_NORMAL_BASED_EDGES_ENABLE_AT_QUALITY_PRESET ) )
     {
+        // NOTE: this has to be in line with whichever gather is implemented around line ~26
         vec3 neighbourNormalL = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2(-2,  0 ) ).xyz );
         vec3 neighbourNormalR = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 2,  0 ) ).xyz );
-        vec3 neighbourNormalT = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0, -2 ) ).xyz );
-        vec3 neighbourNormalB = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0,  2 ) ).xyz );
+        vec3 neighbourNormalT = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0,  2 ) ).xyz );
+        vec3 neighbourNormalB = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0, -2 ) ).xyz );
         //vec3 neighbourNormalL  = LoadNormal( ivec2(fullResCoord), ivec2( -2,  0 ) );
         //vec3 neighbourNormalR  = LoadNormal( ivec2(fullResCoord), ivec2(  2,  0 ) );
         //vec3 neighbourNormalT  = LoadNormal( ivec2(fullResCoord), ivec2(  0, -2 ) );
@@ -151,9 +173,62 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
             SSAOTap( qualityLevel, obscuranceSum, weightSum, i, rotScale, pixCenterPos, negViewspaceDir, pixelNormal, normalizedScreenPos, mipOffset, falloffCalcMulSq, 1.0, normXY, normXYLength );
         }
     }
+    // else // if( qualityLevel == 3 ) adaptive approach
+    // {
+    //     // add new ones if needed
+    //     float2 fullResUV = normalizedScreenPos + g_ASSAOConsts.PerPassFullResUVOffset.xy;
+    //     float importance = g_ImportanceMap.SampleLevel( g_LinearClampSampler, fullResUV, 0.0 ).x;
+
+    //     // this is to normalize SSAO_DETAIL_AO_AMOUNT across all pixel regardless of importance
+    //     obscuranceSum *= (SSAO_ADAPTIVE_TAP_BASE_COUNT / (float)SSAO_MAX_TAPS) + (importance * SSAO_ADAPTIVE_TAP_FLEXIBLE_COUNT / (float)SSAO_MAX_TAPS);
+
+    //     // load existing base values
+    //     float2 baseValues = g_FinalSSAO.Load( int4( SVPosui, g_ASSAOConsts.PassIndex, 0 ) ).xy;
+    //     weightSum += baseValues.y * (float)(SSAO_ADAPTIVE_TAP_BASE_COUNT * 4.0);
+    //     obscuranceSum += (baseValues.x) * weightSum;
+
+    //     // increase importance around edges
+    //     float edgeCount = dot( 1.0-edgesLRTB, float4( 1.0, 1.0, 1.0, 1.0 ) );
+    //     //importance += edgeCount / (float)SSAO_ADAPTIVE_TAP_FLEXIBLE_COUNT;
+
+    //     float avgTotalImportance = (float)g_LoadCounter[0] * g_ASSAOConsts.LoadCounterAvgDiv;
+
+    //     float importanceLimiter = saturate( g_ASSAOConsts.AdaptiveSampleCountLimit / avgTotalImportance );
+    //     importance *= importanceLimiter;
+
+    //     float additionalSampleCountFlt = SSAO_ADAPTIVE_TAP_FLEXIBLE_COUNT * importance;
+
+    //     const float blendRange = 3.0; // use 1 to just blend the last one; use larger number to blend over more for a more smooth transition
+    //     const float blendRangeInv = 1.0 / blendRange;
+
+    //     additionalSampleCountFlt += 0.5;
+    //     uint additionalSamples   = uint( additionalSampleCountFlt );
+    //     uint additionalSamplesTo = min( SSAO_MAX_TAPS, additionalSamples + SSAO_ADAPTIVE_TAP_BASE_COUNT );
+
+    //     // additional manual unroll doesn't help unfortunately
+    //     [loop]
+    //     for( uint i = SSAO_ADAPTIVE_TAP_BASE_COUNT; i < additionalSamplesTo; i++ )
+    //     {
+    //         additionalSampleCountFlt -= 1.0f;
+    //         float weightMod = saturate(additionalSampleCountFlt * blendRangeInv); // slowly blend in the last few samples
+    //         SSAOTap( qualityLevel, obscuranceSum, weightSum, i, rotScale, pixCenterPos, negViewspaceDir, pixelNormal, normalizedScreenPos, mipOffset, falloffCalcMulSq, weightMod, normXY, normXYLength );
+    //     }
+    // }
+
+    // // early out for adaptive base - just output weight (used for the next pass)
+    // if( adaptiveBase )
+    // {
+    //     float obscurance = obscuranceSum / weightSum;
+
+    //     outShadowTerm   = obscurance;
+    //     outEdges        = 0;
+    //     outWeight       = weightSum;
+    //     return;
+    // }
 
     // calculate weighted average
     float obscurance = obscuranceSum / weightSum;
+    float obstwo = obscuranceSum;
 
     // calculate fadeout (1 close, gradient, 0 far)
     float fadeOut = clamp( pixCenterPos.z * g_ASSAOConsts.EffectFadeOutMul + g_ASSAOConsts.EffectFadeOutAdd, 0.0, 1.0 );
@@ -193,7 +268,7 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     occlusion = pow( clamp( occlusion, 0.0, 1.0 ), g_ASSAOConsts.EffectShadowPow );
 
     // outputs!
-    outShadowTerm   = occlusion;    // Our final 'occlusion' term (0 means fully occluded, 1 means fully lit)
-    outEdges        = edgesLRTB;    // These are used to prevent blurring across edges, 1 means no edge, 0 means edge, 0.5 means half way there, etc.
+    outShadowTerm   = edgesLRTB.x;    // Our final 'occlusion' term (0 means fully occluded, 1 means fully lit)
+    outEdges        = edgesLRTB;        // These are used to prevent blurring across edges, 1 means no edge, 0 means edge, 0.5 means half way there, etc.
     outWeight       = weightSum;
 }
