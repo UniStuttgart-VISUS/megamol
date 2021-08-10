@@ -330,14 +330,36 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                         auto pose = skf.GetCamera().get<Camera::Pose>();
                         if (skf.GetCamera().get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
                             auto skf_intrinsics = skf.GetCamera().get<Camera::PerspectiveParameters>();
-                            auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
-                            cam_intrinsics.fovy = skf_intrinsics.fovy;
-                            _camera = Camera(pose, cam_intrinsics);
+                            if (_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                                auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+                                cam_intrinsics.fovy = skf_intrinsics.fovy;
+                                _camera = Camera(pose, cam_intrinsics);
+                            } else if (_camera.get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
+                                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                                Camera::PerspectiveParameters pers_intrinsics;
+                                pers_intrinsics.aspect = cam_intrinsics.aspect;
+                                pers_intrinsics.far_plane = cam_intrinsics.far_plane;
+                                pers_intrinsics.image_plane_tile = cam_intrinsics.image_plane_tile;
+                                pers_intrinsics.near_plane = cam_intrinsics.near_plane;
+                                pers_intrinsics.fovy = skf_intrinsics.fovy;
+                                _camera = Camera(pose, pers_intrinsics);
+                            }
                         } else if (skf.GetCamera().get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
                             auto skf_intrinsics = skf.GetCamera().get<Camera::OrthographicParameters>();
-                            auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
-                            cam_intrinsics.frustrum_height = skf_intrinsics.frustrum_height;
-                            _camera = Camera(pose, cam_intrinsics);
+                            if (_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                                Camera::OrthographicParameters orth_intrinsics;
+                                orth_intrinsics.aspect = cam_intrinsics.aspect;
+                                orth_intrinsics.far_plane = cam_intrinsics.far_plane;
+                                orth_intrinsics.image_plane_tile = cam_intrinsics.image_plane_tile;
+                                orth_intrinsics.near_plane = cam_intrinsics.near_plane;
+                                orth_intrinsics.frustrum_height = skf_intrinsics.frustrum_height;
+                                _camera = Camera(pose, orth_intrinsics);
+                            } else if (_camera.get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
+                                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                                cam_intrinsics.frustrum_height = skf_intrinsics.frustrum_height;
+                                _camera = Camera(pose, cam_intrinsics);
+                            }
                         }
                     } else {
                         this->ResetView();

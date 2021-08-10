@@ -1410,9 +1410,13 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(view), false);
     this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(utility::glm_to_vislib_vector(up), false);
     this->editCurrentProjectionParam.Param<param::EnumParam>()->SetValue(static_cast<int>(camera.getProjectionType()), false);
-    this->editCurrentFovyParam.Param<param::FloatParam>()->SetValue(camera.get<view::Camera::FieldOfViewY>(), false);
-    this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->SetValue(
-        camera.get<view::Camera::FrustrumHeight>(), false);
+    if (camera.getProjectionType() == view::Camera::PERSPECTIVE) {
+        this->editCurrentFovyParam.Param<param::FloatParam>()->SetValue(
+            camera.get<view::Camera::FieldOfViewY>(), false);
+    } else if (camera.getProjectionType() == view::Camera::ORTHOGRAPHIC) {
+        this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->SetValue(
+            camera.get<view::Camera::FrustrumHeight>(), false);
+    }
 }
 
 
