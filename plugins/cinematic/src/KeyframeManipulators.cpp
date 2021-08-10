@@ -7,6 +7,9 @@
 
 #include "stdafx.h"
 #include "KeyframeManipulators.h"
+#include "mmcore/utility/log/Log.h"
+#include "vislib/math/Cuboid.h"
+#include <glm/gtc/type_ptr.hpp>
 
 
 using namespace megamol;

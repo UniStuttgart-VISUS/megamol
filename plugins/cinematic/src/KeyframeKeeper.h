@@ -7,24 +7,17 @@
 
 #ifndef MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
+#pragma once
+
 
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera.h"
-#include "mmcore/AbstractSlot.h"
 
 #include "vislib/math/Cuboid.h"
-#include "vislib/assert.h"
-
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <ctime>
 
 #include "Keyframe.h"
-#include "CallKeyframeKeeper.h"
 #include "CinematicUtils.h"
 
 

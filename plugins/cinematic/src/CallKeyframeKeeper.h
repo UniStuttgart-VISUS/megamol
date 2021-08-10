@@ -7,11 +7,12 @@
 
 #ifndef MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED
+#pragma once
 
-#include "mmcore/AbstractGetDataCall.h"
-#include "mmcore/factories/CallAutoDescription.h"
 
 #include "Keyframe.h"
+#include "mmcore/AbstractGetDataCall.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 
 namespace megamol {

@@ -7,6 +7,20 @@
 
 
 #include "OverlayRenderer.h"
+#include "mmcore/MegaMolGraph.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/Vector2fParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/Vector4fParam.h"
 
 
 using namespace megamol;

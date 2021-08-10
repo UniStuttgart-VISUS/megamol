@@ -7,11 +7,11 @@
 
 #ifndef MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
+#pragma once
+
 
 #include <glm/glm.hpp>
-
 #include "CinematicUtils.h"
-
 #include "mmcore/utility/JSONHelper.h"
 
 

@@ -7,6 +7,13 @@
 
 #include "stdafx.h"
 #include "TimeLineRenderer.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol;
@@ -131,17 +138,20 @@ bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
 
 bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
 
-    auto const lhsFBO = call.GetFramebuffer();
-    lhsFBO->bind();
+    auto fbo = call.GetFramebuffer();
+    fbo->bind();
 
-    view::Camera cam = call.GetCamera();
-    glm::vec2 current_viewport;
-    current_viewport.x = static_cast<float>(call.GetFramebuffer()->getWidth());
-    current_viewport.y = static_cast<float>(call.GetFramebuffer()->getHeight());
-    glm::mat4 ortho = glm::ortho(0.0f, current_viewport.x, 0.0f, current_viewport.y, -1.0f, 1.0f);
+    /// view::Camera camera = call.GetCamera();
 
-    if ((current_viewport != this->viewport) || (this->lineHeight != this->utils.GetTextLineHeight())) {
-        this->viewport = current_viewport;
+    // Get current viewport
+    const float vp_fw = static_cast<float>(fbo->getWidth());
+    const float vp_fh = static_cast<float>(fbo->getHeight());
+    const glm::vec2 vp_dim = {vp_fw, vp_fh};
+
+    glm::mat4 ortho = glm::ortho(0.0f, vp_dim.x, 0.0f, vp_dim.y, -1.0f, 1.0f);
+
+    if ((this->viewport != vp_dim) || (this->lineHeight != this->utils.GetTextLineHeight())) {
+        this->viewport = vp_dim;
         this->lineHeight = this->utils.GetTextLineHeight();
 
         // Set axes position depending on font size

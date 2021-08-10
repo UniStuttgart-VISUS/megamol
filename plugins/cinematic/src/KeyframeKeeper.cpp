@@ -7,8 +7,7 @@
 
 #include "stdafx.h"
 #include "KeyframeKeeper.h"
-#include "imgui.h"
-#include "imgui_internal.h"
+#include "CallKeyframeKeeper.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
@@ -18,6 +17,9 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
+
+#include <imgui.h>
+#include <imgui_internal.h>
 
 
 using namespace megamol;
@@ -152,8 +154,8 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->MakeSlotAvailable(&this->editCurrentUpParam);
 
     param::EnumParam* pe = new param::EnumParam(view::Camera::PERSPECTIVE);
-    pe->SetTypePair(view::Camera::PERSPECTIVE, "Perspective");
-    pe->SetTypePair(view::Camera::ORTHOGRAPHIC, "Orthographic");
+    pe->SetTypePair(static_cast<int>(view::Camera::PERSPECTIVE), "Perspective");
+    pe->SetTypePair(static_cast<int>(view::Camera::ORTHOGRAPHIC), "Orthographic");
     this->editCurrentProjectionParam << pe;
     this->MakeSlotAvailable(&this->editCurrentProjectionParam);
     pe = nullptr;

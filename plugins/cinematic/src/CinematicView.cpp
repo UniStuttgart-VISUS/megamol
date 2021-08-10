@@ -7,9 +7,15 @@
 
 #include "stdafx.h"
 #include "CinematicView.h"
-
+#include "CallKeyframeKeeper.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
 
 using namespace megamol;
@@ -40,7 +46,6 @@ CinematicView::CinematicView(void)
         , frameFolderParam("cinematic::frameFolder", "Specify folder where the frame files should be stored.")
         , addSBSideToNameParam(
               "cinematic::addSBSideToName", "Toggle whether skybox side should be added to output filename")
-        , eyeParam("cinematic::stereo_eye", "Select eye position (for stereo view).")
         , projectionParam("cinematic::stereo_projection", "Select camera projection.")
         , png_data()
         , utils()
@@ -105,26 +110,11 @@ CinematicView::CinematicView(void)
     this->addSBSideToNameParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->addSBSideToNameParam);
 
-    param::EnumParam* enp = new param::EnumParam(static_cast<int>(megamol::core::thecam::Eye::mono));
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::mono), "Mono");
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::left), "Left");
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::centre), "Center");
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::right), "Right");
-    this->eyeParam << enp;
-    /// TODO implement
-    // this->MakeSlotAvailable(&this->eyeParam);
-    enp = nullptr;
-
-    param::EnumParam* pep = new param::EnumParam(static_cast<int>(megamol::core::thecam::Projection_type::perspective));
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::perspective), "Mono Perspective");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::orthographic), "Mono Orthographic");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::off_axis), "Stereo Off-Axis");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::parallel), "Stereo Prallel");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::toe_in), "Stereo Toe-In");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::converged), "Converged");
+    param::EnumParam* pep = new param::EnumParam(view::Camera::PERSPECTIVE);
+    pep->SetTypePair(static_cast<int>(view::Camera::PERSPECTIVE), "Perspective");
+    pep->SetTypePair(static_cast<int>(view::Camera::ORTHOGRAPHIC), "Orthographic");
     this->projectionParam << pep;
-    /// TODO implement
-    // this->MakeSlotAvailable(&this->projectionParam);
+    this->MakeSlotAvailable(&this->projectionParam);
     pep = nullptr;
 }
 
@@ -227,19 +217,12 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     this->render_to_file_cleanup();
                 }
             }
-            // Set (mono/stereo) projection for camera
-            // TODO proper handling of projection type!
-            //  if (this->projectionParam.IsDirty()) {
-            //      this->projectionParam.ResetDirty();
-            //      this->_camera.projection_type(static_cast<megamol::core::thecam::Projection_type>(
-            //          this->projectionParam.Param<param::EnumParam>()->Value()));
-            //  }
-            // Set eye position for camera
-            // TODO this is obsolete?
-            //  if (this->eyeParam.IsDirty()) {
-            //      this->eyeParam.ResetDirty();
-            //      this->_camera.eye(static_cast<megamol::core::thecam::Eye>(this->eyeParam.Param<param::EnumParam>()->Value()));
-            //  }
+            if (this->projectionParam.IsDirty()) {
+                this->projectionParam.ResetDirty();
+                auto prof = static_cast<megamol::core::thecam::Projection_type>(this->projectionParam.Param<param::EnumParam>()->Value());
+
+
+            }
 
             // Time settings ----------------------------------------------------------
             // Load animation time
@@ -264,6 +247,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 }
             }
 
+            // Render selected keyframe
             if ((*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) {
 
                 Keyframe skf = ccc->GetSelectedKeyframe();
@@ -445,6 +429,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
                 // Write frame to file
                 if (this->rendering) {
+                    /// XXX
                     // Check if fbo in cr3d was reset by renderer to indicate that no new frame is available (e.g. see
                     // remote/FBOCompositor2 Render())
                     //  this->png_data.write_lock = ((cr3d->GetFramebufferObject() != nullptr) ? (0) : (1));
@@ -453,7 +438,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     //          "[CINEMATIC RENDERING] Waiting for next frame (Received empty FBO from renderer)
                     //          ...\n");
                     //  }
-                    // Lock writing frame to file for specific tim
+                    // Lock writing frame to file for specific time
                     std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->png_data.start_time);
                     if (diff.count() <
                         static_cast<double>(this->delayFirstRenderFrameParam.Param<param::FloatParam>()->Value())) {

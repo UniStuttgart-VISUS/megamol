@@ -7,33 +7,20 @@
 
 #ifndef MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
 #define MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
+#pragma once
+
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/View3DGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
-#include "mmcore/utility/SDFFont.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/view/Input.h"
 
-#include "vislib/Serialisable.h"
-#include "vislib/Trace.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/math/Point.h"
-#include "vislib/math/Rectangle.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/sys/Path.h"
 
-#include "png.h"
 #include "Keyframe.h"
 #include "CinematicUtils.h"
-#include "CallKeyframeKeeper.h"
 
+#include <png.h>
 #include <glm/gtx/quaternion.hpp>
 
 
@@ -219,7 +206,6 @@ namespace cinematic {
         core::param::ParamSlot resWidthParam;
         core::param::ParamSlot resHeightParam;
         core::param::ParamSlot fpsParam;
-        core::param::ParamSlot eyeParam;
         core::param::ParamSlot projectionParam;
         core::param::ParamSlot frameFolderParam;
         core::param::ParamSlot addSBSideToNameParam;
