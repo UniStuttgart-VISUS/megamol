@@ -57,7 +57,8 @@ CinematicView::CinematicView(void)
         , sbSide(CinematicView::SkyboxSides::SKYBOX_NONE)
         , rendering(false)
         , fps(24)
-        , skyboxCubeMode(false) {
+        , skyboxCubeMode(false)
+        , cinematicFbo(nullptr) {
 
     // init callback
     this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
@@ -120,6 +121,8 @@ CinematicView::CinematicView(void)
 
 
 CinematicView::~CinematicView(void) {
+
+    this->cinematicFbo.reset();
     this->render_to_file_cleanup();
     this->Release();
 }
@@ -137,8 +140,8 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
         ccc_success &= (*ccc)(CallKeyframeKeeper::CallForSetSimulationData);
 
         // Initialise render utils once
-        bool utils_success = false;
-        if (!this->utils.Initialized()) {
+        bool utils_success = this->utils.Initialized();
+        if (!utils_success) {
             if (this->utils.Initialise(this->GetCoreInstance())) {
                 utils_success = true;
             } else {
@@ -146,7 +149,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     "[CINEMATIC VIEW] [Render] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__,
                     __FUNCTION__, __LINE__);
             }
-        }
+        } 
 
         if (ccc_success && utils_success) {
 
@@ -247,7 +250,6 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 }
             }
 
-            // Render selected keyframe
             if ((*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) {
 
                 Keyframe skf = ccc->GetSelectedKeyframe();
@@ -260,8 +262,8 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
                 // Viewport ---------------------------------------------------------------
                 /// Assume current framebuffer resolution to be used as viewport resolution
-                const int vp_iw = _fbo->getWidth();
-                const int vp_ih = _fbo->getHeight();
+                const int vp_iw = this->_fbo->getWidth();
+                const int vp_ih = this->_fbo->getHeight();
                 const int vp_ih_reduced = vp_ih - static_cast<int>(this->utils.GetTextLineHeight());
                 const float vp_fw = static_cast<float>(vp_iw);
                 const float vp_fh = static_cast<float>(vp_ih);
@@ -360,13 +362,12 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 // Non-permanent overwrite of selected keyframe camera by skybox camera settings.
                 if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
                     auto pose = _camera.get<Camera::Pose>();
-
-                    const glm::vec3 snap_pos = pose.position;
+                    const glm::vec3 cam_pos = pose.position;
                     const glm::vec3 cam_right = pose.right;
                     const glm::vec3 cam_up = pose.up;
-                    const glm::vec3 cam_view = pose.position;
+                    const glm::vec3 cam_view = pose.direction;
 
-                    glm::vec3 new_pos = snap_pos;
+                    glm::vec3 new_pos = cam_pos;
                     glm::quat new_orientation;
                     const float Rad180Degrees = glm::radians(180.0f);
                     const float Rad90Degrees = glm::radians(90.0f);
@@ -414,18 +415,27 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     if (_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
                         auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
                         cam_intrinsics.fovy = 90.0f / 180.0f * 3.14f; // TODO proper conversion deg to rad
-
                         _camera = Camera(Camera::Pose(new_pos, new_orientation), cam_intrinsics);
                     } else {
                         // TODO what about ortho?
                     }
-
-                    // TODO orthographic case?
                 }
 
-                // Render to texture ------------------------------------------------------------
-
+                // Render to fbo ----------------------------------------------
+                ///  see megamol::core::view::View3DGL::Render()
+                if (this->cinematicFbo == nullptr) {
+                    this->cinematicFbo = std::make_shared<glowl::FramebufferObject>(fboWidth, fboHeight);
+                    this->cinematicFbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+                } else {
+                    if ((this->cinematicFbo->getWidth() != fboWidth) ||
+                        (this->cinematicFbo->getHeight() != fboHeight)) {
+                        this->cinematicFbo->resize(fboWidth, fboHeight);
+                    }
+                }
+                auto fbo = this->_fbo;
+                this->_fbo = this->cinematicFbo;
                 Base::Render(time, instanceTime);
+                this->_fbo = fbo;
 
                 // Write frame to file
                 if (this->rendering) {
@@ -447,9 +457,10 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     this->render_to_file_write();
                 }
 
-                // Actual Rendering -------------------------------------------------------
+                // Actual Rendering ///////////////////////////////////////////
+                this->_fbo->bind();
 
-                // Set letter box background ----------------------------------------------
+                // Set letter box background ----------------------------------
                 auto bgcol = this->BkgndColour();
                 this->utils.SetBackgroundColor(bgcol);
                 bgcol = this->utils.Color(CinematicUtils::Colors::LETTER_BOX);
@@ -459,7 +470,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glViewport(0, 0, vp_fw, vp_fh);
 
-                // Push fbo texture -------------------------------------------------------
+                // Push fbo texture -------------------------------------------
                 float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
                 float left = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
                 float bottom = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;
@@ -468,10 +479,10 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 glm::vec3 pos_upper_left = {left, up, 1.0f};
                 glm::vec3 pos_upper_right = {right, up, 1.0f};
                 glm::vec3 pos_bottom_right = {right, bottom, 1.0f};
-                this->utils.Push2DColorTexture(this->_fbo->getColorAttachment(0)->getName(), pos_bottom_left,
+                this->utils.Push2DColorTexture(this->cinematicFbo->getColorAttachment(0)->getName(), pos_bottom_left,
                     pos_upper_left, pos_upper_right, pos_bottom_right, true, glm::vec4(0.0f), true);
 
-                // Push menu --------------------------------------------------------------
+                // Push menu --------------------------------------------------
                 std::string leftLabel = " CINEMATIC ";
                 std::string midLabel = "";
                 if (this->rendering) {
@@ -482,8 +493,10 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 std::string rightLabel = "";
                 this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, glm::vec2(vp_fw, vp_fh));
 
-                // Draw 2D ----------------------------------------------------------------
+                // Draw 2D ----------------------------------------------------
                 this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
+
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
         }
     }
@@ -642,7 +655,7 @@ bool CinematicView::render_to_file_write() {
 
         {
             auto err = glGetError();
-            glGetTextureImage(this->_fbo->getColorAttachment(0)->getName(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+            glGetTextureImage(this->cinematicFbo->getColorAttachment(0)->getName(), 0, GL_RGB, GL_UNSIGNED_BYTE,
                 this->png_data.width * this->png_data.height, this->png_data.buffer);
             err = glGetError();
             if (err != GL_NO_ERROR) {

@@ -69,7 +69,9 @@ public:
 
     float GetTextLineWidth(const std::string& text_line);
 
-    void SetTextRotation(float a, float x, float y, float z);
+    void SetTextRotation(float a, glm::vec3 vec);
+
+    void ResetTextRotation();
 
     bool Initialized(void) { return this->init_once; }
 

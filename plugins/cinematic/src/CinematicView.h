@@ -15,13 +15,14 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 
-#include "vislib/graphics/gl/FramebufferObject.h"
-
 #include "Keyframe.h"
 #include "CinematicUtils.h"
 
 #include <png.h>
 #include <glm/gtx/quaternion.hpp>
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include "glowl/FramebufferObject.hpp"
 
 
 namespace megamol {
@@ -56,16 +57,6 @@ namespace cinematic {
         static const char* Description(void) { return "Screenshot View Module"; }
 
         /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            if (!vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()) return false;
-            return true;
-        }
-
-        /**
          * Disallow usage in quickstarts
          *
          * @return false
@@ -87,7 +78,7 @@ namespace cinematic {
 
     private:
 
-        typedef std::chrono::system_clock::time_point time_point;
+        typedef std::chrono::system_clock::time_point TimePoint_t;
 
         /**********************************************************************
          * variables
@@ -116,21 +107,22 @@ namespace cinematic {
             png_infop             infoptr = nullptr;
             float                 animTime;
             unsigned int          write_lock;
-            time_point            start_time;
+            TimePoint_t           start_time;
             unsigned int          exp_frame_cnt;
         };
 
-        PngData                                 png_data;
-        CinematicUtils                          utils;
-        clock_t                                 deltaAnimTime;
-        Keyframe                                shownKeyframe;
-        bool                                    playAnim;
-        int                                     cineWidth;
-        int                                     cineHeight;
-        SkyboxSides                             sbSide;
-        bool                                    rendering;
-        unsigned int                            fps;
-        bool                                    skyboxCubeMode;
+        PngData                   png_data;
+        CinematicUtils            utils;
+        clock_t                   deltaAnimTime;
+        Keyframe                  shownKeyframe;
+        bool                      playAnim;
+        int                       cineWidth;
+        int                       cineHeight;
+        SkyboxSides               sbSide;
+        bool                      rendering;
+        unsigned int              fps;
+        bool                      skyboxCubeMode;
+        std::shared_ptr<glowl::FramebufferObject> cinematicFbo;
 
         /**********************************************************************
          * functions

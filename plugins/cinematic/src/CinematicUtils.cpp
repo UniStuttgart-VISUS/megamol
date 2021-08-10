@@ -274,9 +274,14 @@ float CinematicUtils::GetTextLineWidth(const std::string& text_line) {
 }
 
 
-void CinematicUtils::SetTextRotation(float a, float x, float y, float z) {
+void CinematicUtils::SetTextRotation(float a, glm::vec3 vec) {
 
-    this->font.SetRotation(a, x, y, z);
+    this->font.SetRotation(a, vec);
+}
+
+void CinematicUtils::ResetTextRotation(void) {
+
+    this->font.ResetRotation();
 }
 
 

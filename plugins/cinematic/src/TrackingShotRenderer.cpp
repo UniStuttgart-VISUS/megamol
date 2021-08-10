@@ -176,16 +176,15 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     this->utils.SetBackgroundColor(back_color);
 
     // Get current camera
-    core::view::Camera cam = call.GetCamera();
-    auto view = cam.getViewMatrix();
-    auto proj = cam.getProjectionMatrix();
+    core::view::Camera camera = call.GetCamera();
+    auto view = camera.getViewMatrix();
+    auto proj = camera.getProjectionMatrix();
     glm::mat4 mvp = proj * view;
-    auto cam_pose = cam.get<core::view::Camera::Pose>();
-    auto fbo = call.GetFramebuffer();
+    auto cam_pose = camera.get<core::view::Camera::Pose>();
 
     // Get current viewport
-    const float vp_fw = static_cast<float>(fbo->getWidth());
-    const float vp_fh = static_cast<float>(fbo->getHeight());
+    const float vp_fw = static_cast<float>(lhsFBO->getWidth());
+    const float vp_fh = static_cast<float>(lhsFBO->getHeight());
     const glm::vec2 vp_dim = {vp_fw, vp_fh};
 
     // Get matrix for orthogonal projection of 2D rendering
@@ -193,7 +192,8 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     // Push manipulators ------------------------------------------------------
     if (keyframes->size() > 0) {
-        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), cam, vp_dim, mvp);
+        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(),
+            ccc->GetEndControlPointPosition(), camera, vp_dim, mvp);
         this->manipulators.PushRendering(this->utils);
     }
 

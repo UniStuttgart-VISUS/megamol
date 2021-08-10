@@ -160,7 +160,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->MakeSlotAvailable(&this->editCurrentProjectionParam);
     pe = nullptr;
 
-    this->editCurrentFovyParam.SetParameter(new param::FloatParam(1.0f, 0.0f)); /// sane default value?
+    this->editCurrentFovyParam.SetParameter(new param::FloatParam(glm::radians(30.0f), 0.0f, (2.0f * M_PI))); // = 60° aperture angle
     this->MakeSlotAvailable(&this->editCurrentFovyParam);
 
     this->editCurrentFrustumHeightParam.SetParameter(new param::FloatParam(1.0f, 0.0f)); /// sane default value?
@@ -1101,18 +1101,23 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         Keyframe kf = Keyframe();
         kf.SetAnimTime(t);
         kf.SetSimTime(0.0f);
-        auto cam = this->cameraState;
-        auto cam_pose = cam.get<view::Camera::Pose>();
-        auto cam_intrinsics = cam.get<view::Camera::PerspectiveParameters>();
-        cam_intrinsics.fovy = glm::radians(30.0f); // = 60° aperture angle
-        kf.SetCameraState(view::Camera(cam_pose,cam_intrinsics));
+        auto camera = this->cameraState;
+        auto cam_pose = camera.get<view::Camera::Pose>();
+        if (camera.getProjectionType() == view::Camera::PERSPECTIVE) {
+            auto cam_intrinsics = camera.get<view::Camera::PerspectiveParameters>();
+            cam_intrinsics.fovy = this->editCurrentFovyParam.Param<param::FloatParam>()->Value(); 
+            kf.SetCameraState(view::Camera(cam_pose, cam_intrinsics));
+        } else if (camera.getProjectionType() == view::Camera::ORTHOGRAPHIC) {
+            auto cam_intrinsics = camera.get<view::Camera::OrthographicParameters>();
+            cam_intrinsics.frustrum_height = this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->Value();
+            kf.SetCameraState(view::Camera(cam_pose, cam_intrinsics));
+        }
         return kf;
     }
     else if (t < this->keyframes.front().GetAnimTime()) {
         Keyframe kf = this->keyframes.front();
         kf.SetAnimTime(t);
         return kf;
-
     }
     else if (t > this->keyframes.back().GetAnimTime()) {
         Keyframe kf = this->keyframes.back();
@@ -1183,8 +1188,9 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
             cam_kf_pose.position = pk;
         }
 
-        try {
-            // interpolate aperture angle ------------------------------------------
+        if (cam_kf.getProjectionType() == view::Camera::PERSPECTIVE) {
+        // interpolate fovy angle ---------------------------------------------
+
             float a0 = c0.get<view::Camera::FieldOfViewY>();
             float a1 = c1.get<view::Camera::FieldOfViewY>();
             float a2 = c2.get<view::Camera::FieldOfViewY>();
@@ -1199,10 +1205,23 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
                 cam_intrinsics.fovy = ak;
                 cam_kf.setPerspectiveProjection(cam_intrinsics);
             }
-        }
-        catch (const std::exception&) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[KEYFRAME KEEPER] Exception - Failed to interpolate aperature angle: %s", this->filename.c_str());
+        } else if (cam_kf.getProjectionType() == view::Camera::ORTHOGRAPHIC) {
+        // interpolate frustum height -----------------------------------------
+
+            float a0 = c0.get<view::Camera::FrustrumHeight>();
+            float a1 = c1.get<view::Camera::FrustrumHeight>();
+            float a2 = c2.get<view::Camera::FrustrumHeight>();
+            float a3 = c3.get<view::Camera::FrustrumHeight>();
+            if (a1 == a2) {
+                auto cam_intrinsics = cam_kf.get<view::Camera::OrthographicParameters>();
+                cam_intrinsics.frustrum_height = a1;
+                cam_kf.setOrthographicProjection(cam_intrinsics);
+            } else {
+                float ak = this->float_interpolation(iT, a0, a1, a2, a3);
+                auto cam_intrinsics = cam_kf.get<view::Camera::OrthographicParameters>();
+                cam_intrinsics.frustrum_height = ak;
+                cam_kf.setOrthographicProjection(cam_intrinsics);
+            }
         }
 
         //interpolate orientation ---------------------------------------------
