@@ -15,39 +15,36 @@ using namespace megamol::core::param;
 /*
  * IntParam::IntParam
  */
-IntParam::IntParam(int initVal)
-        : AbstractParam(), val(initVal), minVal(INT_MIN),
-        maxVal(INT_MAX) {
+IntParam::IntParam(int initVal) : AbstractParam(), val(), minVal(INT_MIN), maxVal(INT_MAX) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::INT);
+    this->SetValue(initVal);
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
-    this->InitPresentation(AbstractParamPresentation::ParamType::INT);
 }
 
 
 /*
  * IntParam::IntParam
  */
-IntParam::IntParam(int initVal, int minVal)
-        : AbstractParam(), val(initVal), minVal(minVal),
-        maxVal(INT_MAX) {
+IntParam::IntParam(int initVal, int minVal) : AbstractParam(), val(), minVal(minVal),  maxVal(INT_MAX) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::INT);
+    this->SetValue(initVal);
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
-    this->InitPresentation(AbstractParamPresentation::ParamType::INT);
 }
 
 
 /*
  * IntParam::IntParam
  */
-IntParam::IntParam(int initVal, int minVal, int maxVal)
-        : AbstractParam(), val(initVal), minVal(minVal),
-        maxVal(maxVal) {
+IntParam::IntParam(int initVal, int minVal, int maxVal) : AbstractParam(), val(), minVal(minVal), maxVal(maxVal) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::INT);
+    this->SetValue(initVal);
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
-    this->InitPresentation(AbstractParamPresentation::ParamType::INT);
 }
 
 
