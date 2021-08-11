@@ -206,7 +206,7 @@ namespace view {
          * Returns the camera containing the parameters transferred by this call.
          * Things like the view matrix are not calculated yet and have still to be retrieved from the object
          * by using the appropriate functions. THIS METHOD PERFORMS A COPY OF A WHOLE CAMERA OBJECT.
-         * TO AVOID THIS, USE GetCameraState() or GetCamera(Camera_2&) INSTEAD.
+         * TO AVOID THIS, USE GetCameraState() or GetCamera(Camera&) INSTEAD.
          *
          * @return A camera object containing the minimal state transferred by this call.
          */
@@ -215,7 +215,7 @@ namespace view {
         }
 
         /**
-         * Stores the transferred camera state in a given Camera_2 object to avoid the copy of whole camera objects.
+         * Stores the transferred camera state in a given Camera object to avoid the copy of whole camera objects.
          * This invalidates all present parameters in the given object. They have to be calculated again, using the
          * appropriate functions.
          *
