@@ -93,14 +93,6 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
         depth_texture = cdt->getData();
     }
 
-    // obtain camera information
-    //  core::view::Camera_2 cam(cr->GetCamera());
-    //  cam_type::snapshot_type snapshot;
-    //  cam_type::matrix_type view_tmp, proj_tmp;
-    //  cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    //  glm::mat4 view_mx = view_tmp;
-    //  glm::mat4 proj_mx = proj_tmp;
-
     // get input texture from call
     auto input_texture = ct->getData();
     if (input_texture == nullptr)

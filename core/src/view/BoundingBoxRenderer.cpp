@@ -12,7 +12,6 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/thecam/math/functions.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "mmcore/utility/log/Log.h"
@@ -334,12 +333,12 @@ bool BoundingBoxRenderer::RenderViewCube(CallRender3DGL& call) {
     const auto rotation = glm::mat4(glm::inverse(glm::mat3(cam.getViewMatrix())));
 
     // Create view/model and projection matrices
-    const float dist = 2.0f / std::tan(thecam::math::angle_deg2rad(30.0f) / 2.0f);
+    const float dist = 2.0f / std::tan(glm::radians(30.0f) / 2.0f);
 
     glm::mat4 model(1.0f);
     model[3][2] = -dist;
 
-    const auto proj = glm::perspective(thecam::math::angle_deg2rad(30.0f), 1.0f, 0.1f, 100.0f);
+    const auto proj = glm::perspective(glm::radians(30.0f), 1.0f, 0.1f, 100.0f);
 
     // Set state
     const auto depth_test = glIsEnabled(GL_DEPTH_TEST);

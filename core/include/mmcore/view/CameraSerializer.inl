@@ -61,7 +61,7 @@ bool megamol::core::view::CameraSerializer::deserialize(
     for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {
         size_t index = static_cast<size_t>(it - obj.begin());
         auto cur = *it;
-        megamol::core::view::Camera_2::minimal_state_type cam;
+        megamol::core::view::Camera cam;
         bool result = this->getCamFromJsonObject(cam, cur);
         if (!result) {
             cam = {}; // empty the cam if it is garbage

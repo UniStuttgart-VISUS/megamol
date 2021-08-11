@@ -104,26 +104,6 @@ CinematicView::CinematicView(void)
 
     this->addSBSideToNameParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->addSBSideToNameParam);
-
-    param::EnumParam* enp = new param::EnumParam(static_cast<int>(megamol::core::thecam::Eye::mono));
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::mono), "Mono");
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::left), "Left");
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::centre), "Center");
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::right), "Right");
-    this->eyeParam << enp;
-    this->MakeSlotAvailable(&this->eyeParam);
-    enp = nullptr;
-
-    param::EnumParam* pep = new param::EnumParam(static_cast<int>(megamol::core::thecam::Projection_type::perspective));
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::perspective), "Mono Perspective");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::orthographic), "Mono Orthographic");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::off_axis), "Stereo Off-Axis");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::parallel), "Stereo Prallel");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::toe_in), "Stereo Toe-In");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::converged), "Converged");
-    this->projectionParam << pep;
-    this->MakeSlotAvailable(&this->projectionParam);
-    pep = nullptr;
 }
 
 

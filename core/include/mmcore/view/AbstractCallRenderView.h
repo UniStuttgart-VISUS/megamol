@@ -11,8 +11,6 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Input.h"
-#include "mmcore/thecam/camera.h"
-
 
 
 namespace megamol {
