@@ -48,10 +48,7 @@ if(BUILD_FRONTEND_SERVICES)
 
   # Add target
   add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files} ${gui_header_files} ${gui_source_files})
-  set_target_properties(${PROJECT_NAME}
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    OUTPUT_NAME ${PROJECT_NAME})
-
+  set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PUBLIC
     "include"
     "cuda"
@@ -92,13 +89,9 @@ if(BUILD_FRONTEND_SERVICES)
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service vislib core glad glm imgui imguizmoquat)
     
-  # Install gui shaders
-  if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/shaders")
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")
-  endif ()
   # Install gui resources
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gui/resources/ DESTINATION "share/resources")
   endif ()
 
   # Grouping in Visual Studio
@@ -108,8 +101,9 @@ if(BUILD_FRONTEND_SERVICES)
   source_group("Header Files\\gui" FILES ${gui_header_files})
   source_group("Source Files\\gui" FILES ${gui_source_files})
 
+  # Clang formatting (so far only for gui)
   add_clang_format(${PROJECT_NAME}
-  STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
-  FILES ${gui_header_files} ${gui_source_files})  
+    STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
+    FILES ${gui_header_files} ${gui_source_files})  
 
 endif()
