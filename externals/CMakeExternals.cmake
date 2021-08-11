@@ -404,14 +404,14 @@ function(require_external NAME)
       return()
     endif()
 
+    require_external(glfw)
+    external_get_property(glfw INSTALL_DIR)    
+
     if(WIN32)
       set(IMGUI_LIB "lib/imgui.lib")
     else()
       set(IMGUI_LIB "lib/libimgui.a")
     endif()
-
-    require_external(glfw)
-    external_get_property(glfw INSTALL_DIR)    
 
     add_external_project(imgui STATIC
       GIT_REPOSITORY https://github.com/ocornut/imgui.git
