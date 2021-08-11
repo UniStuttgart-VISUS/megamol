@@ -56,9 +56,6 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModuleGL()
             this->MakeSlotAvailable(&(*slot));
         }
     }
-
-    // Load spline interpolation keyframes at startup
-    this->stepsParam.ForceSetDirty();
 }
 
 

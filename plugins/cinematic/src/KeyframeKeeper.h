@@ -158,7 +158,7 @@ namespace cinematic {
         * functions
         ***********************************************************************/
 
-        const Keyframe& interpolateKeyframe(float time);
+        Keyframe interpolateKeyframe(float time);
 
         bool addKeyframe(Keyframe kf, bool add_undo);
 

@@ -174,7 +174,6 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
 
     this->loadKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_L, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->loadKeyframesParam);
-    this->loadKeyframesParam.ForceSetDirty(); // Try to load keyframe file at program start
 }
 
 
@@ -528,6 +527,10 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         } else if (proj == view::Camera::PERSPECTIVE) {
             this->editCurrentFovyParam.Parameter()->SetGUIVisible(false);
             this->editCurrentFrustumHeightParam.Parameter()->SetGUIVisible(true);
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[KEYFRAME KEEPER] [editCurrentProjectionParam] No valid projection found. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
         }
 
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
@@ -542,6 +545,10 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
                 auto cam_param = camera.get<view::Camera::OrthographicParameters>();
                 cam_param.frustrum_height = this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->Value();
                 camera.setOrthographicProjection(cam_param);
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[KEYFRAME KEEPER] [editCurrentProjectionParam] No valid projection found. [%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
             }
 
             this->selectedKeyframe.SetCameraState(camera);
@@ -1081,7 +1088,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool add_undo) {
 }
 
 
-const Keyframe& KeyframeKeeper::interpolateKeyframe(float time) {
+Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
 
     float t = time;
     t = (t < 0.0f) ? (0.0f) : (t);
@@ -1119,6 +1126,10 @@ const Keyframe& KeyframeKeeper::interpolateKeyframe(float time) {
             auto cam_intrinsics = camera.get<view::Camera::OrthographicParameters>();
             cam_intrinsics.frustrum_height = this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->Value();
             kf.SetCameraState(view::Camera(cam_pose, cam_intrinsics));
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[KEYFRAME KEEPER] [interpolateKeyframe] No valid projection found. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
         }
         return kf;
     }
@@ -1230,6 +1241,10 @@ const Keyframe& KeyframeKeeper::interpolateKeyframe(float time) {
                 cam_intrinsics.frustrum_height = ak;
                 cam_kf.setOrthographicProjection(cam_intrinsics);
             }
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[KEYFRAME KEEPER] [interpolateKeyframe] No valid projection found. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
         }
 
         //interpolate orientation ---------------------------------------------
@@ -1445,6 +1460,10 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     } else if (camera.getProjectionType() == view::Camera::ORTHOGRAPHIC) {
         this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->SetValue(
             camera.get<view::Camera::FrustrumHeight>(), false);
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[KEYFRAME KEEPER] [updateEditParameters] No valid projection found. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
     }
 }
 
