@@ -203,8 +203,10 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(std::unique_ptr<glowl::
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
 
     glUniform2f(program->getUniformLocation("scaling"), 1.0f, 1.0f); // scaling, whatever
-    glUniformMatrix4fv(program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getViewMatrix()));
-    glUniformMatrix4fv(program->getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getProjectionMatrix()));
+    glUniformMatrix4fv(
+        program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getViewMatrix()));
+    glUniformMatrix4fv(
+        program->getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getProjectionMatrix()));
     glUniform1ui(program->getUniformLocation("dimensionCount"), this->columnCount);
     glUniform1ui(program->getUniformLocation("itemCount"), this->itemCount);
 
@@ -871,7 +873,8 @@ void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, flo
 
 void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     debugPush(4, "doFragmentCount");
-    int invocations[] = {static_cast<int>(std::ceil(fbo->getWidth() / 16)), static_cast<int>(std::ceil(fbo->getHeight() / 16))};
+    int invocations[] = {
+        static_cast<int>(std::ceil(fbo->getWidth() / 16)), static_cast<int>(std::ceil(fbo->getHeight() / 16))};
     GLuint invocationCount = invocations[0] * invocations[1];
 
     size_t bytes = sizeof(uint32_t) * 2 * invocationCount;
@@ -1032,16 +1035,18 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     core::view::Camera cam = call.GetCamera();
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
-    auto cam_intrinsics = cam.get<core::view::Camera::OrthographicParameters>(); // don't you dare using a perspective cam here...
+    auto cam_intrinsics =
+        cam.get<core::view::Camera::OrthographicParameters>(); // don't you dare using a perspective cam here...
     fbo = call.GetFramebuffer();
     camera_cpy = cam;
     viewRes = call.GetViewResolution();
 
-    // maintainer comment: assuming this wants to know the aspect of the full window, i.e. not onlyof the current image tile
-    
+    // maintainer comment: assuming this wants to know the aspect of the full window, i.e. not onlyof the current image
+    // tile
+
 
     // maintainer comment: assuming this now here wants to know about the current tile's resolution
-    
+
 
     auto bg = call.BackgroundColor();
 

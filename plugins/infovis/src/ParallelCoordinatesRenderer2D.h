@@ -140,7 +140,8 @@ namespace infovis {
 
         void drawAxes(glm::mat4 ortho);
 
-        void drawDiscrete(const float otherColor[4], const float selectedColor[4], float tfColorFactor, glm::ivec2 const& viewRes);
+        void drawDiscrete(
+            const float otherColor[4], const float selectedColor[4], float tfColorFactor, glm::ivec2 const& viewRes);
 
         void drawItemsDiscrete(
             uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor, glm::ivec2 const& viewRes);
@@ -232,9 +233,9 @@ namespace infovis {
         float fontSize;
         float backgroundColor[4];
         core::BoundingBoxes_2 bounds;
-        core::view::Camera camera_cpy; //< local copy of last used camera
+        core::view::Camera camera_cpy;                 //< local copy of last used camera
         std::shared_ptr<glowl::FramebufferObject> fbo; //< last used framebuffer
-        glm::ivec2 viewRes; //< last used view resolution
+        glm::ivec2 viewRes;                            //< last used view resolution
         unsigned int lastTimeStep;
 
         GLuint columnCount;

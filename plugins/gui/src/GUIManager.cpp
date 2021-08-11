@@ -413,7 +413,7 @@ bool GUIManager::PostDraw() {
     ImGui::Render();
     draw_data = ImGui::GetDrawData();
     DrawUiToScreen();
-    //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Reset all hotkeys ------------------------------------------------------
     for (auto& hotkey : this->hotkeys) {
