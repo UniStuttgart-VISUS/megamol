@@ -411,9 +411,11 @@ bool GUIManager::PostDraw() {
     // Render the current ImGui frame ------------------------------------------
     glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
     ImGui::Render();
-    draw_data = ImGui::GetDrawData();
-    DrawUiToScreen();
-    // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    this->draw_data = ImGui::GetDrawData();
+
+    /// XXX Actual rendering of GUI is done in ImagePresentation_Service
+    /// DrawUiToScreen();
+    /// ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Reset all hotkeys ------------------------------------------------------
     for (auto& hotkey : this->hotkeys) {
