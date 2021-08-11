@@ -238,11 +238,17 @@ static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, G
     case GL_DEBUG_TYPE_PERFORMANCE:
         typeText = "Performance";
         break;
-    case GL_DEBUG_TYPE_OTHER:
-        typeText = "Other";
-        break;
     case GL_DEBUG_TYPE_MARKER:
         typeText = "Marker";
+        break;
+    case GL_DEBUG_TYPE_PUSH_GROUP:
+        typeText = "Push Group";
+        break;
+    case GL_DEBUG_TYPE_POP_GROUP:
+        typeText = "Pop Group";
+        break;
+    case GL_DEBUG_TYPE_OTHER:
+        typeText = "Other";
         break;
     default:
         typeText = "Unknown";
