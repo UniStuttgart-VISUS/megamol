@@ -43,7 +43,7 @@ if(BUILD_VISLIB)
 
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
 
-  target_compile_definitions(vislib PUBLIC SPDLOG_FMT_EXTERNAL)
+  target_compile_definitions(vislib PUBLIC SPDLOG_FMT_EXTERNAL WIN32_LEAN_AND_MEAN)
 
   if(UNIX)
     set(CURSES_NEED_NCURSES True)
