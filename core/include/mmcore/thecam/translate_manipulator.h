@@ -57,9 +57,9 @@ public:
     // Typedef all mathematical types we need in the manipulator.
     typedef typename glm::vec4 point_type;
     typedef typename glm::quat quaternion_type;
-    typedef typename int screen_type;
+    typedef int screen_type;
     typedef typename glm::vec4 vector_type;
-    typedef typename float world_type;
+    typedef float world_type;
 
     translate_manipulator(const world_type stepSize = 1);
 

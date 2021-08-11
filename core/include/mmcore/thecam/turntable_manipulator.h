@@ -29,9 +29,9 @@ public:
     // Typedef all mathematical types we need in the manipulator.
     typedef typename glm::vec4 point_type;
     typedef typename glm::quat quaternion_type;
-    typedef typename int screen_type;
+    typedef int screen_type;
     typedef typename glm::vec4 vector_type;
-    typedef typename float world_type;
+    typedef float world_type;
 
     TurntableManipulator() = default;
 
@@ -67,7 +67,7 @@ public:
                 screen_type dy = y - m_last_sy;
 
                 // get camera pose
-                auto cam_pose = cam->get<view::Camera::Pose>();
+                auto cam_pose = cam->template get<view::Camera::Pose>();
                 auto cam_right = glm::cross(cam_pose.direction, cam_pose.up);
 
                 // split movement into horizontal and vertical (in camera space)
