@@ -4,12 +4,6 @@
  * All rights reserved.
  */
 
-// TODO: Vislib must die!!!
-// Vislib includes Windows.h. This crashes when somebody else (i.e. zmq) is using Winsock2.h, but the vislib include
-// is first without defining WIN32_LEAN_AND_MEAN. This define is the only thing we need from stdafx.h, include could be
-// removed otherwise.
-#include "stdafx.h"
-
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
