@@ -85,7 +85,7 @@ namespace core {
         };
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::BaseView()
+        inline BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::BaseView()
                 : _fbo(nullptr), _camera_controller(&this->_camera) {
 
             // none of the saved camera states are valid right now
@@ -101,7 +101,7 @@ namespace core {
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
         inline void
-        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::beforeRender(
+        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::beforeRender(
             double time, double instanceTime) {
             AbstractView::beforeRender(time, instanceTime);
 
@@ -118,7 +118,7 @@ namespace core {
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
         inline void
-        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::afterRender() {
+        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::afterRender() {
             AbstractView::afterRender();
         }
 
@@ -146,7 +146,7 @@ namespace core {
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
         inline bool
-        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnRenderView(
+        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnRenderView(
             Call& call) {
             VIEWCALL_TYPE* crv = dynamic_cast<VIEWCALL_TYPE*>(&call);
             if (crv == NULL) {
@@ -195,7 +195,7 @@ namespace core {
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
         inline void
-        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::ResetView() {
+        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::ResetView() {
             if (this->_cameraIsMutable) { // check if view is in control of the camera
                 AbstractCallRender* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
                 if ((cr != nullptr) && (_fbo != nullptr) && ((*cr)(AbstractCallRender::FnGetExtents))) {
@@ -208,7 +208,7 @@ namespace core {
         }
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline void BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::Resize(
+        inline void BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::Resize(
             unsigned int width, unsigned int height) {
 
             if (_cameraIsMutable) { // view seems to be in control of the camera
@@ -226,7 +226,7 @@ namespace core {
         }
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline bool BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnKey(
+        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnKey(
             view::Key key, view::KeyAction action, view::Modifiers mods) {
             auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
             if (cr != nullptr) {
@@ -250,7 +250,7 @@ namespace core {
                     if (mods.test(Modifier::CTRL)) {
                         this->_savedCameras[index].first = this->_camera;
                         this->_savedCameras[index].second = true;
-                        if (this->_autoSaveCamSettingsSlot.Param<param::BoolParam>()->Value()) {
+                        if (this->_autoSaveCamSettingsSlot.template Param<param::BoolParam>()->Value()) {
                             this->onStoreCamera(this->_storeCameraSettingsSlot); // manually trigger the storing
                         }
                     } else {
@@ -267,7 +267,7 @@ namespace core {
         }
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
-        inline bool BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnChar(
+        inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnChar(
             unsigned int codePoint) {
             auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
             if (cr == NULL)
@@ -289,7 +289,7 @@ namespace core {
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
         inline bool
-        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnMouseButton(
+        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnMouseButton(
             view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
             if (!this->_camera_controller.isOverriding() && !this->_camera_controller.isActive()) {
                 auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
@@ -336,7 +336,7 @@ namespace core {
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
         inline bool
-        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnMouseMove(
+        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnMouseMove(
             double x, double y) {
             if (!this->_camera_controller.isActive()) {
                 auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
@@ -382,7 +382,7 @@ namespace core {
 
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
         inline bool
-        BaseView<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>::OnMouseScroll(
+        BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnMouseScroll(
             double dx, double dy) {
             auto* cr = this->_rhsRenderSlot.CallAs<view::AbstractCallRender>();
             if (cr != NULL) {
