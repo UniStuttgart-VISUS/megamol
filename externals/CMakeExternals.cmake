@@ -405,7 +405,7 @@ function(require_external NAME)
     endif()
 
     require_external(glfw)
-    external_get_property(glfw INSTALL_DIR)
+    external_get_property(glfw INSTALL_DIR)    
 
     if(WIN32)
       set(IMGUI_LIB "lib/imgui.lib")

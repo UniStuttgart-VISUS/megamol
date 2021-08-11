@@ -398,7 +398,7 @@ In the parameter group `anim` of the `view` module you can adjust the animation 
 
 Alternatively, you can also open an empty MegaMol rendering window and load the above example project script file via the menu `File / Load Project`.  
 
-All available options provided via the graphical user interface are described separately in the readme file of the [GUI plugin](../plugins/gui).
+All available options provided via the graphical user interface are described separately in the readme file of the [GUI Service](../frontend/services/gui).
 
 ![Test Project](pics/testspheres.png)
 *Screenshot of MegaMol running the test spheres instance.*
@@ -553,7 +553,7 @@ Here you can see the example project script `..\examples\testspheres.lua`:
 Project files can easily be created using the built in *Configurator*.
 It can be opened via the menu `Windows / Configurator`.
 You can either edit the currently running MegaMol graph (which might be empty) or you can create a new project starting a module graph by adding the main view module `View3D_2`.
-A detailed description of the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#configurator).
+A detailed description of the configurator can be found in the readme file of the [GUI Service](../frontend/services/gui#configurator).
 
 <!-- TODO:
 Add more ... ?
