@@ -1,5 +1,5 @@
 #
-# MegaMol™ Frontend Services
+# MegaMol Frontend Services
 # Copyright 2019, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
@@ -11,6 +11,8 @@ if(BUILD_FRONTEND_SERVICES)
   
   require_external(glad)
 
+  # Add gui separately
+  add_subdirectory(${MEGAMOL_DIR}/frontend/services/gui)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
@@ -24,7 +26,6 @@ if(BUILD_FRONTEND_SERVICES)
     "opengl_glfw/*.h"
     "opengl_glfw/*.hpp"
     "service_collection/*.hpp"
-    "gui/*.hpp"
     "lua_service_wrapper/*.hpp"
     "screenshot_service/*.hpp"
     "framestatistics_service/*.hpp"
@@ -37,7 +38,6 @@ if(BUILD_FRONTEND_SERVICES)
     "cuda/*cpp"
     "opengl_glfw/*.cpp"
     "service_collection/*.cpp"
-    "gui/*.cpp"
     "lua_service_wrapper/*.cpp"
     "screenshot_service/*.cpp"
     "framestatistics_service/*.cpp"
@@ -58,7 +58,6 @@ if(BUILD_FRONTEND_SERVICES)
     "cuda"
     "opengl_glfw"
     "service_collection"
-    "gui"
     "lua_service_wrapper"
     "screenshot_service"
     "framestatistics_service"

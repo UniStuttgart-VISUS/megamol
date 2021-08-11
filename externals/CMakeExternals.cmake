@@ -404,9 +404,6 @@ function(require_external NAME)
       return()
     endif()
 
-    require_external(glfw)
-    external_get_property(glfw INSTALL_DIR)
-
     if(WIN32)
       set(IMGUI_LIB "lib/imgui.lib")
     else()
@@ -420,11 +417,8 @@ function(require_external NAME)
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt"
-      DEPENDS
-        glfw
       CMAKE_ARGS
-        -DGLAD_INCLUDE_DIR:PATH=${CMAKE_SOURCE_DIR}/externals/glad/include
-        -DGLFW_INCLUDE_DIR:PATH=${INSTALL_DIR}/include)
+        -DGLAD_INCLUDE_DIR:PATH=${CMAKE_SOURCE_DIR}/externals/glad/include)
 
     add_external_library(imgui
       LIBRARY ${IMGUI_LIB})
