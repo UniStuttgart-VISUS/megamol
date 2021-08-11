@@ -160,7 +160,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->MakeSlotAvailable(&this->editCurrentProjectionParam);
     pe = nullptr;
 
-    this->editCurrentFovyParam.SetParameter(new param::FloatParam(glm::radians(30.0f), 0.0f, (2.0f * M_PI))); // = 60° aperture angle
+    this->editCurrentFovyParam.SetParameter(new param::FloatParam(glm::radians(30.0f), 0.0f, glm::radians(180.0f))); // = 60° aperture angle
     this->MakeSlotAvailable(&this->editCurrentFovyParam);
 
     this->editCurrentFrustumHeightParam.SetParameter(new param::FloatParam(1.0f, 0.0f)); /// sane default value?
@@ -175,7 +175,6 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->loadKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_L, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->loadKeyframesParam);
     this->loadKeyframesParam.ForceSetDirty(); // Try to load keyframe file at program start
-
 }
 
 
@@ -259,7 +258,10 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
     this->selectedKeyframe = this->interpolateKeyframe(ccc->GetSelectedKeyframe().GetAnimTime());
     this->updateEditParameters(this->selectedKeyframe);
     ccc->SetSelectedKeyframe(this->selectedKeyframe);
-    this->linearizeSimTangent(prevSelKf);
+    if (this->simTangentStatus) {
+        this->linearizeSimTangent(prevSelKf);
+        this->simTangentStatus = false;
+    }
 
     return true;
 }
@@ -644,7 +646,6 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     ccc->SetControlPointPosition(this->startCtrllPos, this->endCtrllPos);
     ccc->SetFps(this->fps);
 
-
     this->pendingTotalAnimTimePopUp(this->GetCoreInstance()->GetFrameID());
 
     return true;
@@ -792,47 +793,43 @@ bool KeyframeKeeper::redoAction(void) {
 void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
 
     // Linearize tangent between simTangentKf and currently selected keyframe by shifting all inbetween keyframe simulation times
-    if (this->simTangentStatus) {
+    if (this->getKeyframeIndex(this->keyframes, stkf) < 0) {
         // Linearize tangent only between existing keyframes
-        if (this->getKeyframeIndex(this->keyframes, stkf) < 0) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe before trying to linearize the tangent.");
-            this->simTangentStatus = false;
-        }
-        else if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe before trying to linearize the tangent.");
+    }
+    else if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
 
-            // Calculate liner equation between the two selected keyframes 
-            // f(x) = mx + b
-            glm::vec2 p1 = glm::vec2(this->selectedKeyframe.GetAnimTime(), this->selectedKeyframe.GetSimTime());
-            glm::vec2 p2 = glm::vec2(stkf.GetAnimTime(), stkf.GetSimTime());
-            float m = (p1.y - p2.y) / (p1.x - p2.x);
-            float b = m * (-p1.x) + p1.y;
-            // Get indices
-            int iKf1 = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-            int iKf2 = this->getKeyframeIndex(this->keyframes, stkf);
-            if (iKf1 > iKf2) {
-                int tmp = iKf1;
-                iKf1 = iKf2;
-                iKf2 = tmp;
-            }
-            // Consider only keyframes lying between the two selected ones
-            float newSimTime;
-            for (int i = iKf1 + 1; i < iKf2; i++) {
-                newSimTime = m * (this->keyframes[i].GetAnimTime()) + b;
+        // Calculate liner equation between the two selected keyframes 
+        // f(x) = mx + b
+        glm::vec2 p1 = glm::vec2(this->selectedKeyframe.GetAnimTime(), this->selectedKeyframe.GetSimTime());
+        glm::vec2 p2 = glm::vec2(stkf.GetAnimTime(), stkf.GetSimTime());
+        float m = (p1.y - p2.y) / (p1.x - p2.x);
+        float b = m * (-p1.x) + p1.y;
+        // Get indices
+        int iKf1 = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
+        int iKf2 = this->getKeyframeIndex(this->keyframes, stkf);
+        if (iKf1 > iKf2) {
+            int tmp = iKf1;
+            iKf1 = iKf2;
+            iKf2 = tmp;
+        }
+        // Consider only keyframes lying between the two selected ones
+        float newSimTime;
+        for (int i = iKf1 + 1; i < iKf2; i++) {
+            newSimTime = m * (this->keyframes[i].GetAnimTime()) + b;
 
-                // ADD UNDO
-                // Store old keyframe
-                Keyframe tmp_kf = this->keyframes[i];
-                // Apply changes to keyframe
-                this->keyframes[i].SetSimTime(newSimTime);
-                // Add modification to undo queue
-                this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes[i], tmp_kf);
-            }
-    
-            this->simTangentStatus = false;
+            // ADD UNDO
+            // Store old keyframe
+            Keyframe tmp_kf = this->keyframes[i];
+            // Apply changes to keyframe
+            this->keyframes[i].SetSimTime(newSimTime);
+            // Add modification to undo queue
+            this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes[i], tmp_kf);
         }
-        else {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe to finish linearizing the tangent.");
-        }
+   
+    }
+    else {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe to finish linearizing the tangent.");
     }
 }
 
@@ -1084,7 +1081,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool add_undo) {
 }
 
 
-Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
+const Keyframe& KeyframeKeeper::interpolateKeyframe(float time) {
 
     float t = time;
     t = (t < 0.0f) ? (0.0f) : (t);

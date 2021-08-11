@@ -436,11 +436,17 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         default: break;
     }
     strWidth = this->utils.GetTextLineWidth(caption);
-    //this->utils.SetTextRotation(90.0f, cam_view);
+    /* TODO Fix SDFFont text rotation...
+    this->utils.SetTextRotation(70.0f, cam_view);
     this->utils.Push2DText(ortho, caption,
         this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, // x
-        (-1.0f) * this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f * this->lineHeight); // y
+        this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f * this->lineHeight); // y
     this->utils.ResetTextRotation();
+    */
+    // TEMP
+    strWidth = this->utils.GetTextLineWidth(caption);
+    this->utils.Push2DText(ortho, caption, this->axes[Axis::X].startPos.x - strWidth / 2.0f,
+        this->axes[Axis::Y].endPos.y + this->lineHeight + this->rulerMarkHeight);
 
     // Push menu --------------------------------------------------------------
     auto activeKeyframe = (this->dragDropActive) ? (this->dragDropKeyframe) : (skf);
@@ -737,7 +743,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
 
     // Store current mouse position
     this->mouseX = (float)static_cast<int>(x);
-    this->mouseY = (float)static_cast<int>(y);
+    this->mouseY = this->viewport.y - (float)static_cast<int>(y);
 
     // LEFT-CLICK --- keyframe selection
     if (this->mouseButton == MouseButton::BUTTON_LEFT) {

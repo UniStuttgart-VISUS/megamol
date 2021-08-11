@@ -441,7 +441,8 @@ bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 bool OverlayRenderer::Render(view::CallRender3DGL& call) {
 
     // Framebuffer object
-    auto fbo = call.GetFramebuffer();
+    auto const lhsFBO = call.GetFramebuffer();
+    lhsFBO->bind();
 
     auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (cr3d_out != nullptr) {
@@ -452,16 +453,14 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // Get current viewport
-    if ((this->m_viewport.x != fbo->getWidth()) || (this->m_viewport.y != fbo->getHeight())) {
-        this->m_viewport = {fbo->getWidth(), fbo->getHeight()};
+    if ((this->m_viewport.x != lhsFBO->getWidth()) || (this->m_viewport.y != lhsFBO->getHeight())) {
+        this->m_viewport = {lhsFBO->getWidth(), lhsFBO->getHeight()};
         // Reload rectangle on viewport changes
         this->onTriggerRecalcRectangle(this->paramMode);
     }
+
     // Create 2D orthographic mvp matrix
     glm::mat4 ortho = glm::ortho(0.0f, this->m_viewport.x, 0.0f, this->m_viewport.y, -1.0f, 1.0f);
-
-    auto const lhsFBO = call.GetFramebuffer();
-    lhsFBO->bind();
 
     // Draw mode dependent stuff
     auto mode = this->paramMode.Param<param::EnumParam>()->Value();

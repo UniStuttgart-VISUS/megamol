@@ -198,7 +198,6 @@ namespace cinematic {
         core::param::ParamSlot resWidthParam;
         core::param::ParamSlot resHeightParam;
         core::param::ParamSlot fpsParam;
-        core::param::ParamSlot projectionParam;
         core::param::ParamSlot frameFolderParam;
         core::param::ParamSlot addSBSideToNameParam;
     };

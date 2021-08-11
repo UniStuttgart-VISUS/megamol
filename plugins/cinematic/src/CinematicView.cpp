@@ -46,7 +46,6 @@ CinematicView::CinematicView(void)
         , frameFolderParam("cinematic::frameFolder", "Specify folder where the frame files should be stored.")
         , addSBSideToNameParam(
               "cinematic::addSBSideToName", "Toggle whether skybox side should be added to output filename")
-        , projectionParam("cinematic::stereo_projection", "Select camera projection.")
         , png_data()
         , utils()
         , deltaAnimTime(clock())
@@ -110,13 +109,6 @@ CinematicView::CinematicView(void)
 
     this->addSBSideToNameParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->addSBSideToNameParam);
-
-    param::EnumParam* pep = new param::EnumParam(view::Camera::PERSPECTIVE);
-    pep->SetTypePair(static_cast<int>(view::Camera::PERSPECTIVE), "Perspective");
-    pep->SetTypePair(static_cast<int>(view::Camera::ORTHOGRAPHIC), "Orthographic");
-    this->projectionParam << pep;
-    this->MakeSlotAvailable(&this->projectionParam);
-    pep = nullptr;
 }
 
 
@@ -220,12 +212,6 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     this->render_to_file_cleanup();
                 }
             }
-            if (this->projectionParam.IsDirty()) {
-                this->projectionParam.ResetDirty();
-                auto prof = static_cast<megamol::core::thecam::Projection_type>(this->projectionParam.Param<param::EnumParam>()->Value());
-
-
-            }
 
             // Time settings ----------------------------------------------------------
             // Load animation time
@@ -257,8 +243,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 // Load current simulation time to parameter
                 float simTime = skf.GetSimTime();
                 param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(2));
-                animTimeParam->Param<param::FloatParam>()->SetValue(
-                    simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
+                animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
                 // Viewport ---------------------------------------------------------------
                 /// Assume current framebuffer resolution to be used as viewport resolution
@@ -316,35 +301,35 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                         auto pose = skf.GetCamera().get<Camera::Pose>();
                         if (skf.GetCamera().get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
                             auto skf_intrinsics = skf.GetCamera().get<Camera::PerspectiveParameters>();
-                            if (_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
-                                auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+                            if (this->_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                                auto cam_intrinsics = this->_camera.get<Camera::PerspectiveParameters>();
                                 cam_intrinsics.fovy = skf_intrinsics.fovy;
-                                _camera = Camera(pose, cam_intrinsics);
-                            } else if (_camera.get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
-                                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                                this->_camera = Camera(pose, cam_intrinsics);
+                            } else if (this->_camera.get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
+                                auto cam_intrinsics = this->_camera.get<Camera::OrthographicParameters>();
                                 Camera::PerspectiveParameters pers_intrinsics;
                                 pers_intrinsics.aspect = cam_intrinsics.aspect;
                                 pers_intrinsics.far_plane = cam_intrinsics.far_plane;
                                 pers_intrinsics.image_plane_tile = cam_intrinsics.image_plane_tile;
                                 pers_intrinsics.near_plane = cam_intrinsics.near_plane;
                                 pers_intrinsics.fovy = skf_intrinsics.fovy;
-                                _camera = Camera(pose, pers_intrinsics);
+                                this->_camera = Camera(pose, pers_intrinsics);
                             }
                         } else if (skf.GetCamera().get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
                             auto skf_intrinsics = skf.GetCamera().get<Camera::OrthographicParameters>();
-                            if (_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
-                                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                            if (this->_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                                auto cam_intrinsics = this->_camera.get<Camera::OrthographicParameters>();
                                 Camera::OrthographicParameters orth_intrinsics;
                                 orth_intrinsics.aspect = cam_intrinsics.aspect;
                                 orth_intrinsics.far_plane = cam_intrinsics.far_plane;
                                 orth_intrinsics.image_plane_tile = cam_intrinsics.image_plane_tile;
                                 orth_intrinsics.near_plane = cam_intrinsics.near_plane;
                                 orth_intrinsics.frustrum_height = skf_intrinsics.frustrum_height;
-                                _camera = Camera(pose, orth_intrinsics);
-                            } else if (_camera.get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
-                                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                                this->_camera = Camera(pose, orth_intrinsics);
+                            } else if (this->_camera.get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
+                                auto cam_intrinsics = this->_camera.get<Camera::OrthographicParameters>();
                                 cam_intrinsics.frustrum_height = skf_intrinsics.frustrum_height;
-                                _camera = Camera(pose, cam_intrinsics);
+                                this->_camera = Camera(pose, cam_intrinsics);
                             }
                         }
                     } else {
@@ -353,7 +338,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 }
 
                 // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
-                ccc->SetCameraState(std::make_shared<Camera>(_camera));
+                ccc->SetCameraState(std::make_shared<Camera>(this->_camera));
                 if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) {
                     throw vislib::Exception("[CINEMATIC VIEW] Could not propagate current camera to keyframe keeper.", __FILE__, __LINE__);
                 }
@@ -361,7 +346,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 // Apply showing skybox side ONLY if new camera parameters are set.
                 // Non-permanent overwrite of selected keyframe camera by skybox camera settings.
                 if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
-                    auto pose = _camera.get<Camera::Pose>();
+                    auto pose = this->_camera.get<Camera::Pose>();
                     const glm::vec3 cam_pos = pose.position;
                     const glm::vec3 cam_right = pose.right;
                     const glm::vec3 cam_up = pose.up;
@@ -412,10 +397,10 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                         }
                     }
                     // Apply new position, orientation and aperture angle to current camera.
-                    if (_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
-                        auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+                    if (this->_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                        auto cam_intrinsics = this->_camera.get<Camera::PerspectiveParameters>();
                         cam_intrinsics.fovy = 90.0f / 180.0f * 3.14f; // TODO proper conversion deg to rad
-                        _camera = Camera(Camera::Pose(new_pos, new_orientation), cam_intrinsics);
+                        this->_camera = Camera(Camera::Pose(new_pos, new_orientation), cam_intrinsics);
                     } else {
                         // TODO what about ortho?
                     }
