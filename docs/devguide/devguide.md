@@ -423,8 +423,8 @@ Additionally, information about the libraries can be queried with the command ``
 
 ### Parameter Widgets
 
-See [developer information for GUI plugin](../../plugins/gui#new-parameter-widgets).
+See [developer information for GUI Service](../../frontend/services/gui#new-parameter-widgets).
 
-### Window/PopUp/Notification for Frontend Service
+### Window/PopUp/Notification for other Frontend Services
 
-See [developer information for GUI plugin](../../plugins/gui#gui-windowpopupnotification-for-frontend-service).
+See [developer information for GUI Service](../../frontend/services/gui#gui-windowpopupnotification-for-frontend-service).

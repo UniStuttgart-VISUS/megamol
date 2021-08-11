@@ -1,6 +1,6 @@
-# MegaMol Plugin: GUI
+# MegaMol: GUI
 
-This is the plugin that provides the GUI for MegaMol.
+This is the service that provides the GUI for MegaMol.
 
 ![gui](gui.jpg)
 
@@ -185,7 +185,7 @@ Interface slots are stored in project files as part of the configurators state p
 
 ### Hotkey Overview
 
-The following hotkeys are used in the GUI plugin:
+The following hotkeys are used in the GUI:
 
 **Global *(in class GUIManager)*:**
 * Trigger Screenshot:        **`F2`**
@@ -211,7 +211,7 @@ The following hotkeys are used in the GUI plugin:
 
 ## Modules
 
-Additional modules provided by the GUI plugin:
+Additional modules provided by the GUI:
 
 ### OverlayRenderer
 
@@ -246,12 +246,14 @@ The `OverlayRenderer` is a rendering module which provides overlay rendering lik
 
 ### Using ImGui in Modules
 
-If you want to use ImGui in your module (in another plugin) you just have to apply the following steps:
+If you want to use ImGui in your module you just have to apply the following steps:
 
 **1)** Add imgui as external dependency to your plugin's `CMakeLists.txt`:
 ```cmake
-require_external(imgui)
-target_link_libraries(${PROJECT_NAME} PRIVATE imgui)
+megamol_plugin(...
+    ...
+  DEPENDS_EXTERNALS
+    imgui
 ```
 **2)** Include the following ImGui headers in your modules's header:
 ```c++
@@ -263,7 +265,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE imgui)
 bool valid_imgui_scope = ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
 if (!valid_imgui_scope) return;
 ```
-**4)** Then call your own ImGui stuff... See [https://github.com/ocornut/imgui](https://github.com/ocornut/imgui)
+**4)** Then call your own ImGui stuff... See DearImGui: [https://github.com/ocornut/imgui](https://github.com/ocornut/imgui)
 
 ### New Parameter Widgets
 
