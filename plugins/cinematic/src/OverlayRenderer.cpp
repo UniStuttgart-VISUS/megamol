@@ -459,7 +459,7 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
         this->onTriggerRecalcRectangle(this->paramMode);
     }
 
-    // Create 2D orthographic mvp matrix
+    glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
     glm::mat4 ortho = glm::ortho(0.0f, this->m_viewport.x, 0.0f, this->m_viewport.y, -1.0f, 1.0f);
 
     // Draw mode dependent stuff

@@ -438,11 +438,11 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             Keyframe tmp_kf = this->selectedKeyframe;
             glm::vec3 pos_v = utility::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
             std::array<float, 3> pos = { pos_v.x, pos_v.y, pos_v.z };
-            auto cam = this->selectedKeyframe.GetCamera();
-            auto cam_pose = cam.get<view::Camera::Pose>();
+            auto camera = this->selectedKeyframe.GetCamera();
+            auto cam_pose = camera.get<view::Camera::Pose>();
             cam_pose.position = glm::vec3(pos[0], pos[1], pos[2]);
-            cam.setPose(cam_pose);
-            this->selectedKeyframe.SetCameraState(cam);
+            camera.setPose(cam_pose);
+            this->selectedKeyframe.SetCameraState(camera);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
             this->refreshInterpolCamPos(this->interpolSteps);
         }
@@ -1092,6 +1092,17 @@ const Keyframe& KeyframeKeeper::interpolateKeyframe(float time) {
         if (t == this->keyframes[i].GetAnimTime()) {
             return this->keyframes[i];
         }
+    }
+
+    if ((this->cameraState.get<view::Camera::ProjectionType>() != view::Camera::PERSPECTIVE) &&
+        (this->cameraState.get<view::Camera::ProjectionType>() != view::Camera::ORTHOGRAPHIC)) {
+        auto intrinsics = megamol::core::view::Camera::PerspectiveParameters();
+        intrinsics.fovy = 0.5f;
+        intrinsics.aspect = 16.0f / 9.0f;
+        intrinsics.near_plane = 0.01f;
+        intrinsics.far_plane = 100.0f;
+        ///intrinsics.image_plane_tile = ;
+        this->cameraState.setPerspectiveProjection(intrinsics);
     }
 
     if (this->keyframes.empty()) {

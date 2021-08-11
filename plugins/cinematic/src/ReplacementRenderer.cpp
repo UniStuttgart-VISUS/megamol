@@ -146,7 +146,8 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         auto const lhsFBO = call.GetFramebuffer();
         lhsFBO->bind();
 
-         glm::vec2 vp_dim = {lhsFBO->getWidth(), lhsFBO->getHeight()};
+        glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
+        glm::vec2 vp_dim = {lhsFBO->getWidth(), lhsFBO->getHeight()};
 
         // Camera
         core::view::Camera camera = call.GetCamera();
@@ -164,10 +165,16 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         glm::vec4 bottom  = {1.0f, 1.0f, 0.0f, alpha};
 
         auto bbox = vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        // Reuqires only bbox of callees (there might be modifications done by callers)
         auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
         if (cr3d_out != nullptr) {
-            bbox = call.AccessBoundingBoxes().BoundingBox();
+            *cr3d_out = call;
+            if ((*cr3d_out)(view::AbstractCallRender::FnGetExtents)) {
+                call = *cr3d_out;
+                bbox = call.AccessBoundingBoxes().BoundingBox();
+            }
         }
+
         glm::vec3 left_top_back = { bbox.Left(), bbox.Top(), bbox.Back() };
         glm::vec3 left_bottom_back = { bbox.Left(), bbox.Bottom(), bbox.Back() };
         glm::vec3 right_top_back = { bbox.Right(), bbox.Top(), bbox.Back() };
