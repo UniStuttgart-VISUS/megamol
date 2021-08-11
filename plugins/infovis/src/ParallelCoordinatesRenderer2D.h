@@ -134,7 +134,7 @@ namespace infovis {
 
         void pickIndicator(float x, float y, int& axis, int& index);
 
-        void assertData(core::view::CallRender2DGL& call);
+        bool assertData(core::view::CallRender2DGL& call);
 
         void computeScaling(void);
 

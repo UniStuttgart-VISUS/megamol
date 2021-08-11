@@ -14,9 +14,9 @@ using namespace megamol::core::param;
 /*
  * BoolParam::BoolParam
  */
-BoolParam::BoolParam(bool initVal)
-        : AbstractParam(), val(initVal) {
+BoolParam::BoolParam(bool initVal) : AbstractParam(), val() {
     this->InitPresentation(AbstractParamPresentation::ParamType::BOOL);
+    this->SetValue(initVal);
 }
 
 
