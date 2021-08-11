@@ -23,8 +23,7 @@ ButtonParam::ButtonParam(void) : AbstractParam(), keycode() {
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::KeyCode &keycode) : AbstractParam(),
-        keycode(keycode) {
+ButtonParam::ButtonParam(const core::view::KeyCode &keycode) : AbstractParam(), keycode(keycode) {
     this->InitPresentation(AbstractParamPresentation::ParamType::BUTTON);
 }
 
@@ -32,8 +31,7 @@ ButtonParam::ButtonParam(const core::view::KeyCode &keycode) : AbstractParam(),
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifiers &mods) : AbstractParam(), 
-        keycode(key, mods) {
+ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifiers &mods) : AbstractParam(), keycode(key, mods) {
     this->InitPresentation(AbstractParamPresentation::ParamType::BUTTON);
 }
 

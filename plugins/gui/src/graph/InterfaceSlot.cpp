@@ -269,11 +269,11 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
         float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
         this->gui_label.clear();
         for (auto& callslot_ptr : this->CallSlots()) {
-            this->gui_label += (callslot_ptr->Name() + " ");
-        }
-        auto callslot_count = this->CallSlots().size();
-        if (callslot_count > 1) {
-            this->gui_label += ("[" + std::to_string(callslot_count) + "]");
+            std::string parent_module_name;
+            if (callslot_ptr->GetParentModule() != nullptr) {
+                parent_module_name = callslot_ptr->GetParentModule()->Name() + "::";
+            }
+            this->gui_label += (parent_module_name + callslot_ptr->Name() + " \n");
         }
         std::string button_label = "interfaceslot_" + std::to_string(this->uid);
 
@@ -432,9 +432,9 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
             if (this->gui_group_collapsed_view) {
                 auto type = this->GetCallSlotType();
                 ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
-                text_pos_left_upper.y = actual_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
-                text_pos_left_upper.x =
-                    actual_position.x - ImGui::CalcTextSize(this->gui_label.c_str()).x - (1.5f * radius);
+                auto text_size = ImGui::CalcTextSize(this->gui_label.c_str());
+                text_pos_left_upper.y = actual_position.y - text_size.y / 2.0f;
+                text_pos_left_upper.x = actual_position.x - text_size.x - (1.5f * radius);
                 if (type == CallSlotType::CALLEE) {
                     text_pos_left_upper.x = actual_position.x + (1.5f * radius);
                 }
