@@ -180,6 +180,13 @@ bool BoundingBoxRenderer::GetExtents(CallRender3DGL& call) {
  */
 bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
 
+    Camera cam = call.GetCamera();
+    auto const lhsFBO = call.GetFramebuffer();
+
+    glm::mat4 view = cam.getViewMatrix();
+    glm::mat4 proj = cam.getProjectionMatrix();
+    glm::mat4 mvp = proj * view;
+
     CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
     if (chainedCall == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -190,17 +197,11 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
     call = *chainedCall;
 
-    Camera cam = call.GetCamera();
-    glm::mat4 view = cam.getViewMatrix();
-    glm::mat4 proj = cam.getProjectionMatrix();
-    glm::mat4 mvp = proj * view;
-
-    auto const lhsFBO = call.GetFramebuffer();
-
     auto boundingBoxes = chainedCall->AccessBoundingBoxes();
     auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
 
     lhsFBO->bind();
+    glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
 
     bool renderRes = true;
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
@@ -213,6 +214,7 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     renderRes &= (*chainedCall)(view::AbstractCallRender::FnRender);
 
     lhsFBO->bind();
+    glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
 
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes, smoothLines);
