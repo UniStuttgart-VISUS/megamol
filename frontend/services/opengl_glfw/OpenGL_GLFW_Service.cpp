@@ -13,6 +13,11 @@
 #include <chrono>
 #include <vector>
 
+#ifdef MEGAMOL_USE_BOOST_STACKTRACE
+#define BOOST_STACKTRACE_USE_BACKTRACE
+#include <boost/stacktrace.hpp>
+#endif
+
 #include "glad/glad.h"
 #ifdef _WIN32
 #    include <Windows.h>
@@ -268,7 +273,11 @@ static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, G
     output << GetStack() << std::endl;
     OutputDebugStringA(output.str().c_str());
 #else
+#ifdef MEGAMOL_USE_BOOST_STACKTRACE
+    output << boost::stacktrace::stacktrace() << std::endl;
+#else
     output << "(disabled)" << std::endl;
+#endif
 #endif
 
     if (type == GL_DEBUG_TYPE_ERROR) {

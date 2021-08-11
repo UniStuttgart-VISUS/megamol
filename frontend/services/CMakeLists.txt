@@ -95,6 +95,26 @@ if(BUILD_FRONTEND_SERVICES)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
 
+  # Linux Stacktrace
+  # Use Boost stacktrace if installed (is fully optional).
+  # sudo apt install libboost-stacktrace-dev
+  if (UNIX)
+    find_package(Boost 1.71.0
+      COMPONENTS
+        stacktrace_basic
+        stacktrace_backtrace
+        stacktrace_addr2line
+        stacktrace_noop)
+    if (Boost_FOUND)
+      target_link_libraries(${PROJECT_NAME} PUBLIC
+        ${Boost_STACKTRACE_BASIC_LIBRARY}
+        ${Boost_STACKTRACE_BACKTRACE_LIBRARY}
+        ${Boost_STACKTRACE_ADDR2LINE_LIBRARY}
+        ${Boost_STACKTRACE_NOOP_LIBRARY})
+      target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOL_USE_BOOST_STACKTRACE)
+    endif ()
+  endif ()
+
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service vislib glad core gui)
 
   ## Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
