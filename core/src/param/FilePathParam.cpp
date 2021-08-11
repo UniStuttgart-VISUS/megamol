@@ -17,16 +17,15 @@ FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags
     : AbstractParam()
     , flags(flags)
     , extensions(exts)
-    , value(initVal)
+    , value()
     , registered_notifications(false)
     , open_notification() {
-
-    this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
-
     this->open_notification[Flag_File] = std::make_shared<bool>(false);
     this->open_notification[Flag_Directory] = std::make_shared<bool>(false);
     this->open_notification[Flag_NoExistenceCheck] = std::make_shared<bool>(false);
     this->open_notification[Flag_RestrictExtension] = std::make_shared<bool>(false);
+    this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
+    this->SetValue(initVal);
 }
 
 
