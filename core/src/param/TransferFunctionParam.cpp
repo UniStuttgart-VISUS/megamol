@@ -12,45 +12,21 @@
 using namespace megamol::core::param;
 
 
-TransferFunctionParam::TransferFunctionParam(const std::string& initVal)
-        : AbstractParam(), val(""), hash(0) {
-
-    if (this->CheckTransferFunctionString(initVal)) {
-        this->val = initVal;
-        this->hash = std::hash<std::string>()(this->val);
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Invalid parameter value for constructor. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
+TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : AbstractParam(), val(), hash(0) {
     this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
+    this->SetValue(initVal);
 }
 
 
-TransferFunctionParam::TransferFunctionParam(const char* initVal)
-        : AbstractParam(), val(""), hash(0) {
-
-    if (this->CheckTransferFunctionString(std::string(initVal))) {
-        this->val = std::string(initVal);
-        this->hash = std::hash<std::string>()(this->val);
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Invalid parameter value for constructor. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
+TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractParam(), val(), hash(0) {
     this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
+    this->SetValue(std::string(initVal));
 }
 
 
-TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal)
-        : AbstractParam(), val(""), hash(0) {
-
-    if (this->CheckTransferFunctionString(std::string(initVal.PeekBuffer()))) {
-        this->val = std::string(initVal.PeekBuffer());
-        this->hash = std::hash<std::string>()(this->val);
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Invalid parameter value for constructor. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
+TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : AbstractParam(), val(), hash(0) {
     this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
+    this->SetValue(std::string(initVal.PeekBuffer()));
 }
 
 

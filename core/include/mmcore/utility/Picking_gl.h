@@ -106,7 +106,7 @@ namespace utility {
         std::map<unsigned int, std::vector<Interaction>> available_interactions;
         ManipVector_t pending_manipulations;
 
-        std::shared_ptr<glowl::FramebufferObject> fbo;
+        std::unique_ptr<glowl::FramebufferObject> fbo;
         std::shared_ptr<glowl::GLSLProgram> fbo_shader;
 
         bool enabled;

@@ -119,7 +119,7 @@ void MultiPDBLoader::assertData(void) {
 
     // try to load the file
     vislib::sys::ASCIIFileBuffer file;
-    if (file.LoadFile(this->filenameSlot.Param<param::FilePathParam>()->Value())) {
+    if (file.LoadFile(this->filenameSlot.Param<param::FilePathParam>()->Value().native().c_str())) {
         // TODO test if line is really a valid file!
         this->pdb.SetCount(file.Count());
         this->datacall.SetCount(file.Count());
@@ -127,7 +127,7 @@ void MultiPDBLoader::assertData(void) {
         for (unsigned int i = 0; i < file.Count(); i++) {
             this->pdb[i] = new PDBLoader();
             this->datacall[i] = new MolecularDataCall();
-            this->pdb[i]->pdbFilenameSlot.Param<core::param::FilePathParam>()->SetValue(file.Line(i), true);
+            this->pdb[i]->pdbFilenameSlot.Param<core::param::FilePathParam>()->SetValue(file.Line(i).Pointer(), true);
             this->datacall[i]->SetFrameID(0);
             if (this->pdb[i]->getExtent(*this->datacall[i])) {
                 this->pdb[i]->getData(*this->datacall[i]);

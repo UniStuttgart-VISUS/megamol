@@ -19,11 +19,12 @@ using namespace megamol::core;
  * param::Vector2fParam::Vector2fParam
  */
 param::Vector2fParam::Vector2fParam(const vislib::math::Vector<float, 2>& initVal)
-    : AbstractParam(), val(initVal), minVal(-FLT_MAX, -FLT_MAX), maxVal(FLT_MAX, FLT_MAX) {
+    : AbstractParam(), val(), minVal(-FLT_MAX, -FLT_MAX), maxVal(FLT_MAX, FLT_MAX) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR2F);
+    this->SetValue(initVal);
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
-    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR2F);
 }
 
 
@@ -32,24 +33,25 @@ param::Vector2fParam::Vector2fParam(const vislib::math::Vector<float, 2>& initVa
  */
 param::Vector2fParam::Vector2fParam(
     const vislib::math::Vector<float, 2>& initVal, const vislib::math::Vector<float, 2>& minVal)
-    : AbstractParam(), val(initVal), minVal(minVal), maxVal(FLT_MAX, FLT_MAX) {
+    : AbstractParam(), val(), minVal(minVal), maxVal(FLT_MAX, FLT_MAX) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR2F);
+    this->SetValue(initVal);
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
-    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR2F);
 }
 
 
 /*
  * param::Vector2fParam::Vector2fParam
  */
-param::Vector2fParam::Vector2fParam(const vislib::math::Vector<float, 2>& initVal,
-    const vislib::math::Vector<float, 2>& minVal, const vislib::math::Vector<float, 2>& maxVal)
-    : AbstractParam(), val(initVal), minVal(minVal), maxVal(maxVal) {
+param::Vector2fParam::Vector2fParam(const vislib::math::Vector<float, 2>& initVal, const vislib::math::Vector<float, 2>& minVal, const vislib::math::Vector<float, 2>& maxVal)
+    : AbstractParam(), val(), minVal(minVal), maxVal(maxVal) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR2F);
+    this->SetValue(initVal);
     ASSERT(this->isLessOrEqual(this->minVal, this->maxVal));
     ASSERT(this->isLessOrEqual(this->minVal, this->val));
     ASSERT(this->isLessOrEqual(this->val, this->maxVal));
-    this->InitPresentation(AbstractParamPresentation::ParamType::VECTOR2F);
 }
 
 
