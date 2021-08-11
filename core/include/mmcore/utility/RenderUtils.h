@@ -199,7 +199,7 @@ private:
     std::vector<std::shared_ptr<glowl::Texture2D>> textures;
     std::array<ShaderDataType, Primitives::PRIM_COUNT> queues;
     std::array<std::shared_ptr<glowl::GLSLProgram>, Primitives::PRIM_COUNT> shaders;
-    std::array<std::shared_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers;
+    std::array<std::unique_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers;
 
     // FUNCTIONS ------------------------------------------------------- //
 
