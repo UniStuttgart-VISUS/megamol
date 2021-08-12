@@ -73,7 +73,7 @@ namespace gui {
         bool Check(bool only_check, ParamPtrVector_t& params) override;
 
         bool Draw(ParamPtrVector_t params, const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
-            megamol::core::utility::PickingBuffer* inout_picking_buffer) override;
+            megamol::core::utility::PickingBuffer* inout_picking_buffer, ImGuiID in_override_header_state) override;
 
     private:
         // VARIABLES --------------------------------------------------------------

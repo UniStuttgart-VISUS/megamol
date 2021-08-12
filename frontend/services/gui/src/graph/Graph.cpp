@@ -1817,8 +1817,8 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
                     if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
                         // Draw parameters
-                        selected_mod_ptr->GUIParameterGroups().Draw(selected_mod_ptr->Parameters(), "", false, false,
-                            Parameter::WidgetScope::LOCAL, nullptr, GUI_INVALID_ID, nullptr);
+                        selected_mod_ptr->DrawParameters(
+                            "", false, false, Parameter::WidgetScope::LOCAL, nullptr, GUI_INVALID_ID, nullptr);
 
                         ImVec2 popup_pos = ImGui::GetWindowPos();
                         ImVec2 popup_size = ImGui::GetWindowSize();
@@ -1874,8 +1874,8 @@ void Graph::DrawGlobalParameterWidgets(
     megamol::core::utility::PickingBuffer& picking_buffer, std::shared_ptr<TransferFunctionEditor> win_tfeditor_ptr) {
 
     for (auto& module_ptr : this->Modules()) {
-        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), "", false, false,
-            Parameter::WidgetScope::GLOBAL, win_tfeditor_ptr, GUI_INVALID_ID, &picking_buffer);
+        module_ptr->DrawParameters(
+            "", false, false, Parameter::WidgetScope::GLOBAL, win_tfeditor_ptr, GUI_INVALID_ID, &picking_buffer);
     }
 }
 
@@ -2357,7 +2357,7 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
 
                     // Draw parameters
                     if (module_header_open) {
-                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), search_string,
+                        module_ptr->DrawParameters(search_string,
                             this->gui_graph_state.interact.parameters_extended_mode, true,
                             Parameter::WidgetScope::LOCAL, nullptr, GUI_INVALID_ID, nullptr);
                     }

@@ -26,6 +26,18 @@ namespace gui {
      */
     class ParameterGroups {
     public:
+        // STATIC functions ---------------------------------------------------
+
+        static void DrawParameter(megamol::gui::Parameter& inout_param, const std::string& in_search,
+            megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr);
+
+        static void DrawGroupedParameters(const std::string& in_group_name,
+            AbstractParameterGroupWidget::ParamPtrVector_t& params, const std::string& in_search,
+            megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
+            ImGuiID in_override_header_state);
+
+        // --------------------------------------------------------------------
+
         ParameterGroups();
         ~ParameterGroups() = default;
 
@@ -37,13 +49,7 @@ namespace gui {
         bool StateFromJSON(const nlohmann::json& in_json, const std::string& module_fullname);
         bool StateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
 
-        static void DrawParameter(megamol::gui::Parameter& inout_param, const std::string& in_search,
-            megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr);
-
-        static void DrawGroupedParameters(const std::string& in_group_name,
-            AbstractParameterGroupWidget::ParamPtrVector_t& params, const std::string& in_search,
-            megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
-            ImGuiID in_override_header_state);
+        bool ParametersVisible(megamol::gui::ParamVector_t& in_params);
 
     private:
         typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
