@@ -2960,10 +2960,9 @@ std::string megamol::gui::Graph::generate_unique_group_name() const {
     for (auto& group : this->groups) {
         if (group->Name().find(new_name_prefix) == 0) {
             std::string int_postfix = group->Name().substr(new_name_prefix.length());
-            try {
-                int last_id = std::stoi(int_postfix);
-                new_name_id = std::max(new_name_id, last_id);
-            } catch (...) {}
+            int last_id = 0;
+            std::istringstream(int_postfix) >> last_id; // 0 if failed
+            new_name_id = std::max(new_name_id, last_id);
         }
     }
     return std::string(new_name_prefix + std::to_string(new_name_id + 1));
@@ -2977,10 +2976,9 @@ std::string megamol::gui::Graph::generate_unique_module_name(const std::string& 
     for (auto& mod : this->modules) {
         if (mod->Name().find(new_name_prefix) == 0) {
             std::string int_postfix = mod->Name().substr(new_name_prefix.length());
-            try {
-                int last_id = std::stoi(int_postfix);
-                new_name_id = std::max(new_name_id, last_id);
-            } catch (...) {}
+            int last_id = 0;
+            std::istringstream(int_postfix) >> last_id; // 0 if failed
+            new_name_id = std::max(new_name_id, last_id);
         }
     }
     return std::string(new_name_prefix + std::to_string(new_name_id + 1));
@@ -2994,10 +2992,9 @@ std::string megamol::gui::Graph::GenerateUniqueGraphEntryName() {
     for (auto& module_ptr : this->modules) {
         if (module_ptr->GraphEntryName().find(new_name_prefix) == 0) {
             std::string int_postfix = module_ptr->GraphEntryName().substr(new_name_prefix.length());
-            try {
-                int last_id = std::stoi(int_postfix);
-                new_name_id = std::max(new_name_id, last_id);
-            } catch (...) {}
+            int last_id = 0;
+            std::istringstream(int_postfix) >> last_id; // 0 if failed
+            new_name_id = std::max(new_name_id, last_id);
         }
     }
     return std::string(new_name_prefix + std::to_string(new_name_id + 1));

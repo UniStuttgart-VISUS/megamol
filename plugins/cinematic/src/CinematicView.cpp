@@ -126,6 +126,18 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
     auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
 
+    // init camera
+    if ((this->_camera.get<view::Camera::ProjectionType>() != view::Camera::PERSPECTIVE) &&
+        (this->_camera.get<view::Camera::ProjectionType>() != view::Camera::ORTHOGRAPHIC)) {
+        auto intrinsics = core::view::Camera::PerspectiveParameters();
+        intrinsics.fovy = 0.5f;
+        intrinsics.aspect = static_cast<float>(this->_fbo->getWidth()) / static_cast<float>(this->_fbo->getHeight());
+        intrinsics.near_plane = 0.01f;
+        intrinsics.far_plane = 100.0f;
+        /// intrinsics.image_plane_tile = ;
+        this->_camera.setPerspectiveProjection(intrinsics);
+    }
+
     if ((cr3d != nullptr) && (ccc != nullptr)) {
 
         bool ccc_success = (*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData);
@@ -210,6 +222,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     this->render_to_file_setup();
                 } else {
                     this->render_to_file_cleanup();
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Finished rendering.");
                 }
             }
 
@@ -236,13 +249,6 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 }
             }
 
-            // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
-            ccc->SetCameraState(std::make_shared<Camera>(this->_camera));
-            if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) {
-                throw vislib::Exception(
-                    "[CINEMATIC VIEW] Could not propagate current camera to keyframe keeper.", __FILE__, __LINE__);
-            }
-
             if ((*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) {
                 Keyframe skf = ccc->GetSelectedKeyframe();
 
@@ -250,7 +256,6 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 float simTime = skf.GetSimTime();
                 param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(2));
                 animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
-
 
                 // Set camera parameters of selected keyframe for this view.
                 // But only if selected keyframe differs to last locally stored and shown keyframe.
@@ -297,6 +302,13 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     } else {
                         this->ResetView();
                     }
+                }
+
+                // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
+                ccc->SetCameraState(std::make_shared<Camera>(this->_camera));
+                if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) {
+                    throw vislib::Exception(
+                        "[CINEMATIC VIEW] Could not propagate current camera to keyframe keeper.", __FILE__, __LINE__);
                 }
 
                 // Apply showing skybox side ONLY if new camera parameters are set.
@@ -581,7 +593,7 @@ bool CinematicView::render_to_file_setup() {
             "[CINEMATIC VIEW] [render_to_file_setup] Cannot allocate image buffer.", __FILE__, __LINE__);
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Started rendering of complete animation...");
 
     return true;
 }
@@ -722,6 +734,7 @@ bool CinematicView::render_to_file_write() {
         auto lastFrame = static_cast<unsigned int>(this->lastRenderFrameParam.Param<param::IntParam>()->Value());
         if ((this->png_data.animTime > ccc->GetTotalAnimTime()) || (this->png_data.cnt > lastFrame)) {
             this->render_to_file_cleanup();
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Finished rendering.");
             return false;
         }
     }
@@ -767,8 +780,6 @@ bool CinematicView::render_to_file_cleanup() {
             "[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.infoptr is not nullptr. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
     }
-
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
 
     return true;
 }

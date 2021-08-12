@@ -51,7 +51,16 @@ KeyframeManipulators::KeyframeManipulators(void)
     this->state.mvp = glm::mat4();
     this->state.first_ctrl_point = glm::vec3(0.0f, 0.0f, 0.0f);
     this->state.last_ctrl_point = glm::vec3(0.0f, 0.0f, 0.0f);
+
     this->state.cam = view::Camera();
+    auto intrinsics = core::view::Camera::PerspectiveParameters();
+    intrinsics.fovy = 0.5f;
+    intrinsics.aspect = 16.0f / 9.0f;
+    intrinsics.near_plane = 0.01f;
+    intrinsics.far_plane = 100.0f;
+    /// intrinsics.image_plane_tile = ;
+    this->state.cam.setPerspectiveProjection(intrinsics);
+
     this->state.bbox = vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     this->state.hit.reset();
     this->state.last_mouse = glm::vec2(0.0f, 0.0f);

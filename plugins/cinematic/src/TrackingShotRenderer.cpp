@@ -189,8 +189,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     // Push manipulators ------------------------------------------------------
     if (keyframes->size() > 0) {
-        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(),
-            ccc->GetEndControlPointPosition(), camera, vp_dim, mvp);
+        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera, vp_dim, mvp);
         this->manipulators.PushRendering(this->utils);
     }
 

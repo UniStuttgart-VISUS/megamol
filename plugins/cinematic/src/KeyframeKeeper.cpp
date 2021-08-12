@@ -1206,8 +1206,10 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
             cam_kf_pose.position = pk;
         }
 
+        /// TODO XXX Check projection type of all involved keyframes!!!
+
         if (cam_kf.getProjectionType() == view::Camera::PERSPECTIVE) {
-        // interpolate fovy angle ---------------------------------------------
+        // interpolate fovy ---------------------------------------------------
 
             float a0 = c0.get<view::Camera::FieldOfViewY>();
             float a1 = c1.get<view::Camera::FieldOfViewY>();
@@ -1249,11 +1251,11 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         //interpolate orientation ---------------------------------------------
         glm::quat c1_orient = c1.get<view::Camera::Pose>().to_quat();
         glm::quat c2_orient = c2.get<view::Camera::Pose>().to_quat();
-        cam_kf_pose = view::Camera::Pose(
-            cam_kf_pose.position, this->quaternion_interpolation(iT, c1_orient, c2_orient));
 
         // Finally set new interpoated camera for keyframe
+        cam_kf_pose = view::Camera::Pose(cam_kf_pose.position, this->quaternion_interpolation(iT, c1_orient, c2_orient));
         cam_kf.setPose(cam_kf_pose);
+
         kf.SetCameraState(cam_kf);
 
         return kf;
