@@ -10,6 +10,7 @@
 
 #include "AbstractCallRenderView.h"
 #include "AbstractView.h"
+#include "mmcore/param/BoolParam.h"
 
 namespace megamol {
 namespace core {
