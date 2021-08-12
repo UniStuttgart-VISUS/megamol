@@ -461,7 +461,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     std::string leftLabel = " TIMELINE ";
     std::string midLabel = stream.str();
     std::string rightLabel = "";
-    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, this->viewport);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, this->viewport, 0.0f);
 
     // Draw all ---------------------------------------------------------------
     this->utils.DrawAll(ortho, this->viewport);

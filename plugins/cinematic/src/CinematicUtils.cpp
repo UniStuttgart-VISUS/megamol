@@ -134,13 +134,14 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
 }
 
 
-void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp) {
+void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp, float depth) {
 
     this->gui_update();
    
     // Push menu background quad
-    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, 0.0f), glm::vec3(0.0f, dim_vp.y - this->menu_height, 0.0f), 
-        glm::vec3(dim_vp.x, dim_vp.y - this->menu_height, 0.0f), glm::vec3(dim_vp.x, dim_vp.y, 0.0f), this->Color(CinematicUtils::Colors::MENU));
+    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, depth), glm::vec3(0.0f, dim_vp.y - this->menu_height, depth), 
+        glm::vec3(dim_vp.x, dim_vp.y - this->menu_height, depth), glm::vec3(dim_vp.x, dim_vp.y, depth),
+        this->Color(CinematicUtils::Colors::MENU));
 
     // Push menu labels
     float vpWhalf = dim_vp.x / 2.0f;

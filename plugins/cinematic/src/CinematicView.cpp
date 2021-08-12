@@ -253,6 +253,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 Keyframe skf = ccc->GetSelectedKeyframe();
 
                 // Load current simulation time to parameter
+                /// One frame dealy due to propagation in GetExtends in following frame
                 float simTime = skf.GetSimTime();
                 param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(2));
                 animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
@@ -367,7 +368,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     // Apply new position, orientation and aperture angle to current camera.
                     if (this->_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
                         auto cam_intrinsics = this->_camera.get<Camera::PerspectiveParameters>();
-                        cam_intrinsics.fovy = 90.0f / 180.0f * 3.14f; // TODO proper conversion deg to rad
+                        cam_intrinsics.fovy = 90.0f / 180.0f * 3.14f; /// TODO proper conversion deg to rad
                         this->_camera = Camera(Camera::Pose(new_pos, new_orientation), cam_intrinsics);
                     } else {
                         // TODO what about ortho?
@@ -425,7 +426,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
                 if (this->cinematicFbo == nullptr) {
                     this->cinematicFbo = std::make_shared<glowl::FramebufferObject>(fboWidth, fboHeight);
-                    this->cinematicFbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+                    this->cinematicFbo->createColorAttachment(GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
                 } else {
                     if ((this->cinematicFbo->getWidth() != fboWidth) ||
                         (this->cinematicFbo->getHeight() != fboHeight)) {
@@ -463,9 +464,9 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     //  }
                     // Lock writing frame to file for specific time
                     std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->png_data.start_time);
-                    if (diff.count() <
+                    if (diff.count() >
                         static_cast<double>(this->delayFirstRenderFrameParam.Param<param::FloatParam>()->Value())) {
-                        this->png_data.write_lock = 1;
+                        this->png_data.write_lock = 0;
                     }
                     this->render_to_file_write();
                 }
@@ -504,7 +505,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     midLabel = " Playing Animation ";
                 }
                 std::string rightLabel = "";
-                this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, glm::vec2(vp_fw, vp_fh));
+                this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, glm::vec2(vp_fw, vp_fh), 1.0f);
 
                 // Draw 2D ----------------------------------------------------
                 this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
@@ -521,11 +522,23 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
 bool CinematicView::render_to_file_setup() {
 
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
-    if (ccc == nullptr)
+    if (ccc == nullptr) {
         return false;
+    }
 
     // init png data struct
-    this->png_data.bpp = 3;
+    if (this->cinematicFbo->getColorAttachment(0)->getFormat() == GL_RGB) {
+        this->png_data.bpp = 3;
+    }  else if (this->cinematicFbo->getColorAttachment(0)->getFormat() == GL_RGBA) {
+        this->png_data.bpp = 4;
+    }
+    else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[CINEMATIC VIEW] [render_to_file_setup] Unknown color attachment format. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+        this->rendering = false;
+        return false;
+    }
     this->png_data.width = static_cast<unsigned int>(this->cineWidth);
     this->png_data.height = static_cast<unsigned int>(this->cineHeight);
     this->png_data.buffer = nullptr;
@@ -661,15 +674,23 @@ bool CinematicView::render_to_file_write() {
         }
 
         megamol::core::utility::graphics::ScreenShotComments ssc(project);
-        png_set_text(
-            this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
+        png_set_text(this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
         {
+            /// XXX Throws OpenGL error 1282 (Invalid Operation):
+            /// glGetTextureImage(this->cinematicFbo->getColorAttachment(0)->getName(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+            /// this->png_data.width * this->png_data.height, this->png_data.buffer);
             auto err = glGetError();
-            glGetTextureImage(this->cinematicFbo->getColorAttachment(0)->getName(), 0, GL_RGB, GL_UNSIGNED_BYTE,
-                this->png_data.width * this->png_data.height, this->png_data.buffer);
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, this->cinematicFbo->getColorAttachment(0)->getName());
+            if (glGetError() == GL_NO_ERROR) {
+                glGetTexImage(GL_TEXTURE_2D, 0, this->cinematicFbo->getColorAttachment(0)->getFormat(),
+                    this->cinematicFbo->getColorAttachment(0)->getType(), this->png_data.buffer);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glDisable(GL_TEXTURE_2D);
             err = glGetError();
             if (err != GL_NO_ERROR) {
                 throw vislib::Exception(
@@ -708,7 +729,7 @@ bool CinematicView::render_to_file_write() {
         try {
             this->png_data.file.Close();
         } catch (...) {}
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "[CINEMATIC VIEW] [render_to_file_write] Wrote png file %d for animation time %f ...\n", this->png_data.cnt,
             this->png_data.animTime);
 

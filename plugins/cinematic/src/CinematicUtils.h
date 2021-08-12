@@ -57,7 +57,8 @@ public:
 
     void SetBackgroundColor(glm::vec4 bc) { this->background_color = bc; };
 
-    void PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp);
+    void PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label,
+        const std::string& right_label, glm::vec2 dim_vp, float depth);
 
     void HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm::vec2 dim_vp);
 

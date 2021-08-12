@@ -222,7 +222,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     if (this->showHelpText) {
         rightLabel = " [Shift+h] Hide Hotkeys ";
     }
-    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, vp_dim);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, vp_dim, 1.0f);
 
     // Draw 2D ---------------------------------------------------------------
     this->utils.DrawAll(ortho, vp_dim);

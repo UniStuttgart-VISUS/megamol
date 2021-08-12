@@ -1404,17 +1404,20 @@ bool KeyframeKeeper::loadKeyframes() {
             valid &= megamol::core::utility::get_json_value<float>(json, { "last_ctrl_point", "x" }, &this->startCtrllPos.x);
             valid &= megamol::core::utility::get_json_value<float>(json, { "last_ctrl_point", "y" }, &this->startCtrllPos.y);
             valid &= megamol::core::utility::get_json_value<float>(json, { "last_ctrl_point", "z" }, &this->startCtrllPos.z);
+
             // Get keyframe data
-            if (json.at("keyframes").is_array()) {
-                size_t keyframe_count = json.at("keyframes").size();
-                this->keyframes.resize(keyframe_count);
-                for (size_t i = 0; i < keyframe_count; ++i) {
-                    valid &= this->keyframes[i].Deserialise(json.at("keyframes").at(i));
+            if (json.find("keyframes") != json.end()) {
+                if (json.at("keyframes").is_array()) {
+                    size_t keyframe_count = json.at("keyframes").size();
+                    this->keyframes.resize(keyframe_count);
+                    for (size_t i = 0; i < keyframe_count; ++i) {
+                        valid &= this->keyframes[i].Deserialise(json.at("keyframes").at(i));
+                    }
                 }
-            }
-            else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'keyframes' array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                valid = false;
+                else {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'keyframes' array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    valid = false;
+                }
             }
 
             if (valid) {
@@ -1430,6 +1433,14 @@ bool KeyframeKeeper::loadKeyframes() {
             else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] Failed to load keyframes from file: %s", this->filename.c_str());
             }
+        } catch (nlohmann::json::type_error& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[KEYFRAME KEEPER] JSON TYPE ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        } catch (nlohmann::json::exception& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[KEYFRAME KEEPER] JSON: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            return false;
         }
         catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] Unknown Exception - Failed to load keyframes to file: %s", this->filename.c_str());
