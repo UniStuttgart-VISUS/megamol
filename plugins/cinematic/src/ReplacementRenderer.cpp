@@ -11,7 +11,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ButtonParam.h"
-#include "vislib/math/Cuboid.h"
 
 
 using namespace megamol;
@@ -27,7 +26,8 @@ ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererMo
     , replacementKeyParam("hotkeyAssignment", "Choose hotkey for replacement rendering button.")
     , toggleReplacementParam("toggleReplacement", "Toggle replacement rendering.")
     , draw_replacement(false)
-    , utils() {
+    , utils()
+    , bbox() {
 
     // Make render slots available
     this->MakeSlotAvailable(&this->chainRenderSlot);
@@ -91,8 +91,15 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) 
         *cr3d_out = call;
         if ((*cr3d_out)(view::AbstractCallRender::FnGetExtents)) {
             call = *cr3d_out;
+            this->bbox = call.AccessBoundingBoxes().BoundingBox();
             return true;
         }
+    } else {
+        call.SetTimeFramesCount(1);
+        call.SetTime(0.0f);
+        this->bbox = vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        call.AccessBoundingBoxes().SetBoundingBox(this->bbox);
+        return true;
     }
     return false;
 }
@@ -164,25 +171,14 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         glm::vec4 top     = {0.0f, 1.0f, 0.0f, alpha};
         glm::vec4 bottom  = {1.0f, 1.0f, 0.0f, alpha};
 
-        auto bbox = vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-        // Reuqires only bbox of callees (there might be modifications done by callers)
-        auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
-        if (cr3d_out != nullptr) {
-            *cr3d_out = call;
-            if ((*cr3d_out)(view::AbstractCallRender::FnGetExtents)) {
-                call = *cr3d_out;
-                bbox = call.AccessBoundingBoxes().BoundingBox();
-            }
-        }
-
-        glm::vec3 left_top_back = { bbox.Left(), bbox.Top(), bbox.Back() };
-        glm::vec3 left_bottom_back = { bbox.Left(), bbox.Bottom(), bbox.Back() };
-        glm::vec3 right_top_back = { bbox.Right(), bbox.Top(), bbox.Back() };
-        glm::vec3 right_bottom_back = { bbox.Right(), bbox.Bottom(), bbox.Back() };
-        glm::vec3 left_top_front = { bbox.Left(), bbox.Top(), bbox.Front() };
-        glm::vec3 left_bottom_front = { bbox.Left(), bbox.Bottom(), bbox.Front() };
-        glm::vec3 right_top_front = { bbox.Right(), bbox.Top(), bbox.Front() };
-        glm::vec3 right_bottom_front = { bbox.Right(), bbox.Bottom(), bbox.Front() };
+        glm::vec3 left_top_back = { this->bbox.Left(), this->bbox.Top(), this->bbox.Back() };
+        glm::vec3 left_bottom_back = { this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back() };
+        glm::vec3 right_top_back = { this->bbox.Right(), this->bbox.Top(), this->bbox.Back() };
+        glm::vec3 right_bottom_back = { this->bbox.Right(), this->bbox.Bottom(), this->bbox.Back() };
+        glm::vec3 left_top_front = { this->bbox.Left(), this->bbox.Top(), this->bbox.Front() };
+        glm::vec3 left_bottom_front = { this->bbox.Left(), this->bbox.Bottom(), this->bbox.Front() };
+        glm::vec3 right_top_front = { this->bbox.Right(), this->bbox.Top(), this->bbox.Front() };
+        glm::vec3 right_bottom_front = { this->bbox.Right(), this->bbox.Bottom(), this->bbox.Front() };
 
         this->utils.PushQuadPrimitive(left_bottom_front, right_bottom_front, right_top_front, left_top_front, front); // Front
         this->utils.PushQuadPrimitive(left_bottom_back, left_top_back, right_top_back, right_bottom_back, back); // Back

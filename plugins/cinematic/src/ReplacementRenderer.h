@@ -13,6 +13,7 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore/param/ParamSlot.h"
+#include "vislib/math/Cuboid.h"
 
 #include "CinematicUtils.h"
 
@@ -119,6 +120,7 @@ namespace cinematic {
 
         bool draw_replacement;
         CinematicUtils utils;
+        vislib::math::Cuboid<float> bbox;
 
         /**********************************************************************
         * parameters
