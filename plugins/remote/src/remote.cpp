@@ -1,16 +1,11 @@
-/*
- * remote.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
 // Modules
 #include "FBOCompositor2.h"
@@ -21,51 +16,26 @@
 // Calls
 
 namespace megamol::remote {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class RemotePluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(RemotePluginInstance)
+
 public:
-    /** ctor */
-    plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
+    RemotePluginInstance(void)
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "remote", "Plugin containing remote utilities for MegaMol"){};
 
-              /* machine-readable plugin assembly name */
-              "remote", // TODO: Change this!
+    ~RemotePluginInstance() override = default;
 
-              /* human-readable plugin description */
-              "Plugin containing remote utilities for MegaMol"){
+    // Registers modules and calls
+    void registerClasses() override {
 
-              // here we could perform addition initialization
-          };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-
-        // register modules here:
+        // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::remote::FBOTransmitter2>();
         this->module_descriptions.RegisterAutoDescription<megamol::remote::FBOCompositor2>();
         this->module_descriptions.RegisterAutoDescription<megamol::remote::HeadnodeServer>();
         this->module_descriptions.RegisterAutoDescription<megamol::remote::RendernodeView>();
 
-		//
-        // TODO: Register your plugin's modules here
-        // like:
-        //   this->module_descriptions.RegisterAutoDescription<megamol::remote::MyModule1>();
-        //   this->module_descriptions.RegisterAutoDescription<megamol::remote::MyModule2>();
-        //   ...
-        //
-
-        // register calls here:
-        //
-        // TODO: Register your plugin's calls here
-        // like:
-        //   this->call_descriptions.RegisterAutoDescription<megamol::remote::MyCall1>();
-        //   this->call_descriptions.RegisterAutoDescription<megamol::remote::MyCall2>();
-        //   ...
-        //
+        // register calls
     }
 };
 } // namespace megamol::remote

@@ -4,28 +4,22 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 namespace megamol::MegaMolPlugin {
-    class PluginInstance : public ::megamol::core::utility::plugins::Plugin200Instance {
+    class PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
         REGISTERPLUGIN(PluginInstance)
     public:
         PluginInstance()
-                : ::megamol::core::utility::plugins::Plugin200Instance(
-
+                : megamol::core::utility::plugins::AbstractPluginInstance(
                       // machine-readable plugin assembly name
                       "MegaMolPlugin", // TODO: Change this!
 
                       // human-readable plugin description
-                      "Describing MegaMolPlugin (TODO: Change this!)"){
+                      "Describing MegaMolPlugin (TODO: Change this!)"){};
 
-                      // here we could perform addition initialization
-                  };
-
-        ~PluginInstance() override {
-            // here we could perform addition de-initialization
-        }
+        ~PluginInstance() override = default;
 
         // Registers modules and calls
         void registerClasses() override {

@@ -25,7 +25,7 @@
 #include "mmcore/ViewInstanceRequest.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/factories/AbstractAssemblyInstance.h"
+#include "mmcore/factories/AbstractObjectFactoryInstance.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/ModuleDescription.h"
@@ -74,18 +74,12 @@ namespace utility {
 /* forward declaration */
 class ServiceManager;
 
-namespace plugins {
-
-/* forward declaration */
-class PluginManager;
-
-} /* end namespace plugins */
 } /* end namespace utility */
 
 /**
  * class of core instances.
  */
-class MEGAMOLCORE_API CoreInstance : public ApiHandle, public factories::AbstractAssemblyInstance {
+class MEGAMOLCORE_API CoreInstance : public ApiHandle, public factories::AbstractObjectFactoryInstance {
 public:
     friend class megamol::core::LuaState;
 
@@ -111,7 +105,7 @@ public:
      *
      * @return The (machine-readable) name of the assembly
      */
-    virtual const std::string& GetAssemblyName(void) const;
+    virtual const std::string& GetObjectFactoryName() const;
 
     /**
      * Answer the call description manager of the assembly.
@@ -746,7 +740,7 @@ public:
      *
      * @return The plugin manager
      */
-    inline const utility::plugins::PluginManager& Plugins() const { return *plugins; }
+    inline const std::vector<utility::plugins::AbstractPluginInstance::ptr_type>& GetPlugins() const { return plugins; }
 
     /**
      * Callback to delete service objects
@@ -1315,8 +1309,8 @@ private:
     /** Vector storing param updates per frame */
     param::ParamUpdateListener::param_updates_vec_t paramUpdates;
 
-    /** The manager of loaded plugins */
-    utility::plugins::PluginManager* plugins;
+    /** The loaded plugins */
+    std::vector<utility::plugins::AbstractPluginInstance::ptr_type> plugins;
 
     /** The manager of registered services */
     utility::ServiceManager* services;
