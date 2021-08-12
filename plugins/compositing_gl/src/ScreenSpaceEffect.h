@@ -8,7 +8,7 @@
 #ifndef SCREEN_SPACE_EFFECT_H_INCLUDED
 #define SCREEN_SPACE_EFFECT_H_INCLUDED
 
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"

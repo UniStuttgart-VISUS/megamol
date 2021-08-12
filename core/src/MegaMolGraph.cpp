@@ -225,9 +225,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    const auto module_name = vislib::StringA(request.id.c_str());
-
-    Module::ptr_type module_ptr = Module::ptr_type(module_description->CreateModule(module_name));
+    Module::ptr_type module_ptr = module_description->CreateModule(request.id);
     if (!module_ptr) {
         log_error("error. could not instantiate module from module description: " + request.className);
         return false;
