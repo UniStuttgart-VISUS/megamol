@@ -77,7 +77,7 @@ namespace cinematic {
         **********************************************************************/
 
         // Variables shared/updated with call ---------------------------------
-        camera_type                  cameraState;
+        core::view::Camera  cameraState;
 	    std::vector<glm::vec3 >      interpolCamPos;
         std::vector<Keyframe>        keyframes;
         Keyframe                     selectedKeyframe;

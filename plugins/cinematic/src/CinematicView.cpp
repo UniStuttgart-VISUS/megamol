@@ -236,8 +236,14 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 }
             }
 
-            if ((*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) {
+            // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
+            ccc->SetCameraState(std::make_shared<Camera>(this->_camera));
+            if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) {
+                throw vislib::Exception(
+                    "[CINEMATIC VIEW] Could not propagate current camera to keyframe keeper.", __FILE__, __LINE__);
+            }
 
+            if ((*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) {
                 Keyframe skf = ccc->GetSelectedKeyframe();
 
                 // Load current simulation time to parameter
@@ -245,50 +251,6 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(2));
                 animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
-                // Viewport ---------------------------------------------------------------
-                /// Assume current framebuffer resolution to be used as viewport resolution
-                const int vp_iw = this->_fbo->getWidth();
-                const int vp_ih = this->_fbo->getHeight();
-                const int vp_ih_reduced = vp_ih - static_cast<int>(this->utils.GetTextLineHeight());
-                const float vp_fw = static_cast<float>(vp_iw);
-                const float vp_fh = static_cast<float>(vp_ih);
-                const float vp_fh_reduced = static_cast<float>(vp_ih_reduced);
-                const float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
-                glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
-
-                // FBO viewport
-                int fboWidth = vp_iw;
-                int fboHeight = vp_ih_reduced;
-                if (this->rendering) {
-                    fboWidth = this->cineWidth;
-                    fboHeight = this->cineHeight;
-                } else {
-                    float vpRatio = vp_fw / vp_fh_reduced;
-                    // Calculate reduced fbo width and height
-                    if ((this->cineWidth < vp_iw) && (this->cineHeight < vp_ih_reduced)) {
-                        fboWidth = this->cineWidth;
-                        fboHeight = this->cineHeight;
-                    } else {
-                        fboWidth = vp_iw;
-                        fboHeight = vp_ih_reduced;
-                        if (cineRatio > vpRatio) {
-                            fboHeight = (static_cast<int>(vp_fw / cineRatio));
-                        } else if (cineRatio < vpRatio) {
-                            fboWidth = (static_cast<int>(vp_fh_reduced * cineRatio));
-                        }
-                    }
-                }
-                // Texture viewport
-                int texWidth = fboWidth;
-                int texHeight = fboHeight;
-                if ((texWidth > vp_iw) || ((texWidth < vp_iw) && (texHeight < vp_ih_reduced))) {
-                    texWidth = vp_iw;
-                    texHeight = static_cast<int>(vp_fw / cineRatio);
-                }
-                if ((texHeight > vp_ih_reduced) || ((texWidth < vp_iw) && (texHeight < vp_ih_reduced))) {
-                    texHeight = vp_ih_reduced;
-                    texWidth = static_cast<int>(vp_fh_reduced * cineRatio);
-                }
 
                 // Set camera parameters of selected keyframe for this view.
                 // But only if selected keyframe differs to last locally stored and shown keyframe.
@@ -318,7 +280,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                         } else if (skf.GetCamera().get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
                             auto skf_intrinsics = skf.GetCamera().get<Camera::OrthographicParameters>();
                             if (this->_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
-                                auto cam_intrinsics = this->_camera.get<Camera::OrthographicParameters>();
+                                auto cam_intrinsics = this->_camera.get<Camera::PerspectiveParameters>();
                                 Camera::OrthographicParameters orth_intrinsics;
                                 orth_intrinsics.aspect = cam_intrinsics.aspect;
                                 orth_intrinsics.far_plane = cam_intrinsics.far_plane;
@@ -335,12 +297,6 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     } else {
                         this->ResetView();
                     }
-                }
-
-                // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
-                ccc->SetCameraState(std::make_shared<Camera>(this->_camera));
-                if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) {
-                    throw vislib::Exception("[CINEMATIC VIEW] Could not propagate current camera to keyframe keeper.", __FILE__, __LINE__);
                 }
 
                 // Apply showing skybox side ONLY if new camera parameters are set.
@@ -406,8 +362,55 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                     }
                 }
 
+                // Viewport ---------------------------------------------------------------
+                /// Assume current framebuffer resolution to be used as viewport resolution
+                const int vp_iw = this->_fbo->getWidth();
+                const int vp_ih = this->_fbo->getHeight();
+                const int vp_ih_reduced = vp_ih - static_cast<int>(this->utils.GetTextLineHeight());
+                const float vp_fw = static_cast<float>(vp_iw);
+                const float vp_fh = static_cast<float>(vp_ih);
+                const float vp_fh_reduced = static_cast<float>(vp_ih_reduced);
+                const float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
+                glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
+
+                // FBO viewport
+                int fboWidth = vp_iw;
+                int fboHeight = vp_ih_reduced;
+                if (this->rendering) {
+                    fboWidth = this->cineWidth;
+                    fboHeight = this->cineHeight;
+                } else {
+                    float vpRatio = vp_fw / vp_fh_reduced;
+                    // Calculate reduced fbo width and height
+                    if ((this->cineWidth < vp_iw) && (this->cineHeight < vp_ih_reduced)) {
+                        fboWidth = this->cineWidth;
+                        fboHeight = this->cineHeight;
+                    } else {
+                        fboWidth = vp_iw;
+                        fboHeight = vp_ih_reduced;
+                        if (cineRatio > vpRatio) {
+                            fboHeight = (static_cast<int>(vp_fw / cineRatio));
+                        } else if (cineRatio < vpRatio) {
+                            fboWidth = (static_cast<int>(vp_fh_reduced * cineRatio));
+                        }
+                    }
+                }
+                // Texture viewport
+                int texWidth = fboWidth;
+                int texHeight = fboHeight;
+                if ((texWidth > vp_iw) || ((texWidth < vp_iw) && (texHeight < vp_ih_reduced))) {
+                    texWidth = vp_iw;
+                    texHeight = static_cast<int>(vp_fw / cineRatio);
+                }
+                if ((texHeight > vp_ih_reduced) || ((texWidth < vp_iw) && (texHeight < vp_ih_reduced))) {
+                    texHeight = vp_ih_reduced;
+                    texWidth = static_cast<int>(vp_fh_reduced * cineRatio);
+                }
+
                 // Render to fbo ----------------------------------------------
-                ///  see megamol::core::view::View3DGL::Render()
+                const auto tmp_fbo = this->_fbo;
+                const auto tmp_cam = this->_camera;
+
                 if (this->cinematicFbo == nullptr) {
                     this->cinematicFbo = std::make_shared<glowl::FramebufferObject>(fboWidth, fboHeight);
                     this->cinematicFbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
@@ -417,10 +420,23 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                         this->cinematicFbo->resize(fboWidth, fboHeight);
                     }
                 }
-                auto fbo = this->_fbo;
                 this->_fbo = this->cinematicFbo;
+
+                auto pose = this->_camera.get<Camera::Pose>();
+                if (this->_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                    auto cam_intrinsics = this->_camera.get<Camera::PerspectiveParameters>();
+                    cam_intrinsics.aspect = static_cast<float>(fboWidth) / static_cast<float>(fboHeight);
+                    this->_camera = Camera(pose, cam_intrinsics);
+                } else if (this->_camera.get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
+                    auto cam_intrinsics = this->_camera.get<Camera::OrthographicParameters>();
+                    cam_intrinsics.aspect = static_cast<float>(fboWidth) / static_cast<float>(fboHeight);
+                    this->_camera = Camera(pose, cam_intrinsics);
+                }
+
                 Base::Render(time, instanceTime);
-                this->_fbo = fbo;
+
+                this->_fbo = tmp_fbo;
+                this->_camera = tmp_cam;
 
                 // Write frame to file
                 if (this->rendering) {

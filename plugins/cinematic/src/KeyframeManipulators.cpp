@@ -258,7 +258,7 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
 
 bool KeyframeManipulators::PushRendering(CinematicUtils& utils) {
 
-    megamol::core::view::Camera global_camera(this->state.cam);
+    core::view::Camera global_camera(this->state.cam);
     auto global_cam_pose = global_camera.get<core::view::Camera::Pose>();
     glm::vec3 global_cam_position = global_cam_pose.position;
     glm::vec3 global_cam_view = global_cam_pose.direction;

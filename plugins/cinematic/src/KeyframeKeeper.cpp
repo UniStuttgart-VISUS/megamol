@@ -174,6 +174,11 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
 
     this->loadKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_L, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->loadKeyframesParam);
+    this->loadKeyframesParam.ForceSetDirty(); // Try to load keyframe file at program start
+
+    // Default parameter visibility for Camera::PERSPECTIVE
+    this->editCurrentFovyParam.Parameter()->SetGUIVisible(true);
+    this->editCurrentFrustumHeightParam.Parameter()->SetGUIVisible(false);
 }
 
 
@@ -255,12 +260,12 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
     // Update selected keyframe
     Keyframe prevSelKf = this->selectedKeyframe;
     this->selectedKeyframe = this->interpolateKeyframe(ccc->GetSelectedKeyframe().GetAnimTime());
-    this->updateEditParameters(this->selectedKeyframe);
     ccc->SetSelectedKeyframe(this->selectedKeyframe);
     if (this->simTangentStatus) {
         this->linearizeSimTangent(prevSelKf);
         this->simTangentStatus = false;
     }
+    this->updateEditParameters(this->selectedKeyframe);
 
     return true;
 }
@@ -285,8 +290,8 @@ bool KeyframeKeeper::CallForSetDragKeyframe(core::Call& c) {
     // Checking if selected keyframe exists in keyframe array is done by caller.
     Keyframe skf = ccc->GetSelectedKeyframe();
     this->selectedKeyframe = this->interpolateKeyframe(skf.GetAnimTime());
-    this->updateEditParameters(this->selectedKeyframe);
     this->dragDropKeyframe = this->selectedKeyframe;
+    this->updateEditParameters(this->selectedKeyframe);
 
     return true;
 }
@@ -521,36 +526,30 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->editCurrentProjectionParam.ResetDirty();
 
         auto proj = static_cast<view::Camera::ProjectionType>(this->editCurrentProjectionParam.Param<param::EnumParam>()->Value());
-        if (proj == view::Camera::PERSPECTIVE) {
-            this->editCurrentFovyParam.Parameter()->SetGUIVisible(true);
-            this->editCurrentFrustumHeightParam.Parameter()->SetGUIVisible(false);
-        } else if (proj == view::Camera::PERSPECTIVE) {
-            this->editCurrentFovyParam.Parameter()->SetGUIVisible(false);
-            this->editCurrentFrustumHeightParam.Parameter()->SetGUIVisible(true);
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[KEYFRAME KEEPER] [editCurrentProjectionParam] No valid projection found. [%s, %s, line %d]\n",
-                __FILE__, __FUNCTION__, __LINE__);
-        }
-
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
+
             Keyframe tmp_kf = this->selectedKeyframe;
-
             view::Camera camera(this->selectedKeyframe.GetCamera());
-            if (proj == view::Camera::PERSPECTIVE) {
-                auto cam_param = camera.get<view::Camera::PerspectiveParameters>();
-                cam_param.fovy = this->editCurrentFovyParam.Param<param::FloatParam>()->Value();
-                camera.setPerspectiveProjection(cam_param);
-            } else if (proj == view::Camera::ORTHOGRAPHIC) {
-                auto cam_param = camera.get<view::Camera::OrthographicParameters>();
-                cam_param.frustrum_height = this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->Value();
-                camera.setOrthographicProjection(cam_param);
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[KEYFRAME KEEPER] [editCurrentProjectionParam] No valid projection found. [%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
+            if ((proj == view::Camera::PERSPECTIVE) && (camera.getProjectionType() == view::Camera::ORTHOGRAPHIC)) {
+                auto cam_intrinsics = camera.get<view::Camera::OrthographicParameters>();
+                view::Camera::PerspectiveParameters pers_intrinsics;
+                pers_intrinsics.aspect = cam_intrinsics.aspect;
+                pers_intrinsics.far_plane = cam_intrinsics.far_plane;
+                pers_intrinsics.image_plane_tile = cam_intrinsics.image_plane_tile;
+                pers_intrinsics.near_plane = cam_intrinsics.near_plane;
+                pers_intrinsics.fovy = this->editCurrentFovyParam.Param<param::FloatParam>()->Value();
+                camera.setPerspectiveProjection(pers_intrinsics);
             }
-
+             else if ((proj == view::Camera::ORTHOGRAPHIC) && (camera.getProjectionType() == view::Camera::PERSPECTIVE)) {
+                auto cam_intrinsics = camera.get<view::Camera::PerspectiveParameters>();
+                view::Camera::OrthographicParameters orth_intrinsics;
+                orth_intrinsics.aspect = cam_intrinsics.aspect;
+                orth_intrinsics.far_plane = cam_intrinsics.far_plane;
+                orth_intrinsics.image_plane_tile = cam_intrinsics.image_plane_tile;
+                orth_intrinsics.near_plane = cam_intrinsics.near_plane;
+                orth_intrinsics.frustrum_height = this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->Value();
+                camera.setOrthographicProjection(orth_intrinsics);
+            }
             this->selectedKeyframe.SetCameraState(camera);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         } else {
@@ -644,7 +643,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     }
 
     // PROPAGATE UPDATED DATA TO CALL -----------------------------------------
-    ccc->SetCameraState(std::make_shared<camera_type>(this->cameraState));
+    ccc->SetCameraState(std::make_shared<core::view::Camera>(this->cameraState));
     ccc->SetKeyframes(std::make_shared<std::vector<Keyframe>>(this->keyframes));
     ccc->SetSelectedKeyframe(this->selectedKeyframe);
     ccc->SetTotalAnimTime(this->totalAnimTime);
@@ -653,6 +652,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     ccc->SetControlPointPosition(this->startCtrllPos, this->endCtrllPos);
     ccc->SetFps(this->fps);
 
+    // GUI PopUp for total animation time modi
     this->pendingTotalAnimTimePopUp(this->GetCoreInstance()->GetFrameID());
 
     return true;
@@ -1081,6 +1081,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool add_undo) {
     }
 
     this->refreshInterpolCamPos(this->interpolSteps);
+
     this->selectedKeyframe = kf;
     this->updateEditParameters(this->selectedKeyframe);
 
@@ -1101,29 +1102,27 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         }
     }
 
-    if ((this->cameraState.get<view::Camera::ProjectionType>() != view::Camera::PERSPECTIVE) &&
-        (this->cameraState.get<view::Camera::ProjectionType>() != view::Camera::ORTHOGRAPHIC)) {
-        auto intrinsics = megamol::core::view::Camera::PerspectiveParameters();
-        intrinsics.fovy = 0.5f;
-        intrinsics.aspect = 16.0f / 9.0f;
-        intrinsics.near_plane = 0.01f;
-        intrinsics.far_plane = 100.0f;
-        ///intrinsics.image_plane_tile = ;
-        this->cameraState.setPerspectiveProjection(intrinsics);
-    }
-
     if (this->keyframes.empty()) {
         Keyframe kf = Keyframe();
         kf.SetAnimTime(t);
         kf.SetSimTime(0.0f);
-        auto camera = this->cameraState;
-        auto cam_pose = camera.get<view::Camera::Pose>();
-        if (camera.getProjectionType() == view::Camera::PERSPECTIVE) {
-            auto cam_intrinsics = camera.get<view::Camera::PerspectiveParameters>();
+        if ((this->cameraState.get<view::Camera::ProjectionType>() != view::Camera::PERSPECTIVE) &&
+            (this->cameraState.get<view::Camera::ProjectionType>() != view::Camera::ORTHOGRAPHIC)) {
+            auto intrinsics = core::view::Camera::PerspectiveParameters();
+            intrinsics.fovy = 0.5f;
+            intrinsics.aspect = 16.0f / 9.0f;
+            intrinsics.near_plane = 0.01f;
+            intrinsics.far_plane = 100.0f;
+            /// intrinsics.image_plane_tile = ;
+            this->cameraState.setPerspectiveProjection(intrinsics);
+        }
+        auto cam_pose = this->cameraState.get<view::Camera::Pose>();
+        if (this->cameraState.getProjectionType() == view::Camera::PERSPECTIVE) {
+            auto cam_intrinsics = this->cameraState.get<view::Camera::PerspectiveParameters>();
             cam_intrinsics.fovy = this->editCurrentFovyParam.Param<param::FloatParam>()->Value(); 
             kf.SetCameraState(view::Camera(cam_pose, cam_intrinsics));
-        } else if (camera.getProjectionType() == view::Camera::ORTHOGRAPHIC) {
-            auto cam_intrinsics = camera.get<view::Camera::OrthographicParameters>();
+        } else if (this->cameraState.getProjectionType() == view::Camera::ORTHOGRAPHIC) {
+            auto cam_intrinsics = this->cameraState.get<view::Camera::OrthographicParameters>();
             cam_intrinsics.frustrum_height = this->editCurrentFrustumHeightParam.Param<param::FloatParam>()->Value();
             kf.SetCameraState(view::Camera(cam_pose, cam_intrinsics));
         } else {
@@ -1464,6 +1463,30 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[KEYFRAME KEEPER] [updateEditParameters] No valid projection found. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
+    }
+
+    // Show or hide edit parameters for currently selected keyframe
+    bool edit_keyframe_params_visible = (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0);
+    this->editCurrentAnimTimeParam.Parameter()->SetGUIVisible(edit_keyframe_params_visible);
+    this->editCurrentSimTimeParam.Parameter()->SetGUIVisible(edit_keyframe_params_visible);
+    this->editCurrentPosParam.Parameter()->SetGUIVisible(edit_keyframe_params_visible);
+    this->resetViewParam.Parameter()->SetGUIVisible(edit_keyframe_params_visible);
+    this->editCurrentViewParam.Parameter()->SetGUIVisible(edit_keyframe_params_visible);
+    this->editCurrentUpParam.Parameter()->SetGUIVisible(edit_keyframe_params_visible);
+    this->editCurrentProjectionParam.Parameter()->SetGUIVisible(edit_keyframe_params_visible);
+    if (edit_keyframe_params_visible) {
+        auto proj = static_cast<view::Camera::ProjectionType>(
+            this->editCurrentProjectionParam.Param<param::EnumParam>()->Value());
+        if (proj == view::Camera::PERSPECTIVE) {
+            this->editCurrentFovyParam.Parameter()->SetGUIVisible(true);
+            this->editCurrentFrustumHeightParam.Parameter()->SetGUIVisible(false);
+        } else if (proj == view::Camera::ORTHOGRAPHIC) {
+            this->editCurrentFovyParam.Parameter()->SetGUIVisible(false);
+            this->editCurrentFrustumHeightParam.Parameter()->SetGUIVisible(true);
+        }
+    } else {
+        this->editCurrentFovyParam.Parameter()->SetGUIVisible(false);
+        this->editCurrentFrustumHeightParam.Parameter()->SetGUIVisible(false);
     }
 }
 

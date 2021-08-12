@@ -14,11 +14,6 @@
 #include "mmcore/view/Camera.h"
 
 
-// #### Utility minimal camera state ################################### //
-
-typedef megamol::core::view::Camera camera_type;
-
-
 // ##################################################################### //
 
 
