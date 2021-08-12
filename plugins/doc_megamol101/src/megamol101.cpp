@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "ASCIISphereLoader.h"
@@ -13,14 +13,14 @@
 #include "SphereColoringModule.h"
 
 namespace megamol::megamol101 {
-class PluginInstance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(PluginInstance)
-public:
-    PluginInstance()
-            : ::megamol::core::utility::plugins::Plugin200Instance(
-                  "megamol101", "Describing megamol101 (TODO: Change this!)"){};
+class Megamol101PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(Megamol101PluginInstance)
 
-    ~PluginInstance() override = default;
+public:
+    Megamol101PluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("megamol101", "The megamol101 plugin."){};
+
+    ~Megamol101PluginInstance() override = default;
 
     // Registers modules and calls
     void registerClasses() override {

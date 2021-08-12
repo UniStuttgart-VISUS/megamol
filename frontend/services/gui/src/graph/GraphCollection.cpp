@@ -9,7 +9,6 @@
 #include "GraphCollection.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/view/AbstractView.h"
-#include "utility/plugins/PluginManager.h"
 
 
 using namespace megamol;
@@ -143,9 +142,9 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
 
             // Get plugin calls (get prior to core calls for being  able to find duplicates in core instance call desc.
             // manager)
-            auto plugins = core_instance.Plugins().GetPlugins();
+            auto plugins = core_instance.GetPlugins();
             for (auto& plugin : plugins) {
-                plugin_name = plugin->GetAssemblyName();
+                plugin_name = plugin->GetObjectFactoryName();
                 for (auto& c_desc : plugin->GetCallDescriptionManager()) {
                     Call::StockCall call;
                     if (this->get_call_stock_data(call, c_desc, plugin_name)) {
@@ -155,7 +154,7 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
             }
 
             // Get core calls
-            plugin_name = "Core"; // (core_instance->GetAssemblyName() = "")
+            plugin_name = "Core"; // (core_instance->GetObjectFactoryName() = "")
             for (auto& c_desc : core_instance.GetCallDescriptionManager()) {
                 std::string class_name(c_desc->ClassName());
                 if (std::find_if(this->calls_stock.begin(), this->calls_stock.end(),
@@ -222,9 +221,9 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
             // Get plugin modules (get prior to core modules for being  able to find duplicates in core instance module
             // desc. manager)
-            auto plugins = core_instance.Plugins().GetPlugins();
+            auto plugins = core_instance.GetPlugins();
             for (auto& plugin : plugins) {
-                plugin_name = plugin->GetAssemblyName();
+                plugin_name = plugin->GetObjectFactoryName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
                     Module::StockModule mod;
                     if (this->get_module_stock_data(mod, m_desc, plugin_name)) {
@@ -243,7 +242,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             }
 
             // Get core modules
-            plugin_name = "Core"; // (core_instance->GetAssemblyName() = "")
+            plugin_name = "Core"; // (core_instance->GetObjectFactoryName() = "")
             for (auto& m_desc : core_instance.GetModuleDescriptionManager()) {
                 std::string class_name(m_desc->ClassName());
                 if (std::find_if(this->modules_stock.begin(), this->modules_stock.end(),
@@ -1186,7 +1185,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(Module::StockModule& o
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //    "[GUI] [DEBUG] Temporary creating module '%s'...", mod_desc->ClassName());
 
-        megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(nullptr));
+        megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(""));
         if (new_mod == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Unable to create module '%s'. [%s, %s, line %d]\n", mod_desc->ClassName(), __FILE__,

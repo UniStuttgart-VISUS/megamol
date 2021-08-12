@@ -2,18 +2,22 @@
 # Copyright (c) 2020, MegaMol Dev Team
 # All rights reserved.
 #
-
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+# Policies
 cmake_policy(SET CMP0054 NEW)
 cmake_policy(SET CMP0079 NEW) # Needed for static build, requires CMake 3.13!
 if (POLICY CMP0104)
   cmake_policy(SET CMP0104 NEW)
 endif()
 
-project(megamol)
+# Disable in source build
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+# Project
+project(megamol
+  VERSION 1.3.0)
 
 # Default to install to source directory
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -73,35 +77,6 @@ if(WIN32)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif()
-
-# Plugin register function
-# This function must be called by every plugin.
-# Within this function we need to define every binary which should include plugins.
-function(megamol_register_plugin TARGET)
-  if (WIN32)
-    if (BUILD_CONSOLE)
-      target_link_libraries(mmconsole PRIVATE ${TARGET})
-      target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${TARGET}")
-    endif()
-    if (BUILD_FRONTEND)
-      target_link_libraries(megamol PRIVATE ${TARGET})
-      target_link_options(megamol PRIVATE "/WHOLEARCHIVE:${TARGET}")
-    endif()
-  else ()
-    if (BUILD_CONSOLE)
-      target_link_libraries(mmconsole PRIVATE
-        -Wl,--whole-archive
-        ${TARGET}
-        -Wl,--no-whole-archive)
-    endif()
-    if (BUILD_FRONTEND)
-      target_link_libraries(megamol PRIVATE
-        -Wl,--whole-archive
-        ${TARGET}
-        -Wl,--no-whole-archive)
-    endif()
-  endif ()
-endfunction(megamol_register_plugin)
 
 # Plugins
 add_subdirectory(plugins)
