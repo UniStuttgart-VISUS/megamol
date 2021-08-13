@@ -436,7 +436,8 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         default: break;
     }
     strWidth = this->utils.GetTextLineWidth(caption);
-    /* TODO Fix SDFFont text rotation...
+    /// TODO Fix SDFFont text rotation...
+    /*
     this->utils.SetTextRotation(70.0f, cam_view);
     this->utils.Push2DText(ortho, caption,
         this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, // x

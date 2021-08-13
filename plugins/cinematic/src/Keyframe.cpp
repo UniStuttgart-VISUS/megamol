@@ -87,8 +87,7 @@ bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
     } else { // Camera::UNKNOWN
         auto view_mx = camera_state.getViewMatrix();
         auto proj_mx = camera_state.getProjectionMatrix();
-
-        // TODO write matrix entries?
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     return true;
@@ -181,7 +180,8 @@ bool Keyframe::Deserialise(const nlohmann::json& in_json) {
         }
 
     } else {
-        // TODO
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     return valid;

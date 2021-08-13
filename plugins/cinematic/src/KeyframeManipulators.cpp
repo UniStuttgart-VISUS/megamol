@@ -448,7 +448,14 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
     }
 
     // Apply changed camera state to selected keyframe
+    selected_camera_pose.direction = glm::normalize(selected_camera_pose.direction);
+    selected_camera_pose.up = glm::normalize(selected_camera_pose.up);
+    selected_camera_pose.right = glm::normalize(selected_camera_pose.right);
     selected_camera.setPose(selected_camera_pose);
+
+    selected_camera.getProjectionMatrix();
+    selected_camera.getViewMatrix();
+
     this->state.selected_keyframe.SetCameraState(selected_camera);
 
     this->state.last_mouse = current_mouse;

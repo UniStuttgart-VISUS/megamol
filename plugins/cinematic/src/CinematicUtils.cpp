@@ -226,7 +226,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     this->gui_table_row("LEFT Mouse Button", "Select keyframe.");
                     this->gui_table_row("MIDDLE Mouse Button", "Axes scaling in mouse direction.");
                     this->gui_table_row("RIGHT Mouse Button", "Drag & drop keyframe / pan axes.");
-                    /// XXX Calcualation is not correct yet ...
+                    /// TODO XXX Calcualation is not correct yet ...
                     //this->gui_table_row("SHIFT + v","Set same velocity between all keyframes (Experimental).");
                     ImGui::EndTable();
                 }
