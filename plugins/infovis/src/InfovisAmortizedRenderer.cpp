@@ -29,7 +29,7 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
     this->halveRes << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&halveRes);
 
-    auto* approachMappings = new core::param::EnumParam(0);
+    auto* approachMappings = new core::param::EnumParam(6);
     approachMappings->SetTypePair(MS_AR, "MS-AR");
     approachMappings->SetTypePair(QUAD_AR, "4xAR");
     approachMappings->SetTypePair(QUAD_AR_C, "4xAR-C");
@@ -52,6 +52,8 @@ InfovisAmortizedRenderer::~InfovisAmortizedRenderer() {
 }
 
 bool megamol::infovis::InfovisAmortizedRenderer::create(void) {
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ignore: %i", glGetError());
+
     if (!makeShaders()) {
         return false;
     }
@@ -130,10 +132,14 @@ void InfovisAmortizedRenderer::setupBuffers() {
     if (glowlFBO == nullptr) {
         glowlFBO = std::make_shared<glowl::FramebufferObject>(1, 1);
         glowlFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
+        glDisable(GL_MULTISAMPLE);
+        glowlFBOms = std::make_shared<glowl::FramebufferObject>(1, 1);
+        glowlFBOms->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
+        glowlFBOms->bind();
+        glEnable(GL_MULTISAMPLE);
     }
 
     glGenTextures(1, &imageArrayA);
-    glGenTextures(1, &msImageArray);
     glGenTextures(1, &pushImage);
     glGenTextures(1, &imStoreArray);
 
@@ -152,11 +158,10 @@ void InfovisAmortizedRenderer::setupBuffers() {
     }
     glGenBuffers(1, &ssboMatrices);
 
-
     glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
     glEnable(GL_MULTISAMPLE);
 
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, glowlFBOms->getColorAttachment(0)->getName());
     glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGB, 1, 1, 2, GL_TRUE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -201,7 +206,7 @@ void InfovisAmortizedRenderer::setupBuffers() {
     auto err = glGetError();
     if (err != GL_NO_ERROR) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("GL_ERROR in InfovisAmortizedRenderer: " + err);
-    }
+    }  
 }
 
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam) {
@@ -217,17 +222,22 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
+        glowlFBOms->bind();
         glActiveTexture(GL_TEXTURE10);
         glEnable(GL_MULTISAMPLE);
 
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, glowlFBOms->getColorAttachment(0)->getName());
         glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGBA8, w, h, 2, GL_TRUE);
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, msImageArray, 0, frametype);
+        glFramebufferTextureLayer(
+            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, glowlFBOms->getColorAttachment(0)->getName(), 0, frametype);
 
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
         const float tbl[4] = {0.25 + (frametype * 0.5), 0.25, 0.75 - (frametype * 0.5), 0.75};
         glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 2, tbl);
+        //glowlFBO->bind();   
+
+    } else {
+        glDisable(GL_MULTISAMPLE);
     }
     if (approach == 1 || approach == 2 || approach == 3) {
         glm::mat4 jit;
@@ -294,7 +304,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets[frametype].x,
             -intrinsics.frustrum_height * camOffsets[frametype].y, 0.0);
 
-        glm::mat4 jit = glm::translate(glm::mat4(1.0f), adj_offset);
+        //glm::mat4 jit = glm::translate(glm::mat4(1.0f), adj_offset);
         movePush = lastPmvm * inverse(pmvm);
         // movePush = glm::mat4(1.0);
         lastPmvm = pmvm;
@@ -507,6 +517,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
     amort_reconstruction_shdr_array[approach]->use();
 
     fbo->bind();
+    int a = this->amortLevel.Param<core::param::IntParam>()->Value();
 
     amort_reconstruction_shdr_array[approach]->setUniform("h", h);
     amort_reconstruction_shdr_array[approach]->setUniform("w", w);
@@ -516,12 +527,13 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
     if (approach == 0 || approach == 1 || approach == 2 || approach == 3) {
         amort_reconstruction_shdr_array[approach]->setUniform("src_tex2D", 10);
         amort_reconstruction_shdr_array[approach]->setUniform("ssLevel", ssLevel);
+        glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->getUniformLocation("moveMatrices"), a * a,
+            GL_FALSE, &moveMatrices[0][0][0]);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
     if (approach == 4) {
-        int a = this->amortLevel.Param<core::param::IntParam>()->Value();
         glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->getUniformLocation("moveMatrices"), a * a,
             GL_FALSE, &moveMatrices[0][0][0]);
     } else {
@@ -616,8 +628,11 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
             resizeArrays(approach, w, h, ssLevel);
         }
         setupAccel(approach, w, h, ssLevel, &cam);
-
-        cr2d->SetFramebuffer(glowlFBO);
+        if (approach == 0) {
+            cr2d->SetFramebuffer(glowlFBOms);
+        } else {
+            cr2d->SetFramebuffer(glowlFBO);
+        }
         cr2d->SetCamera(cam);
         cr2d->SetBackgroundColor(call.BackgroundColor());
 

@@ -1,8 +1,6 @@
 #version 430
 
-uniform sampler2DMSArray src_tex2D;
-
-uniform int frametype;
+layout (binding=10) uniform sampler2DMSArray src_tex2D;
 uniform int h;
 uniform int w;
 
