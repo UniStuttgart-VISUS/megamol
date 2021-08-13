@@ -510,13 +510,7 @@ void megamol::gui::Configurator::SpecificStateToJSON(nlohmann::json& inout_json)
         // Write GUI state of parameters (groups) of running graph
         if (auto graph_ptr = this->GetGraphCollection().GetRunningGraph()) {
             for (auto& module_ptr : graph_ptr->Modules()) {
-                std::string module_full_name = module_ptr->FullName();
-                // Parameter Groups
-                module_ptr->GUIParameterGroups().StateToJSON(inout_json, module_full_name);
-                // Parameters
-                for (auto& param : module_ptr->Parameters()) {
-                    param.StateToJSON(inout_json, param.FullNameProject());
-                }
+                module_ptr->StateToJSON(inout_json);
             }
         }
 
@@ -578,14 +572,7 @@ void megamol::gui::Configurator::SpecificStateFromJSON(const nlohmann::json& in_
         // Read GUI state of parameters (groups) of running graph
         if (auto graph_ptr = this->GetGraphCollection().GetRunningGraph()) {
             for (auto& module_ptr : graph_ptr->Modules()) {
-                std::string module_full_name = module_ptr->FullName();
-                // Parameter Groups
-                module_ptr->GUIParameterGroups().StateFromJSON(in_json, module_full_name);
-                // Parameters
-                for (auto& param : module_ptr->Parameters()) {
-                    param.StateFromJSON(in_json, param.FullNameProject());
-                    param.ForceSetGUIStateDirty();
-                }
+                module_ptr->StateFromJSON(in_json);
             }
         }
 

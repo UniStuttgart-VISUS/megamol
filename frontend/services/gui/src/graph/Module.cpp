@@ -583,3 +583,34 @@ void megamol::gui::Module::SetGroupName(const std::string& gr_name) {
         p.SetParentModuleName(this->FullName());
     }
 }
+
+
+bool megamol::gui::Module::ParametersVisible() {
+
+    return this->gui_param_groups.ParametersVisible(this->parameters);
+}
+
+
+bool megamol::gui::Module::StateToJSON(nlohmann::json& inout_json) {
+
+    // Parameter Groups
+    bool retval = this->gui_param_groups.StateToJSON(inout_json, this->FullName());
+    // Parameters
+    for (auto& param : this->parameters) {
+        retval &= param.StateToJSON(inout_json, param.FullNameProject());
+    }
+    return retval;
+}
+
+
+bool megamol::gui::Module::StateFromJSON(const nlohmann::json& in_json) {
+
+    // Parameter Groups
+    bool retval = this->gui_param_groups.StateFromJSON(in_json, this->FullName());
+    // Parameters
+    for (auto& param : this->parameters) {
+        retval &= param.StateFromJSON(in_json, param.FullNameProject());
+        param.ForceSetGUIStateDirty();
+    }
+    return retval;
+}

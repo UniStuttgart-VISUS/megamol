@@ -7,19 +7,20 @@
 
 #ifndef MEGAMOL_CINEMATIC_CINEMATICUTILS_H_INCLUDED
 #define MEGAMOL_CINEMATIC_CINEMATICUTILS_H_INCLUDED
+#pragma once
 
 
 #include "mmcore/utility/RenderUtils.h"
+#include "mmcore/view/Camera.h"
 
 
-// #### Utility minimal camera state ################################### //
+// ##################################################################### //
 
-typedef megamol::core::view::Camera camera_type;
 
 namespace megamol {
 namespace cinematic {
 
-// ##################################################################### //
+
 /*
  * Cinematic utility functionality (colors, text, menu, ...).
  */
@@ -56,7 +57,8 @@ public:
 
     void SetBackgroundColor(glm::vec4 bc) { this->background_color = bc; };
 
-    void PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp);
+    void PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label,
+        const std::string& right_label, glm::vec2 dim_vp, float depth);
 
     void HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm::vec2 dim_vp);
 
@@ -68,7 +70,9 @@ public:
 
     float GetTextLineWidth(const std::string& text_line);
 
-    void SetTextRotation(float a, float x, float y, float z);
+    void SetTextRotation(float a, glm::vec3 vec);
+
+    void ResetTextRotation();
 
     bool Initialized(void) { return this->init_once; }
 

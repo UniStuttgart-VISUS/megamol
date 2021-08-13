@@ -120,15 +120,7 @@ bool ParameterList::Draw() {
                 }
             }
             if (!skip && !this->win_extended_mode) {
-                // Check if at least one parameter is visible in basic mode.
-                bool param_visible = false;
-                for (auto& param : module_ptr->Parameters()) {
-                    if (param.IsGUIVisible()) {
-                        param_visible = true;
-                        break;
-                    }
-                }
-                skip = !param_visible;
+                skip = !module_ptr->ParametersVisible();
             }
             if (!skip) {
                 auto group_name = module_ptr->GroupName();
@@ -195,9 +187,8 @@ bool ParameterList::Draw() {
 
                     // Draw parameters
                     if (module_header_open) {
-                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_search_string,
-                            this->win_extended_mode, true, Parameter::WidgetScope::LOCAL, this->win_tfeditor_ptr,
-                            override_header_state, nullptr);
+                        module_ptr->DrawParameters(module_search_string, this->win_extended_mode, true,
+                            Parameter::WidgetScope::LOCAL, this->win_tfeditor_ptr, override_header_state, nullptr);
                     }
                 }
             }

@@ -144,6 +144,9 @@ private:
 
     /** Shader program for a cube */
     vislib::graphics::gl::GLSLShader cubeShader;
+
+    /** Bounding Boxes */
+    megamol::core::BoundingBoxes_2 boundingBoxes;
 };
 } // namespace view
 } // namespace core
