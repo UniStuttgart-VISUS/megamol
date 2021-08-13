@@ -389,6 +389,13 @@ namespace frontend {
     }
 
 
+    void GUI_Service::resource_provide_gui_render() {
+        if (this->m_gui != nullptr) {
+            this->m_gui->DrawUiToScreen();
+        }
+    }
+
+
     void GUI_Service::resource_register_popup(
         const std::string& name, std::weak_ptr<bool> open, std::function<void(void)>& func) {
 
