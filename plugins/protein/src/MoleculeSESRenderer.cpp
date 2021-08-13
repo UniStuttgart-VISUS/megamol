@@ -811,6 +811,8 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
         (*bs)(BindingSiteCall::CallForGetData);
     }
 
+    fbo = call.GetFramebuffer();
+
     // ==================== check parameters ====================
     this->UpdateParameters(mol, bs);
 
