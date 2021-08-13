@@ -88,6 +88,7 @@ namespace infovis {
         GLuint amortizedMsaaFboA = 0;
         GLuint amortizedPushFBO = 0;
         std::shared_ptr<glowl::FramebufferObject> glowlFBO;
+        std::shared_ptr<glowl::FramebufferObject> glowlFBOms;
         std::unique_ptr<glowl::Texture2D> texA;
         std::unique_ptr<glowl::Texture2D> texB;
         glowl::TextureLayout texstore_layout;
