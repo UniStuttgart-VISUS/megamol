@@ -7,11 +7,11 @@
 
 #ifndef MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
+#pragma once
+
 
 #include <glm/glm.hpp>
-
 #include "CinematicUtils.h"
-
 #include "mmcore/utility/JSONHelper.h"
 
 
@@ -28,7 +28,7 @@ namespace cinematic {
 		/** CTOR */
         Keyframe(void);
 
-        Keyframe(float at, float st, camera_type cam);
+        Keyframe(float at, float st, core::view::Camera cam);
 
 		/** DTOR */
 		~Keyframe(void);
@@ -51,7 +51,7 @@ namespace cinematic {
             return this->sim_time; // (this->sim_time == 1.0f) ? (1.0f - 0.0000001f) : (this->sim_time);
         }
 
-        inline camera_type GetCamera() const {
+        inline core::view::Camera GetCamera() const {
             return this->camera_state;
 		}
 
@@ -65,7 +65,7 @@ namespace cinematic {
             this->sim_time = glm::clamp(t, 0.0f, 1.0f);
         }
 
-        inline void SetCameraState(const camera_type& cam){
+        inline void SetCameraState(const core::view::Camera& cam) {
             this->camera_state = cam;
 		}
     
@@ -81,7 +81,7 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-        camera_type camera_state;
+        core::view::Camera camera_state;
         float sim_time; // Simulation time value is relative (always in [0,1])
 		float anim_time;    
 	};

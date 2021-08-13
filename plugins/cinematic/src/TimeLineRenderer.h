@@ -7,31 +7,13 @@
 
 #ifndef MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
+#pragma once
 
-#include "mmcore/CallerSlot.h"
+
+#include "RuntimeConfig.h"
 #include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/SDFFont.h"
-#include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/EnumParam.h"
-
-#include "RuntimeConfig.h"
-
-#include "vislib/String.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/graphics/BitmapImage.h"
-#include "vislib/graphics/Cursor2D.h"
-#include "vislib/graphics/InputModifiers.h"
-#include "vislib/math/ShallowMatrix.h"
-#include "vislib/math/Matrix.h"
-#include "mmcore/utility/log/Log.h"
 
 #include "Keyframe.h"
 #include "CallKeyframeKeeper.h"

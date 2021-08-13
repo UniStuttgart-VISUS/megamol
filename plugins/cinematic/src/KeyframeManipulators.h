@@ -7,20 +7,15 @@
 
 #ifndef MEGAMOL_CINEMATIC_KEYFRAMEMANIPULATORS_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAMEMANIPULATORS_H_INCLUDED
+#pragma once
+
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ButtonParam.h"
-
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/math/Cuboid.h"
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Camera.h"
-
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "Keyframe.h"
 #include "CinematicUtils.h"
+#include <glm/glm.hpp>
 
 
 namespace megamol {

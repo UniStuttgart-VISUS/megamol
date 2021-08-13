@@ -1,62 +1,42 @@
-/*
- * mmvtkm.cpp
- *
- * Copyright (C) 2019-2021 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
 #include "mmvtkm/mmvtkmDataSource.h"
 #include "mmvtkm/mmvtkmFileLoader.h"
 #include "mmvtkm/mmvtkmMeshRenderTasks.h"
 //#include "mmvtkm/mmvtkmRenderer.h"
-#include "mmvtkm/mmvtkmStreamLines.h"
 #include "mmvtkm/mmvtkmDataCall.h"
+#include "mmvtkm/mmvtkmStreamLines.h"
 
 
-/* anonymous namespace hides this type from any other object files */
-namespace {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+namespace megamol::mmvtkm {
+class MmvtkmPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(MmvtkmPluginInstance)
 
 public:
-    /** ctor */
-    plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
+    MmvtkmPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("vtkm", "Plugin to read and render vtkm data."){};
 
-              /* machine-readable plugin assembly name */
-              "vtkm", // TODO: Change this!
+    virtual ~MmvtkmPluginInstance() override = default;
 
-              /* human-readable plugin description */
-              "Plugin to read and render vtkm data."){
+    // Registers modules and calls
+    void registerClasses() override {
 
-              // here we could perform addition initialization
-          };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-
-        // register modules here:
+        // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmFileLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmMeshRenderTasks>();
-        //this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataRenderer>();
+        // this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmStreamLines>();
 
-
-		// register calls here:
+        // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataCall>();
     }
 };
-} // namespace
+} // namespace megamol::mmvtkm

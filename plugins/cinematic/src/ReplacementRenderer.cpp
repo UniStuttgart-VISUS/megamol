@@ -87,30 +87,25 @@ bool ReplacementRenderer::create(void) {
 bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) {
 
     auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
-
-    bool retVal = true;
     if (cr3d_out != nullptr) {
         *cr3d_out = call;
-        retVal = (*cr3d_out)(view::AbstractCallRender::FnGetExtents);
-        call = *cr3d_out;
-        this->bbox = call.AccessBoundingBoxes().BoundingBox();
-    }
-    else {
+        if ((*cr3d_out)(view::AbstractCallRender::FnGetExtents)) {
+            call = *cr3d_out;
+            this->bbox = call.AccessBoundingBoxes().BoundingBox();
+            return true;
+        }
+    } else {
         call.SetTimeFramesCount(1);
         call.SetTime(0.0f);
         this->bbox = vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         call.AccessBoundingBoxes().SetBoundingBox(this->bbox);
+        return true;
     }
-
-    return retVal;
+    return false;
 }
 
 
 bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
-
-    // Camera
-    view::Camera cam;
-    call.GetCamera(cam);
 
     if (this->replacementRenderingParam.IsDirty()) {
         this->replacementRenderingParam.ResetDirty();
@@ -154,16 +149,19 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     if (this->draw_replacement) {
         // Render bounding box as replacement
+
         auto const lhsFBO = call.GetFramebuffer();
         lhsFBO->bind();
 
-        glm::mat4 proj = cam.getProjectionMatrix();
-        glm::mat4 view = cam.getViewMatrix();
+        glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
+        glm::vec2 vp_dim = {lhsFBO->getWidth(), lhsFBO->getHeight()};
+
+        // Camera
+        core::view::Camera camera = call.GetCamera();
+        glm::mat4 proj = camera.getProjectionMatrix();
+        glm::mat4 view = camera.getViewMatrix();
         glm::mat4 mvp = proj * view;
         
-        float vp_fw = call.GetFramebuffer()->getWidth();
-        float vp_fh = call.GetFramebuffer()->getHeight();
-
         float alpha = alphaParam.Param<param::FloatParam>()->Value();
 
         glm::vec4 front   = {0.0f, 0.0f, 1.0f, alpha};
@@ -189,7 +187,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         this->utils.PushQuadPrimitive(left_bottom_back, left_bottom_front, left_top_front, left_top_back, left); // Left
         this->utils.PushQuadPrimitive(right_bottom_back, right_top_back, right_top_front, right_bottom_front, right); // Right
 
-        this->utils.DrawQuadPrimitives(mvp, glm::vec2(vp_fw, vp_fh));
+        this->utils.DrawQuadPrimitives(mvp, vp_dim);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     } else {

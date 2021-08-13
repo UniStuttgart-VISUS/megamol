@@ -41,7 +41,8 @@ BoundingBoxRenderer::BoundingBoxRenderer(void)
     , viewCubeSizeSlot("viewCubeSize", "Size of the view cube")
     , vbo(0)
     , ibo(0)
-    , va(0) {
+    , va(0)
+    , boundingBoxes () {
 
     this->enableBoundingBoxSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->enableBoundingBoxSlot);
@@ -162,16 +163,19 @@ void BoundingBoxRenderer::release(void) {
  * BoundingBoxRenderer::GetExtents
  */
 bool BoundingBoxRenderer::GetExtents(CallRender3DGL& call) {
+
     CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
-    if (chainedCall == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "The BoundingBoxRenderer does not work without a renderer attached to its right");
-        return false;
+    if (chainedCall != nullptr) {
+        *chainedCall = call;
+        if ((*chainedCall)(view::AbstractCallRender::FnGetExtents)) {
+            call = *chainedCall;
+            this->boundingBoxes = call.AccessBoundingBoxes();
+            return true;
+        }
     }
-    *chainedCall = call;
-    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
-    call = *chainedCall;
-    return retVal;
+    megamol::core::utility::log::Log::DefaultLog.WriteError(
+        "The BoundingBoxRenderer does not work without a renderer attached to its right");
+    return false;
 }
 
 /*
@@ -192,11 +196,7 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
             "The BoundingBoxRenderer does not work without a renderer attached to its right");
         return false;
     }
-    *chainedCall = call;
-    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
-    call = *chainedCall;
 
-    auto boundingBoxes = chainedCall->AccessBoundingBoxes();
     auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
 
     lhsFBO->bind();
@@ -204,7 +204,7 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
 
     bool renderRes = true;
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
-        renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes, smoothLines);
+        renderRes &= this->RenderBoundingBoxBack(mvp, this->boundingBoxes, smoothLines);
     }
 
     //glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -216,7 +216,7 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
 
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
-        renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes, smoothLines);
+        renderRes &= this->RenderBoundingBoxFront(mvp, this->boundingBoxes, smoothLines);
     }
     if (this->enableViewCubeSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderViewCube(call);

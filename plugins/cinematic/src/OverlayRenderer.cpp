@@ -7,6 +7,20 @@
 
 
 #include "OverlayRenderer.h"
+#include "mmcore/MegaMolGraph.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/Vector2fParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/Vector4fParam.h"
 
 
 using namespace megamol;
@@ -427,7 +441,8 @@ bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 bool OverlayRenderer::Render(view::CallRender3DGL& call) {
 
     // Framebuffer object
-    auto fbo = call.GetFramebuffer();
+    auto const lhsFBO = call.GetFramebuffer();
+    lhsFBO->bind();
 
     auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (cr3d_out != nullptr) {
@@ -438,16 +453,14 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // Get current viewport
-    if ((this->m_viewport.x != fbo->getWidth()) || (this->m_viewport.y != fbo->getHeight())) {
-        this->m_viewport = {fbo->getWidth(), fbo->getHeight()};
+    if ((this->m_viewport.x != lhsFBO->getWidth()) || (this->m_viewport.y != lhsFBO->getHeight())) {
+        this->m_viewport = {lhsFBO->getWidth(), lhsFBO->getHeight()};
         // Reload rectangle on viewport changes
         this->onTriggerRecalcRectangle(this->paramMode);
     }
-    // Create 2D orthographic mvp matrix
-    glm::mat4 ortho = glm::ortho(0.0f, this->m_viewport.x, 0.0f, this->m_viewport.y, -1.0f, 1.0f);
 
-    auto const lhsFBO = call.GetFramebuffer();
-    lhsFBO->bind();
+    glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
+    glm::mat4 ortho = glm::ortho(0.0f, this->m_viewport.x, 0.0f, this->m_viewport.y, -1.0f, 1.0f);
 
     // Draw mode dependent stuff
     auto mode = this->paramMode.Param<param::EnumParam>()->Value();

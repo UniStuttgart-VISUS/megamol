@@ -7,6 +7,9 @@
 
 #include "stdafx.h"
 #include "KeyframeManipulators.h"
+#include "mmcore/utility/log/Log.h"
+#include "vislib/math/Cuboid.h"
+#include <glm/gtc/type_ptr.hpp>
 
 
 using namespace megamol;
@@ -48,7 +51,16 @@ KeyframeManipulators::KeyframeManipulators(void)
     this->state.mvp = glm::mat4();
     this->state.first_ctrl_point = glm::vec3(0.0f, 0.0f, 0.0f);
     this->state.last_ctrl_point = glm::vec3(0.0f, 0.0f, 0.0f);
+
     this->state.cam = view::Camera();
+    auto intrinsics = core::view::Camera::PerspectiveParameters();
+    intrinsics.fovy = 0.5f;
+    intrinsics.aspect = 16.0f / 9.0f;
+    intrinsics.near_plane = 0.01f;
+    intrinsics.far_plane = 100.0f;
+    /// intrinsics.image_plane_tile = ;
+    this->state.cam.setPerspectiveProjection(intrinsics);
+
     this->state.bbox = vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     this->state.hit.reset();
     this->state.last_mouse = glm::vec2(0.0f, 0.0f);
@@ -255,7 +267,7 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
 
 bool KeyframeManipulators::PushRendering(CinematicUtils& utils) {
 
-    megamol::core::view::Camera global_camera(this->state.cam);
+    core::view::Camera global_camera(this->state.cam);
     auto global_cam_pose = global_camera.get<core::view::Camera::Pose>();
     glm::vec3 global_cam_position = global_cam_pose.position;
     glm::vec3 global_cam_view = global_cam_pose.direction;
@@ -436,6 +448,9 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
     }
 
     // Apply changed camera state to selected keyframe
+    selected_camera_pose.direction = glm::normalize(selected_camera_pose.direction);
+    selected_camera_pose.up = glm::normalize(selected_camera_pose.up);
+    selected_camera_pose.right = glm::normalize(selected_camera_pose.right);
     selected_camera.setPose(selected_camera_pose);
     this->state.selected_keyframe.SetCameraState(selected_camera);
 

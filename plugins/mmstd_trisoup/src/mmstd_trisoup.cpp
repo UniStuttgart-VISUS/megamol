@@ -1,56 +1,42 @@
-/*
- * mmstd_trisoup.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
-#include "TriSoupRenderer.h"
-#include "TriSoupDataSource.h"
-#include "WavefrontObjDataSource.h"
-#include "WavefrontObjWriter.h"
 #include "BlockVolumeMesh.h"
-#include "volumetrics/VoluMetricJob.h"
-#include "OSCBFix.h"
-#include "CoordSysMarker.h"
-#include "volumetrics/IsoSurface.h"
 #include "CallBinaryVolumeData.h"
 #include "CallVolumetricData.h"
+#include "CoordSysMarker.h"
+#include "OSCBFix.h"
+#include "TriSoupDataSource.h"
+#include "TriSoupRenderer.h"
+#include "WavefrontObjDataSource.h"
+#include "WavefrontObjWriter.h"
 #include "vislib/Trace.h"
+#include "volumetrics/IsoSurface.h"
+#include "volumetrics/VoluMetricJob.h"
 
 namespace megamol::trisoup {
-    /** Implementing the instance class of this plugin */
-    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-        REGISTERPLUGIN(plugin_instance)
+    class TrisoupPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+        REGISTERPLUGIN(TrisoupPluginInstance)
+
     public:
-        /** ctor */
-        plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
-
-                /* machine-readable plugin assembly name */
-                "mmstd_trisoup",
-
-                /* human-readable plugin description */
-                "Plugin for rendering TriSoup mesh data") {
-
-            // here we could perform addition initialization
+        TrisoupPluginInstance()
+                : megamol::core::utility::plugins::AbstractPluginInstance(
+                      "mmstd_trisoup", "Plugin for rendering TriSoup mesh data") {
             vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL - 1);
         };
-        /** Dtor */
-        virtual ~plugin_instance(void) {
-            // here we could perform addition de-initialization
-        }
-        /** Registers modules and calls */
-        virtual void registerClasses(void) {
 
-            // register modules here:
+        ~TrisoupPluginInstance() override = default;
+
+        // Registers modules and calls
+        void registerClasses() override {
+
+            // register modules
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjDataSource>();
@@ -61,10 +47,9 @@ namespace megamol::trisoup {
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::CoordSysMarker>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::IsoSurface>();
 
-            // register calls here:
+            // register calls
             this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallBinaryVolumeData>();
             this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallVolumetricData>();
-
         }
     };
 } // namespace megamol::trisoup

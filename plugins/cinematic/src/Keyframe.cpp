@@ -16,10 +16,19 @@ Keyframe::Keyframe(void)
     : anim_time(0.0f)
     , sim_time(0.0f)
     , camera_state() {
+
+    // Default intrinsics
+    auto intrinsics = core::view::Camera::PerspectiveParameters();
+    intrinsics.fovy = 0.5f;
+    intrinsics.aspect = 16.0f / 9.0f;
+    intrinsics.near_plane = 0.01f;
+    intrinsics.far_plane = 100.0f;
+    /// intrinsics.image_plane_tile = ;
+    this->camera_state.setPerspectiveProjection(intrinsics);
 }
 
 
-Keyframe::Keyframe(float anim_time, float sim_time, camera_type cam_state)
+Keyframe::Keyframe(float anim_time, float sim_time, core::view::Camera cam_state)
     : anim_time(anim_time)
     , sim_time(sim_time)
     , camera_state(cam_state) {
@@ -78,8 +87,7 @@ bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
     } else { // Camera::UNKNOWN
         auto view_mx = camera_state.getViewMatrix();
         auto proj_mx = camera_state.getProjectionMatrix();
-
-        // TODO write matrix entries?
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     return true;
@@ -172,7 +180,8 @@ bool Keyframe::Deserialise(const nlohmann::json& in_json) {
         }
 
     } else {
-        // TODO
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     return valid;
