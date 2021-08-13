@@ -381,15 +381,9 @@ namespace frontend {
         }
     }
 
-    void GUI_Service::resource_provide_gui_render() {
-
-        if (this->m_gui != nullptr) {
-            this->m_gui->DrawUiToScreen();
-        }
-    }
-
 
     void GUI_Service::resource_provide_gui_render() {
+
         if (this->m_gui != nullptr) {
             this->m_gui->DrawUiToScreen();
         }
