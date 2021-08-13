@@ -923,7 +923,7 @@ int megamol::core::LuaState::CreateJob(lua_State* L) {
         try {
             this->coreInst->projJobDescs.Register(jd);
             this->coreInst->RequestJobInstantiation(jd.get(), jobName);
-        } catch (vislib::AlreadyExistsException) {
+        } catch (std::invalid_argument&) {
             lua_pushstring(L, ("job \"" + std::string(jobName) + "\" already exists.").c_str());
             lua_error(L);
             return 0;
@@ -952,7 +952,7 @@ int megamol::core::LuaState::CreateView(lua_State* L) {
         try {
             this->coreInst->projViewDescs.Register(vd);
             this->coreInst->RequestViewInstantiation(vd.get(), viewName);
-        } catch (vislib::AlreadyExistsException) {
+        } catch (std::invalid_argument&) {
             lua_pushstring(L, ("view \"" + std::string(viewName) + "\" already exists.").c_str());
             lua_error(L);
             return 0;

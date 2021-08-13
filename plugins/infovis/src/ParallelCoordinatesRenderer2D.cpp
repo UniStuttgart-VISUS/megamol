@@ -374,21 +374,21 @@ bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamS
     return true;
 }
 
-void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2DGL& call) {
+bool ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2DGL& call) {
     auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
     if (floats == nullptr)
-        return;
+        return false;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "ParallelCoordinatesRenderer2D requires a transfer function!");
-        return;
+        return false;
     }
     auto flagsc = readFlagsSlot.CallAs<core::FlagCallRead_GL>();
     if (flagsc == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a flag storage!");
-        return;
+        return false;
     }
 
     floats->SetFrameID(static_cast<unsigned int>(call.Time()));
@@ -473,6 +473,8 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2DGL& call)
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(axisIndirectionBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(filtersBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(minmaxBuffer));
+
+    return true;
 }
 
 void ParallelCoordinatesRenderer2D::computeScaling(void) {
@@ -503,7 +505,9 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
 
 bool ParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
 
-    this->assertData(call);
+    if (!this->assertData(call)) {
+        return false;
+    }
 
     call.AccessBoundingBoxes() = this->bounds;
 
@@ -1057,15 +1061,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
 
     glm::mat4 ortho = proj * view;
 
-    this->assertData(call);
-
-    auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-    if (fc == nullptr)
-        return false;
-    auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (tc == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "%s cannot draw without a transfer function!", ParallelCoordinatesRenderer2D::ClassName());
+    if (!this->assertData(call)) {
         return false;
     }
 

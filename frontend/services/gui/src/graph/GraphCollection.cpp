@@ -9,7 +9,6 @@
 #include "GraphCollection.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/view/AbstractView.h"
-#include "utility/plugins/PluginManager.h"
 
 
 using namespace megamol;
@@ -143,28 +142,28 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
 
             // Get plugin calls (get prior to core calls for being  able to find duplicates in core instance call desc.
             // manager)
-            auto plugins = core_instance.Plugins().GetPlugins();
+            auto plugins = core_instance.GetPlugins();
             for (auto& plugin : plugins) {
-                plugin_name = plugin->GetAssemblyName();
+                plugin_name = plugin->GetObjectFactoryName();
                 for (auto& c_desc : plugin->GetCallDescriptionManager()) {
                     Call::StockCall call;
-                    call.plugin_name = plugin_name;
-                    this->get_call_stock_data(call, c_desc);
-                    this->calls_stock.emplace_back(call);
+                    if (this->get_call_stock_data(call, c_desc, plugin_name)) {
+                        this->calls_stock.emplace_back(call);
+                    }
                 }
             }
 
             // Get core calls
-            plugin_name = "Core"; // (core_instance->GetAssemblyName() = "")
+            plugin_name = "Core"; // (core_instance->GetObjectFactoryName() = "")
             for (auto& c_desc : core_instance.GetCallDescriptionManager()) {
                 std::string class_name(c_desc->ClassName());
                 if (std::find_if(this->calls_stock.begin(), this->calls_stock.end(),
                         [class_name](const Call::StockCall& call) { return (call.class_name == class_name); }) ==
                     this->calls_stock.end()) {
                     Call::StockCall call;
-                    call.plugin_name = plugin_name;
-                    this->get_call_stock_data(call, c_desc);
-                    this->calls_stock.emplace_back(call);
+                    if (this->get_call_stock_data(call, c_desc, plugin_name)) {
+                        this->calls_stock.emplace_back(call);
+                    }
                 }
             }
         }
@@ -222,14 +221,14 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
             // Get plugin modules (get prior to core modules for being  able to find duplicates in core instance module
             // desc. manager)
-            auto plugins = core_instance.Plugins().GetPlugins();
+            auto plugins = core_instance.GetPlugins();
             for (auto& plugin : plugins) {
-                plugin_name = plugin->GetAssemblyName();
+                plugin_name = plugin->GetObjectFactoryName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
                     Module::StockModule mod;
-                    mod.plugin_name = plugin_name;
-                    this->get_module_stock_data(mod, m_desc);
-                    this->modules_stock.emplace_back(mod);
+                    if (this->get_module_stock_data(mod, m_desc, plugin_name)) {
+                        this->modules_stock.emplace_back(mod);
+                    }
 #ifdef GUI_VERBOSE
                     auto module_load_time_count =
                         static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - module_load_time)
@@ -243,16 +242,16 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             }
 
             // Get core modules
-            plugin_name = "Core"; // (core_instance->GetAssemblyName() = "")
+            plugin_name = "Core"; // (core_instance->GetObjectFactoryName() = "")
             for (auto& m_desc : core_instance.GetModuleDescriptionManager()) {
                 std::string class_name(m_desc->ClassName());
                 if (std::find_if(this->modules_stock.begin(), this->modules_stock.end(),
                         [class_name](const Module::StockModule& mod) { return (mod.class_name == class_name); }) ==
                     this->modules_stock.end()) {
                     Module::StockModule mod;
-                    mod.plugin_name = plugin_name;
-                    this->get_module_stock_data(mod, m_desc);
-                    this->modules_stock.emplace_back(mod);
+                    if (this->get_module_stock_data(mod, m_desc, plugin_name)) {
+                        this->modules_stock.emplace_back(mod);
+                    }
 #ifdef GUI_VERBOSE
                     auto module_load_time_count =
                         static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - module_load_time)
@@ -1160,18 +1159,17 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
 }
 
 
-bool megamol::gui::GraphCollection::get_module_stock_data(
-    Module::StockModule& mod, std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc) {
+bool megamol::gui::GraphCollection::get_module_stock_data(Module::StockModule& out_mod,
+    std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const std::string& plugin_name) {
 
-    mod.class_name = std::string(mod_desc->ClassName());
-    mod.description = std::string(mod_desc->Description());
-    mod.is_view = false;
-    mod.parameters.clear();
-    mod.callslots.clear();
-    mod.callslots.emplace(CallSlotType::CALLER, std::vector<CallSlot::StockCallSlot>());
-    mod.callslots.emplace(CallSlotType::CALLEE, std::vector<CallSlot::StockCallSlot>());
-    /// mod.plugin_name is not (yet) available in mod_desc (set from AbstractAssemblyInstance or
-    /// AbstractPluginInstance).
+    out_mod.class_name = std::string(mod_desc->ClassName());
+    out_mod.description = std::string(mod_desc->Description());
+    out_mod.is_view = false;
+    out_mod.parameters.clear();
+    out_mod.callslots.clear();
+    out_mod.callslots.emplace(CallSlotType::CALLER, std::vector<CallSlot::StockCallSlot>());
+    out_mod.callslots.emplace(CallSlotType::CALLEE, std::vector<CallSlot::StockCallSlot>());
+    out_mod.plugin_name = plugin_name;
 
     if (this->calls_stock.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1187,7 +1185,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //    "[GUI] [DEBUG] Temporary creating module '%s'...", mod_desc->ClassName());
 
-        megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(nullptr));
+        megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(""));
         if (new_mod == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Unable to create module '%s'. [%s, %s, line %d]\n", mod_desc->ClassName(), __FILE__,
@@ -1206,7 +1204,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         std::shared_ptr<const core::view::AbstractView> viewptr =
             std::dynamic_pointer_cast<const core::view::AbstractView>(new_mod);
 
-        mod.is_view = (viewptr != nullptr);
+        out_mod.is_view = (viewptr != nullptr);
 
         std::vector<std::shared_ptr<core::param::ParamSlot>> paramSlots;
         std::vector<std::shared_ptr<core::CallerSlot>> callerSlots;
@@ -1231,7 +1229,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
                 continue;
             Parameter::StockParameter psd;
             if (megamol::gui::Parameter::ReadNewCoreParameterToStockParameter((*param_slot), psd)) {
-                mod.parameters.emplace_back(psd);
+                out_mod.parameters.emplace_back(psd);
             }
         }
 
@@ -1244,7 +1242,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
             csd.type = CallSlotType::CALLER;
             csd.necessity = caller_slot->GetNecessity();
 
-            mod.callslots[csd.type].emplace_back(csd);
+            out_mod.callslots[csd.type].emplace_back(csd);
         }
 
         // CalleeSlots
@@ -1256,7 +1254,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
             csd.type = CallSlotType::CALLEE;
             csd.necessity = callee_slot->GetNecessity();
 
-            mod.callslots[csd.type].emplace_back(csd);
+            out_mod.callslots[csd.type].emplace_back(csd);
         }
 
         paramSlots.clear();
@@ -1284,18 +1282,17 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
 }
 
 
-bool megamol::gui::GraphCollection::get_call_stock_data(
-    Call::StockCall& call, std::shared_ptr<const megamol::core::factories::CallDescription> call_desc) {
+bool megamol::gui::GraphCollection::get_call_stock_data(Call::StockCall& out_call,
+    std::shared_ptr<const megamol::core::factories::CallDescription> call_desc, const std::string& plugin_name) {
 
     try {
-        call.class_name = std::string(call_desc->ClassName());
-        call.description = std::string(call_desc->Description());
-        call.functions.clear();
+        out_call.class_name = std::string(call_desc->ClassName());
+        out_call.description = std::string(call_desc->Description());
+        out_call.functions.clear();
         for (unsigned int i = 0; i < call_desc->FunctionCount(); ++i) {
-            call.functions.emplace_back(call_desc->FunctionName(i));
+            out_call.functions.emplace_back(call_desc->FunctionName(i));
         }
-        /// call.plugin_name is not (yet) available in call_desc (set from AbstractAssemblyInstance or
-        /// AbstractPluginInstance).
+        out_call.plugin_name = plugin_name;
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

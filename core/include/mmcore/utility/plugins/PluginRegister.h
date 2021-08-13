@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2020-2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #ifndef MEGAMOLCORE_UTILITY_PLUGINS_PLUGINREGISTER_H_INCLUDED
 #define MEGAMOLCORE_UTILITY_PLUGINS_PLUGINREGISTER_H_INCLUDED
 
@@ -21,7 +27,7 @@ namespace megamol::core::utility::plugins {
         PluginRegister& operator=(PluginRegister&&) = delete;
 
         template<class C>
-        static bool add() {
+        static bool add() noexcept {
             plugins_.emplace_back(std::make_shared<PluginDescriptor<C>>());
             return true;
         }
@@ -33,9 +39,15 @@ namespace megamol::core::utility::plugins {
             return plugins_[i];
         }
 
-        [[nodiscard]] static auto empty() { return plugins_.empty(); }
-        [[nodiscard]] static auto size() { return plugins_.size(); }
-        [[nodiscard]] static const auto& getAll() { return plugins_; }
+        [[nodiscard]] static auto empty() {
+            return plugins_.empty();
+        }
+        [[nodiscard]] static auto size() {
+            return plugins_.size();
+        }
+        [[nodiscard]] static const auto& getAll() {
+            return plugins_;
+        }
 
     private:
         static inline std::vector<std::shared_ptr<AbstractPluginDescriptor>> plugins_;

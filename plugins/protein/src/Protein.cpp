@@ -1,13 +1,10 @@
-/*
- * Protein.cpp
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 // jobs
@@ -18,14 +15,14 @@
 #include "CartoonTessellationRenderer2000GT.h"
 #include "GLSLVolumeRenderer.h"
 #include "MoleculeCartoonRenderer.h"
+#include "MoleculeSESRenderer.h"
 #include "SecPlaneRenderer.h"
 #include "SimpleMoleculeRenderer.h"
 #include "SolPathRenderer.h"
 #include "SolventVolumeRenderer.h"
+#include "SombreroMeshRenderer.h"
 #include "UnstructuredGridRenderer.h"
 #include "VariantMatchRenderer.h"
-#include "SombreroMeshRenderer.h"
-#include "MoleculeSESRenderer.h"
 
 // 2D renderers
 #include "Diagram2DRenderer.h"
@@ -74,48 +71,34 @@
 #include "ColorModule.h"
 #include "HydroBondFilter.h"
 #include "IntSelection.h"
-#include "MSMSMeshLoader.h"
+#include "MSMSCavityFinder.h"
 #include "MSMSGenus0Generator.h"
+#include "MSMSMeshLoader.h"
 #include "MolecularNeighborhood.h"
 #include "MultiParticleDataFilter.h"
 #include "PDBInterpolator.h"
 #include "ProteinAligner.h"
 #include "ProteinExploder.h"
 #include "SolventCounter.h"
-#include "MSMSCavityFinder.h"
 #include "TunnelCutter.h"
 
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
-
 #include "vislib/Trace.h"
-#include "mmcore/utility/log/Log.h"
 
 namespace megamol::protein {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class ProteinPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(ProteinPluginInstance)
+
 public:
-    /** ctor */
-    plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
+    ProteinPluginInstance(void)
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "Protein", "Plugin for protein rendering (SFB716 D4)"){};
 
-              /* machine-readable plugin assembly name */
-              "Protein",
+    ~ProteinPluginInstance() override = default;
 
-              /* human-readable plugin description */
-              "Plugin for protein rendering (SFB716 D4)"){
+    // Registers modules and calls
+    void registerClasses() override {
 
-              // here we could perform addition initialization
-          };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-
-        // register modules here:
+        // register modules
 #ifdef WITH_OPENHAPTICS
         this->module_descriptions.RegisterAutoDescription<megamol::protein::HapticsMoleculeRenderer>();
 #endif // WITH_OPENHAPTICS
@@ -174,7 +157,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SombreroMeshRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeSESRenderer>();
 
-        // register calls here:
+        // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::CallProteinVolumeData>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein::SphereDataCall>();
