@@ -767,8 +767,8 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
 
     // get camera information
     camera = call.GetCamera();
-    glm::mat4 viewTemp = camera.getViewMatrix();
-    glm::mat4 projTemp = camera.getProjectionMatrix();
+    glm::mat4 view = camera.getViewMatrix();
+    glm::mat4 proj = camera.getProjectionMatrix();
 
     // get framebuffer information
     fbo = call.GetFramebuffer();
@@ -912,16 +912,15 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
+    glLoadIdentity();
+    glLoadMatrixf(glm::value_ptr(view));
 
-    // compute scale factor and scale world
-    float scale;
-    if (!vislib::math::IsEqual(mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    glScalef(scale, scale, scale);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glLoadMatrixf(glm::value_ptr(proj));
 
     glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
@@ -995,6 +994,8 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
     delete[] pos0;
