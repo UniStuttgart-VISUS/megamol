@@ -206,7 +206,7 @@ void InfovisAmortizedRenderer::setupBuffers() {
     auto err = glGetError();
     if (err != GL_NO_ERROR) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("GL_ERROR in InfovisAmortizedRenderer: " + err);
-    }  
+    }
 }
 
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam) {
@@ -234,7 +234,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
         const float tbl[4] = {0.25 + (frametype * 0.5), 0.25, 0.75 - (frametype * 0.5), 0.75};
         glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 2, tbl);
-        //glowlFBO->bind();   
+        // glowlFBO->bind();
 
     } else {
         glDisable(GL_MULTISAMPLE);
@@ -304,7 +304,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets[frametype].x,
             -intrinsics.frustrum_height * camOffsets[frametype].y, 0.0);
 
-        //glm::mat4 jit = glm::translate(glm::mat4(1.0f), adj_offset);
+        // glm::mat4 jit = glm::translate(glm::mat4(1.0f), adj_offset);
         movePush = lastPmvm * inverse(pmvm);
         // movePush = glm::mat4(1.0);
         lastPmvm = pmvm;
