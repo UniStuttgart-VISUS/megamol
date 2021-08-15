@@ -695,48 +695,6 @@ bool MoleculeCartoonRenderer::GetExtents(view::CallRender3DGL& call) {
         }
     }
 
-
-    /*
-    protein::CallProteinData *protein = this->molDataCallerSlot.CallAs<protein::CallProteinData>();
-    if (protein == NULL) return false;
-    // decide to use already loaded frame request from CallFrame or 'normal' rendering
-    if (this->callFrameCalleeSlot.GetStatus() == AbstractSlot::STATUS_CONNECTED) {
-        if (!this->renderRMSData) return false;
-    } else {
-        if (!(*protein)()) return false;
-    }
-
-    float scale, xoff, yoff, zoff;
-    vislib::math::Point<float, 3> bbc = protein->BoundingBox().CalcCenter();
-    xoff = -bbc.X();
-    yoff = -bbc.Y();
-    zoff = -bbc.Z();
-    scale = 2.0f / vislib::math::Max(vislib::math::Max(protein->BoundingBox().Width(),
-        protein->BoundingBox().Height()), protein->BoundingBox().Depth());
-
-    BoundingBoxes_2 &bbox = cr3d->AccessBoundingBoxes();
-    bbox.SetObjectSpaceBBox(protein->BoundingBox());
-    bbox.SetWorldSpaceBBox(
-        (protein->BoundingBox().Left() + xoff) * scale,
-        (protein->BoundingBox().Bottom() + yoff) * scale,
-        (protein->BoundingBox().Back() + zoff) * scale,
-        (protein->BoundingBox().Right() + xoff) * scale,
-        (protein->BoundingBox().Top() + yoff) * scale,
-        (protein->BoundingBox().Front() + zoff) * scale);
-    bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
-    bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
-
-    // get the pointer to CallRender3D (solvent renderer)
-    view::CallRender3D *solrencr3d = this->solventRendererCallerSlot.CallAs<view::CallRender3D>();
-    vislib::math::Point<float, 3> solrenbbc;
-    if( solrencr3d ) {
-        (*solrencr3d)(core::view::AbstractCallRender::FnGetExtents); // GetExtents
-        BoundingBoxes_2 &solrenbb = solrencr3d->AccessBoundingBoxes();
-        //this->solrenScale =  solrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
-        //this->solrenTranslate = ( solrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
-    }
-    */
-
     return true;
 }
 
@@ -923,16 +881,6 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         scale = 1.0f;
     }
     glScalef( scale, scale, scale);
-
-    //float scale, xoff, yoff, zoff;
-    //vislib::math::Point<float, 3> bbc = protein->BoundingBox().CalcCenter();
-    //xoff = -bbc.X();
-    //yoff = -bbc.Y();
-    //zoff = -bbc.Z();
-    //scale = 2.0f / vislib::math::Max(vislib::math::Max(protein->BoundingBox().Width(),
-    //    protein->BoundingBox().Height()), protein->BoundingBox().Depth());
-    //glScalef(scale, scale, scale);
-    //glTranslatef(xoff, yoff, zoff);
 
     glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
@@ -1176,9 +1124,6 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
                         continue;
                     idx = aminoacid->CAlphaIndex();
                     // get the coordinates of the C-alpha atom
-                    //vecCA.SetX( mol->AtomPositions()[idx*3+0]);
-                    //vecCA.SetY( mol->AtomPositions()[idx*3+1]);
-                    //vecCA.SetZ( mol->AtomPositions()[idx*3+2]);
                     vecCA.SetX( atomPos[idx*3+0]);
                     vecCA.SetY( atomPos[idx*3+1]);
                     vecCA.SetZ( atomPos[idx*3+2]);
@@ -1194,9 +1139,6 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
                     // get the index of the C atom
                     idx = aminoacid->CCarbIndex();
                     // get the coordinates of the C-alpha atom
-                    //vecC.SetX( mol->AtomPositions()[idx*3+0]);
-                    //vecC.SetY( mol->AtomPositions()[idx*3+1]);
-                    //vecC.SetZ( mol->AtomPositions()[idx*3+2]);
                     vecC.SetX( atomPos[idx*3+0]);
                     vecC.SetY( atomPos[idx*3+1]);
                     vecC.SetZ( atomPos[idx*3+2]);
@@ -1204,9 +1146,6 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
                     // get the index of the O atom
                     idx = aminoacid->OIndex();
                     // get the coordinates of the C-alpha atom
-                    //vecO.SetX( mol->AtomPositions()[idx*3+0]);
-                    //vecO.SetY( mol->AtomPositions()[idx*3+1]);
-                    //vecO.SetZ( mol->AtomPositions()[idx*3+2]);
                     vecO.SetX( atomPos[idx*3+0]);
                     vecO.SetY( atomPos[idx*3+1]);
                     vecO.SetZ( atomPos[idx*3+2]);
@@ -2582,151 +2521,6 @@ void MoleculeCartoonRenderer::RenderCartoonGPU ( const MolecularDataCall *mol, f
             }
         }
     }
-
-    /*
-    for ( cntCha = 0; cntCha < prot->ProteinChainCount(); ++cntCha )
-    {
-        // do nothing if the current chain has too few residues
-        if ( prot->ProteinChain ( cntCha ).AminoAcidCount() < 4 )
-            continue;
-        // set first sec struct elem active
-        cntSec = 0;
-
-        for ( cntRes = 0; cntRes < prot->ProteinChain ( cntCha ).AminoAcidCount() - 4; ++cntRes )
-        {
-            factor = 0.0f;
-
-            // search for correct secondary structure element
-            idx1 = prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].FirstAminoAcidIndex();
-            idx2 = idx1 + prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].AminoAcidCount();
-            // just for security, this should never happen!
-            if ( ( cntRes + 3 ) < idx1 )
-            {
-                cntSec = 0;
-                idx2 = prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].AtomCount();
-            }
-            while ( ( cntRes + 3 ) > idx2 )
-            {
-                cntSec++;
-                idx1 = prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].FirstAminoAcidIndex();
-                idx2 = idx1 + prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].AtomCount();
-            }
-
-            if ( prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].Type() ==
-                CallProteinData::SecStructure::TYPE_HELIX )
-                this->helixSplineShader.Enable();
-            else if ( prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].Type() ==
-                  CallProteinData::SecStructure::TYPE_SHEET )
-            {
-                this->arrowSplineShader.Enable();
-                if ( ( cntRes + 3 ) == idx2 )
-                    factor = 1.0f;
-            }
-            else
-                this->tubeSplineShader.Enable();
-
-            glBegin ( GL_LINES_ADJACENCY_EXT );
-
-            // vertex 1
-            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].CAlphaIndex();
-            v1.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
-            v1.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
-            v1.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
-            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].OIndex();
-            n1.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
-            n1.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
-            n1.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
-            n1 = n1 - v1;
-            n1.Normalise();
-            if ( cntRes > 0 && n3.Dot ( n1 ) < 0.0f )
-                flip = -1.0;
-            else
-                flip = 1.0;
-            n1 *= flip;
-            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].CAlphaIndex();
-            glSecondaryColor3ubv ( GetProteinAtomColor ( idx1 ) );
-            glColor3fv ( n1.PeekComponents() );
-            glVertex3fv ( v1.PeekComponents() );
-
-            // vertex 2
-            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].CAlphaIndex();
-            v2.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
-            v2.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
-            v2.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
-            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].OIndex();
-            n2.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
-            n2.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
-            n2.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
-            n2 = n2 - v2;
-            n2.Normalise();
-            if ( n1.Dot ( n2 ) < 0.0f )
-                flip = -1.0;
-            else
-                flip = 1.0;
-            n2 *= flip;
-            glSecondaryColor3f ( 0.2f, 1.0f, factor );
-            glColor3fv ( n2.PeekComponents() );
-            glVertex3fv ( v2.PeekComponents() );
-
-            // vertex 3
-            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].CAlphaIndex();
-            v3.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
-            v3.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
-            v3.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
-            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].OIndex();
-            n3.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
-            n3.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
-            n3.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
-            n3 = n3 - v3;
-            n3.Normalise();
-            if ( n2.Dot ( n3 ) < 0.0f )
-                flip = -1.0;
-            else
-                flip = 1.0;
-            n3 *= flip;
-            glColor3fv ( n3.PeekComponents() );
-            glVertex3fv ( v3.PeekComponents() );
-
-            // vertex 4
-            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].CAlphaIndex();
-            v4.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
-            v4.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
-            v4.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
-            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].OIndex();
-            n4.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
-            n4.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
-            n4.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
-            n4 = n4 - v4;
-            n4.Normalise();
-            if ( n3.Dot ( n4 ) < 0.0f )
-                flip = -1.0;
-            else
-                flip = 1.0;
-            n4 *= flip;
-            glColor3fv ( n4.PeekComponents() );
-            glVertex3fv ( v4.PeekComponents() );
-
-            // store last vertex for comparison (flip)
-            n3 = n1;
-
-            glEnd();
-
-            this->helixSplineShader.Disable();
-            this->arrowSplineShader.Disable();
-            this->tubeSplineShader.Disable();
-        }
-        this->tubeSplineShader.Disable();
-    }  
-    */
     glDisable ( GL_COLOR_MATERIAL );
 }
 
@@ -2804,9 +2598,6 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall
                         continue;
                     idx = aminoacid->CAlphaIndex();
                     // get the coordinates of the C-alpha atom
-                    //vecCA.SetX( mol->AtomPositions()[idx*3+0]);
-                    //vecCA.SetY( mol->AtomPositions()[idx*3+1]);
-                    //vecCA.SetZ( mol->AtomPositions()[idx*3+2]);
                     vecCA.SetX( atomPos[idx*3+0]);
                     vecCA.SetY( atomPos[idx*3+1]);
                     vecCA.SetZ( atomPos[idx*3+2]);
@@ -2822,9 +2613,6 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall
                     // get the index of the C atom
                     idx = aminoacid->CCarbIndex();
                     // get the coordinates of the C-alpha atom
-                    //vecC.SetX( mol->AtomPositions()[idx*3+0]);
-                    //vecC.SetY( mol->AtomPositions()[idx*3+1]);
-                    //vecC.SetZ( mol->AtomPositions()[idx*3+2]);
                     vecC.SetX( atomPos[idx*3+0]);
                     vecC.SetY( atomPos[idx*3+1]);
                     vecC.SetZ( atomPos[idx*3+2]);
@@ -2832,9 +2620,6 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall
                     // get the index of the O atom
                     idx = aminoacid->OIndex();
                     // get the coordinates of the C-alpha atom
-                    //vecO.SetX( mol->AtomPositions()[idx*3+0]);
-                    //vecO.SetY( mol->AtomPositions()[idx*3+1]);
-                    //vecO.SetZ( mol->AtomPositions()[idx*3+2]);
                     vecO.SetX( atomPos[idx*3+0]);
                     vecO.SetY( atomPos[idx*3+1]);
                     vecO.SetZ( atomPos[idx*3+2]);
@@ -2890,37 +2675,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall
             for( unsigned int j = 2; j < bSplineCoords[i].size()-1; j++ ) {
                 start = end = -1.0f;
                 f1 = f2 = 1.0f;
-//                // set end caps --> if it is the first segment and the last sec struct was different
-//                if( j/this->numberOfSplineSeg > 0 ) {
-//                    if( bSplineSecStruct[i][j/this->numberOfSplineSeg] != bSplineSecStruct[i][j/this->numberOfSplineSeg-1] &&
-//                        j%this->numberOfSplineSeg == 0 )
-//                        end = 1.0f;
-//                }
-//                else if( j == 2 )
-//                        end = 1.0f;
-                // set start caps --> if its the last segment and the next sec struct is different
-//                if( j/this->numberOfSplineSeg < bSplineSecStruct[i].size()-1 ) {
-//                    if( bSplineSecStruct[i][j/this->numberOfSplineSeg] != bSplineSecStruct[i][j/this->numberOfSplineSeg+1] &&
-//                        j%this->numberOfSplineSeg == this->numberOfSplineSeg-1 )
-//                        start = 1.0f;
-//                }
-//                else if( j == bSplineCoords[i].size()-2 )
-//                    start = 1.0f;
-                // set inParams --> set type and stretch factors of arrow head segments for the sheet
-//                if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_SHEET ) {
-//                    type = 1.0f;
-//                    if( bSplineSecStruct[i][j/this->numberOfSplineSeg+1] != MolecularDataCall::SecStructure::TYPE_SHEET )
-//                    {
-//                        if(  j%this->numberOfSplineSeg == 0 )
-//                            end = 1.0f;
-//                        f1 = 1.0f - float(j%this->numberOfSplineSeg)/float(this->numberOfSplineSeg-1)+1.0f/float(this->numberOfSplineSeg-1)+0.2f;
-//                        f2 = 1.0f - float(j%this->numberOfSplineSeg)/float(this->numberOfSplineSeg-1)+0.2f;
-//                    }
-//                }
-//                else if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_HELIX )
-//                        type = 2.0f;
-//                else
-//                        type = 0.0f;
+
                 // get the colors
                 if( this->smoothCartoonColoringMode && j/this->numberOfSplineSeg > 0 ) {
                     col1 = cartoonColor[i][j/this->numberOfSplineSeg]*float(j%this->numberOfSplineSeg)/float(this->numberOfSplineSeg-1)
@@ -2935,84 +2690,6 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall
                     col2 = cartoonColor[i][j/this->numberOfSplineSeg];
                 }
 
-                // store information in the apropriate arrays
-//                if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_SHEET ) {
-//                    this->colorsParamsArrow[counterArrow*6*3+0] = col1.GetX();
-//                    this->colorsParamsArrow[counterArrow*6*3+1] = col1.GetY();
-//                    this->colorsParamsArrow[counterArrow*6*3+2] = col1.GetZ();
-//                    this->colorsParamsArrow[counterArrow*6*3+3] = this->radiusCartoon;
-//                    this->colorsParamsArrow[counterArrow*6*3+4] = f1;
-//                    this->colorsParamsArrow[counterArrow*6*3+5] = f2;
-//                    this->colorsParamsArrow[counterArrow*6*3+6] = type;
-//                    this->colorsParamsArrow[counterArrow*6*3+7] = start;
-//                    this->colorsParamsArrow[counterArrow*6*3+8] = end;
-//                    this->colorsParamsArrow[counterArrow*6*3+9]  = col2.GetX();
-//                    this->colorsParamsArrow[counterArrow*6*3+10] = col2.GetY();
-//                    this->colorsParamsArrow[counterArrow*6*3+11] = col2.GetZ();
-//                    this->colorsParamsArrow[counterArrow*6*3+12] = 0.0f;
-//                    this->colorsParamsArrow[counterArrow*6*3+13] = 0.0f;
-//                    this->colorsParamsArrow[counterArrow*6*3+14] = 0.0f;
-//                    this->colorsParamsArrow[counterArrow*6*3+15] = 0.0f;
-//                    this->colorsParamsArrow[counterArrow*6*3+16] = 0.0f;
-//                    this->colorsParamsArrow[counterArrow*6*3+17] = 0.0f;
-//                    this->vertArrow[counterArrow*6*3+0] = bSplineCoords[i][j-2].GetX();
-//                    this->vertArrow[counterArrow*6*3+1] = bSplineCoords[i][j-2].GetY();
-//                    this->vertArrow[counterArrow*6*3+2] = bSplineCoords[i][j-2].GetZ();
-//                    this->vertArrow[counterArrow*6*3+3] = bSplineCoordsDir[i][j-1].GetX();
-//                    this->vertArrow[counterArrow*6*3+4] = bSplineCoordsDir[i][j-1].GetY();
-//                    this->vertArrow[counterArrow*6*3+5] = bSplineCoordsDir[i][j-1].GetZ();
-//                    this->vertArrow[counterArrow*6*3+6] = bSplineCoords[i][j-1].GetX();
-//                    this->vertArrow[counterArrow*6*3+7] = bSplineCoords[i][j-1].GetY();
-//                    this->vertArrow[counterArrow*6*3+8] = bSplineCoords[i][j-1].GetZ();
-//                    this->vertArrow[counterArrow*6*3+9] = bSplineCoords[i][j].GetX();
-//                    this->vertArrow[counterArrow*6*3+10] = bSplineCoords[i][j].GetY();
-//                    this->vertArrow[counterArrow*6*3+11] = bSplineCoords[i][j].GetZ();
-//                    this->vertArrow[counterArrow*6*3+12] = bSplineCoordsDir[i][j].GetX();
-//                    this->vertArrow[counterArrow*6*3+13] = bSplineCoordsDir[i][j].GetY();
-//                    this->vertArrow[counterArrow*6*3+14] = bSplineCoordsDir[i][j].GetZ();
-//                    this->vertArrow[counterArrow*6*3+15] = bSplineCoords[i][j+1].GetX();
-//                    this->vertArrow[counterArrow*6*3+16] = bSplineCoords[i][j+1].GetY();
-//                    this->vertArrow[counterArrow*6*3+17] = bSplineCoords[i][j+1].GetZ();
-//                    counterArrow++;
-//                } else if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_HELIX ) {
-//                    this->colorsParamsHelix[counterHelix*6*3+0] = col1.GetX();
-//                    this->colorsParamsHelix[counterHelix*6*3+1] = col1.GetY();
-//                    this->colorsParamsHelix[counterHelix*6*3+2] = col1.GetZ();
-//                    this->colorsParamsHelix[counterHelix*6*3+3] = this->radiusCartoon;
-//                    this->colorsParamsHelix[counterHelix*6*3+4] = f1;
-//                    this->colorsParamsHelix[counterHelix*6*3+5] = f2;
-//                    this->colorsParamsHelix[counterHelix*6*3+6] = type;
-//                    this->colorsParamsHelix[counterHelix*6*3+7] = start;
-//                    this->colorsParamsHelix[counterHelix*6*3+8] = end;
-//                    this->colorsParamsHelix[counterHelix*6*3+9]  = col2.GetX();
-//                    this->colorsParamsHelix[counterHelix*6*3+10] = col2.GetY();
-//                    this->colorsParamsHelix[counterHelix*6*3+11] = col2.GetZ();
-//                    this->colorsParamsHelix[counterHelix*6*3+12] = 0.0f;
-//                    this->colorsParamsHelix[counterHelix*6*3+13] = 0.0f;
-//                    this->colorsParamsHelix[counterHelix*6*3+14] = 0.0f;
-//                    this->colorsParamsHelix[counterHelix*6*3+15] = 0.0f;
-//                    this->colorsParamsHelix[counterHelix*6*3+16] = 0.0f;
-//                    this->colorsParamsHelix[counterHelix*6*3+17] = 0.0f;
-//                    this->vertHelix[counterHelix*6*3+0] = bSplineCoords[i][j-2].GetX();
-//                    this->vertHelix[counterHelix*6*3+1] = bSplineCoords[i][j-2].GetY();
-//                    this->vertHelix[counterHelix*6*3+2] = bSplineCoords[i][j-2].GetZ();
-//                    this->vertHelix[counterHelix*6*3+3] = bSplineCoordsDir[i][j-1].GetX();
-//                    this->vertHelix[counterHelix*6*3+4] = bSplineCoordsDir[i][j-1].GetY();
-//                    this->vertHelix[counterHelix*6*3+5] = bSplineCoordsDir[i][j-1].GetZ();
-//                    this->vertHelix[counterHelix*6*3+6] = bSplineCoords[i][j-1].GetX();
-//                    this->vertHelix[counterHelix*6*3+7] = bSplineCoords[i][j-1].GetY();
-//                    this->vertHelix[counterHelix*6*3+8] = bSplineCoords[i][j-1].GetZ();
-//                    this->vertHelix[counterHelix*6*3+9] = bSplineCoords[i][j].GetX();
-//                    this->vertHelix[counterHelix*6*3+10] = bSplineCoords[i][j].GetY();
-//                    this->vertHelix[counterHelix*6*3+11] = bSplineCoords[i][j].GetZ();
-//                    this->vertHelix[counterHelix*6*3+12] = bSplineCoordsDir[i][j].GetX();
-//                    this->vertHelix[counterHelix*6*3+13] = bSplineCoordsDir[i][j].GetY();
-//                    this->vertHelix[counterHelix*6*3+14] = bSplineCoordsDir[i][j].GetZ();
-//                    this->vertHelix[counterHelix*6*3+15] = bSplineCoords[i][j+1].GetX();
-//                    this->vertHelix[counterHelix*6*3+16] = bSplineCoords[i][j+1].GetY();
-//                    this->vertHelix[counterHelix*6*3+17] = bSplineCoords[i][j+1].GetZ();
-//                    counterHelix++;
-//                } else {
                     this->colorsParamsTube[counterTube*6*3+0] = col1.GetX();
                     this->colorsParamsTube[counterTube*6*3+1] = col1.GetY();
                     this->colorsParamsTube[counterTube*6*3+2] = col1.GetZ();
@@ -3098,62 +2775,6 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall
     else {
         this->tubeORShader.Disable();
     }
-
-//    // enable arrow shader
-//    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-//        if( this->currentRenderMode == CARTOON )
-//            this->arrowShader.Enable();
-//        else
-//            this->arrowSimpleShader.Enable();
-//    }
-//    else {
-//        this->arrowORShader.Enable();
-//        glUniform2fARB(this->arrowORShader.ParameterLocation("zValues"),
-//            cameraInfo->NearClip(), cameraInfo->FarClip());
-//        glUniform2fARB(this->arrowORShader.ParameterLocation("winSize"),
-//            curVP[2], curVP[3]);
-//    }
-//    glVertexPointer( 3, GL_FLOAT, 0, this->vertArrow);
-//    glColorPointer( 3, GL_FLOAT, 0, this->colorsParamsArrow);
-//    glDrawArrays( GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountArrow*6);
-//    // disable arrow shader
-//    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-//        if( this->currentRenderMode == CARTOON )
-//            this->arrowShader.Disable();
-//        else
-//            this->arrowSimpleShader.Disable();
-//    }
-//    else {
-//        this->arrowORShader.Disable();
-//    }
-
-//    // enable helix shader
-//    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-//        if( this->currentRenderMode == CARTOON )
-//            this->helixShader.Enable();
-//        else
-//            this->helixSimpleShader.Enable();
-//    }
-//    else {
-//        this->helixORShader.Enable();
-//        glUniform2fARB(this->helixORShader.ParameterLocation("zValues"),
-//            cameraInfo->NearClip(), cameraInfo->FarClip());
-//        glUniform2fARB(this->helixORShader.ParameterLocation("winSize"),
-//            curVP[2], curVP[3]);
-//    }
-//    glVertexPointer( 3, GL_FLOAT, 0, this->vertHelix);
-//    glColorPointer( 3, GL_FLOAT, 0, this->colorsParamsHelix);
-//    glDrawArrays( GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountHelix*6);
-//    // disable helix shader
-//    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-//        if( this->currentRenderMode == CARTOON )
-//            this->helixShader.Disable();
-//        else
-//            this->helixSimpleShader.Disable();
-//    }
-//    else {
-//        this->helixORShader.Disable();
-//    }
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
