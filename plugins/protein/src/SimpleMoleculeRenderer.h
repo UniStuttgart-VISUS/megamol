@@ -219,6 +219,8 @@ namespace protein {
         megamol::core::CallerSlot molDataCallerSlot;
         /** BindingSiteCall caller slot */
         megamol::core::CallerSlot bsDataCallerSlot;
+        /** Slot to get the lights */
+        megamol::core::CallerSlot getLightsSlot;
 
         /** camera information */
         core::view::Camera cam;

@@ -22,6 +22,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "mmcore/view/light/DistantLight.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -45,6 +46,7 @@ using namespace megamol::protein_calls;
 MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
         : Renderer3DModuleGL()
         , molDataCallerSlot("getdata", "Connects the protein rendering with protein data storage")
+        , getLightsSlot("getlights", "Connects the protein rendering with light sources")
         , molRendererCallerSlot("renderMolecule", "Connects the cartoon rendering with another molecule renderer")
         , molRendererORCallerSlot("renderMoleculeOR", "Connects the cartoon rendering with another molecule renderer")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
@@ -69,7 +71,12 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
         , currentFrameId(0)
         , atomCount(0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
+    this->molDataCallerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->molDataCallerSlot);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->getLightsSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
+    this->MakeSlotAvailable(&this->getLightsSlot);
 
     this->molRendererCallerSlot.SetCompatibleCall<view::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->molRendererCallerSlot);
