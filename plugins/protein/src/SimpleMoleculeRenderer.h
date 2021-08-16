@@ -11,16 +11,16 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "protein_calls/MolecularDataCall.h"
-#include "protein_calls/BindingSiteCall.h"
 #include "Color.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
+#include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
@@ -32,16 +32,15 @@ namespace protein {
 
     class SimpleMoleculeRenderer : public megamol::core::view::Renderer3DModuleGL {
     public:
-
         /** The names of the render modes */
         enum RenderMode {
-            LINES            = 0,
-            STICK            = 1,
-            BALL_AND_STICK   = 2,
-            SPACEFILLING     = 3,
-            SAS              = 4,
-            LINES_FILTER     = 5,
-            STICK_FILTER     = 6,
+            LINES = 0,
+            STICK = 1,
+            BALL_AND_STICK = 2,
+            SPACEFILLING = 3,
+            SAS = 4,
+            LINES_FILTER = 5,
+            STICK_FILTER = 6,
             SPACEFILL_FILTER = 7
         };
 
@@ -50,8 +49,7 @@ namespace protein {
          *
          * @return The name of this module.
          */
-        static const char *ClassName(void)
-        {
+        static const char* ClassName(void) {
             return "SimpleMoleculeRenderer";
         }
 
@@ -60,8 +58,7 @@ namespace protein {
          *
          * @return A human readable description of this module.
          */
-        static const char *Description(void)
-        {
+        static const char* Description(void) {
             return "Offers molecule renderings.";
         }
 
@@ -70,8 +67,7 @@ namespace protein {
          *
          * @return 'true' if the module is available, 'false' otherwise.
          */
-        static bool IsAvailable(void)
-        {
+        static bool IsAvailable(void) {
             return true;
         }
 
@@ -82,7 +78,6 @@ namespace protein {
         virtual ~SimpleMoleculeRenderer(void);
 
     protected:
-
         /**
          * Implementation of 'Create'.
          *
@@ -96,10 +91,9 @@ namespace protein {
         virtual void release(void);
 
     private:
-
-       /**********************************************************************
-        * 'render'-functions
-        **********************************************************************/
+        /**********************************************************************
+         * 'render'-functions
+         **********************************************************************/
 
         /**
          * The get extents callback. The module should set the members of
@@ -110,7 +104,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( core::view::CallRender3DGL& call);
+        virtual bool GetExtents(core::view::CallRender3DGL& call);
 
         /**
          * The Open GL Render callback.
@@ -126,7 +120,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderLines(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderLines(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Render the molecular data in stick mode.
@@ -134,7 +128,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderStick(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderStick(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Render the molecular data in ball-and-stick mode.
@@ -142,7 +136,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderBallAndStick(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderBallAndStick(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Render the molecular data in ball-and-stick mode.
@@ -150,7 +144,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderStickClipPlane(megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderStickClipPlane(megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Render the molecular data in spacefilling mode.
@@ -158,7 +152,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderSpacefilling(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderSpacefilling(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Render the molecular data in spacefilling mode.
@@ -166,7 +160,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderSpacefillingClipPlane(megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderSpacefillingClipPlane(megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Render the molecular data in solvent accessible surface mode.
@@ -174,7 +168,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderSAS(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderSAS(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Test the filter module.
@@ -182,7 +176,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderPointsFilter(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderPointsFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Test the filter module.
@@ -190,7 +184,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderLinesFilter(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderLinesFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Render the molecular data in stick mode.
@@ -198,7 +192,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderStickFilter(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderStickFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Render the molecular data in spacefilling mode.
@@ -206,20 +200,21 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderSpacefillingFilter(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
+        void RenderSpacefillingFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Update all parameter slots.
          *
          * @param mol   Pointer to the data call.
          */
-		void UpdateParameters(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs = 0);
+        void UpdateParameters(
+            const megamol::protein_calls::MolecularDataCall* mol, const protein_calls::BindingSiteCall* bs = 0);
 
 
         /**********************************************************************
          * variables
          **********************************************************************/
-        
+
         /** MolecularDataCall caller slot */
         megamol::core::CallerSlot molDataCallerSlot;
         /** BindingSiteCall caller slot */
@@ -272,15 +267,15 @@ namespace protein {
         megamol::core::param::ParamSlot clipPlaneTimeOffsetParam;
         /**  */
         megamol::core::param::ParamSlot clipPlaneDurationParam;
-		/** Toggle use of neighborhood colors for own color */
-		megamol::core::param::ParamSlot useNeighborColors;
+        /** Toggle use of neighborhood colors for own color */
+        megamol::core::param::ParamSlot useNeighborColors;
         float currentZClipPos;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
         vislib::graphics::gl::GLSLShader sphereShaderOR;
         vislib::graphics::gl::GLSLGeometryShader sphereShaderGeom;
-		vislib::graphics::gl::GLSLGeometryShader sphereShaderGeomOR;
+        vislib::graphics::gl::GLSLGeometryShader sphereShaderGeomOR;
         vislib::graphics::gl::GLSLShader sphereClipPlaneShader;
         /** shader for the cylinders (raycasting view) */
         vislib::graphics::gl::GLSLShader cylinderShader;
@@ -306,9 +301,9 @@ namespace protein {
         Color::ColoringMode currentColoringMode1;
 
         /** The color lookup table (for chains, amino acids,...) */
-        vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
+        vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
         /** The color lookup table which stores the rainbow colors */
-        vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
+        vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
 
         /** The atom color table for rendering */
         vislib::Array<float> atomColorTable;
@@ -334,8 +329,8 @@ namespace protein {
         // the list of molecular indices
         vislib::Array<vislib::StringA> molIdxList;
 
-		/** The hash of the lastly rendered molecular data call*/
-		SIZE_T lastDataHash;
+        /** The hash of the lastly rendered molecular data call*/
+        SIZE_T lastDataHash;
     };
 
 
