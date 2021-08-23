@@ -9,5 +9,6 @@ float ScreenSpaceToViewSpaceDepth( float screenDepth )
     // depthLinearizeMul = ( cameraClipFar * cameraClipNear) / ( cameraClipFar - cameraClipNear );
     // depthLinearizeAdd = cameraClipFar / ( cameraClipFar - cameraClipNear );
 
-    return depthLinearizeMul / ( depthLinearizeAdd - screenDepth );
+    //return depthLinearizeMul / ( depthLinearizeAdd - screenDepth );
+    return -depthLinearizeMul / ( 2.0 * screenDepth - 1 + depthLinearizeAdd );
 }

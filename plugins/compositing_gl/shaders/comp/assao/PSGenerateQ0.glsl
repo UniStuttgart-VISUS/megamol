@@ -8,7 +8,8 @@ void main()
     float outShadowTerm;
     float outWeight;
     vec4  outEdges;
-    GenerateSSAOShadowsInternal( outShadowTerm, outEdges, outWeight, inPos.xy/*, inUV*/, 0, false );
+    vec3 normal;
+    GenerateSSAOShadowsInternal( outShadowTerm, outEdges, outWeight, inPos.xy/*, inUV*/, 0, false, normal );
 
     vec2 out0 = vec2(0.f);
     out0.x = outShadowTerm;

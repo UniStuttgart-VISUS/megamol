@@ -42,12 +42,19 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     uvec2 fullResCoord = SVPosui * 2 + g_ASSAOConsts.PerPassFullResCoordOffset.xy;
     vec3 pixelNormal = LoadNormal( ivec2(fullResCoord) );
 	//vec3 pixelNormal = texelFetch(g_NormalmapSource, ivec2(fullResCoord), 0 ).xyz;
-    pixelNormal = transpose(inverse(mat3(g_ASSAOConsts.viewMX))) * (pixelNormal);
+    //pixelNormal = transpose(inverse(mat3(g_ASSAOConsts.viewMX))) * (pixelNormal);
 	normal = pixelNormal;
     //pixelNormal = -pixelNormal;
 
-    const vec2 pixelDirRBViewspaceSizeAtCenterZ = pixCenterPos.z * g_ASSAOConsts.NDCToViewMul * g_ASSAOConsts.Viewport2xPixelSize;  // optimized approximation of:  vec2 pixelDirRBViewspaceSizeAtCenterZ = NDCToViewspace( normalizedScreenPos.xy + g_ASSAOConsts.ViewportPixelSize.xy, pixCenterPos.z ).xy - pixCenterPos.xy;
+    // optimized approximation of:
+    // vec2 pixelDirRBViewspaceSizeAtCenterZ = NDCToViewspace( normalizedScreenPos.xy + g_ASSAOConsts.ViewportPixelSize.xy, pixCenterPos.z ).xy - pixCenterPos.xy;
+    //const vec2 pixelDirRBViewspaceSizeAtCenterZ = pixCenterPos.z * g_ASSAOConsts.NDCToViewMul * g_ASSAOConsts.Viewport2xPixelSize;
+    // try with g_ASSAOConsts.ViewportPixelSize instead of g_ASSAOConsts.Viewport2xPixelSize
+    const vec2 pixelDirRBViewspaceSizeAtCenterZ = (-pixCenterPos.z) * g_ASSAOConsts.Viewport2xPixelSize;
 
+    // was between ~[-340, -520]
+    // update: now at ~[215, 384]
+    // intel is within ~[20, 192]
     float pixLookupRadiusMod;
     float falloffCalcMulSq;
 
@@ -61,6 +68,7 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
         // reduce effect radius near the screen edges slightly; ideally, one would render a larger depth buffer (5% on each side) instead
         if( !adaptiveBase && (qualityLevel >= SSAO_REDUCE_RADIUS_NEAR_SCREEN_BORDER_ENABLE_AT_QUALITY_PRESET) )
         {
+            // TODO: is this correct? since coordinate system is different
             float nearScreenBorder = min( min( normalizedScreenPos.x, 1.0 - normalizedScreenPos.x ), min( normalizedScreenPos.y, 1.0 - normalizedScreenPos.y ) );
             nearScreenBorder = clamp( 10.0 * nearScreenBorder + 0.6, 0.0, 1.0 );
             pixLookupRadiusMod *= nearScreenBorder;
@@ -69,7 +77,7 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
         // load & update pseudo-random rotation matrix
         uint pseudoRandomIndex = uint( SVPosRounded.y * 2 + SVPosRounded.x ) % 5;
         vec4 rs = g_ASSAOConsts.PatternRotScaleMatrices[ pseudoRandomIndex ];
-        // TODO: does this need to be transposed? original is not transposed
+        // TODO: does this need to be transposed?
         // but opengl (column-major) and direct3d (row-major) have different matrix orders
         rotScale = mat2( rs.x * pixLookupRadiusMod, rs.y * pixLookupRadiusMod, rs.z * pixLookupRadiusMod, rs.w * pixLookupRadiusMod );
         //rotScale = mat2( rs.x * pixLookupRadiusMod, rs.z * pixLookupRadiusMod, rs.y * pixLookupRadiusMod, rs.w * pixLookupRadiusMod );
@@ -78,6 +86,7 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     // the main obscurance & sample weight storage
     float obscuranceSum = 0.0;
     float weightSum = 0.0;
+	float obstwo = 0.0;
 
     // edge mask for between this and left/right/top/bottom neighbour pixels - not used in quality level 0 so initialize to "no edge" (1 is no edge, 0 is edge)
     vec4 edgesLRTB = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -100,8 +109,8 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
             vec3 viewspaceDirZNormalized = vec3( pixCenterPos.xy / pixCenterPos.zz, 1.0 );
             vec3 pixLDelta  = vec3( -pixelDirRBViewspaceSizeAtCenterZ.x, 0.0, 0.0 ) + viewspaceDirZNormalized * (pixLZ - pixCenterPos.z); // very close approximation of: vec3 pixLPos  = NDCToViewspace( normalizedScreenPos + vec2( -g_ASSAOConsts.HalfViewportPixelSize.x, 0.0 ), pixLZ ).xyz - pixCenterPos.xyz;
             vec3 pixRDelta  = vec3( +pixelDirRBViewspaceSizeAtCenterZ.x, 0.0, 0.0 ) + viewspaceDirZNormalized * (pixRZ - pixCenterPos.z); // very close approximation of: vec3 pixRPos  = NDCToViewspace( normalizedScreenPos + vec2( +g_ASSAOConsts.HalfViewportPixelSize.x, 0.0 ), pixRZ ).xyz - pixCenterPos.xyz;
-            vec3 pixTDelta  = vec3( 0.0, -pixelDirRBViewspaceSizeAtCenterZ.y, 0.0 ) + viewspaceDirZNormalized * (pixTZ - pixCenterPos.z); // very close approximation of: vec3 pixTPos  = NDCToViewspace( normalizedScreenPos + vec2( 0.0, -g_ASSAOConsts.HalfViewportPixelSize.y ), pixTZ ).xyz - pixCenterPos.xyz;
-            vec3 pixBDelta  = vec3( 0.0, +pixelDirRBViewspaceSizeAtCenterZ.y, 0.0 ) + viewspaceDirZNormalized * (pixBZ - pixCenterPos.z); // very close approximation of: vec3 pixBPos  = NDCToViewspace( normalizedScreenPos + vec2( 0.0, +g_ASSAOConsts.HalfViewportPixelSize.y ), pixBZ ).xyz - pixCenterPos.xyz;
+            vec3 pixTDelta  = vec3( 0.0, +pixelDirRBViewspaceSizeAtCenterZ.y, 0.0 ) + viewspaceDirZNormalized * (pixTZ - pixCenterPos.z); // very close approximation of: vec3 pixTPos  = NDCToViewspace( normalizedScreenPos + vec2( 0.0, -g_ASSAOConsts.HalfViewportPixelSize.y ), pixTZ ).xyz - pixCenterPos.xyz;
+            vec3 pixBDelta  = vec3( 0.0, -pixelDirRBViewspaceSizeAtCenterZ.y, 0.0 ) + viewspaceDirZNormalized * (pixBZ - pixCenterPos.z); // very close approximation of: vec3 pixBPos  = NDCToViewspace( normalizedScreenPos + vec2( 0.0, +g_ASSAOConsts.HalfViewportPixelSize.y ), pixBZ ).xyz - pixCenterPos.xyz;
 
             const float rangeReductionConst         = 4.0f;                         // this is to avoid various artifacts
             const float modifiedFalloffCalcMulSq    = rangeReductionConst * falloffCalcMulSq;
@@ -113,6 +122,8 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
             additionalObscurance.w = CalculatePixelObscurance( pixelNormal, pixBDelta, modifiedFalloffCalcMulSq );
 
             obscuranceSum += g_ASSAOConsts.DetailAOStrength * dot( additionalObscurance, edgesLRTB );
+
+			obstwo = pixLZ / 2.f;
         }
     }
 
@@ -120,14 +131,14 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     if( !adaptiveBase && (qualityLevel >= SSAO_NORMAL_BASED_EDGES_ENABLE_AT_QUALITY_PRESET ) )
     {
         // NOTE: this has to be in line with whichever gather is implemented around line ~26
-        vec3 neighbourNormalL = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2(-2,  0 ) ).xyz );
-        vec3 neighbourNormalR = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 2,  0 ) ).xyz );
-        vec3 neighbourNormalT = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0,  2 ) ).xyz );
-        vec3 neighbourNormalB = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0, -2 ) ).xyz );
-        //vec3 neighbourNormalL  = LoadNormal( ivec2(fullResCoord), ivec2( -2,  0 ) );
-        //vec3 neighbourNormalR  = LoadNormal( ivec2(fullResCoord), ivec2(  2,  0 ) );
-        //vec3 neighbourNormalT  = LoadNormal( ivec2(fullResCoord), ivec2(  0, -2 ) );
-        //vec3 neighbourNormalB  = LoadNormal( ivec2(fullResCoord), ivec2(  0,  2 ) );
+        //vec3 neighbourNormalL = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2(-2,  0 ) ).xyz );
+        //vec3 neighbourNormalR = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 2,  0 ) ).xyz );
+        //vec3 neighbourNormalT = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0,  2 ) ).xyz );
+        //vec3 neighbourNormalB = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0, -2 ) ).xyz );
+        vec3 neighbourNormalL  = LoadNormal( ivec2(fullResCoord), ivec2( -2,  0 ) );
+        vec3 neighbourNormalR  = LoadNormal( ivec2(fullResCoord), ivec2(  2,  0 ) );
+        vec3 neighbourNormalT  = LoadNormal( ivec2(fullResCoord), ivec2(  0,  2 ) );
+        vec3 neighbourNormalB  = LoadNormal( ivec2(fullResCoord), ivec2(  0, -2 ) );
 
         const float dotThreshold = SSAO_NORMAL_BASED_EDGES_DOT_THRESHOLD;
 
@@ -228,7 +239,6 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
 
     // calculate weighted average
     float obscurance = obscuranceSum / weightSum;
-    float obstwo = obscuranceSum;
 
     // calculate fadeout (1 close, gradient, 0 far)
     float fadeOut = clamp( pixCenterPos.z * g_ASSAOConsts.EffectFadeOutMul + g_ASSAOConsts.EffectFadeOutAdd, 0.0, 1.0 );
@@ -268,7 +278,7 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     occlusion = pow( clamp( occlusion, 0.0, 1.0 ), g_ASSAOConsts.EffectShadowPow );
 
     // outputs!
-    outShadowTerm   = edgesLRTB.x;    // Our final 'occlusion' term (0 means fully occluded, 1 means fully lit)
-    outEdges        = edgesLRTB;        // These are used to prevent blurring across edges, 1 means no edge, 0 means edge, 0.5 means half way there, etc.
+    outShadowTerm   = occlusion;    // Our final 'occlusion' term (0 means fully occluded, 1 means fully lit)
+    outEdges        = edgesLRTB;    // These are used to prevent blurring across edges, 1 means no edge, 0 means edge, 0.5 means half way there, etc.
     outWeight       = weightSum;
 }

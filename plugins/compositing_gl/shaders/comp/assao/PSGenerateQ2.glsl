@@ -13,7 +13,7 @@ void main()
 
     vec2 out0 = vec2(0.f);
     out0.x = outShadowTerm;
-    out0.y = 0.f;//PackEdges( outEdges );
+    out0.y = PackEdges( outEdges );
 
     imageStore(g_PingPongHalfResultA, ivec2(inPos.xy), vec4(out0, 0.f, 0.f));
 }

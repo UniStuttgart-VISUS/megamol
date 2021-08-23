@@ -50,6 +50,12 @@ struct ASSAO_Inputs {
     int ViewportWidth;
     int ViewportHeight;
 
+    // calc stuff from camera and dont use projection matrix directly
+    float depthLinearizeMul;
+    float depthLinearizeAdd;
+    float tanHalfFOVX;
+    float tanHalfFOVY;
+
     // Used for expanding UINT normals from [0, 1] to [-1, 1] if needed.
     float NormalsUnpackMul;
     float NormalsUnpackAdd;
@@ -72,6 +78,10 @@ struct ASSAO_Inputs {
         ViewportY = 0;              // stays constant
         ViewportWidth = 0;
         ViewportHeight = 0;
+        depthLinearizeMul = 0.f;
+        depthLinearizeAdd = 0.f;
+        tanHalfFOVX = 0.f;
+        tanHalfFOVY = 0.f;
         NormalsUnpackMul = 2.0f;    // stays constant
         NormalsUnpackAdd = -1.0f;   // stays constant
         generateNormals = false;
@@ -377,7 +387,8 @@ void ASSAO::fullscreenPassDraw(
                 std::get<2>(input_textures[i])->bindSampler(cnt);
 
             std::string name = std::get<1>(input_textures[i]);
-            glUniform1i(prgm->ParameterLocation(name.c_str()), cnt);
+            GLint loc = prgm->ParameterLocation(name.c_str());
+            glUniform1i(loc, cnt);
 
             ++cnt;
         }

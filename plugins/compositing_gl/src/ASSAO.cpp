@@ -375,7 +375,7 @@ bool megamol::compositing::ASSAO::create() {
     int_params.clear();
     int_params = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST},
         {GL_TEXTURE_MAG_FILTER, GL_NEAREST}, {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
-        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE}};
+        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}};
 
     m_samplerStateViewspaceDepthTap =
         std::make_shared<glowl::Sampler>("samplerStateViewspaceDepthTap", int_params);
@@ -453,18 +453,22 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             glm::mat4 view_mx = view_tmp;
             glm::mat4 proj_mx = proj_tmp;
             
-            //float clipNear = cam.near_clipping_plane();
-            //float clipFar = cam.far_clipping_plane();
-            //float mul = (clipFar * clipNear) / (clipFar - clipNear);
-            //float add = clipFar / (clipFar - clipNear);
+            float clipNear = cam.near_clipping_plane();
+            float clipFar = cam.far_clipping_plane();
+            float mul = (clipFar * clipNear) / (clipFar - clipNear);
+            float add = clipFar / (clipFar - clipNear);
 
-            //float tanHalfFOVY = tanf( cam.aperture_angle_radians() * 1.7f * 0.5f );
-            //float tanHalfFOVX = tanHalfFOVY * cam.resolution_gate_aspect();
+            float tanHalfFOVY = tanf( cam.aperture_angle_radians()/* * 1.7f*/ * 0.5f );
+            float tanHalfFOVX = tanHalfFOVY * cam.resolution_gate_aspect();
 
             if (normal_update || depth_update) {
-
+                
                 m_inputs->ViewportWidth = tx_res_normal[0];
                 m_inputs->ViewportHeight = tx_res_normal[1];
+                m_inputs->depthLinearizeMul = mul;
+                m_inputs->depthLinearizeAdd = add;
+                m_inputs->tanHalfFOVX = tanHalfFOVX;
+                m_inputs->tanHalfFOVY = tanHalfFOVX;
                 m_inputs->generateNormals = normal_tx2D == nullptr;
                 // TODO: for now we won't use scissortests
                 // but the implementation still stays for a more easy migration
@@ -855,18 +859,26 @@ void megamol::compositing::ASSAO::updateConstants(
     consts.Viewport2xPixelSize_x_025 =
         glm::vec2(consts.Viewport2xPixelSize.x * 0.25f, consts.Viewport2xPixelSize.y * 0.25f);
 
-    float depthLinearizeMul = -proj[3][2]; // float depthLinearizeMul = ( clipFar * clipNear ) / ( clipFar - clipNear );
-    float depthLinearizeAdd = proj[2][2];  // float depthLinearizeAdd = clipFar / ( clipFar - clipNear );
+    float depthLinearizeMul = proj[3][2]; // float depthLinearizeMul = -( 2 * clipFar * clipNear ) / ( clipFar - clipNear );
+    float depthLinearizeAdd = proj[2][2];  // float depthLinearizeAdd = -(clipFar + clipNear) / ( clipFar - clipNear );
+    //float depthLinearizeMul = inputs->depthLinearizeMul;
+    //float depthLinearizeAdd = inputs->depthLinearizeAdd;
+    
     // correct the handedness issue. need to make sure this below is correct, but I think it is.
     if (depthLinearizeMul * depthLinearizeAdd < 0)
         depthLinearizeAdd = -depthLinearizeAdd;
+    //consts.DepthUnpackConsts = glm::vec2(depthLinearizeMul, depthLinearizeAdd);
     consts.DepthUnpackConsts = glm::vec2(depthLinearizeMul, depthLinearizeAdd);
-
+    
+    float tanHalfFOVX = 1.0f / proj[0][0]; // = tanHalfFOVY * drawContext.Camera.GetAspect( );
     float tanHalfFOVY = 1.0f / proj[1][1]; // = tanf( drawContext.Camera.GetYFOV( ) * 0.5f );
-    float tanHalfFOVX = 1.0F / proj[0][0]; // = tanHalfFOVY * drawContext.Camera.GetAspect( );
+    //float tanHalfFOVY = inputs->tanHalfFOVX;
+    //float tanHalfFOVX = inputs->tanHalfFOVY;
     consts.CameraTanHalfFOV = glm::vec2(tanHalfFOVX, tanHalfFOVY);
 
-    consts.NDCToViewMul = glm::vec2(consts.CameraTanHalfFOV.x * 2.0f, consts.CameraTanHalfFOV.y * -2.0f);
+    //consts.NDCToViewMul = glm::vec2(consts.CameraTanHalfFOV.x * 2.0f, consts.CameraTanHalfFOV.y * -2.0f);
+    //consts.NDCToViewAdd = glm::vec2(consts.CameraTanHalfFOV.x * -1.0f, consts.CameraTanHalfFOV.y * 1.0f);
+    consts.NDCToViewMul = glm::vec2(consts.CameraTanHalfFOV.x, consts.CameraTanHalfFOV.y);
     consts.NDCToViewAdd = glm::vec2(consts.CameraTanHalfFOV.x * -1.0f, consts.CameraTanHalfFOV.y * 1.0f);
 
     consts.EffectRadius = std::clamp(settings.Radius, 0.0f, 100000.0f);
@@ -943,6 +955,7 @@ void megamol::compositing::ASSAO::updateConstants(
         float scale = 1.0f + (a - 1.5f + (b - (subPassCount - 1.0f) * 0.5f) / (float) subPassCount) * 0.07f;
         scale *= additionalRadiusScale;
 
+        // all values are within [-1, 1]
         consts.PatternRotScaleMatrices[subPass] = glm::vec4(scale * ca, scale * -sa, -scale * sa, -scale * ca);
     }
 

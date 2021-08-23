@@ -173,6 +173,7 @@
         <snippet name="assao::NDCToViewspace" />
         <snippet name="assao::DecodeNormal" />
         <snippet name="assao::LoadNormal" />
+        <snippet name="assao::LoadNormalOffset" />
         <snippet name="assao::CalculateRadiusParameters" />
         <snippet name="assao::CalculateEdges" />
         <snippet name="assao::CalculatePixelObscurance" />
@@ -190,6 +191,7 @@
         <snippet name="assao::NDCToViewspace" />
         <snippet name="assao::DecodeNormal" />
         <snippet name="assao::LoadNormal" />
+        <snippet name="assao::LoadNormalOffset" />
         <snippet name="assao::CalculateRadiusParameters" />
         <snippet name="assao::CalculateEdges" />
         <snippet name="assao::CalculatePixelObscurance" />
@@ -207,6 +209,7 @@
         <snippet name="assao::NDCToViewspace" />
         <snippet name="assao::DecodeNormal" />
         <snippet name="assao::LoadNormal" />
+        <snippet name="assao::LoadNormalOffset" />
         <snippet name="assao::CalculateRadiusParameters" />
         <snippet name="assao::CalculateEdges" />
         <snippet name="assao::CalculatePixelObscurance" />
@@ -224,6 +227,7 @@
         <snippet name="assao::NDCToViewspace" />
         <snippet name="assao::DecodeNormal" />
         <snippet name="assao::LoadNormal" />
+        <snippet name="assao::LoadNormalOffset" />
         <snippet name="assao::CalculateRadiusParameters" />
         <snippet name="assao::CalculateEdges" />
         <snippet name="assao::CalculatePixelObscurance" />
