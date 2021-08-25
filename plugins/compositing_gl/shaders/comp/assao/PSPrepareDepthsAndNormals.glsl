@@ -1,3 +1,18 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2016, Intel Corporation
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+// the Software.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 layout(local_size_x = 8, local_size_y = 8) in;
 
 //void PSPrepareDepthsAndNormals( in vec4 inPos : SV_POSITION, out float out0 : SV_Target0, out float out1 : SV_Target1, out float out2 : SV_Target2, out float out3 : SV_Target3 )
@@ -84,9 +99,4 @@ void main()
     imageStore(g_HalfDepthsMipView1, ivec2(inPos.xy), vec4( out1, 0.f, 0.f, 0.f ));
     imageStore(g_HalfDepthsMipView2, ivec2(inPos.xy), vec4( out2, 0.f, 0.f, 0.f ));
     imageStore(g_HalfDepthsMipView3, ivec2(inPos.xy), vec4( out3, 0.f, 0.f, 0.f ));
-
-    //g_NormalsOutputUAV[ baseCoords + ivec2( 0, 0 ) ] = vec4( norm0 * 0.5 + 0.5, 0.0 );
-    //g_NormalsOutputUAV[ baseCoords + ivec2( 1, 0 ) ] = vec4( norm1 * 0.5 + 0.5, 0.0 );
-    //g_NormalsOutputUAV[ baseCoords + ivec2( 0, 1 ) ] = vec4( norm2 * 0.5 + 0.5, 0.0 );
-    //g_NormalsOutputUAV[ baseCoords + ivec2( 1, 1 ) ] = vec4( norm3 * 0.5 + 0.5, 0.0 );
 }

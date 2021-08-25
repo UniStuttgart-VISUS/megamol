@@ -1,3 +1,18 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2016, Intel Corporation
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+// the Software.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 layout(local_size_x = 8, local_size_y = 8) in;
 
 //vec4 PSApply( in vec4 inPos : SV_POSITION/*, in vec2 inUV : TEXCOORD0*/ ) : SV_Target
@@ -22,10 +37,8 @@ void main()
 
     ao = centerVal.x;
 
-#if 1   // change to 0 if you want to disable last pass high-res blur (for debugging purposes, etc.)
+#if true   // change to 0 if you want to disable last pass high-res blur (for debugging purposes, etc.)
     vec4 edgesLRTB = UnpackEdges( centerVal.y );
-
-    // return 1.0 - vec4( edgesLRTB.x, edgesLRTB.y * 0.5 + edgesLRTB.w * 0.5, edgesLRTB.z, 0.0 ); // debug show edges
 
     // convert index shifts to sampling offsets
     float fmx   = float(mx);
@@ -38,13 +51,10 @@ void main()
     // calculate final sampling offsets and sample using bilinear filter
     vec2  uvH = (inPos.xy + vec2( fmx + fmxe - 0.5, 0.5 - fmy ) ) * 0.5 * g_ASSAOConsts.HalfViewportPixelSize;
     float   aoH = textureLod(g_FinalSSAO, vec3( uvH, ih ), 0 ).x;
-    //float   aoH = g_FinalSSAO.SampleLevel( g_LinearClampSampler, vec3( uvH, ih ), 0 ).x;
     vec2  uvV = (inPos.xy + vec2( 0.5 - fmx, fmy - 0.5 + fmye ) ) * 0.5 * g_ASSAOConsts.HalfViewportPixelSize;
     float   aoV = textureLod( g_FinalSSAO, vec3( uvV, iv ), 0 ).x;
-    //float   aoV = g_FinalSSAO.SampleLevel( g_LinearClampSampler, vec3( uvV, iv ), 0 ).x;
     vec2  uvD = (inPos.xy + vec2( fmx - 0.5 + fmxe, fmy - 0.5 + fmye ) ) * 0.5 * g_ASSAOConsts.HalfViewportPixelSize;
     float   aoD = textureLod( g_FinalSSAO, vec3( uvD, id ), 0 ).x;
-    //float   aoD = g_FinalSSAO.SampleLevel( g_LinearClampSampler, vec3( uvD, id ), 0 ).x;
 
     // reduce weight for samples near edge - if the edge is on both sides, weight goes to 0
     vec4 blendWeights;
