@@ -26,8 +26,6 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     vec4 valuesBL = textureGather(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize );
     vec4 valuesUR = textureGatherOffset(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize, ivec2( 1, 1 ) );
 
-    // TODO: is this correct? - TEST WITH DIFFERENT DIRECTION: FROM TOP LEFT TO BOTTOM RIGHT
-    // see 'else'
     // get this pixel's viewspace depth
     pixZ = valuesBL.y; //float pixZ = g_ViewspaceDepthSource.SampleLevel( g_PointMirrorSampler, normalizedScreenPos, 0.0 ).x; // * g_ASSAOConsts.MaxViewspaceDepth;
 
@@ -70,6 +68,7 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
         uint pseudoRandomIndex = uint( SVPosRounded.y * 2 + SVPosRounded.x ) % 5;
         vec4 rs = g_ASSAOConsts.PatternRotScaleMatrices[ pseudoRandomIndex ];
         // TODO: does this need to be transposed?
+        // probably not because of pseudo-randomness
         rotScale = mat2( rs.x * pixLookupRadiusMod, rs.y * pixLookupRadiusMod, rs.z * pixLookupRadiusMod, rs.w * pixLookupRadiusMod );
     }
 

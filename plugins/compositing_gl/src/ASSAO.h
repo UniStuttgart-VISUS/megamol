@@ -65,12 +65,6 @@ struct ASSAO_Inputs {
     int ViewportWidth;
     int ViewportHeight;
 
-    // calc stuff from camera and dont use projection matrix directly
-    float depthLinearizeMul;
-    float depthLinearizeAdd;
-    float tanHalfFOVX;
-    float tanHalfFOVY;
-
     // Used for expanding UINT normals from [0, 1] to [-1, 1] if needed.
     float NormalsUnpackMul;
     float NormalsUnpackAdd;
@@ -93,10 +87,6 @@ struct ASSAO_Inputs {
         ViewportY = 0;              // stays constant
         ViewportWidth = 0;
         ViewportHeight = 0;
-        depthLinearizeMul = 0.f;
-        depthLinearizeAdd = 0.f;
-        tanHalfFOVX = 0.f;
-        tanHalfFOVY = 0.f;
         NormalsUnpackMul = 2.0f;    // stays constant
         NormalsUnpackAdd = -1.0f;   // stays constant
         generateNormals = false;
@@ -289,6 +279,9 @@ private:
     bool reCreateMIPViewIfNeeded(std::shared_ptr<glowl::Texture2DView> current,
         std::shared_ptr<glowl::Texture2D> original, int mipViewSlice);
 
+    // callback functions
+    bool settingsCallback(core::param::ParamSlot& slot);
+
 
     uint32_t m_version;
 
@@ -344,15 +337,11 @@ private:
     /////////////////////////////////////////////////////////////////////////
     // other constants
     int m_max_blur_pass_count;
-    ASSAO_Settings m_settings;
     ASSAO_Constants m_constants;
     std::shared_ptr<glowl::BufferObject> m_ssbo_constants;
     /////////////////////////////////////////////////////////////////////////
 
-    // used for scissoring only
-    // bool m_requiresClear;
-
-    /** TODO */
+    /** Pointer for assao inputs */
     std::shared_ptr<ASSAO_Inputs> m_inputs;
 
     /** Hash value to keep track of update to the output texture */
@@ -360,9 +349,6 @@ private:
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
-
-    /** Slot for optionally querying an input texture, i.e. a rhs connection */
-    megamol::core::CallerSlot m_input_tex_slot;
 
     /** Slot for querying normals render target texture, i.e. a rhs connection */
     megamol::core::CallerSlot m_normals_tex_slot;
@@ -372,11 +358,58 @@ private:
 
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot m_camera_slot;
+
+
+    /////////////////////////////////////////////////////////////////////////
+    // paramslots for input settings
+    ASSAO_Settings m_settings;
+
+    /** Paramslot for radius of occlusion sphere (world space size) */
+    core::param::ParamSlot m_psRadius;
+
+    /** Paramslot for effect strength linear multiplier */
+    core::param::ParamSlot m_psShadowMultiplier;
+
+    /** Paramslot for effect strength pow modifier */
+    core::param::ParamSlot m_psShadowPower;
+
+    /** Paramslot for effect max limit (applied after multiplier but before blur) */
+    core::param::ParamSlot m_psShadowClamp;
+
+    /** Paramslot for self-shadowing limit */
+    core::param::ParamSlot m_psHorizonAngleThreshold;
+
+    /** Paramslot for distance to start fading out the effect */
+    core::param::ParamSlot m_psFadeOutFrom;
+
+    /** Paramslot for distance at which the effect is faded out */
+    core::param::ParamSlot m_psFadeOutTo;
+
+    /** Paramslot for the ssao effect quality level */
+    core::param::ParamSlot m_psQualityLevel;
+
+    /** Paramslot for adaptive quality limit (only for quality level 3) */
+    core::param::ParamSlot m_psAdaptiveQualityLimit;
+
+    /** Paramslot for number of edge-sensitive smart blur passes to apply */
+    core::param::ParamSlot m_psBlurPassCount;
+
+    /** Paramslot for how much to bleed over edges */
+    core::param::ParamSlot m_psSharpness;
+
+    /** Paramslot for rotating sampling kernel if temporal AA / supersampling is used */
+    core::param::ParamSlot m_psTemporalSupersamplingAngleOffset;
+
+    /** Paramslot for scaling sampling kernel if temporal AA / supersampling is used */
+    core::param::ParamSlot m_psTemporalSupersamplingRadiusOffset;
+
+    /** Paramslot for high-res detail AO using neighboring depth pixels */
+    core::param::ParamSlot m_psDetailShadowStrength;
+
+    bool m_settingsHaveChanged;
+    /////////////////////////////////////////////////////////////////////////
 };
 
-
-// TODO: intel originally uses some blending state parameter, but it isnt used here, so we omit this
-// but could easily be extended with glEnable(GL_BLEND) and a blendfunc
 template<typename Tuple, typename Tex>
 void ASSAO::fullscreenPassDraw(
     const std::unique_ptr<GLSLComputeShader>& prgm,
