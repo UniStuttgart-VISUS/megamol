@@ -25,7 +25,7 @@ void main()
 
     float pixZs[4][4];
 
-    // CAUTION: converting from hlsl to glsl could be error-prone
+    // TODO: CAUTION: converting from hlsl to glsl could be error-prone
     // it is highly possible that something is wrong here
     // middle 4
     pixZs[1][1] = out2;

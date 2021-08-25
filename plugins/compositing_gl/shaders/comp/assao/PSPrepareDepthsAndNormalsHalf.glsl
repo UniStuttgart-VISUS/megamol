@@ -45,7 +45,7 @@ void main()
     vec3 pixPos[4][4];
 
     // there is probably a way to optimize the math below; however no approximation will work, has to be precise.
-
+    // TODO: same as in PSPrepareDepthsAndNormals
     // middle 4
     pixPos[1][1] = NDCToViewspace( bottomLeftUV + g_ASSAOConsts.ViewportPixelSize * vec2( 0.0,  0.0 ), pixZs[1][1] );
     pixPos[2][1] = NDCToViewspace( bottomLeftUV + g_ASSAOConsts.ViewportPixelSize * vec2( 1.0,  0.0 ), pixZs[2][1] );

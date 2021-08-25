@@ -36,6 +36,8 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
 #endif
 
     vec2 normalizedScreenPos = SVPosRounded * g_ASSAOConsts.Viewport2xPixelSize + g_ASSAOConsts.Viewport2xPixelSize_x_025;
+    // the assumption that normalizedScreenPos is in NDC might be wrong
+    // need to transform to ndc first!
     vec3 pixCenterPos = NDCToViewspace( normalizedScreenPos, pixZ ); // g
 
     // Load this pixel's viewspace normal
@@ -50,7 +52,7 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     // vec2 pixelDirRBViewspaceSizeAtCenterZ = NDCToViewspace( normalizedScreenPos.xy + g_ASSAOConsts.ViewportPixelSize.xy, pixCenterPos.z ).xy - pixCenterPos.xy;
     //const vec2 pixelDirRBViewspaceSizeAtCenterZ = pixCenterPos.z * g_ASSAOConsts.NDCToViewMul * g_ASSAOConsts.Viewport2xPixelSize;
     // try with g_ASSAOConsts.ViewportPixelSize instead of g_ASSAOConsts.Viewport2xPixelSize
-    const vec2 pixelDirRBViewspaceSizeAtCenterZ = (-pixCenterPos.z) * g_ASSAOConsts.Viewport2xPixelSize;
+    const vec2 pixelDirRBViewspaceSizeAtCenterZ = (-pixCenterPos.z) * g_ASSAOConsts.NDCToViewMul * g_ASSAOConsts.ViewportPixelSize;
 
     // was between ~[-340, -520]
     // update: now at ~[215, 384]
@@ -68,7 +70,6 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
         // reduce effect radius near the screen edges slightly; ideally, one would render a larger depth buffer (5% on each side) instead
         if( !adaptiveBase && (qualityLevel >= SSAO_REDUCE_RADIUS_NEAR_SCREEN_BORDER_ENABLE_AT_QUALITY_PRESET) )
         {
-            // TODO: is this correct? since coordinate system is different
             float nearScreenBorder = min( min( normalizedScreenPos.x, 1.0 - normalizedScreenPos.x ), min( normalizedScreenPos.y, 1.0 - normalizedScreenPos.y ) );
             nearScreenBorder = clamp( 10.0 * nearScreenBorder + 0.6, 0.0, 1.0 );
             pixLookupRadiusMod *= nearScreenBorder;
@@ -107,10 +108,16 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
         {
             //approximate neighbouring pixels positions (actually just deltas or "positions - pixCenterPos" )
             vec3 viewspaceDirZNormalized = vec3( pixCenterPos.xy / pixCenterPos.zz, 1.0 );
-            vec3 pixLDelta  = vec3( -pixelDirRBViewspaceSizeAtCenterZ.x, 0.0, 0.0 ) + viewspaceDirZNormalized * (pixLZ - pixCenterPos.z); // very close approximation of: vec3 pixLPos  = NDCToViewspace( normalizedScreenPos + vec2( -g_ASSAOConsts.HalfViewportPixelSize.x, 0.0 ), pixLZ ).xyz - pixCenterPos.xyz;
-            vec3 pixRDelta  = vec3( +pixelDirRBViewspaceSizeAtCenterZ.x, 0.0, 0.0 ) + viewspaceDirZNormalized * (pixRZ - pixCenterPos.z); // very close approximation of: vec3 pixRPos  = NDCToViewspace( normalizedScreenPos + vec2( +g_ASSAOConsts.HalfViewportPixelSize.x, 0.0 ), pixRZ ).xyz - pixCenterPos.xyz;
-            vec3 pixTDelta  = vec3( 0.0, +pixelDirRBViewspaceSizeAtCenterZ.y, 0.0 ) + viewspaceDirZNormalized * (pixTZ - pixCenterPos.z); // very close approximation of: vec3 pixTPos  = NDCToViewspace( normalizedScreenPos + vec2( 0.0, -g_ASSAOConsts.HalfViewportPixelSize.y ), pixTZ ).xyz - pixCenterPos.xyz;
-            vec3 pixBDelta  = vec3( 0.0, -pixelDirRBViewspaceSizeAtCenterZ.y, 0.0 ) + viewspaceDirZNormalized * (pixBZ - pixCenterPos.z); // very close approximation of: vec3 pixBPos  = NDCToViewspace( normalizedScreenPos + vec2( 0.0, +g_ASSAOConsts.HalfViewportPixelSize.y ), pixBZ ).xyz - pixCenterPos.xyz;
+            // TODO: approximation is not correct atm, re-do the math
+            //vec3 pixLDelta  = vec3( -pixelDirRBViewspaceSizeAtCenterZ.x, 0.0, 0.0 ) + viewspaceDirZNormalized * (pixLZ - pixCenterPos.z);
+            //vec3 pixRDelta  = vec3( +pixelDirRBViewspaceSizeAtCenterZ.x, 0.0, 0.0 ) + viewspaceDirZNormalized * (pixRZ - pixCenterPos.z);
+            //vec3 pixTDelta  = vec3( 0.0, +pixelDirRBViewspaceSizeAtCenterZ.y, 0.0 ) + viewspaceDirZNormalized * (pixTZ - pixCenterPos.z);
+            //vec3 pixBDelta  = vec3( 0.0, -pixelDirRBViewspaceSizeAtCenterZ.y, 0.0 ) + viewspaceDirZNormalized * (pixBZ - pixCenterPos.z);
+            vec3 pixLDelta  = NDCToViewspace( normalizedScreenPos + vec2( -g_ASSAOConsts.HalfViewportPixelSize.x, 0.0 ), pixLZ ).xyz - pixCenterPos.xyz;
+            vec3 pixRDelta  = NDCToViewspace( normalizedScreenPos + vec2( +g_ASSAOConsts.HalfViewportPixelSize.x, 0.0 ), pixRZ ).xyz - pixCenterPos.xyz;
+            vec3 pixTDelta  = NDCToViewspace( normalizedScreenPos + vec2( 0.0, +g_ASSAOConsts.HalfViewportPixelSize.y ), pixTZ ).xyz - pixCenterPos.xyz;
+            vec3 pixBDelta  = NDCToViewspace( normalizedScreenPos + vec2( 0.0, -g_ASSAOConsts.HalfViewportPixelSize.y ), pixBZ ).xyz - pixCenterPos.xyz;
+
 
             const float rangeReductionConst         = 4.0f;                         // this is to avoid various artifacts
             const float modifiedFalloffCalcMulSq    = rangeReductionConst * falloffCalcMulSq;

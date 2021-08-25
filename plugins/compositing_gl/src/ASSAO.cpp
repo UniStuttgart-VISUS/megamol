@@ -878,8 +878,8 @@ void megamol::compositing::ASSAO::updateConstants(
 
     //consts.NDCToViewMul = glm::vec2(consts.CameraTanHalfFOV.x * 2.0f, consts.CameraTanHalfFOV.y * -2.0f);
     //consts.NDCToViewAdd = glm::vec2(consts.CameraTanHalfFOV.x * -1.0f, consts.CameraTanHalfFOV.y * 1.0f);
-    consts.NDCToViewMul = glm::vec2(consts.CameraTanHalfFOV.x, consts.CameraTanHalfFOV.y);
-    consts.NDCToViewAdd = glm::vec2(consts.CameraTanHalfFOV.x * -1.0f, consts.CameraTanHalfFOV.y * 1.0f);
+    consts.NDCToViewMul = glm::vec2(consts.CameraTanHalfFOV.x * 2.f, consts.CameraTanHalfFOV.y * 2.f);
+    consts.NDCToViewAdd = glm::vec2(consts.CameraTanHalfFOV.x * -1.f, consts.CameraTanHalfFOV.y * -1.f);
 
     consts.EffectRadius = std::clamp(settings.Radius, 0.0f, 100000.0f);
     consts.EffectShadowStrength = std::clamp(settings.ShadowMultiplier * 4.3f, 0.0f, 10.0f);
@@ -896,7 +896,7 @@ void megamol::compositing::ASSAO::updateConstants(
     float effectSamplingRadiusNearLimit = (settings.Radius * 1.2f);
 
     // if the depth precision is switched to 32bit float, this can be set to something closer to 1 (0.9999 is fine)
-    consts.DepthPrecisionOffsetMod = 0.9992f;
+    consts.DepthPrecisionOffsetMod = 0.9992f; // TODO: is this correct? or does it need to be slightly > 1?
 
     // consts.RadiusDistanceScalingFunctionPow     = 1.0f - Clamp( settings.RadiusDistanceScalingFunction,
     // 0.0f, 1.0f );

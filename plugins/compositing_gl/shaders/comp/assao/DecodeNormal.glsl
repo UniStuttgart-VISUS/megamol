@@ -1,3 +1,5 @@
+// TODO: not correct for the normals we use
+// either adapt code or dont use at all
 vec3 DecodeNormal( vec3 encodedNormal )
 {
     vec3 normal = encodedNormal * g_ASSAOConsts.NormalsUnpackMul.xxx + g_ASSAOConsts.NormalsUnpackAdd.xxx;

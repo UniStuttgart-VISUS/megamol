@@ -9,7 +9,7 @@ float ssaoValueT;
 float ssaoValueR;
 float ssaoValueB;
 
-if(false) {
+#ifdef false
     // automatically done in our shader
     vec4 valuesUL = textureGather( g_BlurInput, coord );
     vec4 valuesBR = textureGather( g_BlurInput, coord );
@@ -22,8 +22,7 @@ if(false) {
     ssaoValueT    = valuesUL.y;
     ssaoValueR    = valuesBR.y;
     ssaoValueB    = valuesBR.w;
-} else {
-
+#else
     // THIS IS THE DEFAULT!
     // automatically done in our shader
     vec4 valuesBL = textureGather( g_BlurInput, coord - g_ASSAOConsts.HalfViewportPixelSize * 0.5 );
@@ -35,7 +34,7 @@ if(false) {
     ssaoValueT    = valuesUR.x;   // top      --> (5,6)                                           vBL.z
     ssaoValueR    = valuesUR.z;   // right    valuesBR.z == (6,6) --> .z = (6,5)
     ssaoValueB    = valuesBL.z;   // bottom   --> (5,4)
-}
+#endif
 
     float sumWeight = 0.5f;
     float sum = ssaoValue * sumWeight;
