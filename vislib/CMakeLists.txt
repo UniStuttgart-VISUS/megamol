@@ -13,7 +13,6 @@ if(BUILD_VISLIB)
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
-  set(version_files ${CMAKE_BINARY_DIR}/version/VISlibVersionInfo.cpp)
 
   list(REMOVE_ITEM source_files
     "src/sys/DynamicFunctionPointer.cpp"
@@ -35,7 +34,7 @@ if(BUILD_VISLIB)
     )
 
   # Target definition
-  add_library(vislib STATIC ${public_header_files} ${header_files} ${source_files} ${version_files})
+  add_library(vislib STATIC ${public_header_files} ${header_files} ${source_files})
 
   target_link_libraries(vislib 
     PRIVATE ${CMAKE_THREAD_LIBS_INIT} 
@@ -44,7 +43,7 @@ if(BUILD_VISLIB)
 
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
 
-  target_compile_definitions(vislib PUBLIC SPDLOG_FMT_EXTERNAL)
+  target_compile_definitions(vislib PUBLIC SPDLOG_FMT_EXTERNAL WIN32_LEAN_AND_MEAN)
 
   if(UNIX)
     set(CURSES_NEED_NCURSES True)
@@ -59,7 +58,6 @@ if(BUILD_VISLIB)
   source_group("Public Header Files" FILES ${public_header_files})
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
-  source_group("Version" FILES ${version_files})
 
   # build tests if variable VISLIB_BUILD_TESTS is defined
   option(BUILD_VISLIB_TESTS "Build vislib tests" OFF)

@@ -16,7 +16,7 @@
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/Module.h"
 
 #include "GPUMeshCollection.h"
 
