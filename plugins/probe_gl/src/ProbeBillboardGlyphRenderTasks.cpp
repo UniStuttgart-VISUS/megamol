@@ -13,6 +13,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/ColorParam.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
@@ -62,6 +63,8 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
         , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards")
         , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
         , m_use_interpolation_slot("UseInterpolation", "Interpolate between samples")
+        , m_show_canvas_slot("ShowGlyphCanvas", "Render glyphs with opaque background")
+        , m_canvas_color_slot("GlyphCanvasColor", "Color used for the background of individual glyphs")
         , m_tf_range({0.0f,0.0f})
         , m_show_glyphs(true) {
 
@@ -88,6 +91,13 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
 
     this->m_use_interpolation_slot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->m_use_interpolation_slot);
+
+    this->m_show_canvas_slot << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->m_show_canvas_slot);
+
+    this->m_canvas_color_slot << new core::param::ColorParam(1.0, 1.0, 1.0, 1.0);
+    this->MakeSlotAvailable(&this->m_canvas_color_slot);
+
 }
 
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::~ProbeBillboardGlyphRenderTasks() {}
@@ -149,15 +159,12 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         ((*tfc)(0));
     }
     
-    
-
     bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || this->m_billboard_size_slot.IsDirty() ||
-                                 this->m_rendering_mode_slot.IsDirty() || ((tfc != NULL) ? tfc->IsDirty() : false);
+                                 this->m_rendering_mode_slot.IsDirty();
 
     if (something_has_changed) {
         ++m_version;
 
-        this->m_billboard_size_slot.ResetDirty();
         this->m_rendering_mode_slot.ResetDirty();
         auto gpu_mtl_storage = mtlc->getData();
         auto probes = pc->getData();
@@ -177,16 +184,12 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         
         std::visit(visitor, probes->getGenericGlobalMinMax());
 
-        if (tfc != NULL) {
-            tfc->SetRange(m_tf_range);
-            ((*tfc)());
-            m_tf_range = tfc->Range();
-        }
-
-        for (auto& identifier : m_rendertask_collection.second) {
-            m_rendertask_collection.first->deleteRenderTask(identifier);
-        }
+        //for (auto& identifier : m_rendertask_collection.second) {
+        //    m_rendertask_collection.first->deleteRenderTask(identifier);
+        //}
+        m_rendertask_collection.first->clear();
         m_rendertask_collection.second.clear();
+
 
         auto probe_cnt = probes->getProbeCount();
 
@@ -279,75 +282,18 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
             }
 
         } else if (m_rendering_mode_slot.Param<core::param::EnumParam>()->Value() == 1) {
-            // Update transfer texture only if it available and has changed
-            if (tfc != NULL) {
-
-                if (tfc->IsDirty()) {
-                    //++m_version;
-                    tfc->ResetDirty();
-
-                    this->m_transfer_function->makeNonResident();
-                    this->m_transfer_function.reset();
-
-                    {
-                        GLenum err = glGetError();
-                        if (err != GL_NO_ERROR) {
-                            // "Do something cop!"
-                            std::cerr << "GL error during transfer function update" << err << std::endl;
-                        }
-                    }
-
-                    glowl::TextureLayout tex_layout;
-                    tex_layout.width = tfc->TextureSize();
-                    tex_layout.height = 1;
-                    tex_layout.depth = 1;
-                    tex_layout.levels = 1;
-                    // TODO
-                    tex_layout.format = GL_RGBA;
-                    tex_layout.type = GL_FLOAT;
-                    // TODO
-                    tex_layout.internal_format = GL_RGBA32F;
-                    tex_layout.int_parameters = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST},
-                        {GL_TEXTURE_MAG_FILTER, GL_LINEAR}, {GL_TEXTURE_WRAP_S, GL_CLAMP}};
-                    try {
-                        this->m_transfer_function = std::make_shared<glowl::Texture2D>(
-                            "ProbeTransferFunction", tex_layout, (GLvoid*) tfc->GetTextureData());
-                    } catch (glowl::TextureException const& exc) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "Error on transfer texture view creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__,
-                            __FUNCTION__, __LINE__);
-                    }
-
-                    this->m_transfer_function->makeResident();
-                    {
-                        auto err = glGetError();
-                        if (err != GL_NO_ERROR) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "Error on making transfer texture view resident: %i. [%s, %s, line %d]\n", err,
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                    }
-
-                    m_tf_range = tfc->Range();
-                }
-            }
-
-            GLuint64 texture_handle = this->m_transfer_function->getTextureHandle();
 
             for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
                 auto generic_probe = probes->getGenericProbe(probe_idx);
 
-                auto visitor = [draw_command, scale, probe_idx, texture_handle, this](auto&& arg) {
+                auto visitor = [draw_command, scale, probe_idx, this](auto&& arg) {
                     using T = std::decay_t<decltype(arg)>;
                     if constexpr (std::is_same_v<T, probe::FloatProbe>) {
 
                         auto sp_idx = m_scalar_probe_glyph_data.size();
 
                         auto glyph_data = createScalarProbeGlyphData(arg, probe_idx, scale);
-                        glyph_data.tf_texture_handle = texture_handle;
-                        glyph_data.min_value = std::get<0>(m_tf_range);
-                        glyph_data.max_value = std::get<1>(m_tf_range);
                         m_scalar_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_scalar_probe_glyph_data.push_back(glyph_data);
 
@@ -360,9 +306,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         auto sp_idx = m_scalar_distribution_probe_glyph_data.size();
 
                         auto glyph_data = createScalarDistributionProbeGlyphData(arg, probe_idx, scale);
-                        glyph_data.tf_texture_handle = texture_handle;
-                        glyph_data.tf_min = std::get<0>(m_tf_range);
-                        glyph_data.tf_max = std::get<1>(m_tf_range);
                         m_scalar_distribution_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_scalar_distribution_probe_glyph_data.push_back(glyph_data);
 
@@ -377,9 +320,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         auto vp_idx = m_vector_probe_glyph_data.size();
 
                         auto glyph_data = createVectorProbeGlyphData(arg, probe_idx, scale);
-                        glyph_data.tf_texture_handle = texture_handle;
-                        glyph_data.tf_min = std::get<0>(m_tf_range);
-                        glyph_data.tf_max = std::get<1>(m_tf_range);
                         m_vector_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_vector_probe_glyph_data.push_back(glyph_data);
 
@@ -437,25 +377,91 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         }
 
         addAllRenderTasks();
-
-        std::array<PerFrameData, 1> data;
-        data[0].use_interpolation = m_use_interpolation_slot.Param<core::param::BoolParam>()->Value();
-
-        if (m_rendertask_collection.first->getPerFrameBuffers().empty()) {
-            std::string identifier = std::string(FullName()) + "_perFrameData";
-            m_rendertask_collection.first->addPerFrameDataBuffer(identifier, data, 1);
-        }
     }
 
-    if (this->m_use_interpolation_slot.IsDirty()) {
-        this->m_use_interpolation_slot.ResetDirty();
+    bool per_frame_data_has_changed = this->m_use_interpolation_slot.IsDirty() ||
+                                      this->m_show_canvas_slot.IsDirty() ||
+                                      this->m_canvas_color_slot.IsDirty() ||
+                                      ((tfc != NULL) ? tfc->IsDirty() : false) ||
+                                      m_rendertask_collection.first->getPerFrameBuffers().empty();
 
+    if (per_frame_data_has_changed)
+    {
+        this->m_use_interpolation_slot.ResetDirty();
+        this->m_show_canvas_slot.ResetDirty();
+        this->m_canvas_color_slot.ResetDirty();
+
+        if (tfc != NULL) {
+            tfc->SetRange(m_tf_range);
+            ((*tfc)());
+            m_tf_range = tfc->Range();
+        }
+
+        // Update transfer texture only if it available and has changed
+        if (tfc != NULL) {
+
+            if (tfc->IsDirty()) {
+                //++m_version;
+                tfc->ResetDirty();
+
+                this->m_transfer_function->makeNonResident();
+                this->m_transfer_function.reset();
+
+                {
+                    GLenum err = glGetError();
+                    if (err != GL_NO_ERROR) {
+                        // "Do something cop!"
+                        std::cerr << "GL error during transfer function update" << err << std::endl;
+                    }
+                }
+
+                glowl::TextureLayout tex_layout;
+                tex_layout.width = tfc->TextureSize();
+                tex_layout.height = 1;
+                tex_layout.depth = 1;
+                tex_layout.levels = 1;
+                // TODO
+                tex_layout.format = GL_RGBA;
+                tex_layout.type = GL_FLOAT;
+                // TODO
+                tex_layout.internal_format = GL_RGBA32F;
+                tex_layout.int_parameters = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
+                    {GL_TEXTURE_WRAP_S, GL_CLAMP}};
+                try {
+                    this->m_transfer_function = std::make_shared<glowl::Texture2D>(
+                        "ProbeTransferFunction", tex_layout, (GLvoid*) tfc->GetTextureData());
+                } catch (glowl::TextureException const& exc) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "Error on transfer texture view creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__,
+                        __FUNCTION__, __LINE__);
+                }
+
+                this->m_transfer_function->makeResident();
+                {
+                    auto err = glGetError();
+                    if (err != GL_NO_ERROR) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "Error on making transfer texture view resident: %i. [%s, %s, line %d]\n", err, __FILE__,
+                            __FUNCTION__, __LINE__);
+                    }
+                }
+
+                m_tf_range = tfc->Range();
+            }
+        }
+
+        GLuint64 texture_handle = this->m_transfer_function->getTextureHandle();
 
         std::array<PerFrameData, 1> data;
         data[0].use_interpolation = m_use_interpolation_slot.Param<core::param::BoolParam>()->Value();
+        data[0].show_canvas = m_show_canvas_slot.Param<core::param::BoolParam>()->Value();
+        data[0].canvas_color = m_canvas_color_slot.Param<core::param::ColorParam>()->Value();
+        data[0].tf_texture_handle = texture_handle;
+        data[0].tf_min = std::get<0>(m_tf_range);
+        data[0].tf_max = std::get<1>(m_tf_range);
 
         std::string identifier = std::string(FullName()) + "_perFrameData";
-        if (!m_rendertask_collection.first->getPerFrameBuffers().empty()) {
+        if (m_rendertask_collection.first->getPerFrameBuffers().empty()) {
             m_rendertask_collection.first->addPerFrameDataBuffer(identifier, data, 1);
         } else {
             m_rendertask_collection.first->updatePerFrameDataBuffer(identifier, data, 1);
@@ -883,9 +889,6 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::createScalarProbeGlyphData(
     if (probe.getSamplingResult()->samples.size() > 32) {
         // TODO print warning/error message
     }
-
-    glyph_data.min_value = probe.getSamplingResult()->min_value;
-    glyph_data.max_value = probe.getSamplingResult()->max_value;
 
     glyph_data.sample_cnt = std::min(static_cast<size_t>(32), probe.getSamplingResult()->samples.size());
 

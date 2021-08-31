@@ -77,6 +77,10 @@ namespace probe_gl {
 
         core::param::ParamSlot m_use_interpolation_slot;
 
+        core::param::ParamSlot m_show_canvas_slot;
+
+        core::param::ParamSlot m_canvas_color_slot;
+
         std::shared_ptr<glowl::Mesh> m_billboard_dummy_mesh;
 
         std::shared_ptr<glowl::Texture2D> m_transfer_function;
@@ -92,9 +96,16 @@ namespace probe_gl {
         struct PerFrameData {
             int use_interpolation;
 
+            int show_canvas;
+
             int padding0;
             int padding1;
-            int padding2;
+
+            std::array<float,4> canvas_color;
+
+            GLuint64 tf_texture_handle;
+            float tf_min;
+            float tf_max;
         };
 
         struct TexturedGlyphData {
@@ -114,10 +125,6 @@ namespace probe_gl {
 
             float sample_cnt;
             std::array<float, 4> samples[32];
-
-            GLuint64 tf_texture_handle;
-            float tf_min;
-            float tf_max;
         };
 
         struct GlyphScalarProbeData {
@@ -125,16 +132,11 @@ namespace probe_gl {
             glm::vec4 probe_direction;
             float scale;
 
-            float min_value;
-            float max_value;
-
             float sample_cnt;
             float samples[32];
 
             int probe_id;
             int state;
-
-            GLuint64 tf_texture_handle;
         };
 
         struct GlyphScalarDistributionProbeData {
@@ -147,10 +149,6 @@ namespace probe_gl {
 
             float sample_cnt;
             std::array<float,4> samples[32];
-
-            GLuint64 tf_texture_handle;
-            float tf_min;
-            float tf_max;
         };
 
         struct GlyphClusterIDData {
