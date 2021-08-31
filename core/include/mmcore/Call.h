@@ -18,6 +18,7 @@
 #include <map>
 #include <string>
 #include "PerformanceQueryManager.h"
+#include "PerformanceHistory.h"
 #endif
 
 #include "mmcore/api/MegaMolCore.std.h"
@@ -104,20 +105,20 @@ namespace core {
 
 #ifdef PROFILING
         inline double GetLastCPUTime(uint32_t func) const {
-            if (func < last_cpu_time.size())
-                return last_cpu_time[func];
+            if (func < callback_names.size())
+                return cpu_history[func].last_value();
             else
                 return -1.0;
         }
         inline double GetAverageCPUTime(uint32_t func) const {
-            if (func < avg_cpu_time.size())
-                return avg_cpu_time[func];
+            if (func < callback_names.size())
+                return cpu_history[func].average();
             else
                 return -1.0;
         }
         inline uint32_t GetNumCPUSamples(uint32_t func) const {
-            if (func < num_cpu_time_samples.size())
-                return num_cpu_time_samples[func];
+            if (func < callback_names.size())
+                return cpu_history[func].samples();
             else
                 return 0;
         }
@@ -143,10 +144,10 @@ namespace core {
         inline uint32_t GetFuncCount() const {
             /// XXX assert(last_cpu_time.size() == avg_cpu_time.size() == num_cpu_time_samples.size() == last_gpu_time.size() ==
             ///       avg_gpu_time.size() == num_gpu_time_samples.size());
-            return static_cast<uint32_t>(last_cpu_time.size());
+            return static_cast<uint32_t>(callback_names.size());
         }
         inline std::string GetFuncName(uint32_t i) const {
-            if (i < last_cpu_time.size()) {
+            if (i < callback_names.size()) {
                 return callback_names[i];
             } else {
                 return "out of bounds";
@@ -183,9 +184,10 @@ namespace core {
 
         void setProfilingInfo(std::vector<std::string> names, bool usesGL) {
             callback_names = std::move(names);
-            last_cpu_time.resize(callback_names.size());
-            avg_cpu_time.resize(callback_names.size());
-            num_cpu_time_samples.resize(callback_names.size());
+            //last_cpu_time.resize(callback_names.size());
+            //avg_cpu_time.resize(callback_names.size());
+            //num_cpu_time_samples.resize(callback_names.size());
+            cpu_history.resize(callback_names.size());
             last_gpu_time.resize(callback_names.size());
             avg_gpu_time.resize(callback_names.size());
             num_gpu_time_samples.resize(callback_names.size());
@@ -195,9 +197,10 @@ namespace core {
             }
         }
 
-        std::vector<double> last_cpu_time;
-        std::vector<double> avg_cpu_time;
-        std::vector<uint32_t> num_cpu_time_samples;
+        //std::vector<double> last_cpu_time;
+        //std::vector<double> avg_cpu_time;
+        //std::vector<uint32_t> num_cpu_time_samples;
+        std::vector<PerformanceHistory> cpu_history;
 
         std::vector<double> last_gpu_time;
         std::vector<double> avg_gpu_time;
