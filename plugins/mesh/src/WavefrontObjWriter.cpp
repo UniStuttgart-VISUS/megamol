@@ -38,7 +38,7 @@ bool megamol::mesh::WavefrontObjWriter::run() {
 
     auto mac = rhs_mesh_call->getData();
 
-    std::string fname = std::string(_filename_slot.Param<core::param::FilePathParam>()->Value());
+    std::string fname = _filename_slot.Param<core::param::FilePathParam>()->Value().string();
 
     auto meshes = mac->accessMeshes();
     auto num_meshes = meshes.size();
