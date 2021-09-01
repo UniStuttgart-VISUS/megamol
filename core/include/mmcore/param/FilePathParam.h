@@ -162,7 +162,7 @@ namespace param {
         /** Indicates whether notifications are already registered or not (should be done only once) */
         bool registered_notifications;
         /** Flags for opening specific notifications */
-        std::map<Flags_t, std::tuple<std::shared_ptr<bool>, std::shared_ptr<std::string>>> open_notification;
+        std::map<Flags_t, std::tuple<std::shared_ptr<bool>, std::shared_ptr<std::string>>> notification;
     };
 
 

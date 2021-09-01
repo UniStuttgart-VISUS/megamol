@@ -19,11 +19,11 @@ FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags
     , extensions(exts)
     , value()
     , registered_notifications(false)
-    , open_notification() {
-    this->open_notification[Flag_File] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
-    this->open_notification[Flag_Directory] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
-    this->open_notification[Flag_NoExistenceCheck] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
-    this->open_notification[Flag_RestrictExtension] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
+    , notification() {
+    this->notification[Flag_File] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
+    this->notification[Flag_Directory] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
+    this->notification[Flag_NoExistenceCheck] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
+    this->notification[Flag_RestrictExtension] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
     this->InitPresentation(AbstractParamPresentation::ParamType::FILEPATH);
     this->SetValue(initVal);
 }
@@ -71,27 +71,27 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
             if (error_flags & Flag_File) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[FilePathParam] Omitting value '%s'. Expected file but directory is given.", new_value.generic_u8string().c_str());
-                if (std::get<0>(this->open_notification[Flag_File]) != nullptr)
-                    *std::get<0>(this->open_notification[Flag_File]) = true;
-                if (std::get<1>(this->open_notification[Flag_File]) != nullptr)
-                    *std::get<1>(this->open_notification[Flag_File]) = new_value.generic_u8string();
+                if (std::get<0>(this->notification[Flag_File]) != nullptr)
+                    *std::get<0>(this->notification[Flag_File]) = true;
+                if (std::get<1>(this->notification[Flag_File]) != nullptr)
+                    *std::get<1>(this->notification[Flag_File]) = new_value.generic_u8string();
             }
             if (error_flags & Flag_Directory) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[FilePathParam] Omitting value '%s'. Expected directory but file is given.", new_value.generic_u8string().c_str());
-                if (std::get<0>(this->open_notification[Flag_Directory]) != nullptr)
-                    *std::get<0>(this->open_notification[Flag_Directory]) = true;
-                if (std::get<1>(this->open_notification[Flag_Directory]) != nullptr)
-                    *std::get<1>(this->open_notification[Flag_Directory]) = new_value.generic_u8string();
+                if (std::get<0>(this->notification[Flag_Directory]) != nullptr)
+                    *std::get<0>(this->notification[Flag_Directory]) = true;
+                if (std::get<1>(this->notification[Flag_Directory]) != nullptr)
+                    *std::get<1>(this->notification[Flag_Directory]) = new_value.generic_u8string();
 
             }
             if (error_flags & Flag_NoExistenceCheck) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[FilePathParam] Omitting value '%s'. File does not exist.", new_value.generic_u8string().c_str());
-                if (std::get<0>(this->open_notification[Flag_NoExistenceCheck]) != nullptr)
-                    *std::get<0>(this->open_notification[Flag_NoExistenceCheck]) = true;
-                if (std::get<1>(this->open_notification[Flag_NoExistenceCheck]) != nullptr)
-                    *std::get<1>(this->open_notification[Flag_NoExistenceCheck]) = new_value.generic_u8string();
+                if (std::get<0>(this->notification[Flag_NoExistenceCheck]) != nullptr)
+                    *std::get<0>(this->notification[Flag_NoExistenceCheck]) = true;
+                if (std::get<1>(this->notification[Flag_NoExistenceCheck]) != nullptr)
+                    *std::get<1>(this->notification[Flag_NoExistenceCheck]) = new_value.generic_u8string();
             }
             if (error_flags & Flag_RestrictExtension) {
                 std::string log_exts;
@@ -100,10 +100,10 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
                 }
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[FilePathParam] Omitting value '%s'. File does not have required extension: %s", new_value.generic_u8string().c_str(), log_exts.c_str());
-                if (std::get<0>(this->open_notification[Flag_RestrictExtension]) != nullptr)
-                    *std::get<0>(this->open_notification[Flag_RestrictExtension]) = true;
-                if (std::get<1>(this->open_notification[Flag_RestrictExtension]) != nullptr)
-                    *std::get<1>(this->open_notification[Flag_RestrictExtension]) = new_value.generic_u8string();
+                if (std::get<0>(this->notification[Flag_RestrictExtension]) != nullptr)
+                    *std::get<0>(this->notification[Flag_RestrictExtension]) = true;
+                if (std::get<1>(this->notification[Flag_RestrictExtension]) != nullptr)
+                    *std::get<1>(this->notification[Flag_RestrictExtension]) = new_value.generic_u8string();
             }
             if (error_flags == 0) {
                 this->value = new_value;
@@ -169,18 +169,18 @@ bool FilePathParam::RegisterNotifications(const FilePathParam::RegisterNotificat
 
     if (!this->registered_notifications) {
         const std::string prefix = "Omitting value: %s. ";
-        pc("file_is_dir", std::weak_ptr<bool>(std::get<0>(this->open_notification[Flag_File])), prefix + "Expected file but directory is given.",
-            std::weak_ptr<std::string>(std::get<1>(this->open_notification[Flag_File])));
-        pc("dir_is_file", std::weak_ptr<bool>(std::get<0>(this->open_notification[Flag_Directory])), prefix + "Expected directory but file is given.",
-            std::weak_ptr<std::string>(std::get<1>(this->open_notification[Flag_Directory])));
-        pc("file_not_exist", std::weak_ptr<bool>(std::get<0>(this->open_notification[Flag_NoExistenceCheck])), prefix + "Path does not exist.",
-            std::weak_ptr<std::string>(std::get<1>(this->open_notification[Flag_NoExistenceCheck])));
+        pc("file_is_dir", std::weak_ptr<bool>(std::get<0>(this->notification[Flag_File])), prefix + "Expected file but directory is given.",
+            std::weak_ptr<std::string>(std::get<1>(this->notification[Flag_File])));
+        pc("dir_is_file", std::weak_ptr<bool>(std::get<0>(this->notification[Flag_Directory])), prefix + "Expected directory but file is given.",
+            std::weak_ptr<std::string>(std::get<1>(this->notification[Flag_Directory])));
+        pc("file_not_exist", std::weak_ptr<bool>(std::get<0>(this->notification[Flag_NoExistenceCheck])), prefix + "Path does not exist.",
+            std::weak_ptr<std::string>(std::get<1>(this->notification[Flag_NoExistenceCheck])));
         std::string log_exts;
         for (auto& ext : this->extensions) {
             log_exts += "'." + ext + "' ";
         }
-        pc("file_wrong_ext", std::weak_ptr<bool>(std::get<0>(this->open_notification[Flag_RestrictExtension])), prefix + "File does not have required extension: " + log_exts,
-            std::weak_ptr<std::string>(std::get<1>(this->open_notification[Flag_RestrictExtension])));
+        pc("file_wrong_ext", std::weak_ptr<bool>(std::get<0>(this->notification[Flag_RestrictExtension])), prefix + "File does not have required extension: " + log_exts,
+            std::weak_ptr<std::string>(std::get<1>(this->notification[Flag_RestrictExtension])));
 
         this->registered_notifications = true;
         return true;
