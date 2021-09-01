@@ -4,6 +4,11 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
+// Workaround global WIN32_LEAN_AND_MEAN definition
+#ifdef _WIN32
+#include <winsock.h>
+#endif
+
 #include "vislib/sys/error.h"
 #include "vislib/net/SocketException.h"
 

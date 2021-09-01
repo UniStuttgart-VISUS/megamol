@@ -49,12 +49,10 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include "mmcore/utility/sys/SystemInformation.h"
-#include "vislib/vislibversion.h"
 
 #include "factories/CallClassRegistry.h"
 #include "factories/ModuleClassRegistry.h"
 #include "utility/ServiceManager.h"
-#include "utility/plugins/PluginManager.h"
 
 #include "png.h"
 #include "vislib/Array.h"
@@ -125,7 +123,7 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void* data, megamol::core:
  */
 megamol::core::CoreInstance::CoreInstance(void)
     : ApiHandle()
-    , factories::AbstractAssemblyInstance()
+    , factories::AbstractObjectFactoryInstance()
     , preInit(new PreInit)
     , config()
     , shaderSourceFactory(config)
@@ -146,7 +144,7 @@ megamol::core::CoreInstance::CoreInstance(void)
     , loadedLuaProjects()
     , timeOffset(0.0)
     , paramUpdateListeners()
-    , plugins(nullptr)
+    , plugins()
     , all_call_descriptions()
     , all_module_descriptions()
     , parameterHash(1) {
@@ -154,16 +152,7 @@ megamol::core::CoreInstance::CoreInstance(void)
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
-    this->plugins = new utility::plugins::PluginManager();
     this->services = new utility::ServiceManager(*this);
-
-#ifdef _WIN32
-    WCHAR dll_path[MAX_PATH] = {0};
-    GetModuleFileNameW(mmCoreModuleHandle, dll_path, _countof(dll_path));
-    this->SetAssemblyFileName(dll_path);
-#else
-    this->SetAssemblyFileName("Core <TODO: Fix implementation>");
-#endif
 
     this->namespaceRoot = std::make_shared<RootModuleNamespace>();
 
@@ -233,8 +222,7 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     this->module_descriptions.Shutdown();
     this->call_descriptions.Shutdown();
     // finally plugins
-    delete this->plugins;
-    this->plugins = nullptr;
+    this->plugins.clear();
 
     delete this->lua;
     this->lua = nullptr;
@@ -246,9 +234,9 @@ megamol::core::CoreInstance::~CoreInstance(void) {
 
 
 /*
- * megamol::core::CoreInstance::GetAssemblyName
+ * megamol::core::CoreInstance::GetObjectFactoryName
  */
-const std::string& megamol::core::CoreInstance::GetAssemblyName(void) const {
+const std::string& megamol::core::CoreInstance::GetObjectFactoryName() const {
     static std::string noname("");
     return noname;
 }
@@ -2829,7 +2817,7 @@ megamol::core::Module::ptr_type megamol::core::CoreInstance::instantiateModule(
         return Module::ptr_type(nullptr);
     }
 
-    Module::ptr_type mod = Module::ptr_type(desc->CreateModule(modName));
+    Module::ptr_type mod = Module::ptr_type(desc->CreateModule(std::string(modName.PeekBuffer())));
     if (!mod) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "Unable to construct module \"%s\" (%s)", desc->ClassName(), path.PeekBuffer());
@@ -3189,23 +3177,30 @@ void megamol::core::CoreInstance::loadPlugin(const std::shared_ptr<utility::plug
 
     try {
 
-        auto new_plugin = this->plugins->LoadPlugin(pluginDescriptor, *this);
+        auto new_plugin = pluginDescriptor->create();
 
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-            "Plugin \"%s\" loaded: %d Modules, %d Calls registered\n", new_plugin->GetAssemblyName().c_str(),
-            new_plugin->GetModuleDescriptionManager().Count(), new_plugin->GetCallDescriptionManager().Count());
+        // initialize factories
+        new_plugin->GetModuleDescriptionManager();
+
+        this->plugins.push_back(new_plugin);
+
+        // report success
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Plugin \"%s\" loaded: %u Modules, %u Calls",
+                                                               new_plugin->GetObjectFactoryName().c_str(),
+                                                               new_plugin->GetModuleDescriptionManager().Count(),
+                                                               new_plugin->GetCallDescriptionManager().Count());
 
         for (auto md : new_plugin->GetModuleDescriptionManager()) {
             try {
                 this->all_module_descriptions.Register(md);
-            } catch (const vislib::AlreadyExistsException&) {
+            } catch (const std::invalid_argument&) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load module description \"%s\": Naming conflict", md->ClassName());
             }
         }
         for (auto cd : new_plugin->GetCallDescriptionManager()) {
             try {
                 this->all_call_descriptions.Register(cd);
-            } catch (const vislib::AlreadyExistsException&) {
+            } catch (const std::invalid_argument&) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load call description \"%s\": Naming conflict", cd->ClassName());
             }
         }

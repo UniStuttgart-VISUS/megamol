@@ -15,38 +15,36 @@ using namespace megamol::core::param;
 /*
  * FloatParam::FloatParam
  */
-FloatParam::FloatParam(float initVal)
-        : AbstractParam(), val(initVal), minVal(-FLT_MAX),
-        maxVal(FLT_MAX) {
+FloatParam::FloatParam(float initVal) : AbstractParam(), val(), minVal(-FLT_MAX), maxVal(FLT_MAX) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::FLOAT);
+    this->SetValue(initVal);
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
-    this->InitPresentation(AbstractParamPresentation::ParamType::FLOAT);
 }
 
 
 /*
  * FloatParam::FloatParam
  */
-FloatParam::FloatParam(float initVal, float minVal)
-        : AbstractParam(), val(initVal), minVal(minVal),
-        maxVal(FLT_MAX) {
+FloatParam::FloatParam(float initVal, float minVal) : AbstractParam(), val(), minVal(minVal), maxVal(FLT_MAX) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::FLOAT);
+    this->SetValue(initVal);
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
-    this->InitPresentation(AbstractParamPresentation::ParamType::FLOAT);
 }
 
 
 /*
  * FloatParam::FloatParam
  */
-FloatParam::FloatParam(float initVal, float minVal, float maxVal)
-        : AbstractParam(), val(initVal), minVal(minVal), maxVal(maxVal) {
+FloatParam::FloatParam(float initVal, float minVal, float maxVal) : AbstractParam(), val(), minVal(minVal), maxVal(maxVal) {
+    this->InitPresentation(AbstractParamPresentation::ParamType::FLOAT);
+    this->SetValue(initVal);
     ASSERT(this->minVal <= this->maxVal);
     ASSERT(this->minVal <= this->val);
     ASSERT(this->val <= this->maxVal);
-    this->InitPresentation(AbstractParamPresentation::ParamType::FLOAT);
 }
 
 
