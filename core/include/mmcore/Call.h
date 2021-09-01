@@ -123,20 +123,20 @@ namespace core {
                 return 0;
         }
         inline double GetLastGPUTime(uint32_t func) const {
-            if (func < last_gpu_time.size())
-                return last_gpu_time[func];
+            if (func < callback_names.size())
+                return gpu_history[func].last_value();
             else
                 return -1.0;
         }
         inline double GetAverageGPUTime(uint32_t func) const {
-            if (func < avg_gpu_time.size())
-                return avg_gpu_time[func];
+            if (func < callback_names.size())
+                return gpu_history[func].average();
             else
                 return -1.0;
         }
         inline uint32_t GetNumGPUSamples(uint32_t func) const {
-            if (func < num_gpu_time_samples.size())
-                return num_gpu_time_samples[func];
+            if (func < callback_names.size())
+                return gpu_history[func].samples();
             else
                 return 0;
         }
@@ -184,27 +184,17 @@ namespace core {
 
         void setProfilingInfo(std::vector<std::string> names, bool usesGL) {
             callback_names = std::move(names);
-            //last_cpu_time.resize(callback_names.size());
-            //avg_cpu_time.resize(callback_names.size());
-            //num_cpu_time_samples.resize(callback_names.size());
             cpu_history.resize(callback_names.size());
-            last_gpu_time.resize(callback_names.size());
-            avg_gpu_time.resize(callback_names.size());
-            num_gpu_time_samples.resize(callback_names.size());
+            gpu_history.resize(callback_names.size());
             uses_gl = usesGL;
             if (usesGL) {
                 qm->AddCall(this);
             }
         }
 
-        //std::vector<double> last_cpu_time;
-        //std::vector<double> avg_cpu_time;
-        //std::vector<uint32_t> num_cpu_time_samples;
         std::vector<PerformanceHistory> cpu_history;
+        std::vector<PerformanceHistory> gpu_history;
 
-        std::vector<double> last_gpu_time;
-        std::vector<double> avg_gpu_time;
-        std::vector<uint32_t> num_gpu_time_samples;
         std::vector<std::string> callback_names;
         bool uses_gl = false;
 

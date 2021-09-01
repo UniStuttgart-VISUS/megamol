@@ -96,10 +96,7 @@ bool Call::operator()(unsigned int func) {
         const auto endTime = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double, std::milli> diffMillis = endTime - startTime;
         cpu_history[func].push_value(diffMillis.count());
-        //last_cpu_time[func] = diffMillis.count();
-        //const auto total = (avg_cpu_time[func] * num_cpu_time_samples[func] + last_cpu_time[func]);
-        //num_cpu_time_samples[func]++;
-        //avg_cpu_time[func] = total / static_cast<double>(num_cpu_time_samples[func]);
+
 #endif
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         if (p2 || p3 || p3_2) glPopDebugGroup();

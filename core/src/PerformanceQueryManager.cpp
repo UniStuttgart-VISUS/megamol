@@ -94,10 +94,7 @@ void PerformanceQueryManager::Collect() {
         const auto the_call = qi.call_idx;
         qi.started = false;
         auto c = all_calls[the_call];
-        c->last_gpu_time[the_func] = static_cast<double>(time / 1000000.0);
-        const auto total = c->avg_gpu_time[the_func] * c->num_gpu_time_samples[the_func] + c->last_gpu_time[the_func];
-        c->num_gpu_time_samples[the_func]++;
-        c->avg_gpu_time[the_func] = total / c->num_gpu_time_samples[the_func];
+        c->gpu_history[the_func].push_value(static_cast<double>(time / 1000000.0));
     }
     AdvanceGLProfiling(); // important! regardless of whether the last call was actually profiled! we need to advance
                           // through the graph though
