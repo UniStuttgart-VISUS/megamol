@@ -70,19 +70,19 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
 
             if (error_flags & Flag_File) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[FilePathParam] Omitting value '%s'. Expected file but directory is given.", new_value.c_str());
+                    "[FilePathParam] Omitting value '%s'. Expected file but directory is given.", new_value.generic_u8string().c_str());
                 if (this->open_notification[Flag_File] != nullptr)
                     *this->open_notification[Flag_File] = true;
             }
             if (error_flags & Flag_Directory) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[FilePathParam] Omitting value '%s'. Expected directory but file is given.", new_value.c_str());
+                    "[FilePathParam] Omitting value '%s'. Expected directory but file is given.", new_value.generic_u8string().c_str());
                 if (this->open_notification[Flag_Directory] != nullptr)
                     *this->open_notification[Flag_Directory] = true;
             }
             if (error_flags & Flag_NoExistenceCheck) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[FilePathParam] Omitting value '%s'. File does not exist.", new_value.c_str());
+                    "[FilePathParam] Omitting value '%s'. File does not exist.", new_value.generic_u8string().c_str());
                 if (this->open_notification[Flag_NoExistenceCheck] != nullptr)
                     *this->open_notification[Flag_NoExistenceCheck] = true;
             }
@@ -92,8 +92,7 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
                     log_exts += "'." + ext + "' ";
                 }
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[FilePathParam] Omitting value '%s'. File does not have required extension: %s", new_value.c_str(),
-                    log_exts.c_str());
+                    "[FilePathParam] Omitting value '%s'. File does not have required extension: %s", new_value.generic_u8string().c_str(), log_exts.c_str());
                 if (this->open_notification[Flag_RestrictExtension] != nullptr)
                     *this->open_notification[Flag_RestrictExtension] = true;
             }
