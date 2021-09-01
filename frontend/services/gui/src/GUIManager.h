@@ -305,8 +305,8 @@ namespace gui {
         // Pop-up name, open pop-up flag held by pop-up caller, function drawing content of pop-up
         std::map<std::string, std::pair<std::weak_ptr<bool>, std::function<void()>>> popup_collection;
         // Pop-up name, open pop-up flag held by pop-up caller, flag to dismiss further pop-ups but print console log,
-        // message
-        std::map<std::string, std::tuple<std::weak_ptr<bool>, bool, std::string>> notification_collection;
+        // message, pointer to currently omitted parameter value as string
+        std::map<std::string, std::tuple<std::weak_ptr<bool>, bool, std::string, std::weak_ptr<std::string>>> notification_collection;
 
         /** Shortcut pointer to configurator window */
         std::shared_ptr<Configurator> win_configurator_ptr;
