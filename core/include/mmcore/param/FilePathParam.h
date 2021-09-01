@@ -43,7 +43,8 @@ namespace param {
 
         typedef uint32_t Flags_t;
         typedef std::vector<std::string> Extensions_t;
-        typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&, std::weak_ptr<std::string> omitted_value)> RegisterNotificationCallback_t;
+        // Value semantics: 1) pop-up id string, 2) Pointer to 'open pop-up' flag, 3) message, 4) pointer to currently omitted parameter value as string held by pop-up caller
+        typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&, std::weak_ptr<std::string>)> RegisterNotificationCallback_t;
 
         /**
          * Ctor.

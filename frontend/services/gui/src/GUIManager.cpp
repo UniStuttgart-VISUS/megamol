@@ -896,8 +896,7 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                                                                  const std::string& message, std::weak_ptr<std::string> omitted_val) {
                                     const auto notification_name =
                                         std::string("Parameter: ") + p.FullNameProject() + "##" + id;
-                                    this->notification_collection[notification_name] =
-                                        std::tuple<std::weak_ptr<bool>, bool, std::string, std::weak_ptr<std::string>>(open, false, message, omitted_val);
+                                    this->notification_collection[notification_name] = { open, false, message, omitted_val };
                                 });
                             }
                         }
@@ -1860,7 +1859,7 @@ void GUIManager::RegisterPopUp(
 
 void GUIManager::RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message) {
 
-    this->notification_collection[name] = std::tuple<std::weak_ptr<bool>, bool, std::string, std::weak_ptr<std::string>>(open, false, message, std::make_shared<std::string>());
+    this->notification_collection[name] = { open, false, message, std::make_shared<std::string>() };
 }
 
 

@@ -240,6 +240,11 @@ namespace gui {
         ///////////////////////////////////////////////////////////////////////
 
     private:
+
+        // Value semantics: 1) Pointer to 'open pop-up' flag held by pop-up caller, 2) flag to dismiss further pop-ups but print console log,
+        // 3) message, 4) pointer to currently omitted parameter value as string held by pop-up caller
+        typedef std::tuple<std::weak_ptr<bool>, bool, std::string, std::weak_ptr<std::string>> NotificationData_t;
+
         /** Available GUI styles. */
         enum Styles {
             CorporateGray,
@@ -304,9 +309,8 @@ namespace gui {
         WindowCollection win_collection;
         // Pop-up name, open pop-up flag held by pop-up caller, function drawing content of pop-up
         std::map<std::string, std::pair<std::weak_ptr<bool>, std::function<void()>>> popup_collection;
-        // Pop-up name, open pop-up flag held by pop-up caller, flag to dismiss further pop-ups but print console log,
-        // message, pointer to currently omitted parameter value as string
-        std::map<std::string, std::tuple<std::weak_ptr<bool>, bool, std::string, std::weak_ptr<std::string>>> notification_collection;
+        // Pop-up name, further notification data
+        std::map<std::string, NotificationData_t> notification_collection;
 
         /** Shortcut pointer to configurator window */
         std::shared_ptr<Configurator> win_configurator_ptr;
