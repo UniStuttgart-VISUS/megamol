@@ -15,20 +15,20 @@ void PerformanceHistory::push_value(double val) {
     // array starts zeroed so unused samples do not change the result here
     window_total -= time_buffer[next_index];
     window_total += val;
-    // until we have at least a sample everywhere, the average is over num_samples only
-    window_avg = window_total / std::min(buffer_length, num_samples);
 
     time_buffer[next_index] = val;
     const auto total = avg_time * num_samples + val;
     num_samples++;
     avg_time = total / static_cast<double>(num_samples);
-    //last_index = next_index;
+
+    // until we have at least a sample everywhere, the average is over num_samples only
+    window_avg = window_total / std::min(buffer_length, num_samples);
+
     next_index = next_wrap(next_index);
 }
 
 void PerformanceHistory::reset() {
     next_index = 0;
-    //last_index = 0;
     time_buffer.fill(0.0);
     num_samples = 0;
     avg_time = 0;

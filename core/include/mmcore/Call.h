@@ -104,6 +104,9 @@ namespace core {
         }
 
 #ifdef PROFILING
+        static uint32_t GetSampleHistoryLength() {
+            return PerformanceHistory::buffer_length;
+        }
         inline double GetLastCPUTime(uint32_t func) const {
             if (func < callback_names.size())
                 return cpu_history[func].last_value();
