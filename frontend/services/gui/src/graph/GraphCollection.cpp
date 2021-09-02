@@ -653,15 +653,11 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                         prof[i].lcput = profiling.GetLastCPUTime(i);
                         prof[i].acput = profiling.GetAverageCPUTime(i);
                         prof[i].ncpus = profiling.GetNumCPUSamples(i);
-                        const auto ch = profiling.GetCPUHistory(i);
-                        std::transform(ch.begin(), ch.end(), prof[i].hcpu.begin(),
-                            [](double d) -> float { return static_cast<float>(d); });
+                        prof[i].hcpu = profiling.GetCPUHistory(i);
                         prof[i].lgput = profiling.GetLastGPUTime(i);
                         prof[i].agput = profiling.GetAverageGPUTime(i);
                         prof[i].ngpus = profiling.GetNumGPUSamples(i);
-                        const auto gh = profiling.GetGPUHistory(i);
-                        std::transform(gh.begin(), gh.end(), prof[i].hgpu.begin(),
-                            [](double d) -> float { return static_cast<float>(d); });
+                        prof[i].hgpu = profiling.GetGPUHistory(i);
                         prof[i].name = profiling.GetFuncName(i);
                     }
                     gcall.ptr.lock()->SetProfilingValues(prof);

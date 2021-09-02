@@ -12,8 +12,9 @@
 
 #ifdef PROFILING
 
-#define PROFILING_CHILD_WIDTH (18.0f)
-#define PROFILING_CHILD_HEIGHT (14.8f)
+#define PROFILING_PLOT_HEIGHT (7.0f)
+#define PROFILING_CHILD_WIDTH (15.0f)
+#define PROFILING_CHILD_HEIGHT (9.0f + 2.0f * PROFILING_PLOT_HEIGHT)
 #include "implot.h"
 
 #endif
@@ -440,25 +441,28 @@ void megamol::gui::Call::draw_profiling_data() {
                 ImGui::TextUnformatted("NumCPUSamples");
                 ImGui::TableNextColumn();
                 ImGui::Text("%i", this->profiling[i].ncpus);
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted("CPU History");
-                ImGui::TableNextColumn();
 
-                /*
-                ImGui::PlotLines("###cpuplot", this->profiling[i].hcpu.data(),
-                    static_cast<int>(this->profiling[i].hcpu.size()), 0, nullptr, 0.0f, 16.0f,
-                    ));
-                */
+                ImGui::EndTable();
+            }
 
-                if (ImPlot::BeginPlot("CPU", nullptr, nullptr,
-                        ImVec2(core::PerformanceHistory::buffer_length * 2 * megamol::gui::gui_scaling.Get(),
-                            (3.0f * ImGui::GetFrameHeight())))) {
-                    ImPlot::PlotLine(
-                        "###cpuplot", this->profiling[i].hcpu.data(), static_cast<int>(this->profiling[i].hcpu.size()));
-                    ImPlot::EndPlot();
-                }
+            std::array<float, core::PerformanceHistory::buffer_length> xbuf;
+            std::iota(xbuf.begin(), xbuf.end(), 0.0f);
+            std::array<float, core::PerformanceHistory::buffer_length> ybuf;
+            const auto ch = this->profiling[i].hcpu;
+            std::transform(ch.begin(), ch.end(), ybuf.begin(), [](double d) -> float { return static_cast<float>(d); });
+            auto Xhist_count = static_cast<int>(ybuf.size());
 
+            ImPlot::FitNextPlotAxes(); // no ImPlotAxisFlags_Lock
+            if (ImPlot::BeginPlot("CPU History", nullptr, nullptr,
+                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())))) {
+                ImPlot::PlotLine("###cpuplot", xbuf.data(), ybuf.data(), Xhist_count);
+                ImPlot::EndPlot();
+            }
+
+            if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
+                    ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
+                    ImVec2(0.0f, 0.0f))) {
+                ImGui::TableSetupColumn(("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("LastGPUTime");
@@ -474,16 +478,20 @@ void megamol::gui::Call::draw_profiling_data() {
                 ImGui::TextUnformatted("NumGPUSamples");
                 ImGui::TableNextColumn();
                 ImGui::Text("%.12i", this->profiling[i].ngpus);
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted("GPU History");
-                ImGui::TableNextColumn();
-                ImGui::PlotLines("###gpuplot", this->profiling[i].hgpu.data(),
-                    static_cast<int>(this->profiling[i].hgpu.size()), 0, nullptr, 0.0f, 16.0f,
-                    ImVec2(core::PerformanceHistory::buffer_length * 2 * megamol::gui::gui_scaling.Get(),
-                        ((3.0f * ImGui::GetFrameHeight()))));
+
                 ImGui::EndTable();
             }
+
+            const auto gh = this->profiling[i].hgpu;
+            std::transform(gh.begin(), gh.end(), ybuf.begin(), [](double d) -> float { return static_cast<float>(d); });
+
+            ImPlot::FitNextPlotAxes();
+            if (ImPlot::BeginPlot("GPU History", nullptr, nullptr,
+                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())))) {
+                ImPlot::PlotLine("###gpuplot", xbuf.data(), ybuf.data(), Xhist_count);
+                ImPlot::EndPlot();
+            }
+
             ImGui::EndTabItem();
         }
     }

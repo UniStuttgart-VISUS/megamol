@@ -77,11 +77,11 @@ namespace gui {
             double lcput;
             double acput;
             uint32_t ncpus;
-            std::array<float, core::PerformanceHistory::buffer_length> hcpu;
+            std::array<double, core::PerformanceHistory::buffer_length> hcpu;
             double lgput;
             double agput;
             uint32_t ngpus;
-            std::array<float, core::PerformanceHistory::buffer_length> hgpu;
+            std::array<double, core::PerformanceHistory::buffer_length> hgpu;
             std::string name;
         };
 
