@@ -393,6 +393,8 @@ private:
     core::param::ParamSlot m_psDetailShadowStrength;
 
     bool m_settingsHaveChanged;
+    bool m_slotIsActive;
+    bool m_updateCausedByNormalSlotChange;
     /////////////////////////////////////////////////////////////////////////
 };
 

@@ -122,6 +122,8 @@ megamol::compositing::ASSAO::ASSAO()
     , m_psTemporalSupersamplingRadiusOffset("TemporalSupersamplingRadiusOffset", "Specifies the scaling of the sampling kernel if temporal AA / supersampling is used")
     , m_psDetailShadowStrength("DetailShadowStrength", "Specifies the high-res detail AO using neighboring depth pixels")
     , m_settingsHaveChanged(false)
+    , m_slotIsActive(false)
+    , m_updateCausedByNormalSlotChange(false)
 {
     this->m_outputTexSlot.SetCallback(CallTexture2D::ClassName(), "GetData", &ASSAO::getDataCallback);
     this->m_outputTexSlot.SetCallback(
@@ -488,19 +490,37 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
 
     if (lhsTc == NULL) return false;
     
-    if ((callNormal != NULL) && (callDepth != NULL) && (callCamera != NULL)) {
+    if ((callDepth != NULL) && (callCamera != NULL)) {
 
-        if (!(*callNormal)(0))
+        bool generateNormals = false;
+        if (callNormal == NULL) {
+            if (m_slotIsActive) {
+                m_slotIsActive = false;
+                m_updateCausedByNormalSlotChange = true;
+            }
+            generateNormals = true;
+        } else {
+            if (!m_slotIsActive) {
+                m_slotIsActive = true;
+                m_updateCausedByNormalSlotChange = true;
+            }
+        }
+
+        if (!generateNormals && !(*callNormal)(0))
             return false;
 
-         if (!(*callDepth)(0))
+        if (!(*callDepth)(0))
             return false;
 
-         if (!(*callCamera)(0))
-             return false;
+        if (!(*callCamera)(0))
+            return false;
 
         // something has changed in the neath...
-        bool normalUpdate = callNormal->hasUpdate();
+        bool normalUpdate = false;
+
+        if (!generateNormals) {
+            normalUpdate = callNormal->hasUpdate();
+        }
         bool depthUpdate = callDepth->hasUpdate();
         bool cameraUpdate = callCamera->hasUpdate();
 
@@ -508,20 +528,20 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             (callNormal != NULL ? normalUpdate : false) || 
             (callDepth != NULL ? depthUpdate : false) || 
             (callCamera != NULL ? cameraUpdate : false) ||
+            m_updateCausedByNormalSlotChange ||
             m_settingsHaveChanged;
 
         if (somethingHasChanged) {
             ++m_version;
 
-            bool generateNormals = false;
-            if (callNormal == NULL) {
-                generateNormals = true;
-            }
+            if (callNormal == NULL && m_slotIsActive)
+                return false;
             if (callDepth == NULL)
                 return false;
             if (callCamera == NULL)
                 return false;
 
+            m_normals.reset(new glowl::Texture2D("m_normals", m_normalLayout, nullptr));
 
             std::array<int, 2> txResNormal;
             if (!generateNormals) {
@@ -553,7 +573,7 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             glm::mat4 projMx = projTmp;
             
 
-            if (normalUpdate || depthUpdate || m_settingsHaveChanged) {
+            if (normalUpdate || depthUpdate || m_settingsHaveChanged || m_updateCausedByNormalSlotChange) {
 
                 // assuming a full resolution depth buffer!
                 m_inputs->ViewportWidth = txResDepth[0];
@@ -597,6 +617,7 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
 
     if (lhsTc->version() < m_version) {
         m_settingsHaveChanged = false;
+        m_updateCausedByNormalSlotChange = false;
         lhsTc->setData(m_finalOutput, m_version);
     }
 
