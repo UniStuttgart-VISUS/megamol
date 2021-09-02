@@ -125,6 +125,12 @@ namespace core {
             else
                 return 0;
         }
+        inline std::array<double, PerformanceHistory::buffer_length> GetCPUHistory(uint32_t func) const {
+            if (func < callback_names.size())
+                return cpu_history[func].copyHistory();
+            else
+                return std::array<double, PerformanceHistory::buffer_length>{};
+        }
         inline double GetLastGPUTime(uint32_t func) const {
             if (func < callback_names.size())
                 return gpu_history[func].last_value();
@@ -143,7 +149,12 @@ namespace core {
             else
                 return 0;
         }
-
+        inline std::array<double, PerformanceHistory::buffer_length> GetGPUHistory(uint32_t func) const {
+            if (func < callback_names.size())
+                return gpu_history[func].copyHistory();
+            else
+                return std::array<double, PerformanceHistory::buffer_length>{};
+        }
         inline uint32_t GetFuncCount() const {
             /// XXX assert(last_cpu_time.size() == avg_cpu_time.size() == num_cpu_time_samples.size() == last_gpu_time.size() ==
             ///       avg_gpu_time.size() == num_gpu_time_samples.size());
