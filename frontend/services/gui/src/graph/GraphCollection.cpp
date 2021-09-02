@@ -645,23 +645,24 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                 if (gcall.class_name == ccall.request.className &&
                     gui_utils::CaseInsensitiveStringCompare(gcall.from, ccall.request.from) &&
                     gui_utils::CaseInsensitiveStringCompare(gcall.to, ccall.request.to)) {
-                    auto func_count = ccall.callPtr->GetFuncCount();
+                    const auto& profiling = ccall.callPtr->GetProfiling();
+                    auto func_count = profiling.GetFuncCount();
                     std::vector<gui::Call::Profiling> prof;
                     prof.resize(func_count);
                     for (uint32_t i = 0; i < func_count; i++) {
-                        prof[i].lcput = ccall.callPtr->GetLastCPUTime(i);
-                        prof[i].acput = ccall.callPtr->GetAverageCPUTime(i);
-                        prof[i].ncpus = ccall.callPtr->GetNumCPUSamples(i);
-                        const auto ch = ccall.callPtr->GetCPUHistory(i);
+                        prof[i].lcput = profiling.GetLastCPUTime(i);
+                        prof[i].acput = profiling.GetAverageCPUTime(i);
+                        prof[i].ncpus = profiling.GetNumCPUSamples(i);
+                        const auto ch = profiling.GetCPUHistory(i);
                         std::transform(ch.begin(), ch.end(), prof[i].hcpu.begin(),
                             [](double d) -> float { return static_cast<float>(d); });
-                        prof[i].lgput = ccall.callPtr->GetLastGPUTime(i);
-                        prof[i].agput = ccall.callPtr->GetAverageGPUTime(i);
-                        prof[i].ngpus = ccall.callPtr->GetNumGPUSamples(i);
-                        const auto gh = ccall.callPtr->GetGPUHistory(i);
+                        prof[i].lgput = profiling.GetLastGPUTime(i);
+                        prof[i].agput = profiling.GetAverageGPUTime(i);
+                        prof[i].ngpus = profiling.GetNumGPUSamples(i);
+                        const auto gh = profiling.GetGPUHistory(i);
                         std::transform(gh.begin(), gh.end(), prof[i].hgpu.begin(),
                             [](double d) -> float { return static_cast<float>(d); });
-                        prof[i].name = ccall.callPtr->GetFuncName(i);
+                        prof[i].name = profiling.GetFuncName(i);
                     }
                     gcall.ptr.lock()->SetProfilingValues(prof);
                 }

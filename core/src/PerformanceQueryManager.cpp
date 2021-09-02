@@ -42,7 +42,7 @@ void PerformanceQueryManager::ResetGLProfiling() {
 }
 
 void PerformanceQueryManager::AdvanceGLProfiling() {
-    starting_func = (starting_func + 1) % all_calls[starting_call]->GetFuncCount();
+    starting_func = (starting_func + 1) % all_calls[starting_call]->profiling.GetFuncCount();
     if (starting_func == 0) {
         // we wrapped, advance to next call!
         starting_call = (starting_call + 1) % all_calls.size();
@@ -94,7 +94,7 @@ void PerformanceQueryManager::Collect() {
         const auto the_call = qi.call_idx;
         qi.started = false;
         auto c = all_calls[the_call];
-        c->gpu_history[the_func].push_value(static_cast<double>(time / 1000000.0));
+        c->profiling.gpu_history[the_func].push_value(static_cast<double>(time) / 1000000.0);
     }
     AdvanceGLProfiling(); // important! regardless of whether the last call was actually profiled! we need to advance
                           // through the graph though
