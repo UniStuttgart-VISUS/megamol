@@ -312,6 +312,7 @@ private:
     /////////////////////////////////////////////////////////////////////////
     glowl::TextureLayout m_depthBufferViewspaceLinearLayout;
     glowl::TextureLayout m_AOResultLayout;
+    glowl::TextureLayout m_normalLayout;
 
     glm::ivec2 m_size;
     glm::ivec2 m_halfSize;
@@ -435,7 +436,7 @@ void ASSAO::fullscreenPassDraw(
     }
 
     for (int i = 0; i < outputTextures.size(); ++i) {
-        outputTextures[i].first->bindImage(outputTextures[i].second, GL_READ_WRITE);
+        outputTextures[i].first->bindImage(outputTextures[i].second, GL_WRITE_ONLY);
     }
 
     // all textures in output_textures should have the same size, so we just use the first
