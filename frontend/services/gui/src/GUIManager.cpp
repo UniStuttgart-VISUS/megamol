@@ -892,12 +892,14 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                     if (p.Type() == ParamType_t::FILEPATH) {
                         if (auto* p_ptr = p.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
                             if (p_ptr->RegisterNotifications()) {
-                                p_ptr->RegisterNotifications([&, this](const std::string& id, std::weak_ptr<bool> open,
-                                                                 const std::string& message, std::weak_ptr<std::string> omitted_val) {
-                                    const auto notification_name =
-                                        std::string("Parameter: ") + p.FullNameProject() + "##" + id;
-                                    this->notification_collection[notification_name] = { open, false, message, omitted_val };
-                                });
+                                p_ptr->RegisterNotifications(
+                                    [&, this](const std::string& id, std::weak_ptr<bool> open,
+                                        const std::string& message, std::weak_ptr<std::string> omitted_val) {
+                                        const auto notification_name =
+                                            std::string("Parameter: ") + p.FullNameProject() + "##" + id;
+                                        this->notification_collection[notification_name] = {
+                                            open, false, message, omitted_val};
+                                    });
                             }
                         }
                     }
@@ -1859,7 +1861,7 @@ void GUIManager::RegisterPopUp(
 
 void GUIManager::RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message) {
 
-    this->notification_collection[name] = { open, false, message, std::make_shared<std::string>() };
+    this->notification_collection[name] = {open, false, message, std::make_shared<std::string>()};
 }
 
 

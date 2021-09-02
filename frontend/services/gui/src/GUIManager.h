@@ -240,9 +240,9 @@ namespace gui {
         ///////////////////////////////////////////////////////////////////////
 
     private:
-
-        // Value semantics: 1) Pointer to 'open pop-up' flag held by pop-up caller, 2) flag to dismiss further pop-ups but print console log,
-        // 3) message, 4) pointer to currently omitted parameter value as string held by pop-up caller
+        // Value semantics: 1) Pointer to 'open pop-up' flag held by pop-up caller, 2) flag to dismiss further pop-ups
+        // but print console log, 3) message, 4) pointer to currently omitted parameter value as string held by pop-up
+        // caller
         typedef std::tuple<std::weak_ptr<bool>, bool, std::string, std::weak_ptr<std::string>> NotificationData_t;
 
         /** Available GUI styles. */
