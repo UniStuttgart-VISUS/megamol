@@ -11,8 +11,8 @@
 #include "Module.h"
 
 #ifdef PROFILING
-#define PROFILING_CHILD_WIDTH (12.0f)
-#define PROFILING_CHILD_HEIGHT (8.5f)
+#define PROFILING_CHILD_WIDTH (18.0f)
+#define PROFILING_CHILD_HEIGHT (14.8f)
 #endif
 
 using namespace megamol;
@@ -439,6 +439,14 @@ void megamol::gui::Call::draw_profiling_data() {
                 ImGui::Text("%i", this->profiling[i].ncpus);
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
+                ImGui::TextUnformatted("CPU History");
+                ImGui::TableNextColumn();
+                ImGui::PlotLines("###cpuplot", this->profiling[i].hcpu.data(),
+                    static_cast<int>(this->profiling[i].hcpu.size()), 0, nullptr, 0.0f, 16.0f,
+                    ImVec2(core::PerformanceHistory::buffer_length * 2 * megamol::gui::gui_scaling.Get(),
+                        (3.0f * ImGui::GetFrameHeight())));
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
                 ImGui::TextUnformatted("LastGPUTime");
                 ImGui::TableNextColumn();
                 ImGui::Text("%.12f", this->profiling[i].lgput);
@@ -452,6 +460,14 @@ void megamol::gui::Call::draw_profiling_data() {
                 ImGui::TextUnformatted("NumGPUSamples");
                 ImGui::TableNextColumn();
                 ImGui::Text("%.12i", this->profiling[i].ngpus);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("GPU History");
+                ImGui::TableNextColumn();
+                ImGui::PlotLines("###gpuplot", this->profiling[i].hgpu.data(),
+                    static_cast<int>(this->profiling[i].hgpu.size()), 0, nullptr, 0.0f, 16.0f,
+                    ImVec2(core::PerformanceHistory::buffer_length * 2 * megamol::gui::gui_scaling.Get(),
+                        ((3.0f * ImGui::GetFrameHeight()))));
                 ImGui::EndTable();
             }
             ImGui::EndTabItem();

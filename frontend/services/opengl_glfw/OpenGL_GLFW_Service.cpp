@@ -787,7 +787,7 @@ void OpenGL_GLFW_Service::postGraphRender() {
     ::glfwSwapBuffers(m_pimpl->glfwContextWindowPtr);
 
 #ifdef PROFILING
-    core::Call::CollectGPUPerformance();
+    core::CallProfiling::CollectGPUPerformance();
 #endif
 
     //::glfwMakeContextCurrent(window_ptr);

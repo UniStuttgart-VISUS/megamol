@@ -45,6 +45,15 @@ public:
         return num_samples;
     }
 
+    std::array<double, buffer_length> copyHistory() const {
+        std::array<double, buffer_length> ret{};
+        std::copy(time_buffer.begin() + next_index, time_buffer.end(), ret.begin());
+        if (next_index > 0) {
+            std::copy_n(time_buffer.begin(), next_index, ret.begin() + (buffer_length - next_index));
+        }
+        return ret;
+    }
+
 private:
     static int offset(const int index, const int offset);
 

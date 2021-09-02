@@ -26,10 +26,6 @@
 
 using namespace megamol::core;
 
-#ifdef PROFILING
-PerformanceQueryManager *Call::qm = nullptr;
-#endif
-
 /*
  * Call::Call
  */
@@ -42,11 +38,6 @@ Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap
  * Call::~Call
  */
 Call::~Call(void) {
-#ifdef PROFILING
-    if (uses_gl) {
-        qm->RemoveCall(this);
-    }
-#endif
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
         this->caller = nullptr; // DO NOT DELETE
@@ -85,17 +76,17 @@ bool Call::operator()(unsigned int func) {
         const auto startTime = std::chrono::high_resolution_clock::now();
         bool gl_started = false;
         if (uses_gl) {
-            gl_started = qm->Start(this, this->callee->GetCoreInstance()->GetFrameID(), func);
+            gl_started = CallProfiling::qm->Start(this, this->callee->GetCoreInstance()->GetFrameID(), func);
         }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
 #ifdef PROFILING
         if (gl_started) {
-            qm->Stop(this->callee->GetCoreInstance()->GetFrameID());
+            CallProfiling::qm->Stop(this->callee->GetCoreInstance()->GetFrameID());
         }
         const auto endTime = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double, std::milli> diffMillis = endTime - startTime;
-        cpu_history[func].push_value(diffMillis.count());
+        profiling.cpu_history[func].push_value(diffMillis.count());
 
 #endif
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
