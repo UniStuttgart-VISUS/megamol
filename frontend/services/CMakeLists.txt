@@ -12,6 +12,7 @@ if(BUILD_FRONTEND_SERVICES)
   require_external(glm)
   require_external(glad)
   require_external(imgui)
+  require_external(implot)  
   require_external(imguizmoquat)
 
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -87,7 +88,7 @@ if(BUILD_FRONTEND_SERVICES)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service vislib core glad glm imgui imguizmoquat)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service vislib core glad glm imgui implot imguizmoquat)
     
   # Install gui resources
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")

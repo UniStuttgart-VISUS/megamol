@@ -11,8 +11,11 @@
 #include "Module.h"
 
 #ifdef PROFILING
+
 #define PROFILING_CHILD_WIDTH (18.0f)
 #define PROFILING_CHILD_HEIGHT (14.8f)
+#include "implot.h"
+
 #endif
 
 using namespace megamol;
@@ -441,10 +444,21 @@ void megamol::gui::Call::draw_profiling_data() {
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("CPU History");
                 ImGui::TableNextColumn();
+
+                /*
                 ImGui::PlotLines("###cpuplot", this->profiling[i].hcpu.data(),
                     static_cast<int>(this->profiling[i].hcpu.size()), 0, nullptr, 0.0f, 16.0f,
-                    ImVec2(core::PerformanceHistory::buffer_length * 2 * megamol::gui::gui_scaling.Get(),
-                        (3.0f * ImGui::GetFrameHeight())));
+                    ));
+                */
+
+                if (ImPlot::BeginPlot("CPU", nullptr, nullptr,
+                        ImVec2(core::PerformanceHistory::buffer_length * 2 * megamol::gui::gui_scaling.Get(),
+                            (3.0f * ImGui::GetFrameHeight())))) {
+                    ImPlot::PlotLine(
+                        "###cpuplot", this->profiling[i].hcpu.data(), static_cast<int>(this->profiling[i].hcpu.size()));
+                    ImPlot::EndPlot();
+                }
+
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("LastGPUTime");

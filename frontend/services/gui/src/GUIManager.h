@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include "implot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking_gl.h"
@@ -293,7 +294,10 @@ namespace gui {
         megamol::gui::HotkeyMap_t hotkeys;
 
         /** The ImGui context created and used by this GUIManager */
-        ImGuiContext* context;
+        ImGuiContext* imgui_context;
+
+        /** The ImGui context created and used by this GUIManager */
+        ImPlotContext* implot_context;
 
         GUIImGuiAPI initialized_api;
 

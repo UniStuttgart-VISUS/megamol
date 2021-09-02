@@ -22,7 +22,8 @@ using namespace megamol::gui;
 
 GUIManager::GUIManager()
         : hotkeys()
-        , context(nullptr)
+        , imgui_context(nullptr)
+        , implot_context(nullptr)
         , initialized_api(megamol::gui::GUIImGuiAPI::NONE)
         , gui_state()
         , win_collection()
@@ -179,7 +180,7 @@ bool GUIManager::CreateContext(GUIImGuiAPI imgui_api) {
 
         this->initialized_api = imgui_api;
         megamol::gui::gui_context_count++;
-        ImGui::SetCurrentContext(this->context);
+        ImGui::SetCurrentContext(this->imgui_context);
         return true;
     }
     return false;
@@ -204,13 +205,13 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         return false;
     }
     // Check for existing imgui context
-    if (this->context == nullptr) {
+    if (this->imgui_context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Set ImGui context
-    ImGui::SetCurrentContext(this->context);
+    ImGui::SetCurrentContext(this->imgui_context);
 
     // Process hotkeys
     if (this->hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].is_pressed) {
@@ -367,14 +368,14 @@ bool GUIManager::PostDraw() {
         return false;
     }
     // Check for existing imgui context
-    if (this->context == nullptr) {
+    if (this->imgui_context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     // Set ImGui context
-    ImGui::SetCurrentContext(this->context);
+    ImGui::SetCurrentContext(this->imgui_context);
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -509,7 +510,7 @@ bool GUIManager::PostDraw() {
 
 bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
 
-    ImGui::SetCurrentContext(this->context);
+    ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -635,7 +636,7 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
 
 bool GUIManager::OnChar(unsigned int codePoint) {
-    ImGui::SetCurrentContext(this->context);
+    ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
     io.ClearInputCharacters();
@@ -649,7 +650,7 @@ bool GUIManager::OnChar(unsigned int codePoint) {
 
 bool GUIManager::OnMouseMove(double x, double y) {
 
-    ImGui::SetCurrentContext(this->context);
+    ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
     io.MousePos = ImVec2(static_cast<float>(x), static_cast<float>(y));
@@ -670,7 +671,7 @@ bool GUIManager::OnMouseMove(double x, double y) {
 bool GUIManager::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
-    ImGui::SetCurrentContext(this->context);
+    ImGui::SetCurrentContext(this->imgui_context);
 
     bool down = (action == core::view::MouseButtonAction::PRESS);
     auto buttonIndex = static_cast<size_t>(button);
@@ -693,7 +694,7 @@ bool GUIManager::OnMouseButton(
 
 bool GUIManager::OnMouseScroll(double dx, double dy) {
 
-    ImGui::SetCurrentContext(this->context);
+    ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
     io.MouseWheelH += (float) dx;
@@ -737,7 +738,7 @@ void megamol::gui::GUIManager::SetScale(float scale) {
 void megamol::gui::GUIManager::SetClipboardFunc(const char* (*get_clipboard_func)(void* user_data),
     void (*set_clipboard_func)(void* user_data, const char* string), void* user_data) {
 
-    if (this->context != nullptr) {
+    if (this->imgui_context != nullptr) {
         ImGuiIO& io = ImGui::GetIO();
         io.SetClipboardTextFn = set_clipboard_func;
         io.GetClipboardTextFn = get_clipboard_func;
@@ -952,12 +953,13 @@ bool GUIManager::create_context() {
 
     // Create ImGui context ---------------------------------------------------
     IMGUI_CHECKVERSION();
-    this->context = ImGui::CreateContext(font_atlas);
-    if (this->context == nullptr) {
+    this->imgui_context = ImGui::CreateContext(font_atlas);
+    if (this->imgui_context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unable to create ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->implot_context = ImPlot::CreateContext();
 
     // Style settings ---------------------------------------------------------
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB |
@@ -1061,11 +1063,11 @@ bool GUIManager::create_context() {
 bool GUIManager::destroy_context() {
 
     if (this->initialized_api != GUIImGuiAPI::NONE) {
-        if (this->context != nullptr) {
+        if (this->imgui_context != nullptr) {
 
             // Handle multiple ImGui contexts.
             if (megamol::gui::gui_context_count < 2) {
-                ImGui::SetCurrentContext(this->context);
+                ImGui::SetCurrentContext(this->imgui_context);
                 // Shutdown API only if only one context is left
                 switch (this->initialized_api) {
                 case (GUIImGuiAPI::OPEN_GL):
@@ -1078,11 +1080,14 @@ bool GUIManager::destroy_context() {
                 ImGui::GetCurrentContext()->FontAtlasOwnedByContext = true;
             }
 
-            ImGui::DestroyContext(this->context);
+            if (this->implot_context != nullptr) {
+                ImPlot::DestroyContext(this->implot_context);
+            }
+            ImGui::DestroyContext(this->imgui_context);
             megamol::gui::gui_context_count--;
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Destroyed ImGui context.");
         }
-        this->context = nullptr;
+        this->imgui_context = nullptr;
         this->initialized_api = GUIImGuiAPI::NONE;
     }
 
