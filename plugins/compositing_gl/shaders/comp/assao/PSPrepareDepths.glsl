@@ -20,7 +20,7 @@ void main()
 {
     vec3 inPos = gl_GlobalInvocationID;
 
-#if false   // gather can be a bit faster but doesn't work with input depth buffers that don't match the working viewport
+#if 0   // gather can be a bit faster but doesn't work with input depth buffers that don't match the working viewport
     vec2 gatherUV = inPos.xy * g_ASSAOConsts.Viewport2xPixelSize;
     vec4 depths = textureGather(g_DepthSource, gatherUV );
     float a = depths.w;  // texelFetchOffset(g_DepthSource, ivec3( ivec2(inPos.xy) * 2, 0 ), ivec2( 0, 0 ) ).x;
@@ -33,10 +33,6 @@ void main()
     float b = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 1, 1 ) ).x;
     float c = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 0, 0 ) ).x;
     float d = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 1, 0 ) ).x;
-    //float a = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 0, 0 ) ).x;
-    //float b = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 1, 0 ) ).x;
-    //float c = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 0, 1 ) ).x;
-    //float d = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 1, 1 ) ).x;
 #endif
 
     float out0 = ScreenSpaceToViewSpaceDepth( a );

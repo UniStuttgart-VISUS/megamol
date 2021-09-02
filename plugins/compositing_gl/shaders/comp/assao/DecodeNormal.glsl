@@ -14,6 +14,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // CAUTION: not correct for the normals we use
+// DEPRECATED
 vec3 DecodeNormal( vec3 encodedNormal )
 {
     vec3 normal = encodedNormal * g_ASSAOConsts.NormalsUnpackMul.xxx + g_ASSAOConsts.NormalsUnpackAdd.xxx;

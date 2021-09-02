@@ -16,6 +16,6 @@
 vec3 LoadNormal( ivec2 pos )
 {
     vec3 encodedNormal = texelFetch(g_NormalmapSource, pos, 0 ).xyz;
-	encodedNormal = transpose(inverse(mat3(g_ASSAOConsts.viewMX))) * (encodedNormal);
+	encodedNormal = transpose(inverse(mat3(g_ASSAOConsts.ViewMX))) * (encodedNormal);
     return normalize(encodedNormal);
 }

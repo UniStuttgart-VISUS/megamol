@@ -21,7 +21,7 @@ void main()
 {
     vec3 inPos = gl_GlobalInvocationID;
     ivec2 viewport = imageSize(g_PingPongHalfResultB);
-    // TODO: is this correct? error-prone
+
     vec2 inUV = (2.f * inPos.xy + vec2(1.f)) / (2.f * vec2(viewport));
 
     vec2 returnVal = SampleBlurredWide( vec4(inPos, 1.f), inUV );

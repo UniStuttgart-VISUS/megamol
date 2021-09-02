@@ -27,6 +27,5 @@ void main()
     float d = textureLod(g_FinalSSAO, vec3( inUV, 3 ), 0.0 ).x;
     float avg = (a+d) * 0.5;
 
-    //return vec4( avg.xxx, 1.0 );
     imageStore(g_FinalOutput, ivec2(inPos.xy), vec4(avg.xxx, 1.f));
 }

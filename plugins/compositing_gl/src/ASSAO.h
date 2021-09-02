@@ -35,7 +35,7 @@
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture2DArray.hpp"
-#include "compositing/Texture2DView.hpp"
+#include "glowl/Texture2DView.hpp"
 #include "compositing/Sampler.hpp"
 
 #include <glm/glm.hpp>
@@ -51,13 +51,6 @@ namespace compositing {
         TextureArraySamplerTuple;
 
 struct ASSAO_Inputs {
-    // Output scissor rect - used to draw AO effect to a sub-rectangle, for example, for performance reasons when
-    // using wider-than-screen depth input to avoid close-to-border artifacts.
-    int ScissorLeft;
-    int ScissorTop;
-    int ScissorRight;
-    int ScissorBottom;
-
     // Custom viewports not supported yet; this is here for future support. ViewportWidth and ViewportHeight must
     // match or be smaller than source depth and normalmap sizes.
     int ViewportX;
@@ -70,26 +63,20 @@ struct ASSAO_Inputs {
     float NormalsUnpackAdd;
 
     // Incoming textures from callerslots
-    bool generateNormals;
-    glowl::TextureLayout resultLayout;
+    bool GenerateNormals;
 
     // Transformation Matrices
     glm::mat4 ProjectionMatrix;
     glm::mat4 ViewMatrix;
 
     ASSAO_Inputs() {
-        // ScissorBottom in Direct3D needs to be ScissorTop in OpenGL and vice versa
-        ScissorLeft = 0;
-        ScissorTop = 0;             // needs to be used as ScissorBottom in host code
-        ScissorRight = 0;
-        ScissorBottom = 0;          // needs to be used as ScissorTop in host code
         ViewportX = 0;              // stays constant
         ViewportY = 0;              // stays constant
         ViewportWidth = 0;
         ViewportHeight = 0;
         NormalsUnpackMul = 2.0f;    // stays constant
         NormalsUnpackAdd = -1.0f;   // stays constant
-        generateNormals = false;
+        GenerateNormals = false;
         ProjectionMatrix = glm::mat4(1.0f);
         ViewMatrix = glm::mat4(1.0f);
     }
@@ -193,7 +180,7 @@ struct ASSAO_Constants {
     float DetailAOStrength;
     float Dummy0;
 
-    glm::mat4 viewMX;
+    glm::mat4 ViewMX;
 
 #if SSAO_ENABLE_NORMAL_WORLD_TO_VIEW_CONVERSION
     ASSAO_Float4x4 NormalsWorldToViewspaceMatrix;
@@ -288,18 +275,18 @@ private:
     /////////////////////////////////////////////////////////////////////////
     // COMPUTE SHADER BATTERY
     /////////////////////////////////////////////////////////////////////////
-    std::unique_ptr<GLSLComputeShader> m_prepare_depths_prgm;
-    std::unique_ptr<GLSLComputeShader> m_prepare_depths_half_prgm;
-    std::unique_ptr<GLSLComputeShader> m_prepare_depths_and_normals_prgm;
-    std::unique_ptr<GLSLComputeShader> m_prepare_depths_and_normals_half_prgm;
-    std::vector<std::unique_ptr<GLSLComputeShader>> m_prepare_depth_mip_prgms;
-    std::array<std::unique_ptr<GLSLComputeShader>, 5> m_generate_prgms;
-    std::unique_ptr<GLSLComputeShader> m_smart_blur_prgm;
-    std::unique_ptr<GLSLComputeShader> m_smart_blur_wide_prgm;
-    std::unique_ptr<GLSLComputeShader> m_apply_prgm;
-    std::unique_ptr<GLSLComputeShader> m_non_smart_blur_prgm;
-    std::unique_ptr<GLSLComputeShader> m_non_smart_apply_prgm;
-    std::unique_ptr<GLSLComputeShader> m_non_smart_half_apply_prgm;
+    std::unique_ptr<GLSLComputeShader> m_prepareDepthsPrgm;
+    std::unique_ptr<GLSLComputeShader> m_prepareDepthsHalfPrgm;
+    std::unique_ptr<GLSLComputeShader> m_prepareDepthsAndNormalsPrgm;
+    std::unique_ptr<GLSLComputeShader> m_prepareDepthsAndNormalsHalfPrgm;
+    std::vector<std::unique_ptr<GLSLComputeShader>> m_prepareDepthMipPrgms;
+    std::array<std::unique_ptr<GLSLComputeShader>, 5> m_generatePrgms;
+    std::unique_ptr<GLSLComputeShader> m_smartBlurPrgm;
+    std::unique_ptr<GLSLComputeShader> m_smartBlurWidePrgm;
+    std::unique_ptr<GLSLComputeShader> m_applyPrgm;
+    std::unique_ptr<GLSLComputeShader> m_nonSmartBlurPrgm;
+    std::unique_ptr<GLSLComputeShader> m_nonSmartApplyPrgm;
+    std::unique_ptr<GLSLComputeShader> m_nonSmartHalfApplyPrgm;
     /////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////
@@ -329,35 +316,33 @@ private:
     glm::ivec2 m_size;
     glm::ivec2 m_halfSize;
     glm::ivec2 m_quarterSize;
-    glm::ivec4 m_fullResOutScissorRect;
-    glm::ivec4 m_halfResOutScissorRect;
     int m_depthMipLevels;
     /////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////
     // other constants
-    int m_max_blur_pass_count;
+    int m_maxBlurPassCount;
     ASSAO_Constants m_constants;
-    std::shared_ptr<glowl::BufferObject> m_ssbo_constants;
+    std::shared_ptr<glowl::BufferObject> m_ssboConstants;
     /////////////////////////////////////////////////////////////////////////
 
     /** Pointer for assao inputs */
     std::shared_ptr<ASSAO_Inputs> m_inputs;
 
     /** Hash value to keep track of update to the output texture */
-    size_t m_output_texture_hash;
+    size_t m_outputTextureHash;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
-    megamol::core::CalleeSlot m_output_tex_slot;
+    megamol::core::CalleeSlot m_outputTexSlot;
 
     /** Slot for querying normals render target texture, i.e. a rhs connection */
-    megamol::core::CallerSlot m_normals_tex_slot;
+    megamol::core::CallerSlot m_normalsTexSlot;
 
     /** Slot for querying depth render target texture, i.e. a rhs connection */
-    megamol::core::CallerSlot m_depth_tex_slot;
+    megamol::core::CallerSlot m_depthTexSlot;
 
     /** Slot for querying camera, i.e. a rhs connection */
-    megamol::core::CallerSlot m_camera_slot;
+    megamol::core::CallerSlot m_cameraSlot;
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -413,28 +398,28 @@ private:
 template<typename Tuple, typename Tex>
 void ASSAO::fullscreenPassDraw(
     const std::unique_ptr<GLSLComputeShader>& prgm,
-    const std::vector<Tuple>& input_textures,
-    std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& output_textures,
-    bool add_constants,
+    const std::vector<Tuple>& inputTextures,
+    std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& outputTextures,
+    bool addConstants,
     const TextureArraySamplerTuple& finals)
 {
     prgm->Enable();
 
-    if (add_constants)
-        m_ssbo_constants->bind(0);
+    if (addConstants)
+        m_ssboConstants->bind(0);
 
     int cnt = 0;
 
-    for (int i = 0; i < input_textures.size(); ++i) {
-        if (std::get<0>(input_textures[i]) != nullptr) {
+    for (int i = 0; i < inputTextures.size(); ++i) {
+        if (std::get<0>(inputTextures[i]) != nullptr) {
             glActiveTexture(GL_TEXTURE0 + cnt);
 
-            std::get<0>(input_textures[i])->bindTexture();
+            std::get<0>(inputTextures[i])->bindTexture();
 
-            if (std::get<2>(input_textures[i]) != nullptr)
-                std::get<2>(input_textures[i])->bindSampler(cnt);
+            if (std::get<2>(inputTextures[i]) != nullptr)
+                std::get<2>(inputTextures[i])->bindSampler(cnt);
 
-            std::string name = std::get<1>(input_textures[i]);
+            std::string name = std::get<1>(inputTextures[i]);
             GLint loc = prgm->ParameterLocation(name.c_str());
             glUniform1i(loc, cnt);
 
@@ -449,14 +434,14 @@ void ASSAO::fullscreenPassDraw(
         glUniform1i(prgm->ParameterLocation(std::get<1>(finals).c_str()), 0);
     }
 
-    for (int i = 0; i < output_textures.size(); ++i) {
-        output_textures[i].first->bindImage(output_textures[i].second, GL_READ_WRITE);
+    for (int i = 0; i < outputTextures.size(); ++i) {
+        outputTextures[i].first->bindImage(outputTextures[i].second, GL_READ_WRITE);
     }
 
     // all textures in output_textures should have the same size, so we just use the first
     // TODO: adjust dispatch size
-    prgm->Dispatch(static_cast<int>(std::ceil(output_textures[0].first->getWidth() / 8.f)),
-        static_cast<int>(std::ceil(output_textures[0].first->getHeight() / 8.f)), 1);
+    prgm->Dispatch(static_cast<int>(std::ceil(outputTextures[0].first->getWidth() / 8.f)),
+        static_cast<int>(std::ceil(outputTextures[0].first->getHeight() / 8.f)), 1);
 
     prgm->Disable();
 

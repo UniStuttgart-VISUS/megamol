@@ -71,7 +71,6 @@ void PrepareDepthMip( const vec4 inPos/*, const vec2 inUV*/, int mipLevel, out f
 
         float closest = min( min( depths.x, depths.y ), min( depths.z, depths.w ) );
 
-        // TODO: is vec2(1.0) correct?
         CalculateRadiusParameters( abs( closest ), vec2(1.0), dummyUnused1, dummyUnused2, falloffCalcMulSq );
 
         vec4 dists = depths - closest.xxxx;

@@ -67,15 +67,12 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
         // load & update pseudo-random rotation matrix
         uint pseudoRandomIndex = uint( SVPosRounded.y * 2 + SVPosRounded.x ) % 5;
         vec4 rs = g_ASSAOConsts.PatternRotScaleMatrices[ pseudoRandomIndex ];
-        // TODO: does this need to be transposed?
-        // probably not because of pseudo-randomness
         rotScale = mat2( rs.x * pixLookupRadiusMod, rs.y * pixLookupRadiusMod, rs.z * pixLookupRadiusMod, rs.w * pixLookupRadiusMod );
     }
 
     // the main obscurance & sample weight storage
     float obscuranceSum = 0.0;
     float weightSum = 0.0;
-	float obstwo = 0.0;
 
     // edge mask for between this and left/right/top/bottom neighbour pixels - not used in quality level 0 so initialize to "no edge" (1 is no edge, 0 is edge)
     vec4 edgesLRTB = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -117,18 +114,12 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
             additionalObscurance.w = CalculatePixelObscurance( pixelNormal, pixBDelta, modifiedFalloffCalcMulSq );
 
             obscuranceSum += g_ASSAOConsts.DetailAOStrength * dot( additionalObscurance, edgesLRTB );
-
-			obstwo = pixLZ / 2.f;
         }
     }
 
     // Sharp normals also create edges - but this adds to the cost as well
     if( !adaptiveBase && (qualityLevel >= SSAO_NORMAL_BASED_EDGES_ENABLE_AT_QUALITY_PRESET ) )
     {
-        //vec3 neighbourNormalL = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2(-2,  0 ) ).xyz );
-        //vec3 neighbourNormalR = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 2,  0 ) ).xyz );
-        //vec3 neighbourNormalT = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0,  2 ) ).xyz );
-        //vec3 neighbourNormalB = DecodeNormal( texelFetchOffset(g_NormalmapSource, ivec2(fullResCoord), 0, ivec2( 0, -2 ) ).xyz );
         vec3 neighbourNormalL  = LoadNormal( ivec2(fullResCoord), ivec2( -2,  0 ) );
         vec3 neighbourNormalR  = LoadNormal( ivec2(fullResCoord), ivec2(  2,  0 ) );
         vec3 neighbourNormalT  = LoadNormal( ivec2(fullResCoord), ivec2(  0,  2 ) );

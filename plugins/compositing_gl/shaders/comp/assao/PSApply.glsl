@@ -37,7 +37,7 @@ void main()
 
     ao = centerVal.x;
 
-#if true   // change to 0 if you want to disable last pass high-res blur (for debugging purposes, etc.)
+#if 1   // change to 0 if you want to disable last pass high-res blur (for debugging purposes, etc.)
     vec4 edgesLRTB = UnpackEdges( centerVal.y );
 
     // convert index shifts to sampling offsets

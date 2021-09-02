@@ -13,6 +13,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// not used atm
 vec3 ScreenSpaceToViewSpacePosition( vec2 screenPos, float viewspaceDepth )
 {
     // TODO: is this correct with the new math? probably not
