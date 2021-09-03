@@ -452,9 +452,9 @@ void megamol::gui::Call::draw_profiling_data() {
             std::transform(ch.begin(), ch.end(), ybuf.begin(), [](double d) -> float { return static_cast<float>(d); });
             auto Xhist_count = static_cast<int>(ybuf.size());
 
-            ImPlot::FitNextPlotAxes(); // no ImPlotAxisFlags_Lock
-            if (ImPlot::BeginPlot("CPU History", nullptr, nullptr,
-                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())))) {
+            if (ImPlot::BeginPlot("CPU History", nullptr, "ms",
+                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
                 ImPlot::PlotLine("###cpuplot", xbuf.data(), ybuf.data(), Xhist_count);
                 ImPlot::EndPlot();
             }
@@ -485,9 +485,9 @@ void megamol::gui::Call::draw_profiling_data() {
             const auto gh = this->profiling[i].hgpu;
             std::transform(gh.begin(), gh.end(), ybuf.begin(), [](double d) -> float { return static_cast<float>(d); });
 
-            ImPlot::FitNextPlotAxes();
-            if (ImPlot::BeginPlot("GPU History", nullptr, nullptr,
-                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())))) {
+            if (ImPlot::BeginPlot("GPU History", nullptr, "ms",
+                    ImVec2(ImGui::GetContentRegionAvail().x, (PROFILING_PLOT_HEIGHT * ImGui::GetFrameHeight())),
+                    ImPlotFlags_None, ImPlotAxisFlags_AutoFit)) {
                 ImPlot::PlotLine("###gpuplot", xbuf.data(), ybuf.data(), Xhist_count);
                 ImPlot::EndPlot();
             }
