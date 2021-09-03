@@ -482,7 +482,7 @@ function(require_external NAME)
 
     add_external_project(implot STATIC
       GIT_REPOSITORY https://github.com/epezent/implot.git
-      GIT_TAG "v0.8"
+      GIT_TAG "v0.11"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMPLOT_LIB}"
       DEPENDS imgui
       CMAKE_ARGS
