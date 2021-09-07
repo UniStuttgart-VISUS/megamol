@@ -45,6 +45,12 @@ if(ENABLE_CUDA)
   set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif()
 
+# CUE
+option(ENABLE_CUESDK "Enable CUE for highlighting hotkeys on Corsair Keyboards" OFF)
+if (ENABLE_CUESDK)
+  add_compile_definitions(CUESDK_ENABLED)
+endif()
+
 # GLFW
 option(USE_GLFW "Use GLFW" ON)
 

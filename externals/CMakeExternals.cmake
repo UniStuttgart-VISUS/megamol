@@ -32,6 +32,17 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/asmjit/asmjit.git
       GIT_TAG "8474400e82c3ea65bd828761539e5d9b25f6bd83" )
 
+  # Corsair CUE SDK
+  elseif(NAME STREQUAL "CUESDK")
+    if (TARGET CUESDK)
+      return()
+    endif()
+
+    add_external_headeronly_project(CUESDK
+      GIT_REPOSITORY https://github.com/CorsairOfficial/cue-sdk.git
+      GIT_TAG "v3.0.378"
+      INCLUDE_DIR "src/include")
+
   # Delaunator
   elseif(NAME STREQUAL "Delaunator")
     if(TARGET Delaunator)

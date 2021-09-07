@@ -133,6 +133,8 @@ namespace param {
 
     private:
 
+        void initialize();
+
         /** The key of this button */
         core::view::KeyCode keycode;
 

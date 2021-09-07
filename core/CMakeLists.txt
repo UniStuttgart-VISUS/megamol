@@ -24,6 +24,9 @@ if(BUILD_CORE)
   require_external(glowl)
   require_external(json)
   require_external(megamol-shader-factory)
+  if (ENABLE_CUESDK)
+    require_external(CUESDK)
+  endif()
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
@@ -53,7 +56,7 @@ if(BUILD_CORE)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include")
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glm glowl zlib libpng json lua megamol-shader-factory expat frontend_resources libcppzmq libzmq
+    PUBLIC vislib glm glowl zlib libpng json lua megamol-shader-factory expat frontend_resources libcppzmq libzmq CUESDK
     PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service) # abstract render api used by MegaMolGraph
   if(UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
