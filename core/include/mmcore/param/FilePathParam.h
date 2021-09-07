@@ -43,7 +43,8 @@ namespace param {
 
         typedef uint32_t Flags_t;
         typedef std::vector<std::string> Extensions_t;
-        typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&)> RegisterNotificationCallback_t;
+        // Value semantics: 1) pop-up id string, 2) Pointer to 'open pop-up' flag, 3) message, 4) pointer to currently omitted parameter value as string held by pop-up caller
+        typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&, std::weak_ptr<std::string>)> RegisterNotificationCallback_t;
 
         /**
          * Ctor.
@@ -161,7 +162,7 @@ namespace param {
         /** Indicates whether notifications are already registered or not (should be done only once) */
         bool registered_notifications;
         /** Flags for opening specific notifications */
-        std::map<Flags_t, std::shared_ptr<bool>> open_notification;
+        std::map<Flags_t, std::tuple<std::shared_ptr<bool>, std::shared_ptr<std::string>>> notification;
     };
 
 

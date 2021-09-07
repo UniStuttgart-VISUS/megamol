@@ -59,23 +59,6 @@ if(BUILD_CORE)
     target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
   endif()
 
-  # Add libunwind.
-  if(UNIX)
-    option(USE_LIBUNWIND "use libunwind" OFF)
-    if(USE_LIBUNWIND)
-      find_package(LIBUNWIND REQUIRED)
-      message(STATUS ${LIBUNWIND_LIBRARIES})
-      message(STATUS ${LIBUNWIND_INCLUDE_DIR})
-      if(LIBUNWIND_FOUND)
-        target_compile_definitions(${PROJECT_NAME} PUBLIC "HAS_LIBUNWIND")
-        target_include_directories(${PROJECT_NAME} PUBLIC ${LIBUNWIND_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBUNWIND_LIBRARIES} )
-      else()
-        message(FATAL_ERROR "Can not find libunwind.")
-      endif()
-    endif()
-  endif()
-  
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
