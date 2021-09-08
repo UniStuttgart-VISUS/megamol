@@ -30,6 +30,10 @@ struct Command {
 
 class CommandRegistry {
 public:
+    CommandRegistry();
+
+    ~CommandRegistry();
+
     void add_command(const Command& c);
 
     void remove_command(const megamol::core::param::AbstractParam* param);

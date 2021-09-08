@@ -12,6 +12,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 #  # afterwards list the dependencies.
 #  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
+if (ENABLE_CUESDK)
+  require_external(CUESDK)
+endif()
+
 file(GLOB_RECURSE header_files "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp" )
 file(GLOB_RECURSE source_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
@@ -30,6 +34,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   #$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
   #$<INSTALL_INTERFACE:include/>
 )
+target_link_libraries(${PROJECT_NAME} PUBLIC CUESDK)
 
 # Grouping in Visual Studio
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)

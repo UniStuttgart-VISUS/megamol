@@ -46,9 +46,11 @@ if(ENABLE_CUDA)
 endif()
 
 # CUE
-option(ENABLE_CUESDK "Enable CUE for highlighting hotkeys on Corsair Keyboards" OFF)
-if (ENABLE_CUESDK)
-  add_compile_definitions(CUESDK_ENABLED)
+if (WIN32)
+  option(ENABLE_CUESDK "Enable CUE for highlighting hotkeys on Corsair Keyboards" OFF)
+  if (ENABLE_CUESDK)
+    add_compile_definitions(CUESDK_ENABLED)
+  endif()
 endif()
 
 # GLFW
