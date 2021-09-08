@@ -113,6 +113,72 @@ protected:
      */
     virtual bool Render(CallRender3DGL& call);
 
+    bool OnChar(unsigned codePoint) override {
+        auto* ci = this->_getContextSlot.template CallAs<InputCall>();
+        if (ci != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::Char;
+            evt.charData.codePoint = codePoint;
+            ci->SetInputEvent(evt);
+            return (*ci)(InputCall::FnOnChar);
+        }
+        return false; 
+    }
+
+    bool OnKey(Key key, KeyAction action, Modifiers mods) override {
+        auto* ci = this->_getContextSlot.template CallAs<InputCall>();
+        if (ci != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::Key;
+            evt.keyData.key = key;
+            evt.keyData.action = action;
+            evt.keyData.mods = mods;
+            ci->SetInputEvent(evt);
+            return (*ci)(InputCall::FnOnKey);
+        }
+        return false;
+    }
+
+    bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override {
+        auto* ci = this->chainRenderSlot.template CallAs<InputCall>();
+        if (ci != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseButton;
+            evt.mouseButtonData.button = button;
+            evt.mouseButtonData.action = action;
+            evt.mouseButtonData.mods = mods;
+            ci->SetInputEvent(evt);
+            return (*ci)(InputCall::FnOnMouseButton);
+        }
+        return false;
+    }
+
+    bool OnMouseMove(double x, double y) override {
+        auto* ci = this->chainRenderSlot.template CallAs<InputCall>();
+        if (ci != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseMove;
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
+            ci->SetInputEvent(evt);
+            return (*ci)(InputCall::FnOnMouseMove);
+        }
+        return false; 
+    }
+
+    bool OnMouseScroll(double dx, double dy) override {
+        auto* ci = this->chainRenderSlot.template CallAs<InputCall>();
+        if (ci != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseScroll;
+            evt.mouseScrollData.dx = dx;
+            evt.mouseScrollData.dy = dy;
+            ci->SetInputEvent(evt);
+            return (*ci)(InputCall::FnOnMouseScroll);
+        }
+        return false; 
+    }
+
 private:
     core::CallerSlot _getContextSlot;
 
@@ -168,26 +234,6 @@ bool ContextToGL<CALL, init_func, ren_func, CN, DESC>::Render(CallRender3DGL& ca
         viewport = {width, height};
     }
     cr->SetFramebuffer(_framebuffer);
-    cr->SetInputEvent(call.GetInputEvent());
-
-    auto const& ie = cr->GetInputEvent();
-    switch (ie.tag) {
-    case InputEvent::Tag::Char: {
-        (*cr)(CALL::FnOnChar);
-    } break;
-    case InputEvent::Tag::Key: {
-        (*cr)(CALL::FnOnKey);
-    } break;
-    case InputEvent::Tag::MouseButton: {
-        (*cr)(CALL::FnOnMouseButton);
-    } break;
-    case InputEvent::Tag::MouseMove: {
-        (*cr)(CALL::FnOnMouseMove);
-    } break;
-    case InputEvent::Tag::MouseScroll: {
-        (*cr)(CALL::FnOnMouseScroll);
-    } break;
-    }
 
     (*cr)(CALL::FnRender);
 
