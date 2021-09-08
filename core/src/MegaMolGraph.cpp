@@ -12,6 +12,8 @@
 #include <string>
 #include <numeric> // std::accumulate
 
+#include "mmcore/param/ButtonParam.h"
+
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
     std::vector<std::string> result;
@@ -267,8 +269,22 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
 
     if (!isCreateOk) {
         this->module_list_.pop_front();
+    } else {
+        // iterate parameters, add hotkeys to CommandRegistry
+        for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
+            auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
+            if (ps != nullptr) {
+                auto p = ps->Param<param::ButtonParam>();
+                if (p != nullptr) {
+                    frontend_resources::Command c;
+                    c.key = p->GetKeyCode();
+                    c.param = p;
+                    c.name = ps->FullName();
+                    m_command_registry->add_command(c);
+                }
+            }
+        }
     }
-
     return isCreateOk;
 }
 
@@ -388,6 +404,17 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
     if (!module_ptr) {
         log_error("error. no object behind pointer when deleting module: " + request);
         return false;
+    }
+
+    // iterate parameters, remove hotkeys from CommandRegistry
+    for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
+        auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
+        if (ps != nullptr) {
+            auto p = ps->Param<param::ButtonParam>();
+            if (p != nullptr) {
+                m_command_registry->remove_command(p);
+            }
+        }
     }
 
     // delete all outgoing/incoming calls
@@ -656,6 +683,15 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::fron
 
     m_image_presentation = & const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         find_it->getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+
+    auto find_it2 = std::find_if(provided_resources.begin(), provided_resources.end(), [&](megamol::frontend::FrontendResource const& resource) {
+            return resource.getIdentifier() == megamol::frontend_resources::CommandRegistry_Req_Name;
+        });
+    if (find_it2 == provided_resources.end()) {
+        return false;
+    }
+    m_command_registry = & const_cast<megamol::frontend_resources::CommandRegistry&>(
+        find_it2->getResource<megamol::frontend_resources::CommandRegistry>());
 
     return true;
 }

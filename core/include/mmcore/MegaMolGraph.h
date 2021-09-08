@@ -21,6 +21,7 @@
 
 #include "FrontendResource.h"
 #include "ImagePresentationEntryPoints.h"
+#include "CommandRegistry.h"
 
 namespace megamol {
 namespace core {
@@ -191,6 +192,8 @@ private:
     // poke the rendering, collect the resulting View renderings and present them to the user appropriately
     std::list<Module::ptr_type> graph_entry_points;
     megamol::frontend_resources::ImagePresentationEntryPoints* m_image_presentation = nullptr;
+
+    megamol::frontend_resources::CommandRegistry* m_command_registry = nullptr;
 
     MegaMolGraph_Convenience convenience_functions;
 

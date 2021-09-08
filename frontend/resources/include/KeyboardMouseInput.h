@@ -296,6 +296,10 @@ public:
         this->key = key;
     }
 
+    bool operator==(const KeyCode &other) const {
+        return (mods.equals(other.mods) && key == other.key);
+  }
+
     /**
      * Generates a human-readable ASCII String representing the key code.
      *
@@ -446,3 +450,19 @@ namespace input = frontend_resources;
 
 } /* end namespace frontend_resources */
 } /* end namespace megamol */
+
+namespace std {
+
+  template <>
+  struct hash<megamol::frontend_resources::KeyCode>
+  {
+    std::size_t operator()(const megamol::frontend_resources::KeyCode& k) const noexcept {
+      using std::size_t;
+      using std::hash;
+      using std::string;
+
+      return (static_cast<uint64_t>(k.key) << 32 | k.mods.toInt());
+    }
+  };
+
+}

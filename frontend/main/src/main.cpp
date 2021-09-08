@@ -9,6 +9,7 @@
 
 #include "RuntimeConfig.h"
 #include "GlobalValueStore.h"
+#include "CommandRegistry.h"
 
 #include "CUDA_Service.hpp"
 #include "FrameStatistics_Service.hpp"
@@ -176,12 +177,17 @@ int main(const int argc, const char** argv) {
     const megamol::core::factories::ModuleDescriptionManager& moduleProvider = core.GetModuleDescriptionManager();
     const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
 
+
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
     // Graph and Config are also a resources that may be accessed by services
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
     services.getProvidedResources().push_back({"RuntimeConfig", config});
     services.getProvidedResources().push_back({"GlobalValueStore", global_value_store});
+
+    megamol::frontend_resources::CommandRegistry commands;
+    services.getProvidedResources().push_back({megamol::frontend_resources::CommandRegistry_Req_Name, commands});
+
 
     // proof of concept: a resource that returns a list of names of available resources
     // used by Lua Wrapper and LuaAPI to return list of available resources via remoteconsole
