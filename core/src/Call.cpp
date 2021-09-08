@@ -19,7 +19,7 @@
 #ifdef PROFILING
 #    include "mmcore/view/Renderer3DModuleGL.h"
 #    include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/CoreInstance.h"
+#    include "mmcore/CoreInstance.h"
 #    include <ctime>
 #endif
 #include "mmcore/utility/log/Log.h"

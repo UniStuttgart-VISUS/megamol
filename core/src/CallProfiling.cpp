@@ -80,8 +80,6 @@ std::array<double, PerformanceHistory::buffer_length> CallProfiling::GetGPUHisto
 }
 
 uint32_t CallProfiling::GetFuncCount() const {
-    /// XXX assert(last_cpu_time.size() == avg_cpu_time.size() == num_cpu_time_samples.size() == last_gpu_time.size() ==
-            ///       avg_gpu_time.size() == num_gpu_time_samples.size());
     return static_cast<uint32_t>(callback_names.size());
 }
 

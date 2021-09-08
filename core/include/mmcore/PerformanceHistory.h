@@ -19,17 +19,6 @@ public:
     double operator[](int index) const;
 
     double last_value() const {
-        // do we want to treat the special case?
-        //if (num_samples > 0) {
-        //    return time_buffer[last_index];
-        //} else {
-        //    return std::numeric_limits<double>::infinity();
-        //}
-
-        // or just like this...
-        //return time_buffer[last_index];
-
-        // or even better
         return time_buffer[offset(next_index, buffer_length - 1)];
     }
 
