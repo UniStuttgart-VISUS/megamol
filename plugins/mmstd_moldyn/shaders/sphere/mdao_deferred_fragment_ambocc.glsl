@@ -7,8 +7,8 @@ vec3 perp(vec3 v)
 }
 
 
-float evaluateAmbientOcclusion(const in vec3 objPos, const in vec3 objNormal) 
-{
+float evaluateAmbientOcclusion(const in vec3 objPos, const in vec3 objNormal) {
+
 	// Number of samples per ray
 	const int samplesPerRay = 5;
 	// Number of total samples

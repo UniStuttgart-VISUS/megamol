@@ -3,7 +3,7 @@
     <include file="common"/>
     <include file="core_utils"/>
     <include file="bitflags"/>
-    <include file="sphere_flags"/>
+    <include file="sphere-flags"/>
 
     <shader name="ellipsoid_vertex">
         <snippet type="version">430</snippet>

@@ -30,7 +30,6 @@ void main() {
 		return;
 	}
 	
-	
 	// Check if the cell is completely contained in the sphere
 	// This is the case when the cell corner point with the greatest distance from the sphere
 	// center lies in the sphere
