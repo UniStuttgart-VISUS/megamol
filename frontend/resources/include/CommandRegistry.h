@@ -40,6 +40,8 @@ public:
 
     void update_hotkey(const std::string& command_name, KeyCode key);
 
+    void modifiers_changed(Modifiers mod);
+
     megamol::core::param::AbstractParam* param_from_keycode(KeyCode key);
 
 private:
@@ -54,6 +56,8 @@ private:
     std::unordered_map<KeyCode, int> key_to_command;
     std::unordered_map<std::string, int> command_index;
     std::vector<Command> commands;
+
+    Modifiers current_modifiers;
 };
 
 } /* end namespace frontend_resources */

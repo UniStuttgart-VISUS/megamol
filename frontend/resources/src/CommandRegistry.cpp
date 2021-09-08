@@ -209,6 +209,13 @@ void megamol::frontend_resources::CommandRegistry::update_hotkey(const std::stri
     }
 }
 
+void megamol::frontend_resources::CommandRegistry::modifiers_changed(Modifiers mod) {
+    // TODO
+    // find keys that match the modifier
+    // unset all others, huh.
+    current_modifiers = mod;
+}
+
 megamol::core::param::AbstractParam* megamol::frontend_resources::CommandRegistry::param_from_keycode(KeyCode key) {
     const auto c = key_to_command.find(key);
     if (c == key_to_command.end()) {
@@ -241,6 +248,14 @@ std::string megamol::frontend_resources::CommandRegistry::increment_name(const s
 
 void megamol::frontend_resources::CommandRegistry::push_command(const Command& c) {
     commands.push_back(c);
-    if (c.key.key != Key::KEY_UNKNOWN) key_to_command[c.key] = static_cast<int>(commands.size() - 1);
+    if (c.key.key != Key::KEY_UNKNOWN) {
+        key_to_command[c.key] = static_cast<int>(commands.size() - 1);
+#ifdef CUESDK_ENABLED
+        if (current_modifiers.equals(c.key.mods)) {
+            auto ledColor = CorsairLedColor{ CorsairLEDfromGLFWKey[c.key.key], 255, 0, 0 };
+	    CorsairSetLedsColors(1, &ledColor);
+        }
+#endif
+    }
     command_index[c.name] = static_cast<int>(commands.size() - 1);
 }
