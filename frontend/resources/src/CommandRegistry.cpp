@@ -33,6 +33,7 @@ void megamol::frontend_resources::CommandRegistry::update_hotkey(const std::stri
         const auto old_key = c.key;
         c.key = key;
         key_to_command.erase(old_key);
+        key_to_command[key] = command_index[command_name];
     }
 }
 
