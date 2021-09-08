@@ -279,6 +279,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
                     frontend_resources::Command c;
                     c.key = p->GetKeyCode();
                     c.param = p;
+                    // actually a module should be able to define its own names, shouldn't it?
                     c.name = ps->FullName();
                     m_command_registry->add_command(c);
                 }
