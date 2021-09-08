@@ -36,6 +36,7 @@ public:
 
     void update_hotkey(const std::string& command_name, KeyCode key);
 
+    megamol::core::param::AbstractParam* param_from_keycode(KeyCode key);
 
 private:
 

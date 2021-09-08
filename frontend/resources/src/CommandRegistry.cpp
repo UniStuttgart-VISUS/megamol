@@ -37,6 +37,15 @@ void megamol::frontend_resources::CommandRegistry::update_hotkey(const std::stri
     }
 }
 
+megamol::core::param::AbstractParam* megamol::frontend_resources::CommandRegistry::param_from_keycode(KeyCode key) {
+    const auto c = key_to_command.find(key);
+    if (c == key_to_command.end()) {
+        return nullptr;
+    } else {
+        return commands[c->second].param;
+    }
+}
+
 std::string megamol::frontend_resources::CommandRegistry::increment_name(const std::string& oldname) {
     std::string new_name;
     std::string prefix;
