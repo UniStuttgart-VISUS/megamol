@@ -61,10 +61,7 @@ bool Call::operator()(unsigned int func) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         auto f = this->callee->GetCallbackFuncName(func);
         auto parent = callee->Parent().get();
-        auto p3 = dynamic_cast<core::view::Renderer3DModule*>(parent);
-        auto p3_2 = dynamic_cast<core::view::Renderer3DModuleGL*>(parent);
-        auto p2 = dynamic_cast<core::view::Renderer2DModule*>(parent);
-        if (p3 || p3_2 || p2) {
+        if (caps.OpenGLRequired()) {
             std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
             output += "::";
             output += f;
@@ -75,7 +72,7 @@ bool Call::operator()(unsigned int func) {
 #ifdef PROFILING
         const auto startTime = std::chrono::high_resolution_clock::now();
         bool gl_started = false;
-        if (uses_gl) {
+        if (caps.OpenGLRequired()) {
             gl_started = CallProfiling::qm->Start(this, this->callee->GetCoreInstance()->GetFrameID(), func);
         }
 #endif
@@ -90,7 +87,7 @@ bool Call::operator()(unsigned int func) {
 
 #endif
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-        if (p2 || p3 || p3_2) glPopDebugGroup();
+        if (caps.OpenGLRequired()) glPopDebugGroup();
 #endif
     }
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,

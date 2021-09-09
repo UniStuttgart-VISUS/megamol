@@ -12,7 +12,7 @@ CallProfiling::CallProfiling() {
 }
 
 CallProfiling::~CallProfiling() {
-    if (parent_call->UsesGL()) {
+    if (parent_call->GetCapabilities().OpenGLRequired()) {
         qm->RemoveCall(parent_call);
     }
 }
@@ -108,7 +108,7 @@ void CallProfiling::setProfilingInfo(std::vector<std::string> names, Call* paren
     cpu_history.resize(callback_names.size());
     gpu_history.resize(callback_names.size());
     parent_call = parent;
-    if (parent_call->UsesGL()) {
+    if (parent_call->GetCapabilities().OpenGLRequired()) {
         InitializeQueryManager();
         qm->AddCall(parent_call);
     }

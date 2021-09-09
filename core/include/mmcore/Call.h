@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <utility>
+#include "CallCapabilities.h"
 #ifdef PROFILING
 #include "CallProfiling.h"
 #endif
@@ -99,13 +100,8 @@ namespace core {
             return this->className;
         }
 
-        // TODO needs to be replaced by some CallAPICapabilities or something
-        bool UsesGL() {
-#ifdef PROFILING
-            return uses_gl;
-#else
-            return false;
-#endif
+        const CallCapabilities& GetCapabilities() const {
+            return caps;
         }
 
 #ifdef PROFILING
@@ -131,14 +127,12 @@ namespace core {
 
         CallProfiling profiling;
 
-        void setProfilingInfo(std::vector<std::string> names, bool usesGL) {
-            uses_gl = usesGL;
+        void setProfilingInfo(std::vector<std::string> names) {
             profiling.setProfilingInfo(std::move(names), this);
         }
-        bool uses_gl = false;
 #endif // PROFILING
-
-
+    protected:
+        CallCapabilities caps;
     };
 
 

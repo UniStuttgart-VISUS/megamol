@@ -366,12 +366,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     for (uint32_t x = 0; x < call_description->FunctionCount(); ++x) {
         callbacks[x] = call_description->FunctionName(x);
     }
-    // TODO if gl enabled, else both vars = false
-    const auto gl_1 = dynamic_cast<view::Renderer2DModule*>(to_slot.second.get());
-    const auto gl_2 = dynamic_cast<view::Renderer3DModuleGL*>(to_slot.second.get());
-    // something like that would be nice but does not work
-    //const auto gl_3 = dynamic_cast<view::RendererModule<view::CallRender3DGL>>(to_slot.second.get());
-    call->setProfilingInfo(callbacks, gl_1 || gl_2);
+    call->setProfilingInfo(callbacks);
 #endif
 
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
