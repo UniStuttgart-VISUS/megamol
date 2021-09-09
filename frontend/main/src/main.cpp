@@ -9,9 +9,9 @@
 
 #include "RuntimeConfig.h"
 #include "GlobalValueStore.h"
-#include "CommandRegistry.h"
 
 #include "CUDA_Service.hpp"
+#include "Command_Service.hpp"
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
@@ -127,6 +127,7 @@ int main(const int argc, const char** argv) {
     megamol::frontend::ImagePresentation_Service imagepresentation_service;
     megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
     imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
+    megamol::frontend::Command_Service command_service;
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -154,6 +155,7 @@ int main(const int argc, const char** argv) {
     services.add(framestatistics_service, &framestatisticsConfig);
     services.add(projectloader_service, &projectloaderConfig);
     services.add(imagepresentation_service, &imagepresentationConfig);
+    services.add(command_service, nullptr);
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
 #endif
@@ -184,10 +186,6 @@ int main(const int argc, const char** argv) {
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
     services.getProvidedResources().push_back({"RuntimeConfig", config});
     services.getProvidedResources().push_back({"GlobalValueStore", global_value_store});
-
-    megamol::frontend_resources::CommandRegistry commands;
-    services.getProvidedResources().push_back({megamol::frontend_resources::CommandRegistry_Req_Name, commands});
-
 
     // proof of concept: a resource that returns a list of names of available resources
     // used by Lua Wrapper and LuaAPI to return list of available resources via remoteconsole
