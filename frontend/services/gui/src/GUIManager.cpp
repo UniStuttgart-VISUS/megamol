@@ -606,29 +606,29 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
     }
 
     // Check for parameter hotkeys
-    hotkeyPressed = false;
-    if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-        for (auto& module_ptr : graph_ptr->Modules()) {
-            // Break loop after first occurrence of parameter hotkey
-            if (hotkeyPressed) {
-                break;
-            }
-            for (auto& p : module_ptr->Parameters()) {
-                if (p.Type() == ParamType_t::BUTTON) {
-                    auto keyCode = p.GetStorage<megamol::core::view::KeyCode>();
-                    if (this->is_hotkey_pressed(keyCode)) {
-                        // Sync directly button action to parameter in core
-                        /// Does not require syncing of graphs
-                        if (p.CoreParamPtr() != nullptr) {
-                            p.CoreParamPtr()->setDirty();
-                        }
-                        /// p.ForceSetValueDirty();
-                        hotkeyPressed = true;
-                    }
-                }
-            }
-        }
-    }
+    // hotkeyPressed = false;
+    // if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+    //    for (auto& module_ptr : graph_ptr->Modules()) {
+    //        // Break loop after first occurrence of parameter hotkey
+    //        if (hotkeyPressed) {
+    //            break;
+    //        }
+    //        for (auto& p : module_ptr->Parameters()) {
+    //            if (p.Type() == ParamType_t::BUTTON) {
+    //                auto keyCode = p.GetStorage<megamol::core::view::KeyCode>();
+    //                if (this->is_hotkey_pressed(keyCode)) {
+    //                    // Sync directly button action to parameter in core
+    //                    /// Does not require syncing of graphs
+    //                    if (p.CoreParamPtr() != nullptr) {
+    //                        p.CoreParamPtr()->setDirty();
+    //                    }
+    //                    /// p.ForceSetValueDirty();
+    //                    hotkeyPressed = true;
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
 
     return hotkeyPressed;
 }

@@ -1,6 +1,7 @@
 #include "Command_Service.hpp"
 
 #include "KeyboardMouse_Events.h"
+#include "mmcore/param/AbstractParam.h"
 #include "mmcore/utility/log/Log.h"
 
 
@@ -36,11 +37,21 @@ void megamol::frontend::Command_Service::digestChangedRequestedResources() {
             &this->requestedResourceReferences[0].getResource<megamol::frontend_resources::KeyboardEvents>();
         for (auto& key_event : keyboard_events->key_events) {
             auto key = std::get<0>(key_event);
+            auto action = std::get<1>(key_event);
+            auto modifiers = std::get<2>(key_event);
+
             if (key == frontend_resources::Key::KEY_RIGHT_SHIFT || key == frontend_resources::Key::KEY_LEFT_SHIFT ||
                 key == frontend_resources::Key::KEY_RIGHT_CONTROL|| key == frontend_resources::Key::KEY_LEFT_CONTROL||
                 key == frontend_resources::Key::KEY_RIGHT_ALT || key == frontend_resources::Key::KEY_LEFT_ALT) {
-                auto modifiers = std::get<2>(key_event);
                 commands.modifiers_changed(modifiers);
+            }
+
+            if (action == frontend_resources::KeyAction::PRESS) {
+                frontend_resources::KeyCode kc {key, modifiers};
+                auto p = commands.param_from_keycode(kc);
+                if (p != nullptr) {
+                    p->setDirty();
+                }
             }
         }
 }
