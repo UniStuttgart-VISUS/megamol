@@ -1,6 +1,5 @@
 #pragma once
 
-#ifdef PROFILING
 #include <array>
 #include <vector>
 
@@ -40,7 +39,7 @@ private:
     int32_t running_query = -1;
 };
 
-#endif
 
 } // namespace core
 } // namespace megamol
+

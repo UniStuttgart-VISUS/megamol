@@ -99,8 +99,16 @@ namespace core {
             return this->className;
         }
 
+        // TODO needs to be replaced by some CallAPICapabilities or something
+        bool UsesGL() {
 #ifdef PROFILING
-        bool UsesGL() { return uses_gl; }
+            return uses_gl;
+#else
+            return false;
+#endif
+        }
+
+#ifdef PROFILING
         const CallProfiling& GetProfiling() const { return profiling; }
 #endif
 
@@ -127,9 +135,9 @@ namespace core {
             uses_gl = usesGL;
             profiling.setProfilingInfo(std::move(names), this);
         }
-
         bool uses_gl = false;
-#endif //PROFILING
+#endif // PROFILING
+
 
     };
 
