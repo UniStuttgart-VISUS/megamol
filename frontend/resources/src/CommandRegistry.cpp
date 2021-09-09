@@ -1,12 +1,7 @@
 #include "CommandRegistry.h"
 
 #ifdef CUESDK_ENABLED
-#define CORSAIR_LIGHTING_SDK_DISABLE_DEPRECATION_WARNINGS
-#include "CUESDK.h"
-#include <map>
-
-// TODO move somewhere it's needed
-std::map<megamol::frontend_resources::Key, CorsairLedId> CorsairLEDfromGLFWKey {
+std::unordered_map<megamol::frontend_resources::Key, CorsairLedId> megamol::frontend_resources::CommandRegistry::corsair_led_from_glfw_key {
         {megamol::frontend_resources::Key::KEY_ESCAPE, CLK_Escape},
         {megamol::frontend_resources::Key::KEY_F1, CLK_F1},
         {megamol::frontend_resources::Key::KEY_F2, CLK_F2},
@@ -155,7 +150,6 @@ std::map<megamol::frontend_resources::Key, CorsairLedId> CorsairLEDfromGLFWKey {
         //{megamol::frontend_resources::Key::KEY_, CLK_International5},
         //{megamol::frontend_resources::Key::KEY_, CLK_International4},
     };
-
 #endif
 
 
@@ -163,6 +157,12 @@ megamol::frontend_resources::CommandRegistry::CommandRegistry() {
 #ifdef CUESDK_ENABLED
     CorsairPerformProtocolHandshake();
     CorsairRequestControl(CAM_ExclusiveLightingControl);
+    led_positions = CorsairGetLedPositions();
+    for (auto i = 0; i < led_positions->numberOfLed; i++) {
+        const auto ledPos = led_positions->pLedPosition[i];
+        auto ledColor = CorsairLedColor{ledPos.ledId, 0, 0, 0};
+        black_keyboard.push_back(ledColor);
+    }
 #endif
 }
 
@@ -202,17 +202,26 @@ void megamol::frontend_resources::CommandRegistry::remove_command(const megamol:
 void megamol::frontend_resources::CommandRegistry::update_hotkey(const std::string& command_name, KeyCode key) {
     if (!is_new(command_name)) {
         auto& c = commands[command_index[command_name]];
+        remove_color_from_layer(c);
         const auto old_key = c.key;
         c.key = key;
         key_to_command.erase(old_key);
         key_to_command[key] = command_index[command_name];
+        add_color_to_layer(c);
     }
 }
 
 void megamol::frontend_resources::CommandRegistry::modifiers_changed(Modifiers mod) {
     // TODO
-    // find keys that match the modifier
-    // unset all others, huh.
+#ifdef CUESDK_ENABLED
+    // unset all keys
+    CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data());
+    // find layer that matches the modifier
+    const auto layer = key_colors.find(mod);
+    if (layer != key_colors.end()) {
+        CorsairSetLedsColors(static_cast<int>(layer->second.size()), layer->second.data());
+    }
+#endif
     current_modifiers = mod;
 }
 
@@ -246,15 +255,37 @@ std::string megamol::frontend_resources::CommandRegistry::increment_name(const s
     return new_name;
 }
 
+void megamol::frontend_resources::CommandRegistry::add_color_to_layer(const megamol::frontend_resources::Command& c) {
+#ifdef CUESDK_ENABLED
+    auto cols = key_colors.find(c.key.mods);
+    if (cols == key_colors.end()) {
+        key_colors[c.key.mods] = std::vector<CorsairLedColor>();
+    }
+    CorsairLedColor clc {corsair_led_from_glfw_key[c.key.key], 255, 0, 0};
+    key_colors[c.key.mods].push_back(clc);
+#endif
+}
+
+void megamol::frontend_resources::CommandRegistry::remove_color_from_layer(
+#ifdef CUESDK_ENABLED
+    const megamol::frontend_resources::Command& c) {
+    auto& layer = key_colors[c.key.mods];
+    const auto& k = corsair_led_from_glfw_key[c.key.key];
+    const auto it = std::remove_if(layer.begin(), layer.end(), [k](const CorsairLedColor& c) {return c.ledId == k;});
+    layer.erase(it);
+#endif
+}
+
 void megamol::frontend_resources::CommandRegistry::push_command(const Command& c) {
     commands.push_back(c);
     if (c.key.key != Key::KEY_UNKNOWN) {
         key_to_command[c.key] = static_cast<int>(commands.size() - 1);
 #ifdef CUESDK_ENABLED
         if (current_modifiers.equals(c.key.mods)) {
-            auto ledColor = CorsairLedColor{ CorsairLEDfromGLFWKey[c.key.key], 255, 0, 0 };
-	    CorsairSetLedsColors(1, &ledColor);
+            auto ledColor = CorsairLedColor{ corsair_led_from_glfw_key[c.key.key], 255, 0, 0 };
+            CorsairSetLedsColors(1, &ledColor);
         }
+        add_color_to_layer(c);
 #endif
     }
     command_index[c.name] = static_cast<int>(commands.size() - 1);

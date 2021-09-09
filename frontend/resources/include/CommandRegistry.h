@@ -13,6 +13,11 @@
 
 #include "KeyboardMouseInput.h"
 
+#ifdef CUESDK_ENABLED
+#define CORSAIR_LIGHTING_SDK_DISABLE_DEPRECATION_WARNINGS
+#include "CUESDK.h"
+#endif
+
 namespace megamol::core::param {
     class AbstractParam;
 }
@@ -52,10 +57,19 @@ private:
 
     std::string increment_name(const std::string& oldname);
     void push_command(const Command& c);
+    void add_color_to_layer(const megamol::frontend_resources::Command& c);
+    void remove_color_from_layer(const megamol::frontend_resources::Command& c);
 
     std::unordered_map<KeyCode, int> key_to_command;
     std::unordered_map<std::string, int> command_index;
     std::vector<Command> commands;
+
+#ifdef CUESDK_ENABLED
+    static std::unordered_map<megamol::frontend_resources::Key, CorsairLedId> corsair_led_from_glfw_key;
+    std::unordered_map<Modifiers, std::vector<CorsairLedColor>> key_colors;
+    CorsairLedPositions* led_positions = nullptr;
+    std::vector<CorsairLedColor> black_keyboard;
+#endif
 
     Modifiers current_modifiers;
 };

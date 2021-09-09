@@ -237,6 +237,10 @@ public:
         return *this;
     }
 
+    inline bool operator==(const Modifiers& other) const {
+        return other.equals(*this);
+    }
+
 };
 
 inline Modifiers operator|(Modifiers lhs, Modifiers rhs) {
@@ -462,6 +466,14 @@ namespace std {
       using std::string;
 
       return (static_cast<uint64_t>(k.key) << 32 | k.mods.toInt());
+    }
+  };
+
+  template <>
+  struct hash<megamol::frontend_resources::Modifiers>
+  {
+    std::size_t operator()(const megamol::frontend_resources::Modifiers& m) const noexcept {
+      return m.toInt();
     }
   };
 
