@@ -1,5 +1,7 @@
 #include "CommandRegistry.h"
 
+#include <iostream>
+
 #ifdef CUESDK_ENABLED
 std::unordered_map<megamol::frontend_resources::Key, CorsairLedId> megamol::frontend_resources::CommandRegistry::corsair_led_from_glfw_key {
         {megamol::frontend_resources::Key::KEY_ESCAPE, CLK_Escape},
@@ -150,12 +152,34 @@ std::unordered_map<megamol::frontend_resources::Key, CorsairLedId> megamol::fron
         //{megamol::frontend_resources::Key::KEY_, CLK_International5},
         //{megamol::frontend_resources::Key::KEY_, CLK_International4},
     };
+
+const char* corsair_error_to_string(CorsairError error) {
+    switch (error) {
+    case CE_Success :
+        return "CE_Success";
+    case CE_ServerNotFound:
+        return "CE_ServerNotFound";
+    case CE_NoControl:
+        return "CE_NoControl";
+    case CE_ProtocolHandshakeMissing:
+        return "CE_ProtocolHandshakeMissing";
+    case CE_IncompatibleProtocol:
+        return "CE_IncompatibleProtocol";
+    case CE_InvalidArguments:
+        return "CE_InvalidArguments";
+    default:
+        return "unknown error";
+    }
+}
 #endif
 
 
 megamol::frontend_resources::CommandRegistry::CommandRegistry() {
 #ifdef CUESDK_ENABLED
     CorsairPerformProtocolHandshake();
+    if (const auto error = CorsairGetLastError()) {
+        std::cout << "Corsair CUE Handshake failed: " << corsair_error_to_string(error) << " - is iCUE running?" << std::endl;
+    }
     CorsairRequestControl(CAM_ExclusiveLightingControl);
     led_positions = CorsairGetLedPositions();
     for (auto i = 0; i < led_positions->numberOfLed; i++) {
