@@ -4,9 +4,6 @@
 using namespace megamol;
 using namespace core;
 
-std::string CallProfiling::err_oob = "out of bounds";
-PerformanceQueryManager* CallProfiling::qm = nullptr;
-
 CallProfiling::CallProfiling() {
     
 }
@@ -109,5 +106,11 @@ void CallProfiling::setProfilingInfo(std::vector<std::string> names, Call* paren
     if (parent_call->GetCapabilities().OpenGLRequired()) {
         InitializeQueryManager();
         qm->AddCall(parent_call);
+    }
+}
+
+void CallProfiling::ShutdownProfiling() const {
+    if (qm != nullptr) {
+        qm->RemoveCall(parent_call);
     }
 }

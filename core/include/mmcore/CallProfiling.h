@@ -49,15 +49,10 @@ namespace core {
         std::vector<PerformanceHistory> gpu_history;
         std::vector<std::string> callback_names;
         Call *parent_call = nullptr;
-        static PerformanceQueryManager *qm;
-        static std::string err_oob;
+        // this only works since the MegaMol build is static, otherwise a global round-robin could be a problem...
+        inline static PerformanceQueryManager *qm = nullptr;
+        inline const static std::string err_oob = "out of bounds";
     };
-
-    inline void CallProfiling::ShutdownProfiling() const {
-        if (qm != nullptr) {
-            qm->RemoveCall(parent_call);
-        }
-    }
 
 }
 }
