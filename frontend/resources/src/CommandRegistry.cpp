@@ -266,7 +266,7 @@ void megamol::frontend_resources::CommandRegistry::modifiers_changed(Modifiers m
     current_modifiers = mod;
 }
 
-bool megamol::frontend_resources::CommandRegistry::exec_command(const std::string& command_name) {
+bool megamol::frontend_resources::CommandRegistry::exec_command(const std::string& command_name) const {
     const auto& it = command_index.find(command_name);
     if (it != command_index.end()) {
         commands[it->second].execute();
@@ -276,7 +276,7 @@ bool megamol::frontend_resources::CommandRegistry::exec_command(const std::strin
     }
 }
 
-bool megamol::frontend_resources::CommandRegistry::exec_command(const KeyCode& key) {
+bool megamol::frontend_resources::CommandRegistry::exec_command(const KeyCode& key) const {
     const auto c = key_to_command.find(key);
     if (c == key_to_command.end()) {
         return false;
@@ -286,7 +286,7 @@ bool megamol::frontend_resources::CommandRegistry::exec_command(const KeyCode& k
     }
 }
 
-megamol::core::param::AbstractParam* megamol::frontend_resources::CommandRegistry::param_from_keycode(const KeyCode& key) {
+megamol::core::param::AbstractParam* megamol::frontend_resources::CommandRegistry::param_from_keycode(const KeyCode& key) const {
     const auto c = key_to_command.find(key);
     if (c == key_to_command.end()) {
         return nullptr;

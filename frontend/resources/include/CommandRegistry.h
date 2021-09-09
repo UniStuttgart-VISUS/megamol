@@ -55,10 +55,14 @@ public:
 
     void modifiers_changed(Modifiers mod);
 
-    bool exec_command(const std::string& command_name);
-    bool exec_command(const KeyCode& key);
+    bool exec_command(const std::string& command_name) const;
+    bool exec_command(const KeyCode& key) const;
 
-    megamol::core::param::AbstractParam* param_from_keycode(const KeyCode& key);
+    const std::vector<Command> list_commands() const {
+        return commands;
+    }
+
+    megamol::core::param::AbstractParam* param_from_keycode(const KeyCode& key) const;
 
 private:
 

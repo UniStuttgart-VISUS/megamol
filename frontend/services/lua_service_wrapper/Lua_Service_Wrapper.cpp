@@ -18,6 +18,8 @@
 #include "WindowManipulation.h"
 #include "GUIState.h"
 #include "GlobalValueStore.h"
+#include "CommandRegistry.h"
+
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -100,7 +102,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "GUIState", // propagate GUI state and visibility
         "MegaMolGraph", // LuaAPI manipulates graph
         "RenderNextFrame", // LuaAPI can render one frame
-        "GlobalValueStore" // LuaAPI can read and set global values
+        "GlobalValueStore", // LuaAPI can read and set global values
+        frontend_resources::CommandRegistry_Req_Name
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
@@ -376,7 +379,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
 
     callbacks.add<VoidResult, std::string, std::string>(
         "mmSetGlobalValue",
-        "(string key, string value)\n\t Sets a global key-value pair. If the key is already present, overwrites the value.",
+        "(string key, string value)\n\tSets a global key-value pair. If the key is already present, overwrites the value.",
         {[&](std::string key, std::string value) -> VoidResult
         {
             auto& global_value_store = const_cast<megamol::frontend_resources::GlobalValueStore&>(m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>());
@@ -386,7 +389,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
 
     callbacks.add<StringResult, std::string>(
         "mmGetGlobalValue",
-        "(string key)\n\t Returns the value for the given global key. If no key with that name is known, returns empty string.",
+        "(string key)\n\tReturns the value for the given global key. If no key with that name is known, returns empty string.",
         {[&](std::string key) -> StringResult
         {
             auto& global_value_store = m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>();
@@ -398,6 +401,26 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
 
             // TODO: maybe we want to LuaError?
             return StringResult{""};
+        }});
+
+    callbacks.add<VoidResult, std::string>(
+        "mmExecCommand",
+        "(string command)\n\tExecutes a command as provided by a hotkey, for example.",
+        {[&](std::string command) -> VoidResult {
+            auto& command_registry = m_requestedResourceReferences[8].getResource<megamol::frontend_resources::CommandRegistry>();
+            command_registry.exec_command(command);
+            return VoidResult{};
+        }});
+
+    callbacks.add<StringResult>(
+        "mmListCommands",
+        "()\n\tLists the available commands.",
+        {[&]() -> StringResult {
+            auto& command_registry = m_requestedResourceReferences[8].getResource<megamol::frontend_resources::CommandRegistry>();
+            auto& l = command_registry.list_commands();
+            std::string output;
+            std::for_each(l.begin(), l.end(), [&](const frontend_resources::Command& c) {output = output + c.name + "\n"; });
+            return StringResult{output};
         }});
 
     // mmLoadProject ?
