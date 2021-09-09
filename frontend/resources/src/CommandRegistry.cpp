@@ -161,8 +161,14 @@ megamol::frontend_resources::CommandRegistry::CommandRegistry() {
     for (auto i = 0; i < led_positions->numberOfLed; i++) {
         const auto ledPos = led_positions->pLedPosition[i];
         auto ledColor = CorsairLedColor{ledPos.ledId, 0, 0, 0};
+        if (ledPos.ledId == CLK_LeftShift || ledPos.ledId == CLK_RightShift ||
+            ledPos.ledId == CLK_LeftCtrl|| ledPos.ledId == CLK_RightCtrl ||
+            ledPos.ledId == CLK_LeftAlt || ledPos.ledId == CLK_RightAlt) {
+            ledColor.b = 255;
+        }
         black_keyboard.push_back(ledColor);
     }
+    CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data());
 #endif
 }
 
