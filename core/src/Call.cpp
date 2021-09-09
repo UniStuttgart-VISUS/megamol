@@ -38,6 +38,11 @@ Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap
  * Call::~Call
  */
 Call::~Call(void) {
+#ifdef PROFILING
+    if (caps.OpenGLRequired()) {
+        profiling.ShutdownProfiling();
+    }
+#endif
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
         this->caller = nullptr; // DO NOT DELETE

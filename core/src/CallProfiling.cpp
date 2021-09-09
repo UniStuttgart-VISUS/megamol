@@ -12,9 +12,7 @@ CallProfiling::CallProfiling() {
 }
 
 CallProfiling::~CallProfiling() {
-    if (parent_call->GetCapabilities().OpenGLRequired()) {
-        qm->RemoveCall(parent_call);
-    }
+
 }
 
 uint32_t CallProfiling::GetSampleHistoryLength() {

@@ -58,7 +58,7 @@ public:
     static const char* FunctionName(unsigned int idx) { return AbstractCallRender::FunctionName(idx); }
 
     /** Ctor. */
-    CallRender3DGL(void) : CallRenderGL() { caps.RequireOpenGL(); }
+    CallRender3DGL(void) = default;
 
     /** Dtor. */
     virtual ~CallRender3DGL(void) = default;

@@ -75,7 +75,7 @@ public:
     }
 
     /** Ctor. */
-    CallRender2DGL(void) : CallRenderGL() { caps.RequireOpenGL(); }
+    CallRender2DGL(void) = default;
 
     /** Dtor. */
     virtual ~CallRender2DGL(void) = default;

@@ -34,6 +34,8 @@ namespace core {
         uint32_t GetFuncCount() const;
         const std::string& GetFuncName(uint32_t i) const;
 
+        void ShutdownProfiling() const;
+
         static void InitializeQueryManager();
         static void CollectGPUPerformance();
 
@@ -50,6 +52,12 @@ namespace core {
         static PerformanceQueryManager *qm;
         static std::string err_oob;
     };
+
+    inline void CallProfiling::ShutdownProfiling() const {
+        if (qm != nullptr) {
+            qm->RemoveCall(parent_call);
+        }
+    }
 
 }
 }

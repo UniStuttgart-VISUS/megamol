@@ -14,7 +14,7 @@ using namespace megamol::core;
  * view::CallRender3DGL::CallRender3DGL
  */
 view::CallRenderGL::CallRenderGL(void) : AbstractCallRender() {
-    // intentionally empty
+    caps.RequireOpenGL();
 }
 
 
