@@ -192,6 +192,7 @@ void megamol::frontend_resources::CommandRegistry::add_command(const megamol::fr
             c2.key = c.key;
         }
         c2.param = c.param;
+        c2.effect = c.effect;
         push_command(c2);
     }
 }
@@ -202,6 +203,16 @@ void megamol::frontend_resources::CommandRegistry::remove_command(const megamol:
         command_index.erase(it->name);
         if (it->key.key != Key::KEY_UNKNOWN) key_to_command.erase(it->key);
         commands.erase(it);
+    }
+}
+
+void megamol::frontend_resources::CommandRegistry::remove_command(const std::string& command_name) {
+    if (!is_new(command_name)) {
+        auto idx = command_index[command_name];
+        auto& c = commands[idx];
+        command_index.erase(command_name);
+        if (c.key.key != Key::KEY_UNKNOWN) key_to_command.erase(c.key);
+        commands.erase(commands.begin() + idx);
     }
 }
 
@@ -231,7 +242,27 @@ void megamol::frontend_resources::CommandRegistry::modifiers_changed(Modifiers m
     current_modifiers = mod;
 }
 
-megamol::core::param::AbstractParam* megamol::frontend_resources::CommandRegistry::param_from_keycode(KeyCode key) {
+bool megamol::frontend_resources::CommandRegistry::exec_command(const std::string& command_name) {
+    const auto& it = command_index.find(command_name);
+    if (it != command_index.end()) {
+        commands[it->second].execute();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool megamol::frontend_resources::CommandRegistry::exec_command(const KeyCode& key) {
+    const auto c = key_to_command.find(key);
+    if (c == key_to_command.end()) {
+        return false;
+    } else {
+        commands[c->second].execute();
+        return true;
+    }
+}
+
+megamol::core::param::AbstractParam* megamol::frontend_resources::CommandRegistry::param_from_keycode(const KeyCode& key) {
     const auto c = key_to_command.find(key);
     if (c == key_to_command.end()) {
         return nullptr;

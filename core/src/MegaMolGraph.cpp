@@ -281,6 +281,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
                     c.param = p;
                     // actually a module should be able to define its own names, shouldn't it?
                     c.name = ps->FullName();
+                    c.effect = [p]() { p->setDirty(); };
                     m_command_registry->add_command(c);
                 }
             }

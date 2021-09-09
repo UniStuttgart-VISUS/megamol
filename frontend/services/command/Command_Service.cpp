@@ -48,10 +48,7 @@ void megamol::frontend::Command_Service::digestChangedRequestedResources() {
 
             if (action == frontend_resources::KeyAction::PRESS) {
                 frontend_resources::KeyCode kc {key, modifiers};
-                auto p = commands.param_from_keycode(kc);
-                if (p != nullptr) {
-                    p->setDirty();
-                }
+                commands.exec_command(kc);
             }
         }
 }

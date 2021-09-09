@@ -6,6 +6,7 @@
  */
 
 #pragma once
+#include <functional>
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -31,6 +32,12 @@ struct Command {
     std::string name;
     KeyCode key;
     megamol::core::param::AbstractParam* param;
+    std::function<void()> effect;
+
+    void execute() const {
+        auto f = effect;
+        f();
+    }
 };
 
 class CommandRegistry {
@@ -42,12 +49,16 @@ public:
     void add_command(const Command& c);
 
     void remove_command(const megamol::core::param::AbstractParam* param);
+    void remove_command(const std::string& command_name);
 
     void update_hotkey(const std::string& command_name, KeyCode key);
 
     void modifiers_changed(Modifiers mod);
 
-    megamol::core::param::AbstractParam* param_from_keycode(KeyCode key);
+    bool exec_command(const std::string& command_name);
+    bool exec_command(const KeyCode& key);
+
+    megamol::core::param::AbstractParam* param_from_keycode(const KeyCode& key);
 
 private:
 
