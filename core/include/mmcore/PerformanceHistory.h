@@ -1,14 +1,14 @@
 #pragma once
 
 #include <array>
-#include <limits>
+#include <algorithm>
 
 namespace megamol {
 namespace core {
 
 class PerformanceHistory {
 public:
-    static constexpr uint32_t buffer_length = 100;
+    static const uint32_t buffer_length = 100;
 
     PerformanceHistory();
 
