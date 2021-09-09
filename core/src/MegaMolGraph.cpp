@@ -12,11 +12,6 @@
 #include <string>
 #include <numeric> // std::accumulate
 
-// TODO if GL enabled
-#include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
-#include "mmcore/view/RendererModule.h"
-
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
     std::vector<std::string> result;
