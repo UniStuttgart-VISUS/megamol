@@ -1,7 +1,5 @@
 #pragma once
 
-#ifdef MM_CUDA_ENABLED
-
 #include "AbstractFrontendService.hpp"
 
 #include "CommandRegistry.h"
@@ -44,5 +42,3 @@ private:
     std::vector<std::string> requestedResourceNames;
 };
 } // namespace megamol::frontend
-
-#endif

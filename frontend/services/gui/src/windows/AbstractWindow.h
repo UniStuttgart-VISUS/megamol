@@ -36,6 +36,7 @@ namespace gui {
             WINDOW_ID_MAIN_PARAMETERS = 1,
             WINDOW_ID_PARAMETERS = 2,
             WINDOW_ID_PERFORMANCE = 3,
+            WINDOW_ID_HOTKEYEDITOR = 4,
             WINDOW_ID_TRANSFER_FUNCTION = 5,
             WINDOW_ID_CONFIGURATOR = 6,
             WINDOW_ID_LOGCONSOLE = 7
@@ -57,7 +58,7 @@ namespace gui {
 
         AbstractWindow(const std::string& name, WindowConfigID window_id)
                 : win_config()
-                , hotkeys()
+                , win_hotkeys()
                 , hash_id(std::hash<std::string>()(name))
                 , name(name)
                 , window_id(window_id)
@@ -65,7 +66,7 @@ namespace gui {
 
         AbstractWindow(const std::string& name, VolatileDrawCallback_t& callback)
                 : win_config()
-                , hotkeys()
+                , win_hotkeys()
                 , hash_id(std::hash<std::string>()(name))
                 , name(name)
                 , window_id(WINDOW_ID_VOLATILE)
@@ -107,7 +108,7 @@ namespace gui {
         void StateToJSON(nlohmann::json& inout_json);
 
         inline megamol::gui::HotkeyMap_t& GetHotkeys() {
-            return this->hotkeys;
+            return this->win_hotkeys;
         }
 
         // --------------------------------------------------------------------
@@ -132,7 +133,7 @@ namespace gui {
 
     protected:
         BasicConfig win_config;
-        megamol::gui::HotkeyMap_t hotkeys;
+        megamol::gui::HotkeyMap_t win_hotkeys;
         WindowConfigID window_id; // [SAVED] ID of the predefined callback drawing the window content
 
     private:

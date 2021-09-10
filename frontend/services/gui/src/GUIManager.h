@@ -18,6 +18,7 @@
 #include "widgets/PopUps.h"
 #include "windows/Configurator.h"
 #include "windows/WindowCollection.h"
+#include "CommandRegistry.h"
 
 
 namespace megamol {
@@ -237,6 +238,11 @@ namespace gui {
         bool SynchronizeRunningGraph(
             megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
+        /**
+         * Register GUI hotkeys.
+         */
+        void RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry);
+
         ///////////////////////////////////////////////////////////////////////
 
     private:
@@ -295,7 +301,7 @@ namespace gui {
 
         // VARIABLES --------------------------------------------------------------
 
-        megamol::gui::HotkeyMap_t hotkeys;
+        megamol::gui::HotkeyMap_t gui_hotkeys;
 
         /** The ImGui context created and used by this GUIManager */
         ImGuiContext* context;
@@ -307,13 +313,18 @@ namespace gui {
 
         /** GUI element collections. */
         WindowCollection win_collection;
+
         // Pop-up name, open pop-up flag held by pop-up caller, function drawing content of pop-up
         std::map<std::string, std::pair<std::weak_ptr<bool>, std::function<void()>>> popup_collection;
+
         // Pop-up name, further notification data
         std::map<std::string, NotificationData_t> notification_collection;
 
         /** Shortcut pointer to configurator window */
         std::shared_ptr<Configurator> win_configurator_ptr;
+
+        /** Pointer to command registry resource */
+        megamol::frontend_resources::CommandRegistry* command_registry_ptr;
 
         // Widgets
         FileBrowserWidget file_browser;
@@ -334,6 +345,7 @@ namespace gui {
 
         void draw_popups();
 
+        /// UNUSED
         bool is_hotkey_pressed(megamol::core::view::KeyCode keycode) const;
 
         void load_preset_window_docking(ImGuiID global_docking_id);

@@ -42,7 +42,7 @@ ParameterList::ParameterList(const std::string& window_name, AbstractWindow::Win
             this->win_modules_list.emplace_back(initial_module_uid);
         }
     } else if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
-        this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = {
+        this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = { "gui:param:search",
             megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
         this->win_config.hotkey =
             megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F10, core::view::Modifier::NONE);
@@ -87,11 +87,11 @@ bool ParameterList::Draw() {
 
     // Parameter substring name filtering (only for main parameter view)
     if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
-        if (this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed) {
+        if (this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed) {
             this->search_widget.SetSearchFocus();
-            this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed = false;
+            this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed = false;
         }
-        std::string help_test = "[" + this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].keycode.ToString() +
+        std::string help_test = "[" + this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].keycode.ToString() +
                                 "] Set keyboard focus to search input field.\n"
                                 "Case insensitive substring search in module and parameter names.";
         this->search_widget.Widget("guiwindow_parameter_earch", help_test);
