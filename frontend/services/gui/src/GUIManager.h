@@ -313,13 +313,18 @@ namespace gui {
 
         /** GUI element collections. */
         WindowCollection win_collection;
+
         // Pop-up name, open pop-up flag held by pop-up caller, function drawing content of pop-up
         std::map<std::string, std::pair<std::weak_ptr<bool>, std::function<void()>>> popup_collection;
+
         // Pop-up name, further notification data
         std::map<std::string, NotificationData_t> notification_collection;
 
         /** Shortcut pointer to configurator window */
         std::shared_ptr<Configurator> win_configurator_ptr;
+
+        /** Pointer to command registry resource */
+        megamol::frontend_resources::CommandRegistry* command_registry_ptr;
 
         // Widgets
         FileBrowserWidget file_browser;

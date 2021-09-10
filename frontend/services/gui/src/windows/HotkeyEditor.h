@@ -11,6 +11,7 @@
 
 
 #include "AbstractWindow.h"
+#include "CommandRegistry.h"
 
 
 namespace megamol {
@@ -21,6 +22,8 @@ namespace gui {
         explicit HotkeyEditor(const std::string& window_name);
         ~HotkeyEditor();
 
+        void SetData(megamol::core::view::CommandRegistry* cmdregistry);
+
         bool Update() override;
         bool Draw() override;
 
@@ -29,6 +32,8 @@ namespace gui {
 
     private:
         // VARIABLES --------------------------------------------------------------
+
+        megamol::frontend_resources::CommandRegistry* command_registry_ptr;
 
     };
 

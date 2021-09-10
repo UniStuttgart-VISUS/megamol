@@ -15,6 +15,7 @@
 #include "widgets/CorporateWhiteStyle.h"
 #include "widgets/DefaultStyle.h"
 #include "windows/PerformanceMonitor.h"
+#include "windows/HotkeyEditor.h"
 
 
 using namespace megamol::gui;
@@ -29,6 +30,7 @@ GUIManager::GUIManager()
         , popup_collection()
         , notification_collection()
         , win_configurator_ptr(nullptr)
+        , command_registry_ptr(nullptr)
         , file_browser()
         , tooltip()
         , picking_buffer() {
@@ -318,6 +320,9 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     if (auto win_perfmon_ptr = this->win_collection.GetWindow<PerformanceMonitor>()) {
         win_perfmon_ptr->SetData(
             this->gui_state.stat_averaged_fps, this->gui_state.stat_averaged_ms, this->gui_state.stat_frame_count);
+    }
+    if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
+        win_hkeditor_ptr->SetData(this->command_registry_ptr);
     }
 
     // Update windows
@@ -1876,8 +1881,10 @@ std::string GUIManager::extract_fontname(const std::string& imgui_fontname) cons
 
 void GUIManager::RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry) {
 
-    frontend_resources::Command hkcmd;
+    // SAve local reference to cmd registry for hotkey editor window
+    this->command_registry_ptr = &cmdregistry;
 
+    frontend_resources::Command hkcmd;
     // GUI
     for (auto& hotkey : this->gui_hotkeys) {
         hkcmd.key = hotkey.second.keycode;
@@ -1891,19 +1898,18 @@ void GUIManager::RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregist
         // Check "Show/Hide Window"-Hotkey
         hkcmd.key = wc.Config().hotkey;
         hkcmd.param = nullptr;
-        hkcmd.name = wc.Name();
+        hkcmd.name = std::string("gui:win:" + wc.Name());
         hkcmd.effect = [&]() { wc.Config().show = !wc.Config().show; };
         cmdregistry.add_command(hkcmd);
 
         // Check for additional hotkeys of window
         for (auto& hotkey : wc.GetHotkeys()) {
-            hkcmd.key = wc.Config().hotkey;
+            hkcmd.key = hotkey.second.keycode;
             hkcmd.param = nullptr;
-            hkcmd.name = std::string("gui:win:" + wc.Name());
-            hkcmd.effect = [&]() { wc.Config().show = !wc.Config().show; };
+            hkcmd.name = hotkey.second.name;
+            hkcmd.effect = [&]() { hotkey.second.is_pressed = true; };
             cmdregistry.add_command(hkcmd);
         }
     };
     this->win_collection.EnumWindows(windows_func);
-
 }
