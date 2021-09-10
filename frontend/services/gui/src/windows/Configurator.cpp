@@ -35,12 +35,12 @@ megamol::gui::Configurator::Configurator(
     assert(this->win_tfeditor_ptr != nullptr);
 
     // init hotkeys
-    this->win_hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = { "gui:config:module_search",
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = { "_hotkey_gui_configurator_module_search",
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->win_hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = { "gui:config:param_search",
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = { "_hotkey_gui_configurator_param_search",
         core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->win_hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = { "gui:config:delete_graph_entry", core::view::KeyCode(core::view::Key::KEY_DELETE), false};
-    this->win_hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = { "gui:config:save_project",
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = { "_hotkey_gui_configurator_delete_graph_entry", core::view::KeyCode(core::view::Key::KEY_DELETE), false};
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = { "_hotkey_gui_configurator_save_project",
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
         false};
 

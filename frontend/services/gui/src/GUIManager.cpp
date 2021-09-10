@@ -36,19 +36,19 @@ GUIManager::GUIManager()
         , picking_buffer() {
 
     // Init hotkeys
-    this->gui_hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT] = { "gui:trigger_screenshot",
+    this->gui_hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT] = { "_hotkey_gui_trigger_screenshot",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
-    this->gui_hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY] = { "gui:toggle_graph_entry",
+    this->gui_hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY] = { "_hotkey_gui_toggle_graph_entry",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
-    this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM] = { "gui:exit",
+    this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM] = { "_hotkey_gui_exit",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
-    this->gui_hotkeys[HOTKEY_GUI_MENU] = { "gui:menu",
+    this->gui_hotkeys[HOTKEY_GUI_MENU] = { "_hotkey_gui_menu",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
-    this->gui_hotkeys[HOTKEY_GUI_SAVE_PROJECT] = { "gui:save_project",
+    this->gui_hotkeys[HOTKEY_GUI_SAVE_PROJECT] = { "_hotkey_gui_save_project",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
-    this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT] = { "gui:load_project",
+    this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT] = { "_hotkey_gui_load_project",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_L, core::view::Modifier::CTRL), false};
-    this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI] = { "gui:Show-hide",
+    this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI] = { "_hotkey_gui_show-hide",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
@@ -1881,33 +1881,59 @@ std::string GUIManager::extract_fontname(const std::string& imgui_fontname) cons
 
 void GUIManager::RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry) {
 
-    // SAve local reference to cmd registry for hotkey editor window
+    // Save local reference to cmd registry for hotkey editor window
     this->command_registry_ptr = &cmdregistry;
 
     frontend_resources::Command hkcmd;
+    hkcmd.parent_type = megamol::frontend_resources::Command::parent_type_c::PARENT_GUI;
     // GUI
     for (auto& hotkey : this->gui_hotkeys) {
         hkcmd.key = hotkey.second.keycode;
-        hkcmd.param = nullptr;
         hkcmd.name = hotkey.second.name;
-        hkcmd.effect = [&]() { hotkey.second.is_pressed = true; };
+        hkcmd.parent = std::string();
+        hkcmd.effect = [&](const frontend_resources::Command *self) {
+            for (auto& hotkey : this->gui_hotkeys) {
+                if (hotkey.second.name == self->name) {
+                    hotkey.second.is_pressed = !hotkey.second.is_pressed;
+                }
+            }
+        };
         cmdregistry.add_command(hkcmd);
     }
     // Hotkeys of window(s)
     const auto windows_func = [&](AbstractWindow& wc) {
         // Check "Show/Hide Window"-Hotkey
         hkcmd.key = wc.Config().hotkey;
-        hkcmd.param = nullptr;
-        hkcmd.name = std::string("gui:win:" + wc.Name());
-        hkcmd.effect = [&]() { wc.Config().show = !wc.Config().show; };
+        hkcmd.name = std::string("_hotkey_gui_window_" + wc.Name());
+        hkcmd.parent = std::to_string(wc.Hash());
+        hkcmd.effect = [&](const frontend_resources::Command *self) {
+            std::stringstream sstream(self->parent);
+            size_t parent_hash = 0;
+            sstream >> parent_hash;
+            const auto wf = [&](AbstractWindow& wc) {
+                if (wc.Hash() == parent_hash) {
+                    wc.Config().show = !wc.Config().show;
+                }
+            };
+            this->win_collection.EnumWindows(wf);
+        };
         cmdregistry.add_command(hkcmd);
 
         // Check for additional hotkeys of window
         for (auto& hotkey : wc.GetHotkeys()) {
             hkcmd.key = hotkey.second.keycode;
-            hkcmd.param = nullptr;
             hkcmd.name = hotkey.second.name;
-            hkcmd.effect = [&]() { hotkey.second.is_pressed = true; };
+            hkcmd.parent = std::string();
+            hkcmd.effect = [&](const frontend_resources::Command *self) {
+                const auto wf = [&](AbstractWindow& wc) {
+                    for (auto& hotkey : wc.GetHotkeys()) {
+                        if (hotkey.second.name == self->name) {
+                            hotkey.second.is_pressed = !hotkey.second.is_pressed;
+                        }
+                    }
+                };
+                this->win_collection.EnumWindows(wf);
+            };
             cmdregistry.add_command(hkcmd);
         }
     };

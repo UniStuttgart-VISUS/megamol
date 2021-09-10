@@ -43,10 +43,25 @@ bool megamol::gui::HotkeyEditor::Update() {
 
 bool megamol::gui::HotkeyEditor::Draw() {
 
-    if (this->command_registry_ptr != nullptr) {
-        for (auto& cmd : this->command_registry_ptr->list_commands()) {
-            ImGui::TextUnformatted(cmd.name.c_str());
+    auto table_flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize;
+    auto column_flags = ImGuiTableColumnFlags_WidthFixed; // ImGuiTableColumnFlags_WidthStretch;
+    if (ImGui::BeginTable("megamol_hotkeys", 3, table_flags)) {
+        ImGui::TableSetupColumn("", column_flags);
+
+        if (this->command_registry_ptr != nullptr) {
+            for (auto& cmd : this->command_registry_ptr->list_commands()) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(cmd.name.c_str());
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(cmd.key.ToString().c_str());
+                ImGui::TableNextColumn();
+                if (ImGui::Button(std::string("execute##" + cmd.name).c_str())) {
+                    cmd.execute();
+                }
+            }
         }
+        ImGui::EndTable();
     }
 
     return true;
@@ -55,17 +70,18 @@ bool megamol::gui::HotkeyEditor::Draw() {
 
 void HotkeyEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
-    for (auto& header_item : in_json.items()) {
-        if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
-            for (auto& config_item : header_item.value().items()) {
-                if (config_item.key() == this->Name()) {
-                    auto config_values = config_item.value();
-                    /* TODO
-                    megamol::core::utility::get_json_value<unsigned int>(
-                        config_values, {"log_level"}, &this->win_log_level);
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"log_force_open"}, &this->win_log_force_open);
-                    */
+    if (this->command_registry_ptr != nullptr) {
+        for (auto& header_item : in_json.items()) {
+            if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
+                for (auto& config_item : header_item.value().items()) {
+                    if (config_item.key() == this->Name()) {
+                        auto config_values = config_item.value();
+                        megamol::frontend_resources::Command cmd;
+                        for (auto& cmd_json : config_values) {
+                            megamol::frontend_resources::from_json(cmd_json, cmd);
+                            this->command_registry_ptr->add_command(cmd);
+                        }
+                    }
                 }
             }
         }
@@ -75,5 +91,11 @@ void HotkeyEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
 void HotkeyEditor::SpecificStateToJSON(nlohmann::json& inout_json) {
 
-    /// TODO inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()]["..."] = this->...;
+    if (this->command_registry_ptr != nullptr) {
+        for (auto& cmd : this->command_registry_ptr->list_commands()) {
+            nlohmann::basic_json cmd_json;
+            megamol::frontend_resources::to_json(cmd_json, cmd);
+            inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][this->Name()].push_back(cmd_json);
+        }
+    }
 }
