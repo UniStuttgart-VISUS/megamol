@@ -42,7 +42,7 @@ ParameterList::ParameterList(const std::string& window_name, AbstractWindow::Win
             this->win_modules_list.emplace_back(initial_module_uid);
         }
     } else if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
-        this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = { "_hotkey_gui_parameterlist_param_search",
+        this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = {"_hotkey_gui_parameterlist_param_search",
             megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
         this->win_config.hotkey =
             megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F10, core::view::Modifier::NONE);

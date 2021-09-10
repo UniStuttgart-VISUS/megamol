@@ -36,19 +36,19 @@ GUIManager::GUIManager()
         , picking_buffer() {
 
     // Init hotkeys
-    this->gui_hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT] = { "_hotkey_gui_trigger_screenshot",
+    this->gui_hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT] = {"_hotkey_gui_trigger_screenshot",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
-    this->gui_hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY] = { "_hotkey_gui_toggle_graph_entry",
+    this->gui_hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY] = {"_hotkey_gui_toggle_graph_entry",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
-    this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM] = { "_hotkey_gui_exit",
+    this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM] = {"_hotkey_gui_exit",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
-    this->gui_hotkeys[HOTKEY_GUI_MENU] = { "_hotkey_gui_menu",
+    this->gui_hotkeys[HOTKEY_GUI_MENU] = {"_hotkey_gui_menu",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
-    this->gui_hotkeys[HOTKEY_GUI_SAVE_PROJECT] = { "_hotkey_gui_save_project",
+    this->gui_hotkeys[HOTKEY_GUI_SAVE_PROJECT] = {"_hotkey_gui_save_project",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
-    this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT] = { "_hotkey_gui_load_project",
+    this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT] = {"_hotkey_gui_load_project",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_L, core::view::Modifier::CTRL), false};
-    this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI] = { "_hotkey_gui_show-hide",
+    this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI] = {"_hotkey_gui_show-hide",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
@@ -1891,7 +1891,7 @@ void GUIManager::RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregist
         hkcmd.key = hotkey.second.keycode;
         hkcmd.name = hotkey.second.name;
         hkcmd.parent = std::string();
-        hkcmd.effect = [&](const frontend_resources::Command *self) {
+        hkcmd.effect = [&](const frontend_resources::Command* self) {
             for (auto& hotkey : this->gui_hotkeys) {
                 if (hotkey.second.name == self->name) {
                     hotkey.second.is_pressed = !hotkey.second.is_pressed;
@@ -1906,7 +1906,7 @@ void GUIManager::RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregist
         hkcmd.key = wc.Config().hotkey;
         hkcmd.name = std::string("_hotkey_gui_window_" + wc.Name());
         hkcmd.parent = std::to_string(wc.Hash());
-        hkcmd.effect = [&](const frontend_resources::Command *self) {
+        hkcmd.effect = [&](const frontend_resources::Command* self) {
             std::stringstream sstream(self->parent);
             size_t parent_hash = 0;
             sstream >> parent_hash;
@@ -1924,7 +1924,7 @@ void GUIManager::RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregist
             hkcmd.key = hotkey.second.keycode;
             hkcmd.name = hotkey.second.name;
             hkcmd.parent = std::string();
-            hkcmd.effect = [&](const frontend_resources::Command *self) {
+            hkcmd.effect = [&](const frontend_resources::Command* self) {
                 const auto wf = [&](AbstractWindow& wc) {
                     for (auto& hotkey : wc.GetHotkeys()) {
                         if (hotkey.second.name == self->name) {
