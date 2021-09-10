@@ -23,11 +23,11 @@ void GenerateSSAOShadowsInternal( out float outShadowTerm, out vec4 outEdges, ou
     const int numberOfTaps = int(g_numTaps[qualityLevel]);
     float pixZ, pixLZ, pixTZ, pixRZ, pixBZ;
 
-    vec4 valuesBL = textureGather(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize );
-    vec4 valuesUR = textureGatherOffset(g_ViewspaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize, ivec2( 1, 1 ) );
+    vec4 valuesBL = textureGather(g_ViewSpaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize );
+    vec4 valuesUR = textureGatherOffset(g_ViewSpaceDepthSource, SVPosRounded * g_ASSAOConsts.HalfViewportPixelSize, ivec2( 1, 1 ) );
 
     // get this pixel's viewspace depth
-    pixZ = valuesBL.y; //float pixZ = g_ViewspaceDepthSource.SampleLevel( g_PointMirrorSampler, normalizedScreenPos, 0.0 ).x; // * g_ASSAOConsts.MaxViewspaceDepth;
+    pixZ = valuesBL.y; //float pixZ = g_ViewSpaceDepthSource.SampleLevel( g_PointMirrorSampler, normalizedScreenPos, 0.0 ).x; // * g_ASSAOConsts.MaxViewspaceDepth;
 
     // get left right top bottom neighbouring pixels for edge detection (gets compiled out on qualityLevel == 0)
     pixLZ   = valuesBL.x;

@@ -24,7 +24,7 @@ vec3 CalculateNormal( const vec4 edgesLRTB, vec3 pixCenterPos, vec3 pixLPos, vec
     pixTPos = normalize(pixTPos - pixCenterPos);
     pixBPos = normalize(pixBPos - pixCenterPos);
 
-    vec3 pixelNormal = vec3( 0, 0, -0.0005 );
+    vec3 pixelNormal = vec3( 0, 0, 0.0005 );
     pixelNormal += ( acceptedNormals.x ) * cross( pixLPos, pixTPos );
     pixelNormal += ( acceptedNormals.y ) * cross( pixTPos, pixRPos );
     pixelNormal += ( acceptedNormals.z ) * cross( pixRPos, pixBPos );

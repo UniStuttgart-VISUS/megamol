@@ -266,20 +266,22 @@
 
     <shader name="CSApply">
         <snippet type="version">430</snippet>
-        <snippet name="assao::ApplyUniforms" />
         <snippet name="assao::ASSAOConstants" />
+        <snippet name="assao::ApplyUniforms" />
         <snippet name="assao::UnpackEdges" />
         <snippet name="assao::PSApply" />
     </shader>
 
     <shader name="CSNonSmartApply">
         <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
         <snippet name="assao::ApplyUniforms" />
         <snippet name="assao::PSNonSmartApply" />
     </shader>
 
     <shader name="CSNonSmartHalfApply">
         <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
         <snippet name="assao::ApplyUniforms" />
         <snippet name="assao::PSNonSmartHalfApply" />
     </shader>

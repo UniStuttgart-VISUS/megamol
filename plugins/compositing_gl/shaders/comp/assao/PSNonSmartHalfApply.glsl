@@ -20,11 +20,10 @@ layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
     vec3 inPos = gl_GlobalInvocationID;
-    ivec3 viewport = textureSize(g_FinalSSAO, 0);
-    vec2 inUV = (2.f * inPos.xy + vec2(1.f)) / (2.f * vec2(viewport.xy));
+    vec2 inUV = (inPos.xy + 0.25) * g_ASSAOConsts.ViewportPixelSize;
 
-    float a = textureLod(g_FinalSSAO, vec3( inUV, 0 ), 0.0 ).x;
-    float d = textureLod(g_FinalSSAO, vec3( inUV, 3 ), 0.0 ).x;
+    float a = textureLod(g_FinalSSAOLinearClamp, vec3( inUV, 0 ), 0.0 ).x;
+    float d = textureLod(g_FinalSSAOLinearClamp, vec3( inUV, 3 ), 0.0 ).x;
     float avg = (a+d) * 0.5;
 
     imageStore(g_FinalOutput, ivec2(inPos.xy), vec4(avg.xxx, 1.f));

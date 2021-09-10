@@ -28,11 +28,11 @@ void main()
     float c = depths.x;  // texelFetchOffset(g_DepthSource, ivec3( ivec2(inPos.xy) * 2, 0 ), ivec2( 0, 1 ) ).x;
     float d = depths.y;  // texelFetchOffset(g_DepthSource, ivec3( ivec2(inPos.xy) * 2, 0 ), ivec2( 1, 1 ) ).x;
 #else
-    ivec3 baseCoord = ivec3( ivec2(inPos.xy) * 2, 0 );
-    float a = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 0, 1 ) ).x;
-    float b = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 1, 1 ) ).x;
-    float c = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 0, 0 ) ).x;
-    float d = texelFetchOffset(g_DepthSource, baseCoord.xy, 0, ivec2( 1, 0 ) ).x;
+    ivec2 baseCoord = ivec2(inPos.xy * 2);
+    float a = texelFetchOffset(g_DepthSource, baseCoord, 0, ivec2( 0, 0 ) ).x;
+    float b = texelFetchOffset(g_DepthSource, baseCoord, 0, ivec2( 1, 0 ) ).x;
+    float c = texelFetchOffset(g_DepthSource, baseCoord, 0, ivec2( 0, 1 ) ).x;
+    float d = texelFetchOffset(g_DepthSource, baseCoord, 0, ivec2( 1, 1 ) ).x;
 #endif
 
     float out0 = ScreenSpaceToViewSpaceDepth( a );

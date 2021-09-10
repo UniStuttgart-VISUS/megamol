@@ -418,8 +418,8 @@ bool megamol::compositing::ASSAO::create() {
     }
 
     m_depthBufferViewspaceLinearLayout = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
-    m_AOResultLayout = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_UNSIGNED_BYTE, 1);
-    m_normalLayout = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1);
+    m_AOResultLayout = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_FLOAT, 1);
+    m_normalLayout = glowl::TextureLayout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
     m_halfDepths[0] = std::make_shared<glowl::Texture2D>("m_halfDepths0", m_depthBufferViewspaceLinearLayout, nullptr);
     m_halfDepths[1] = std::make_shared<glowl::Texture2D>("m_halfDepths1", m_depthBufferViewspaceLinearLayout, nullptr);
     m_halfDepths[2] = std::make_shared<glowl::Texture2D>("m_halfDepths2", m_depthBufferViewspaceLinearLayout, nullptr);
@@ -541,7 +541,7 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             if (callCamera == NULL)
                 return false;
 
-            m_normals.reset(new glowl::Texture2D("m_normals", m_normalLayout, nullptr));
+            //m_normals.reset(new glowl::Texture2D("m_normals", m_normalLayout, nullptr));
 
             std::array<int, 2> txResNormal;
             if (!generateNormals) {
@@ -598,17 +598,19 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
 
                 // Apply
                 {
-                    TextureArraySamplerTuple inputFinals =
-                        {m_finalResults, "g_FinalSSAO", m_samplerStateLinearClamp};
+                    std::vector<TextureArraySamplerTuple> inputFinals = {
+                        {m_finalResults, "g_FinalSSAOLinearClamp", m_samplerStateLinearClamp}};
 
                     if (m_settings.QualityLevel < 0)
                         fullscreenPassDraw <TextureSamplerTuple, glowl::Texture2D>(m_nonSmartHalfApplyPrgm, {}, outputTextures, true, inputFinals);
                     else if (m_settings.QualityLevel == 0)
                         fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                             m_nonSmartApplyPrgm, {}, outputTextures, true, inputFinals);
-                    else
+                    else {
+                        inputFinals.push_back({m_finalResults, "g_FinalSSAO", nullptr});
                         fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
                             m_applyPrgm, {}, outputTextures, true, inputFinals);
+                    }
                 }
             }
         }
@@ -630,7 +632,8 @@ void megamol::compositing::ASSAO::prepareDepths(
     bool generateNormals = inputs->GenerateNormals;
 
     std::vector<TextureSamplerTuple> inputTextures(1);
-    inputTextures[0] = { depthTexture, (std::string) "gDepthSource", nullptr /*m_samplerStatePointClamp*/ };
+    inputTextures[0] = { depthTexture, (std::string) "g_DepthSource", nullptr };
+    
 
     std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, GLuint>> outputFourDepths = {
         {m_halfDepths[0], 0}, {m_halfDepths[1], 1}, {m_halfDepths[2], 2}, {m_halfDepths[3], 3}};
@@ -646,6 +649,8 @@ void megamol::compositing::ASSAO::prepareDepths(
                 m_prepareDepthsPrgm, inputTextures, outputFourDepths);
         }
     } else {
+        inputTextures.push_back({depthTexture, (std::string) "g_DepthSourcePointClamp", m_samplerStatePointClamp});
+
         if (settings.QualityLevel < 0) {
             outputTwoDepths.push_back({normalTexture, 4});
             fullscreenPassDraw<TextureSamplerTuple, glowl::Texture2D>(
@@ -767,9 +772,10 @@ void megamol::compositing::ASSAO::generateSSAO(const ASSAO_Settings& settings,
                 GLuint binding = 0;
 
                 std::vector<TextureSamplerTuple> inputTextures = {
-                    {m_pingPongHalfResultA, "gBlurInput", m_samplerStatePointMirror}};
+                    {m_pingPongHalfResultA, "g_BlurInput", m_samplerStatePointMirror}};
 
                 // TODO: re-do below code, ugly af
+                // check for i == blurPasses - 1 above and not in every if
                 if (settings.QualityLevel > 0) {
                     if (wideBlursRemaining > 0) {
                         if (i == blurPasses - 1) {
@@ -983,12 +989,13 @@ void megamol::compositing::ASSAO::updateConstants(
     if (!generateNormals) {
         consts.NormalsUnpackMul = inputs->NormalsUnpackMul;
         consts.NormalsUnpackAdd = inputs->NormalsUnpackAdd;
+        consts.TransformNormalsToViewSpace = 1;
     } else {
+        consts.TransformNormalsToViewSpace = 0;
         consts.NormalsUnpackMul = 2.0f;
         consts.NormalsUnpackAdd = -1.0f;
     }
     consts.DetailAOStrength = settings.DetailShadowStrength;
-    consts.Dummy0 = 0.0f;
 
     consts.ViewMX = inputs->ViewMatrix;
 

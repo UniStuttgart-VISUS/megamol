@@ -178,7 +178,7 @@ struct ASSAO_Constants {
     float NormalsUnpackMul;
     float NormalsUnpackAdd;
     float DetailAOStrength;
-    float Dummy0;
+    int TransformNormalsToViewSpace;
 
     glm::mat4 ViewMX;
 
@@ -251,7 +251,7 @@ private:
         const std::vector<Tuple>& input_textures,
         std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& output_textures,
         bool add_constants = true,
-        const TextureArraySamplerTuple& tast = {nullptr, "", nullptr}
+        const std::vector<TextureArraySamplerTuple>& finals = {}
     );
     
     bool equalLayouts(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs);
@@ -404,7 +404,7 @@ void ASSAO::fullscreenPassDraw(
     const std::vector<Tuple>& inputTextures,
     std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& outputTextures,
     bool addConstants,
-    const TextureArraySamplerTuple& finals)
+    const std::vector<TextureArraySamplerTuple>& finals)
 {
     prgm->Enable();
 
@@ -430,11 +430,16 @@ void ASSAO::fullscreenPassDraw(
         }
     }
 
-    if (std::get<0>(finals) != nullptr) {
-        glActiveTexture(GL_TEXTURE0 + cnt);
-        std::get<0>(finals)->bindTexture();
-        std::get<2>(finals)->bindSampler(cnt);
-        glUniform1i(prgm->ParameterLocation(std::get<1>(finals).c_str()), 0);
+    for (const auto& tex : finals) {
+        if (std::get<0>(tex) != nullptr) {
+            glActiveTexture(GL_TEXTURE0 + cnt);
+            std::get<0>(tex)->bindTexture();
+            if (std::get<2>(tex) != nullptr)
+                std::get<2>(tex)->bindSampler(cnt);
+            glUniform1i(prgm->ParameterLocation(std::get<1>(tex).c_str()), cnt);
+        }
+
+        ++cnt;
     }
 
     for (int i = 0; i < outputTextures.size(); ++i) {

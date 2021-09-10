@@ -76,7 +76,7 @@ struct ASSAOConstants
     float NormalsUnpackMul;
     float NormalsUnpackAdd;
     float DetailAOStrength;
-    float Dummy0;
+    int TransformNormalsToViewSpace;
 
 #if SSAO_ENABLE_NORMAL_WORLD_TO_VIEW_CONVERSION
     mat4  NormalsWorldToViewspaceMatrix;

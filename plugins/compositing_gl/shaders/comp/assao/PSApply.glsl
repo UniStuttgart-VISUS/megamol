@@ -33,7 +33,6 @@ void main()
     int id = (1 - mx) + (1 - my) * 2; // diagonal
 
     vec2 centerVal = texelFetch(g_FinalSSAO, ivec3( pixPosHalf, ic ), 0).xy;
-    //vec2 centerVal = g_FinalSSAO.Load( ivec4( pixPosHalf, ic, 0 ) ).xy;
 
     ao = centerVal.x;
 
@@ -50,11 +49,11 @@ void main()
 
     // calculate final sampling offsets and sample using bilinear filter
     vec2  uvH = (inPos.xy + vec2( fmx + fmxe - 0.5, 0.5 - fmy ) ) * 0.5 * g_ASSAOConsts.HalfViewportPixelSize;
-    float   aoH = textureLod(g_FinalSSAO, vec3( uvH, ih ), 0 ).x;
+    float   aoH = textureLod(g_FinalSSAOLinearClamp, vec3( uvH, ih ), 0 ).x;
     vec2  uvV = (inPos.xy + vec2( 0.5 - fmx, fmy - 0.5 + fmye ) ) * 0.5 * g_ASSAOConsts.HalfViewportPixelSize;
-    float   aoV = textureLod( g_FinalSSAO, vec3( uvV, iv ), 0 ).x;
+    float   aoV = textureLod( g_FinalSSAOLinearClamp, vec3( uvV, iv ), 0 ).x;
     vec2  uvD = (inPos.xy + vec2( fmx - 0.5 + fmxe, fmy - 0.5 + fmye ) ) * 0.5 * g_ASSAOConsts.HalfViewportPixelSize;
-    float   aoD = textureLod( g_FinalSSAO, vec3( uvD, id ), 0 ).x;
+    float   aoD = textureLod( g_FinalSSAOLinearClamp, vec3( uvD, id ), 0 ).x;
 
     // reduce weight for samples near edge - if the edge is on both sides, weight goes to 0
     vec4 blendWeights;

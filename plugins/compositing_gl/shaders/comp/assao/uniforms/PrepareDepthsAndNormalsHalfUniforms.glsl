@@ -1,4 +1,5 @@
 uniform sampler2D g_DepthSource;
+uniform sampler2D g_DepthSourcePointClamp;
 // halfDepthsMipViews
 // -----------------------
 layout(r16f, binding = 0) uniform writeonly image2D g_HalfDepthsMipView0;
