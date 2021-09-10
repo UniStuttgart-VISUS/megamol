@@ -229,6 +229,9 @@ namespace molecularmaps {
         static void ReadColorTableFromFile(
             vislib::StringA filename, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable);
 
+        static void ReadColorTableFromFile(
+            std::filesystem::path path, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable);
+
         /**
          * Lookup table for the hydrophobicity of an amnio acid by residue name.
          *
