@@ -202,11 +202,12 @@ megamol::frontend_resources::CommandRegistry::~CommandRegistry() {
 #endif
 }
 
-void megamol::frontend_resources::CommandRegistry::add_command(const megamol::frontend_resources::Command& c) {
+std::string megamol::frontend_resources::CommandRegistry::add_command(const megamol::frontend_resources::Command& c) {
     const bool command_is_new = command_index.find(c.name) == command_index.end();
     const bool key_code_unused = key_to_command.find(c.key) == key_to_command.end();
     if (command_is_new && key_code_unused) {
         push_command(c);
+        return c.name;
     } else {
         Command c2;
         if (!command_is_new) {
@@ -221,6 +222,17 @@ void megamol::frontend_resources::CommandRegistry::add_command(const megamol::fr
         c2.parent_type = c.parent_type;
         c2.effect = c.effect;
         push_command(c2);
+        return c2.name;
+    }
+}
+
+const megamol::frontend_resources::Command megamol::frontend_resources::CommandRegistry::get_command(
+    const KeyCode& key) const {
+    const auto c = key_to_command.find(key);
+    if (c == key_to_command.end()) {
+        return Command{};
+    } else {
+        return commands[c->second];
     }
 }
 

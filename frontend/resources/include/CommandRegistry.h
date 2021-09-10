@@ -71,7 +71,8 @@ public:
 
     ~CommandRegistry();
 
-    void add_command(const Command& c);
+    std::string add_command(const Command& c);
+    const Command get_command(const KeyCode& key) const;
 
     void remove_command_by_parent(const std::string& parent_param);
     void remove_command_by_name(const std::string& command_name);
