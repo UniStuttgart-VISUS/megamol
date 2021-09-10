@@ -17,7 +17,7 @@ using namespace megamol::core;
 /*
  * view::special::DemoRenderer2D::DemoRenderer2D
  */
-view::special::DemoRenderer2D::DemoRenderer2D() : view::Renderer2DModule(),
+view::special::DemoRenderer2D::DemoRenderer2D() : view::Renderer2DModuleGL(),
         mx(0.0f), my(0.0f), fromx(1.0f), fromy(1.0f), tox(3.0f), toy(3.0f),
         drag(false) {
     // intentionally empty

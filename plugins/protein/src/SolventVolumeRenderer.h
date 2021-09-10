@@ -18,6 +18,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/utility/RenderUtils.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "slicing.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -238,7 +239,7 @@ private:
     megamol::core::CalleeSlot dataOutSlot;
 
     // camera information
-    core::view::Camera_2 cameraInfo;
+    core::view::Camera cameraInfo;
     // scaling factor for the scene
     float scale;
     // translation of the scene
@@ -335,7 +336,7 @@ private:
     unsigned int atomCount;
 
     // FBO for rendering the protein
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> proteinFBO;
+    std::shared_ptr<glowl::FramebufferObject> proteinFBO;
 
     // volume texture
     GLuint volumeTex;
@@ -407,14 +408,17 @@ private:
     // array for solvent molecules' atom residue type & the atom idx
     vislib::Array<float> solventAtomParams;
     // textures/FBOs for visible molecule counting
-    vislib::graphics::gl::FramebufferObject molVisFbo;
+    std::shared_ptr<glowl::FramebufferObject> molVisFbo;
     // dimensions of the molVisFbo
     unsigned int molVisFboWidth;
     unsigned int molVisFboHeight;
     // VBO for visible molecule counting
     GLuint molVisVbo;
     // framebuffer object for molecule type counting
-    vislib::graphics::gl::FramebufferObject solTypeCountFbo;
+    std::shared_ptr<glowl::FramebufferObject> solTypeCountFbo;
+
+    // Render utility class used for drawing texture to framebuffer
+    core::utility::RenderUtils renderUtils;
 };
 
 

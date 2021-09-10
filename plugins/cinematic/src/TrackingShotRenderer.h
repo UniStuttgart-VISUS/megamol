@@ -7,34 +7,14 @@
 
 #ifndef MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
+#pragma once
+
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/utility/SDFFont.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/FilePathParam.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
-#include "mmcore/view/Input.h"
 
-#include "vislib/Trace.h"
-#include "vislib/String.h"
-#include "vislib/Array.h"
-#include "vislib/memutils.h"
-#include "vislib/StringSerialiser.h"
-#include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/sys/CriticalSection.h"
-#include "mmcore/utility/sys/Thread.h"
-
-#include "CallKeyframeKeeper.h"
-#include "ReplacementRenderer.h"
 #include "KeyframeManipulators.h"
 #include "CinematicUtils.h"
 

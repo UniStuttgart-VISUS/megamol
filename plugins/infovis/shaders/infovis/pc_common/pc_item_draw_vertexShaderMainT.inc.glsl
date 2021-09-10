@@ -1,6 +1,6 @@
 uniform vec2 res = vec2(1,1);
-uniform float widthR = 1.0;
-uniform float heightR = 1.0;
+uniform int widthR = 1;
+uniform int heightR = 1;
 uniform float thicknessP;
 
 void main() {

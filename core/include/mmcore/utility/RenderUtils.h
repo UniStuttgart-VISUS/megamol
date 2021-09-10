@@ -26,7 +26,6 @@
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
-#include "mmcore/view/Camera_2.h"
 
 
 namespace megamol::core::utility {
@@ -47,29 +46,6 @@ static inline vislib::math::Point<float, 3> glm_to_vislib_point(glm::vec3 v) {
 
 static inline glm::vec3 vislib_point_to_glm(vislib::math::Point<float, 3> v) {
     return glm::vec3(v.X(), v.Y(), v.Z());
-}
-
-
-// #### Utility quaternion functions ################################### //
-
-static inline glm::quat quaternion_from_vectors(glm::vec3 view_vector, glm::vec3 up_vector) {
-
-    glm::vec3 view = view_vector * glm::vec3(-1.0f, -1.0f, -1.0f); /// why?
-    glm::vec3 right = glm::cross(up_vector, view);
-    glm::vec3 up = glm::cross(view, right);
-
-    glm::vec3 norm_right = glm::normalize(right);
-    glm::vec3 norm_up = glm::normalize(up);
-    glm::vec3 norm_view = glm::normalize(view);
-
-    glm::mat3 matrix_basis;
-    matrix_basis[0] = norm_right;
-    matrix_basis[1] = norm_up;
-    matrix_basis[2] = norm_view;
-
-    glm::quat orientation_quat = glm::quat_cast(matrix_basis);
-
-    return orientation_quat; // glm::normalize(orientation_quat);
 }
 
 

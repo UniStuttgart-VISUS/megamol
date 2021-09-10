@@ -17,7 +17,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmcore/view/Input.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/BindingSiteCall.h"
@@ -34,7 +34,7 @@
 namespace megamol {
 namespace protein {
 
-    class SequenceRenderer : public megamol::core::view::Renderer2DModule {
+    class SequenceRenderer : public megamol::core::view::Renderer2DModuleGL {
     public:
 
         /**

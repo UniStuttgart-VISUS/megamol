@@ -167,6 +167,13 @@ bool HistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     // end suck
 
+    // get camera
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    std::copy(glm::value_ptr(view), glm::value_ptr(view) + 16, &modelViewMatrix_column[0]);
+    std::copy(glm::value_ptr(proj), glm::value_ptr(proj) + 16, &projMatrix_column[0]);
+
     histogramProgram->use();
     glUniformMatrix4fv(histogramProgram->getUniformLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
     glUniformMatrix4fv(histogramProgram->getUniformLocation("projection"), 1, GL_FALSE, projMatrix_column);

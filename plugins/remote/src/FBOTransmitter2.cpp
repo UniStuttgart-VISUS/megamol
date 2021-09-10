@@ -455,22 +455,20 @@ bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float fram
         this->GetCoreInstance()
             ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3DGL>(
                 mvn, [cam_params](megamol::core::view::CallRender3DGL& cr3d) {
-                    core::view::Camera_2 cam;
-                    cr3d.GetCamera(cam);
-                    core::view::Camera_2::snapshot_type cam_snap;
-                    cam_snap = cam.take_snapshot(cam_snap, core::thecam::snapshot_content::all);
-                    auto pos = cam_snap.position;
-                    auto up = cam_snap.up_vector;
-                    auto view = cam_snap.view_vector;
-                    cam_params[0] = pos.x();
-                    cam_params[1] = pos.y();
-                    cam_params[2] = pos.z();
-                    cam_params[3] = up.x();
-                    cam_params[4] = up.y();
-                    cam_params[5] = up.z();
-                    cam_params[6] = view.x();
-                    cam_params[7] = view.y();
-                    cam_params[8] = view.z();
+                    core::view::Camera cam = cr3d.GetCamera();
+                    auto cam_pose = cam.get<core::view::Camera::Pose>();
+                    auto pos = cam_pose.position;
+                    auto up = cam_pose.up;
+                    auto view = cam_pose.direction;
+                    cam_params[0] = pos.x;
+                    cam_params[1] = pos.y;
+                    cam_params[2] = pos.z;
+                    cam_params[3] = up.x;
+                    cam_params[4] = up.y;
+                    cam_params[5] = up.z;
+                    cam_params[6] = view.x;
+                    cam_params[7] = view.y;
+                    cam_params[8] = view.z;
                 });
 
     if (!(retBbox && retTimes && retCam)) {

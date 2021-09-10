@@ -1,10 +1,8 @@
 #include "stdafx.h"
 #include "InfovisAmortizedRenderer.h"
 
-#include <glm/gtc/functions.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -28,16 +26,10 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
     this->nextRendererSlot.SetCompatibleCall<megamol::core::view::CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->nextRendererSlot);
 
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
-
-    setupBuffers();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-
     this->halveRes << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&halveRes);
 
-    auto* approachMappings = new core::param::EnumParam(0);
+    auto* approachMappings = new core::param::EnumParam(6);
     approachMappings->SetTypePair(MS_AR, "MS-AR");
     approachMappings->SetTypePair(QUAD_AR, "4xAR");
     approachMappings->SetTypePair(QUAD_AR_C, "4xAR-C");
@@ -60,10 +52,11 @@ InfovisAmortizedRenderer::~InfovisAmortizedRenderer() {
 }
 
 bool megamol::infovis::InfovisAmortizedRenderer::create(void) {
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ignore: %i", glGetError());
+
     if (!makeShaders()) {
         return false;
     }
-
     setupBuffers();
     return true;
 }
@@ -133,24 +126,43 @@ bool InfovisAmortizedRenderer::makeShaders() {
 }
 
 void InfovisAmortizedRenderer::setupBuffers() {
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
-
     glGenFramebuffers(1, &amortizedFboA);
     glGenFramebuffers(1, &amortizedMsaaFboA);
-    glGenFramebuffers(1, &amortizedPushFBO);
+    // glGenFramebuffers(1, &amortizedPushFBO);
+    if (glowlFBO == nullptr) {
+        glowlFBO = std::make_shared<glowl::FramebufferObject>(1, 1);
+        glowlFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
+        glDisable(GL_MULTISAMPLE);
+        glowlFBOms = std::make_shared<glowl::FramebufferObject>(1, 1);
+        glowlFBOms->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
+        glowlFBOms->bind();
+        glEnable(GL_MULTISAMPLE);
+    }
+
     glGenTextures(1, &imageArrayA);
-    glGenTextures(1, &msImageArray);
     glGenTextures(1, &pushImage);
     glGenTextures(1, &imStoreArray);
-    glGenTextures(1, &imStoreA);
-    glGenTextures(1, &imStoreB);
+
+    // glGenTextures(1, &imStoreA);
+    // glGenTextures(1, &imStoreB);
+
+
+    if (texA == nullptr || texB == nullptr) {
+        texstore_layout = glowl::TextureLayout(GL_RGBA32F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1,
+            {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+                {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
+                {GL_TEXTURE_MAG_FILTER, GL_NEAREST}},
+            {});
+        texA = std::make_unique<glowl::Texture2D>("texStoreA", texstore_layout, nullptr);
+        texB = std::make_unique<glowl::Texture2D>("texStoreB", texstore_layout, nullptr);
+    }
     glGenBuffers(1, &ssboMatrices);
 
     glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
     glEnable(GL_MULTISAMPLE);
 
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
-    glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 2, GL_RGB, 1, 1, 2, GL_TRUE);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, glowlFBOms->getColorAttachment(0)->getName());
+    glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGB, 1, 1, 2, GL_TRUE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -191,43 +203,41 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+    auto err = glGetError();
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("GL_ERROR in InfovisAmortizedRenderer: " + err);
+    }
 }
 
-void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel) {
-    int w = ceil(float(ow) / float(this->amortLevel.Param<core::param::IntParam>()->Value()));
-    int h = ceil(float(oh) / float(this->amortLevel.Param<core::param::IntParam>()->Value()));
-
+void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam) {
+    int a = this->amortLevel.Param<core::param::IntParam>()->Value();
+    int w = ceil(float(ow) / a);
+    int h = ceil(float(oh) / a);
     glm::mat4 pm;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            pm[j][i] = projMatrix_column[i + j * 4];
-        }
-    }
     glm::mat4 mvm;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            mvm[j][i] = modelViewMatrix_column[i + j * 4];
-        }
-    }
-    auto pmvm = pm * mvm;
+    auto pmvm = projMatrix * mvMatrix;
 
     if (approach == 0) {
         invMatrices[frametype] = pmvm;
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
+        glowlFBOms->bind();
         glActiveTexture(GL_TEXTURE10);
         glEnable(GL_MULTISAMPLE);
 
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, glowlFBOms->getColorAttachment(0)->getName());
         glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGBA8, w, h, 2, GL_TRUE);
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, msImageArray, 0, frametype);
+        glFramebufferTextureLayer(
+            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, glowlFBOms->getColorAttachment(0)->getName(), 0, frametype);
 
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
         const float tbl[4] = {0.25 + (frametype * 0.5), 0.25, 0.75 - (frametype * 0.5), 0.75};
         glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 2, tbl);
+        // glowlFBO->bind();
+
+    } else {
+        glDisable(GL_MULTISAMPLE);
     }
     if (approach == 1 || approach == 2 || approach == 3) {
         glm::mat4 jit;
@@ -287,41 +297,29 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
         const float tbl[2] = {(1.0 + (frametype % a) * 2.0) / (2.0 * a), (1.0 + int(frametype / a) * 2.0) / (2.0 * a)};
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("%f , %f", tbl[0], tbl[1]);
         glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 1, tbl);
     }
     if (approach == 6) {
-        glm::mat4 jit;
-        glm::mat4 pmvm = pm * mvm;
-        int a = this->amortLevel.Param<core::param::IntParam>()->Value();
+        auto intrinsics = cam->get<core::view::Camera::OrthographicParameters>();
+        glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets[frametype].x,
+            -intrinsics.frustrum_height * camOffsets[frametype].y, 0.0);
 
-        jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
-
+        // glm::mat4 jit = glm::translate(glm::mat4(1.0f), adj_offset);
         movePush = lastPmvm * inverse(pmvm);
+        // movePush = glm::mat4(1.0);
         lastPmvm = pmvm;
 
-        pm = jit * pm;
-        for (int i = 0; i < 16; i++)
-            projMatrix_column[i] = glm::value_ptr(pm)[i];
-
-        glBindFramebuffer(GL_FRAMEBUFFER, amortizedPushFBO);
-
-        glActiveTexture(GL_TEXTURE4);
-
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, pushImage, 0);
+        auto p = cam->get<core::view::Camera::Pose>();
+        p.position = p.position + 0.5f * adj_offset;
+        cam->setPose(p);
+        glowlFBO->bind();
     }
     glClear(GL_COLOR_BUFFER_BIT);
-    glViewport(0, 0, w, h);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(modelViewMatrix_column);
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(projMatrix_column);
 }
 
 void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLevel) {
-    glDeleteTextures(1, &imStoreA);
-    glDeleteTextures(1, &imStoreB);
+    // glDeleteTextures(1, &imStoreA);
+    // glDeleteTextures(1, &imStoreB);
 
     if (approach == 0) {
         framesNeeded = 2;
@@ -427,15 +425,14 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
                     glm::fvec3(((float) a - 1.0 - 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
             }
         }
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, pushImage);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w / a, h / a, 0, GL_RGBA, GL_FLOAT, NULL);
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, imStoreA);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, imStoreB);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
+        // glActiveTexture(GL_TEXTURE4);
+        glowlFBO->resize(w / a, h / a);
+
+        texstore_layout.width = w;
+        texstore_layout.height = h;
+
+        texA = std::make_unique<glowl::Texture2D>("texStoreA", texstore_layout, nullptr);
+        texB = std::make_unique<glowl::Texture2D>("texStoreB", texstore_layout, nullptr);
     }
 }
 
@@ -476,7 +473,7 @@ bool InfovisAmortizedRenderer::OnMouseScroll(double dx, double dy) {
         evt.mouseScrollData.dx = dx;
         evt.mouseScrollData.dy = dy;
         cr->SetInputEvent(evt);
-        if (!(*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll))
+        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll))
             return true;
     }
     return false;
@@ -519,23 +516,24 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
 
     amort_reconstruction_shdr_array[approach]->use();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+    fbo->bind();
+    int a = this->amortLevel.Param<core::param::IntParam>()->Value();
 
     amort_reconstruction_shdr_array[approach]->setUniform("h", h);
     amort_reconstruction_shdr_array[approach]->setUniform("w", w);
-    amort_reconstruction_shdr_array[approach]->setUniform("ow", windowWidth);
-    amort_reconstruction_shdr_array[approach]->setUniform("oh", windowHeight);
-    amort_reconstruction_shdr_array[approach]->setUniform("approach", approach);
-    amort_reconstruction_shdr_array[approach]->setUniform("frametype", frametype);
-    amort_reconstruction_shdr_array[approach]->setUniform("ssLevel", ssLevel);
     amort_reconstruction_shdr_array[approach]->setUniform(
         "amortLevel", this->amortLevel.Param<core::param::IntParam>()->Value());
-    amort_reconstruction_shdr_array[approach]->setUniform("parity", parity);
 
-    if (approach == 0 || approach == 1 || approach == 2 || approach == 3)
+    if (approach == 0 || approach == 1 || approach == 2 || approach == 3) {
         amort_reconstruction_shdr_array[approach]->setUniform("src_tex2D", 10);
+        amort_reconstruction_shdr_array[approach]->setUniform("ssLevel", ssLevel);
+        glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->getUniformLocation("moveMatrices"), a * a,
+            GL_FALSE, &moveMatrices[0][0][0]);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    }
     if (approach == 4) {
-        int a = this->amortLevel.Param<core::param::IntParam>()->Value();
         glUniformMatrix4fv(amort_reconstruction_shdr_array[approach]->getUniformLocation("moveMatrices"), a * a,
             GL_FALSE, &moveMatrices[0][0][0]);
     } else {
@@ -543,6 +541,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
             &moveMatrices[0][0][0]);
     }
     if (approach == 5) {
+        amort_reconstruction_shdr_array[approach]->setUniform("frametype", frametype);
         amort_reconstruction_shdr_array[approach]->setUniform("src_tex2D", 10);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, imStoreA);
@@ -553,28 +552,28 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         glBindTexture(GL_TEXTURE_2D, imStoreB);
         glBindImageTexture(6, imStoreB, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
         amort_reconstruction_shdr_array[approach]->setUniform("StoreB", 6);
+
+        amort_reconstruction_shdr_array[approach]->setUniform("moveM", movePush);
     }
     if (approach == 6) {
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, imStoreA);
-        glBindImageTexture(5, imStoreA, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
-        amort_reconstruction_shdr_array[approach]->setUniform("StoreA", 5);
-
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, imStoreB);
-        glBindImageTexture(6, imStoreB, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
-        amort_reconstruction_shdr_array[approach]->setUniform("StoreB", 6);
-
+        if (parity == 0) {
+            texA->bindImage(6, GL_READ_ONLY);
+            amort_reconstruction_shdr_array[approach]->setUniform("StoreA", 6);
+            texB->bindImage(7, GL_WRITE_ONLY);
+            amort_reconstruction_shdr_array[approach]->setUniform("StoreB", 7);
+        } else {
+            texA->bindImage(7, GL_WRITE_ONLY);
+            amort_reconstruction_shdr_array[approach]->setUniform("StoreA", 7);
+            texB->bindImage(6, GL_READ_ONLY);
+            amort_reconstruction_shdr_array[approach]->setUniform("StoreB", 6);
+        }
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, pushImage);
+        // glBindTexture(GL_TEXTURE_2D, glowlFBO->getColorAttachment(0)->getName());
+        glowlFBO->bindColorbuffer(0);
         amort_reconstruction_shdr_array[approach]->setUniform("src_tex2D", 4);
+        amort_reconstruction_shdr_array[approach]->setUniform("moveM", movePush);
+        amort_reconstruction_shdr_array[approach]->setUniform("frametype", frametype);
     }
-    amort_reconstruction_shdr_array[approach]->setUniform("moveM", movePush);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
-    // glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0]);
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("errorCode: %s", glGetError());
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glUseProgram(0);
@@ -597,14 +596,10 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         // Nothing to do really
         return true;
     }
-
     // get camera
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    cr2d->SetCamera(cam);
-
-    cam_type::matrix_type view, proj;
-    cam.calc_matrices(view, proj);
+    core::view::Camera cam = call.GetCamera();
+    mvMatrix = cam.getViewMatrix();
+    projMatrix = cam.getProjectionMatrix();
 
     cr2d->SetTime(call.Time());
     cr2d->SetInstanceTime(call.InstanceTime());
@@ -616,22 +611,15 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     backgroundColor[1] = bg[1];
     backgroundColor[2] = bg[2];
     backgroundColor[3] = 1.0;
-
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
-    // this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
-
+    fbo = call.GetFramebuffer();
     cr2d->SetBackgroundColor(call.BackgroundColor());
     cr2d->AccessBoundingBoxes() = call.GetBoundingBoxes();
+    cr2d->SetViewResolution(call.GetViewResolution());
 
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
         int a = amortLevel.Param<core::param::IntParam>()->Value();
-        int w = cam.resolution_gate().width();
-        int h = cam.resolution_gate().height();
-        windowWidth = w;
-        windowHeight = h;
+        int w = fbo->getWidth();
+        int h = fbo->getHeight();
         int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
         int approach = this->approachEnumSlot.Param<core::param::EnumParam>()->Value();
 
@@ -639,13 +627,18 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         if (approach != oldApp || w != oldW || h != oldH || ssLevel != oldssLevel || a != oldaLevel) {
             resizeArrays(approach, w, h, ssLevel);
         }
-
-        setupAccel(approach, w, h, ssLevel);
-        cr2d->SetFramebufferObject(call.GetFramebufferObject());
+        setupAccel(approach, w, h, ssLevel, &cam);
+        if (approach == 0) {
+            cr2d->SetFramebuffer(glowlFBOms);
+        } else {
+            cr2d->SetFramebuffer(glowlFBO);
+        }
+        cr2d->SetCamera(cam);
+        cr2d->SetBackgroundColor(call.BackgroundColor());
 
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
-        glClearColor(bg.x, bg.y, bg.z, bg.a);
+
         doReconstruction(approach, w, h, ssLevel);
 
         // to avoid excessive resizing, retain last render variables and check if changed
@@ -655,7 +648,8 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         oldW = w;
         oldaLevel = a;
     } else {
-        cr2d->SetFramebufferObject(call.GetFramebufferObject());
+        cr2d->SetFramebuffer(fbo);
+        cr2d->SetCamera(cam);
 
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);

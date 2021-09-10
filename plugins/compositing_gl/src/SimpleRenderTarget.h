@@ -11,7 +11,7 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/view/RendererModule.h"
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
@@ -22,8 +22,8 @@ namespace compositing {
 /**
  * TODO
  */
-class SimpleRenderTarget : public megamol::core::view::Renderer3DModuleGL {
-public:
+class SimpleRenderTarget : public core::view::RendererModule<core::view::CallRender3DGL> {
+    public:
     /**
      * Answer the name of this module.
      *
@@ -88,13 +88,6 @@ protected:
     bool Render(core::view::CallRender3DGL& call);
 
     /**
-     * Method that gets called before the rendering is started for all changed modules
-     *
-     * @param call The rendering call that contains the camera
-     */
-    void PreRender(core::view::CallRender3DGL& call);
-
-    /**
      *
      */
     bool getColorRenderTarget(core::Call& caller);
@@ -136,7 +129,7 @@ protected:
 
 private:
     /** Local copy of last used camera*/
-    core::view::Camera_2 m_last_used_camera;
+    core::view::Camera m_last_used_camera;
 
     core::CalleeSlot m_color_render_target;
     core::CalleeSlot m_normal_render_target;

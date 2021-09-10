@@ -13,12 +13,19 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/CallRenderGL.h"
+#include "mmcore/view/CallRender3D.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include <glowl/FramebufferObject.hpp>
 
 namespace megamol {
 namespace core {
 namespace view {
+
+    
+    inline constexpr char callrender2dgl_name[] = "CallRender2DGL";
+
+    inline constexpr char callrender2dgl_desc[] = "New and improved call for rendering a frame with OpenGL";
 
 
 /**
@@ -33,67 +40,14 @@ namespace view {
  * call (bounding boxes).
  * The renderer should not draw anything outside the bounding box
  */
-class CallRender2DGL : public CallRenderGL {
-public:
+    class CallRender2DGL : public BaseCallRender<glowl::FramebufferObject, callrender2dgl_name, callrender2dgl_desc> {
+    public:
+        /** Ctor. */
+        CallRender2DGL(void) = default;
 
-    /**
-     * Answer the name of the objects of this description.
-     *
-     * @return The name of the objects of this description.
-     */
-    static const char *ClassName(void) {
-        return "CallRender2DGL";
-    }
-
-    /**
-     * Gets a human readable description of the module.
-     *
-     * @return A human readable description of the module.
-     */
-    static const char *Description(void) {
-        return "Call for rendering a frame";
-    }
-
-    /**
-     * Answer the number of functions used for this call.
-     *
-     * @return The number of functions used for this call.
-     */
-    static unsigned int FunctionCount(void) {
-        return AbstractCallRender::FunctionCount();
-    }
-
-    /**
-     * Answer the name of the function used for this call.
-     *
-     * @param idx The index of the function to return it's name.
-     *
-     * @return The name of the requested function.
-     */
-    static const char * FunctionName(unsigned int idx) {
-        return AbstractCallRender::FunctionName(idx);
-    }
-
-    /** Ctor. */
-    CallRender2DGL(void) = default;
-
-    /** Dtor. */
-    virtual ~CallRender2DGL(void) = default;
-
-
-    /**
-     * Assignment operator
-     *
-     * @param rhs The right hand side operand
-     *
-     * @return A reference to this
-     */
-    CallRender2DGL& operator=(const CallRender2DGL& rhs) {
-        AbstractCallRender::operator=(rhs);
-        return *this;
-    }
-
-};
+        /** Dtor. */
+        virtual ~CallRender2DGL(void) = default;
+    };
 
 
 /** Description class typedef */

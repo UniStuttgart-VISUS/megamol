@@ -133,12 +133,11 @@ bool megamol::mesh::Render3DUI::Render(core::view::CallRender3DGL& call) {
     if (cr == NULL) return false;
 
     // obtain camera information
-    core::view::Camera_2 cam(cr->GetCamera());
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_tmp, proj_tmp;
-    cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    m_view_mx_cpy = view_tmp;
-    m_proj_mx_cpy = proj_tmp;
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    m_view_mx_cpy = view;
+    m_proj_mx_cpy = proj;
 
     // check for interacton call get access to interaction collection
     Call3DInteraction* ci = this->m_3DInteraction_callerSlot.CallAs<Call3DInteraction>();

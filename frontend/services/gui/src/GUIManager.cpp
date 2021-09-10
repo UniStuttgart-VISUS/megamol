@@ -392,10 +392,13 @@ bool GUIManager::PostDraw() {
 
         // Draw global parameter widgets -------------------------------------------
         if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+
             /// ! Only enabled in second frame if interaction objects are added during first frame !
             this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
+
             graph_ptr->DrawGlobalParameterWidgets(
                 this->picking_buffer, this->win_collection.GetWindow<TransferFunctionEditor>());
+
             this->picking_buffer.DisableInteraction();
         }
 
@@ -411,7 +414,12 @@ bool GUIManager::PostDraw() {
     // Render the current ImGui frame ------------------------------------------
     glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
     ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    this->draw_data = ImGui::GetDrawData();
+
+    /// XXX Actual rendering of GUI is done in ImagePresentation_Service
+    /// XXX Other OpenGL rendering of GUI is currently omitted (e.g. ViewCube)
+    /// DrawUiToScreen();
+    /// ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Reset all hotkeys ------------------------------------------------------
     for (auto& hotkey : this->hotkeys) {
@@ -928,6 +936,17 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
         sync_success &= param_sync_success;
     }
     return sync_success;
+}
+
+
+void megamol::gui::GUIManager::DrawUiToScreen() {
+    if (!draw_data)
+        return;
+
+    // draw_data is filled in PostDraw() and should have a valid value here
+    ImGuiIO& io = ImGui::GetIO();
+    glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
+    ImGui_ImplOpenGL3_RenderDrawData(draw_data);
 }
 
 
@@ -1821,9 +1840,10 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
             auto separator_index = filename.find_last_of(id_separator);
             if (separator_index != std::string::npos) {
                 auto last_id_str = filename.substr(separator_index + 1);
-                try {
-                    this->gui_state.screenshot_filepath_id = std::stoi(last_id_str);
-                } catch (...) { new_separator = true; }
+                std::istringstream(last_id_str) >> this->gui_state.screenshot_filepath_id; // 0 if failed
+                if (this->gui_state.screenshot_filepath_id = 0) {
+                    new_separator = true;
+                }
                 this->gui_state.screenshot_filepath_id++;
                 if (new_separator) {
                     ret_filepath =
