@@ -33,11 +33,13 @@ static std::string tolower(std::string s) {
     return s;
 }
 
+// AbstractNamedObject::FullName() prepends extra :: to module names which leads to
+// lookup problems when module names already start with ::
+// so we normalize the amount of :: on module names coming into the public graph api functions
 static std::string clean(std::string const& path) {
-    auto begin = path.find_first_not_of(':');
-    auto end   = path.find_last_not_of(':');
 
-    return tolower(path.substr(begin, end+1 - begin));
+    auto begin = path.find_first_not_of(':');
+    return "::" + path.substr(begin);
 }
 
 static std::string cut_off_prefix(std::string const& name, std::string const& prefix) {
@@ -116,17 +118,21 @@ const megamol::core::factories::CallDescriptionManager& megamol::core::MegaMolGr
 
 /*
  * ------------- public Graph API begin -------------
+ *
+ * normalize :: of incoming module/call/param names 
 */
 
 bool megamol::core::MegaMolGraph::DeleteModule(std::string const& id) {
-    return delete_module(id);
+    return delete_module(clean(id));
 }
 
 bool megamol::core::MegaMolGraph::CreateModule(std::string const& className, std::string const& id) {
-    return add_module(ModuleInstantiationRequest{className, id});
+    return add_module(ModuleInstantiationRequest{className, clean(id)});
 }
 
-bool megamol::core::MegaMolGraph::RenameModule(std::string const& oldId, std::string const& newId) {
+bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::string const& neww) {
+    auto oldId = clean(old);
+    auto newId = clean(neww);
 
     auto module_it = find_module(oldId);
     if (module_it == module_list_.end()) {
@@ -142,9 +148,8 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& oldId, std::st
     module_it->request.id = newId;
     module_it->modulePtr->setName(newId.c_str());
 
-    const auto clean_old = clean(oldId);
     const auto matches_old_prefix = [&](std::string const& call_slot) {
-        auto res = clean(call_slot).find(clean_old);
+        auto res = call_slot.find(oldId);
         return (res != std::string::npos) && res == 0;
     };
     
@@ -176,15 +181,16 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& oldId, std::st
 }
 
 bool megamol::core::MegaMolGraph::DeleteCall(std::string const& from, std::string const& to) {
-    return delete_call(CallDeletionRequest{from, to});
+    return delete_call(CallDeletionRequest{clean(from), clean(to)});
 }
 
 bool megamol::core::MegaMolGraph::CreateCall(
     std::string const& className, std::string const& from, std::string const& to) {
-    return add_call(CallInstantiationRequest{className, from, to});
+    return add_call(CallInstantiationRequest{className, clean(from), clean(to)});
 }
 
-megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::string const& moduleName) const {
+megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::string const& module) const {
+    auto moduleName = clean(module);
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
@@ -196,7 +202,9 @@ megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::str
 }
 
 megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
-    std::string const& from, std::string const& to) const {
+    std::string const& from_, std::string const& to_) const {
+    auto from = clean(from_);
+    auto to = clean(to_);
     auto call_it = find_call(from, to);
 
     if (call_it == call_list_.end()) {
@@ -208,10 +216,11 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
 }
 
 megamol::core::param::AbstractParam* megamol::core::MegaMolGraph::FindParameter(std::string const& paramName) const {
-    return getParameterFromParamSlot(this->FindParameterSlot(paramName));
+    return getParameterFromParamSlot(this->FindParameterSlot(clean(paramName)));
 }
 
-megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {
+megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& param) const {
+    auto paramName = clean(param);
     // match module where module name is prefix of parameter slot name
     auto module_it = find_module_by_prefix(paramName);
 
@@ -236,7 +245,8 @@ megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(
 }
 
 std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::EnumerateModuleParameters(
-    std::string const& moduleName) const {
+    std::string const& module) const {
+    auto moduleName = clean(module);
     auto param_slots = EnumerateModuleParameterSlots(moduleName);
 
     std::vector<megamol::core::param::AbstractParam*> params;
@@ -248,7 +258,8 @@ std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::E
 }
 
 std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::EnumerateModuleParameterSlots(
-    std::string const& moduleName) const {
+    std::string const& module) const {
+    auto moduleName = clean(module);
     std::vector<megamol::core::param::ParamSlot*> parameters;
 
     auto module_it = find_module(moduleName);
@@ -305,8 +316,9 @@ std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::ListP
     return param_slots;
 }
 
-bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName)
+bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module)
 {
+    auto moduleName = clean(module);
     // currently, we expect the entry point to be derived from AbstractView
     auto module_it = find_module(moduleName);
 
@@ -336,7 +348,8 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName)
     return true;
 }
 
-bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) {
+bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string module) {
+    auto moduleName = clean(module);
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
@@ -410,7 +423,7 @@ void megamol::core::MegaMolGraph::Clear() {
 
 megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module(std::string const& name) {
     auto it = std::find_if(this->module_list_.begin(), this->module_list_.end(),
-        [&name](megamol::core::ModuleInstance_t const& el) { return clean(el.request.id) == clean(name); });
+        [&name](megamol::core::ModuleInstance_t const& el) { return el.request.id == name; });
 
     return it;
 }
@@ -419,7 +432,7 @@ megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_mo
     std::string const& name) const {
 
     auto it = std::find_if(this->module_list_.cbegin(), this->module_list_.cend(),
-        [&name](megamol::core::ModuleInstance_t const& el) { return clean(el.request.id) == clean(name); });
+        [&name](megamol::core::ModuleInstance_t const& el) { return el.request.id == name; });
 
     return it;
 }
@@ -428,7 +441,7 @@ megamol::core::CallList_t::iterator megamol::core::MegaMolGraph::find_call(
     std::string const& from, std::string const& to) {
     auto it = std::find_if(
         this->call_list_.begin(), this->call_list_.end(), [&](megamol::core::CallInstance_t const& el) {
-            return clean(el.request.from) == clean(from) && clean(el.request.to) == clean(to);
+            return el.request.from == from && el.request.to == to;
         });
 
     return it;
@@ -439,7 +452,7 @@ megamol::core::CallList_t::const_iterator megamol::core::MegaMolGraph::find_call
 
     auto it = std::find_if(
         this->call_list_.cbegin(), this->call_list_.cend(), [&](megamol::core::CallInstance_t const& el) {
-            return clean(el.request.from) == clean(from) && clean(el.request.to) == clean(to);
+            return el.request.from == from && el.request.to == to;
         });
 
     return it;
