@@ -278,10 +278,13 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
                 if (p != nullptr) {
                     frontend_resources::Command c;
                     c.key = p->GetKeyCode();
-                    c.param = p;
+                    c.parent = ps->FullName();
                     // actually a module should be able to define its own names, shouldn't it?
                     c.name = ps->FullName();
-                    c.effect = [p]() { p->setDirty(); };
+                    c.effect = [&](const frontend_resources::Command *self) {
+                        auto my_p = this->FindParameter(self->parent);
+                        if (my_p != nullptr) {my_p->setDirty();}
+                    };
                     m_command_registry->add_command(c);
                 }
             }
@@ -414,7 +417,7 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         if (ps != nullptr) {
             auto p = ps->Param<param::ButtonParam>();
             if (p != nullptr) {
-                m_command_registry->remove_command(p);
+                m_command_registry->remove_command_by_parent(ps->FullName().PeekBuffer());
             }
         }
     }

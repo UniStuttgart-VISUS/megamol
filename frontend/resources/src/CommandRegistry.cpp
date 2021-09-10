@@ -215,14 +215,15 @@ void megamol::frontend_resources::CommandRegistry::add_command(const megamol::fr
         if (key_code_unused) {
             c2.key = c.key;
         }
-        c2.param = c.param;
+        c2.parent = c.parent;
+        c2.parent_type = c.parent_type;
         c2.effect = c.effect;
         push_command(c2);
     }
 }
 
-void megamol::frontend_resources::CommandRegistry::remove_command(const megamol::core::param::AbstractParam* param) {
-    auto it = std::find_if(commands.begin(), commands.end(), [param] (const Command& c){return c.param == param;});
+void megamol::frontend_resources::CommandRegistry::remove_command_by_parent(const std::string& parent_param) {
+    auto it = std::find_if(commands.begin(), commands.end(), [parent_param] (const Command& c){return c.parent == parent_param;});
     if (it != commands.end()) {
         command_index.erase(it->name);
         if (it->key.key != Key::KEY_UNKNOWN) key_to_command.erase(it->key);
@@ -230,7 +231,7 @@ void megamol::frontend_resources::CommandRegistry::remove_command(const megamol:
     }
 }
 
-void megamol::frontend_resources::CommandRegistry::remove_command(const std::string& command_name) {
+void megamol::frontend_resources::CommandRegistry::remove_command_by_name(const std::string& command_name) {
     if (!is_new(command_name)) {
         auto idx = command_index[command_name];
         auto& c = commands[idx];
@@ -283,15 +284,6 @@ bool megamol::frontend_resources::CommandRegistry::exec_command(const KeyCode& k
     } else {
         commands[c->second].execute();
         return true;
-    }
-}
-
-megamol::core::param::AbstractParam* megamol::frontend_resources::CommandRegistry::param_from_keycode(const KeyCode& key) const {
-    const auto c = key_to_command.find(key);
-    if (c == key_to_command.end()) {
-        return nullptr;
-    } else {
-        return commands[c->second].param;
     }
 }
 
