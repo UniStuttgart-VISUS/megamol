@@ -13,6 +13,7 @@
 #include <regex>
 
 #include "KeyboardMouseInput.h"
+#include <json.hpp>
 
 #ifdef CUESDK_ENABLED
 #define CORSAIR_LIGHTING_SDK_DISABLE_DEPRECATION_WARNINGS
@@ -31,14 +32,38 @@ static std::string CommandRegistry_Req_Name = "CommandRegistry";
 struct Command {
     std::string name;
     KeyCode key;
-    megamol::core::param::AbstractParam* param;
-    std::function<void()> effect;
+    std::string parent;
+    enum class parent_type_c {
+        PARENT_PARAM = 1,
+        PARENT_GUI = 2
+    };
+    parent_type_c parent_type = parent_type_c::PARENT_PARAM;
+    std::function<void(const Command *self)> effect;
 
     void execute() const {
         auto f = effect;
-        f();
+        f(this);
     }
+
+    Command() = default;
 };
+
+// note: effect must be recovered on the fly.
+inline void to_json(nlohmann::json& j, const Command& c)  {
+    j = nlohmann::json{{{"name", c.name}, {"key", static_cast<int>(c.key.key)}, {"mods", c.key.mods.toInt()},
+        {"parent_type", static_cast<int>(c.parent_type)}, {"parent", c.parent}}};
+}
+
+// note: effect must be recovered on the fly.
+inline void from_json(const nlohmann::json& j, Command& c) {
+    j.at("name").get_to(c.name);
+    j.at("key").get_to(c.key.key);
+    int m;
+    j.at("mods").get_to(m);
+    c.key.mods.fromInt(m);
+    j.at("parent_type").get_to(c.parent_type);
+}
+
 
 class CommandRegistry {
 public:
@@ -48,8 +73,8 @@ public:
 
     void add_command(const Command& c);
 
-    void remove_command(const megamol::core::param::AbstractParam* param);
-    void remove_command(const std::string& command_name);
+    void remove_command_by_parent(const std::string& parent_param);
+    void remove_command_by_name(const std::string& command_name);
 
     void update_hotkey(const std::string& command_name, KeyCode key);
 
@@ -61,8 +86,6 @@ public:
     const std::vector<Command> list_commands() const {
         return commands;
     }
-
-    megamol::core::param::AbstractParam* param_from_keycode(const KeyCode& key) const;
 
 private:
 

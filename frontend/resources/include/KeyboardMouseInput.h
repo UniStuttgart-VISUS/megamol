@@ -200,6 +200,8 @@ public:
 
     inline int toInt() const { return static_cast<int>(bits.to_ulong()); }
 
+    inline void fromInt(int val) { bits.set(val); }
+
     inline bool none() const { return bits.none(); }
 
     inline bool test(Modifier mod) const { return (bits & Modifiers(mod).bits).any(); }
