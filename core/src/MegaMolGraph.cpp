@@ -279,8 +279,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
                     frontend_resources::Command c;
                     c.key = p->GetKeyCode();
                     c.parent = ps->FullName();
-                    // actually a module should be able to define its own names, shouldn't it?
-                    c.name = p->GetCommandName();
+                    c.name = module_ptr->Name().PeekBuffer() + std::string("_") + p->GetCommandName();
                     c.effect = [&](const frontend_resources::Command *self) {
                         auto my_p = this->FindParameter(self->parent);
                         if (my_p != nullptr) {my_p->setDirty();}

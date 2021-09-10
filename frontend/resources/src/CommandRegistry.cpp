@@ -211,6 +211,8 @@ void megamol::frontend_resources::CommandRegistry::add_command(const megamol::fr
         Command c2;
         if (!command_is_new) {
             c2.name = increment_name(c.name);
+        } else {
+            c2.name = c.name;
         }
         if (key_code_unused) {
             c2.key = c.key;
