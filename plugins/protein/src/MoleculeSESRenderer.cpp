@@ -22,6 +22,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "mmcore/view/light/DistantLight.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
@@ -44,6 +45,7 @@ using namespace megamol::core::utility::log;
 MoleculeSESRenderer::MoleculeSESRenderer(void)
         : Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the protein SES rendering with protein data storage")
+        , getLightsSlot("getLights", "Connects the protein SES rendering with light sources")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , postprocessingParam("postProcessingMode", "Enable Postprocessing Mode: ")
         , rendermodeParam("renderingMode", "Choose Render Mode: ")
@@ -68,7 +70,11 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
         , puxelSizeBuffer(512 << 20)
         , computeSesPerMolecule(false) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
+    this->molDataCallerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->molDataCallerSlot);
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->getLightsSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
+    this->MakeSlotAvailable(&this->getLightsSlot);
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
 

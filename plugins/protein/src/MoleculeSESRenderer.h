@@ -139,7 +139,7 @@ namespace protein {
          *
          * @param m The probe position.
          */
-        //void RenderProbe(const vislib::math::Vector<float, 3> m);
+        // void RenderProbe(const vislib::math::Vector<float, 3> m);
         void RenderProbeGPU(const vislib::math::Vector<float, 3> m);
 
         /**
@@ -273,6 +273,8 @@ namespace protein {
         megamol::core::CallerSlot molDataCallerSlot;
         /** BindingSiteCall caller slot */
         megamol::core::CallerSlot bsDataCallerSlot;
+        /** Light data caller slot */
+        megamol::core::CallerSlot getLightsSlot;
 
         /** camera information */
         // vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
