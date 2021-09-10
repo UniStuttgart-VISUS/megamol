@@ -190,7 +190,7 @@ std::string megamol::gui::Parameter::GetValueString() const {
         } else if constexpr (std::is_same_v<T, std::monostate>) {
             switch (this->type) {
             case (ParamType_t::BUTTON): {
-                auto parameter = megamol::core::param::ButtonParam();
+                auto parameter = megamol::core::param::ButtonParam("");
                 value_string = std::string(parameter.ValueString().PeekBuffer());
                 break;
             }

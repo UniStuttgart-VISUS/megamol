@@ -166,7 +166,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     // resetFlagsSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
     // this->MakeSlotAvailable(&resetFlagsSlot);
 
-    resetFiltersSlot << new core::param::ButtonParam();
+    resetFiltersSlot << new core::param::ButtonParam("ResetFilters");
     resetFiltersSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
     this->MakeSlotAvailable(&resetFiltersSlot);
 

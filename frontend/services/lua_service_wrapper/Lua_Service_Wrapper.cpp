@@ -419,7 +419,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
             auto& command_registry = m_requestedResourceReferences[8].getResource<megamol::frontend_resources::CommandRegistry>();
             auto& l = command_registry.list_commands();
             std::string output;
-            std::for_each(l.begin(), l.end(), [&](const frontend_resources::Command& c) {output = output + c.name + "\n"; });
+            std::for_each(l.begin(), l.end(), [&](const frontend_resources::Command& c) {output = output + c.name + ", " + c.key.ToString() + "\n"; });
             return StringResult{output};
         }});
 

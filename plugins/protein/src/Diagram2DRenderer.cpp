@@ -47,7 +47,7 @@ Diagram2DRenderer::Diagram2DRenderer( void ) : Renderer2DModule (),
     this->MakeSlotAvailable( &this->plotColorParam);
     
     // set up the clear diagram param
-    this->clearDiagramParam.SetParameter( new param::ButtonParam(core::view::Key::KEY_DELETE));
+    this->clearDiagramParam.SetParameter( new param::ButtonParam("ClearDiagram", core::view::Key::KEY_DELETE));
     this->MakeSlotAvailable( &this->clearDiagramParam);
 
     // set the label space
