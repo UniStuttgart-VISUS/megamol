@@ -328,8 +328,8 @@ void megamol::frontend_resources::CommandRegistry::add_color_to_layer(const mega
 }
 
 void megamol::frontend_resources::CommandRegistry::remove_color_from_layer(
-#ifdef CUESDK_ENABLED
     const megamol::frontend_resources::Command& c) {
+#ifdef CUESDK_ENABLED
     auto& layer = key_colors[c.key.mods];
     const auto& k = corsair_led_from_glfw_key[c.key.key];
     const auto it = std::remove_if(layer.begin(), layer.end(), [k](const CorsairLedColor& c) {return c.ledId == k;});
