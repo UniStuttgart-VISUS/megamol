@@ -114,10 +114,13 @@ const megamol::core::factories::CallDescriptionManager& megamol::core::MegaMolGr
     return *callProvider_ptr;
 }
 
+/*
+ * ------------- public Graph API begin -------------
+*/
+
 bool megamol::core::MegaMolGraph::DeleteModule(std::string const& id) {
     return delete_module(id);
 }
-
 
 bool megamol::core::MegaMolGraph::CreateModule(std::string const& className, std::string const& id) {
     return add_module(ModuleInstantiationRequest{className, id});
@@ -176,11 +179,234 @@ bool megamol::core::MegaMolGraph::DeleteCall(std::string const& from, std::strin
     return delete_call(CallDeletionRequest{from, to});
 }
 
-
 bool megamol::core::MegaMolGraph::CreateCall(
     std::string const& className, std::string const& from, std::string const& to) {
     return add_call(CallInstantiationRequest{className, from, to});
 }
+
+megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::string const& moduleName) const {
+    auto module_it = find_module(moduleName);
+
+    if (module_it == module_list_.end()) {
+        log_error("error. could not find module: " + moduleName);
+        return nullptr;
+    }
+
+    return module_it->modulePtr;
+}
+
+megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
+    std::string const& from, std::string const& to) const {
+    auto call_it = find_call(from, to);
+
+    if (call_it == call_list_.end()) {
+        log_error("error. could not find call: " + from + " -> " + to);
+        return nullptr;
+    }
+
+    return call_it->callPtr;
+}
+
+megamol::core::param::AbstractParam* megamol::core::MegaMolGraph::FindParameter(std::string const& paramName) const {
+    return getParameterFromParamSlot(this->FindParameterSlot(paramName));
+}
+
+megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {
+    // match module where module name is prefix of parameter slot name
+    auto module_it = find_module_by_prefix(paramName);
+
+    if (module_it == module_list_.end()) {
+        log_error("error. could not find parameter, module name not found, parameter name: " + paramName + ")");
+        return nullptr;
+    }
+
+    std::string module_name = module_it->request.id;
+    std::string slot_name = cut_off_prefix(paramName, module_name + "::");
+
+    AbstractSlot* slot_ptr = module_it->modulePtr->FindSlot(slot_name.c_str());
+    param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
+
+    if (slot_ptr == nullptr || param_slot_ptr == nullptr) {
+        log_error("error. could not find parameter, slot not found or of wrong type. parameter name: " + paramName +
+            ", slot name: " + slot_name);
+        return nullptr;
+    }
+
+    return param_slot_ptr;
+}
+
+std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::EnumerateModuleParameters(
+    std::string const& moduleName) const {
+    auto param_slots = EnumerateModuleParameterSlots(moduleName);
+
+    std::vector<megamol::core::param::AbstractParam*> params;
+    params.reserve(param_slots.size());
+
+    for (auto& slot : param_slots) params.push_back(getParameterFromParamSlot(slot));
+
+    return params;
+}
+
+std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::EnumerateModuleParameterSlots(
+    std::string const& moduleName) const {
+    std::vector<megamol::core::param::ParamSlot*> parameters;
+
+    auto module_it = find_module(moduleName);
+
+    if (module_it == module_list_.end()) {
+        log_error("error. could not find module: " + moduleName);
+        return parameters;
+    }
+
+    auto children_begin = module_it->modulePtr->ChildList_Begin();
+    auto children_end = module_it->modulePtr->ChildList_End();
+
+    while (children_begin != children_end) {
+        AbstractNamedObject::ptr_type named_object = *children_begin;
+        if (named_object != nullptr) {
+            AbstractSlot* slot_ptr = dynamic_cast<AbstractSlot*>(named_object.get());
+            param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
+
+            if (slot_ptr && param_slot_ptr) parameters.push_back(param_slot_ptr);
+        }
+
+        children_begin++;
+    }
+
+    return parameters;
+}
+
+megamol::core::CallList_t const& megamol::core::MegaMolGraph::ListCalls() const { return call_list_; }
+
+megamol::core::ModuleList_t const& megamol::core::MegaMolGraph::ListModules() const {
+    return module_list_;
+}
+
+std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::ListParameters() const {
+    auto param_slots = this->ListParameterSlots();
+
+    std::vector<megamol::core::param::AbstractParam*> parameters;
+    parameters.reserve(param_slots.size());
+
+    for (auto& slot : param_slots) parameters.push_back(getParameterFromParamSlot(slot));
+
+    return parameters;
+}
+
+std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::ListParameterSlots() const {
+    std::vector<megamol::core::param::ParamSlot*> param_slots;
+
+    for (auto& mod : module_list_) {
+        auto module_params = this->EnumerateModuleParameterSlots(mod.modulePtr->Name().PeekBuffer());
+
+        param_slots.insert(param_slots.end(), module_params.begin(), module_params.end());
+    }
+
+    return param_slots;
+}
+
+bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName)
+{
+    // currently, we expect the entry point to be derived from AbstractView
+    auto module_it = find_module(moduleName);
+
+    if (module_it == module_list_.end()) {
+        log_error("error adding graph entry point. could not find module: " + moduleName);
+        return false;
+    }
+    
+    auto module_shared_ptr = module_it->modulePtr; // we cant cast shared_ptr to void* for image presentation rendering
+    auto& module_ref = *module_shared_ptr;
+    auto* module_raw_ptr = &module_ref;
+
+    // the image presentation will issue the rendering and provide the view with resources for rendering
+    // probably we dont care or dont check wheter the same view is added as entry point multiple times
+    bool view_presentation_ok = m_image_presentation->add_entry_point(moduleName, static_cast<void*>(module_raw_ptr));
+
+    if (!view_presentation_ok) {
+        log_error("error adding graph entry point. image presentation service rejected module: " + moduleName);
+        return false;
+    }
+
+    this->graph_entry_points.push_back(module_shared_ptr);
+
+    module_it->isGraphEntryPoint = true;
+    log("set graph entry point: " + moduleName);
+
+    return true;
+}
+
+bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) {
+    auto module_it = find_module(moduleName);
+
+    if (module_it == module_list_.end()) {
+        log_error("error removing graph entry point. could not find module: " + moduleName);
+        return false;
+    }
+
+    bool view_removal_ok = m_image_presentation->remove_entry_point(moduleName);
+
+    // note that for us it is not an error to try to remove a module as graph entry point
+    // if that module is not registered as an entry point
+    // but maybe image presentation may tell us that for some other reason removal failed?
+    if (!view_removal_ok) {
+        log_error("error adding graph entry point. image presentation service could not remove module: " + moduleName);
+        return false;
+    }
+
+    this->graph_entry_points.remove_if(
+        [&](Module::ptr_type& module) { return std::string{module->Name().PeekBuffer()} == moduleName; });
+
+    module_it->isGraphEntryPoint = false;
+    log("remove graph entry point: " + moduleName);
+
+    return true;
+}
+
+bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::frontend::FrontendResource> const& resources) {
+    this->provided_resources.insert(provided_resources.end(), resources.begin(), resources.end());
+
+    auto find_it = std::find_if(provided_resources.begin(), provided_resources.end(),
+        [&](megamol::frontend::FrontendResource const& resource) {
+            return resource.getIdentifier() == "ImagePresentationEntryPoints";
+        });
+
+    if (find_it == provided_resources.end()) {
+        return false;
+    }
+
+    m_image_presentation = & const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
+        find_it->getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+
+    auto find_it2 = std::find_if(provided_resources.begin(), provided_resources.end(), [&](megamol::frontend::FrontendResource const& resource) {
+            return resource.getIdentifier() == megamol::frontend_resources::CommandRegistry_Req_Name;
+        });
+    if (find_it2 == provided_resources.end()) {
+        return false;
+    }
+    m_command_registry = & const_cast<megamol::frontend_resources::CommandRegistry&>(
+        find_it2->getResource<megamol::frontend_resources::CommandRegistry>());
+
+    return true;
+}
+
+megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenience() {
+    return this->convenience_functions;
+}
+
+void megamol::core::MegaMolGraph::Clear() {
+    // currently entry points are expected to be graph modules, i.e. views
+    // therefore it is ok for us to clear all entry points if the graph shuts down
+    call_list_.clear();
+    m_image_presentation->clear_entry_points();
+    graph_entry_points.clear();
+    module_list_.clear();
+}
+
+/*
+ * ------------- end public Graph API begin -------------
+*/
+
 
 megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module(std::string const& name) {
     auto it = std::find_if(this->module_list_.begin(), this->module_list_.end(),
@@ -476,29 +702,6 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
     return true;
 }
 
-megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::string const& moduleName) const {
-    auto module_it = find_module(moduleName);
-
-    if (module_it == module_list_.end()) {
-        log_error("error. could not find module: " + moduleName);
-        return nullptr;
-    }
-
-    return module_it->modulePtr;
-}
-
-megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
-    std::string const& from, std::string const& to) const {
-    auto call_it = find_call(from, to);
-
-    if (call_it == call_list_.end()) {
-        log_error("error. could not find call: " + from + " -> " + to);
-        return nullptr;
-    }
-
-    return call_it->callPtr;
-}
-
 static const auto check_module_is_prefix = [](std::string const& request, auto const& module) {
         const auto& module_name = module.request.id;
         const auto substring = request.substr(0, module_name.size());
@@ -514,203 +717,6 @@ megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module_b
 
 megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& request) const {
     return std::find_if(module_list_.begin(), module_list_.end(), [&](auto const& module){ return check_module_is_prefix(request, module); });
-}
-
-megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {
-    // match module where module name is prefix of parameter slot name
-    auto module_it = find_module_by_prefix(paramName);
-
-    if (module_it == module_list_.end()) {
-        log_error("error. could not find parameter, module name not found, parameter name: " + paramName + ")");
-        return nullptr;
-    }
-
-    std::string module_name = module_it->request.id;
-    std::string slot_name = cut_off_prefix(paramName, module_name + "::");
-
-    AbstractSlot* slot_ptr = module_it->modulePtr->FindSlot(slot_name.c_str());
-    param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
-
-    if (slot_ptr == nullptr || param_slot_ptr == nullptr) {
-        log_error("error. could not find parameter, slot not found or of wrong type. parameter name: " + paramName +
-            ", slot name: " + slot_name);
-        return nullptr;
-    }
-
-    return param_slot_ptr;
-}
-
-megamol::core::param::AbstractParam* megamol::core::MegaMolGraph::FindParameter(std::string const& paramName) const {
-    return getParameterFromParamSlot(this->FindParameterSlot(paramName));
-}
-
-
-std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::EnumerateModuleParameterSlots(
-    std::string const& moduleName) const {
-    std::vector<megamol::core::param::ParamSlot*> parameters;
-
-    auto module_it = find_module(moduleName);
-
-    if (module_it == module_list_.end()) {
-        log_error("error. could not find module: " + moduleName);
-        return parameters;
-    }
-
-    auto children_begin = module_it->modulePtr->ChildList_Begin();
-    auto children_end = module_it->modulePtr->ChildList_End();
-
-    while (children_begin != children_end) {
-        AbstractNamedObject::ptr_type named_object = *children_begin;
-        if (named_object != nullptr) {
-            AbstractSlot* slot_ptr = dynamic_cast<AbstractSlot*>(named_object.get());
-            param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
-
-            if (slot_ptr && param_slot_ptr) parameters.push_back(param_slot_ptr);
-        }
-
-        children_begin++;
-    }
-
-    return parameters;
-}
-
-std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::EnumerateModuleParameters(
-    std::string const& moduleName) const {
-    auto param_slots = EnumerateModuleParameterSlots(moduleName);
-
-    std::vector<megamol::core::param::AbstractParam*> params;
-    params.reserve(param_slots.size());
-
-    for (auto& slot : param_slots) params.push_back(getParameterFromParamSlot(slot));
-
-    return params;
-}
-
-megamol::core::CallList_t const& megamol::core::MegaMolGraph::ListCalls() const { return call_list_; }
-
-megamol::core::ModuleList_t const& megamol::core::MegaMolGraph::ListModules() const {
-    return module_list_;
-}
-
-std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::ListParameterSlots() const {
-    std::vector<megamol::core::param::ParamSlot*> param_slots;
-
-    for (auto& mod : module_list_) {
-        auto module_params = this->EnumerateModuleParameterSlots(mod.modulePtr->Name().PeekBuffer());
-
-        param_slots.insert(param_slots.end(), module_params.begin(), module_params.end());
-    }
-
-    return param_slots;
-}
-
-std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::ListParameters() const {
-    auto param_slots = this->ListParameterSlots();
-
-    std::vector<megamol::core::param::AbstractParam*> parameters;
-    parameters.reserve(param_slots.size());
-
-    for (auto& slot : param_slots) parameters.push_back(getParameterFromParamSlot(slot));
-
-    return parameters;
-}
-
-bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName)
-{
-    // currently, we expect the entry point to be derived from AbstractView
-    auto module_it = find_module(moduleName);
-
-    if (module_it == module_list_.end()) {
-        log_error("error adding graph entry point. could not find module: " + moduleName);
-        return false;
-    }
-    
-    auto module_shared_ptr = module_it->modulePtr; // we cant cast shared_ptr to void* for image presentation rendering
-    auto& module_ref = *module_shared_ptr;
-    auto* module_raw_ptr = &module_ref;
-
-    // the image presentation will issue the rendering and provide the view with resources for rendering
-    // probably we dont care or dont check wheter the same view is added as entry point multiple times
-    bool view_presentation_ok = m_image_presentation->add_entry_point(moduleName, static_cast<void*>(module_raw_ptr));
-
-    if (!view_presentation_ok) {
-        log_error("error adding graph entry point. image presentation service rejected module: " + moduleName);
-        return false;
-    }
-
-    this->graph_entry_points.push_back(module_shared_ptr);
-
-    module_it->isGraphEntryPoint = true;
-    log("set graph entry point: " + moduleName);
-
-    return true;
-}
-
-bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) {
-    auto module_it = find_module(moduleName);
-
-    if (module_it == module_list_.end()) {
-        log_error("error removing graph entry point. could not find module: " + moduleName);
-        return false;
-    }
-
-    bool view_removal_ok = m_image_presentation->remove_entry_point(moduleName);
-
-    // note that for us it is not an error to try to remove a module as graph entry point
-    // if that module is not registered as an entry point
-    // but maybe image presentation may tell us that for some other reason removal failed?
-    if (!view_removal_ok) {
-        log_error("error adding graph entry point. image presentation service could not remove module: " + moduleName);
-        return false;
-    }
-
-    this->graph_entry_points.remove_if(
-        [&](Module::ptr_type& module) { return std::string{module->Name().PeekBuffer()} == moduleName; });
-
-    module_it->isGraphEntryPoint = false;
-    log("remove graph entry point: " + moduleName);
-
-    return true;
-}
-
-bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::frontend::FrontendResource> const& resources) {
-    this->provided_resources.insert(provided_resources.end(), resources.begin(), resources.end());
-
-    auto find_it = std::find_if(provided_resources.begin(), provided_resources.end(),
-        [&](megamol::frontend::FrontendResource const& resource) {
-            return resource.getIdentifier() == "ImagePresentationEntryPoints";
-        });
-
-    if (find_it == provided_resources.end()) {
-        return false;
-    }
-
-    m_image_presentation = & const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
-        find_it->getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
-
-    auto find_it2 = std::find_if(provided_resources.begin(), provided_resources.end(), [&](megamol::frontend::FrontendResource const& resource) {
-            return resource.getIdentifier() == megamol::frontend_resources::CommandRegistry_Req_Name;
-        });
-    if (find_it2 == provided_resources.end()) {
-        return false;
-    }
-    m_command_registry = & const_cast<megamol::frontend_resources::CommandRegistry&>(
-        find_it2->getResource<megamol::frontend_resources::CommandRegistry>());
-
-    return true;
-}
-
-megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenience() {
-    return this->convenience_functions;
-}
-
-void megamol::core::MegaMolGraph::Clear() {
-    // currently entry points are expected to be graph modules, i.e. views
-    // therefore it is ok for us to clear all entry points if the graph shuts down
-    call_list_.clear();
-    m_image_presentation->clear_entry_points();
-    graph_entry_points.clear();
-    module_list_.clear();
 }
 
 std::vector<megamol::frontend::FrontendResource> megamol::core::MegaMolGraph::get_requested_resources(std::vector<std::string> resource_requests) {
