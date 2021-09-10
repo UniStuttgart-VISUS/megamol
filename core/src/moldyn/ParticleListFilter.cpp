@@ -41,7 +41,7 @@ moldyn::ParticleListFilter::ParticleListFilter(void) : Module(),
     this->includedListsSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->includedListsSlot);
 
-    this->includeAllSlot << new param::ButtonParam();
+    this->includeAllSlot << new param::ButtonParam("IncludeAllParticles");
     this->MakeSlotAvailable(&this->includeAllSlot);
 
     this->globalColorMapComputationSlot << new param::BoolParam(true);

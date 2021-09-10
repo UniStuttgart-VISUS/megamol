@@ -145,7 +145,7 @@ namespace megamol
 						Module::MakeSlotAvailable(&this->filename_increment);
 
 						// Button to write file manually
-						this->write_now << new core::param::ButtonParam();
+						this->write_now << new core::param::ButtonParam("WriteSTL");
 						this->write_now.SetUpdateCallback(&AbstractSTLWriter::write_manually_callback);
 						Module::MakeSlotAvailable(&this->write_now);
 					}

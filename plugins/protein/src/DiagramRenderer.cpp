@@ -115,13 +115,13 @@ DiagramRenderer::DiagramRenderer( void ) : Renderer2DModule (),
 
     this->showCrosshairParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showCrosshairParam);
-    this->showCrosshairToggleParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_C, core::view::Modifier::CTRL));
+    this->showCrosshairToggleParam.SetParameter(new param::ButtonParam("ToggleCrosshair", core::view::Key::KEY_C, core::view::Modifier::CTRL));
     this->showCrosshairToggleParam.SetUpdateCallback(this, &DiagramRenderer::onCrosshairToggleButton);
     this->MakeSlotAvailable(&this->showCrosshairToggleParam);
-    this->showAllParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::CTRL));
+    this->showAllParam.SetParameter(new param::ButtonParam("ShowAllSeries", core::view::Key::KEY_S, core::view::Modifier::CTRL));
     this->showAllParam.SetUpdateCallback(this, &DiagramRenderer::onShowAllButton);
     this->MakeSlotAvailable(&this->showAllParam);
-    this->hideAllParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H, core::view::Modifier::CTRL));
+    this->hideAllParam.SetParameter(new param::ButtonParam("HideAllSeries", core::view::Key::KEY_H, core::view::Modifier::CTRL));
     this->hideAllParam.SetUpdateCallback(this, &DiagramRenderer::onHideAllButton);
     this->MakeSlotAvailable(&this->hideAllParam);
     

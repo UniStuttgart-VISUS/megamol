@@ -36,7 +36,7 @@ namespace param {
          * Be aware, that if you do not assign a key, the button will not be
          * available from viewers without a GUI.
          */
-        ButtonParam(void);
+        ButtonParam(std::string commandName);
 
         /**
          * Ctor.
@@ -45,7 +45,7 @@ namespace param {
          *                if you do not assign a key, the button will not be
          *                available from viewers without a GUI.
          */
-        ButtonParam(const core::view::KeyCode &keycode);
+        ButtonParam(std::string commandName, const core::view::KeyCode &keycode);
 
         /**
          * Ctor.
@@ -54,7 +54,7 @@ namespace param {
          *                if you do not assign a key, the button will not be
          *                available from viewers without a GUI.
          */
-        ButtonParam(const core::view::Key &key);
+        ButtonParam(std::string commandName, const core::view::Key &key);
 
         /**
          * Ctor.
@@ -66,7 +66,7 @@ namespace param {
          *             if you do not assign a key, the button will not be
          *             available from viewers without a GUI.
          */
-        ButtonParam(const core::view::Key &key, const core::view::Modifiers &mods);
+        ButtonParam(std::string commandName, const core::view::Key &key, const core::view::Modifiers &mods);
 
         /**
          * Ctor.
@@ -78,7 +78,7 @@ namespace param {
          *            if you do not assign a key, the button will not be
          *            available from viewers without a GUI.
          */
-        ButtonParam(const core::view::Key &key, const core::view::Modifier &mod);
+        ButtonParam(std::string commandName, const core::view::Key &key, const core::view::Modifier &mod);
 
         /**
          * Dtor.
@@ -111,24 +111,12 @@ namespace param {
          */
         virtual vislib::TString ValueString(void) const;
 
-        inline void SetKeyCode(const core::view::KeyCode& keycode) {
-            this->keycode = keycode;
-        }
-
-        inline void SetKey(const core::view::Key& key) {
-            this->keycode.key = key;
-        }
-
-        inline void SetModifiers(const core::view::Modifiers& mods) {
-            this->keycode.mods = mods;
-        }
-
-        inline void SetModifier(const core::view::Modifier& mod) {
-            this->keycode.mods = core::view::Modifiers(mod);
-        }
-
         inline core::view::KeyCode GetKeyCode(void) const {
             return this->keycode;
+        }
+
+        inline const std::string& GetCommandName(void) const {
+            return this->command_name;
         }
 
     private:
@@ -137,6 +125,9 @@ namespace param {
 
         /** The key of this button */
         core::view::KeyCode keycode;
+
+        /** name of the abstract command connected to this button */
+        std::string command_name;
 
     };
 

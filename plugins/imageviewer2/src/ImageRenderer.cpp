@@ -70,10 +70,10 @@ imageviewer2::ImageRenderer::ImageRenderer(void)
     this->pasteSlideshowSlot.SetUpdateCallback(&ImageRenderer::onSlideshowPasted);
     this->MakeSlotAvailable(&this->pasteSlideshowSlot);
 
-    this->firstSlot << new param::ButtonParam();
+    this->firstSlot << new param::ButtonParam("GotoFirstImage");
     this->firstSlot.SetUpdateCallback(&ImageRenderer::onFirstPressed);
     this->MakeSlotAvailable(&this->firstSlot);
-    this->previousSlot << new param::ButtonParam(core::view::Key::KEY_PAGE_UP);
+    this->previousSlot << new param::ButtonParam("GotoPreviousImage", core::view::Key::KEY_PAGE_UP);
     this->previousSlot.SetUpdateCallback(&ImageRenderer::onPreviousPressed);
     this->MakeSlotAvailable(&this->previousSlot);
 
@@ -81,10 +81,10 @@ imageviewer2::ImageRenderer::ImageRenderer(void)
     this->currentSlot.SetUpdateCallback(&ImageRenderer::onCurrentSet);
     this->MakeSlotAvailable(&this->currentSlot);
 
-    this->nextSlot << new param::ButtonParam(core::view::Key::KEY_PAGE_DOWN);
+    this->nextSlot << new param::ButtonParam("GotoNextImage", core::view::Key::KEY_PAGE_DOWN);
     this->nextSlot.SetUpdateCallback(&ImageRenderer::onNextPressed);
     this->MakeSlotAvailable(&this->nextSlot);
-    this->lastSlot << new param::ButtonParam();
+    this->lastSlot << new param::ButtonParam("GotoLastImage");
     this->lastSlot.SetUpdateCallback(&ImageRenderer::onLastPressed);
     this->MakeSlotAvailable(&this->lastSlot);
 

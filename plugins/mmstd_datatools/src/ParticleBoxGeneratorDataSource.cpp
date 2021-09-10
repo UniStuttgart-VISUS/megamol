@@ -85,7 +85,7 @@ ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource(void) : core::Mod
     randomSeedSlot.ForceSetDirty();
     MakeSlotAvailable(&randomSeedSlot);
 
-    randomReseedSlot.SetParameter(new core::param::ButtonParam());
+    randomReseedSlot.SetParameter(new core::param::ButtonParam("ReseedRandom"));
     randomReseedSlot.SetUpdateCallback(&ParticleBoxGeneratorDataSource::reseed);
     MakeSlotAvailable(&randomReseedSlot);
 }

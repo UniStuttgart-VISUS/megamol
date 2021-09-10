@@ -66,7 +66,7 @@ TableSampler::TableSampler()
     this->sampleNumberRelativeParam.SetUpdateCallback(this, &TableSampler::resampleCallback);
     this->MakeSlotAvailable(&this->sampleNumberRelativeParam);
 
-    this->resampleParam << new core::param::ButtonParam();
+    this->resampleParam << new core::param::ButtonParam("Resample");
     this->resampleParam.SetUpdateCallback(this, &TableSampler::resampleCallback);
     this->MakeSlotAvailable(&resampleParam);
 }

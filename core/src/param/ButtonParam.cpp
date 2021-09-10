@@ -1,7 +1,7 @@
 /*
  * ButtonParam.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -15,7 +15,7 @@ using namespace megamol::core::param;
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(void) : AbstractParam(), keycode() {
+ButtonParam::ButtonParam(std::string commandName) : AbstractParam(), keycode(), command_name(commandName) {
     initialize();
 }
 
@@ -23,7 +23,8 @@ ButtonParam::ButtonParam(void) : AbstractParam(), keycode() {
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::KeyCode &keycode) : AbstractParam(), keycode(keycode) {
+ButtonParam::ButtonParam(std::string commandName, const core::view::KeyCode& keycode)
+        : AbstractParam(), keycode(keycode), command_name(commandName) {
     initialize();
 }
 
@@ -31,7 +32,8 @@ ButtonParam::ButtonParam(const core::view::KeyCode &keycode) : AbstractParam(), 
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifiers &mods) : AbstractParam(), keycode(key, mods) {
+ButtonParam::ButtonParam(std::string commandName, const core::view::Key& key, const core::view::Modifiers& mods)
+        : AbstractParam(), keycode(key, mods), command_name(commandName) {
     initialize();
 }
 
@@ -39,8 +41,8 @@ ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifiers
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifier &mod) : AbstractParam(),
-        keycode(key, core::view::Modifiers(mod)) {
+ButtonParam::ButtonParam(std::string commandName, const core::view::Key& key, const core::view::Modifier& mod)
+        : AbstractParam(), keycode(key, core::view::Modifiers(mod)), command_name(commandName) {
     initialize();
 }
 
@@ -48,7 +50,8 @@ ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifier 
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::Key &key) : AbstractParam(), keycode(key) {
+ButtonParam::ButtonParam(std::string commandName, const core::view::Key& key)
+        : AbstractParam(), keycode(key), command_name(commandName) {
     initialize();
 }
 
