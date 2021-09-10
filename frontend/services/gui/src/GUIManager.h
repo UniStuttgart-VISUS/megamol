@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include "CommandRegistry.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking_gl.h"
@@ -18,7 +19,6 @@
 #include "widgets/PopUps.h"
 #include "windows/Configurator.h"
 #include "windows/WindowCollection.h"
-#include "CommandRegistry.h"
 
 
 namespace megamol {

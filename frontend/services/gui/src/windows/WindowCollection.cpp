@@ -8,8 +8,8 @@
 
 #include "WindowCollection.h"
 #include "Configurator.h"
-#include "LogConsole.h"
 #include "HotkeyEditor.h"
+#include "LogConsole.h"
 #include "ParameterList.h"
 #include "PerformanceMonitor.h"
 #include "TransferFunctionEditor.h"

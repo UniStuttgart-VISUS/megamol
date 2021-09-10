@@ -14,8 +14,8 @@
 #include "widgets/CorporateGreyStyle.h"
 #include "widgets/CorporateWhiteStyle.h"
 #include "widgets/DefaultStyle.h"
-#include "windows/PerformanceMonitor.h"
 #include "windows/HotkeyEditor.h"
+#include "windows/PerformanceMonitor.h"
 
 
 using namespace megamol::gui;
@@ -576,14 +576,14 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
     }
 
     //// GUI
-    //for (auto& hotkey : this->gui_hotkeys) {
+    // for (auto& hotkey : this->gui_hotkeys) {
     //    if (this->is_hotkey_pressed(hotkey.second.keycode)) {
     //        hotkey.second.is_pressed = true;
     //        hotkeyPressed = true;
     //    }
     //}
     //// Hotkeys of window(s)
-    //const auto windows_func = [&](AbstractWindow& wc) {
+    // const auto windows_func = [&](AbstractWindow& wc) {
     //    // Check Window Hotkey
     //    bool windowHotkeyPressed = this->is_hotkey_pressed(wc.Config().hotkey);
     //    if (windowHotkeyPressed) {
@@ -599,9 +599,9 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
     //        }
     //    }
     //};
-    //this->win_collection.EnumWindows(windows_func);
+    // this->win_collection.EnumWindows(windows_func);
     //
-    //if (hotkeyPressed)
+    // if (hotkeyPressed)
     //    return true;
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).

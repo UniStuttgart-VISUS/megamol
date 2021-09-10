@@ -12,8 +12,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
-    : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_HOTKEYEDITOR)
-    , command_registry_ptr(nullptr) {
+        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_HOTKEYEDITOR), command_registry_ptr(nullptr) {
 
     // Configure HOTKEY EDITOR Window
     this->win_config.size = ImVec2(0.0f * megamol::gui::gui_scaling.Get(), 0.0f * megamol::gui::gui_scaling.Get());
@@ -24,9 +23,7 @@ megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
 }
 
 
-HotkeyEditor::~HotkeyEditor() {
-
-}
+HotkeyEditor::~HotkeyEditor() {}
 
 
 void megamol::gui::HotkeyEditor::SetData(megamol::core::view::CommandRegistry* cmdregistry) {

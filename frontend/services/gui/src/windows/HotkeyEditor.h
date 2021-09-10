@@ -34,7 +34,6 @@ namespace gui {
         // VARIABLES --------------------------------------------------------------
 
         megamol::frontend_resources::CommandRegistry* command_registry_ptr;
-
     };
 
 
