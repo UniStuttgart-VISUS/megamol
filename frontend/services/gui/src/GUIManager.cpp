@@ -21,7 +21,7 @@ using namespace megamol::gui;
 
 
 GUIManager::GUIManager()
-        : hotkeys()
+        : gui_hotkeys()
         , context(nullptr)
         , initialized_api(megamol::gui::GUIImGuiAPI::NONE)
         , gui_state()
@@ -34,19 +34,19 @@ GUIManager::GUIManager()
         , picking_buffer() {
 
     // Init hotkeys
-    this->hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT] = {
+    this->gui_hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT] = { "gui:trigger_screenshot",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
-    this->hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY] = {
+    this->gui_hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY] = { "gui:toggle_graph_entry",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
-    this->hotkeys[HOTKEY_GUI_EXIT_PROGRAM] = {
+    this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM] = { "gui:exit",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
-    this->hotkeys[HOTKEY_GUI_MENU] = {
+    this->gui_hotkeys[HOTKEY_GUI_MENU] = { "gui:menu",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
-    this->hotkeys[HOTKEY_GUI_SAVE_PROJECT] = {
+    this->gui_hotkeys[HOTKEY_GUI_SAVE_PROJECT] = { "gui:save_project",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
-    this->hotkeys[HOTKEY_GUI_LOAD_PROJECT] = {
+    this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT] = { "gui:load_project",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_L, core::view::Modifier::CTRL), false};
-    this->hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI] = {
+    this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI] = { "gui:Show-hide",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
@@ -213,7 +213,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     ImGui::SetCurrentContext(this->context);
 
     // Process hotkeys
-    if (this->hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].is_pressed) {
+    if (this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].is_pressed) {
         if (this->gui_state.gui_visible) {
             this->gui_state.gui_hide_next_frame = 2;
         } else {
@@ -232,17 +232,17 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             this->gui_state.gui_visible = true;
         }
     }
-    if (this->hotkeys[HOTKEY_GUI_EXIT_PROGRAM].is_pressed) {
+    if (this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM].is_pressed) {
         this->gui_state.shutdown_triggered = true;
         return true;
     }
-    if (this->hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].is_pressed) {
+    if (this->gui_hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].is_pressed) {
         this->gui_state.screenshot_triggered = true;
     }
-    if (this->hotkeys[HOTKEY_GUI_MENU].is_pressed) {
+    if (this->gui_hotkeys[HOTKEY_GUI_MENU].is_pressed) {
         this->gui_state.menu_visible = !this->gui_state.menu_visible;
     }
-    if (this->hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].is_pressed) {
+    if (this->gui_hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].is_pressed) {
         if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
             graph_ptr->ToggleGraphEntry();
         }
@@ -414,7 +414,7 @@ bool GUIManager::PostDraw() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Reset all hotkeys ------------------------------------------------------
-    for (auto& hotkey : this->hotkeys) {
+    for (auto& hotkey : this->gui_hotkeys) {
         hotkey.second.is_pressed = false;
     }
 
@@ -570,34 +570,34 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
         return true;
     }
 
-    // GUI
-    for (auto& hotkey : this->hotkeys) {
-        if (this->is_hotkey_pressed(hotkey.second.keycode)) {
-            hotkey.second.is_pressed = true;
-            hotkeyPressed = true;
-        }
-    }
-    // Hotkeys of window(s)
-    const auto windows_func = [&](AbstractWindow& wc) {
-        // Check Window Hotkey
-        bool windowHotkeyPressed = this->is_hotkey_pressed(wc.Config().hotkey);
-        if (windowHotkeyPressed) {
-            wc.Config().show = !wc.Config().show;
-        }
-        hotkeyPressed |= windowHotkeyPressed;
-
-        // Check for additional window hotkeys
-        for (auto& hotkey : wc.GetHotkeys()) {
-            if (this->is_hotkey_pressed(hotkey.second.keycode)) {
-                hotkey.second.is_pressed = true;
-                hotkeyPressed = true;
-            }
-        }
-    };
-    this->win_collection.EnumWindows(windows_func);
-
-    if (hotkeyPressed)
-        return true;
+    //// GUI
+    //for (auto& hotkey : this->gui_hotkeys) {
+    //    if (this->is_hotkey_pressed(hotkey.second.keycode)) {
+    //        hotkey.second.is_pressed = true;
+    //        hotkeyPressed = true;
+    //    }
+    //}
+    //// Hotkeys of window(s)
+    //const auto windows_func = [&](AbstractWindow& wc) {
+    //    // Check Window Hotkey
+    //    bool windowHotkeyPressed = this->is_hotkey_pressed(wc.Config().hotkey);
+    //    if (windowHotkeyPressed) {
+    //        wc.Config().show = !wc.Config().show;
+    //    }
+    //    hotkeyPressed |= windowHotkeyPressed;
+    //
+    //    // Check for additional window hotkeys
+    //    for (auto& hotkey : wc.GetHotkeys()) {
+    //        if (this->is_hotkey_pressed(hotkey.second.keycode)) {
+    //            hotkey.second.is_pressed = true;
+    //            hotkeyPressed = true;
+    //        }
+    //    }
+    //};
+    //this->win_collection.EnumWindows(windows_func);
+    //
+    //if (hotkeyPressed)
+    //    return true;
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
@@ -1185,14 +1185,14 @@ void GUIManager::draw_menu() {
     // FILE -------------------------------------------------------------------
     if (ImGui::BeginMenu("File")) {
 
-        if (ImGui::MenuItem("Load Project", this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem("Load Project", this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT].keycode.ToString().c_str())) {
             this->gui_state.open_popup_load = true;
         }
         this->tooltip.ToolTip("Project will be added to currently running project.");
-        if (ImGui::MenuItem("Save Project", this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem("Save Project", this->gui_hotkeys[HOTKEY_GUI_SAVE_PROJECT].keycode.ToString().c_str())) {
             this->gui_state.open_popup_save = true;
         }
-        if (ImGui::MenuItem("Exit", this->hotkeys[HOTKEY_GUI_EXIT_PROGRAM].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem("Exit", this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM].keycode.ToString().c_str())) {
             this->gui_state.shutdown_triggered = true;
         }
         ImGui::EndMenu();
@@ -1202,7 +1202,7 @@ void GUIManager::draw_menu() {
     // WINDOWS ----------------------------------------------------------------
     if (ImGui::BeginMenu("Windows")) {
         ImGui::MenuItem(
-            "Menu", this->hotkeys[HOTKEY_GUI_MENU].keycode.ToString().c_str(), &this->gui_state.menu_visible);
+            "Menu", this->gui_hotkeys[HOTKEY_GUI_MENU].keycode.ToString().c_str(), &this->gui_state.menu_visible);
         const auto func = [&](AbstractWindow& wc) {
             bool registered_window = (wc.Config().hotkey.key != core::view::Key::KEY_UNKNOWN);
             if (registered_window) {
@@ -1231,7 +1231,7 @@ void GUIManager::draw_menu() {
         ImGui::Separator();
 
         if (ImGui::MenuItem(
-                "Show/Hide All Windows", this->hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].keycode.ToString().c_str())) {
+                "Show/Hide All Windows", this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].keycode.ToString().c_str())) {
             this->gui_state.gui_hide_next_frame = 2;
         }
 
@@ -1250,7 +1250,7 @@ void GUIManager::draw_menu() {
         if (ImGui::MenuItem("Select File Name", this->gui_state.screenshot_filepath.c_str())) {
             this->gui_state.open_popup_screenshot = true;
         }
-        if (ImGui::MenuItem("Trigger", this->hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem("Trigger", this->gui_hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
             this->gui_state.screenshot_triggered = true;
         }
         ImGui::EndMenu();
@@ -1303,8 +1303,8 @@ void GUIManager::draw_menu() {
                     }
                 }
                 if (ImGui::MenuItem("Toggle Graph Entry",
-                        this->hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].keycode.ToString().c_str())) {
-                    this->hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].is_pressed = true;
+                        this->gui_hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].keycode.ToString().c_str())) {
+                    this->gui_hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].is_pressed = true;
                 }
 
                 ImGui::EndMenu();
@@ -1570,7 +1570,7 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // Save project pop-up
     if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-        this->gui_state.open_popup_save |= this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].is_pressed;
+        this->gui_state.open_popup_save |= this->gui_hotkeys[HOTKEY_GUI_SAVE_PROJECT].is_pressed;
         this->gui_state.open_popup_save |= this->win_configurator_ptr->ConsumeTriggeredGlobalProjectSave();
 
         auto filename = graph_ptr->GetFilename();
@@ -1588,18 +1588,18 @@ void megamol::gui::GUIManager::draw_popups() {
         PopUps::Minimal(
             "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
     }
-    this->hotkeys[HOTKEY_GUI_SAVE_PROJECT].is_pressed = false;
+    this->gui_hotkeys[HOTKEY_GUI_SAVE_PROJECT].is_pressed = false;
 
     // Load project pop-up
     std::string filename;
-    this->gui_state.open_popup_load |= this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
+    this->gui_state.open_popup_load |= this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
     if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load, {"lua", "png"},
             megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
     }
-    this->hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed = false;
+    this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed = false;
 
     // File name for screenshot pop-up
     auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
@@ -1871,4 +1871,39 @@ std::string GUIManager::extract_fontname(const std::string& imgui_fontname) cons
     auto sep_index = return_fontname.find(',');
     return_fontname = return_fontname.substr(0, sep_index);
     return return_fontname;
+}
+
+
+void GUIManager::RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry) {
+
+    frontend_resources::Command hkcmd;
+
+    // GUI
+    for (auto& hotkey : this->gui_hotkeys) {
+        hkcmd.key = hotkey.second.keycode;
+        hkcmd.param = nullptr;
+        hkcmd.name = hotkey.second.name;
+        hkcmd.effect = [&]() { hotkey.second.is_pressed = true; };
+        cmdregistry.add_command(hkcmd);
+    }
+    // Hotkeys of window(s)
+    const auto windows_func = [&](AbstractWindow& wc) {
+        // Check "Show/Hide Window"-Hotkey
+        hkcmd.key = wc.Config().hotkey;
+        hkcmd.param = nullptr;
+        hkcmd.name = wc.Name();
+        hkcmd.effect = [&]() { wc.Config().show = !wc.Config().show; };
+        cmdregistry.add_command(hkcmd);
+
+        // Check for additional hotkeys of window
+        for (auto& hotkey : wc.GetHotkeys()) {
+            hkcmd.key = wc.Config().hotkey;
+            hkcmd.param = nullptr;
+            hkcmd.name = std::string("gui:win:" + wc.Name());
+            hkcmd.effect = [&]() { wc.Config().show = !wc.Config().show; };
+            cmdregistry.add_command(hkcmd);
+        }
+    };
+    this->win_collection.EnumWindows(windows_func);
+
 }

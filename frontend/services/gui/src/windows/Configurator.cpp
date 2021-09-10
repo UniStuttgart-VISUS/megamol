@@ -35,12 +35,12 @@ megamol::gui::Configurator::Configurator(
     assert(this->win_tfeditor_ptr != nullptr);
 
     // init hotkeys
-    this->hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = {
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = { "gui:config:module_search",
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = {
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = { "gui:config:param_search",
         core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = {core::view::KeyCode(core::view::Key::KEY_DELETE), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = {
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = { "gui:config:delete_graph_entry", core::view::KeyCode(core::view::Key::KEY_DELETE), false};
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = { "gui:config:save_project",
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
         false};
 
@@ -104,7 +104,7 @@ bool megamol::gui::Configurator::Draw() {
     }
 
     // Update state -------------------------------------------------------
-    this->graph_state.hotkeys = this->hotkeys;
+    this->graph_state.hotkeys = this->win_hotkeys;
 
     // Process hotkeys
     /// HOTKEY_CONFIGURATOR_SAVE_PROJECT
@@ -153,7 +153,7 @@ bool megamol::gui::Configurator::Draw() {
     // Only reset 'externally' processed hotkeys
     this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].is_pressed = false;
     this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].is_pressed = false;
-    this->hotkeys = this->graph_state.hotkeys;
+    this->win_hotkeys = this->graph_state.hotkeys;
 
     return true;
 }

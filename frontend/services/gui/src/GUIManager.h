@@ -18,6 +18,7 @@
 #include "widgets/PopUps.h"
 #include "windows/Configurator.h"
 #include "windows/WindowCollection.h"
+#include "CommandRegistry.h"
 
 
 namespace megamol {
@@ -237,6 +238,11 @@ namespace gui {
         bool SynchronizeRunningGraph(
             megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
+        /**
+         * Register GUI hotkeys.
+         */
+        void RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry);
+
         ///////////////////////////////////////////////////////////////////////
 
     private:
@@ -295,7 +301,7 @@ namespace gui {
 
         // VARIABLES --------------------------------------------------------------
 
-        megamol::gui::HotkeyMap_t hotkeys;
+        megamol::gui::HotkeyMap_t gui_hotkeys;
 
         /** The ImGui context created and used by this GUIManager */
         ImGuiContext* context;
@@ -334,6 +340,7 @@ namespace gui {
 
         void draw_popups();
 
+        /// UNUSED
         bool is_hotkey_pressed(megamol::core::view::KeyCode keycode) const;
 
         void load_preset_window_docking(ImGuiID global_docking_id);
