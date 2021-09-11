@@ -28,6 +28,8 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     return result;
 }
 
+// modules search and compare slot names case insensitive (legacy behaviour)
+// std::string operator== is case sensitive. so when looking for slots, we lower them first.
 static std::string tolower(std::string s) {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
     return s;
@@ -441,7 +443,8 @@ megamol::core::CallList_t::iterator megamol::core::MegaMolGraph::find_call(
     std::string const& from, std::string const& to) {
     auto it = std::find_if(
         this->call_list_.begin(), this->call_list_.end(), [&](megamol::core::CallInstance_t const& el) {
-            return el.request.from == from && el.request.to == to;
+            // tolower emulates case insensitive comparison in Module::FindSlot() during add_call
+            return tolower(el.request.from) == tolower(from) && tolower(el.request.to) == tolower(to);
         });
 
     return it;
@@ -452,7 +455,8 @@ megamol::core::CallList_t::const_iterator megamol::core::MegaMolGraph::find_call
 
     auto it = std::find_if(
         this->call_list_.cbegin(), this->call_list_.cend(), [&](megamol::core::CallInstance_t const& el) {
-            return el.request.from == from && el.request.to == to;
+            // tolower emulates case insensitive comparison in Module::FindSlot() during add_call
+            return tolower(el.request.from) == tolower(from) && tolower(el.request.to) == tolower(to);
         });
 
     return it;
