@@ -116,7 +116,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     }; //= {"ZMQ_Context"};
 
-    *open_version_notification = config.show_version_notification;
+    *open_version_notification = false;
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
         new megamol::frontend_resources::LuaRemoteConnectionsBroker{},
@@ -444,6 +444,10 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
         "(string version)\n\tChecks whether the running MegaMol corresponds to version.",
         {[&](std::string version) -> BoolResult {
             bool version_ok = version == MEGAMOL_CORE_COMP_REV;
+            *open_version_notification = (!version_ok && m_config.show_version_notification);
+            if (!version_ok) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Version info in project (%s) does not match MegaMol version (%s)!", version.c_str(), MEGAMOL_CORE_COMP_REV);
+            }
             return BoolResult(version_ok);
         }});
 
