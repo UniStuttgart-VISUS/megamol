@@ -34,7 +34,8 @@ datatools::CSVFileSequence::CSVFileSequence(void)
         , fileNumberMinSlot("fileNumberMin", "Slot for the minimum file number")
         , fileNumberMaxSlot("fileNumberMax", "Slot for the maximum file number")
         , fileNumberStepSlot("fileNumberStep", "Slot for the file number increase step")
-        , fileNameSlotNameSlot("fileNameSlotName", "The name of the data source file name parameter slot")
+        , fileNameSlotNameSlot("fileNameSlotName", "The name of the data source file name parameter slot (e.g. "
+                                                   "'filename', not the whole path to module and slot)")
         , useClipBoxAsBBox("useClipBoxAsBBox", "If true will use the all-data clip box as bounding box")
         , outDataSlot("outData", "The slot for publishing data to the writer")
         , inDataSlot("inData", "The slot for requesting data from the source")
@@ -451,11 +452,28 @@ bool datatools::CSVFileSequence::onFileNameSlotNameChanged(core::param::ParamSlo
  */
 core::param::ParamSlot* datatools::CSVFileSequence::findFileNameSlot(void) {
     core::param::StringParam* P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
-    if (P != NULL) {
-        auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
-        return megamolgraph.FindParameterSlot(P->Value());
-    }
-    return NULL;
+
+    // target slot has name
+    if (!P)
+        return nullptr;
+
+    // there is a target module connected via call
+    if (this->inDataSlot.GetStatus() != megamol::core::AbstractSlot::STATUS_CONNECTED)
+        return nullptr;
+
+    core::param::ParamSlot* slot =
+        dynamic_cast<core::param::ParamSlot*>(AbstractNamedObjectContainer::dynamic_pointer_cast(
+            this->inDataSlot
+                .CallAs<megamol::core::Call>() // connected Call
+                ->PeekCalleeSlotNoConst()      // slot of target Module
+                ->Parent()                     // target Module
+                ->shared_from_this())          // cast to AbstractNamedObjectContainer
+                                                  // TODO: find slot by full name, not just by slot name
+                                                  ->FindChild(P->Value().c_str()) // Find target Slot by name in Module
+                                                  .get()                          // get value of smart ptr
+        );
+
+    return slot;
 }
 
 
