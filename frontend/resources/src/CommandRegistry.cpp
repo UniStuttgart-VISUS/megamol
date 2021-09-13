@@ -258,10 +258,12 @@ void megamol::frontend_resources::CommandRegistry::remove_command_by_name(const 
 bool megamol::frontend_resources::CommandRegistry::update_hotkey(const std::string& command_name, KeyCode key) {
     if (!is_new(command_name)) {
         auto& c = commands[command_index[command_name]];
-        remove_color_from_layer(c);
         const auto old_key = c.key;
+        if (old_key.key != Key::KEY_UNKNOWN) {
+            remove_color_from_layer(c);
+            key_to_command.erase(old_key);
+        }
         c.key = key;
-        key_to_command.erase(old_key);
         key_to_command[key] = command_index[command_name];
         add_color_to_layer(c);
         return true;
@@ -330,18 +332,22 @@ void megamol::frontend_resources::CommandRegistry::add_color_to_layer(const mega
     if (cols == key_colors.end()) {
         key_colors[c.key.mods] = std::vector<CorsairLedColor>();
     }
-    CorsairLedColor clc {corsair_led_from_glfw_key[c.key.key], 255, 0, 0};
-    key_colors[c.key.mods].push_back(clc);
+    if (c.key.key != Key::KEY_UNKNOWN) {
+        CorsairLedColor clc {corsair_led_from_glfw_key[c.key.key], 255, 0, 0};
+        key_colors[c.key.mods].push_back(clc);
+    }
 #endif
 }
 
 void megamol::frontend_resources::CommandRegistry::remove_color_from_layer(
     const megamol::frontend_resources::Command& c) {
 #ifdef CUESDK_ENABLED
-    auto& layer = key_colors[c.key.mods];
-    const auto& k = corsair_led_from_glfw_key[c.key.key];
-    const auto it = std::remove_if(layer.begin(), layer.end(), [k](const CorsairLedColor& c) {return c.ledId == k;});
-    layer.erase(it);
+    if (c.key.key != Key::KEY_UNKNOWN) {
+        auto& layer = key_colors[c.key.mods];
+        const auto& k = corsair_led_from_glfw_key[c.key.key];
+        const auto it = std::remove_if(layer.begin(), layer.end(), [k](const CorsairLedColor& c) {return c.ledId == k;});
+        layer.erase(it);
+    }
 #endif
 }
 
