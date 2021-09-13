@@ -323,9 +323,6 @@ namespace gui {
         /** Shortcut pointer to configurator window */
         std::shared_ptr<Configurator> win_configurator_ptr;
 
-        /** Pointer to command registry resource */
-        megamol::frontend_resources::CommandRegistry* command_registry_ptr;
-
         // Widgets
         FileBrowserWidget file_browser;
         HoverToolTip tooltip;
@@ -344,9 +341,6 @@ namespace gui {
         void draw_menu();
 
         void draw_popups();
-
-        /// UNUSED
-        bool is_hotkey_pressed(megamol::core::view::KeyCode keycode) const;
 
         void load_preset_window_docking(ImGuiID global_docking_id);
 

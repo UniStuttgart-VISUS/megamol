@@ -37,8 +37,13 @@ namespace gui {
 
         megamol::frontend_resources::CommandRegistry* command_registry_ptr;
 
+        int pending_hotkey_assignment;
+        megamol::frontend_resources::KeyCode pending_hotkey;
+
         StringSearchWidget search_widget;
         HoverToolTip tooltip_widget;
+
+        bool is_any_key_pressed();
     };
 
 

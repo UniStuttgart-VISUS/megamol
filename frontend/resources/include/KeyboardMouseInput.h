@@ -200,7 +200,7 @@ public:
 
     inline int toInt() const { return static_cast<int>(bits.to_ulong()); }
 
-    inline void fromInt(int val) { bits.set(val); }
+    inline void fromInt(int val) { bits = Bits(val); }
 
     inline bool none() const { return bits.none(); }
 

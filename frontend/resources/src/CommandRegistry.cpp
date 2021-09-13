@@ -203,7 +203,7 @@ megamol::frontend_resources::CommandRegistry::~CommandRegistry() {
 }
 
 std::string megamol::frontend_resources::CommandRegistry::add_command(const megamol::frontend_resources::Command& c) {
-    const bool command_is_new = command_index.find(c.name) == command_index.end();
+    const bool command_is_new = is_new(c.name);
     const bool key_code_unused = key_to_command.find(c.key) == key_to_command.end();
     if (command_is_new && key_code_unused) {
         push_command(c);
@@ -255,7 +255,7 @@ void megamol::frontend_resources::CommandRegistry::remove_command_by_name(const 
     }
 }
 
-void megamol::frontend_resources::CommandRegistry::update_hotkey(const std::string& command_name, KeyCode key) {
+bool megamol::frontend_resources::CommandRegistry::update_hotkey(const std::string& command_name, KeyCode key) {
     if (!is_new(command_name)) {
         auto& c = commands[command_index[command_name]];
         remove_color_from_layer(c);
@@ -264,7 +264,9 @@ void megamol::frontend_resources::CommandRegistry::update_hotkey(const std::stri
         key_to_command.erase(old_key);
         key_to_command[key] = command_index[command_name];
         add_color_to_layer(c);
+        return true;
     }
+    return false;
 }
 
 void megamol::frontend_resources::CommandRegistry::modifiers_changed(Modifiers mod) {

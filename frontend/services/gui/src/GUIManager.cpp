@@ -30,7 +30,6 @@ GUIManager::GUIManager()
         , popup_collection()
         , notification_collection()
         , win_configurator_ptr(nullptr)
-        , command_registry_ptr(nullptr)
         , file_browser()
         , tooltip()
         , picking_buffer() {
@@ -285,9 +284,6 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         win_perfmon_ptr->SetData(
             this->gui_state.stat_averaged_fps, this->gui_state.stat_averaged_ms, this->gui_state.stat_frame_count);
     }
-    if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
-        win_hkeditor_ptr->SetData(this->command_registry_ptr);
-    }
 
     // Update windows
     this->win_collection.Update();
@@ -325,62 +321,122 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
 bool GUIManager::PostDraw() {
 
-    // Early exit when post step should be omitted
-    if (!this->gui_state.gui_visible_post) {
-        return true;
-    }
-    // Check for initialized imgui api
-    if (this->initialized_api == GUIImGuiAPI::NONE) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    // Check for existing imgui context
-    if (this->context == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
+    if (this->gui_state.gui_visible_post) {
 
-    // Set ImGui context
-    ImGui::SetCurrentContext(this->context);
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    ////////// DRAW GUI ///////////////////////////////////////////////////////
-    try {
-
-        // Main HOTKEY_GUI_MENU ---------------------------------------------------------------
-        this->draw_menu();
-
-        // Draw Windows ------------------------------------------------------------
-        this->win_collection.Draw(this->gui_state.menu_visible);
-
-        // Draw Pop-ups ------------------------------------------------------------
-        this->draw_popups();
-
-        // Draw global parameter widgets -------------------------------------------
-        if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-            /// ! Only enabled in second frame if interaction objects are added during first frame !
-            this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
-            graph_ptr->DrawGlobalParameterWidgets(
-                this->picking_buffer, this->win_collection.GetWindow<TransferFunctionEditor>());
-            this->picking_buffer.DisableInteraction();
+        // Check for initialized imgui api
+        if (this->initialized_api == GUIImGuiAPI::NONE) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        // Check for existing imgui context
+        if (this->context == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
         }
 
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        // Set ImGui context
+        ImGui::SetCurrentContext(this->context);
+        ImGuiIO& io = ImGui::GetIO();
+        ImGuiStyle& style = ImGui::GetStyle();
+
+        ////////// DRAW GUI ///////////////////////////////////////////////////////
+        try {
+
+            // Main HOTKEY_GUI_MENU ---------------------------------------------------------------
+            this->draw_menu();
+
+            // Draw Windows ------------------------------------------------------------
+            this->win_collection.Draw(this->gui_state.menu_visible);
+
+            // Draw Pop-ups ------------------------------------------------------------
+            this->draw_popups();
+
+            // Draw global parameter widgets -------------------------------------------
+            if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+                /// ! Only enabled in second frame if interaction objects are added during first frame !
+                this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
+                graph_ptr->DrawGlobalParameterWidgets(
+                    this->picking_buffer, this->win_collection.GetWindow<TransferFunctionEditor>());
+                this->picking_buffer.DisableInteraction();
+            }
+
+        } catch (...) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unknown Error... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+
+        /// TODO - SEPARATE RENDERING OF OPENGL-STUFF DEPENDING ON AVAILABLE API?!
+
+        // Render the current ImGui frame ------------------------------------------
+        glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+
+        // Loading new font -------------------------------------------------------
+        // (after first imgui frame for default fonts being available)
+        if (this->gui_state.font_load > 1) {
+            this->gui_state.font_load--;
+        } else if (this->gui_state.font_load == 1) {
+            bool load_success = false;
+
+            if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
+                    this->gui_state.font_load_filename, std::string("ttf"))) {
+
+                ImFontConfig config;
+                config.OversampleH = 4;
+                config.OversampleV = 4;
+                config.GlyphRanges = this->gui_state.font_utf8_ranges.data();
+
+                if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_filename.c_str(),
+                        static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
+                    bool font_api_load_success = false;
+                    switch (this->initialized_api) {
+                    case (GUIImGuiAPI::OPEN_GL): {
+                        font_api_load_success = ImGui_ImplOpenGL3_CreateFontsTexture();
+                    } break;
+                    default: {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    } break;
+                    }
+                    // Load last added font
+                    if (font_api_load_success) {
+                        io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+                        load_success = true;
+                    }
+                }
+                if (!load_success) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "[GUI] Unable to load font from file '%s' with size %d. [%s, %s, line %d]\n",
+                        this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__,
+                        __FUNCTION__, __LINE__);
+                }
+            } else if ((!this->gui_state.font_load_filename.empty()) &&
+                       (this->gui_state.font_load_filename != "<unknown>")) {
+                std::string imgui_font_string =
+                    this->gui_state.font_load_filename + ", " + std::to_string(this->gui_state.font_load_size) + "px";
+                for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < (io.Fonts->Fonts.Size); n++) {
+                    std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
+                    if (font_name == imgui_font_string) {
+                        io.FontDefault = io.Fonts->Fonts[n];
+                        load_success = true;
+                    }
+                }
+                if (!load_success) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "[GUI] Unable to load font '%s' by name with size %d. [%s, %s, line %d]\n",
+                        this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__,
+                        __FUNCTION__, __LINE__);
+                }
+            }
+            this->gui_state.font_load = 0;
+        }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    /// TODO - SEPARATE RENDERING OF OPENGL-STUFF DEPENDING ON AVAILABLE API?!
-
-    // Render the current ImGui frame ------------------------------------------
-    glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Process hotkeys --------------------------------------------------------
     if (this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].is_pressed) {
@@ -446,66 +502,6 @@ bool GUIManager::PostDraw() {
             this->gui_state.gui_hide_next_frame = 0;
             this->gui_state.gui_visible = false;
         }
-    }
-
-    // Loading new font -------------------------------------------------------
-    // (after first imgui frame for default fonts being available)
-    if (this->gui_state.font_load > 1) {
-        this->gui_state.font_load--;
-    } else if (this->gui_state.font_load == 1) {
-        bool load_success = false;
-
-        if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
-                this->gui_state.font_load_filename, std::string("ttf"))) {
-
-            ImFontConfig config;
-            config.OversampleH = 4;
-            config.OversampleV = 4;
-            config.GlyphRanges = this->gui_state.font_utf8_ranges.data();
-
-            if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_filename.c_str(),
-                    static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
-                bool font_api_load_success = false;
-                switch (this->initialized_api) {
-                case (GUIImGuiAPI::OPEN_GL): {
-                    font_api_load_success = ImGui_ImplOpenGL3_CreateFontsTexture();
-                } break;
-                default: {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                } break;
-                }
-                // Load last added font
-                if (font_api_load_success) {
-                    io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-                    load_success = true;
-                }
-            }
-            if (!load_success) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] Unable to load font from file '%s' with size %d. [%s, %s, line %d]\n",
-                    this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
-                    __LINE__);
-            }
-        } else if ((!this->gui_state.font_load_filename.empty()) &&
-                   (this->gui_state.font_load_filename != "<unknown>")) {
-            std::string imgui_font_string =
-                this->gui_state.font_load_filename + ", " + std::to_string(this->gui_state.font_load_size) + "px";
-            for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < (io.Fonts->Fonts.Size); n++) {
-                std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
-                if (font_name == imgui_font_string) {
-                    io.FontDefault = io.Fonts->Fonts[n];
-                    load_success = true;
-                }
-            }
-            if (!load_success) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] Unable to load font '%s' by name with size %d. [%s, %s, line %d]\n",
-                    this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
-                    __LINE__);
-            }
-        }
-        this->gui_state.font_load = 0;
     }
 
     return true;
@@ -1616,16 +1612,6 @@ void megamol::gui::GUIManager::draw_popups() {
 }
 
 
-bool megamol::gui::GUIManager::is_hotkey_pressed(megamol::core::view::KeyCode keycode) const {
-
-    ImGuiIO& io = ImGui::GetIO();
-    return (ImGui::IsKeyDown(static_cast<int>(keycode.key))) &&
-           (keycode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
-           (keycode.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
-           (keycode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
-}
-
-
 void megamol::gui::GUIManager::load_preset_window_docking(ImGuiID global_docking_id) {
 
 /// DOCKING
@@ -1882,7 +1868,9 @@ std::string GUIManager::extract_fontname(const std::string& imgui_fontname) cons
 void GUIManager::RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry) {
 
     // Save local reference to cmd registry for hotkey editor window
-    this->command_registry_ptr = &cmdregistry;
+    if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
+        win_hkeditor_ptr->SetData(&cmdregistry);
+    }
 
     frontend_resources::Command hkcmd;
     hkcmd.parent_type = megamol::frontend_resources::Command::parent_type_c::PARENT_GUI;
