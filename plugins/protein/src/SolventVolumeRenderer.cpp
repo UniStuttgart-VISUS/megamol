@@ -24,6 +24,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
@@ -203,15 +204,15 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer(void)
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 
     // ;-list of residue names which compose the solvent
@@ -614,9 +615,9 @@ void protein::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall* mol) {
                     int(this->coloringModePolymerParam.Param<param::EnumParam>()->Value()));
                 // ColorAtom(atomColor, mol, polymerColorMode, atomIdx, residueIdx );
                 Color::MakeColorTable(mol, currentColoringMode0, this->atomColorTable, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true);
+                    this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->midGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->maxGradColorParam.Param<param::ColorParam>()->Value(), true);
             }
         }
     }

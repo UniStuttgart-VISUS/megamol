@@ -16,6 +16,7 @@
 #include "MoleculeCartoonRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -158,15 +159,15 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     this->MakeSlotAvailable(&this->smoothCartoonColoringParam);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 
     // fill color table with default values and set the filename param
@@ -903,9 +904,9 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
         1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
         this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-        this->minGradColorParam.Param<param::StringParam>()->Value(),
-        this->midGradColorParam.Param<param::StringParam>()->Value(),
-        this->maxGradColorParam.Param<param::StringParam>()->Value(), false, bs);
+        this->minGradColorParam.Param<param::ColorParam>()->Value(),
+        this->midGradColorParam.Param<param::ColorParam>()->Value(),
+        this->maxGradColorParam.Param<param::ColorParam>()->Value(), false, bs);
 
     // parameter refresh
     // Note this also recomputes the atom color table using the color call if necessary
@@ -981,9 +982,9 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         Color::MakeColorTable(mol,
             static_cast<Color::ColoringMode>(int(this->stickColoringModeParam.Param<param::EnumParam>()->Value())),
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+            this->minGradColorParam.Param<param::ColorParam>()->Value(),
+            this->midGradColorParam.Param<param::ColorParam>()->Value(),
+            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
         // render rest as stick
         this->RenderStick(mol, posInter, bs);
         // reset coloring mode
@@ -995,9 +996,9 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
             cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+            this->minGradColorParam.Param<param::ColorParam>()->Value(),
+            this->midGradColorParam.Param<param::ColorParam>()->Value(),
+            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
     }
 
     glDisable(GL_DEPTH_TEST);
@@ -1063,9 +1064,9 @@ void MoleculeCartoonRenderer::UpdateParameters(
                 cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
                 1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
                 this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-                this->minGradColorParam.Param<param::StringParam>()->Value(),
-                this->midGradColorParam.Param<param::StringParam>()->Value(),
-                this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+                this->minGradColorParam.Param<param::ColorParam>()->Value(),
+                this->midGradColorParam.Param<param::ColorParam>()->Value(),
+                this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_INFO, "Recomputing atom color table WITHOUT color module!");
         } else if (col != nullptr) {

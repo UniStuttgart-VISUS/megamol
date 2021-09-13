@@ -9,6 +9,7 @@
 #include "MSMSMeshLoader.h"
 #include <fstream>
 #include "Color.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -204,14 +205,14 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                 vislib::Array<float> atomColorTable2;
 
                 Color::MakeColorTable(mol, currentColoringMode0, atomColorTable, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
+                    this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->midGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs, false, pa);
 
                 Color::MakeColorTable(mol, currentColoringMode1, atomColorTable2, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
+                    this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->midGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs, false, pa);
 
                 // loop over atoms and compute color
                 float* vertex = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];

@@ -21,6 +21,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
@@ -140,15 +141,15 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->probeRadiusParam);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 
     // molecular indices list param
@@ -157,7 +158,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->molIdxListParam);
 
     // the color for the maximum value (gradient coloring
-    this->specialColorParam.SetParameter(new param::StringParam("#228B22"));
+    this->specialColorParam.SetParameter(new param::ColorParam("#228B22"));
     this->MakeSlotAvailable(&this->specialColorParam);
 
     // en-/disable positional interpolation
@@ -627,16 +628,15 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
             cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs,
+            this->minGradColorParam.Param<param::ColorParam>()->Value(),
+            this->midGradColorParam.Param<param::ColorParam>()->Value(),
+            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs,
             this->useNeighborColors.Param<param::BoolParam>()->Value());
     }
 
     // ---------- special color handling ... -----------
     unsigned int midx, ridx, rcnt, aidx, acnt;
-    float r, g, b;
-    utility::ColourParser::FromString(this->specialColorParam.Param<param::StringParam>()->Value(), r, g, b);
+    auto specCol = this->specialColorParam.Param<param::ColorParam>()->Value();
     for (unsigned int mi = 0; mi < this->molIdxList.Count(); ++mi) {
         midx = atoi(this->molIdxList[mi]);
         ridx = mol->Molecules()[midx].FirstResidueIndex();
@@ -645,9 +645,9 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
             aidx = mol->Residues()[ri]->FirstAtomIndex();
             acnt = aidx + mol->Residues()[ri]->AtomCount();
             for (unsigned int ai = aidx; ai < acnt; ++ai) {
-                this->atomColorTable[3 * ai + 0] = r;
-                this->atomColorTable[3 * ai + 1] = g;
-                this->atomColorTable[3 * ai + 2] = b;
+                this->atomColorTable[3 * ai + 0] = specCol[0];
+                this->atomColorTable[3 * ai + 1] = specCol[1];
+                this->atomColorTable[3 * ai + 2] = specCol[2];
             }
         }
     }
@@ -2370,9 +2370,9 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
             cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs,
+            this->minGradColorParam.Param<param::ColorParam>()->Value(),
+            this->midGradColorParam.Param<param::ColorParam>()->Value(),
+            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs,
             this->useNeighborColors.Param<param::BoolParam>()->Value());
 
         // Use one coloring mode

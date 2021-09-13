@@ -9,6 +9,7 @@
 #include "MSMSGenus0Generator.h"
 #include <fstream>
 #include "Color.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -121,15 +122,15 @@ MSMSGenus0Generator::MSMSGenus0Generator(void)
     this->MakeSlotAvailable(&this->colorWeightParam);
 
     // the color for the minimum value (gradient coloring
-    this->minGradColorParam.SetParameter(new param::StringParam("#146496"));
+    this->minGradColorParam.SetParameter(new param::ColorParam("#146496"));
     this->MakeSlotAvailable(&this->minGradColorParam);
 
     // the color for the middle value (gradient coloring
-    this->midGradColorParam.SetParameter(new param::StringParam("#f0f0f0"));
+    this->midGradColorParam.SetParameter(new param::ColorParam("#f0f0f0"));
     this->MakeSlotAvailable(&this->midGradColorParam);
 
     // the color for the maximum value (gradient coloring
-    this->maxGradColorParam.SetParameter(new param::StringParam("#ae3b32"));
+    this->maxGradColorParam.SetParameter(new param::ColorParam("#ae3b32"));
     this->MakeSlotAvailable(&this->maxGradColorParam);
 }
 
@@ -243,14 +244,14 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                 vislib::Array<float> atomColorTable2;
 
                 Color::MakeColorTable(mol, currentColoringMode0, atomColorTable, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
+                    this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->midGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs, false, pa);
 
                 Color::MakeColorTable(mol, currentColoringMode1, atomColorTable2, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
+                    this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->midGradColorParam.Param<param::ColorParam>()->Value(),
+                    this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs, false, pa);
 
                 // loop over atoms and compute color
                 float* vertex = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];

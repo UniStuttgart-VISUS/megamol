@@ -11,8 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <string>
 #include <filesystem>
+#include <string>
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/PerAtomFloatCall.h"
@@ -23,6 +23,8 @@ namespace protein {
     class Color {
 
     public:
+        typedef std::array<float, 4> ColorType;
+
         /** The names of the coloring modes */
         enum ColoringMode {
             ELEMENT = 0,
@@ -159,8 +161,8 @@ namespace protein {
         static void MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol, ColoringMode cm0,
             ColoringMode cm1, float weight0, float weight1, vislib::Array<float>& atomColorTable,
             vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
-            vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
-            vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute = false,
+            vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, ColorType minGradColor,
+            ColorType midGradColor, ColorType maxGradColor, bool forceRecompute = false,
             const protein_calls::BindingSiteCall* bs = 0, bool useNeighbors = false,
             const protein_calls::PerAtomFloatCall* pa = 0, bool enzymeMode = false, bool gxtype = true);
 
@@ -188,8 +190,8 @@ namespace protein {
         static void MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
             ColoringMode currentColoringMode, vislib::Array<float>& atomColorTable,
             vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
-            vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
-            vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute = false,
+            vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, ColorType minGradColor,
+            ColorType midGradColor, ColorType maxGradColor, bool forceRecompute = false,
             const protein_calls::BindingSiteCall* bs = 0, bool useNeighbors = false,
             const protein_calls::PerAtomFloatCall* pa = 0, bool enzymeMode = false, bool gxtype = true);
 
@@ -215,8 +217,8 @@ namespace protein {
         static void MakeComparisonColorTable(const megamol::protein_calls::MolecularDataCall* mol1,
             const megamol::protein_calls::MolecularDataCall* mol2, ColoringMode currentColoringMode,
             vislib::Array<float>& atomColorTable, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
-            vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
-            vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute = false,
+            vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, ColorType minGradColor,
+            ColorType midGradColor, ColorType maxGradColor, bool forceRecompute = false,
             const protein_calls::BindingSiteCall* bs = 0, const protein_calls::PerAtomFloatCall* pa = 0);
 
         /**

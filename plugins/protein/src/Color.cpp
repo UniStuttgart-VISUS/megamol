@@ -321,10 +321,16 @@ float Color::GetHydrophibicityByResName(std::string resName) {
  */
 void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol, ColoringMode currentColoringMode,
     vislib::Array<float>& atomColorTable, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
-    vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
-    vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa,
-    bool enzymeMode, bool gxtype) {
+    vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, ColorType minGradColor, ColorType midGradColor,
+    ColorType maxGradColor, bool forceRecompute, const protein_calls::BindingSiteCall* bs, bool useNeighbors,
+    const protein_calls::PerAtomFloatCall* pa, bool enzymeMode, bool gxtype) {
+
+    // get min color
+    vislib::math::Vector<float, 3> colMin(minGradColor[0], minGradColor[1], minGradColor[2]);
+    // get mid color
+    vislib::math::Vector<float, 3> colMid(midGradColor[0], midGradColor[1], midGradColor[2]);
+    // get max color
+    vislib::math::Vector<float, 3> colMax(maxGradColor[0], maxGradColor[1], maxGradColor[2]);
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx, atomCnt;
@@ -456,15 +462,6 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
         } // ... END coloring mode AMINOACID
         else if (currentColoringMode == HYDROPHOBICITY) {
             float r, g, b;
-            // get min color
-            utility::ColourParser::FromString(minGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMin(r, g, b);
-            // get mid color
-            utility::ColourParser::FromString(midGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMid(r, g, b);
-            // get max color
-            utility::ColourParser::FromString(maxGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMax(r, g, b);
             // temp color variable
             vislib::math::Vector<float, 3> col;
 #ifdef MONERA
@@ -558,15 +555,6 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
         } // ... END coloring mode STRUCTURE
         else if (currentColoringMode == BFACTOR) {
             float r, g, b;
-            // get min color
-            utility::ColourParser::FromString(minGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMin(r, g, b);
-            // get mid color
-            utility::ColourParser::FromString(midGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMid(r, g, b);
-            // get max color
-            utility::ColourParser::FromString(maxGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMax(r, g, b);
             // temp color variable
             vislib::math::Vector<float, 3> col;
 
@@ -608,15 +596,6 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
         } // ... END coloring mode BFACTOR
         else if (currentColoringMode == PER_ATOM_FLOAT) {
             float r, g, b;
-            // get min color
-            utility::ColourParser::FromString(minGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMin(r, g, b);
-            // get mid color
-            utility::ColourParser::FromString(midGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMid(r, g, b);
-            // get max color
-            utility::ColourParser::FromString(maxGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMax(r, g, b);
             // temp color variable
             vislib::math::Vector<float, 3> col;
 
@@ -661,15 +640,6 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
         } // ... END coloring mode PER_ATOM_FLOAT
         else if (currentColoringMode == CHARGE) {
             float r, g, b;
-            // get min color
-            utility::ColourParser::FromString(minGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMin(r, g, b);
-            // get mid color
-            utility::ColourParser::FromString(midGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMid(r, g, b);
-            // get max color
-            utility::ColourParser::FromString(maxGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMax(r, g, b);
             // temp color variable
             vislib::math::Vector<float, 3> col;
 
@@ -711,15 +681,6 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
         } // ... END coloring mode CHARGE
         else if (currentColoringMode == OCCUPANCY) {
             float r, g, b;
-            // get min color
-            utility::ColourParser::FromString(minGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMin(r, g, b);
-            // get mid color
-            utility::ColourParser::FromString(midGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMid(r, g, b);
-            // get max color
-            utility::ColourParser::FromString(maxGradColor, r, g, b);
-            vislib::math::Vector<float, 3> colMax(r, g, b);
             // temp color variable
             vislib::math::Vector<float, 3> col;
 
@@ -1012,10 +973,9 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
 void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol, ColoringMode cm0, ColoringMode cm1,
     float weight0, float weight1, vislib::Array<float>& atomColorTable,
     vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
-    vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
-    vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa,
-    bool enzymeMode, bool gxtype) {
+    vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, ColorType minGradColor, ColorType midGradColor,
+    ColorType maxGradColor, bool forceRecompute, const protein_calls::BindingSiteCall* bs, bool useNeighbors,
+    const protein_calls::PerAtomFloatCall* pa, bool enzymeMode, bool gxtype) {
 
     // if recomputation is forced: clear current color table
     if (forceRecompute) {
@@ -1085,9 +1045,9 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
 void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularDataCall* mol1,
     const megamol::protein_calls::MolecularDataCall* mol2, ColoringMode currentColoringMode,
     vislib::Array<float>& atomColorTable, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
-    vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
-    vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, const protein_calls::PerAtomFloatCall* pa) {
+    vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, ColorType minGradColor, ColorType midGradColor,
+    ColorType maxGradColor, bool forceRecompute, const protein_calls::BindingSiteCall* bs,
+    const protein_calls::PerAtomFloatCall* pa) {
 
     // temporary variables
     unsigned int cnt, cnt2, idx, idx2, cntAtom, cntRes, cntSecS, atomIdx, atomIdx2, atomCnt, atomCnt2;
