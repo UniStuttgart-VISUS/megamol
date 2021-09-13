@@ -2344,14 +2344,17 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
  */
 void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, const protein_calls::BindingSiteCall* bs) {
     // color table param
+    bool updatedColorTable = false;
     if (this->colorTableFileParam.IsDirty()) {
         Color::ReadColorTableFromFile(
             this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
+        updatedColorTable = true;
     }
     // Recompute color table
     if ((this->coloringModeParam0.IsDirty()) || (this->coloringModeParam1.IsDirty()) ||
-        (this->cmWeightParam.IsDirty()) || (this->useNeighborColors.IsDirty()) || lastDataHash != mol->DataHash()) {
+        (this->cmWeightParam.IsDirty()) || (this->useNeighborColors.IsDirty()) || lastDataHash != mol->DataHash() ||
+        updatedColorTable) {
 
         lastDataHash = mol->DataHash();
 
