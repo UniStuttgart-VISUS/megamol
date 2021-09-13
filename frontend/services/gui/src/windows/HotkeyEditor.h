@@ -12,8 +12,8 @@
 
 #include "AbstractWindow.h"
 #include "CommandRegistry.h"
-#include "widgets/StringSearchWidget.h"
 #include "widgets/HoverToolTip.h"
+#include "widgets/StringSearchWidget.h"
 
 
 namespace megamol {
@@ -39,7 +39,6 @@ namespace gui {
 
         StringSearchWidget search_widget;
         HoverToolTip tooltip_widget;
-
     };
 
 

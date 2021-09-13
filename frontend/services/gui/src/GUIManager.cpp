@@ -1488,10 +1488,10 @@ void megamol::gui::GUIManager::draw_popups() {
             }
         }
         if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
-            if (std::get<3>(it->second).lock()->empty()) {
-                ImGui::TextUnformatted(std::get<2>(it->second).c_str());
-            } else {
+            if ((std::get<3>(it->second).lock() != nullptr) && (!std::get<3>(it->second).lock()->empty())) {
                 ImGui::Text(std::get<2>(it->second).c_str(), std::get<3>(it->second).lock()->c_str());
+            } else {
+                ImGui::TextUnformatted(std::get<2>(it->second).c_str());
             }
             bool close = false;
             if (ImGui::Button("Ok")) {

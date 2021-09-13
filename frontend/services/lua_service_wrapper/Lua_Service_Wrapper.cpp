@@ -32,8 +32,8 @@ static void log(const char* text) {
 static void log(std::string text) { log(text.c_str()); }
 
 static std::shared_ptr<bool> open_version_notification = std::make_shared<bool>(true);
-static const std::string version_mismatch_title = "Warning: MegaMol version does not match version in project!";
-static const std::string version_mismatch_notification = "Version Check";
+static const std::string version_mismatch_title = "Version Check";
+static const std::string version_mismatch_notification = "Warning: MegaMol version does not match version in project!";
 
 namespace {
     // used to abort a service callback if we are already inside a service wrapper callback

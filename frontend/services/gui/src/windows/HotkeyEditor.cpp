@@ -12,7 +12,10 @@ using namespace megamol::gui;
 
 
 megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
-        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_HOTKEYEDITOR), command_registry_ptr(nullptr), search_widget(), tooltip_widget() {
+        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_HOTKEYEDITOR)
+        , command_registry_ptr(nullptr)
+        , search_widget()
+        , tooltip_widget() {
 
     // Configure HOTKEY EDITOR Window
     this->win_config.size = ImVec2(0.0f * megamol::gui::gui_scaling.Get(), 0.0f * megamol::gui::gui_scaling.Get());
@@ -44,7 +47,8 @@ bool megamol::gui::HotkeyEditor::Draw() {
     auto search_string = this->search_widget.GetSearchString();
 
     auto table_flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize;
-    auto column_flags = ImGuiTableColumnFlags_None; //ImGuiTableColumnFlags_WidthFixed; // ImGuiTableColumnFlags_WidthStretch;
+    auto column_flags =
+        ImGuiTableColumnFlags_None; // ImGuiTableColumnFlags_WidthFixed; // ImGuiTableColumnFlags_WidthStretch;
     if (ImGui::BeginTable("megamol_hotkeys", 2, table_flags)) {
 
         ImGui::TableSetupColumn("Name\n(Click to execute)", column_flags);
@@ -54,7 +58,9 @@ bool megamol::gui::HotkeyEditor::Draw() {
         if (this->command_registry_ptr != nullptr) {
             for (auto& cmd : this->command_registry_ptr->list_commands()) {
 
-                if (search_string.empty() || (gui_utils::FindCaseInsensitiveSubstring(cmd.name, search_string) || gui_utils::FindCaseInsensitiveSubstring(cmd.key.ToString(), search_string))) {
+                if (search_string.empty() ||
+                    (gui_utils::FindCaseInsensitiveSubstring(cmd.name, search_string) ||
+                        gui_utils::FindCaseInsensitiveSubstring(cmd.key.ToString(), search_string))) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     if (ImGui::Button(std::string(cmd.name + "##" + cmd.name).c_str())) {
