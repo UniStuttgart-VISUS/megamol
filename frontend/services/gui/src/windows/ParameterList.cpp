@@ -94,7 +94,7 @@ bool ParameterList::Draw() {
         std::string help_test = "[" + this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].keycode.ToString() +
                                 "] Set keyboard focus to search input field.\n"
                                 "Case insensitive substring search in module and parameter names.";
-        this->search_widget.Widget("guiwindow_parameter_earch", help_test);
+        this->search_widget.Widget("guiwindow_parameter_search", help_test);
     }
 
     ImGui::Separator();

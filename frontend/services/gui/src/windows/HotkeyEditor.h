@@ -12,6 +12,8 @@
 
 #include "AbstractWindow.h"
 #include "CommandRegistry.h"
+#include "widgets/StringSearchWidget.h"
+#include "widgets/HoverToolTip.h"
 
 
 namespace megamol {
@@ -34,6 +36,10 @@ namespace gui {
         // VARIABLES --------------------------------------------------------------
 
         megamol::frontend_resources::CommandRegistry* command_registry_ptr;
+
+        StringSearchWidget search_widget;
+        HoverToolTip tooltip_widget;
+
     };
 
 

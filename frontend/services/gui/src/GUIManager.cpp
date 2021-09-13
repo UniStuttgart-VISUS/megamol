@@ -214,42 +214,6 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
 
-    // Process hotkeys
-    if (this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].is_pressed) {
-        if (this->gui_state.gui_visible) {
-            this->gui_state.gui_hide_next_frame = 2;
-        } else {
-            // Show GUI after it was hidden (before early exit!)
-            // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
-            this->gui_state.menu_visible = true;
-            const auto func = [&](AbstractWindow& wc) {
-                if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
-                        this->gui_state.gui_restore_hidden_windows.end(),
-                        wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
-                    wc.Config().show = true;
-                }
-            };
-            this->win_collection.EnumWindows(func);
-            this->gui_state.gui_restore_hidden_windows.clear();
-            this->gui_state.gui_visible = true;
-        }
-    }
-    if (this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM].is_pressed) {
-        this->gui_state.shutdown_triggered = true;
-        return true;
-    }
-    if (this->gui_hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].is_pressed) {
-        this->gui_state.screenshot_triggered = true;
-    }
-    if (this->gui_hotkeys[HOTKEY_GUI_MENU].is_pressed) {
-        this->gui_state.menu_visible = !this->gui_state.menu_visible;
-    }
-    if (this->gui_hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].is_pressed) {
-        if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-            graph_ptr->ToggleGraphEntry();
-        }
-    }
-
     // Delayed font loading for resource directories being available via resource in frontend
     if (this->gui_state.load_default_fonts) {
         this->load_default_fonts();
@@ -418,7 +382,43 @@ bool GUIManager::PostDraw() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    // Reset all hotkeys ------------------------------------------------------
+    // Process hotkeys --------------------------------------------------------
+    if (this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].is_pressed) {
+        if (this->gui_state.gui_visible) {
+            this->gui_state.gui_hide_next_frame = 2;
+        } else {
+            // Show GUI after it was hidden (before early exit!)
+            // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
+            this->gui_state.menu_visible = true;
+            const auto func = [&](AbstractWindow& wc) {
+                if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
+                        this->gui_state.gui_restore_hidden_windows.end(),
+                        wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
+                    wc.Config().show = true;
+                }
+            };
+            this->win_collection.EnumWindows(func);
+            this->gui_state.gui_restore_hidden_windows.clear();
+            this->gui_state.gui_visible = true;
+        }
+    }
+    if (this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM].is_pressed) {
+        this->gui_state.shutdown_triggered = true;
+        return true;
+    }
+    if (this->gui_hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT].is_pressed) {
+        this->gui_state.screenshot_triggered = true;
+    }
+    if (this->gui_hotkeys[HOTKEY_GUI_MENU].is_pressed) {
+        this->gui_state.menu_visible = !this->gui_state.menu_visible;
+    }
+    if (this->gui_hotkeys[HOTKEY_GUI_TOGGLE_GRAPH_ENTRY].is_pressed) {
+        if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+            graph_ptr->ToggleGraphEntry();
+        }
+    }
+
+    // Reset all hotkeys
     for (auto& hotkey : this->gui_hotkeys) {
         hotkey.second.is_pressed = false;
     }
