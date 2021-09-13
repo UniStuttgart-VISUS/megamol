@@ -14,12 +14,8 @@
 #include "Color.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/math/ShallowVector.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/math/ShallowVector.h"
-#include "mmcore/CoreInstance.h"
-#include <string>
-#include <iostream>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -227,94 +223,94 @@ std::string Color::GetName(Color::ColoringMode col) {
 /*
  * Get the hydrophobicity value for an amino acid
  */
-float Color::GetHydrophibicityByResName(vislib::StringA resName) {
+float Color::GetHydrophibicityByResName(std::string resName) {
 #ifdef MONERA
     // O.D.Monera, T.J.Sereda, N.E.Zhou, C.M.Kay, R.S.Hodges
     // "Relationship of sidechain hydrophobicity and alpha-helical propensity on the stability of the single-stranded
     // amphipathic alpha-helix." J.Pept.Sci. 1995 Sep - Oct; 1(5) : 319 - 29.
-    if (resName.Equals("ALA", false))
+    if (resName.compare("ALA") == 0)
         return 41.0f;
-    else if (resName.Equals("ARG", false))
+    else if (resName.compare("ARG") == 0)
         return -14.0f;
-    else if (resName.Equals("LEU", false))
+    else if (resName.compare("LEU") == 0)
         return 97.0f;
-    else if (resName.Equals("LYS", false))
+    else if (resName.compare("LYS") == 0)
         return -23.0f;
-    else if (resName.Equals("MET", false))
+    else if (resName.compare("MET") == 0)
         return 74.0f;
-    else if (resName.Equals("GLN", false))
+    else if (resName.compare("GLN") == 0)
         return -10.0f;
-    else if (resName.Equals("ILE", false))
+    else if (resName.compare("ILE") == 0)
         return 99.0f;
-    else if (resName.Equals("TRP", false))
+    else if (resName.compare("TRP") == 0)
         return 97.0f;
-    else if (resName.Equals("PHE", false))
+    else if (resName.compare("PHE") == 0)
         return 100.0f;
-    else if (resName.Equals("TYR", false))
+    else if (resName.compare("TYR") == 0)
         return 63.0f;
-    else if (resName.Equals("CYS", false))
+    else if (resName.compare("CYS") == 0)
         return 49.0f;
-    else if (resName.Equals("VAL", false))
+    else if (resName.compare("VAL") == 0)
         return 76.0f;
-    else if (resName.Equals("ASN", false))
+    else if (resName.compare("ASN") == 0)
         return -28.0f;
-    else if (resName.Equals("SER", false))
+    else if (resName.compare("SER") == 0)
         return -5.0f;
-    else if (resName.Equals("HIS", false))
+    else if (resName.compare("HIS") == 0)
         return 8.0f;
-    else if (resName.Equals("GLU", false))
+    else if (resName.compare("GLU") == 0)
         return -31.0f;
-    else if (resName.Equals("THR", false))
+    else if (resName.compare("THR") == 0)
         return 13.0f;
-    else if (resName.Equals("ASP", false))
+    else if (resName.compare("ASP") == 0)
         return -55.0f;
-    else if (resName.Equals("GLY", false))
+    else if (resName.compare("GLY") == 0)
         return 0.0f;
-    else if (resName.Equals("PRO", false))
+    else if (resName.compare("PRO") == 0)
         return -46.0f;
 #else
     // J. Kyte, R. F. Doolittle
     // "A simple method for displaying the hydropathic character of a protein."
     // J. Mol. Biol. 1982 May 5; 157(1) : 105 - 32.
-    if (resName.Equals("Ala", false))
+    if (resName.compare("Ala") == 0)
         return 1.8f;
-    else if (resName.Equals("Arg", false))
+    else if (resName.compare("Arg") == 0)
         return -4.5f;
-    else if (resName.Equals("Asn", false))
+    else if (resName.compare("Asn") == 0)
         return -3.5f;
-    else if (resName.Equals("Asp", false))
+    else if (resName.compare("Asp") == 0)
         return -3.5f;
-    else if (resName.Equals("Cys", false))
+    else if (resName.compare("Cys") == 0)
         return 2.5f;
-    else if (resName.Equals("Glu", false))
+    else if (resName.compare("Glu") == 0)
         return -3.5f;
-    else if (resName.Equals("Gln", false))
+    else if (resName.compare("Gln") == 0)
         return -3.5f;
-    else if (resName.Equals("Gly", false))
+    else if (resName.compare("Gly") == 0)
         return -0.4f;
-    else if (resName.Equals("His", false))
+    else if (resName.compare("His") == 0)
         return -3.2f;
-    else if (resName.Equals("Ile", false))
+    else if (resName.compare("Ile") == 0)
         return 4.5f;
-    else if (resName.Equals("Leu", false))
+    else if (resName.compare("Leu") == 0)
         return 3.8f;
-    else if (resName.Equals("Lys", false))
+    else if (resName.compare("Lys") == 0)
         return -3.9f;
-    else if (resName.Equals("Met", false))
+    else if (resName.compare("Met") == 0)
         return 1.9f;
-    else if (resName.Equals("Phe", false))
+    else if (resName.compare("Phe") == 0)
         return 2.8f;
-    else if (resName.Equals("Pro", false))
+    else if (resName.compare("Pro") == 0)
         return -1.6f;
-    else if (resName.Equals("Ser", false))
+    else if (resName.compare("Ser") == 0)
         return -0.8f;
-    else if (resName.Equals("Thr", false))
+    else if (resName.compare("Thr") == 0)
         return -0.7f;
-    else if (resName.Equals("Trp", false))
+    else if (resName.compare("Trp") == 0)
         return -0.9f;
-    else if (resName.Equals("Tyr", false))
+    else if (resName.compare("Tyr") == 0)
         return -1.3f;
-    else if (resName.Equals("Val", false))
+    else if (resName.compare("Val") == 0)
         return 4.2f;
 #endif
     return 0.0f;
@@ -327,7 +323,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
     vislib::Array<float>& atomColorTable, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
     vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
     vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa, bool enzymeMode, bool gxtype) {
+    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa,
+    bool enzymeMode, bool gxtype) {
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx, atomCnt;
@@ -489,7 +486,7 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
                 cnt = mol->Residues()[cntRes]->AtomCount();
                 // get residue type index
                 resTypeIdx = mol->Residues()[cntRes]->Type();
-                val = GetHydrophibicityByResName(mol->ResidueTypeNames()[resTypeIdx]);
+                val = GetHydrophibicityByResName(mol->ResidueTypeNames()[resTypeIdx].PeekBuffer());
                 for (cntAtom = idx; cntAtom < idx + cnt; ++cntAtom) {
                     // below middle value --> blend between min and mid color
                     if (val < mid) {
@@ -895,7 +892,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
                 dist = sqrt(pow(centroid[0] - mol->AtomPositions()[3 * i + 0], 2.0f) +
                             pow(centroid[1] - mol->AtomPositions()[3 * i + 1], 2.0f) +
                             pow(centroid[2] - mol->AtomPositions()[3 * i + 2], 2.0f));
-                if (dist > max_dist) max_dist = dist;
+                if (dist > max_dist)
+                    max_dist = dist;
             }
             steps = max_dist / static_cast<float>(anz_cols);
             // calculate the colors
@@ -1016,7 +1014,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
     vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
     vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
     vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa, bool enzymeMode, bool gxtype) {
+    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa,
+    bool enzymeMode, bool gxtype) {
 
     // if recomputation is forced: clear current color table
     if (forceRecompute) {
@@ -1024,8 +1023,10 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
     }
 
     // Clamp weights to zero
-    if (weight0 < 0.0) weight0 = 0.0;
-    if (weight1 < 0.0) weight1 = 0.0;
+    if (weight0 < 0.0)
+        weight0 = 0.0;
+    if (weight1 < 0.0)
+        weight1 = 0.0;
 
     // Normalize weights
     weight0 = weight0 / (weight0 + weight1);
@@ -1052,7 +1053,6 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
         for (unsigned int cnt = 0; cnt < mol->AtomCount() * 3; cnt++) {
             atomColorTable.Add(color0[cnt] * weight0 + color1[cnt] * weight1);
         }
-
     }
 
     // apply the neighborhood colors
@@ -1111,7 +1111,8 @@ void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularData
 
     unsigned int ssc = mol1->SecondaryStructureCount();
 
-    if (ssc > mol2->SecondaryStructureCount()) ssc = mol2->SecondaryStructureCount();
+    if (ssc > mol2->SecondaryStructureCount())
+        ssc = mol2->SecondaryStructureCount();
 
     float max = -2.0f;
 
@@ -1136,14 +1137,15 @@ void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularData
 
             const megamol::protein_calls::MolecularDataCall::Residue* t1 = mol2->Residues()[cntRes];
 
-            if (t1 == NULL) break;
+            if (t1 == NULL)
+                break;
 
             if (mol1->Residues()[cntRes]->Identifier() ==
                     megamol::protein_calls::MolecularDataCall::Residue::AMINOACID &&
                 mol2->Residues()[cntRes]->Identifier() ==
                     megamol::protein_calls::MolecularDataCall::Residue::AMINOACID) {
-                aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
-                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol2->Residues()[cntRes]);
+                aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol1->Residues()[cntRes]);
+                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol2->Residues()[cntRes]);
             } else { // TODO check if this is correct
                 continue;
             }
@@ -1157,7 +1159,8 @@ void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularData
 
             float absoluteDist = sqrt(xDist * xDist + yDist * yDist + zDist * zDist);
 
-            if (absoluteDist > max) max = absoluteDist;
+            if (absoluteDist > max)
+                max = absoluteDist;
 
             // set the color for every atom
             for (cntAtom = atomIdx; cntAtom < atomCnt; ++cntAtom) {
@@ -1186,7 +1189,8 @@ void Color::MakeRainbowColorTable(unsigned int num, vislib::Array<vislib::math::
 
     unsigned int n = (num / 4);
     // the color table should have a minimum size of 16
-    if (n < 4) n = 4;
+    if (n < 4)
+        n = 4;
     rainbowColors.Clear();
     rainbowColors.AssertCapacity(num);
     float f = 1.0f / float(n);
@@ -1215,14 +1219,14 @@ void Color::MakeRainbowColorTable(unsigned int num, vislib::Array<vislib::math::
  * Read color table from file.
  */
 void Color::ReadColorTableFromFile(
-    vislib::StringA filename, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable) {
+    std::string filename, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable) {
 
     // file buffer variable
     vislib::sys::ASCIIFileBuffer file;
     // delete old color table
     colorLookupTable.SetCount(0);
     // try to load the color table file
-    if (file.LoadFile(filename)) {
+    if (file.LoadFile(filename.c_str())) {
         float r, g, b;
         colorLookupTable.AssertCapacity(file.Count());
         // get colors from file
@@ -1263,4 +1267,9 @@ void Color::ReadColorTableFromFile(
         colorLookupTable[23].Set(0.75f, 0.75f, 0.50f);
         colorLookupTable[24].Set(1.00f, 0.75f, 0.50f);
     }
+}
+
+void Color::ReadColorTableFromFile(
+    std::filesystem::path filename, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable) {
+    Color::ReadColorTableFromFile(filename.string(), colorLookupTable);
 }

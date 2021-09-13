@@ -18,6 +18,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
@@ -78,9 +79,10 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
+    std::string filename("colors.txt");
     Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    this->colorTableFileParam.SetParameter(
+        new param::FilePathParam(filename, core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring modes
@@ -2344,7 +2346,7 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
         Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
     }
     // Recompute color table

@@ -13,13 +13,13 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/PerAtomFloatCall.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol;
@@ -33,24 +33,24 @@ using namespace megamol::protein;
  * MSMSMeshLoader::MSMSMeshLoader
  */
 MSMSMeshLoader::MSMSMeshLoader(void)
-    : core::Module()
-    , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
-    , datahash(0)
-    , getDataSlot("getdata", "The slot publishing the loaded data")
-    , molDataSlot("moldata", "The slot requesting molecular data")
-    , bsDataSlot("getBindingSites", "The slot requesting binding site data")
-    , perAtomDataSlot("getPerAtomData", "The slot requesting per-atom data")
-    , filenameSlot("filename", "The path to the file to load (without file extension)")
-    , msmsDetailParam("MSMS_detail", "The detail level for the (optional) MSMS computation")
-    , msmsProbeParam("MSMS_probeRadius", "The probe radius for the (optional) MSMS computation")
-    , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
-    , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
-    , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
-    , colorWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
-    , minGradColorParam("color::minGradColor", "Color for min value for gradient coloring")
-    , midGradColorParam("color::midGradColor", "Color for mid value for gradient coloring")
-    , maxGradColorParam("color::maxGradColor", "Color for max value for gradient coloring")
-    , prevTime(-1) {
+        : core::Module()
+        , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+        , datahash(0)
+        , getDataSlot("getdata", "The slot publishing the loaded data")
+        , molDataSlot("moldata", "The slot requesting molecular data")
+        , bsDataSlot("getBindingSites", "The slot requesting binding site data")
+        , perAtomDataSlot("getPerAtomData", "The slot requesting per-atom data")
+        , filenameSlot("filename", "The path to the file to load (without file extension)")
+        , msmsDetailParam("MSMS_detail", "The detail level for the (optional) MSMS computation")
+        , msmsProbeParam("MSMS_probeRadius", "The probe radius for the (optional) MSMS computation")
+        , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
+        , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
+        , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
+        , colorWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
+        , minGradColorParam("color::minGradColor", "Color for min value for gradient coloring")
+        , midGradColorParam("color::midGradColor", "Color for mid value for gradient coloring")
+        , maxGradColorParam("color::maxGradColor", "Color for max value for gradient coloring")
+        , prevTime(-1) {
     // the data out slot
     this->getDataSlot.SetCallback(CallTriMeshData::ClassName(), "GetData", &MSMSMeshLoader::getDataCallback);
     this->getDataSlot.SetCallback(CallTriMeshData::ClassName(), "GetExtent", &MSMSMeshLoader::getExtentCallback);
@@ -69,9 +69,10 @@ MSMSMeshLoader::MSMSMeshLoader(void)
     this->MakeSlotAvailable(&this->filenameSlot);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
+    std::string filename("colors.txt");
     Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    this->colorTableFileParam.SetParameter(
+        new param::FilePathParam(filename, core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // MSMS detail parameter
@@ -127,7 +128,9 @@ MSMSMeshLoader::MSMSMeshLoader(void)
 /*
  * MSMSMeshLoader::~MSMSMeshLoader
  */
-MSMSMeshLoader::~MSMSMeshLoader(void) { this->Release(); }
+MSMSMeshLoader::~MSMSMeshLoader(void) {
+    this->Release();
+}
 
 
 /*
@@ -152,7 +155,8 @@ void MSMSMeshLoader::release(void) {
  */
 bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
     CallTriMeshData* ctmd = dynamic_cast<CallTriMeshData*>(&caller);
-    if (ctmd == NULL) return false;
+    if (ctmd == NULL)
+        return false;
 
     // load data on demand
     if (this->filenameSlot.IsDirty()) {
@@ -169,8 +173,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
     if (pa) {
         pa->SetFrameID(ctmd->FrameID());
         // try to call data
-        if ((*pa)(PerAtomFloatCall::CallForGetFloat)) {
-        }
+        if ((*pa)(PerAtomFloatCall::CallForGetFloat)) {}
     }
 
     // try to call molecular data and compute colors
@@ -238,7 +241,8 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     dist = sqrt(pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
                                 pow(centroid[1] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 1], 2) +
                                 pow(centroid[2] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 2], 2));
-                    if (dist > max_dist) max_dist = dist;
+                    if (dist > max_dist)
+                        max_dist = dist;
                 }
                 steps = max_dist / float(anz_cols);
 
@@ -323,8 +327,10 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                 float weight1 = 1.0f - weight0;
 
                 // Clamp weights to zero
-                if (weight0 < 0.0) weight0 = 0.0;
-                if (weight1 < 0.0) weight1 = 0.0;
+                if (weight0 < 0.0)
+                    weight0 = 0.0;
+                if (weight1 < 0.0)
+                    weight1 = 0.0;
 
                 // Normalize weights
                 weight0 = weight0 / (weight0 + weight1);
@@ -451,7 +457,8 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
  */
 bool MSMSMeshLoader::getExtentCallback(core::Call& caller) {
     CallTriMeshData* ctmd = dynamic_cast<CallTriMeshData*>(&caller);
-    if (ctmd == NULL) return false;
+    if (ctmd == NULL)
+        return false;
 
     unsigned int frameCnt = 1;
 
@@ -574,7 +581,8 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
         size_t j = 0;
         for (unsigned int i = 3; i < vertFile.Count(); i++) {
             line = vertFile.Line(i);
-            if (line.IsEmpty()) continue;
+            if (line.IsEmpty())
+                continue;
             if (j >= this->vertexCount) {
                 Log::DefaultLog.WriteError(
                     "Too many vertices in MSMS file %s (line %i).", vertFilename.PeekBuffer(), i);
@@ -624,7 +632,8 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
         j = 0;
         for (unsigned int i = 3; i < faceFile.Count(); i++) {
             line = faceFile.Line(i);
-            if (line.IsEmpty()) continue;
+            if (line.IsEmpty())
+                continue;
             if (j >= this->faceCount) {
                 Log::DefaultLog.WriteError("Too many faces in MSMS file %s (line %i).", faceFilename.PeekBuffer(), i);
                 return false;

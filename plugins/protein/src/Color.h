@@ -11,10 +11,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "protein_calls/MolecularDataCall.h"
-#include "protein_calls/BindingSiteCall.h"
-#include "protein_calls/PerAtomFloatCall.h"
 #include <string>
+#include <filesystem>
+#include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/PerAtomFloatCall.h"
 
 namespace megamol {
 namespace protein {
@@ -22,28 +23,27 @@ namespace protein {
     class Color {
 
     public:
-
         /** The names of the coloring modes */
         enum ColoringMode {
-            ELEMENT			= 0,
-            STRUCTURE		= 1,
-            RAINBOW			= 2,
-            BFACTOR			= 3,
-            CHARGE			= 4,
-            OCCUPANCY		= 5,
-            CHAIN			= 6,
-            MOLECULE		= 7,
-            RESIDUE			= 8,
-            CHAINBOW		= 9,
-            AMINOACID		= 10,
-            VALUE			= 11,
-            CHAIN_ID		= 12,
-            MOVEMENT		= 13,
-            BINDINGSITE		= 14,
-			HYDROPHOBICITY	= 15,
-            PER_ATOM_FLOAT  = 16,
-            HEIGHTMAP_COL   = 17,
-            HEIGHTMAP_VAL   = 18
+            ELEMENT = 0,
+            STRUCTURE = 1,
+            RAINBOW = 2,
+            BFACTOR = 3,
+            CHARGE = 4,
+            OCCUPANCY = 5,
+            CHAIN = 6,
+            MOLECULE = 7,
+            RESIDUE = 8,
+            CHAINBOW = 9,
+            AMINOACID = 10,
+            VALUE = 11,
+            CHAIN_ID = 12,
+            MOVEMENT = 13,
+            BINDINGSITE = 14,
+            HYDROPHOBICITY = 15,
+            PER_ATOM_FLOAT = 16,
+            HEIGHTMAP_COL = 17,
+            HEIGHTMAP_VAL = 18
         };
 
         /**
@@ -51,10 +51,8 @@ namespace protein {
          *
          * @param aminoAcidColorTable The amino acid color table.
          */
-        static void FillAminoAcidColorTable(
-            vislib::Array<vislib::math::Vector<float, 3> >
-              &aminoAcidColorTable);
-        
+        static void FillAminoAcidColorTable(vislib::Array<vislib::math::Vector<float, 3>>& aminoAcidColorTable);
+
         /**
          * Get the coloring mode at a certain index of a given data call.
          *
@@ -63,33 +61,33 @@ namespace protein {
          *
          * @return The coloring mode.
          */
-		static Color::ColoringMode GetModeByIndex(const megamol::protein_calls::MolecularDataCall *mol,
-            unsigned int idx);
+        static Color::ColoringMode GetModeByIndex(
+            const megamol::protein_calls::MolecularDataCall* mol, unsigned int idx);
 
         /**
-        * Get the coloring mode at a certain index of a given data call.
-        *
-        * @param mol The molecular data call.
-        * @param bs  The binding site data call.
-        * @param idx The index.
-        *
-        * @return The coloring mode.
-        */
-        static Color::ColoringMode GetModeByIndex(const megamol::protein_calls::MolecularDataCall *mol,
-            const protein_calls::BindingSiteCall *bs, unsigned int idx);
+         * Get the coloring mode at a certain index of a given data call.
+         *
+         * @param mol The molecular data call.
+         * @param bs  The binding site data call.
+         * @param idx The index.
+         *
+         * @return The coloring mode.
+         */
+        static Color::ColoringMode GetModeByIndex(const megamol::protein_calls::MolecularDataCall* mol,
+            const protein_calls::BindingSiteCall* bs, unsigned int idx);
 
         /**
-        * Get the coloring mode at a certain index of a given data call.
-        *
-        * @param mol The molecular data call.
-        * @param bs  The binding site data call.
-        * @param pa  The per-atom float data call.
-        * @param idx The index.
-        *
-        * @return The coloring mode.
-        */
-        static Color::ColoringMode GetModeByIndex(const megamol::protein_calls::MolecularDataCall *mol,
-            const protein_calls::BindingSiteCall *bs, const protein_calls::PerAtomFloatCall *pa, unsigned int idx);
+         * Get the coloring mode at a certain index of a given data call.
+         *
+         * @param mol The molecular data call.
+         * @param bs  The binding site data call.
+         * @param pa  The per-atom float data call.
+         * @param idx The index.
+         *
+         * @return The coloring mode.
+         */
+        static Color::ColoringMode GetModeByIndex(const megamol::protein_calls::MolecularDataCall* mol,
+            const protein_calls::BindingSiteCall* bs, const protein_calls::PerAtomFloatCall* pa, unsigned int idx);
 
         /**
          * Get the corresponding name of a given coloring mode.
@@ -99,7 +97,7 @@ namespace protein {
          * @return The name.
          */
         static std::string GetName(Color::ColoringMode col);
-        
+
         /**
          * Get the number of coloring modes used by a given data call.
          *
@@ -107,29 +105,31 @@ namespace protein {
          *
          * @return The number of coloring modes.
          */
-		static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol) {
+        static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall* mol) {
             return 12;
         }
 
         /**
-        * Get the number of coloring modes used by a given data call.
-        *
-        * @param mol The data call.
-        *
-        * @return The number of coloring modes.
-        */
-        static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs) {
+         * Get the number of coloring modes used by a given data call.
+         *
+         * @param mol The data call.
+         *
+         * @return The number of coloring modes.
+         */
+        static unsigned int GetNumOfColoringModes(
+            const megamol::protein_calls::MolecularDataCall* mol, const protein_calls::BindingSiteCall* bs) {
             return 13;
         }
 
         /**
-        * Get the number of coloring modes used by a given data call.
-        *
-        * @param mol The data call.
-        *
-        * @return The number of coloring modes.
-        */
-        static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs, const protein_calls::PerAtomFloatCall *pa) {
+         * Get the number of coloring modes used by a given data call.
+         *
+         * @param mol The data call.
+         *
+         * @return The number of coloring modes.
+         */
+        static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall* mol,
+            const protein_calls::BindingSiteCall* bs, const protein_calls::PerAtomFloatCall* pa) {
             return 15;
         }
 
@@ -153,26 +153,16 @@ namespace protein {
          * @param maxGradColor        The maximum value for gradient coloring.
          * @param forceRecompute      Force recomputation of the color table.
          * @param bs                  The binding site data call.
-	 * @param useNeighbors        Add colors of the neighbors to the current color
+         * @param useNeighbors        Add colors of the neighbors to the current color
          * @param pa                  The per-atom float data call.
          */
-		static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
-            ColoringMode cm0,
-            ColoringMode cm1,
-            float weight0,
-            float weight1,
-            vislib::Array<float> &atomColorTable,
-            vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
-            vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
-            vislib::TString minGradColor,
-            vislib::TString midGradColor,
-            vislib::TString maxGradColor,
-            bool forceRecompute = false,
-			const protein_calls::BindingSiteCall *bs = 0,
-			bool useNeighbors = false,
-			const protein_calls::PerAtomFloatCall *pa = 0,
-            bool enzymeMode = false,
-            bool gxtype = true);
+        static void MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol, ColoringMode cm0,
+            ColoringMode cm1, float weight0, float weight1, vislib::Array<float>& atomColorTable,
+            vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
+            vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
+            vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute = false,
+            const protein_calls::BindingSiteCall* bs = 0, bool useNeighbors = false,
+            const protein_calls::PerAtomFloatCall* pa = 0, bool enzymeMode = false, bool gxtype = true);
 
 
         /**
@@ -191,34 +181,27 @@ namespace protein {
          * @param maxGradColor        The maximum value for gradient coloring.
          * @param forceRecompute      Force recomputation of the color table.
          * @param bs                  The binding site data call.
-	     * @param useNeighbors        Add colors of the neighbors to the current color
+         * @param useNeighbors        Add colors of the neighbors to the current color
          * @param pa                  The per-atom float data call.
          * @param enzymeMode          Enyzme coloring mode, coloring only relevant parts of the active site
          */
-		static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
-            ColoringMode currentColoringMode,
-            vislib::Array<float> &atomColorTable,
-            vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
-            vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
-            vislib::TString minGradColor,
-            vislib::TString midGradColor,
-            vislib::TString maxGradColor,
-            bool forceRecompute = false,
-			const protein_calls::BindingSiteCall *bs = 0,
-			bool useNeighbors = false,
-	    const protein_calls::PerAtomFloatCall *pa = 0, 
-            bool enzymeMode = false,
-            bool gxtype = true);
+        static void MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
+            ColoringMode currentColoringMode, vislib::Array<float>& atomColorTable,
+            vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
+            vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
+            vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute = false,
+            const protein_calls::BindingSiteCall* bs = 0, bool useNeighbors = false,
+            const protein_calls::PerAtomFloatCall* pa = 0, bool enzymeMode = false, bool gxtype = true);
 
-		/**
+        /**
          * Make color table for all atoms acoording to compare two different
-		 * proteins
+         * proteins
          * The color table is only computed if it is empty or if the
          * recomputation is forced by parameter.
          *
-         * @param mol1                The first data interface. 
-		 *                            This one is rendered
-		 * @param mol2				  The second data interface.
+         * @param mol1                The first data interface.
+         *                            This one is rendered
+         * @param mol2				  The second data interface.
          * @param currentColoringMode The current coloring mode.
          * @param atomColorTable      The atom color table.
          * @param colorLookupTable    The color lookup table.
@@ -229,27 +212,21 @@ namespace protein {
          * @param forceRecompute      Force recomputation of the color table.
          * @param bs                  The binding site data call.
          */
-		static void MakeComparisonColorTable(const megamol::protein_calls::MolecularDataCall *mol1,
-			const megamol::protein_calls::MolecularDataCall *mol2,
-			ColoringMode currentColoringMode,
-			vislib::Array<float> &atomColorTable,
-			vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
-			vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
-			vislib::TString minGradColor,
-			vislib::TString midGradColor,
-			vislib::TString maxGradColor,
-			bool forceRecompute = false,
-            const protein_calls::BindingSiteCall *bs = 0,
-            const protein_calls::PerAtomFloatCall *pa = 0);
+        static void MakeComparisonColorTable(const megamol::protein_calls::MolecularDataCall* mol1,
+            const megamol::protein_calls::MolecularDataCall* mol2, ColoringMode currentColoringMode,
+            vislib::Array<float>& atomColorTable, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
+            vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
+            vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute = false,
+            const protein_calls::BindingSiteCall* bs = 0, const protein_calls::PerAtomFloatCall* pa = 0);
 
-         /**
+        /**
          * Creates a rainbow color table with 'num' entries.
          *
          * @param num            The number of color entries.
          * @param rainbowColors  The rainbow color lookup table.
          */
-        static void MakeRainbowColorTable( unsigned int num,
-            vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors);
+        static void MakeRainbowColorTable(
+            unsigned int num, vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors);
 
         /**
          * Read color table from file.
@@ -257,19 +234,28 @@ namespace protein {
          * @param filename          The filename of the color table file.
          * @param colorLookupTable  The color lookup table.
          */
-        static void ReadColorTableFromFile( vislib::StringA filename,
-            vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable);
+        static void ReadColorTableFromFile(
+            std::string filename, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable);
 
-		/**
-		 * Lookup table for the hydrophobicity of an amnio acid by residue name.
-		 *
-		 * @param resName The name of the residue as 3-letter code
-		 * @return The hydrophobicity.
-		 */
-		static float GetHydrophibicityByResName(vislib::StringA resName);
+        /**
+         * Read color table from file.
+         *
+         * @param filename          The filename of the color table file.
+         * @param colorLookupTable  The color lookup table.
+         */
+        static void ReadColorTableFromFile(
+            std::filesystem::path filename, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable);
+
+        /**
+         * Lookup table for the hydrophobicity of an amnio acid by residue name.
+         *
+         * @param resName The name of the residue as 3-letter code
+         * @return The hydrophobicity.
+         */
+        static float GetHydrophibicityByResName(std::string resName);
     };
 
 } /* end namespace protein */
-} /* end namespace megaMol */
+} // namespace megamol
 
 #endif /* MMPROTEINPLUGIN_COLOR_H_INCLUDED */
