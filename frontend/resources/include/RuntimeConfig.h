@@ -64,6 +64,7 @@ struct RuntimeConfig {
     bool gui_show = true;
     float gui_scale = 1.0f;
     bool screenshot_show_privacy_note = true;
+    bool show_version_note = true;
 
     bool remote_headnode                        = false;
     bool remote_rendernode                      = false;

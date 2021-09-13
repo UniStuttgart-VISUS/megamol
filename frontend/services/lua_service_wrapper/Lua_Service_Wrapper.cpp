@@ -22,12 +22,18 @@
 
 
 // local logging wrapper for your convenience until central MegaMol logger established
+#include "GUIRegisterWindow.h"
+#include "mmcore/versioninfo.h"
 #include "mmcore/utility/log/Log.h"
 static void log(const char* text) {
     const std::string msg = "Lua_Service_Wrapper: " + std::string(text) + "\n";
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 static void log(std::string text) { log(text.c_str()); }
+
+static std::shared_ptr<bool> open_version_notification = std::make_shared<bool>(true);
+static const std::string version_mismatch_title = "Warning: MegaMol version does not match version in project!";
+static const std::string version_mismatch_notification = "Version Check";
 
 namespace {
     // used to abort a service callback if we are already inside a service wrapper callback
@@ -51,6 +57,7 @@ Lua_Service_Wrapper::Lua_Service_Wrapper() {
 
 Lua_Service_Wrapper::~Lua_Service_Wrapper() {
     // clean up raw pointers you allocated with new, which is bad practice and nobody does
+    open_version_notification.reset();
 }
 
 bool Lua_Service_Wrapper::init(void* configPtr) {
@@ -103,8 +110,13 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "MegaMolGraph", // LuaAPI manipulates graph
         "RenderNextFrame", // LuaAPI can render one frame
         "GlobalValueStore", // LuaAPI can read and set global values
-        frontend_resources::CommandRegistry_Req_Name
+        frontend_resources::CommandRegistry_Req_Name,
+        "GUIRegisterWindow",
+        "RuntimeConfig"
+
     }; //= {"ZMQ_Context"};
+
+    *open_version_notification = config.show_version_notification;
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
         new megamol::frontend_resources::LuaRemoteConnectionsBroker{},
@@ -147,6 +159,9 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     fill_graph_manipulation_callbacks(&frontend_resource_callbacks);
 
     luaAPI.AddCallbacks(frontend_resource_callbacks);
+
+    auto &gui_window_request_resource = resources[9].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+    gui_window_request_resource.register_notification(version_mismatch_title, std::weak_ptr<bool>(open_version_notification), version_mismatch_notification);
 }
 
 // -------- main loop callbacks ---------
@@ -219,6 +234,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
     using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
     using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
+    using BoolResult = megamol::frontend_resources::LuaCallbacksCollection::BoolResult;
 
     auto& callbacks = *reinterpret_cast<LuaCallbacksCollection*>(callbacks_collection_ptr);
 
@@ -421,6 +437,14 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
             std::string output;
             std::for_each(l.begin(), l.end(), [&](const frontend_resources::Command& c) {output = output + c.name + ", " + c.key.ToString() + "\n"; });
             return StringResult{output};
+        }});
+
+    callbacks.add<BoolResult, std::string>(
+        "mmCheckVersion",
+        "(string version)\n\tChecks whether the running MegaMol corresponds to version.",
+        {[&](std::string version) -> BoolResult {
+            bool version_ok = version == MEGAMOL_CORE_COMP_REV;
+            return BoolResult(version_ok);
         }});
 
     // mmLoadProject ?
