@@ -79,7 +79,7 @@ bool megamol::gui::HotkeyEditor::Draw() {
                             ImGui::CloseCurrentPopup();
                         };
 
-                        ImGui::TextUnformatted("Press new hotkey to overwrite existing on... \n[Press ESC to abort]");
+                        ImGui::TextUnformatted("Press new hotkey to overwrite existing one... \n[Press ESC to abort]");
                         if (this->pending_hotkey_assignment == 0) {
                             // First: Wait for first user key press
                             if (is_any_key_pressed()) {
@@ -105,9 +105,20 @@ bool megamol::gui::HotkeyEditor::Draw() {
                             }
                         } else if (this->pending_hotkey_assignment == 2) {
                             // Third: Ask for new hotkey assignment
-                            ImGui::Text("New hotkey: %s", this->pending_hotkey.ToString().c_str());
+                            const auto oldc = this->command_registry_ptr->get_command(this->pending_hotkey);
+                            if (oldc.key.key != frontend_resources::Key::KEY_UNKNOWN) {
+                                ImGui::Text("Re-assign existing hotkey: %s - currently assigned to %s",
+                                    this->pending_hotkey.ToString().c_str(), oldc.name.c_str());
+                            } else {
+                                ImGui::Text("New hotkey: %s", this->pending_hotkey.ToString().c_str());
+                            }
                             if (ImGui::Button("Confirm")) {
-                                this->command_registry_ptr->update_hotkey(cmd.name, this->pending_hotkey);
+                                if (oldc.key.key == frontend_resources::Key::KEY_UNKNOWN) {
+                                    this->command_registry_ptr->update_hotkey(cmd.name, this->pending_hotkey);
+                                } else {
+                                    this->command_registry_ptr->remove_hotkey(this->pending_hotkey);
+                                    this->command_registry_ptr->update_hotkey(cmd.name, this->pending_hotkey);
+                                }
                                 close_popup();
                             }
                             ImGui::SameLine();

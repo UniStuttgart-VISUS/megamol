@@ -264,8 +264,20 @@ bool megamol::frontend_resources::CommandRegistry::update_hotkey(const std::stri
             key_to_command.erase(old_key);
         }
         c.key = key;
-        key_to_command[key] = command_index[command_name];
-        add_color_to_layer(c);
+        if (key.key != Key::KEY_UNKNOWN) {
+            key_to_command[key] = command_index[command_name];
+            add_color_to_layer(c);
+        }
+        modifiers_changed(current_modifiers);
+        return true;
+    }
+    return false;
+}
+
+bool megamol::frontend_resources::CommandRegistry::remove_hotkey(KeyCode key) {
+    auto it = key_to_command.find(key);
+    if (it != key_to_command.end()) {
+        update_hotkey(commands[it->second].name, Key::KEY_UNKNOWN);
         return true;
     }
     return false;

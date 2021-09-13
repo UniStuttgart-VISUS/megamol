@@ -78,6 +78,7 @@ public:
     void remove_command_by_name(const std::string& command_name);
 
     bool update_hotkey(const std::string& command_name, KeyCode key);
+    bool remove_hotkey(KeyCode key);
 
     void modifiers_changed(Modifiers mod);
 
