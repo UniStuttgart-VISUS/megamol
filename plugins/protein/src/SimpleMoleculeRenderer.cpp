@@ -2354,7 +2354,8 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
     // Recompute color table
     if ((this->coloringModeParam0.IsDirty()) || (this->coloringModeParam1.IsDirty()) ||
         (this->cmWeightParam.IsDirty()) || (this->useNeighborColors.IsDirty()) || lastDataHash != mol->DataHash() ||
-        updatedColorTable) {
+        updatedColorTable || this->minGradColorParam.IsDirty() || this->midGradColorParam.IsDirty() ||
+        this->maxGradColorParam.IsDirty() || this->specialColorParam.IsDirty()) {
 
         lastDataHash = mol->DataHash();
 
@@ -2388,6 +2389,10 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
         this->coloringModeParam1.ResetDirty();
         this->cmWeightParam.ResetDirty();
         this->useNeighborColors.ResetDirty();
+        this->minGradColorParam.ResetDirty();
+        this->midGradColorParam.ResetDirty();
+        this->maxGradColorParam.ResetDirty();
+        this->specialColorParam.ResetDirty();
     }
     // rendering mode param
     if (this->renderModeParam.IsDirty()) {
