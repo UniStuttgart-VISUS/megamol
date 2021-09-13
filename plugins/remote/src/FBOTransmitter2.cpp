@@ -68,7 +68,7 @@ megamol::remote::FBOTransmitter2::FBOTransmitter2()
     this->MakeSlotAvailable(&commSelectSlot_);
     this->view_name_slot_ << new megamol::core::param::StringParam{"::inst::view"};
     this->MakeSlotAvailable(&this->view_name_slot_);
-    this->trigger_button_slot_ << new megamol::core::param::ButtonParam{
+    this->trigger_button_slot_ << new megamol::core::param::ButtonParam{"TransmitFBO", 
         core::view::Key::KEY_T, core::view::Modifier::ALT};
     this->trigger_button_slot_.SetUpdateCallback(&FBOTransmitter2::triggerButtonClicked);
     this->MakeSlotAvailable(&this->trigger_button_slot_);
@@ -85,7 +85,7 @@ megamol::remote::FBOTransmitter2::FBOTransmitter2()
     this->render_comp_img_slot_.SetUpdateCallback(&FBOTransmitter2::renderCompChanged);
     this->MakeSlotAvailable(&render_comp_img_slot_);
 #endif // WITH_MPI
-    reconnect_slot_ << new megamol::core::param::ButtonParam{};
+    reconnect_slot_ << new megamol::core::param::ButtonParam{"ReconnectTransmitter"};
     reconnect_slot_.SetUpdateCallback(&FBOTransmitter2::reconnectCallback);
     this->MakeSlotAvailable(&reconnect_slot_);
 

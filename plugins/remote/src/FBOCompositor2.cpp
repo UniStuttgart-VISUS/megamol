@@ -64,7 +64,7 @@ megamol::remote::FBOCompositor2::FBOCompositor2()
     this->MakeSlotAvailable(&targetBandwidthSlot_);
     numRendernodesSlot_ << new megamol::core::param::IntParam(1, 1, std::numeric_limits<int>::max());
     this->MakeSlotAvailable(&numRendernodesSlot_);
-    startSlot_ << new megamol::core::param::ButtonParam(core::view::Key::KEY_F10);
+    startSlot_ << new megamol::core::param::ButtonParam("StartCompositor", core::view::Key::KEY_F10);
     startSlot_.SetUpdateCallback(&FBOCompositor2::startCallback);
     this->MakeSlotAvailable(&startSlot_);
 
