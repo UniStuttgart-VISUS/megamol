@@ -299,6 +299,7 @@ namespace gui {
         HoverToolTip gui_tooltip;
         ImageWidget gui_image_widget;
         ParameterOrbitalWidget gui_rotation_widget;
+        std::string gui_popup_msg;
 
         size_t tf_string_hash;
         std::shared_ptr<megamol::gui::TransferFunctionEditor> tf_editor_external_ptr;

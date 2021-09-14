@@ -57,6 +57,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , gui_tooltip()
         , gui_image_widget()
         , gui_rotation_widget()
+        , gui_popup_msg()
         , tf_string_hash(0)
         , tf_editor_external_ptr(nullptr)
         , tf_editor_inplace(std::string("inplace_tfeditor_parameter_" + std::to_string(uid)), false)
@@ -1546,6 +1547,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
 
         ImGui::PushItemWidth(widget_width);
 
+        auto last_val = val;
         auto file_flags = store.first;
         auto file_extensions = store.second;
         bool button_edit = this->gui_file_browser.Button_Select(
@@ -1554,6 +1556,39 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
             val = std::filesystem::u8path(std::get<std::string>(this->gui_widget_store));
+            try {
+                if (last_val != val) {
+                    auto error_flags = FilePathParam::ValidatePath(val, file_extensions, file_flags);
+                    if (error_flags & FilePathParam::FilePathParam::Flag_File) {
+                        this->gui_popup_msg = "[FilePathParam] Omitting value '" + val.generic_u8string() +
+                                              "'. Expected file but directory is given.";
+                    }
+                    if (error_flags & FilePathParam::Flag_Directory) {
+                        this->gui_popup_msg = "[FilePathParam] Omitting value '" + val.generic_u8string() +
+                                              "'. Expected directory but file is given.";
+                    }
+                    if (error_flags & FilePathParam::Flag_NoExistenceCheck) {
+                        this->gui_popup_msg =
+                            "[FilePathParam] Omitting value '" + val.generic_u8string() + "'. File does not exist.";
+                    }
+                    if (error_flags & FilePathParam::Flag_RestrictExtension) {
+                        std::string log_exts;
+                        for (auto& ext : file_extensions) {
+                            log_exts += "'." + ext + "' ";
+                        }
+                        this->gui_popup_msg = "[FilePathParam] Omitting value '" + val.generic_u8string() +
+                                              "'. File does not have required extension: " + log_exts;
+                    }
+                    if (error_flags != 0) {
+                        val = last_val;
+                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(this->gui_popup_msg.c_str());
+                        ImGui::OpenPopup("FilePathParam");
+                    }
+                }
+            } catch (std::filesystem::filesystem_error& e) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            }
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->gui_widget_store = val.generic_u8string();
@@ -1563,6 +1598,20 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
 
         this->gui_tooltip_text += "\n" + std::get<std::string>(this->gui_widget_store);
     }
+
+    auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
+    if (ImGui::BeginPopupModal("FilePathParam", nullptr, popup_flags)) {
+        ImGui::TextUnformatted(this->gui_popup_msg.c_str());
+        bool close = false;
+        if (ImGui::Button("Ok")) {
+            close = true;
+        }
+        if (close || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
     return retval;
 }
 

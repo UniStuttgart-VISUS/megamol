@@ -128,11 +128,6 @@ namespace param {
         }
 
         /**
-         * Register static notifications.
-         */
-        void RegisterNotifications(const RegisterNotificationCallback_t& pc) override;
-
-        /**
          * Function checks if path is valid for given flags
          *
          * @return Return 0 for success, flags with failed check otherwise.

@@ -163,27 +163,6 @@ public:
     */
     static std::string GetTypeName(AbstractParamPresentation::ParamType type);
 
-
-    /**
-     * Register GUI notification pop-ups.
-     */
-
-    // Value semantics: 1) pop-up id string, 2) Pointer to 'open pop-up' flag, 3) message, 4) pointer to currently
-    // omitted parameter value as string held by pop-up caller
-    typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&, std::weak_ptr<std::string>)>
-        RegisterNotificationCallback_t;
-
-    // Check if registration is required
-    inline bool NotificationsRegistered() const {
-        return this->registered_notifications;
-    }
-
-    /// Overwrite for specific parameter implementation if required
-    virtual void RegisterNotifications(const RegisterNotificationCallback_t& pc) {
-        /// Default: No callbacks to register
-        this->registered_notifications = true;
-    };
-
     /**
      * De-/Serialization of parameters GUi state.
      */
@@ -195,13 +174,6 @@ protected:
     AbstractParamPresentation(void);
 
     virtual ~AbstractParamPresentation(void) = default;
-
-    /** Indicates whether notifications are already registered or not (should be done only once) */
-    bool registered_notifications;
-
-    /** Flags for opening specific notifications */
-    /// ID, open pop-up flag, pointer to message string
-    std::map<uint32_t, std::tuple<std::shared_ptr<bool>, std::shared_ptr<std::string>>> notification;
 
 private:
 
