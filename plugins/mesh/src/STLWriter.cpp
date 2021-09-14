@@ -38,7 +38,7 @@ namespace mesh {
         this->MakeSlotAvailable(&this->mesh_lhs_slot);
 
         // Initialize parameter slots
-        this->filename << new core::param::FilePathParam("mesh.stl", core::param::FilePathParam::FLAG_TOBECREATED);
+        this->filename << new core::param::FilePathParam("mesh.stl", core::param::FilePathParam::Flag_File_ToBeCreated);
         this->MakeSlotAvailable(&this->filename);
 
         this->filetype << new core::param::EnumParam(0);
@@ -82,7 +82,7 @@ namespace mesh {
                 if (this->triggered) {
                     this->triggered = false;
 
-                    return write(this->filename.Param<core::param::FilePathParam>()->Value().PeekBuffer(),
+                    return write(this->filename.Param<core::param::FilePathParam>()->Value().string(),
                         *tmc.get_vertices().get(), *tmc.get_normals().get(), *tmc.get_indices().get());
                 }
 

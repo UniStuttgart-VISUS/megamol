@@ -225,9 +225,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    const auto module_name = vislib::StringA(request.id.c_str());
-
-    Module::ptr_type module_ptr = Module::ptr_type(module_description->CreateModule(module_name));
+    Module::ptr_type module_ptr = module_description->CreateModule(request.id);
     if (!module_ptr) {
         log_error("error. could not instantiate module from module description: " + request.className);
         return false;
@@ -669,9 +667,9 @@ megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenienc
 void megamol::core::MegaMolGraph::Clear() {
     // currently entry points are expected to be graph modules, i.e. views
     // therefore it is ok for us to clear all entry points if the graph shuts down
+    call_list_.clear();
     m_image_presentation->clear_entry_points();
     graph_entry_points.clear();
-    call_list_.clear();
     module_list_.clear();
 }
 

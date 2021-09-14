@@ -101,7 +101,7 @@ CinematicView::CinematicView(void)
     this->delayFirstRenderFrameParam.SetParameter(new param::FloatParam(1.0f));
     this->MakeSlotAvailable(&this->delayFirstRenderFrameParam);
 
-    this->frameFolderParam.SetParameter(new param::FilePathParam(""));
+    this->frameFolderParam.SetParameter(new param::FilePathParam("", param::FilePathParam::Flag_Directory_ToBeCreated));
     this->MakeSlotAvailable(&this->frameFolderParam);
 
     this->addSBSideToNameParam << new param::BoolParam(false);
@@ -481,10 +481,10 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     float left = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
     float bottom = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;
     float up = (vp_fh_reduced - static_cast<float>(texHeight)) / 2.0f;
-    glm::vec3 pos_bottom_left = {left, bottom, 0.0f};
-    glm::vec3 pos_upper_left = {left, up, 0.0f};
-    glm::vec3 pos_upper_right = {right, up, 0.0f};
-    glm::vec3 pos_bottom_right = {right, bottom, 0.0f};
+    glm::vec3 pos_bottom_left = {left, bottom, 1.0f};
+    glm::vec3 pos_upper_left = {left, up, 1.0f};
+    glm::vec3 pos_upper_right = {right, up, 1.0f};
+    glm::vec3 pos_bottom_right = {right, bottom, 1.0f};
     this->utils.Push2DColorTexture(this->_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left,
         pos_upper_right, pos_bottom_right, true, glm::vec4(0.0f), true);
     
@@ -564,7 +564,8 @@ bool CinematicView::render_to_file_setup() {
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
     frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%02ifps", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday,
         now->tm_hour, now->tm_min, now->tm_sec, this->fps);
-    this->png_data.path = static_cast<vislib::StringA>(this->frameFolderParam.Param<param::FilePathParam>()->Value());
+    this->png_data.path = static_cast<vislib::StringA>(
+        this->frameFolderParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
     if (this->png_data.path.IsEmpty()) {
         this->png_data.path = vislib::sys::Path::Concatenate(vislib::sys::Path::GetCurrentDirectoryA(), frameFolder);
     }

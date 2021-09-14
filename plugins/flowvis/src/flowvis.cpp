@@ -1,47 +1,32 @@
 /*
  * flowvis.cpp
- * Copyright (C) 2018-2019 by MegaMol Team
+ * Copyright (C) 2018-2021 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
 #include "ExtractPores.h"
 
 namespace megamol::flowvis {
 /** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class FlowvisPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(FlowvisPluginInstance)
+
 public:
-    /** ctor */
-    plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
+    FlowvisPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("flowvis", "Plugin for flow visualization."){};
 
-              /* machine-readable plugin assembly name */
-              "flowvis",
+    ~FlowvisPluginInstance() override = default;
 
-              /* human-readable plugin description */
-              "Plugin for flow visualization."){
+    // Registers modules and calls
+    void registerClasses() override {
 
-              // here we could perform addition initialization
-          };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-
-        // register modules here:
+        // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::flowvis::ExtractPores>();
 
-        // register calls here:
+        // register calls
         
     }
 };

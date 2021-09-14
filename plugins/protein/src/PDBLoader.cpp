@@ -838,14 +838,16 @@ bool PDBLoader::getData( core::Call& call) {
 
 	if (this->capFilenameSlot.IsDirty()) {
 		this->capFilenameSlot.ResetDirty();
-		this->loadFileCap(this->capFilenameSlot.Param<core::param::FilePathParam>()->Value());
+            this->loadFileCap(
+                this->capFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
 	}
 
     if ( this->pdbFilenameSlot.IsDirty() || this->solventResidues.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
         this->solventResidues.ResetDirty();
-        this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
-        this->pdbfilename = T2A(this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
+        this->loadFile(this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+        this->pdbfilename =
+            this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
     }
 
     dc->SetDataHash( this->datahash);
@@ -996,14 +998,16 @@ bool PDBLoader::getExtent( core::Call& call) {
 
 	if (this->capFilenameSlot.IsDirty()) {
 		this->capFilenameSlot.ResetDirty();
-		this->loadFileCap(this->capFilenameSlot.Param<core::param::FilePathParam>()->Value());
+            this->loadFileCap(
+                this->capFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
 	}
 
     if ( this->pdbFilenameSlot.IsDirty() || this->solventResidues.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
         this->solventResidues.ResetDirty();
-        this->loadFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
-        this->pdbfilename = this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value();
+        this->loadFile(this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+        this->pdbfilename =
+            this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
     }
 
     dc->SetPDBFilename(this->pdbfilename);
@@ -1374,7 +1378,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
         // if no xtc-filename has been set
         if( this->xtcFilenameSlot.
-          Param<core::param::FilePathParam>()->Value().IsEmpty() ) {
+          Param<core::param::FilePathParam>()->Value().empty() ) {
             // parsed first frame - load all other frames now
             atomCnt = 0;
             while( lineCnt < file.Count() ) {

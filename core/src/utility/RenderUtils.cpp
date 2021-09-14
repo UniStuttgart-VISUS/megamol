@@ -11,7 +11,8 @@ namespace megamol::core::utility {
 
 // STATIC functions -------------------------------------------------------
 
-bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename, GLint tex_min_filter, GLint tex_max_filter) {
+bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr,
+    const std::filesystem::path& filename, GLint tex_min_filter, GLint tex_max_filter) {
 
     if (filename.empty())
         return false;
@@ -155,14 +156,6 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
     }
     this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocations(location_name_pairs);
 
-    if (!this->createShader(this->shaders[Primitives::DEPTH_TEXTURE], shader_factory,
-            "primitives::depth_texture::vertex", "primitives::depth_texture::fragment")) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to create depth texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocations(location_name_pairs);
-
     // Create buffers
     this->buffers[Buffers::POSITION] =
         std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
@@ -204,7 +197,7 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
 }
 
 
-bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename, bool reload) {
+bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::filesystem::path& filename, bool reload) {
 
     if (reload) {
         auto texture_iter = std::find_if(this->textures.begin(), this->textures.end(), [&out_texture_id](std::shared_ptr<glowl::Texture2D> tex_ptr) {
@@ -327,25 +320,6 @@ void RenderUtils::Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bot
 }
 
 
-void RenderUtils::Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left,
-    const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y,
-    const glm::vec4& color) {
-
-    glm::vec3 pbl = pos_bottom_left;
-    glm::vec3 pul = pos_upper_left;
-    glm::vec3 pur = pos_upper_right;
-    glm::vec3 pbr = pos_bottom_right;
-    if (flip_y) {
-        pbl.y = pos_upper_left.y;
-        pul.y = pos_bottom_left.y;
-        pur.y = pos_bottom_right.y;
-        pbr.y = pos_upper_right.y;
-    }
-    glm::vec4 attributes = {0.0f, 0.0f, 0.0f, 0.0f};
-    this->pushQuad(RenderUtils::Primitives::DEPTH_TEXTURE, texture_id, pbl, pul, pur, pbr, color, attributes);
-}
-
-
 unsigned int RenderUtils::GetTextureWidth(GLuint texture_id) const {
 
     unsigned int texture_width = 0;
@@ -395,9 +369,6 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, const glm::m
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
-    if (primitive == Primitives::COLOR_TEXTURE) {
-        glDisable(GL_DEPTH_TEST);
-    }
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glDisable(GL_CULL_FACE);
     // Smoothing
@@ -479,51 +450,6 @@ void RenderUtils::sortPrimitiveQueue(Primitives primitive) {
     default:
         break;
     }
-}
-
-
-size_t RenderUtils::loadRawFile(std::wstring filename, BYTE** outData) {
-
-    // Reset out data
-    *outData = nullptr;
-
-    vislib::StringW name = static_cast<vislib::StringW>(filename.c_str());
-    if (name.IsEmpty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            " Unable to load texture file. No name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return 0;
-    }
-    if (!vislib::sys::File::Exists(name)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load not existing file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
-            __LINE__);
-        return 0;
-    }
-
-    size_t size = static_cast<size_t>(vislib::sys::File::GetSize(name));
-    if (size < 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load empty file \"%s\". [%s, %s, line %d]\n",
-            filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
-        return 0;
-    }
-
-    vislib::sys::FastFile f;
-    if (!f.Open(name, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to open file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
-        return 0;
-    }
-
-    *outData = new BYTE[size];
-    size_t num = static_cast<size_t>(f.Read(*outData, size));
-    if (num != size) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to read whole file \"%s\". [%s, %s, line %d]\n",
-            filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
-        ARY_SAFE_DELETE(*outData);
-        return 0;
-    }
-
-    return num;
 }
 
 

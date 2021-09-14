@@ -143,7 +143,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->editCurrentApertureParam.SetParameter(new param::FloatParam(60.0f, 0.0f, 180.0f));
     this->MakeSlotAvailable(&this->editCurrentApertureParam);
 
-    this->fileNameParam.SetParameter(new param::FilePathParam(vislib::StringA(this->filename.c_str())));
+    this->fileNameParam.SetParameter(new param::FilePathParam(this->filename, param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->fileNameParam);
 
     this->saveKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::SHIFT));
@@ -521,7 +521,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->fileNameParam.IsDirty()) {
         this->fileNameParam.ResetDirty();
 
-        this->filename = std::string(this->fileNameParam.Param<param::FilePathParam>()->Value().PeekBuffer());
+        this->filename = this->fileNameParam.Param<param::FilePathParam>()->Value().generic_u8string();
     }
     // saveKeyframesParam -----------------------------------------------------
     if (this->saveKeyframesParam.IsDirty()) {
@@ -1195,12 +1195,12 @@ bool KeyframeKeeper::saveKeyframes() {
             std::setfill('0') << std::setw(2) << now->tm_min << 
             std::setfill('0') << std::setw(2) << now->tm_sec << ".kf";
         this->filename = stream.str();
-        this->fileNameParam.Param<param::FilePathParam>()->SetValue(vislib::StringA(this->filename.c_str()), false);
+        this->fileNameParam.Param<param::FilePathParam>()->SetValue(this->filename, false);
     } 
 
     try {
         std::ofstream outfile;
-        outfile.open(this->filename.c_str(), std::ios::binary);
+        outfile.open(this->filename, std::ios::binary);
         if (!outfile.good()) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to create keyframe file.");
             return false;

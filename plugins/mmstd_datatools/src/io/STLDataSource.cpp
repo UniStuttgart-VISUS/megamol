@@ -102,11 +102,10 @@ bool STLDataSource::get_input() {
         this->index_buffer = std::make_shared<std::vector<unsigned int>>();
 
         // Read data
-        const auto& vislib_filename = this->filename_slot.Param<core::param::FilePathParam>()->Value();
-        const std::string filename(vislib_filename.PeekBuffer());
+        const auto& filename = this->filename_slot.Param<core::param::FilePathParam>()->Value();
 
         try {
-            read(filename);
+            read(filename.string());
         } catch (const std::runtime_error& ex) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Request for extent failed: %s. [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);

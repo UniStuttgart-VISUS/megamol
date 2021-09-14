@@ -1,32 +1,27 @@
-/*
- * ng_mesh.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
 //#include "mesh/CallmeshRenderBatches.h"
 //#include "meshDebugDataSource.h"
+#include "3DUIRenderTaskDataSource.h"
 #include "GPUMeshes.h"
+#include "MeshBakery.h"
+#include "MeshViewerRenderTasks.h"
+#include "ObjWriter.h"
 #include "Render3DUI.h"
 #include "RenderMDIMesh.h"
+#include "SimpleGPUMtlDataSource.h"
 #include "UIElement.h"
 #include "WavefrontObjLoader.h"
 #include "gltf/glTFFileLoader.h"
 #include "gltf/glTFRenderTasksDataSource.h"
-#include "3DUIRenderTaskDataSource.h"
 #include "mesh/MeshCalls.h"
-#include "SimpleGPUMtlDataSource.h"
-#include "MeshViewerRenderTasks.h"
-#include "MeshBakery.h"
-#include "ObjWriter.h"
 #include "mesh/MeshDataCall.h"
 #include "mesh/TriangleMeshCall.h"
 #include "TriangleMeshRenderer2D.h"
@@ -36,30 +31,19 @@
 #include "SimplifyMesh.h"
 
 namespace megamol::mesh {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class MeshPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(MeshPluginInstance)
+
 public:
-    /** ctor */
-    plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
+    MeshPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("mesh", "Plugin for rendering meshes."){};
 
-              /* machine-readable plugin assembly name */
-              "ng_mesh",
+    ~MeshPluginInstance() override = default;
 
-              /* human-readable plugin description */
-              "Plugin for rendering meshes."){
+    // Registers modules and calls
+    void registerClasses() override {
 
-              // here we could perform addition initialization
-          };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-
-        // register modules here:
+        // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::RenderMDIMesh>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFFileLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFRenderTasksDataSource>();
@@ -79,15 +63,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::ThreeDimensionalUIRenderTaskDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::UIElement>();
 
-        //
-        // TODO: Register your plugin's modules here
-        // like:
-        //   this->module_descriptions.RegisterAutoDescription<megamol::ng_mesh::MyModule1>();
-        //   this->module_descriptions.RegisterAutoDescription<megamol::ng_mesh::MyModule2>();
-        //   ...
-        //
-
-        // register calls here:
+        // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::Call3DInteraction>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGlTFData>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPUMeshData>();
@@ -97,14 +73,6 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallImage>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::MeshDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::TriangleMeshCall>();
-
-        //
-        // TODO: Register your plugin's calls here
-        // like:
-        //   this->call_descriptions.RegisterAutoDescription<megamol::ng_mesh::MyCall1>();
-        //   this->call_descriptions.RegisterAutoDescription<megamol::ng_mesh::MyCall2>();
-        //   ...
-        //
     }
 };
 } // namespace megamol::mesh

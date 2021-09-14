@@ -109,6 +109,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(mmpld_io
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mmpld_io.git
+      GIT_TAG 0002c64e0be4dddc137e4fe37db4b96361bc79bd
       INCLUDE_DIR "include")
 
   # nanoflann
@@ -140,6 +141,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(sim_sort
       GIT_REPOSITORY https://github.com/alexstraub1990/simultaneous-sort.git
+      GIT_TAG 220fdf37fec2d9d3e3f7674194544ee70eb93ee7 # master on 2021-07-26, because nothing was specified here.
       INCLUDE_DIR "include")
 
   # Built libraries #####################################################
@@ -377,6 +379,7 @@ function(require_external NAME)
 
     add_external_project(IceT STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
+      GIT_TAG abf5bf2b92c0531170c8db2621b375065c7da7c4 # master on 2021-07-26, because nothing was specified here.
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
@@ -402,7 +405,7 @@ function(require_external NAME)
     endif()
 
     require_external(glfw)
-    external_get_property(glfw INSTALL_DIR)
+    external_get_property(glfw INSTALL_DIR)    
 
     if(WIN32)
       set(IMGUI_LIB "lib/imgui.lib")
@@ -621,6 +624,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(obj-io INTERFACE
       GIT_REPOSITORY https://github.com/thinks/obj-io.git
+      GIT_TAG bfe835200fdff49b45a6de4561741203f85ad028 # master on 2021-07-26, because nothing was specified here.
       INCLUDE_DIR "include/thinks")
 
   # qhull
@@ -661,6 +665,7 @@ function(require_external NAME)
 
     add_external_project(quickhull STATIC
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
+      GIT_TAG 4f65e0801b8f60c9a97da2dadbe63c2b46397694 # master on 2021-07-26, because nothing was specified here.
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/quickhull/CMakeLists.txt"
