@@ -12,6 +12,7 @@
 #include <sstream> // stringstream
 #include <algorithm>
 #include <vector>
+#include <ostream>
 
 namespace megamol {
 namespace frontend_resources {
@@ -207,9 +208,9 @@ public:
         const bool s = this->test(frontend_resources::Modifier::SHIFT);
         const bool c = this->test(frontend_resources::Modifier::CTRL);
         const bool a = this->test(frontend_resources::Modifier::ALT);
-        if (s) range.push_back("SHIFT");
-        if (c) range.push_back("CTRL");
-        if (a) range.push_back("ALT");
+        if (s) range.emplace_back("SHIFT");
+        if (c) range.emplace_back("CTRL");
+        if (a) range.emplace_back("ALT");
         std::ostringstream out;
         auto b = range.begin();
         auto e = range.end();
