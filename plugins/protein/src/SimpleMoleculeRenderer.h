@@ -262,8 +262,6 @@ namespace protein {
         /** Toggle offscreen rendering */
         megamol::core::param::ParamSlot offscreenRenderingParam;
         /** Toggle the use of geometry shaders for glyph raycasting */
-        megamol::core::param::ParamSlot toggleGeomShaderParam;
-        /** Toggle the use of geometry shaders for glyph raycasting */
         megamol::core::param::ParamSlot toggleZClippingParam;
         /**  */
         megamol::core::param::ParamSlot clipPlaneTimeOffsetParam;
@@ -276,13 +274,10 @@ namespace protein {
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
         vislib::graphics::gl::GLSLShader sphereShaderOR;
-        vislib::graphics::gl::GLSLGeometryShader sphereShaderGeom;
-        vislib::graphics::gl::GLSLGeometryShader sphereShaderGeomOR;
         vislib::graphics::gl::GLSLShader sphereClipPlaneShader;
         /** shader for the cylinders (raycasting view) */
         vislib::graphics::gl::GLSLShader cylinderShader;
         vislib::graphics::gl::GLSLShader cylinderShaderOR;
-        vislib::graphics::gl::GLSLGeometryShader cylinderShaderGeom; // (uses geometry shader)
         vislib::graphics::gl::GLSLShader cylinderClipPlaneShader;
         /** Shader that uses filter information */
         vislib::graphics::gl::GLSLShader filterSphereShader;
