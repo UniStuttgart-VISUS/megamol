@@ -65,6 +65,7 @@ inline void from_json(const nlohmann::json& j, Command& c) {
     j.at("mods").get_to(m);
     c.key.mods.fromInt(m);
     j.at("parent_type").get_to(c.parent_type);
+    j.at("parent").get_to(c.parent);
 }
 
 
