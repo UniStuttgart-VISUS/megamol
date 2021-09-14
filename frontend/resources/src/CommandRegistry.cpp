@@ -284,6 +284,9 @@ bool megamol::frontend_resources::CommandRegistry::update_hotkey(const std::stri
         }
         c.key = key;
         if (key.key != Key::KEY_UNKNOWN) {
+            // important! deserialization might result in different "stealing" order of duplicate hotkeys
+            // these will be fixed by subsequent hotkey updates, but might result in temporary duplication during deserialization
+            remove_hotkey(key);
             key_to_command[key] = command_index[command_name];
             add_color_to_layer(c);
         }
@@ -371,8 +374,15 @@ void megamol::frontend_resources::CommandRegistry::add_color_to_layer(const mega
     }
     if (c.key.key != Key::KEY_UNKNOWN) {
         CorsairLedColor clc {corsair_led_from_glfw_key[c.key.key], 255, 0, 0};
-        key_colors[c.key.mods].push_back(clc);
+        auto& layer = key_colors[c.key.mods];
+        auto it = std::find_if(layer.begin(), layer.end(), [&](const CorsairLedColor& cled){return cled.ledId == clc.ledId;});
+        if (it == layer.end()) {
+            key_colors[c.key.mods].push_back(clc);
+        } else {
+            std::cout << "Warning: Corsair LEDs inconsistent: " << clc.ledId << " (from " << c.key.ToString() << ") already used" << std::endl;
+        }
     }
+    std::cout << "adding " << c.name << " with " << c.key.ToString() << std::endl;
 #endif
 }
 
