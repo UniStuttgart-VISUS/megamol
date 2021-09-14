@@ -161,7 +161,8 @@ std::string megamol::gui::Parameter::GetValueString() const {
         } else if constexpr (std::is_same_v<T, std::string>) {
             value_string = arg;
         } else if constexpr (std::is_same_v<T, std::filesystem::path>) {
-            auto parameter = megamol::core::param::FilePathParam(arg);
+            auto file_storage = this->GetStorage<FilePathStorage_t>();
+            auto parameter = megamol::core::param::FilePathParam(arg, file_storage.first, file_storage.second);
             value_string = std::string(parameter.ValueString().PeekBuffer());
         } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
             auto parameter = megamol::core::param::TernaryParam(arg);
