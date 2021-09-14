@@ -35,7 +35,9 @@ struct Command {
     std::string parent;
     enum class parent_type_c {
         PARENT_PARAM = 1,
-        PARENT_GUI = 2
+        PARENT_GUI_HOTKEY = 2,
+        PARENT_GUI_WINDOW = 3,
+        PARENT_GUI_WINDOW_HOTKEY = 4
     };
     parent_type_c parent_type = parent_type_c::PARENT_PARAM;
     std::function<void(const Command *self)> effect;

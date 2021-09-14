@@ -1,5 +1,5 @@
 /*
- * Input.h
+ * KeyboardMouseInput.h
  *
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.

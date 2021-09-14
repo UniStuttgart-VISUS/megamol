@@ -1867,63 +1867,7 @@ std::string GUIManager::extract_fontname(const std::string& imgui_fontname) cons
 
 void GUIManager::RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry) {
 
-    // Save local reference to cmd registry for hotkey editor window
     if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
-        win_hkeditor_ptr->SetData(&cmdregistry);
+        win_hkeditor_ptr->RegisterHotkeys(&cmdregistry, &this->win_collection, &this->gui_hotkeys);
     }
-
-    frontend_resources::Command hkcmd;
-    hkcmd.parent_type = megamol::frontend_resources::Command::parent_type_c::PARENT_GUI;
-    // GUI
-    for (auto& hotkey : this->gui_hotkeys) {
-        hkcmd.key = hotkey.second.keycode;
-        hkcmd.name = hotkey.second.name;
-        hkcmd.parent = std::string();
-        hkcmd.effect = [&](const frontend_resources::Command* self) {
-            for (auto& hotkey : this->gui_hotkeys) {
-                if (hotkey.second.name == self->name) {
-                    hotkey.second.is_pressed = !hotkey.second.is_pressed;
-                }
-            }
-        };
-        cmdregistry.add_command(hkcmd);
-    }
-    // Hotkeys of window(s)
-    const auto windows_func = [&](AbstractWindow& wc) {
-        // Check "Show/Hide Window"-Hotkey
-        hkcmd.key = wc.Config().hotkey;
-        hkcmd.name = std::string("_hotkey_gui_window_" + wc.Name());
-        hkcmd.parent = std::to_string(wc.Hash());
-        hkcmd.effect = [&](const frontend_resources::Command* self) {
-            std::stringstream sstream(self->parent);
-            size_t parent_hash = 0;
-            sstream >> parent_hash;
-            const auto wf = [&](AbstractWindow& wc) {
-                if (wc.Hash() == parent_hash) {
-                    wc.Config().show = !wc.Config().show;
-                }
-            };
-            this->win_collection.EnumWindows(wf);
-        };
-        cmdregistry.add_command(hkcmd);
-
-        // Check for additional hotkeys of window
-        for (auto& hotkey : wc.GetHotkeys()) {
-            hkcmd.key = hotkey.second.keycode;
-            hkcmd.name = hotkey.second.name;
-            hkcmd.parent = std::string();
-            hkcmd.effect = [&](const frontend_resources::Command* self) {
-                const auto wf = [&](AbstractWindow& wc) {
-                    for (auto& hotkey : wc.GetHotkeys()) {
-                        if (hotkey.second.name == self->name) {
-                            hotkey.second.is_pressed = !hotkey.second.is_pressed;
-                        }
-                    }
-                };
-                this->win_collection.EnumWindows(wf);
-            };
-            cmdregistry.add_command(hkcmd);
-        }
-    };
-    this->win_collection.EnumWindows(windows_func);
 }

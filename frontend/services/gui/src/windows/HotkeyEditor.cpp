@@ -13,11 +13,16 @@ using namespace megamol::gui;
 
 megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_HOTKEYEDITOR)
-        , command_registry_ptr(nullptr)
         , search_widget()
         , tooltip_widget()
         , pending_hotkey_assignment(0)
-        , pending_hotkey() {
+        , pending_hotkey()
+        , parent_gui_hotkey_lambda()
+        , parent_gui_window_lambda()
+        , parent_gui_window_hotkey_lambda()
+        , command_registry_ptr(nullptr)
+        , window_collection_ptr(nullptr)
+        , gui_hotkey_ptr(nullptr) {
 
     // Configure HOTKEY EDITOR Window
     this->win_config.size = ImVec2(0.0f * megamol::gui::gui_scaling.Get(), 0.0f * megamol::gui::gui_scaling.Get());
@@ -31,9 +36,80 @@ megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
 HotkeyEditor::~HotkeyEditor() {}
 
 
-void megamol::gui::HotkeyEditor::SetData(megamol::core::view::CommandRegistry* cmdregistry) {
+void megamol::gui::HotkeyEditor::RegisterHotkeys(megamol::core::view::CommandRegistry* cmdregistry,
+    megamol::gui::WindowCollection* wincollection, megamol::gui::HotkeyMap_t* guihotkeys) {
 
+    assert(cmdregistry != nullptr);
+    assert(wincollection != nullptr);
+    assert(guihotkeys != nullptr);
     this->command_registry_ptr = cmdregistry;
+    this->window_collection_ptr = wincollection;
+    this->gui_hotkey_ptr = guihotkeys;
+
+    this->parent_gui_hotkey_lambda = [&](const frontend_resources::Command* self) {
+        for (auto& hotkey : *this->gui_hotkey_ptr) {
+            if (hotkey.second.name == self->name) {
+                hotkey.second.is_pressed = !hotkey.second.is_pressed;
+            }
+        }
+    };
+
+    this->parent_gui_window_lambda = [&](const frontend_resources::Command* self) {
+        std::stringstream sstream(self->parent);
+        size_t parent_hash = 0;
+        sstream >> parent_hash;
+        const auto wf = [&](megamol::gui::AbstractWindow& wc) {
+            if (wc.Hash() == parent_hash) {
+                wc.Config().show = !wc.Config().show;
+            }
+        };
+        this->window_collection_ptr->EnumWindows(wf);
+    };
+
+    this->parent_gui_window_hotkey_lambda = [&](const frontend_resources::Command* self) {
+        const auto wf = [&](megamol::gui::AbstractWindow& wc) {
+            for (auto& hotkey : wc.GetHotkeys()) {
+                if (hotkey.second.name == self->name) {
+                    hotkey.second.is_pressed = !hotkey.second.is_pressed;
+                }
+            }
+        };
+        this->window_collection_ptr->EnumWindows(wf);
+    };
+
+
+    // Add new commands -------------------------------------------------------
+
+    // GUI
+    frontend_resources::Command hkcmd;
+    for (auto& hotkey : *this->gui_hotkey_ptr) {
+        hkcmd.parent_type = megamol::frontend_resources::Command::parent_type_c::PARENT_GUI_HOTKEY;
+        hkcmd.key = hotkey.second.keycode;
+        hkcmd.name = hotkey.second.name;
+        hkcmd.parent = std::string();
+        hkcmd.effect = this->parent_gui_hotkey_lambda;
+        cmdregistry->add_command(hkcmd);
+    }
+
+    // Hotkeys of window(s)
+    const auto windows_func = [&](AbstractWindow& wc) {
+        // Check "Show/Hide Window"-Hotkey
+        hkcmd.key = wc.Config().hotkey;
+        hkcmd.name = std::string("_hotkey_gui_window_" + wc.Name());
+        hkcmd.parent = std::to_string(wc.Hash());
+        hkcmd.effect = this->parent_gui_window_lambda;
+        cmdregistry->add_command(hkcmd);
+
+        // Check for additional hotkeys of window
+        for (auto& hotkey : wc.GetHotkeys()) {
+            hkcmd.key = hotkey.second.keycode;
+            hkcmd.name = hotkey.second.name;
+            hkcmd.parent = std::string();
+            hkcmd.effect = this->parent_gui_window_hotkey_lambda;
+            cmdregistry->add_command(hkcmd);
+        }
+    };
+    this->window_collection_ptr->EnumWindows(windows_func);
 }
 
 
@@ -88,7 +164,8 @@ bool megamol::gui::HotkeyEditor::Draw() {
                         } else if (this->pending_hotkey_assignment == 1) {
                             // Second: Collect all pressed keys
                             ImGuiIO& io = ImGui::GetIO();
-                            for (int i = 0; i < 337; i++) { // Exclude modifiers (total range of array is 512)
+                            for (int i = 0; i < 337; i++) { // Exclude modifiers (Total range of array is 512. See
+                                                            // KeysDown[512] in imgui.h) and see KeyboardMouseInput.h)
                                 if (io.KeysDown[i]) {
                                     this->pending_hotkey.key = static_cast<megamol::frontend_resources::Key>(i);
                                     this->pending_hotkey.mods = core::view::Modifier::NONE;
@@ -144,7 +221,7 @@ bool megamol::gui::HotkeyEditor::Draw() {
 }
 
 
-void HotkeyEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
+void megamol::gui::HotkeyEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
     if (this->command_registry_ptr != nullptr) {
         for (auto& header_item : in_json.items()) {
@@ -161,6 +238,20 @@ void HotkeyEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
                                                 megamol::frontend_resources::Command cmd;
                                                 megamol::frontend_resources::from_json(cmd_json.value(), cmd);
                                                 if (!this->command_registry_ptr->update_hotkey(cmd.name, cmd.key)) {
+                                                    switch (cmd.parent_type) {
+                                                    case (megamol::frontend_resources::Command::parent_type_c::
+                                                            PARENT_GUI_HOTKEY):
+                                                        cmd.effect = this->parent_gui_hotkey_lambda;
+                                                        break;
+                                                    case (megamol::frontend_resources::Command::parent_type_c::
+                                                            PARENT_GUI_WINDOW):
+                                                        cmd.effect = this->parent_gui_window_lambda;
+                                                        break;
+                                                    case (megamol::frontend_resources::Command::parent_type_c::
+                                                            PARENT_GUI_WINDOW_HOTKEY):
+                                                        cmd.effect = this->parent_gui_window_hotkey_lambda;
+                                                        break;
+                                                    }
                                                     this->command_registry_ptr->add_command(cmd);
                                                 }
                                             }
@@ -177,7 +268,7 @@ void HotkeyEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
 }
 
 
-void HotkeyEditor::SpecificStateToJSON(nlohmann::json& inout_json) {
+void megamol::gui::HotkeyEditor::SpecificStateToJSON(nlohmann::json& inout_json) {
 
     nlohmann::json cmdlist_json;
     if (this->command_registry_ptr != nullptr) {
@@ -191,7 +282,7 @@ void HotkeyEditor::SpecificStateToJSON(nlohmann::json& inout_json) {
 }
 
 
-bool HotkeyEditor::is_any_key_pressed() {
+bool megamol::gui::HotkeyEditor::is_any_key_pressed() {
 
     ImGuiIO& io = ImGui::GetIO();
     bool regular_key_pressed = false;
