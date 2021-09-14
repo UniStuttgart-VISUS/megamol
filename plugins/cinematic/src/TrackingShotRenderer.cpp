@@ -39,7 +39,7 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModuleGL()
     this->stepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
     this->MakeSlotAvailable(&this->stepsParam);
 
-    this->toggleHelpTextParam.SetParameter(new param::ButtonParam("toggleHelp", core::view::Key::KEY_H, core::view::Modifier::SHIFT));
+    this->toggleHelpTextParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
 
     for (auto& slot : this->manipulators.GetParams()) {

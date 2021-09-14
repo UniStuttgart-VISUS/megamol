@@ -31,11 +31,11 @@ megamol::stdplugin::datatools::DataFileSequenceStepper::DataFileSequenceStepper(
     this->filenameSlotNameSlot << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->filenameSlotNameSlot);
 
-    this->nextFileSlot << new core::param::ButtonParam("SeqNextFile", core::view::Key::KEY_N);
+    this->nextFileSlot << new core::param::ButtonParam(core::view::Key::KEY_N);
     this->nextFileSlot.SetUpdateCallback(&DataFileSequenceStepper::onNextFile);
     this->MakeSlotAvailable(&this->nextFileSlot);
 
-    this->prevFileSlot << new core::param::ButtonParam("SeqPrevFile", core::view::Key::KEY_B);
+    this->prevFileSlot << new core::param::ButtonParam(core::view::Key::KEY_B);
     this->prevFileSlot.SetUpdateCallback(&DataFileSequenceStepper::onPrevFile);
     this->MakeSlotAvailable(&this->prevFileSlot);
 }

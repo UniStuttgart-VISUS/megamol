@@ -27,10 +27,10 @@ datatools::ParticleInstantiator::ParticleInstantiator(void)
     this->instanceOffsetParam << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
     this->MakeSlotAvailable(&this->instanceOffsetParam);
 
-    this->setFromClipboxParam << new core::param::ButtonParam("SetOffsetFromClipBox");
+    this->setFromClipboxParam << new core::param::ButtonParam();
     this->MakeSlotAvailable(&this->setFromClipboxParam);
 
-    this->setFromBoundingboxParam << new core::param::ButtonParam("SetOffsetFromBBox");
+    this->setFromBoundingboxParam << new core::param::ButtonParam();
     this->MakeSlotAvailable(&this->setFromBoundingboxParam);
 
 }

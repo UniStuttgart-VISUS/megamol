@@ -40,7 +40,7 @@ megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpac
 
     this->MakeSlotAvailable(this->tfQuery.GetSlot());
 
-    this->rebuildButtonSlot.SetParameter(new core::param::ButtonParam("RebuildColorData"));
+    this->rebuildButtonSlot.SetParameter(new core::param::ButtonParam());
     this->MakeSlotAvailable(&this->rebuildButtonSlot);
 
     this->densityRadiusSlot.SetParameter(new core::param::FloatParam(10.0f, 0.0f));
@@ -52,7 +52,7 @@ megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpac
     this->densityMaxCountSlot.SetParameter(new core::param::IntParam(100, 0));
     this->MakeSlotAvailable(&this->densityMaxCountSlot);
 
-    this->densityComputeCountRangeSlot.SetParameter(new core::param::ButtonParam("ComputeDensityRange"));
+    this->densityComputeCountRangeSlot.SetParameter(new core::param::ButtonParam());
     this->MakeSlotAvailable(&this->densityComputeCountRangeSlot);
 
     this->opacityMinValSlot.SetParameter(new core::param::FloatParam(0.0f, 0.0f, 1.0f));

@@ -93,7 +93,7 @@ PDBWriter::PDBWriter () : AbstractJob(), Module(),
     this->MakeSlotAvailable(&this->outDirSlot);
 
 	// Parameter for the trigger button
-	this->triggerButtonSlot << new core::param::ButtonParam("WritePDB", core::view::Key::KEY_P);
+	this->triggerButtonSlot << new core::param::ButtonParam(core::view::Key::KEY_P);
 	this->triggerButtonSlot.SetUpdateCallback(&PDBWriter::buttonCallback);
 	this->MakeSlotAvailable(&this->triggerButtonSlot);
 

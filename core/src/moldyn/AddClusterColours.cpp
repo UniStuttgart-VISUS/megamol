@@ -72,7 +72,7 @@ moldyn::AddClusterColours::AddClusterColours(void) : Module(),
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->rebuildButtonSlot << new param::ButtonParam("RebuildColorData");
+    this->rebuildButtonSlot << new param::ButtonParam();
     this->MakeSlotAvailable(&this->rebuildButtonSlot);
 }
 
