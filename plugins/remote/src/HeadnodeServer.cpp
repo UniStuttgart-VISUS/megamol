@@ -42,7 +42,7 @@ megamol::remote::HeadnodeServer::HeadnodeServer()
     deploy_project_slot_ << new megamol::core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->deploy_project_slot_);
 
-    start_server_slot_ << new megamol::core::param::ButtonParam("StartServer", core::view::Key::KEY_F8);
+    start_server_slot_ << new megamol::core::param::ButtonParam(core::view::Key::KEY_F8);
     start_server_slot_.SetUpdateCallback(&HeadnodeServer::onStartServer);
     this->MakeSlotAvailable(&this->start_server_slot_);
 

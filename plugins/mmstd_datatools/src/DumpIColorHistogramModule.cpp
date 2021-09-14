@@ -18,7 +18,7 @@ stdplugin::datatools::DumpIColorHistogramModule::DumpIColorHistogramModule(void)
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
-    this->dumpBtnSlot.SetParameter(new core::param::ButtonParam("DumpData"));
+    this->dumpBtnSlot.SetParameter(new core::param::ButtonParam());
     this->dumpBtnSlot.SetUpdateCallback(&DumpIColorHistogramModule::dump);
     this->MakeSlotAvailable(&this->dumpBtnSlot);
 

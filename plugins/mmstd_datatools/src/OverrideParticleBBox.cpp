@@ -63,10 +63,10 @@ datatools::OverrideParticleBBox::OverrideParticleBBox(void)
     this->bboxMaxSlot.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f)));
     this->MakeSlotAvailable(&this->bboxMaxSlot);
 
-    this->resetSlot.SetParameter(new core::param::ButtonParam("ResetBBox"));
+    this->resetSlot.SetParameter(new core::param::ButtonParam());
     this->MakeSlotAvailable(&this->resetSlot);
 
-    this->autocomputeSlot.SetParameter(new core::param::ButtonParam("TriggerAutoCompute"));
+    this->autocomputeSlot.SetParameter(new core::param::ButtonParam());
     this->MakeSlotAvailable(&this->autocomputeSlot);
 
     this->autocomputeSamplesSlot.SetParameter(new core::param::IntParam(10, 0));

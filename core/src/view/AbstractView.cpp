@@ -83,11 +83,11 @@ view::AbstractView::AbstractView(void)
     this->MakeSlotAvailable(&this->_cameraSettingsSlot);
 
     this->_storeCameraSettingsSlot.SetParameter(
-        new param::ButtonParam("StoreCam", view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
+        new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
     this->_storeCameraSettingsSlot.SetUpdateCallback(&AbstractView::onStoreCamera);
     this->MakeSlotAvailable(&this->_storeCameraSettingsSlot);
 
-    this->_restoreCameraSettingsSlot.SetParameter(new param::ButtonParam("LoadCam", view::Key::KEY_C, view::Modifier::ALT));
+    this->_restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
     this->_restoreCameraSettingsSlot.SetUpdateCallback(&AbstractView::onRestoreCamera);
     this->MakeSlotAvailable(&this->_restoreCameraSettingsSlot);
 
@@ -100,7 +100,7 @@ view::AbstractView::AbstractView(void)
     this->_autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->_autoLoadCamSettingsSlot);
 
-    this->_resetViewSlot.SetParameter(new param::ButtonParam("ResetView", Key::KEY_HOME));
+    this->_resetViewSlot.SetParameter(new param::ButtonParam(Key::KEY_HOME));
     this->_resetViewSlot.SetUpdateCallback(&AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_resetViewSlot);
 

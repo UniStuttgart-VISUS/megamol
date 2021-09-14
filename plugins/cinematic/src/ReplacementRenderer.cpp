@@ -36,7 +36,7 @@ ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererMo
     alphaParam.SetParameter(new param::FloatParam(0.75f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&alphaParam);
 
-    this->toggleReplacementParam.SetParameter(new param::ButtonParam("toggleReplacement",
+    this->toggleReplacementParam.SetParameter(new param::ButtonParam(
         frontend_resources::KeyCode{frontend_resources::Key::KEY_1, frontend_resources::Modifier::ALT}));
     this->MakeSlotAvailable(&this->toggleReplacementParam);
 

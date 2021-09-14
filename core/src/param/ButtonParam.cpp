@@ -15,7 +15,7 @@ using namespace megamol::core::param;
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(std::string commandName) : AbstractParam(), keycode(), command_name(commandName) {
+ButtonParam::ButtonParam() : AbstractParam(), keycode() {
     initialize();
 }
 
@@ -23,8 +23,8 @@ ButtonParam::ButtonParam(std::string commandName) : AbstractParam(), keycode(), 
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(std::string commandName, const core::view::KeyCode& keycode)
-        : AbstractParam(), keycode(keycode), command_name(commandName) {
+ButtonParam::ButtonParam(const core::view::KeyCode& keycode)
+        : AbstractParam(), keycode(keycode) {
     initialize();
 }
 
@@ -32,8 +32,8 @@ ButtonParam::ButtonParam(std::string commandName, const core::view::KeyCode& key
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(std::string commandName, const core::view::Key& key, const core::view::Modifiers& mods)
-        : AbstractParam(), keycode(key, mods), command_name(commandName) {
+ButtonParam::ButtonParam(const core::view::Key& key, const core::view::Modifiers& mods)
+        : AbstractParam(), keycode(key, mods) {
     initialize();
 }
 
@@ -41,8 +41,8 @@ ButtonParam::ButtonParam(std::string commandName, const core::view::Key& key, co
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(std::string commandName, const core::view::Key& key, const core::view::Modifier& mod)
-        : AbstractParam(), keycode(key, core::view::Modifiers(mod)), command_name(commandName) {
+ButtonParam::ButtonParam(const core::view::Key& key, const core::view::Modifier& mod)
+        : AbstractParam(), keycode(key, core::view::Modifiers(mod)) {
     initialize();
 }
 
@@ -50,8 +50,8 @@ ButtonParam::ButtonParam(std::string commandName, const core::view::Key& key, co
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(std::string commandName, const core::view::Key& key)
-        : AbstractParam(), keycode(key), command_name(commandName) {
+ButtonParam::ButtonParam(const core::view::Key& key)
+        : AbstractParam(), keycode(key) {
     initialize();
 }
 

@@ -32,7 +32,7 @@ AbstractDataWriter::AbstractDataWriter(void) : Module(),
         &AbstractDataWriter::onCallGetCapability);
     this->MakeSlotAvailable(&this->controlSlot);
 
-    this->manualRunSlot << new core::param::ButtonParam("ManualRun");
+    this->manualRunSlot << new core::param::ButtonParam();
     this->manualRunSlot.SetUpdateCallback(&AbstractDataWriter::triggerManualRun);
     this->MakeSlotAvailable(&this->manualRunSlot);
 }

@@ -105,7 +105,7 @@ AbstractView3D::AbstractView3D(void)
     this->_viewKeyRotPointSlot.SetParameter(vrpsev);
     this->MakeSlotAvailable(&this->_viewKeyRotPointSlot);
 
-    this->_enableMouseSelectionSlot.SetParameter(new param::ButtonParam("EnableMouseSelection", Key::KEY_TAB));
+    this->_enableMouseSelectionSlot.SetParameter(new param::ButtonParam(Key::KEY_TAB));
     this->_enableMouseSelectionSlot.SetUpdateCallback(&AbstractView3D::onToggleButton);
     this->MakeSlotAvailable(&this->_enableMouseSelectionSlot);
 
@@ -160,7 +160,7 @@ AbstractView3D::AbstractView3D(void)
     this->_cameraOvrLookatParam << new param::Vector3fParam(vislib::math::Vector<float, 3>());
     this->MakeSlotAvailable(&this->_cameraOvrLookatParam);
 
-    this->_cameraOvrParam << new param::ButtonParam("CameraOverride");
+    this->_cameraOvrParam << new param::ButtonParam();
     this->_cameraOvrParam.SetUpdateCallback(&AbstractView3D::cameraOvrCallback);
     this->MakeSlotAvailable(&this->_cameraOvrParam);
 

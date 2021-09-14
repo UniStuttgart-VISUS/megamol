@@ -60,7 +60,7 @@ MMFTDataSource::MMFTDataSource()
 
     filenameSlot_ << new core::param::FilePathParam("");
     MakeSlotAvailable(&filenameSlot_);
-    reloadSlot_ << new core::param::ButtonParam("MMFTReload");
+    reloadSlot_ << new core::param::ButtonParam();
     reloadSlot_.SetUpdateCallback(this, &MMFTDataSource::reloadCallback);
     MakeSlotAvailable(&reloadSlot_);
 
