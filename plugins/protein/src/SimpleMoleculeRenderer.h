@@ -19,6 +19,8 @@
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 
+#include "glowl/FramebufferObject.hpp"
+#include "glowl/GLSLProgram.hpp"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
@@ -284,6 +286,14 @@ namespace protein {
         vislib::graphics::gl::GLSLShader filterSphereShaderOR;
         vislib::graphics::gl::GLSLShader filterCylinderShader;
         vislib::graphics::gl::GLSLShader filterCylinderShaderOR;
+
+        // new shader programs
+        std::shared_ptr<glowl::GLSLProgram> sphereShader_;
+        std::shared_ptr<glowl::GLSLProgram> sphereClipPlaneShader_;
+        std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
+        std::shared_ptr<glowl::GLSLProgram> cylinderClipPlaneShader_;
+        std::shared_ptr<glowl::GLSLProgram> filterSphereShader_;
+        std::shared_ptr<glowl::GLSLProgram> filterCylinderShader_;
 
         // attribute locations for GLSL-Shader
         GLint attribLocInParams;

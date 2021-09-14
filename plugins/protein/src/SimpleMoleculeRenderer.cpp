@@ -23,6 +23,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore/utility/ShaderFactory.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/light/DistantLight.h"
@@ -397,6 +398,47 @@ bool SimpleMoleculeRenderer::create(void) {
         }
     } catch (vislib::Exception e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create clip plane cylinder shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
+    // new shaders
+    try {
+        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+
+        sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
+            std::filesystem::path("simplemolecule/sm_sphere.vert.glsl"),
+            std::filesystem::path("simplemolecule/sm_sphere.frag.glsl"));
+
+#if 0
+        sphereClipPlaneShader_ = core::utility::make_shared_glowl_shader("sphereClipPlane", shdr_options,
+            std::filesystem::path("simplemolecule/sm_sphere_clipplane.vert.glsl"),
+            std::filesystem::path("simplemolecule/sm_sphere_clipplane.frag.glsl"));
+
+        filterSphereShader_ = core::utility::make_shared_glowl_shader("sphereFilter", shdr_options,
+            std::filesystem::path("simplemolecule/sm_sphere_filter.vert.glsl"),
+            std::filesystem::path("simplemolecule/sm_sphere_filter.frag.glsl"));
+
+        cylinderShader_ = core::utility::make_shared_glowl_shader("cylinder", shdr_options,
+            std::filesystem::path("simplemolecule/sm_cylinder.vert.glsl"),
+            std::filesystem::path("simplemolecule/sm_cylinder.frag.glsl"));
+
+        cylinderClipPlaneShader_ = core::utility::make_shared_glowl_shader("cylinderClipPlane", shdr_options,
+            std::filesystem::path("simplemolecule/sm_cylinder_clipplane.vert.glsl"),
+            std::filesystem::path("simplemolecule/sm_cylinder_clipplane.frag.glsl"));
+
+        filterCylinderShader_ = core::utility::make_shared_glowl_shader("cylinderFilter", shdr_options,
+            std::filesystem::path("simplemolecule/sm_cylinder_filter.vert.glsl"),
+            std::filesystem::path("simplemolecule/sm_cylinder_filter.frag.glsl"));
+#endif
+
+        // TODO shaders for the second render pass
+
+    } catch (glowl::GLSLProgramException const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception");
         return false;
     }
 
