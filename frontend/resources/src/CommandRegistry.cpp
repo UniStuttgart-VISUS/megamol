@@ -252,9 +252,12 @@ const megamol::frontend_resources::Command megamol::frontend_resources::CommandR
 void megamol::frontend_resources::CommandRegistry::remove_command_by_parent(const std::string& parent_param) {
     auto it = std::find_if(commands.begin(), commands.end(), [parent_param] (const Command& c){return c.parent == parent_param;});
     if (it != commands.end()) {
-        command_index.erase(it->name);
-        if (it->key.key != Key::KEY_UNKNOWN) key_to_command.erase(it->key);
+        if (it->key.key != Key::KEY_UNKNOWN) {
+            remove_color_from_layer(*it);
+            key_to_command.erase(it->key);
+        }
         commands.erase(it);
+        rebuild_index();
     }
 }
 
@@ -262,9 +265,12 @@ void megamol::frontend_resources::CommandRegistry::remove_command_by_name(const 
     if (!is_new(command_name)) {
         auto idx = command_index[command_name];
         auto& c = commands[idx];
-        command_index.erase(command_name);
-        if (c.key.key != Key::KEY_UNKNOWN) key_to_command.erase(c.key);
+        if (c.key.key != Key::KEY_UNKNOWN) {
+            remove_color_from_layer(c);
+            key_to_command.erase(c.key);
+        }
         commands.erase(commands.begin() + idx);
+        rebuild_index();
     }
 }
 
@@ -282,16 +288,6 @@ bool megamol::frontend_resources::CommandRegistry::update_hotkey(const std::stri
             add_color_to_layer(c);
         }
         modifiers_changed(current_modifiers);
-        return true;
-    }
-    return false;
-}
-
-bool megamol::frontend_resources::CommandRegistry::update_hotkey(
-    const std::string& command_name, const std::string& updated_name) {
-    if (!is_new(command_name)) {
-        auto& c = commands[command_index[command_name]];
-        c.name = updated_name;
         return true;
     }
     return false;
@@ -405,4 +401,16 @@ void megamol::frontend_resources::CommandRegistry::push_command(const Command& c
 #endif
     }
     command_index[c.name] = static_cast<int>(commands.size() - 1);
+}
+
+void megamol::frontend_resources::CommandRegistry::rebuild_index() {
+    command_index.clear();
+    key_to_command.clear();
+    for (auto x = 0; x < commands.size(); ++x) {
+        auto& c = commands[x];
+        command_index[commands[x].name] = x;
+        if (c.key.key != Key::KEY_UNKNOWN) {
+            key_to_command[c.key] = x;
+        }
+    }
 }

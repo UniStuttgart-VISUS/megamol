@@ -158,7 +158,11 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::stri
             if (p != nullptr) {
                 auto command_name = oldId + std::string("_") + ps->Name().PeekBuffer();
                 auto updated_command_name = newId + std::string("_") + ps->Name().PeekBuffer();
-                m_command_registry->update_hotkey(command_name, updated_command_name);  
+                auto c = m_command_registry->get_command(command_name);
+                m_command_registry->remove_command_by_name(command_name);
+                c.name = updated_command_name;
+                c.parent = ps->FullName();
+                m_command_registry->add_command(c);
             }
         }
     }
