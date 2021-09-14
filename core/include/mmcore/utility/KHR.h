@@ -13,11 +13,6 @@
 #include <sstream>
 
 #ifndef _WIN32 
-#ifdef HAS_LIBUNWIND
-#define UNW_LOCAL_ONLY
-#include <libunwind.h>
-#include <cxxabi.h>
-#endif
 #include <execinfo.h>
 #else
 #include <Windows.h>
@@ -37,13 +32,6 @@ namespace utility {
 
             static int startDebug();
             static std::string getStack();
-
-        #ifndef _WIN32
-        #ifdef HAS_LIBUNWIND
-            static int getFileAndLine(unw_word_t addr, char* file, size_t flen, int* line);
-        #endif
-        #endif
-
     };
 
 } // namespace utility

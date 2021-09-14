@@ -105,7 +105,7 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 
 1. As prerequisites, following packages from the repository are required:
 
-    `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
+    `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
 
 2. First, download the source code from GitHub:
 
