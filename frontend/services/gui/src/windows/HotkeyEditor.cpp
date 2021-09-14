@@ -17,12 +17,14 @@ megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
         , tooltip_widget()
         , pending_hotkey_assignment(0)
         , pending_hotkey()
+        , parent_param_lambda()
         , parent_gui_hotkey_lambda()
         , parent_gui_window_lambda()
         , parent_gui_window_hotkey_lambda()
         , command_registry_ptr(nullptr)
         , window_collection_ptr(nullptr)
-        , gui_hotkey_ptr(nullptr) {
+        , gui_hotkey_ptr(nullptr)
+        , megamolgraph_ptr(nullptr) {
 
     // Configure HOTKEY EDITOR Window
     this->win_config.size = ImVec2(0.0f * megamol::gui::gui_scaling.Get(), 0.0f * megamol::gui::gui_scaling.Get());
@@ -37,14 +39,25 @@ HotkeyEditor::~HotkeyEditor() {}
 
 
 void megamol::gui::HotkeyEditor::RegisterHotkeys(megamol::core::view::CommandRegistry* cmdregistry,
-    megamol::gui::WindowCollection* wincollection, megamol::gui::HotkeyMap_t* guihotkeys) {
+    megamol::core::MegaMolGraph* megamolgraph, megamol::gui::WindowCollection* wincollection,
+    megamol::gui::HotkeyMap_t* guihotkeys) {
 
     assert(cmdregistry != nullptr);
     assert(wincollection != nullptr);
     assert(guihotkeys != nullptr);
+    assert(megamolgraph != nullptr);
+
     this->command_registry_ptr = cmdregistry;
     this->window_collection_ptr = wincollection;
     this->gui_hotkey_ptr = guihotkeys;
+    this->megamolgraph_ptr = megamolgraph;
+
+    this->parent_gui_window_hotkey_lambda = [&](const frontend_resources::Command* self) {
+        auto my_p = this->megamolgraph_ptr->FindParameter(self->parent);
+        if (my_p != nullptr) {
+            my_p->setDirty();
+        }
+    };
 
     this->parent_gui_hotkey_lambda = [&](const frontend_resources::Command* self) {
         for (auto& hotkey : *this->gui_hotkey_ptr) {
@@ -239,6 +252,10 @@ void megamol::gui::HotkeyEditor::SpecificStateFromJSON(const nlohmann::json& in_
                                                 megamol::frontend_resources::from_json(cmd_json.value(), cmd);
                                                 if (!this->command_registry_ptr->update_hotkey(cmd.name, cmd.key)) {
                                                     switch (cmd.parent_type) {
+                                                    case (megamol::frontend_resources::Command::parent_type_c::
+                                                            PARENT_PARAM):
+                                                        cmd.effect = this->parent_param_lambda;
+                                                        break;
                                                     case (megamol::frontend_resources::Command::parent_type_c::
                                                             PARENT_GUI_HOTKEY):
                                                         cmd.effect = this->parent_gui_hotkey_lambda;

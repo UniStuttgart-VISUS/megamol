@@ -13,6 +13,7 @@
 #include "AbstractWindow.h"
 #include "CommandRegistry.h"
 #include "WindowCollection.h"
+#include "mmcore/MegaMolGraph.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/StringSearchWidget.h"
 
@@ -32,7 +33,8 @@ namespace gui {
         void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
         void RegisterHotkeys(megamol::core::view::CommandRegistry* cmdregistry,
-            megamol::gui::WindowCollection* wincollection, megamol::gui::HotkeyMap_t* guihotkeys);
+            megamol::core::MegaMolGraph* megamolgraph, megamol::gui::WindowCollection* wincollection,
+            megamol::gui::HotkeyMap_t* guihotkeys);
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -48,7 +50,9 @@ namespace gui {
         megamol::frontend_resources::CommandRegistry* command_registry_ptr;
         megamol::gui::WindowCollection* window_collection_ptr;
         megamol::gui::HotkeyMap_t* gui_hotkey_ptr;
+        megamol::core::MegaMolGraph* megamolgraph_ptr;
 
+        std::function<void(const frontend_resources::Command*)> parent_param_lambda;
         std::function<void(const frontend_resources::Command*)> parent_gui_hotkey_lambda;
         std::function<void(const frontend_resources::Command*)> parent_gui_window_lambda;
         std::function<void(const frontend_resources::Command*)> parent_gui_window_hotkey_lambda;

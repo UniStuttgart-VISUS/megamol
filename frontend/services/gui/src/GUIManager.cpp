@@ -1865,9 +1865,10 @@ std::string GUIManager::extract_fontname(const std::string& imgui_fontname) cons
 }
 
 
-void GUIManager::RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry) {
+void GUIManager::RegisterHotkeys(
+    megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamolgraph) {
 
     if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
-        win_hkeditor_ptr->RegisterHotkeys(&cmdregistry, &this->win_collection, &this->gui_hotkeys);
+        win_hkeditor_ptr->RegisterHotkeys(&cmdregistry, &megamolgraph, &this->win_collection, &this->gui_hotkeys);
     }
 }

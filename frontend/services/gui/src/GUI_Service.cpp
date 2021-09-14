@@ -139,11 +139,6 @@ namespace frontend {
 
         // Check for updates in requested resources --------------------------------
 
-        /// MegaMolGraph = resource index 0
-        auto graph_resource_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>();
-        /// WARNING: Changing a constant type will lead to an undefined behavior!
-        this->m_megamol_graph = const_cast<megamol::core::MegaMolGraph*>(graph_resource_ptr);
-
         /// WindowEvents = resource index 1
         auto window_events =
             &this->m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowEvents>();
@@ -317,10 +312,16 @@ namespace frontend {
             this->m_gui->SetResourceDirectories(runtime_config.resource_directories);
         }
 
+        /// MegaMolGraph = resource index 0
+        auto graph_resource_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>();
+        /// WARNING: Changing a constant type will lead to an undefined behavior!
+        this->m_megamol_graph = const_cast<megamol::core::MegaMolGraph*>(graph_resource_ptr);
+        assert(this->m_megamol_graph != nullptr);
+
         /// WARNING: Changing a constant type will lead to an undefined behavior!
         auto& command_registry = const_cast<megamol::frontend_resources::CommandRegistry&>(
             this->m_requestedResourceReferences[12].getResource<megamol::frontend_resources::CommandRegistry>());
-        this->m_gui->RegisterHotkeys(command_registry);
+        this->m_gui->RegisterHotkeys(command_registry, *this->m_megamol_graph);
     }
 
 

@@ -241,7 +241,8 @@ namespace gui {
         /**
          * Register GUI hotkeys.
          */
-        void RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry);
+        void RegisterHotkeys(
+            megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamol_graph);
 
         ///////////////////////////////////////////////////////////////////////
 
