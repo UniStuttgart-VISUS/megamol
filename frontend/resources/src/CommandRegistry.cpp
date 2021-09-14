@@ -392,12 +392,12 @@ void megamol::frontend_resources::CommandRegistry::push_command(const Command& c
     commands.push_back(c);
     if (c.key.key != Key::KEY_UNKNOWN) {
         key_to_command[c.key] = static_cast<int>(commands.size() - 1);
+        add_color_to_layer(c);
 #ifdef CUESDK_ENABLED
         if (current_modifiers.equals(c.key.mods)) {
             auto ledColor = CorsairLedColor{ corsair_led_from_glfw_key[c.key.key], 255, 0, 0 };
             CorsairSetLedsColors(1, &ledColor);
         }
-        add_color_to_layer(c);
 #endif
     }
     command_index[c.name] = static_cast<int>(commands.size() - 1);
