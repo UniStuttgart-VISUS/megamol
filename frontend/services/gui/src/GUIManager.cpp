@@ -888,10 +888,10 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                 }
 
                 if (!p.CoreParamPtr().IsNull()) {
-                    // Register (new) parameter notifications from file path params
+                    // Register (new) parameter notifications for file path params
                     if (p.Type() == ParamType_t::FILEPATH) {
                         if (auto* p_ptr = p.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
-                            if (p_ptr->RegisterNotifications()) {
+                            if (!p_ptr->NotificationsRegistered()) {
                                 p_ptr->RegisterNotifications(
                                     [&, this](const std::string& id, std::weak_ptr<bool> open,
                                         const std::string& message, std::weak_ptr<std::string> omitted_val) {
@@ -1483,10 +1483,10 @@ void megamol::gui::GUIManager::draw_popups() {
             }
         }
         if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
-            if (std::get<3>(it->second).lock()->empty()) {
-                ImGui::TextUnformatted(std::get<2>(it->second).c_str());
-            } else {
+            if ((std::get<3>(it->second).lock() != nullptr) && (!std::get<3>(it->second).lock()->empty())) {
                 ImGui::Text(std::get<2>(it->second).c_str(), std::get<3>(it->second).lock()->c_str());
+            } else {
+                ImGui::TextUnformatted(std::get<2>(it->second).c_str());
             }
             bool close = false;
             if (ImGui::Button("Ok")) {

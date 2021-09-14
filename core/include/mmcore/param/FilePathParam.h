@@ -43,8 +43,6 @@ namespace param {
 
         typedef uint32_t Flags_t;
         typedef std::vector<std::string> Extensions_t;
-        // Value semantics: 1) pop-up id string, 2) Pointer to 'open pop-up' flag, 3) message, 4) pointer to currently omitted parameter value as string held by pop-up caller
-        typedef std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&, std::weak_ptr<std::string>)> RegisterNotificationCallback_t;
 
         /**
          * Ctor.
@@ -132,11 +130,7 @@ namespace param {
         /**
          * Register static notifications.
          */
-        bool RegisterNotifications(const RegisterNotificationCallback_t& pc);
-        // Check if registration is required
-        inline bool RegisterNotifications() const {
-            return !this->registered_notifications;
-        }
+        void RegisterNotifications(const RegisterNotificationCallback_t& pc) override;
 
         /**
          * Function checks if path is valid for given flags
@@ -158,11 +152,6 @@ namespace param {
 
         /** The file or directory path */
         std::filesystem::path value;
-
-        /** Indicates whether notifications are already registered or not (should be done only once) */
-        bool registered_notifications;
-        /** Flags for opening specific notifications */
-        std::map<Flags_t, std::tuple<std::shared_ptr<bool>, std::shared_ptr<std::string>>> notification;
     };
 
 

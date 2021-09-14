@@ -17,9 +17,8 @@ FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags
     : AbstractParam()
     , flags(flags)
     , extensions(exts)
-    , value()
-    , registered_notifications(false)
-    , notification() {
+    , value() {
+
     this->notification[Flag_File] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
     this->notification[Flag_Directory] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
     this->notification[Flag_NoExistenceCheck] = { std::make_shared<bool>(false), std::make_shared<std::string>() };
@@ -165,7 +164,7 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
 }
 
 
-bool FilePathParam::RegisterNotifications(const FilePathParam::RegisterNotificationCallback_t& pc) {
+void FilePathParam::RegisterNotifications(const FilePathParam::RegisterNotificationCallback_t& pc) {
 
     if (!this->registered_notifications) {
         const std::string prefix = "Omitting value: %s. ";
@@ -183,7 +182,5 @@ bool FilePathParam::RegisterNotifications(const FilePathParam::RegisterNotificat
             std::weak_ptr<std::string>(std::get<1>(this->notification[Flag_RestrictExtension])));
 
         this->registered_notifications = true;
-        return true;
     }
-    return false;
 }

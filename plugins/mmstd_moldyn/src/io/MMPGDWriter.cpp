@@ -27,7 +27,8 @@ MMPGDWriter::MMPGDWriter(void) : AbstractDataWriter(),
         filenameSlot("filename", "The path to the MMPGD file to be written"),
         dataSlot("data", "The slot requesting the data to be written") {
 
-    this->filenameSlot << new core::param::FilePathParam("");
+    this->filenameSlot << new core::param::FilePathParam(
+        "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"mmpgd"});
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->dataSlot.SetCompatibleCall<ParticleGridDataCallDescription>();

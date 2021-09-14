@@ -332,13 +332,13 @@ In order to register a GUI window, popup or notification within a frontend servi
 
 - In the **frontend service header file (.h)** add a variable for opening the popup. If this variable is set to `true`, the popup is opened.
 
-        bool m_open_popup = true;
+        std::shared_ptr<bool> gui_open_popup;
 
 - Since the registration of a GUI popup is only required once, add the following code to the **setRequestedResources()** function. 
     *Adjust the index in `resources`!*
 
         auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-        gui_window_request_resource.register_popup("TEST PopUp", m_open_popup, [&]() {
+        gui_window_request_resource.register_popup("<PopUp Title", std::weak_ptr<bool>(gui_open_popup), [&]() {
 
             // Put your popup content here ...
             ImGui::TextUnformatted("Hello World ...");
@@ -351,13 +351,13 @@ In order to register a GUI window, popup or notification within a frontend servi
 
 - In the **frontend service header file (.h)** add a variable for opening the popup. If this variable is set to `true`, the popup is opened.
 
-        bool m_open_popup = true;
+        std::shared_ptr<bool> gui_open_notification;
 
 - Since the registration of a GUI notification is only required once, add the following code to the **setRequestedResources()** function. 
     *Adjust the index in `resources`!*
 
         auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-        gui_window_request_resource.register_notification("TEST Notification", m_open_popup, "This is the notification ...");
+        gui_window_request_resource.register_notification("<Notification Title>", std::weak_ptr<bool>(gui_open_notification), "<Notification Message>");
     
   **NOTE:** The notification is also printed to the console. If the GUI resource is not available, there will be no console output of this message!
 

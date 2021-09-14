@@ -41,7 +41,8 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     , presentation(AbstractParamPresentation::Presentation::Basic)
     , compatible(Presentation::Basic)
     , initialised(false)
-    , presentation_name_map() {
+    , presentation_name_map()
+    , registered_notifications (false) {
 
     this->presentation_name_map.clear();
     this->presentation_name_map.emplace(Presentation::Basic, "Basic");
