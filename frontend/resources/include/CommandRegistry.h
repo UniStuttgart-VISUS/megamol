@@ -77,11 +77,13 @@ public:
 
     std::string add_command(const Command& c);
     const Command get_command(const KeyCode& key) const;
+    const Command get_command(const std::string& command_name);
 
     void remove_command_by_parent(const std::string& parent_param);
     void remove_command_by_name(const std::string& command_name);
 
     bool update_hotkey(const std::string& command_name, KeyCode key);
+    bool update_hotkey(const std::string& command_name, const std::string& updated_name);
     bool remove_hotkey(KeyCode key);
 
     void modifiers_changed(Modifiers mod);
@@ -95,7 +97,7 @@ public:
 
 private:
 
-    bool is_new(const std::string& name) {
+    bool is_new(const std::string& name) const {
         return command_index.find(name) == command_index.end();
     }
 

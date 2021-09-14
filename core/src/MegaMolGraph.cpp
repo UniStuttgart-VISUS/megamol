@@ -150,6 +150,19 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::stri
     module_it->request.id = newId;
     module_it->modulePtr->setName(newId.c_str());
 
+    for (auto child = module_it->modulePtr->ChildList_Begin(); child != module_it->modulePtr->ChildList_End();
+         ++child) {
+        auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
+        if (ps != nullptr) {
+            auto p = ps->Param<param::ButtonParam>();
+            if (p != nullptr) {
+                auto command_name = oldId + std::string("_") + ps->Name().PeekBuffer();
+                auto updated_command_name = newId + std::string("_") + ps->Name().PeekBuffer();
+                m_command_registry->update_hotkey(command_name, updated_command_name);  
+            }
+        }
+    }
+
     const auto matches_old_prefix = [&](std::string const& call_slot) {
         auto res = call_slot.find(oldId);
         return (res != std::string::npos) && res == 0;

@@ -137,12 +137,13 @@ bool megamol::gui::HotkeyEditor::Draw() {
     this->search_widget.Widget("hotkeyeditor_search", "Case insensitive substring search in names and hotkeys.");
     auto search_string = this->search_widget.GetSearchString();
 
+    ImGui::TextUnformatted("Left-click on button => Execute hotkey\nRight-click on button => Edit hotkey");
+
     auto table_flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize;
     if (ImGui::BeginTable("megamol_hotkeys", 2, table_flags)) {
 
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableSetupColumn(
-            "Hotkey\n[Left-click to execute]\n[Right-click to edit]", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Hotkey", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableHeadersRow();
 
         if (this->command_registry_ptr != nullptr) {
@@ -168,7 +169,7 @@ bool megamol::gui::HotkeyEditor::Draw() {
                             ImGui::CloseCurrentPopup();
                         };
 
-                        ImGui::TextUnformatted("Press new hotkey to overwrite existing one... \n[Press ESC to abort]");
+                        ImGui::TextUnformatted("Press new hotkey to overwrite existing one\n[Press ESC to abort]");
                         if (this->pending_hotkey_assignment == 0) {
                             // First: Wait for first user key press
                             if (is_any_key_pressed()) {

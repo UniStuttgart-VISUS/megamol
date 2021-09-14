@@ -239,6 +239,16 @@ const megamol::frontend_resources::Command megamol::frontend_resources::CommandR
     }
 }
 
+const megamol::frontend_resources::Command megamol::frontend_resources::CommandRegistry::get_command(
+    const std::string& command_name) {
+    if (is_new(command_name)) {
+        return Command{};
+    } else {
+        auto idx = command_index[command_name];
+        return commands[idx];
+    }
+}
+
 void megamol::frontend_resources::CommandRegistry::remove_command_by_parent(const std::string& parent_param) {
     auto it = std::find_if(commands.begin(), commands.end(), [parent_param] (const Command& c){return c.parent == parent_param;});
     if (it != commands.end()) {
@@ -272,6 +282,16 @@ bool megamol::frontend_resources::CommandRegistry::update_hotkey(const std::stri
             add_color_to_layer(c);
         }
         modifiers_changed(current_modifiers);
+        return true;
+    }
+    return false;
+}
+
+bool megamol::frontend_resources::CommandRegistry::update_hotkey(
+    const std::string& command_name, const std::string& updated_name) {
+    if (!is_new(command_name)) {
+        auto& c = commands[command_index[command_name]];
+        c.name = updated_name;
         return true;
     }
     return false;
