@@ -17,14 +17,14 @@ megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
         , tooltip_widget()
         , pending_hotkey_assignment(0)
         , pending_hotkey()
-        , parent_param_lambda()
-        , parent_gui_hotkey_lambda()
-        , parent_gui_window_lambda()
-        , parent_gui_window_hotkey_lambda()
         , command_registry_ptr(nullptr)
         , window_collection_ptr(nullptr)
         , gui_hotkey_ptr(nullptr)
-        , megamolgraph_ptr(nullptr) {
+        , megamolgraph_ptr(nullptr)
+        , parent_param_lambda()
+        , parent_gui_hotkey_lambda()
+        , parent_gui_window_lambda()
+        , parent_gui_window_hotkey_lambda() {
 
     // Configure HOTKEY EDITOR Window
     this->win_config.size = ImVec2(0.0f * megamol::gui::gui_scaling.Get(), 0.0f * megamol::gui::gui_scaling.Get());
@@ -35,7 +35,13 @@ megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
 }
 
 
-HotkeyEditor::~HotkeyEditor() {}
+HotkeyEditor::~HotkeyEditor() {
+
+    this->command_registry_ptr = nullptr;
+    this->window_collection_ptr = nullptr;
+    this->gui_hotkey_ptr = nullptr;
+    this->megamolgraph_ptr = nullptr;
+}
 
 
 void megamol::gui::HotkeyEditor::RegisterHotkeys(megamol::core::view::CommandRegistry* cmdregistry,
@@ -107,6 +113,7 @@ void megamol::gui::HotkeyEditor::RegisterHotkeys(megamol::core::view::CommandReg
     // Hotkeys of window(s)
     const auto windows_func = [&](AbstractWindow& wc) {
         // Check "Show/Hide Window"-Hotkey
+        hkcmd.parent_type = megamol::frontend_resources::Command::parent_type_c::PARENT_GUI_WINDOW;
         hkcmd.key = wc.Config().hotkey;
         hkcmd.name = std::string("_hotkey_gui_window_" + wc.Name());
         hkcmd.parent = std::to_string(wc.Hash());
@@ -115,6 +122,7 @@ void megamol::gui::HotkeyEditor::RegisterHotkeys(megamol::core::view::CommandReg
 
         // Check for additional hotkeys of window
         for (auto& hotkey : wc.GetHotkeys()) {
+            hkcmd.parent_type = megamol::frontend_resources::Command::parent_type_c::PARENT_GUI_WINDOW_HOTKEY;
             hkcmd.key = hotkey.second.keycode;
             hkcmd.name = hotkey.second.name;
             hkcmd.parent = std::string();

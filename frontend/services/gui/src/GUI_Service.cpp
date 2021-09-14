@@ -299,17 +299,11 @@ namespace frontend {
 
     void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources) {
 
-        this->m_requestedResourceReferences = resources;
+        // (Called only once)
 
-        /// Get resource directories = resource index 10
-        // (Required to set only once)
+        this->m_requestedResourceReferences = resources;
         if (this->m_gui == nullptr) {
             return;
-        }
-        auto& runtime_config =
-            this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
-        if (!runtime_config.resource_directories.empty()) {
-            this->m_gui->SetResourceDirectories(runtime_config.resource_directories);
         }
 
         /// MegaMolGraph = resource index 0
@@ -318,9 +312,17 @@ namespace frontend {
         this->m_megamol_graph = const_cast<megamol::core::MegaMolGraph*>(graph_resource_ptr);
         assert(this->m_megamol_graph != nullptr);
 
-        /// WARNING: Changing a constant type will lead to an undefined behavior!
+        /// Resource Directories = resource index 10
+        auto& runtime_config =
+            this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
+        if (!runtime_config.resource_directories.empty()) {
+            this->m_gui->SetResourceDirectories(runtime_config.resource_directories);
+        }
+
+        /// Command Registry = resource index = 12
         auto& command_registry = const_cast<megamol::frontend_resources::CommandRegistry&>(
             this->m_requestedResourceReferences[12].getResource<megamol::frontend_resources::CommandRegistry>());
+        /// WARNING: Changing a constant type will lead to an undefined behavior!
         this->m_gui->RegisterHotkeys(command_registry, *this->m_megamol_graph);
     }
 
