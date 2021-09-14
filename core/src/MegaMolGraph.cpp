@@ -523,10 +523,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
                     c.key = p->GetKeyCode();
                     c.parent = ps->FullName();
                     c.name = module_ptr->Name().PeekBuffer() + std::string("_") + ps->Name().PeekBuffer();
-                    c.effect = [&](const frontend_resources::Command *self) {
-                        auto my_p = this->FindParameter(self->parent);
-                        if (my_p != nullptr) {my_p->setDirty();}
-                    };
+                    c.effect = this->Parameter_Lambda;
                     m_command_registry->add_command(c);
                 }
             }

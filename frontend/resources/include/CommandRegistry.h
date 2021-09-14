@@ -30,6 +30,7 @@ namespace frontend_resources {
 static std::string CommandRegistry_Req_Name = "CommandRegistry";
 
 struct Command {
+    using EffectFunction = std::function<void(const Command *)>;
     std::string name;
     KeyCode key;
     std::string parent;
@@ -40,7 +41,7 @@ struct Command {
         PARENT_GUI_WINDOW_HOTKEY = 4
     };
     parent_type_c parent_type = parent_type_c::PARENT_PARAM;
-    std::function<void(const Command *self)> effect;
+    EffectFunction effect;
 
     void execute() const {
         auto f = effect;

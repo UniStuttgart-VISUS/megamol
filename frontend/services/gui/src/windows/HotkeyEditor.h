@@ -51,10 +51,9 @@ namespace gui {
         megamol::gui::WindowCollection* window_collection_ptr;
         megamol::gui::HotkeyMap_t* gui_hotkey_ptr;
         megamol::core::MegaMolGraph* megamolgraph_ptr;
-        std::function<void(const frontend_resources::Command*)> parent_param_lambda;
-        std::function<void(const frontend_resources::Command*)> parent_gui_hotkey_lambda;
-        std::function<void(const frontend_resources::Command*)> parent_gui_window_lambda;
-        std::function<void(const frontend_resources::Command*)> parent_gui_window_hotkey_lambda;
+        frontend_resources::Command::EffectFunction parent_gui_hotkey_lambda;
+        frontend_resources::Command::EffectFunction parent_gui_window_lambda;
+        frontend_resources::Command::EffectFunction parent_gui_window_hotkey_lambda;
     };
 
 

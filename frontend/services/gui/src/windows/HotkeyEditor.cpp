@@ -21,7 +21,6 @@ megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
         , window_collection_ptr(nullptr)
         , gui_hotkey_ptr(nullptr)
         , megamolgraph_ptr(nullptr)
-        , parent_param_lambda()
         , parent_gui_hotkey_lambda()
         , parent_gui_window_lambda()
         , parent_gui_window_hotkey_lambda() {
@@ -57,13 +56,6 @@ void megamol::gui::HotkeyEditor::RegisterHotkeys(megamol::core::view::CommandReg
     this->window_collection_ptr = wincollection;
     this->gui_hotkey_ptr = guihotkeys;
     this->megamolgraph_ptr = megamolgraph;
-
-    this->parent_gui_window_hotkey_lambda = [&](const frontend_resources::Command* self) {
-        auto my_p = this->megamolgraph_ptr->FindParameter(self->parent);
-        if (my_p != nullptr) {
-            my_p->setDirty();
-        }
-    };
 
     this->parent_gui_hotkey_lambda = [&](const frontend_resources::Command* self) {
         for (auto& hotkey : *this->gui_hotkey_ptr) {
@@ -262,7 +254,7 @@ void megamol::gui::HotkeyEditor::SpecificStateFromJSON(const nlohmann::json& in_
                                                     switch (cmd.parent_type) {
                                                     case (megamol::frontend_resources::Command::parent_type_c::
                                                             PARENT_PARAM):
-                                                        cmd.effect = this->parent_param_lambda;
+                                                        cmd.effect = this->megamolgraph_ptr->Parameter_Lambda;
                                                         break;
                                                     case (megamol::frontend_resources::Command::parent_type_c::
                                                             PARENT_GUI_HOTKEY):

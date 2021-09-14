@@ -144,6 +144,13 @@ public:
 
     MegaMolGraph_Convenience& Convenience();
 
+    frontend_resources::Command::EffectFunction Parameter_Lambda = [&](const frontend_resources::Command* self) {
+        auto my_p = this->FindParameter(self->parent);
+        if (my_p != nullptr) {
+            my_p->setDirty();
+        }
+    };
+
     // Create View ?
 
     // Create Chain Call ?
