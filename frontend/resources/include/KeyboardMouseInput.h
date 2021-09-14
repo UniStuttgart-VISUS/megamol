@@ -10,6 +10,8 @@
 #include <bitset>
 #include <type_traits>
 #include <sstream> // stringstream
+#include <algorithm>
+#include <vector>
 
 namespace megamol {
 namespace frontend_resources {
@@ -200,6 +202,27 @@ public:
 
     inline int toInt() const { return static_cast<int>(bits.to_ulong()); }
 
+    inline std::string ToString() const {
+        std::vector<std::string> range;
+        const bool s = this->test(frontend_resources::Modifier::SHIFT);
+        const bool c = this->test(frontend_resources::Modifier::CTRL);
+        const bool a = this->test(frontend_resources::Modifier::ALT);
+        if (s) range.push_back("SHIFT");
+        if (c) range.push_back("CTRL");
+        if (a) range.push_back("ALT");
+        std::ostringstream out;
+        auto b = range.begin();
+        auto e = range.end();
+        if (b != e) {
+            std::copy(b, std::prev(e), std::ostream_iterator<std::string>(out, " + "));
+            b = std::prev(e);
+        }
+        if (b != e) {
+            out << *b;
+        }
+        return out.str();
+    }
+
     inline void fromInt(int val) { bits = Bits(val); }
 
     inline bool none() const { return bits.none(); }
@@ -315,9 +338,10 @@ public:
 
         std::string msg;
 
-        if (this->mods.test(frontend_resources::Modifier::SHIFT)) msg += "SHIFT + ";
-        if (this->mods.test(frontend_resources::Modifier::CTRL)) msg += "CTRL + ";
-        if (this->mods.test(frontend_resources::Modifier::ALT)) msg += "ALT + ";
+        const auto mmsg = mods.ToString();
+        if (!mmsg.empty()) {
+            msg += mmsg + " + ";
+        }
 
         switch (this->key) {
             case (frontend_resources::Key::KEY_UNKNOWN) : msg += ""; break; // 'Unknown Key'

@@ -192,7 +192,10 @@ megamol::frontend_resources::CommandRegistry::CommandRegistry() {
         }
         black_keyboard.push_back(ledColor);
     }
-    CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data());
+    if (!CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data())) {
+        const auto error = CorsairGetLastError();
+        std::cout << "Setting Corsair leds to default failed: " << corsair_error_to_string(error) << std::endl;
+    }
 #endif
 }
 
@@ -287,11 +290,17 @@ void megamol::frontend_resources::CommandRegistry::modifiers_changed(Modifiers m
     // TODO
 #ifdef CUESDK_ENABLED
     // unset all keys
-    CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data());
+    if (!CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data())) {
+        const auto error = CorsairGetLastError();
+        std::cout << "Setting Corsair leds to default failed: " << corsair_error_to_string(error) << std::endl;
+    }
     // find layer that matches the modifier
     const auto layer = key_colors.find(mod);
     if (layer != key_colors.end()) {
-        CorsairSetLedsColors(static_cast<int>(layer->second.size()), layer->second.data());
+        if (!CorsairSetLedsColors(static_cast<int>(layer->second.size()), layer->second.data())) {
+            const auto error = CorsairGetLastError();
+            std::cout << "Setting Corsair leds for layer " << mod.ToString() << " failed: " << corsair_error_to_string(error) << std::endl;
+        }
     }
 #endif
     current_modifiers = mod;
