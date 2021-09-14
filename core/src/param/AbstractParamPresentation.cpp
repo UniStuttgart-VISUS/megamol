@@ -40,7 +40,8 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     , read_only(false)
     , presentation(AbstractParamPresentation::Presentation::Basic)
     , compatible(Presentation::Basic)
-    , initialised(false) {
+    , initialised(false)
+    , presentation_name_map() {
 
     this->presentation_name_map.clear();
     this->presentation_name_map.emplace(Presentation::Basic, "Basic");

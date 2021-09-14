@@ -58,6 +58,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , gui_image_widget()
         , gui_rotation_widget()
         , gui_popup_msg()
+        , gui_popup_disabled(false)
         , tf_string_hash(0)
         , tf_editor_external_ptr(nullptr)
         , tf_editor_inplace(std::string("inplace_tfeditor_parameter_" + std::to_string(uid)), false)
@@ -1532,6 +1533,8 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
     std::filesystem::path& val, const FilePathStorage_t& store) {
     bool retval = false;
 
+    const std::string popup_name = "FilePathParam";
+
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         ImGui::BeginGroup();
@@ -1560,29 +1563,31 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
                 if (last_val != val) {
                     auto error_flags = FilePathParam::ValidatePath(val, file_extensions, file_flags);
                     if (error_flags & FilePathParam::FilePathParam::Flag_File) {
-                        this->gui_popup_msg = "[FilePathParam] Omitting value '" + val.generic_u8string() +
-                                              "'. Expected file but directory is given.";
+                        this->gui_popup_msg =
+                            "Omitting value '" + val.generic_u8string() + "'. Expected file but directory is given.";
                     }
                     if (error_flags & FilePathParam::Flag_Directory) {
-                        this->gui_popup_msg = "[FilePathParam] Omitting value '" + val.generic_u8string() +
-                                              "'. Expected directory but file is given.";
+                        this->gui_popup_msg =
+                            "Omitting value '" + val.generic_u8string() + "'. Expected directory but file is given.";
                     }
                     if (error_flags & FilePathParam::Flag_NoExistenceCheck) {
-                        this->gui_popup_msg =
-                            "[FilePathParam] Omitting value '" + val.generic_u8string() + "'. File does not exist.";
+                        this->gui_popup_msg = "Omitting value '" + val.generic_u8string() + "'. File does not exist.";
                     }
                     if (error_flags & FilePathParam::Flag_RestrictExtension) {
                         std::string log_exts;
                         for (auto& ext : file_extensions) {
                             log_exts += "'." + ext + "' ";
                         }
-                        this->gui_popup_msg = "[FilePathParam] Omitting value '" + val.generic_u8string() +
+                        this->gui_popup_msg = "Omitting value '" + val.generic_u8string() +
                                               "'. File does not have required extension: " + log_exts;
                     }
                     if (error_flags != 0) {
                         val = last_val;
-                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(this->gui_popup_msg.c_str());
-                        ImGui::OpenPopup("FilePathParam");
+                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                            (std::string("[FilePathParam] ") + this->gui_popup_msg).c_str());
+                        if (!this->gui_popup_disabled) {
+                            ImGui::OpenPopup(popup_name.c_str());
+                        }
                     }
                 }
             } catch (std::filesystem::filesystem_error& e) {
@@ -1600,11 +1605,18 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
     }
 
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
-    if (ImGui::BeginPopupModal("FilePathParam", nullptr, popup_flags)) {
-        ImGui::TextUnformatted(this->gui_popup_msg.c_str());
+    if (ImGui::BeginPopupModal(popup_name.c_str(), nullptr, popup_flags)) {
+        ImGui::Text("Parameter: %s", this->FullNameProject().c_str());
+        ImGui::TextColored(GUI_COLOR_TEXT_WARN, "Message: %s", this->gui_popup_msg.c_str());
         bool close = false;
         if (ImGui::Button("Ok")) {
             close = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Ok - Disable further notifications.")) {
+            close = true;
+            // Disable further notifications
+            this->gui_popup_disabled = true;
         }
         if (close || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
             ImGui::CloseCurrentPopup();
