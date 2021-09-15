@@ -411,29 +411,25 @@ bool SimpleMoleculeRenderer::create(void) {
             std::filesystem::path("simplemolecule/sm_sphere.vert.glsl"),
             std::filesystem::path("simplemolecule/sm_sphere.frag.glsl"));
 
-#if 0
         sphereClipPlaneShader_ = core::utility::make_shared_glowl_shader("sphereClipPlane", shdr_options,
             std::filesystem::path("simplemolecule/sm_sphere.vert.glsl"),
             std::filesystem::path("simplemolecule/sm_sphere_clipplane.frag.glsl"));
 
         filterSphereShader_ = core::utility::make_shared_glowl_shader("sphereFilter", shdr_options,
             std::filesystem::path("simplemolecule/sm_sphere_filter.vert.glsl"),
-            std::filesystem::path("simplemolecule/sm_sphere_filter.frag.glsl"));
-#endif
+            std::filesystem::path("simplemolecule/sm_sphere.frag.glsl"));
 
         cylinderShader_ = core::utility::make_shared_glowl_shader("cylinder", shdr_options,
             std::filesystem::path("simplemolecule/sm_cylinder.vert.glsl"),
             std::filesystem::path("simplemolecule/sm_cylinder.frag.glsl"));
 
-#if 0
         cylinderClipPlaneShader_ = core::utility::make_shared_glowl_shader("cylinderClipPlane", shdr_options,
             std::filesystem::path("simplemolecule/sm_cylinder.vert.glsl"),
             std::filesystem::path("simplemolecule/sm_cylinder_clipplane.frag.glsl"));
 
         filterCylinderShader_ = core::utility::make_shared_glowl_shader("cylinderFilter", shdr_options,
             std::filesystem::path("simplemolecule/sm_cylinder_filter.vert.glsl"),
-            std::filesystem::path("simplemolecule/sm_cylinder_filter.frag.glsl"));
-#endif
+            std::filesystem::path("simplemolecule/sm_cylinder.frag.glsl"));
 
         // TODO shaders for the second render pass
 
@@ -794,6 +790,7 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
 
     // enable sphere shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+#ifdef OLD_SHADERS
         this->sphereShader.Enable();
         // set shader variables
         glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
@@ -804,6 +801,17 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
         glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
         glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
         glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
+#else
+        sphereShader_->use();
+        sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+        sphereShader_->setUniform("camIn", cam_pose.direction);
+        sphereShader_->setUniform("camRight", cam_pose.right);
+        sphereShader_->setUniform("camUp", cam_pose.up);
+        sphereShader_->setUniform("MVP", MVP);
+        sphereShader_->setUniform("MVinv", MVinv);
+        sphereShader_->setUniform("MVPinv", MVPinv);
+        sphereShader_->setUniform("MVPtransp", MVPtransp);
+#endif
     } else {
         this->sphereShaderOR.Enable();
         // set shader variables
@@ -827,11 +835,7 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
 
     // disable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->sphereShader.Disable();
-    } else {
-        this->sphereShaderOR.Disable();
-    }
+    glUseProgram(0);
 
     // enable cylinder shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
@@ -1228,6 +1232,7 @@ void SimpleMoleculeRenderer::RenderStickClipPlane(MolecularDataCall* mol, const 
 
     /// Draw spheres ///
 
+#ifdef OLD_SHADERS
     this->sphereClipPlaneShader.Enable();
     // set shader variables
     glUniform4fv(this->sphereClipPlaneShader.ParameterLocation("viewAttr"), 1, viewportStuff);
@@ -1237,16 +1242,27 @@ void SimpleMoleculeRenderer::RenderStickClipPlane(MolecularDataCall* mol, const 
     glUniform3f(this->sphereClipPlaneShader.ParameterLocation("clipPlaneDir"), 0.0, 0.0,
         mol->AccessBoundingBoxes().ObjectSpaceBBox().Back());
     glUniform3f(this->sphereClipPlaneShader.ParameterLocation("clipPlaneBase"), 0.0, 0.0, this->currentZClipPos);
+#else
+    sphereClipPlaneShader_->use();
+    sphereClipPlaneShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    sphereClipPlaneShader_->setUniform("camIn", cam_pose.direction);
+    sphereClipPlaneShader_->setUniform("camRight", cam_pose.right);
+    sphereClipPlaneShader_->setUniform("camUp", cam_pose.up);
+    sphereClipPlaneShader_->setUniform(
+        "clipPlaneDir", glm::vec3(0.0f, 0.0f, mol->AccessBoundingBoxes().ObjectSpaceBBox().Back()));
+    sphereClipPlaneShader_->setUniform("clipPlaneBase", glm::vec3(0.0f, 0.0f, this->currentZClipPos));
+#endif
     // set vertex and color pointers and draw them
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer(4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
     glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
-    this->sphereClipPlaneShader.Disable();
+    glUseProgram(0);
 
     /// Draw cylinders ///
 
+#ifdef OLD_SHADERS
     this->cylinderClipPlaneShader.Enable();
     glUniform4fv(this->cylinderClipPlaneShader.ParameterLocation("viewAttr"), 1, viewportStuff);
     glUniform3fv(this->cylinderClipPlaneShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
@@ -1260,6 +1276,21 @@ void SimpleMoleculeRenderer::RenderStickClipPlane(MolecularDataCall* mol, const 
     glUniform3f(this->cylinderClipPlaneShader.ParameterLocation("clipPlaneDir"), 0.0, 0.0,
         mol->AccessBoundingBoxes().ObjectSpaceBBox().Back());
     glUniform3f(this->cylinderClipPlaneShader.ParameterLocation("clipPlaneBase"), 0.0, 0.0, this->currentZClipPos);
+#else
+    cylinderClipPlaneShader_->use();
+    cylinderClipPlaneShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    cylinderClipPlaneShader_->setUniform("camIn", cam_pose.direction);
+    cylinderClipPlaneShader_->setUniform("camRight", cam_pose.right);
+    cylinderClipPlaneShader_->setUniform("camUp", cam_pose.up);
+    attribLocInParams = glGetAttribLocation(cylinderClipPlaneShader_->getHandle(), "inParams");
+    attribLocQuatC = glGetAttribLocation(cylinderClipPlaneShader_->getHandle(), "quatC");
+    attribLocColor1 = glGetAttribLocation(cylinderClipPlaneShader_->getHandle(), "color1");
+    attribLocColor2 = glGetAttribLocation(cylinderClipPlaneShader_->getHandle(), "color2");
+    cylinderClipPlaneShader_->setUniform(
+        "clipPlaneDir", glm::vec3(0.0f, 0.0f, mol->AccessBoundingBoxes().ObjectSpaceBBox().Back()));
+    cylinderClipPlaneShader_->setUniform("clipPlaneBase", glm::vec3(0.0f, 0.0f, this->currentZClipPos));
+#endif
+
     // enable vertex attribute arrays for the attribute locations
     glDisableClientState(GL_COLOR_ARRAY);
     glEnableVertexAttribArray(this->attribLocInParams);
@@ -1279,7 +1310,7 @@ void SimpleMoleculeRenderer::RenderStickClipPlane(MolecularDataCall* mol, const 
     glDisableVertexAttribArray(this->attribLocColor1);
     glDisableVertexAttribArray(this->attribLocColor2);
     glDisableClientState(GL_VERTEX_ARRAY);
-    this->cylinderClipPlaneShader.Disable();
+    glUseProgram(0);
 }
 
 /*
@@ -1386,6 +1417,7 @@ void SimpleMoleculeRenderer::RenderSpacefillingClipPlane(MolecularDataCall* mol,
 
     auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
 
+#ifdef OLD_SHADERS
     this->sphereClipPlaneShader.Enable();
     // set shader variables
     glUniform4fv(this->sphereClipPlaneShader.ParameterLocation("viewAttr"), 1, viewportStuff);
@@ -1395,6 +1427,16 @@ void SimpleMoleculeRenderer::RenderSpacefillingClipPlane(MolecularDataCall* mol,
     glUniform3f(this->sphereClipPlaneShader.ParameterLocation("clipPlaneDir"), 0.0, 0.0,
         mol->AccessBoundingBoxes().ObjectSpaceBBox().Back());
     glUniform3f(this->sphereClipPlaneShader.ParameterLocation("clipPlaneBase"), 0.0, 0.0, this->currentZClipPos);
+#else
+    sphereClipPlaneShader_->use();
+    sphereClipPlaneShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    sphereClipPlaneShader_->setUniform("camIn", cam_pose.direction);
+    sphereClipPlaneShader_->setUniform("camRight", cam_pose.right);
+    sphereClipPlaneShader_->setUniform("camUp", cam_pose.up);
+    sphereClipPlaneShader_->setUniform(
+        "clipPlaneDir", glm::vec3(0.0f, 0.0f, mol->AccessBoundingBoxes().ObjectSpaceBBox().Back()));
+    sphereClipPlaneShader_->setUniform("clipPlaneBase", glm::vec3(0.0f, 0.0f, this->currentZClipPos));
+#endif
 
     // set vertex and color pointers and draw them
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -1404,8 +1446,7 @@ void SimpleMoleculeRenderer::RenderSpacefillingClipPlane(MolecularDataCall* mol,
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
 
     // disable sphere shader
-
-    this->sphereClipPlaneShader.Disable();
+    glUseProgram(0);
 }
 
 /*
@@ -1741,6 +1782,7 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
 
     // enable sphere shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+#ifdef OLD_SHADERS
         this->filterSphereShader.Enable();
         // set shader variables
         glUniform4fv(this->filterSphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
@@ -1749,6 +1791,14 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
         glUniform3fv(this->filterSphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
         // Set filter attribute
         this->attribLocAtomFilter = glGetAttribLocation(this->filterSphereShader.ProgramHandle(), "filter");
+#else
+        filterSphereShader_->use();
+        filterSphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+        filterSphereShader_->setUniform("camIn", cam_pose.direction);
+        filterSphereShader_->setUniform("camRight", cam_pose.right);
+        filterSphereShader_->setUniform("camUp", cam_pose.up);
+        this->attribLocAtomFilter = glGetAttribLocation(filterSphereShader_->getHandle(), "filter");
+#endif
     } else {
         this->filterSphereShaderOR.Enable();
         // set shader variables
@@ -1777,15 +1827,12 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
     glDisableVertexAttribArray(this->attribLocAtomFilter);
 
     // disable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->filterSphereShader.Disable();
-    } else {
-        this->filterSphereShaderOR.Disable();
-    }
+    glUseProgram(0);
 
     // enable cylinder shader
     // enable cylinder shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+#ifdef OLD_SHADERS
         this->filterCylinderShader.Enable();
         // set shader variables
         glUniform4fv(this->filterCylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
@@ -1798,6 +1845,18 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
         attribLocColor1 = glGetAttribLocation(this->filterCylinderShader, "color1");
         attribLocColor2 = glGetAttribLocation(this->filterCylinderShader, "color2");
         this->attribLocConFilter = glGetAttribLocation(this->filterCylinderShader, "filter");
+#else
+        filterCylinderShader_->use();
+        filterCylinderShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+        filterCylinderShader_->setUniform("camIn", cam_pose.direction);
+        filterCylinderShader_->setUniform("camRight", cam_pose.right);
+        filterCylinderShader_->setUniform("camUp", cam_pose.up);
+        attribLocInParams = glGetAttribLocation(filterCylinderShader_->getHandle(), "inParams");
+        attribLocQuatC = glGetAttribLocation(filterCylinderShader_->getHandle(), "quatC");
+        attribLocColor1 = glGetAttribLocation(filterCylinderShader_->getHandle(), "color1");
+        attribLocColor2 = glGetAttribLocation(filterCylinderShader_->getHandle(), "color2");
+        this->attribLocConFilter = glGetAttribLocation(filterCylinderShader_->getHandle(), "filter");
+#endif
     } else {
         this->filterCylinderShaderOR.Enable();
         // set shader variables
@@ -1839,11 +1898,7 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
     glDisableClientState(GL_VERTEX_ARRAY);
 
     // disable cylinder shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->filterCylinderShader.Disable();
-    } else {
-        this->filterCylinderShaderOR.Disable();
-    }
+    glUseProgram(0);
 
     /* GLenum errCode;
      const GLubyte *errString;
@@ -1892,6 +1947,7 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
 
     // Enable sphere shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+#ifdef OLD_SHADERS
         this->filterSphereShader.Enable();
         // set shader variables
         glUniform4fv(this->filterSphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
@@ -1900,6 +1956,14 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
         glUniform3fv(this->filterSphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
         // Set filter attribute
         this->attribLocAtomFilter = glGetAttribLocation(this->filterSphereShader.ProgramHandle(), "filter");
+#else
+        filterSphereShader_->use();
+        filterSphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+        filterSphereShader_->setUniform("camIn", cam_pose.direction);
+        filterSphereShader_->setUniform("camRight", cam_pose.right);
+        filterSphereShader_->setUniform("camUp", cam_pose.up);
+        this->attribLocAtomFilter = glGetAttribLocation(filterSphereShader_->getHandle(), "filter");
+#endif
     } else {
         this->filterSphereShaderOR.Enable();
         // set shader variables
@@ -1923,11 +1987,7 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
     glDisableVertexAttribArray(this->attribLocAtomFilter);
 
     // disable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->filterSphereShader.Disable();
-    } else {
-        this->filterSphereShaderOR.Disable();
-    }
+    glUseProgram(0);
 }
 
 /*

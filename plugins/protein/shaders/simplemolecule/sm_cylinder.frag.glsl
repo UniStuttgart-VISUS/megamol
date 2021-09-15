@@ -46,7 +46,7 @@ void main(void) {
     if (radicand < 0.0) { discard; }
 #endif // CLIP
 
-   float radix = sqrt(radicand);
+    float radix = sqrt(radicand);
     vec2 lambdas = vec2((-rDc - radix) / rDr, (-rDc + radix) / rDr);
 
     // calculations for cylinder caps
