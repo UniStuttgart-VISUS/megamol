@@ -73,6 +73,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/invor/glowl.git
       GIT_TAG "v0.4f"
       INCLUDE_DIR "include")
+    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD)
 
   # json
   elseif(NAME STREQUAL "json")

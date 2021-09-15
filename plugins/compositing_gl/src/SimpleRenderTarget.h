@@ -13,7 +13,6 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
 
 namespace megamol {

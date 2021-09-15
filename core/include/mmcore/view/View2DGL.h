@@ -20,7 +20,6 @@
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CameraControllers.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/FramebufferObject.hpp>
 
 namespace megamol {

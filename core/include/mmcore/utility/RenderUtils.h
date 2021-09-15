@@ -15,7 +15,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/BufferObject.hpp>
 #include <glowl/Texture2D.hpp>
 #include <glowl/GLSLProgram.hpp>

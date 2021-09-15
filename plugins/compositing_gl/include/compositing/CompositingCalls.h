@@ -13,7 +13,6 @@
 #include "mmcore/CallGeneric.h"
 #include "mmcore/view/Camera.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 
