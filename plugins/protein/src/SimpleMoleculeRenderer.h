@@ -274,17 +274,11 @@ namespace protein {
         float currentZClipPos;
 
         /** shader for the spheres (raycasting view) */
-        vislib::graphics::gl::GLSLShader sphereShader;
         vislib::graphics::gl::GLSLShader sphereShaderOR;
-        vislib::graphics::gl::GLSLShader sphereClipPlaneShader;
         /** shader for the cylinders (raycasting view) */
-        vislib::graphics::gl::GLSLShader cylinderShader;
         vislib::graphics::gl::GLSLShader cylinderShaderOR;
-        vislib::graphics::gl::GLSLShader cylinderClipPlaneShader;
         /** Shader that uses filter information */
-        vislib::graphics::gl::GLSLShader filterSphereShader;
         vislib::graphics::gl::GLSLShader filterSphereShaderOR;
-        vislib::graphics::gl::GLSLShader filterCylinderShader;
         vislib::graphics::gl::GLSLShader filterCylinderShaderOR;
 
         // new shader programs
