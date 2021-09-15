@@ -130,7 +130,7 @@ namespace core {
                 return false;
             }
 
-            AbstractCallRender* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
+            AbstractCallRender* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
             if (cr == nullptr) {
                 return false;
             }
@@ -198,7 +198,7 @@ namespace core {
         inline void
         BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::ResetView() {
             if (this->_cameraIsMutable) { // check if view is in control of the camera
-                AbstractCallRender* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
+                AbstractCallRender* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
                 if ((cr != nullptr) && (_fbo != nullptr) && ((*cr)(AbstractCallRender::FnGetExtents))) {
                     this->_camera_controller.reset(
                         this->_bboxs, static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight()));
@@ -229,7 +229,7 @@ namespace core {
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
         inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnKey(
             view::Key key, view::KeyAction action, view::Modifiers mods) {
-            auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
+            auto* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
             if (cr != nullptr) {
                 InputEvent evt;
                 evt.tag = InputEvent::Tag::Key;
@@ -270,7 +270,7 @@ namespace core {
         template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE>
         inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnChar(
             unsigned int codePoint) {
-            auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
+            auto* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
             if (cr == NULL)
                 return false;
 
@@ -293,7 +293,7 @@ namespace core {
         BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnMouseButton(
             view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
             if (!this->_camera_controller.isOverriding() && !this->_camera_controller.isActive()) {
-                auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
+                auto* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
                 if (cr != nullptr) {
                     view::InputEvent evt;
                     evt.tag = view::InputEvent::Tag::MouseButton;
@@ -310,17 +310,17 @@ namespace core {
                 // get window resolution to help computing mouse coordinates
                 int wndWidth;
                 int wndHeight;
-                auto projType = this->_camera.get<Camera::ProjectionType>();
+                auto projType = this->_camera.template get<Camera::ProjectionType>();
                 if (projType == Camera::ProjectionType::PERSPECTIVE) {
-                    auto tile_end = this->_camera.get<Camera::PerspectiveParameters>().image_plane_tile.tile_end;
-                    auto tile_start = this->_camera.get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
+                    auto tile_end = this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_end;
+                    auto tile_start = this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
                     auto tile_size = tile_end - tile_start;
 
                     wndWidth = static_cast<int>(static_cast<float>(this->_fbo->getWidth()) / tile_size.x);
                     wndHeight = static_cast<int>(static_cast<float>(this->_fbo->getHeight()) / tile_size.y);
                 } else if (projType == Camera::ProjectionType::ORTHOGRAPHIC) {
-                    auto tile_end = this->_camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
-                    auto tile_start = this->_camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
+                    auto tile_end = this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
+                    auto tile_start = this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
                     auto tile_size = tile_end - tile_start;
 
                     wndWidth = static_cast<int>(static_cast<float>(this->_fbo->getWidth()) / tile_size.x);
@@ -340,7 +340,7 @@ namespace core {
         BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnMouseMove(
             double x, double y) {
             if (!this->_camera_controller.isActive()) {
-                auto* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
+                auto* cr = this->_rhsRenderSlot.template CallAs<AbstractCallRender>();
                 if (cr != nullptr) {
                     view::InputEvent evt;
                     evt.tag = view::InputEvent::Tag::MouseMove;
@@ -356,17 +356,17 @@ namespace core {
                 // get window resolution to help computing mouse coordinates
                 int wndWidth;
                 int wndHeight;
-                auto projType = this->_camera.get<Camera::ProjectionType>();
+                auto projType = this->_camera.template get<Camera::ProjectionType>();
                 if (projType == Camera::ProjectionType::PERSPECTIVE) {
-                    auto tile_end = this->_camera.get<Camera::PerspectiveParameters>().image_plane_tile.tile_end;
-                    auto tile_start = this->_camera.get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
+                    auto tile_end = this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_end;
+                    auto tile_start = this->_camera.template get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
                     auto tile_size = tile_end - tile_start;
 
                     wndWidth = static_cast<int>(static_cast<float>(this->_fbo->getWidth()) / tile_size.x);
                     wndHeight = static_cast<int>(static_cast<float>(this->_fbo->getHeight()) / tile_size.y);
                 } else if (projType == Camera::ProjectionType::ORTHOGRAPHIC) {
-                    auto tile_end = this->_camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
-                    auto tile_start = this->_camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
+                    auto tile_end = this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
+                    auto tile_start = this->_camera.template get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
                     auto tile_size = tile_end - tile_start;
 
                     wndWidth = static_cast<int>(static_cast<float>(this->_fbo->getWidth()) / tile_size.x);
@@ -385,7 +385,7 @@ namespace core {
         inline bool
         BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE>::OnMouseScroll(
             double dx, double dy) {
-            auto* cr = this->_rhsRenderSlot.CallAs<view::AbstractCallRender>();
+            auto* cr = this->_rhsRenderSlot.template CallAs<view::AbstractCallRender>();
             if (cr != NULL) {
                 view::InputEvent evt;
                 evt.tag = view::InputEvent::Tag::MouseScroll;
