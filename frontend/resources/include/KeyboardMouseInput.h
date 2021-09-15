@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <vector>
 #include <ostream>
+#include <iterator>
 
 namespace megamol {
 namespace frontend_resources {

@@ -16,7 +16,6 @@
 #include <json.hpp>
 
 #ifdef CUESDK_ENABLED
-#define CORSAIR_LIGHTING_SDK_DISABLE_DEPRECATION_WARNINGS
 #include "CUESDK.h"
 #endif
 
