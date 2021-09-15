@@ -126,12 +126,14 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 #ifdef _WIN32
             std::replace(fname.begin(), fname.end(), '/', '\\');
 #endif
-            if (this->reader) {
+            if (this->reader && dataHashChanged) {
                 this->reader->Close();
                 io->RemoveAllVariables();
                 io->RemoveAllAttributes();
+                this->reader =
+                    std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
             }
-            this->reader = std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
+
 
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Beginning step");
             const adios2::StepStatus status = reader->BeginStep();
@@ -407,12 +409,17 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Opening File %s", fname.c_str());
 
-            if (this->reader) {
+            if (this->reader && dataHashChanged) {
                 this->reader->Close();
                 this->adiosInst->AtIO("Input").RemoveAllVariables();
                 this->adiosInst->AtIO("Input").RemoveAllAttributes();
+                this->reader =
+                    std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
+            } else if (!this->reader) {
+                this->reader =
+                    std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
             }
-            this->reader = std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
+            
 
             // megamol::core::utility::log::Log::DefaultLog.WriteInfo("ADIOS2: Reading available attributes");
             // auto availAttrib =io->AvailableAttributes();
