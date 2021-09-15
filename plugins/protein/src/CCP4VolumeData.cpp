@@ -112,17 +112,14 @@ bool protein::CCP4VolumeData::tryLoadFile(void) {
 	// clear all containers
 	this->ClearData();
 
-
-
 	// open file for reading
-    vislib::StringA ccp4filename( this->filename.Param<param::FilePathParam>()->Value());
-	const char *fn = ccp4filename.PeekBuffer();
-    std::ifstream fin( fn, std::ios::binary | std::ios::in );
+        auto fn = this->filename.Param<param::FilePathParam>()->Value();
+    std::ifstream fin(fn, std::ios::binary | std::ios::in);
 
     // return if file open failed
     if( !fin ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR,
-            "%s: Unable to open CCP4 input file \"%s\"", this->ClassName(), fn );
+            "%s: Unable to open CCP4 input file \"%s\"", this->ClassName(), fn.generic_u8string().c_str());
         return false;
     }
 

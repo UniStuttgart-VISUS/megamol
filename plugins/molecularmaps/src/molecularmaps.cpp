@@ -1,66 +1,33 @@
-/*
- * molecularmaps.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
+#include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "MapGenerator.h"
 
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
+namespace megamol::molecularmaps {
 
+class MolecularmapsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(MolecularmapsPluginInstance)
 
-/* anonymous namespace hides this type from any other object files */
-namespace {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
 public:
-    /** ctor */
-    plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
+    MolecularmapsPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "molecularmaps", "New version of the molecular maps creator"){};
 
-                  /* machine-readable plugin assembly name */
-                  "molecularmaps", // TODO: Change this!
+    ~MolecularmapsPluginInstance() override = default;
 
-                  /* human-readable plugin description */
-                  "New version of the molecular maps creator"){
+    // Registers modules and calls
+    void registerClasses() override {
 
-                  // here we could perform addition initialization
-              };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-
-        // register modules here:
-
-        //
-        // TODO: Register your plugin's modules here
-        // like:
-        //   this->module_descriptions.RegisterAutoDescription<megamol::molecularmaps::MyModule1>();
-        //   this->module_descriptions.RegisterAutoDescription<megamol::molecularmaps::MyModule2>();
-        //   ...
-        //
+        // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::molecularmaps::MapGenerator>();
 
-        // register calls here:
-
-        //
-        // TODO: Register your plugin's calls here
-        // like:
-        //   this->call_descriptions.RegisterAutoDescription<megamol::molecularmaps::MyCall1>();
-        //   this->call_descriptions.RegisterAutoDescription<megamol::molecularmaps::MyCall2>();
-        //   ...
-        //
+        // register calls
     }
 };
-} // namespace
+} // namespace megamol::molecularmaps

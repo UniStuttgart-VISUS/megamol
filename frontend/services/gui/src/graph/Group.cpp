@@ -611,7 +611,8 @@ void megamol::gui::Group::SetPosition(const GraphItemsState_t& state, ImVec2 pos
 
 void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
 
-    float line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
+    const float line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
+    const float slot_height = GUI_SLOT_RADIUS * 3.0f;
 
     // POSITION
     float pos_minX = FLT_MAX;
@@ -630,34 +631,45 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
         this->gui_position = megamol::gui::Module::GetDefaultModulePosition(in_canvas);
     }
 
-    // SIZE
-    size_t caller_count = this->InterfaceSlots().operator[](CallSlotType::CALLER).size();
-    size_t callee_count = this->InterfaceSlots().operator[](CallSlotType::CALLEE).size();
-    size_t max_slot_count = std::max(caller_count, callee_count);
-
-    // WIDTH
-    float max_label_length = 0.0f;
-    // Consider interface slot label width only in collapsed view
-    if (this->gui_collapsed_view) {
-        for (auto& interfaceslot_map : this->InterfaceSlots()) {
-            for (auto& interfaceslot_ptr : interfaceslot_map.second) {
-                max_label_length =
-                    std::max(ImGui::CalcTextSize(interfaceslot_ptr->Label().c_str()).x, max_label_length);
+    float group_width = (1.5f * ImGui::CalcTextSize(this->name.c_str()).x / in_canvas.zooming);
+    float group_height = (3.0f * line_height);
+    std::vector<float> caller_label_heights;
+    std::vector<float> callee_label_heights;
+    float caller_max_label_width = 0.0f;
+    float callee_max_label_width = 0.0f;
+    for (auto& interfaceslot_map : this->InterfaceSlots()) {
+        for (auto& interfaceslot_ptr : interfaceslot_map.second) {
+            auto text_size = ImGui::CalcTextSize(interfaceslot_ptr->Label().c_str());
+            if (interfaceslot_map.first == CallSlotType::CALLER) {
+                caller_max_label_width = std::max(text_size.x, caller_max_label_width);
+                caller_label_heights.emplace_back(
+                    std::max((text_size.y / in_canvas.zooming + GUI_SLOT_RADIUS * 1.0f), slot_height));
+            } else if (interfaceslot_map.first == CallSlotType::CALLEE) {
+                callee_max_label_width = std::max(text_size.x, callee_max_label_width);
+                callee_label_heights.emplace_back(
+                    std::max((text_size.y / in_canvas.zooming + GUI_SLOT_RADIUS * 1.0f), slot_height));
             }
         }
-        if (max_label_length > 0.0f) {
-            max_label_length = (2.0f * max_label_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
-        }
     }
-    float group_width =
-        std::max((1.5f * ImGui::CalcTextSize(this->name.c_str()).x / in_canvas.zooming), max_label_length) +
-        (3.0f * GUI_SLOT_RADIUS);
 
-    // HEIGHT
-    float group_height = std::max((3.0f * line_height),
-        (line_height + (static_cast<float>(max_slot_count) * (GUI_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_SLOT_RADIUS));
+    if (this->gui_collapsed_view) {
 
-    if (!this->gui_collapsed_view) {
+        float max_label_width =
+            ((caller_max_label_width + callee_max_label_width) / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
+        group_width = std::max(group_width, max_label_width) + (3.0f * GUI_SLOT_RADIUS);
+
+        float caller_max_label_height = 0.0f;
+        for (auto& lh : caller_label_heights) {
+            caller_max_label_height += lh;
+        }
+        float callee_max_label_height = 0.0f;
+        for (auto& lh : callee_label_heights) {
+            callee_max_label_height += lh;
+        }
+        group_height = std::max(group_height,
+            (line_height + GUI_SLOT_RADIUS + (std::max(caller_max_label_height, callee_max_label_height))));
+    } else {
+
         float pos_maxX = -FLT_MAX;
         float pos_maxY = -FLT_MAX;
         ImVec2 tmp_size;
@@ -670,35 +682,34 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
         group_width = std::max(group_width, (pos_maxX + GUI_GRAPH_BORDER) - pos_minX);
         group_height = std::max(group_height, (pos_maxY + GUI_GRAPH_BORDER) - pos_minY);
     }
+
     // Clamp to minimum size
     this->gui_size = ImVec2(std::max(group_width, (100.0f * megamol::gui::gui_scaling.Get())),
         std::max(group_height, (50.0f * megamol::gui::gui_scaling.Get())));
 
-
     // Set group interface position of call slots --------------------------
-
     ImVec2 group_pos = in_canvas.offset + this->gui_position * in_canvas.zooming;
     group_pos.y += (line_height * in_canvas.zooming);
     ImVec2 group_size = this->gui_size * in_canvas.zooming;
     group_size.y -= (line_height * in_canvas.zooming);
-
-    size_t caller_idx = 0;
-    size_t callee_idx = 0;
-    ImVec2 callslot_group_position;
-
-    for (auto& interfaceslots_map : this->InterfaceSlots()) {
-        for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-            if (interfaceslots_map.first == CallSlotType::CALLER) {
-                callslot_group_position = ImVec2((group_pos.x + group_size.x),
-                    (group_pos.y + group_size.y * ((float) caller_idx + 1) / ((float) caller_count + 1)));
-                caller_idx++;
-            } else if (interfaceslots_map.first == CallSlotType::CALLEE) {
-                callslot_group_position = ImVec2(
-                    group_pos.x, (group_pos.y + group_size.y * ((float) callee_idx + 1) / ((float) callee_count + 1)));
-                callee_idx++;
+    float caller_y = group_pos.y;
+    float callee_y = group_pos.y;
+    for (auto& interfaceslot_map : this->InterfaceSlots()) {
+        auto slot_cnt = interfaceslot_map.second.size();
+        for (size_t i = 0; i < slot_cnt; i++) {
+            ImVec2 callslot_group_position;
+            if (interfaceslot_map.first == CallSlotType::CALLER) {
+                auto caller_label_height = caller_label_heights[i] * in_canvas.zooming;
+                callslot_group_position = ImVec2((group_pos.x + group_size.x), (caller_y + caller_label_height / 2.0f));
+                caller_y += caller_label_height;
+            } else if (interfaceslot_map.first == CallSlotType::CALLEE) {
+                auto callee_label_height = callee_label_heights[i] * in_canvas.zooming;
+                callslot_group_position = ImVec2(group_pos.x, (callee_y + callee_label_height / 2.0f));
+                callee_y += callee_label_height;
             }
-            interfaceslot_ptr->SetPosition(callslot_group_position);
+            interfaceslot_map.second[i]->SetPosition(callslot_group_position);
         }
     }
+
     this->spacial_sort_interfaceslots();
 }

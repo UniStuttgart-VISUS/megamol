@@ -29,7 +29,7 @@ void megamol::stdplugin::datatools::CSVWriter::release() {}
 
 
 bool megamol::stdplugin::datatools::CSVWriter::run() {
-    auto filename = std::filesystem::path(std::string(_filename_slot.Param<core::param::FilePathParam>()->Value()));
+    auto filename = _filename_slot.Param<core::param::FilePathParam>()->Value();
     if (filename.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[CSVWriter]: No file name specified. Abort.");
         return false;

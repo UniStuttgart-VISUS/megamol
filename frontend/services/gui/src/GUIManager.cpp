@@ -840,11 +840,8 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                 }
                 // Load GUI state from project file when project file changed
                 if (!script_filename.empty()) {
-                    auto script_path = script_filename;
-#ifdef _MSC_VER
-                    script_path = megamol::core::utility::Utf8Encode(script_path);
-#endif
-                    synced_graph_ptr->SetFilename(script_path, false);
+                    auto script_path = std::filesystem::u8path(script_filename);
+                    synced_graph_ptr->SetFilename(script_path.generic_u8string(), false);
                 }
             }
         }
@@ -895,13 +892,14 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                     if (p.Type() == ParamType_t::FILEPATH) {
                         if (auto* p_ptr = p.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
                             if (p_ptr->RegisterNotifications()) {
-                                p_ptr->RegisterNotifications([&, this](const std::string& id, std::weak_ptr<bool> open,
-                                                                 const std::string& message) {
-                                    const auto notification_name =
-                                        std::string("Parameter: ") + p.FullNameProject() + "##" + id;
-                                    this->notification_collection[notification_name] =
-                                        std::tuple<std::weak_ptr<bool>, bool, std::string>(open, false, message);
-                                });
+                                p_ptr->RegisterNotifications(
+                                    [&, this](const std::string& id, std::weak_ptr<bool> open,
+                                        const std::string& message, std::weak_ptr<std::string> omitted_val) {
+                                        const auto notification_name =
+                                            std::string("Parameter: ") + p.FullNameProject() + "##" + id;
+                                        this->notification_collection[notification_name] = {
+                                            open, false, message, omitted_val};
+                                    });
                             }
                         }
                     }
@@ -1485,7 +1483,11 @@ void megamol::gui::GUIManager::draw_popups() {
             }
         }
         if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
-            ImGui::TextUnformatted(std::get<2>(it->second).c_str());
+            if (std::get<3>(it->second).lock()->empty()) {
+                ImGui::TextUnformatted(std::get<2>(it->second).c_str());
+            } else {
+                ImGui::Text(std::get<2>(it->second).c_str(), std::get<3>(it->second).lock()->c_str());
+            }
             bool close = false;
             if (ImGui::Button("Ok")) {
                 close = true;
@@ -1810,9 +1812,10 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
     // Check for existing file
     bool created_filepath = false;
     if (!inout_filepath.empty()) {
+        auto ret_filepath = inout_filepath;
         do {
             // Create new filename with iterating suffix
-            std::string filename = megamol::core::utility::FileUtils::GetFilenameStem<std::string>(inout_filepath);
+            std::string filename = megamol::core::utility::FileUtils::GetFilePathStem<std::string>(ret_filepath);
             std::string id_separator = "_";
             bool new_separator = false;
             auto separator_index = filename.find_last_of(id_separator);
@@ -1823,17 +1826,18 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
                 } catch (...) { new_separator = true; }
                 this->gui_state.screenshot_filepath_id++;
                 if (new_separator) {
-                    this->gui_state.screenshot_filepath =
+                    ret_filepath =
                         filename + id_separator + std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
                 } else {
-                    inout_filepath = filename.substr(0, separator_index + 1) +
-                                     std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
+                    ret_filepath = filename.substr(0, separator_index + 1) +
+                                   std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
                 }
             } else {
-                inout_filepath =
+                ret_filepath =
                     filename + id_separator + std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
             }
-        } while (megamol::core::utility::FileUtils::FileExists<std::string>(inout_filepath));
+        } while (megamol::core::utility::FileUtils::FileExists<std::string>(ret_filepath));
+        inout_filepath = std::filesystem::u8path(ret_filepath).generic_u8string();
         created_filepath = true;
     }
     return created_filepath;
@@ -1857,7 +1861,7 @@ void GUIManager::RegisterPopUp(
 
 void GUIManager::RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message) {
 
-    this->notification_collection[name] = std::tuple<std::weak_ptr<bool>, bool, std::string>(open, false, message);
+    this->notification_collection[name] = {open, false, message, std::make_shared<std::string>()};
 }
 
 

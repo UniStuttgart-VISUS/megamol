@@ -83,7 +83,7 @@ void moldyn::MMPLDWriter::release(void) {}
  */
 bool moldyn::MMPLDWriter::run(void) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
+    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
         return false;

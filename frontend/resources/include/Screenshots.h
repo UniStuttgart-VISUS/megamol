@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <vector>
 
 namespace megamol {
@@ -56,11 +57,11 @@ public:
 
 class IImageDataWriter {
 public:
-    bool write_screenshot(IScreenshotSource const& image_source, std::string const& filename) const {
+    bool write_screenshot(IScreenshotSource const& image_source, std::filesystem::path const& filename) const {
         return this->write_image(std::move(image_source.take_screenshot()), filename);
     }
 
-    virtual bool write_image(ImageData image, std::string const& filename) const = 0;
+    virtual bool write_image(ImageData image, std::filesystem::path const& filename) const = 0;
 
     ~IImageDataWriter() = default;
 };
@@ -79,7 +80,7 @@ private:
 
 class ImageDataToPNGWriter : public IImageDataWriter {
 public:
-    bool write_image(ImageData image, std::string const& filename) const override;
+    bool write_image(ImageData image, std::filesystem::path const& filename) const override;
 };
 
 

@@ -91,8 +91,8 @@ namespace megamol
 						this->filename_slot.ResetDirty();
 
 						// Read data
-						const auto& vislib_filename = this->filename_slot.Param<core::param::FilePathParam>()->Value();
-						const std::string filename(vislib_filename.PeekBuffer());
+						const auto& filepath = this->filename_slot.Param<core::param::FilePathParam>()->Value();
+                        const std::string filename(filepath.generic_u8string());
 
 						try
 						{

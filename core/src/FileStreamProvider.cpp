@@ -44,7 +44,7 @@ namespace core {
             if (!this->stream.good())
             {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn("Unable to open file '%s' for writing!",
-                    this->filePath.Param<core::param::FilePathParam>()->Value());
+                    this->filePath.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             }
         }
 

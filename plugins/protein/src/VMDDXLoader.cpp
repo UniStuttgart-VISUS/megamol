@@ -61,9 +61,8 @@ VMDDXLoader::VMDDXLoader(void) : Module(),
             &VMDDXLoader::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
-    this->filenameSlot.SetParameter(new core::param::FilePathParam("/Path/to/file"));
+    this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
     this->MakeSlotAvailable(&this->filenameSlot);
-    this->filenameSlot.Param<param::FilePathParam>()->SetValue("");
 }
 
 
@@ -108,7 +107,7 @@ bool VMDDXLoader::getData(core::Call& call) {
     // Generate filename based on frame idx and pattern
     vislib::StringA frameFile;
     if(this->filenamesDigits == 0) {
-        frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
+        frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
     } else {
         std::stringstream ss;
         ss.width(this->filenamesDigits);
@@ -340,7 +339,7 @@ void VMDDXLoader::readDataAscii2Float(char *buffIn, float* buffOut,
 void VMDDXLoader::scanFolder() {
     using namespace vislib;
 
-    TString filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
+    TString filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
 
     vislib::sys::File testFile;
 

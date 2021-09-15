@@ -19,7 +19,7 @@ adiosDataSource::adiosDataSource()
     , getData("getdata", "Slot to request data from this data source.")
     , filenameSlot("filename", "The path to the ADIOS-based file to load.") {
 
-    this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
+    this->filenameSlot.SetParameter(new core::param::FilePathParam("", core::param::FilePathParam::Flag_Directory));
     this->filenameSlot.SetUpdateCallback(&adiosDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filenameSlot);
 
@@ -122,7 +122,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
     if (dataHashChanged || inquireChanged || loadedFrameID != cad->getFrameIDtoLoad()) {
 
         try {
-            std::string fname = std::string(T2A(this->filenameSlot.Param<core::param::FilePathParam>()->Value()));
+            auto fname = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string();
 #ifdef _WIN32
             std::replace(fname.begin(), fname.end(), '/', '\\');
 #endif
@@ -400,7 +400,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             // io->SetEngine("BP3"); this is for v2.4.0
             // adiosInst->AtIO("Input").SetParameters({{"verbose", "4"}});
             io->SetParameter("verbose", "5");
-            std::string fname = std::string(T2A(this->filenameSlot.Param<core::param::FilePathParam>()->Value()));
+            auto fname = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string();
 #ifdef _WIN32
             std::replace(fname.begin(), fname.end(), '/', '\\');
 #endif

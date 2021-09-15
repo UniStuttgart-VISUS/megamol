@@ -118,10 +118,9 @@ public:
     /**
      * Load textures.
      */
-    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
-    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR) {
-        return megamol::core::utility::RenderUtils::LoadTextureFromFile(out_texture_ptr, megamol::core::utility::ToString(filename), tex_min_filter, tex_max_filter);
-    }
+    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr,
+        const std::filesystem::path& filename, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR,
+        GLint tex_max_filter = GL_LINEAR);
 
     static bool LoadTextureFromData(
         std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data, GLint tex_min_filter = GL_NEAREST_MIPMAP_LINEAR, GLint tex_max_filter = GL_LINEAR);
@@ -137,10 +136,7 @@ public:
     bool InitPrimitiveRendering(megamol::core::utility::ShaderSourceFactory& factory);
 
     // Keeps the texture object in render utils for later access via texture id
-    bool LoadTextureFromFile(GLuint& out_texture_id, const std::wstring& filename, bool reload = false) {
-        return this->LoadTextureFromFile(out_texture_id, megamol::core::utility::ToString(filename), reload);
-    }
-    bool LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename, bool reload = false);
+    bool LoadTextureFromFile(GLuint& out_texture_id, const std::filesystem::path& filename, bool reload = false);
 
     void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view,
         const glm::vec3& cam_pos, const glm::vec4& color, bool sort = false);
@@ -227,7 +223,7 @@ private:
     std::vector<std::shared_ptr<glowl::Texture2D>> textures;
     std::array<ShaderDataType, Primitives::PRIM_COUNT> queues;
     std::array<std::shared_ptr<glowl::GLSLProgram>, Primitives::PRIM_COUNT> shaders;
-    std::array<std::shared_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers;
+    std::array<std::unique_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers;
 
     // FUNCTIONS ------------------------------------------------------- //
 
@@ -242,8 +238,6 @@ private:
     void drawPrimitives(Primitives primitive, const glm::mat4& mat_mvp, glm::vec2 dim_vp);
 
     void sortPrimitiveQueue(Primitives primitive);
-
-    size_t loadRawFile(std::wstring filename, BYTE** outData);
 
     void clearQueue(Primitives primitive);
 

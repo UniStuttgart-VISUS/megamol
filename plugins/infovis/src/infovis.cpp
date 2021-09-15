@@ -1,16 +1,11 @@
-/*
- * infovis.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
 
 #include "DepthFunction.h"
 #include "DiagramSeries.h"
@@ -28,28 +23,19 @@
 #include "TextureHistogramRenderer2D.h"
 
 namespace megamol::infovis {
-/** Implementing the instance class of this plugin */
-class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-    REGISTERPLUGIN(plugin_instance)
+class InfovisPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(InfovisPluginInstance)
+
 public:
-    /** ctor */
-    plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
-                  /* machine-readable plugin assembly name */
-                  "infovis",
+    InfovisPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance("infovis", "Information visualization"){};
 
-                  /* human-readable plugin description */
-                  "Information visualization"){
+    ~InfovisPluginInstance() override = default;
 
-                  // here we could perform addition initialization
-              };
-    /** Dtor */
-    virtual ~plugin_instance(void) {
-        // here we could perform addition de-initialization
-    }
-    /** Registers modules and calls */
-    virtual void registerClasses(void) {
-        // register modules here:
+    // Registers modules and calls
+    void registerClasses() override {
+
+        // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::TableHistogramRenderer2D>();
@@ -61,7 +47,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::DepthFunction>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
-        // register calls here:
+        // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeriesCall>();
     }
 };
