@@ -164,6 +164,9 @@ namespace gui {
         bool IsCanvasHoverd() const {
             return this->gui_canvas_hovered;
         }
+        bool IsModuleHovered() const {
+            return (this->gui_graph_state.interact.module_hovered_uid != GUI_INVALID_ID);
+        }
 
         void SetLayoutGraph(bool layout = true) {
             this->gui_graph_layout = ((layout) ? (1) : (0));

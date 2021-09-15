@@ -180,10 +180,11 @@ void megamol::gui::Configurator::PopUps() {
 
         ImGuiID selected_callslot_uid = selected_graph_ptr->GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
+        bool is_any_module_hovered = selected_graph_ptr->IsModuleHovered();
 
         bool valid_double_click =
             (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
-                (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup));
+                (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup) && (!is_any_module_hovered));
         bool valid_double_click_callslot =
             (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
                 (selected_callslot_uid != GUI_INVALID_ID) &&
