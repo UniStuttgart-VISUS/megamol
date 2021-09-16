@@ -22,7 +22,8 @@ adiosWriter::adiosWriter(void)
     , encodingSlot("encoding","Specifiy encoding")
     , io(nullptr) {
 
-    this->filename.SetParameter(new core::param::FilePathParam(""));
+    this->filename.SetParameter(
+        new core::param::FilePathParam("", megamol::core::param::FilePathParam::Flag_Directory_ToBeCreated));
     this->MakeSlotAvailable(&this->filename);
 
     this->getData.SetCompatibleCall<CallADIOSDataDescription>();
