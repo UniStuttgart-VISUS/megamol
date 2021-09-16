@@ -25,7 +25,7 @@ void main(void) {
                 float zebra = abs(4. *fract((uv.x + uv.y + float(frame_id)*0.0005) * 60.)-1.);
                 zebra = clamp(zebra, 0.0, 1.0);
                 vec4 col = texture(input_tx2D,uv_coord).rgba;
-                frag_out = vec4(col.rgb * zebra + vec3(1.0, 0.411, 0.705) * (1 - zebra), col.a);
+                frag_out = vec4(col.rgb * zebra + (1 - col.rgb) * (1 - zebra), col.a);
             } else {
                 frag_out = texture(input_tx2D,uv_coord).rgba;
             }
