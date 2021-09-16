@@ -2010,6 +2010,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 
 std::string megamol::core::CoreInstance::SerializeGraph() {
 
+    std::string serVersion = std::string("mmCheckVersion(\"") + std::string(MEGAMOL_CORE_COMP_REV) + "\")";
     std::string serInstances;
     std::string serModules;
     std::string serCalls;
@@ -2090,7 +2091,7 @@ std::string megamol::core::CoreInstance::SerializeGraph() {
         serParams = confParams.str();
     }
 
-    return serInstances + '\n' + serModules + '\n' + serCalls + '\n' + serParams;
+    return serVersion + '\n' + serInstances + '\n' + serModules + '\n' + serCalls + '\n' + serParams;
 }
 
 

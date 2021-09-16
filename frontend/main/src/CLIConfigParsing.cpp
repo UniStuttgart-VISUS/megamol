@@ -108,6 +108,7 @@ static std::string guishow_option       = "guishow";
 static std::string nogui_option         = "nogui";
 static std::string guiscale_option      = "guiscale";
 static std::string privacynote_option   = "privacynote";
+static std::string versionnote_option   = "versionnote";
 static std::string param_option         = "param";
 static std::string remote_head_option   = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -153,6 +154,11 @@ static void guiscale_handler(std::string const& option_name, cxxopts::ParseResul
 static void privacynote_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.screenshot_show_privacy_note = parsed_options[option_name].as<bool>();
+};
+
+static void versionnote_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.show_version_note = parsed_options[option_name].as<bool>();
 };
 
 static void remote_head_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -436,6 +442,7 @@ std::vector<OptionsListEntry> cli_options_list =
         , {nogui_option,         "Dont render GUI overlay",                                                         cxxopts::value<bool>(),                     nogui_handler}
         , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
         , {privacynote_option,   "Show privacy note when taking screenshot, use '=false' to disable",               cxxopts::value<bool>(),                     privacynote_handler}
+        , {versionnote_option,   "Show version warning when loading a project, use '=false' to disable",            cxxopts::value<bool>(),                     versionnote_handler}
         , {param_option,         "Set MegaMol Graph parameter to value: --param param=value",                       cxxopts::value<std::vector<std::string>>(), param_handler}
         , {remote_head_option,   "Start HeadNode server and run Remote_Service test ",               cxxopts::value<bool>(),                     remote_head_handler}
         , {remote_render_option, "Start RenderNode client and run Remote_Service test ",             cxxopts::value<bool>(),                     remote_render_handler}

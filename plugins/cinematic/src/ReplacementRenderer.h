@@ -125,7 +125,6 @@ namespace cinematic {
 
         core::param::ParamSlot replacementRenderingParam;
         core::param::ParamSlot toggleReplacementParam;
-        core::param::ParamSlot replacementKeyParam;
         core::param::ParamSlot alphaParam;
 
     };

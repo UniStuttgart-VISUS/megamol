@@ -18,14 +18,22 @@
 #include "WindowManipulation.h"
 #include "GUIState.h"
 #include "GlobalValueStore.h"
+#include "CommandRegistry.h"
+
 
 // local logging wrapper for your convenience until central MegaMol logger established
+#include "GUIRegisterWindow.h"
+#include "mmcore/versioninfo.h"
 #include "mmcore/utility/log/Log.h"
 static void log(const char* text) {
     const std::string msg = "Lua_Service_Wrapper: " + std::string(text) + "\n";
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 static void log(std::string text) { log(text.c_str()); }
+
+static std::shared_ptr<bool> open_version_notification = std::make_shared<bool>(true);
+static const std::string version_mismatch_title = "Version Check";
+static const std::string version_mismatch_notification = "Warning: MegaMol version does not match version in project!";
 
 namespace {
     // used to abort a service callback if we are already inside a service wrapper callback
@@ -49,6 +57,7 @@ Lua_Service_Wrapper::Lua_Service_Wrapper() {
 
 Lua_Service_Wrapper::~Lua_Service_Wrapper() {
     // clean up raw pointers you allocated with new, which is bad practice and nobody does
+    open_version_notification.reset();
 }
 
 bool Lua_Service_Wrapper::init(void* configPtr) {
@@ -100,8 +109,14 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "GUIState", // propagate GUI state and visibility
         "MegaMolGraph", // LuaAPI manipulates graph
         "RenderNextFrame", // LuaAPI can render one frame
-        "GlobalValueStore" // LuaAPI can read and set global values
+        "GlobalValueStore", // LuaAPI can read and set global values
+        frontend_resources::CommandRegistry_Req_Name,
+        "GUIRegisterWindow",
+        "RuntimeConfig"
+
     }; //= {"ZMQ_Context"};
+
+    *open_version_notification = false;
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
         new megamol::frontend_resources::LuaRemoteConnectionsBroker{},
@@ -144,6 +159,9 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     fill_graph_manipulation_callbacks(&frontend_resource_callbacks);
 
     luaAPI.AddCallbacks(frontend_resource_callbacks);
+
+    auto &gui_window_request_resource = resources[9].getResource<megamol::frontend_resources::GUIRegisterWindow>();
+    gui_window_request_resource.register_notification(version_mismatch_title, std::weak_ptr<bool>(open_version_notification), version_mismatch_notification);
 }
 
 // -------- main loop callbacks ---------
@@ -216,6 +234,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
     using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
     using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
+    using BoolResult = megamol::frontend_resources::LuaCallbacksCollection::BoolResult;
 
     auto& callbacks = *reinterpret_cast<LuaCallbacksCollection*>(callbacks_collection_ptr);
 
@@ -376,7 +395,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
 
     callbacks.add<VoidResult, std::string, std::string>(
         "mmSetGlobalValue",
-        "(string key, string value)\n\t Sets a global key-value pair. If the key is already present, overwrites the value.",
+        "(string key, string value)\n\tSets a global key-value pair. If the key is already present, overwrites the value.",
         {[&](std::string key, std::string value) -> VoidResult
         {
             auto& global_value_store = const_cast<megamol::frontend_resources::GlobalValueStore&>(m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>());
@@ -386,7 +405,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
 
     callbacks.add<StringResult, std::string>(
         "mmGetGlobalValue",
-        "(string key)\n\t Returns the value for the given global key. If no key with that name is known, returns empty string.",
+        "(string key)\n\tReturns the value for the given global key. If no key with that name is known, returns empty string.",
         {[&](std::string key) -> StringResult
         {
             auto& global_value_store = m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>();
@@ -398,6 +417,38 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
 
             // TODO: maybe we want to LuaError?
             return StringResult{""};
+        }});
+
+    callbacks.add<VoidResult, std::string>(
+        "mmExecCommand",
+        "(string command)\n\tExecutes a command as provided by a hotkey, for example.",
+        {[&](std::string command) -> VoidResult {
+            auto& command_registry = m_requestedResourceReferences[8].getResource<megamol::frontend_resources::CommandRegistry>();
+            command_registry.exec_command(command);
+            return VoidResult{};
+        }});
+
+    callbacks.add<StringResult>(
+        "mmListCommands",
+        "()\n\tLists the available commands.",
+        {[&]() -> StringResult {
+            auto& command_registry = m_requestedResourceReferences[8].getResource<megamol::frontend_resources::CommandRegistry>();
+            auto& l = command_registry.list_commands();
+            std::string output;
+            std::for_each(l.begin(), l.end(), [&](const frontend_resources::Command& c) {output = output + c.name + ", " + c.key.ToString() + "\n"; });
+            return StringResult{output};
+        }});
+
+    callbacks.add<BoolResult, std::string>(
+        "mmCheckVersion",
+        "(string version)\n\tChecks whether the running MegaMol corresponds to version.",
+        {[&](std::string version) -> BoolResult {
+            bool version_ok = version == MEGAMOL_CORE_COMP_REV;
+            *open_version_notification = (!version_ok && m_config.show_version_notification);
+            if (!version_ok) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Version info in project (%s) does not match MegaMol version (%s)!", version.c_str(), MEGAMOL_CORE_COMP_REV);
+            }
+            return BoolResult(version_ok);
         }});
 
     // mmLoadProject ?

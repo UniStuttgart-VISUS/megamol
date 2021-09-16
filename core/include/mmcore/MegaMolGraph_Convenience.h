@@ -24,6 +24,7 @@ public:
 
     MegaMolGraph_Convenience(void* graph_ptr = nullptr);
 
+    std::string SerializeVersion() const;
     std::string SerializeModules() const;
     std::string SerializeCalls() const;
     std::string SerializeModuleParameters(std::string const& module_name) const;

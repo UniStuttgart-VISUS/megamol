@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include "CommandRegistry.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking_gl.h"
@@ -237,6 +238,12 @@ namespace gui {
         bool SynchronizeRunningGraph(
             megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
+        /**
+         * Register GUI hotkeys.
+         */
+        void RegisterHotkeys(
+            megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamol_graph);
+
         ///////////////////////////////////////////////////////////////////////
 
     private:
@@ -290,7 +297,7 @@ namespace gui {
 
         // VARIABLES --------------------------------------------------------------
 
-        megamol::gui::HotkeyMap_t hotkeys;
+        megamol::gui::HotkeyMap_t gui_hotkeys;
 
         /** The ImGui context created and used by this GUIManager */
         ImGuiContext* context;
@@ -337,8 +344,6 @@ namespace gui {
         void draw_menu();
 
         void draw_popups();
-
-        bool is_hotkey_pressed(megamol::core::view::KeyCode keycode) const;
 
         void load_preset_window_docking(ImGuiID global_docking_id);
 
