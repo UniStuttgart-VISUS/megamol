@@ -111,7 +111,7 @@ dataHash(0), columns(), values() {
     this->commentPrefixSlot.SetParameter(new core::param::StringParam(""));
     this->MakeSlotAvailable(&this->commentPrefixSlot);
 
-    this->clearSlot << new core::param::ButtonParam("ClearData");
+    this->clearSlot << new core::param::ButtonParam();
     this->clearSlot.SetUpdateCallback(&CSVDataSource::clearData);
     this->MakeSlotAvailable(&this->clearSlot);
 

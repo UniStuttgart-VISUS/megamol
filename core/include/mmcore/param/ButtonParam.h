@@ -36,7 +36,7 @@ namespace param {
          * Be aware, that if you do not assign a key, the button will not be
          * available from viewers without a GUI.
          */
-        ButtonParam(std::string commandName);
+        ButtonParam();
 
         /**
          * Ctor.
@@ -45,7 +45,7 @@ namespace param {
          *                if you do not assign a key, the button will not be
          *                available from viewers without a GUI.
          */
-        ButtonParam(std::string commandName, const core::view::KeyCode &keycode);
+        ButtonParam(const core::view::KeyCode &keycode);
 
         /**
          * Ctor.
@@ -54,7 +54,7 @@ namespace param {
          *                if you do not assign a key, the button will not be
          *                available from viewers without a GUI.
          */
-        ButtonParam(std::string commandName, const core::view::Key &key);
+        ButtonParam(const core::view::Key &key);
 
         /**
          * Ctor.
@@ -66,7 +66,7 @@ namespace param {
          *             if you do not assign a key, the button will not be
          *             available from viewers without a GUI.
          */
-        ButtonParam(std::string commandName, const core::view::Key &key, const core::view::Modifiers &mods);
+        ButtonParam(const core::view::Key &key, const core::view::Modifiers &mods);
 
         /**
          * Ctor.
@@ -78,7 +78,7 @@ namespace param {
          *            if you do not assign a key, the button will not be
          *            available from viewers without a GUI.
          */
-        ButtonParam(std::string commandName, const core::view::Key &key, const core::view::Modifier &mod);
+        ButtonParam(const core::view::Key &key, const core::view::Modifier &mod);
 
         /**
          * Dtor.
@@ -115,19 +115,12 @@ namespace param {
             return this->keycode;
         }
 
-        inline const std::string& GetCommandName(void) const {
-            return this->command_name;
-        }
-
     private:
 
         void initialize();
 
         /** The key of this button */
         core::view::KeyCode keycode;
-
-        /** name of the abstract command connected to this button */
-        std::string command_name;
 
     };
 

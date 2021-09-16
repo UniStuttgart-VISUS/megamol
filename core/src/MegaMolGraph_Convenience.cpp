@@ -1,6 +1,7 @@
 #include <sstream>
 #include "mmcore/MegaMolGraph_Convenience.h"
 #include "mmcore/MegaMolGraph.h"
+#include "mmcore/versioninfo.h"
 
 #include "mmcore/utility/log/Log.h"
 
@@ -19,6 +20,12 @@ static void err(std::string text) {
 }
 
 MegaMolGraph_Convenience::MegaMolGraph_Convenience(void* graph_ptr) : m_graph_ptr{graph_ptr} {}
+
+std::string megamol::core::MegaMolGraph_Convenience::SerializeVersion() const {
+    std::string serVersion = std::string("mmCheckVersion(\"") + std::string(MEGAMOL_CORE_COMP_REV) + "\")";
+
+    return serVersion + '\n';
+}
 
 std::string megamol::core::MegaMolGraph_Convenience::SerializeModules() const {
     std::string serViews;
@@ -89,6 +96,7 @@ std::string megamol::core::MegaMolGraph_Convenience::SerializeAllParameters() co
 std::string megamol::core::MegaMolGraph_Convenience::SerializeGraph() const {
     std::string serialization;
 
+    serialization += SerializeVersion();
     serialization += SerializeModules();
     serialization += SerializeCalls();
     serialization += SerializeAllParameters();

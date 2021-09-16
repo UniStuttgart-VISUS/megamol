@@ -192,7 +192,10 @@ megamol::frontend_resources::CommandRegistry::CommandRegistry() {
         }
         black_keyboard.push_back(ledColor);
     }
-    CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data());
+    if (!CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data())) {
+        const auto error = CorsairGetLastError();
+        std::cout << "Setting Corsair leds to default failed: " << corsair_error_to_string(error) << std::endl;
+    }
 #endif
 }
 
@@ -203,7 +206,7 @@ megamol::frontend_resources::CommandRegistry::~CommandRegistry() {
 }
 
 std::string megamol::frontend_resources::CommandRegistry::add_command(const megamol::frontend_resources::Command& c) {
-    const bool command_is_new = command_index.find(c.name) == command_index.end();
+    const bool command_is_new = is_new(c.name);
     const bool key_code_unused = key_to_command.find(c.key) == key_to_command.end();
     if (command_is_new && key_code_unused) {
         push_command(c);
@@ -236,12 +239,25 @@ const megamol::frontend_resources::Command megamol::frontend_resources::CommandR
     }
 }
 
+const megamol::frontend_resources::Command megamol::frontend_resources::CommandRegistry::get_command(
+    const std::string& command_name) {
+    if (is_new(command_name)) {
+        return Command{};
+    } else {
+        auto idx = command_index[command_name];
+        return commands[idx];
+    }
+}
+
 void megamol::frontend_resources::CommandRegistry::remove_command_by_parent(const std::string& parent_param) {
     auto it = std::find_if(commands.begin(), commands.end(), [parent_param] (const Command& c){return c.parent == parent_param;});
     if (it != commands.end()) {
-        command_index.erase(it->name);
-        if (it->key.key != Key::KEY_UNKNOWN) key_to_command.erase(it->key);
+        if (it->key.key != Key::KEY_UNKNOWN) {
+            remove_color_from_layer(*it);
+            key_to_command.erase(it->key);
+        }
         commands.erase(it);
+        rebuild_index();
     }
 }
 
@@ -249,33 +265,61 @@ void megamol::frontend_resources::CommandRegistry::remove_command_by_name(const 
     if (!is_new(command_name)) {
         auto idx = command_index[command_name];
         auto& c = commands[idx];
-        command_index.erase(command_name);
-        if (c.key.key != Key::KEY_UNKNOWN) key_to_command.erase(c.key);
+        if (c.key.key != Key::KEY_UNKNOWN) {
+            remove_color_from_layer(c);
+            key_to_command.erase(c.key);
+        }
         commands.erase(commands.begin() + idx);
+        rebuild_index();
     }
 }
 
-void megamol::frontend_resources::CommandRegistry::update_hotkey(const std::string& command_name, KeyCode key) {
+bool megamol::frontend_resources::CommandRegistry::update_hotkey(const std::string& command_name, KeyCode key) {
     if (!is_new(command_name)) {
         auto& c = commands[command_index[command_name]];
-        remove_color_from_layer(c);
         const auto old_key = c.key;
+        if (old_key.key != Key::KEY_UNKNOWN) {
+            remove_color_from_layer(c);
+            key_to_command.erase(old_key);
+        }
         c.key = key;
-        key_to_command.erase(old_key);
-        key_to_command[key] = command_index[command_name];
-        add_color_to_layer(c);
+        if (key.key != Key::KEY_UNKNOWN) {
+            // important! deserialization might result in different "stealing" order of duplicate hotkeys
+            // these will be fixed by subsequent hotkey updates, but might result in temporary duplication during deserialization
+            remove_hotkey(key);
+            key_to_command[key] = command_index[command_name];
+            add_color_to_layer(c);
+        }
+        modifiers_changed(current_modifiers);
+        return true;
     }
+    return false;
+}
+
+bool megamol::frontend_resources::CommandRegistry::remove_hotkey(KeyCode key) {
+    auto it = key_to_command.find(key);
+    if (it != key_to_command.end()) {
+        update_hotkey(commands[it->second].name, Key::KEY_UNKNOWN);
+        return true;
+    }
+    return false;
 }
 
 void megamol::frontend_resources::CommandRegistry::modifiers_changed(Modifiers mod) {
     // TODO
 #ifdef CUESDK_ENABLED
     // unset all keys
-    CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data());
+    if (!CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data())) {
+        const auto error = CorsairGetLastError();
+        std::cout << "Setting Corsair leds to default failed: " << corsair_error_to_string(error) << std::endl;
+    }
     // find layer that matches the modifier
     const auto layer = key_colors.find(mod);
     if (layer != key_colors.end()) {
-        CorsairSetLedsColors(static_cast<int>(layer->second.size()), layer->second.data());
+        if (!CorsairSetLedsColors(static_cast<int>(layer->second.size()), layer->second.data())) {
+            const auto error = CorsairGetLastError();
+            std::cout << "Setting Corsair leds for layer " << mod.ToString() << " failed: " << corsair_error_to_string(error) << std::endl;
+        }
     }
 #endif
     current_modifiers = mod;
@@ -328,18 +372,29 @@ void megamol::frontend_resources::CommandRegistry::add_color_to_layer(const mega
     if (cols == key_colors.end()) {
         key_colors[c.key.mods] = std::vector<CorsairLedColor>();
     }
-    CorsairLedColor clc {corsair_led_from_glfw_key[c.key.key], 255, 0, 0};
-    key_colors[c.key.mods].push_back(clc);
+    if (c.key.key != Key::KEY_UNKNOWN) {
+        CorsairLedColor clc {corsair_led_from_glfw_key[c.key.key], 255, 0, 0};
+        auto& layer = key_colors[c.key.mods];
+        auto it = std::find_if(layer.begin(), layer.end(), [&](const CorsairLedColor& cled){return cled.ledId == clc.ledId;});
+        if (it == layer.end()) {
+            key_colors[c.key.mods].push_back(clc);
+        } else {
+            std::cout << "Warning: Corsair LEDs inconsistent: " << clc.ledId << " (from " << c.key.ToString() << ") already used" << std::endl;
+        }
+    }
+    std::cout << "adding " << c.name << " with " << c.key.ToString() << std::endl;
 #endif
 }
 
 void megamol::frontend_resources::CommandRegistry::remove_color_from_layer(
     const megamol::frontend_resources::Command& c) {
 #ifdef CUESDK_ENABLED
-    auto& layer = key_colors[c.key.mods];
-    const auto& k = corsair_led_from_glfw_key[c.key.key];
-    const auto it = std::remove_if(layer.begin(), layer.end(), [k](const CorsairLedColor& c) {return c.ledId == k;});
-    layer.erase(it);
+    if (c.key.key != Key::KEY_UNKNOWN) {
+        auto& layer = key_colors[c.key.mods];
+        const auto& k = corsair_led_from_glfw_key[c.key.key];
+        const auto it = std::remove_if(layer.begin(), layer.end(), [k](const CorsairLedColor& c) {return c.ledId == k;});
+        layer.erase(it);
+    }
 #endif
 }
 
@@ -347,13 +402,25 @@ void megamol::frontend_resources::CommandRegistry::push_command(const Command& c
     commands.push_back(c);
     if (c.key.key != Key::KEY_UNKNOWN) {
         key_to_command[c.key] = static_cast<int>(commands.size() - 1);
+        add_color_to_layer(c);
 #ifdef CUESDK_ENABLED
         if (current_modifiers.equals(c.key.mods)) {
             auto ledColor = CorsairLedColor{ corsair_led_from_glfw_key[c.key.key], 255, 0, 0 };
             CorsairSetLedsColors(1, &ledColor);
         }
-        add_color_to_layer(c);
 #endif
     }
     command_index[c.name] = static_cast<int>(commands.size() - 1);
+}
+
+void megamol::frontend_resources::CommandRegistry::rebuild_index() {
+    command_index.clear();
+    key_to_command.clear();
+    for (auto x = 0; x < commands.size(); ++x) {
+        auto& c = commands[x];
+        command_index[commands[x].name] = x;
+        if (c.key.key != Key::KEY_UNKNOWN) {
+            key_to_command[c.key] = x;
+        }
+    }
 }

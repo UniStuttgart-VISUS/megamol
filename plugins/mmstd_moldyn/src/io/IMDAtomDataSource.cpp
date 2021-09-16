@@ -837,7 +837,7 @@ IMDAtomDataSource::IMDAtomDataSource(void)
     this->maxColumnValSlot << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->maxColumnValSlot);
 
-    this->posXFilterNow << new core::param::ButtonParam("PosFilterNow", core::view::Key::KEY_F);
+    this->posXFilterNow << new core::param::ButtonParam(core::view::Key::KEY_F);
     this->posXFilterNow.SetUpdateCallback(&IMDAtomDataSource::posXFilterUpdate);
     this->MakeSlotAvailable(&this->posXFilterNow);
     this->posXFilter << new core::param::BoolParam(false);

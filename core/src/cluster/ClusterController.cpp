@@ -74,7 +74,7 @@ cluster::ClusterController::ClusterController() : job::AbstractThreadedJob(),
         this->cdsRunSlot.ForceSetDirty();
     }
 
-    this->shutdownClusterSlot << new param::ButtonParam("ShutDownCluster");
+    this->shutdownClusterSlot << new param::ButtonParam();
     this->shutdownClusterSlot.SetUpdateCallback(&ClusterController::onShutdownCluster);
     this->MakeSlotAvailable(&this->shutdownClusterSlot);
 

@@ -37,13 +37,13 @@ view::TimeControl::TimeControl(void) :
 
     this->animTimeSlot << new param::FloatParam(0.0f, 0.0f);
 
-    this->animSpeedUpSlot << new param::ButtonParam("AnimSpeedUp", view::Key::KEY_M);
+    this->animSpeedUpSlot << new param::ButtonParam(view::Key::KEY_M);
     this->animSpeedUpSlot.SetUpdateCallback(this, &TimeControl::onAnimSpeedStep);
 
-    this->animSpeedDownSlot << new param::ButtonParam("AnimSpeedDown", view::Key::KEY_N);
+    this->animSpeedDownSlot << new param::ButtonParam(view::Key::KEY_N);
     this->animSpeedDownSlot.SetUpdateCallback(this, &TimeControl::onAnimSpeedStep);
 
-    this->toggleAnimPlaySlot << new param::ButtonParam("AnimPlay", view::Key::KEY_SPACE);
+    this->toggleAnimPlaySlot << new param::ButtonParam(view::Key::KEY_SPACE);
     this->toggleAnimPlaySlot.SetUpdateCallback(this, &TimeControl::onAnimToggleButton);
 
     this->slaveSlot.SetCompatibleCall<CallTimeControlDescription>();

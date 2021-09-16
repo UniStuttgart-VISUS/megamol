@@ -29,10 +29,10 @@ KeyframeManipulators::KeyframeManipulators(void)
     this->selectors.clear();
     this->manipulators.clear();
 
-    this->toggleOusideBboxParam.SetParameter(new param::ButtonParam("ToggleShowManipulatorOutsideBBox", core::view::Key::KEY_W, core::view::Modifier::SHIFT));
+    this->toggleOusideBboxParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_W, core::view::Modifier::SHIFT));
     this->paramSlots.emplace_back(&this->toggleOusideBboxParam);
 
-    this->toggleVisibleGroupParam.SetParameter(new param::ButtonParam("CycleManipulatorGroup", core::view::Key::KEY_Q, core::view::Modifier::SHIFT));
+    this->toggleVisibleGroupParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Q, core::view::Modifier::SHIFT));
     this->paramSlots.emplace_back(&this->toggleVisibleGroupParam);
 
     param::EnumParam* vmg = new param::EnumParam(this->visibleGroup);

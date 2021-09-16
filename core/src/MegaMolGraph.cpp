@@ -150,6 +150,23 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::stri
     module_it->request.id = newId;
     module_it->modulePtr->setName(newId.c_str());
 
+    for (auto child = module_it->modulePtr->ChildList_Begin(); child != module_it->modulePtr->ChildList_End();
+         ++child) {
+        auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
+        if (ps != nullptr) {
+            auto p = ps->Param<param::ButtonParam>();
+            if (p != nullptr) {
+                auto command_name = oldId + std::string("_") + ps->Name().PeekBuffer();
+                auto updated_command_name = newId + std::string("_") + ps->Name().PeekBuffer();
+                auto c = m_command_registry->get_command(command_name);
+                m_command_registry->remove_command_by_name(command_name);
+                c.name = updated_command_name;
+                c.parent = ps->FullName();
+                m_command_registry->add_command(c);
+            }
+        }
+    }
+
     const auto matches_old_prefix = [&](std::string const& call_slot) {
         auto res = call_slot.find(oldId);
         return (res != std::string::npos) && res == 0;
@@ -522,11 +539,8 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
                     frontend_resources::Command c;
                     c.key = p->GetKeyCode();
                     c.parent = ps->FullName();
-                    c.name = module_ptr->Name().PeekBuffer() + std::string("_") + p->GetCommandName();
-                    c.effect = [&](const frontend_resources::Command *self) {
-                        auto my_p = this->FindParameter(self->parent);
-                        if (my_p != nullptr) {my_p->setDirty();}
-                    };
+                    c.name = module_ptr->Name().PeekBuffer() + std::string("_") + ps->Name().PeekBuffer();
+                    c.effect = this->Parameter_Lambda;
                     m_command_registry->add_command(c);
                 }
             }

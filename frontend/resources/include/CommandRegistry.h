@@ -16,7 +16,6 @@
 #include <json.hpp>
 
 #ifdef CUESDK_ENABLED
-#define CORSAIR_LIGHTING_SDK_DISABLE_DEPRECATION_WARNINGS
 #include "CUESDK.h"
 #endif
 
@@ -30,15 +29,18 @@ namespace frontend_resources {
 static std::string CommandRegistry_Req_Name = "CommandRegistry";
 
 struct Command {
+    using EffectFunction = std::function<void(const Command *)>;
     std::string name;
     KeyCode key;
     std::string parent;
     enum class parent_type_c {
         PARENT_PARAM = 1,
-        PARENT_GUI = 2
+        PARENT_GUI_HOTKEY = 2,
+        PARENT_GUI_WINDOW = 3,
+        PARENT_GUI_WINDOW_HOTKEY = 4
     };
     parent_type_c parent_type = parent_type_c::PARENT_PARAM;
-    std::function<void(const Command *self)> effect;
+    EffectFunction effect;
 
     void execute() const {
         auto f = effect;
@@ -62,6 +64,7 @@ inline void from_json(const nlohmann::json& j, Command& c) {
     j.at("mods").get_to(m);
     c.key.mods.fromInt(m);
     j.at("parent_type").get_to(c.parent_type);
+    j.at("parent").get_to(c.parent);
 }
 
 
@@ -73,11 +76,13 @@ public:
 
     std::string add_command(const Command& c);
     const Command get_command(const KeyCode& key) const;
+    const Command get_command(const std::string& command_name);
 
     void remove_command_by_parent(const std::string& parent_param);
     void remove_command_by_name(const std::string& command_name);
 
-    void update_hotkey(const std::string& command_name, KeyCode key);
+    bool update_hotkey(const std::string& command_name, KeyCode key);
+    bool remove_hotkey(KeyCode key);
 
     void modifiers_changed(Modifiers mod);
 
@@ -90,9 +95,11 @@ public:
 
 private:
 
-    bool is_new(const std::string& name) {
+    bool is_new(const std::string& name) const {
         return command_index.find(name) == command_index.end();
     }
+
+    void rebuild_index();
 
     std::string increment_name(const std::string& oldname);
     void push_command(const Command& c);

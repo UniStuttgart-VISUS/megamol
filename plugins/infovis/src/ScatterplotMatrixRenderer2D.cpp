@@ -195,7 +195,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->pickColorParam << new core::param::ColorParam("red");
     this->MakeSlotAvailable(&this->pickColorParam);
 
-    this->resetSelectionParam << new core::param::ButtonParam("ResetSelection");
+    this->resetSelectionParam << new core::param::ButtonParam();
     this->resetSelectionParam.SetUpdateCallback(this, &ScatterplotMatrixRenderer2D::resetSelectionCallback);
     this->MakeSlotAvailable(&this->resetSelectionParam);
 

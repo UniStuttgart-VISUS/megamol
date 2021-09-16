@@ -80,15 +80,15 @@ cryShader(), sliceProcessor(), meshProcessor(), debugLoopDataEntryObject() {
     this->extractTileSizeSlot << new core::param::StringParam(val);
     this->MakeSlotAvailable(&this->extractTileSizeSlot);
 
-    this->saveBtnSlot << new core::param::ButtonParam("SavePoreNetwork");
+    this->saveBtnSlot << new core::param::ButtonParam();
     this->saveBtnSlot.SetUpdateCallback(&PoreNetExtractor::onSaveBtnClicked);
     this->MakeSlotAvailable(&this->saveBtnSlot);
 
-    this->loadBtnSlot << new core::param::ButtonParam("LoadPoreNetwork");
+    this->loadBtnSlot << new core::param::ButtonParam();
     this->loadBtnSlot.SetUpdateCallback(&PoreNetExtractor::onLoadBtnClicked);
     this->MakeSlotAvailable(&this->loadBtnSlot);
 
-    this->extractBtnSlot << new core::param::ButtonParam("ExtractPoreNetwork");
+    this->extractBtnSlot << new core::param::ButtonParam();
     this->extractBtnSlot.SetUpdateCallback(&PoreNetExtractor::onExtractBtnClicked);
     this->MakeSlotAvailable(&this->extractBtnSlot);
 

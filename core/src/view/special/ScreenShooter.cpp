@@ -247,7 +247,7 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
     this->backgroundSlot << bkgnd;
     this->MakeSlotAvailable(&this->backgroundSlot);
 
-    this->triggerButtonSlot << new param::ButtonParam("TriggerScreenShooter", core::view::Key::KEY_S, core::view::Modifier::ALT);
+    this->triggerButtonSlot << new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::ALT);
     this->triggerButtonSlot.SetUpdateCallback(&ScreenShooter::triggerButtonClicked);
     if (!reducedParameters) this->MakeSlotAvailable(&this->triggerButtonSlot);
 

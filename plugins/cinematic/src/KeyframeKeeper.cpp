@@ -92,28 +92,28 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->MakeSlotAvailable(&this->keyframeCallSlot);
 
     // init parameters
-    this->applyKeyframeParam.SetParameter(new param::ButtonParam("ApplyKeyframe", core::view::Key::KEY_A, core::view::Modifier::SHIFT));
+    this->applyKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_A, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->applyKeyframeParam);
 
-    this->undoChangesParam.SetParameter(new param::ButtonParam("UndoKeyChanges", core::view::Key::KEY_Y, core::view::Modifier::SHIFT)); // = z in german keyboard layout
+    this->undoChangesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Y, core::view::Modifier::SHIFT)); // = z in german keyboard layout
     this->MakeSlotAvailable(&this->undoChangesParam);
 
-    this->redoChangesParam.SetParameter(new param::ButtonParam("RedoKeyChanges", core::view::Key::KEY_Z, core::view::Modifier::SHIFT)); // = y in german keyboard layout
+    this->redoChangesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Z, core::view::Modifier::SHIFT)); // = y in german keyboard layout
     this->MakeSlotAvailable(&this->redoChangesParam);
 
-    this->deleteSelectedKeyframeParam.SetParameter(new param::ButtonParam("DeleteKeyFrame", core::view::Key::KEY_D, core::view::Modifier::SHIFT));
+    this->deleteSelectedKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_D, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->deleteSelectedKeyframeParam);
 
     this->setTotalAnimTimeParam.SetParameter(new param::FloatParam(this->totalAnimTime, 0.000001f));
     this->MakeSlotAvailable(&this->setTotalAnimTimeParam);
 
-    this->snapAnimFramesParam.SetParameter(new param::ButtonParam("SnapAnimFrames", core::view::Key::KEY_F, core::view::Modifier::SHIFT));
+    this->snapAnimFramesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_F, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->snapAnimFramesParam);
 
-    this->snapSimFramesParam.SetParameter(new param::ButtonParam("SnapSimFrames", core::view::Key::KEY_G, core::view::Modifier::SHIFT));
+    this->snapSimFramesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_G, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->snapSimFramesParam);
 
-    this->simTangentParam.SetParameter(new param::ButtonParam("LinearizeTangent", core::view::Key::KEY_T, core::view::Modifier::SHIFT));
+    this->simTangentParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_T, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->simTangentParam);
 
     this->interpolTangentParam.SetParameter(new param::FloatParam(this->splineTangentLength)); // , -10.0f, 10.0f));
@@ -131,7 +131,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->editCurrentPosParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, -1.0f)));
     this->MakeSlotAvailable(&this->editCurrentPosParam);
 
-    this->resetViewParam.SetParameter(new param::ButtonParam("ResetView", core::view::Key::KEY_U, core::view::Modifier::SHIFT));
+    this->resetViewParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_U, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->resetViewParam);
     
     this->editCurrentViewParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f)));
@@ -146,10 +146,10 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->fileNameParam.SetParameter(new param::FilePathParam(this->filename, param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->fileNameParam);
 
-    this->saveKeyframesParam.SetParameter(new param::ButtonParam("SaveKeyFrames", core::view::Key::KEY_S, core::view::Modifier::SHIFT));
+    this->saveKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->saveKeyframesParam);
 
-    this->loadKeyframesParam.SetParameter(new param::ButtonParam("LoadKeyFrames", core::view::Key::KEY_L, core::view::Modifier::SHIFT));
+    this->loadKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_L, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->loadKeyframesParam);
     this->loadKeyframesParam.ForceSetDirty(); // Try to load keyframe file at program start
 }
@@ -569,7 +569,6 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     ccc->SetTotalSimTime(this->totalSimTime);
     ccc->SetControlPointPosition(this->startCtrllPos, this->endCtrllPos);
     ccc->SetFps(this->fps);
-
 
     this->pendingTotalAnimTimePopUp(this->GetCoreInstance()->GetFrameID());
 
@@ -1352,18 +1351,23 @@ int KeyframeKeeper::getKeyframeIndex(std::vector<Keyframe>& keyframes, Keyframe 
 
 void megamol::cinematic::KeyframeKeeper::pendingTotalAnimTimePopUp(uint32_t frame_id) {
 
-    // Call only once per frame
+    // Call only once per frame (CallForGetUpdatedKeyframeData() is called multiple times per frame)
+    if (this->pendingTotalAnimTime == this->totalAnimTime) {
+        this->pendingTotalAnimTime = -1.0f;
+    }
     if ((this->pendingTotalAnimTime > 0.0f) && (this->frameId != frame_id)) {
 
         bool valid_imgui_scope =
             ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
         if (valid_imgui_scope) {
+
             const std::string popup_label = "Changed Total Animation Time##" + std::string(this->FullName());
             if (!ImGui::IsPopupOpen(popup_label.c_str())) {
                 ImGui::OpenPopup(popup_label.c_str());
             }
             if (ImGui::BeginPopupModal(popup_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-                ImGui::TextUnformatted("Scale animation time of keyframes \nwith new total animation time:");
+                ImGui::Text("Scale current animation time '%f' of keyframes \nwith new total animation time '%f'?",
+                    this->totalAnimTime, this->pendingTotalAnimTime);
                 if (ImGui::Button("Yes")) {
                     for (auto& kf : this->keyframes) {
                         float at = kf.GetAnimTime() / this->totalAnimTime * this->pendingTotalAnimTime;
@@ -1403,7 +1407,6 @@ void megamol::cinematic::KeyframeKeeper::pendingTotalAnimTimePopUp(uint32_t fram
             this->totalAnimTime = this->pendingTotalAnimTime;
             this->pendingTotalAnimTime = -1.0f;
         }
-
         this->frameId = frame_id;
     }
 }
