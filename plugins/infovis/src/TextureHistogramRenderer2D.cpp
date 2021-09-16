@@ -44,7 +44,7 @@ bool TextureHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenG
         calcHistogramProgram_ =
             core::utility::make_glowl_shader("histo_tex_calc", shaderOptions, "infovis/histo/tex_calc.comp.glsl");
         selectionProgram_ = core::utility::make_glowl_shader(
-            "histo_texture_select", shaderOptions, "infovis/histo/texture_select.comp.glsl");
+            "histo_tex_select", shaderOptions, "infovis/histo/tex_select.comp.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("TextureHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -252,7 +252,6 @@ void TextureHistogramRenderer2D::applySelections() {
             selectionProgram_->setUniform("selectedBin", binComp.first);
             glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
         }
-
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 

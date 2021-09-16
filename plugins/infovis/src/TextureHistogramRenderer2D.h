@@ -70,7 +70,9 @@ private:
     std::unique_ptr<glowl::GLSLProgram> selectionProgram_;
 
     std::shared_ptr<glowl::Texture2D> data_;
-    GLuint minValueBuffer = 0, maxValueBuffer = 0;
+
+    GLuint minValueBuffer = 0;
+    GLuint maxValueBuffer = 0;
 
     glm::ivec2 lastTexSize = glm::ivec2(0, 0);
     std::vector<std::pair<int, int>> selectedBinComps_;
