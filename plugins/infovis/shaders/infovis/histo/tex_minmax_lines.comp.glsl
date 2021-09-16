@@ -21,7 +21,7 @@ void main() {
 
     const ivec2 texSize = textureSize(tex, 0);
 
-    if (texY >= texSize.y || component > numComponents) {
+    if (texY >= texSize.y || component >= numComponents) {
         return;
     }
 
