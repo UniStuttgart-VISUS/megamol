@@ -134,6 +134,8 @@ bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     }
     readFlagsCall->getData()->flags->bind(5);
 
+    applySelections();
+
     const GLsizeiptr bufSize = (numComponents + numComponents * h) * sizeof(float);
 
     GLuint minValueBuffer;
@@ -204,6 +206,24 @@ bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
 }
 
 void TextureHistogramRenderer2D::updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) {
+
+    auto binComp = std::make_pair(selectedBin, selectedComponent);
+    switch (selectionMode) {
+    case SelectionMode::PICK:
+        selectedBinComps_.clear();
+        selectedBinComps_.push_back(binComp);
+        break;
+    case SelectionMode::APPEND:
+        selectedBinComps_.push_back(binComp);
+        break;
+    case SelectionMode::REMOVE:
+        selectedBinComps_.erase(
+            std::remove(selectedBinComps_.begin(), selectedBinComps_.end(), binComp), selectedBinComps_.end());
+        break;
+    }
+}
+
+void TextureHistogramRenderer2D::applySelections() {
     auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core::FlagCallRead_GL>();
     auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core::FlagCallWrite_GL>();
     if (readFlagsCall != nullptr && writeFlagsCall != nullptr) {
@@ -217,15 +237,26 @@ void TextureHistogramRenderer2D::updateSelection(SelectionMode selectionMode, in
 
         auto numRows = data_->getWidth() * data_->getHeight();
         selectionProgram_->setUniform("numRows", static_cast<GLuint>(numRows));
-        selectionProgram_->setUniform(
-            "selectionMode", static_cast<std::underlying_type_t<SelectionMode>>(selectionMode));
-        selectionProgram_->setUniform("selectedComponent", selectedComponent);
-        selectionProgram_->setUniform("selectedBin", selectedBin);
-
         GLuint groupCounts[3];
         computeDispatchSizes(numRows, selectionWorkgroupSize_, maxWorkgroupCount_, groupCounts);
 
+        // deselect all
+        selectionProgram_->setUniform(
+            "selectionMode", static_cast<std::underlying_type_t<SelectionMode>>(SelectionMode::PICK));
+        selectionProgram_->setUniform("selectedComponent", -1);
+        selectionProgram_->setUniform("selectedBin", -1);
         glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+
+        // select relevant
+        for (auto& binComp : selectedBinComps_) {
+            selectionProgram_->setUniform(
+                "selectionMode", static_cast<std::underlying_type_t<SelectionMode>>(SelectionMode::APPEND));
+            selectionProgram_->setUniform("selectedComponent", binComp.second);
+            selectionProgram_->setUniform("selectedBin", binComp.first);
+            glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+        }
+
+
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         glUseProgram(0);

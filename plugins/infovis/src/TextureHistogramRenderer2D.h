@@ -58,6 +58,7 @@ private:
     bool handleCall(core::view::CallRender2DGL& call) override;
 
     void updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) override;
+    void applySelections();
 
     core::CallerSlot textureDataCallerSlot_;
     core::CallerSlot flagStorageReadCallerSlot_;
@@ -71,6 +72,7 @@ private:
     std::shared_ptr<glowl::Texture2D> data_;
 
     glm::ivec2 lastTexSize = glm::ivec2(0, 0);
+    std::vector<std::pair<int, int>> selectedBinComps_;
 
     GLint selectionWorkgroupSize_[3];
     GLint maxWorkgroupCount_[3];
