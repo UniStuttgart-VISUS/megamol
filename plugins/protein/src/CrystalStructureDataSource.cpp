@@ -35,9 +35,9 @@ using namespace megamol::core::utility::log;
 protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimDataModule(),
         dataOutSlot("dataout", "The slot providing the loaded data"),
         dataChkptCallerSlot("chkptData", "The caller slot to connect a chkpt-source."),
-        fileFramesSlot("fileFrames", "The path to the frame file."),
-        fileAtomsSlot("fileAtoms", "The path to the atom file"),
-        fileCellsSlot("fileCells", "The path to the file containing cells"),
+        fileFramesSlot("fileFrames", "The path to the frame file, e.g.: /PathToFile/bto_625000at_500fr.bin"),
+        fileAtomsSlot("fileAtoms", "The path to the atom file, e.g.: /PathToFile/bto_625000at.bin"),
+        fileCellsSlot("fileCells", "The path to the file containing cells, e.g.: /PathToFile/bto_625000at_cells.bin"),
         frameCacheSizeParam("frameCacheSize", "The size of the frame cache"),
         displOffsParam("displOffs", "The frame offset for displacement vectors"),
         dSourceParam("dipoleScr", "The dipole source"),
@@ -45,11 +45,11 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimData
         frameCnt(0)  {
 
     // Filename slots
-    this->fileFramesSlot << new core::param::FilePathParam("/PathToFile/bto_625000at_500fr.bin");
+    this->fileFramesSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->fileFramesSlot);
-    this->fileCellsSlot << new core::param::FilePathParam("/PathToFile/bto_625000at_cells.bin");
+    this->fileCellsSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->fileCellsSlot);
-    this->fileAtomsSlot << new core::param::FilePathParam("/PathToFile/bto_625000at.bin");
+    this->fileAtomsSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->fileAtomsSlot);
 
     // Data caller slot for chkpt source
