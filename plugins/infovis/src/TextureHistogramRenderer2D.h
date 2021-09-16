@@ -60,10 +60,20 @@ private:
     void updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) override;
 
     core::CallerSlot textureDataCallerSlot_;
+    core::CallerSlot flagStorageReadCallerSlot_;
+    core::CallerSlot flagStorageWriteCallerSlot_;
 
     std::unique_ptr<glowl::GLSLProgram> calcMinMaxLinesProgram_;
     std::unique_ptr<glowl::GLSLProgram> calcMinMaxAllProgram_;
     std::unique_ptr<glowl::GLSLProgram> calcHistogramProgram_;
+    std::unique_ptr<glowl::GLSLProgram> selectionProgram_;
+
+    std::shared_ptr<glowl::Texture2D> data_;
+
+    glm::ivec2 lastTexSize = glm::ivec2(0, 0);
+
+    GLint selectionWorkgroupSize_[3];
+    GLint maxWorkgroupCount_[3];
 };
 
 } // namespace megamol::infovis

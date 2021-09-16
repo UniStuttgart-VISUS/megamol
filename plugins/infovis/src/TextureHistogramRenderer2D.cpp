@@ -7,6 +7,7 @@
 #include "TextureHistogramRenderer2D.h"
 
 #include "compositing/CompositingCalls.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/ShaderFactory.h"
 
@@ -15,9 +16,19 @@ using namespace megamol::infovis;
 using megamol::core::utility::log::Log;
 
 TextureHistogramRenderer2D::TextureHistogramRenderer2D()
-        : BaseHistogramRenderer2D(), textureDataCallerSlot_("getData", "Texture input") {
+        : BaseHistogramRenderer2D()
+        , textureDataCallerSlot_("getData", "Texture input")
+        , flagStorageReadCallerSlot_("readFlagStorage", "Flag storage read input")
+        , flagStorageWriteCallerSlot_("writeFlagStorage", "Flag storage write input") {
+
     textureDataCallerSlot_.SetCompatibleCall<compositing::CallTexture2DDescription>();
     MakeSlotAvailable(&textureDataCallerSlot_);
+
+    flagStorageReadCallerSlot_.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    MakeSlotAvailable(&flagStorageReadCallerSlot_);
+
+    flagStorageWriteCallerSlot_.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
+    MakeSlotAvailable(&flagStorageWriteCallerSlot_);
 }
 
 TextureHistogramRenderer2D::~TextureHistogramRenderer2D() {
@@ -32,10 +43,18 @@ bool TextureHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenG
             "histo_tex_minmax_all", shaderOptions, "infovis/histo/tex_minmax_all.comp.glsl");
         calcHistogramProgram_ =
             core::utility::make_glowl_shader("histo_tex_calc", shaderOptions, "infovis/histo/tex_calc.comp.glsl");
+        selectionProgram_ = core::utility::make_glowl_shader(
+            "histo_texture_select", shaderOptions, "infovis/histo/texture_select.comp.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("TextureHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
+
+    glGetProgramiv(selectionProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectionWorkgroupSize_);
+
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount_[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount_[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount_[2]);
 
     return true;
 }
@@ -48,6 +67,19 @@ bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
         return false;
     }
 
+    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core::FlagCallRead_GL>();
+    if (readFlagsCall == nullptr) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TextureHistogramRenderer2D requires a read flag storage!");
+        return false;
+    }
+    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core::FlagCallWrite_GL>();
+    if (writeFlagsCall == nullptr) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TextureHistogramRenderer2D requires a write flag storage!");
+        return false;
+    }
+
+    (*readFlagsCall)(core::FlagCallRead_GL::CallGetData);
+
     // stupid cheat, but is that really worth it?
     // static uint32_t lastFrame = -1;
     // auto currFrame = this->GetCoreInstance()->GetFrameID();
@@ -55,11 +87,11 @@ bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     //    return true;
     // lastFrame = currFrame;
     (*textureCall)(compositing::CallTexture2D::CallGetData);
-    const auto data = textureCall->getData();
+    data_ = textureCall->getData();
 
     std::size_t numComponents = 0;
     std::vector<std::string> names;
-    const auto int_form = data->getFormat();
+    const auto int_form = data_->getFormat();
 
     switch (int_form) {
     case GL_RGBA:
@@ -88,13 +120,19 @@ bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     }
 
     // Local shader blocks are 256 x 4
-    auto h = data->getHeight();
+    auto h = data_->getHeight();
     GLuint numGroups = (h > 0 ? h - 1 : h) / 256 + 1;
 
     // Get min and max value of texture
 
     // Use two buffers for min and max.
     // First numComponents values are for global values, after this numComponents values for each row.
+
+    if (lastTexSize != glm::ivec2(data_->getWidth(), data_->getHeight()) || readFlagsCall->hasUpdate()) {
+        readFlagsCall->getData()->validateFlagCount(data_->getWidth() * data_->getHeight());
+        lastTexSize = glm::ivec2(data_->getWidth(), data_->getHeight());
+    }
+    readFlagsCall->getData()->flags->bind(5);
 
     const GLsizeiptr bufSize = (numComponents + numComponents * h) * sizeof(float);
 
@@ -119,7 +157,7 @@ bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     calcMinMaxLinesProgram_->setUniform("numComponents", static_cast<GLuint>(numComponents));
 
     glActiveTexture(GL_TEXTURE0);
-    data->bindTexture();
+    data_->bindTexture();
     calcMinMaxLinesProgram_->setUniform("tex", 0);
 
     glDispatchCompute(numGroups, 1, 1);
@@ -154,7 +192,7 @@ bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     bindCommon(calcHistogramProgram_);
 
     glActiveTexture(GL_TEXTURE0);
-    data->bindTexture();
+    data_->bindTexture();
     calcHistogramProgram_->setUniform("tex", 0);
 
     glDispatchCompute(numGroups, 1, 1);
@@ -166,5 +204,33 @@ bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
 }
 
 void TextureHistogramRenderer2D::updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) {
-    // Selection not implemented.
+    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core::FlagCallRead_GL>();
+    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core::FlagCallWrite_GL>();
+    if (readFlagsCall != nullptr && writeFlagsCall != nullptr) {
+        selectionProgram_->use();
+
+        bindCommon(selectionProgram_);
+        glActiveTexture(GL_TEXTURE0);
+        data_->bindTexture();
+        selectionProgram_->setUniform("tex", 0);
+        readFlagsCall->getData()->flags->bind(5);
+
+        auto numRows = data_->getWidth() * data_->getHeight();
+        selectionProgram_->setUniform("numRows", static_cast<GLuint>(numRows));
+        selectionProgram_->setUniform(
+            "selectionMode", static_cast<std::underlying_type_t<SelectionMode>>(selectionMode));
+        selectionProgram_->setUniform("selectedComponent", selectedComponent);
+        selectionProgram_->setUniform("selectedBin", selectedBin);
+
+        GLuint groupCounts[3];
+        computeDispatchSizes(numRows, selectionWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+
+        glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+        glUseProgram(0);
+
+        writeFlagsCall->setData(readFlagsCall->getData(), readFlagsCall->version() + 1);
+        (*writeFlagsCall)(core::FlagCallWrite_GL::CallGetData);
+    }
 }
