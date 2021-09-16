@@ -26,7 +26,8 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "Disconnect", &GlTFFileLoader::disconnectGltfCallback);
     this->MakeSlotAvailable(&this->m_gltf_slot);
 
-    this->m_glTFFilename_slot << new core::param::FilePathParam("");
+    this->m_glTFFilename_slot << new core::param::FilePathParam(
+        "", core::param::FilePathParam::Flag_File_RestrictExtension, {"gltf"});
     this->MakeSlotAvailable(&this->m_glTFFilename_slot);
 }
 

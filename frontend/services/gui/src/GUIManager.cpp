@@ -888,21 +888,6 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
                 }
 
                 if (!p.CoreParamPtr().IsNull()) {
-                    // Register (new) parameter notifications from file path params
-                    if (p.Type() == ParamType_t::FILEPATH) {
-                        if (auto* p_ptr = p.CoreParamPtr().DynamicCast<core::param::FilePathParam>()) {
-                            if (p_ptr->RegisterNotifications()) {
-                                p_ptr->RegisterNotifications(
-                                    [&, this](const std::string& id, std::weak_ptr<bool> open,
-                                        const std::string& message, std::weak_ptr<std::string> omitted_val) {
-                                        const auto notification_name =
-                                            std::string("Parameter: ") + p.FullNameProject() + "##" + id;
-                                        this->notification_collection[notification_name] = {
-                                            open, false, message, omitted_val};
-                                    });
-                            }
-                        }
-                    }
                     // Write changed gui state to core parameter
                     if (p.IsGUIStateDirty()) {
                         param_sync_success &= megamol::gui::Parameter::WriteCoreParameterGUIState(p, p.CoreParamPtr());
@@ -1453,16 +1438,16 @@ void megamol::gui::GUIManager::draw_popups() {
     // Externally registered pop-ups
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
     for (auto it = this->popup_collection.begin(); it != this->popup_collection.end(); it++) {
-        if (it->second.first.expired() || (it->second.first.lock() == nullptr)) {
+        if (it->second.open_flag.expired() || (it->second.open_flag.lock() == nullptr)) {
             this->popup_collection.erase(it);
             break;
         }
-        if (*(it->second.first.lock())) {
-            *(it->second.first.lock()) = false;
+        if (*(it->second.open_flag.lock())) {
+            *(it->second.open_flag.lock()) = false;
             ImGui::OpenPopup(it->first.c_str());
         }
         if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
-            it->second.second();
+            it->second.draw_callback();
             if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 ImGui::CloseCurrentPopup();
             }
@@ -1472,22 +1457,18 @@ void megamol::gui::GUIManager::draw_popups() {
 
     // Externally registered notifications
     for (auto it = this->notification_collection.begin(); it != this->notification_collection.end(); it++) {
-        if (std::get<0>(it->second).expired() || std::get<0>(it->second).lock() == nullptr) {
+        if (it->second.open_flag.expired() || (it->second.open_flag.lock() == nullptr)) {
             this->notification_collection.erase(it);
             break;
         }
-        if (*std::get<0>(it->second).lock()) {
-            (*std::get<0>(it->second).lock()) = false;
-            if (!std::get<1>(it->second)) {
+        if (*it->second.open_flag.lock()) {
+            *it->second.open_flag.lock() = false;
+            if (!it->second.disable) {
                 ImGui::OpenPopup(it->first.c_str());
             }
         }
         if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
-            if (std::get<3>(it->second).lock()->empty()) {
-                ImGui::TextUnformatted(std::get<2>(it->second).c_str());
-            } else {
-                ImGui::Text(std::get<2>(it->second).c_str(), std::get<3>(it->second).lock()->c_str());
-            }
+            ImGui::TextUnformatted(it->second.message.c_str());
             bool close = false;
             if (ImGui::Button("Ok")) {
                 close = true;
@@ -1496,7 +1477,7 @@ void megamol::gui::GUIManager::draw_popups() {
             if (ImGui::Button("Ok - Disable further notifications.")) {
                 close = true;
                 // Disable further notifications
-                std::get<1>(it->second) = true;
+                it->second.disable = true;
             }
             if (close || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 ImGui::CloseCurrentPopup();
@@ -1854,14 +1835,13 @@ void GUIManager::RegisterWindow(
 void GUIManager::RegisterPopUp(
     const std::string& name, std::weak_ptr<bool> open, const std::function<void()>& callback) {
 
-    this->popup_collection[name] =
-        std::pair<std::weak_ptr<bool>, std::function<void()>>(open, const_cast<std::function<void()>&>(callback));
+    this->popup_collection[name] = PopUpData{open, const_cast<std::function<void()>&>(callback)};
 }
 
 
 void GUIManager::RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message) {
 
-    this->notification_collection[name] = {open, false, message, std::make_shared<std::string>()};
+    this->notification_collection[name] = NotificationData{open, false, message};
 }
 
 

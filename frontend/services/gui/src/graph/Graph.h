@@ -161,8 +161,11 @@ namespace gui {
         ImGuiID GetDropSlot() const {
             return this->gui_graph_state.interact.slot_dropped_uid;
         }
-        bool IsCanvasHoverd() const {
+        bool IsCanvasHovered() const {
             return this->gui_canvas_hovered;
+        }
+        bool IsModuleHovered() const {
+            return (this->gui_graph_state.interact.module_hovered_uid != GUI_INVALID_ID);
         }
 
         void SetLayoutGraph(bool layout = true) {
