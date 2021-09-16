@@ -126,19 +126,19 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 #ifdef _WIN32
             std::replace(fname.begin(), fname.end(), '/', '\\');
 #endif
-            if (this->reader) {
-                this->reader->Close();
-                io->RemoveAllVariables();
-                io->RemoveAllAttributes();
-            }
-            this->reader = std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
-
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Beginning step");
-            const adios2::StepStatus status = reader->BeginStep();
-            if (status != adios2::StepStatus::OK) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("[adiosDataSource] BeginStep returned an error.");
+            if (!this->reader) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[adiosDataSource] Header callback not called yet.");
                 return false;
             }
+
+
+            //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Beginning step");
+            //const adios2::StepStatus status = reader->BeginStep();
+            //if (status != adios2::StepStatus::OK) {
+            //    megamol::core::utility::log::Log::DefaultLog.WriteError("[adiosDataSource] BeginStep returned an error.");
+            //    return false;
+            //}
 
 
             auto toInquire = cad->getVarsToInquire();
@@ -328,9 +328,9 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                     }
                 }
             }
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] EndStep");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] PerformGets");
             const auto t1 = std::chrono::high_resolution_clock::now();
-            reader->EndStep();
+            reader->PerformGets();
             const auto t2 = std::chrono::high_resolution_clock::now();
             const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Time spent for reading frame: %d ms", duration);
@@ -407,12 +407,17 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Opening File %s", fname.c_str());
 
-            if (this->reader) {
+            if (this->reader && dataHashChanged) {
                 this->reader->Close();
                 this->adiosInst->AtIO("Input").RemoveAllVariables();
                 this->adiosInst->AtIO("Input").RemoveAllAttributes();
+                this->reader =
+                    std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
+            } else if (!this->reader) {
+                this->reader =
+                    std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
             }
-            this->reader = std::make_shared<adios2::Engine>(adiosInst->AtIO("Input").Open(fname, adios2::Mode::Read));
+            
 
             // megamol::core::utility::log::Log::DefaultLog.WriteInfo("ADIOS2: Reading available attributes");
             // auto availAttrib =io->AvailableAttributes();
@@ -425,9 +430,13 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[adiosDataSource] Number of attributes %d", tmp_attributes.size());
 
+            availVars.clear();
             availVars.reserve(tmp_variables.size());
+            variables.clear();
             variables.reserve(tmp_variables.size());
+            availAttribs.clear();
             availAttribs.reserve(tmp_attributes.size());
+            attributes.clear();
             attributes.reserve(tmp_attributes.size());
             timesteps.clear();
             for (auto var : tmp_variables) {
