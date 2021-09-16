@@ -15,6 +15,7 @@
 #include <omp.h>
 #include "Color.h"
 #include "SimpleMoleculeRenderer.h"
+#include "compositing/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -53,6 +54,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , getLightsSlot("getLights", "Connects the molecule rendering with availabel light sources")
+        , getFramebufferSlot("getFramebuffer", "Connects the molecule rendering to an optional external framebuffer")
         , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
         , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
         , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
@@ -80,6 +82,8 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->getLightsSlot);
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
+    this->getFramebufferSlot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
+    this->MakeSlotAvailable(&this->getFramebufferSlot);
 
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
@@ -215,99 +219,6 @@ bool SimpleMoleculeRenderer::create(void) {
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_PROGRAM_POINT_SIZE);
-
-    using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
-
-    ShaderSource vertSrc;
-    ShaderSource fragSrc;
-
-    // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentOR", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Unable to load vertex shader source for offscreen rendering sphere shader");
-        return false;
-    }
-    try {
-        if (!this->sphereShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create offscreen sphere shader: %s\n", e.GetMsgA());
-        return false;
-    }
-
-    vertSrc.Clear();
-    fragSrc.Clear();
-
-    // Load filter sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::filterSphereVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for filter sphere shader");
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentOR", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Unable to load vertex shader source for offscreen filter sphere shader (OR)");
-        return false;
-    }
-    try {
-        if (!this->filterSphereShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create filter sphere shader (OR): %s\n", e.GetMsgA());
-        return false;
-    }
-
-    vertSrc.Clear();
-    fragSrc.Clear();
-
-    // Load cylinder shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragmentOR", fragSrc)) {
-        //        "protein::std::cylinderFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Unable to load fragment shader source for offscreen cylinder shader");
-        return false;
-    }
-    try {
-        if (!this->cylinderShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create offscreen cylinder shader: %s\n", e.GetMsgA());
-        return false;
-    }
-
-    vertSrc.Clear();
-    fragSrc.Clear();
-
-    // Load filter cylinder shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::filterCylinderVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for filter cylinder shader");
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragmentOR", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Unable to load vertex shader source for filter cylinder shader (OR)");
-        return false;
-    }
-    try {
-        if (!this->filterCylinderShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create filter cylinder shader (OR): %s\n", e.GetMsgA());
-        return false;
-    }
 
     // new shaders
     try {
@@ -695,30 +606,15 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
     }
 
     // enable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        sphereShader_->use();
-        sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
-        sphereShader_->setUniform("camIn", cam_pose.direction);
-        sphereShader_->setUniform("camRight", cam_pose.right);
-        sphereShader_->setUniform("camUp", cam_pose.up);
-        sphereShader_->setUniform("MVP", MVP);
-        sphereShader_->setUniform("MVinv", MVinv);
-        sphereShader_->setUniform("MVPinv", MVPinv);
-        sphereShader_->setUniform("MVPtransp", MVPtransp);
-    } else {
-        this->sphereShaderOR.Enable();
-        // set shader variables
-        glUniform4fv(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
-        glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("NormalM"), 1, false, glm::value_ptr(NormalM));
-    }
+    sphereShader_->use();
+    sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    sphereShader_->setUniform("camIn", cam_pose.direction);
+    sphereShader_->setUniform("camRight", cam_pose.right);
+    sphereShader_->setUniform("camUp", cam_pose.up);
+    sphereShader_->setUniform("MVP", MVP);
+    sphereShader_->setUniform("MVinv", MVinv);
+    sphereShader_->setUniform("MVPinv", MVPinv);
+    sphereShader_->setUniform("MVPtransp", MVPtransp);
 
     // set vertex and color pointers and draw them
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -731,39 +627,19 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
     glUseProgram(0);
 
     // enable cylinder shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        cylinderShader_->use();
-        cylinderShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
-        cylinderShader_->setUniform("camIn", cam_pose.direction);
-        cylinderShader_->setUniform("camRight", cam_pose.right);
-        cylinderShader_->setUniform("camUp", cam_pose.up);
-        cylinderShader_->setUniform("MVP", MVP);
-        cylinderShader_->setUniform("MVinv", MVinv);
-        cylinderShader_->setUniform("MVPinv", MVPinv);
-        cylinderShader_->setUniform("MVPtransp", MVPtransp);
-        attribLocInParams = glGetAttribLocation(cylinderShader_->getHandle(), "inParams");
-        attribLocQuatC = glGetAttribLocation(cylinderShader_->getHandle(), "quatC");
-        attribLocColor1 = glGetAttribLocation(cylinderShader_->getHandle(), "color1");
-        attribLocColor2 = glGetAttribLocation(cylinderShader_->getHandle(), "color2");
-    } else {
-        this->cylinderShaderOR.Enable();
-        // set shader variables
-        glUniform4fv(this->cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(this->cylinderShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
-        glUniform3fv(this->cylinderShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
-        glUniform3fv(this->cylinderShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
-        glUniform2f(this->cylinderShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
-        glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
-        glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
-        glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
-        glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
-        glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("NormalM"), 1, false, glm::value_ptr(NormalM));
-        // get the attribute locations
-        attribLocInParams = glGetAttribLocation(this->cylinderShaderOR, "inParams");
-        attribLocQuatC = glGetAttribLocation(this->cylinderShaderOR, "quatC");
-        attribLocColor1 = glGetAttribLocation(this->cylinderShaderOR, "color1");
-        attribLocColor2 = glGetAttribLocation(this->cylinderShaderOR, "color2");
-    }
+    cylinderShader_->use();
+    cylinderShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    cylinderShader_->setUniform("camIn", cam_pose.direction);
+    cylinderShader_->setUniform("camRight", cam_pose.right);
+    cylinderShader_->setUniform("camUp", cam_pose.up);
+    cylinderShader_->setUniform("MVP", MVP);
+    cylinderShader_->setUniform("MVinv", MVinv);
+    cylinderShader_->setUniform("MVPinv", MVPinv);
+    cylinderShader_->setUniform("MVPtransp", MVPtransp);
+    attribLocInParams = glGetAttribLocation(cylinderShader_->getHandle(), "inParams");
+    attribLocQuatC = glGetAttribLocation(cylinderShader_->getHandle(), "quatC");
+    attribLocColor1 = glGetAttribLocation(cylinderShader_->getHandle(), "color1");
+    attribLocColor2 = glGetAttribLocation(cylinderShader_->getHandle(), "color2");
 
     // enable vertex attribute arrays for the attribute locations
     glDisableClientState(GL_COLOR_ARRAY);
@@ -885,29 +761,15 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     }
 
     // enable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        sphereShader_->use();
-        sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
-        sphereShader_->setUniform("camIn", cam_pose.direction);
-        sphereShader_->setUniform("camRight", cam_pose.right);
-        sphereShader_->setUniform("camUp", cam_pose.up);
-        sphereShader_->setUniform("MVP", MVP);
-        sphereShader_->setUniform("MVinv", MVinv);
-        sphereShader_->setUniform("MVPinv", MVPinv);
-        sphereShader_->setUniform("MVPtransp", MVPtransp);
-    } else {
-        this->sphereShaderOR.Enable();
-        // set shader variables
-        glUniform4fv(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
-        glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
-    }
+    sphereShader_->use();
+    sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    sphereShader_->setUniform("camIn", cam_pose.direction);
+    sphereShader_->setUniform("camRight", cam_pose.right);
+    sphereShader_->setUniform("camUp", cam_pose.up);
+    sphereShader_->setUniform("MVP", MVP);
+    sphereShader_->setUniform("MVinv", MVinv);
+    sphereShader_->setUniform("MVPinv", MVPinv);
+    sphereShader_->setUniform("MVPtransp", MVPtransp);
 
     // set vertex and color pointers and draw them
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -920,38 +782,19 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     glUseProgram(0);
 
     // enable cylinder shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        cylinderShader_->use();
-        cylinderShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
-        cylinderShader_->setUniform("camIn", cam_pose.direction);
-        cylinderShader_->setUniform("camRight", cam_pose.right);
-        cylinderShader_->setUniform("camUp", cam_pose.up);
-        cylinderShader_->setUniform("MVP", MVP);
-        cylinderShader_->setUniform("MVinv", MVinv);
-        cylinderShader_->setUniform("MVPinv", MVPinv);
-        cylinderShader_->setUniform("MVPtransp", MVPtransp);
-        attribLocInParams = glGetAttribLocation(cylinderShader_->getHandle(), "inParams");
-        attribLocQuatC = glGetAttribLocation(cylinderShader_->getHandle(), "quatC");
-        attribLocColor1 = glGetAttribLocation(cylinderShader_->getHandle(), "color1");
-        attribLocColor2 = glGetAttribLocation(cylinderShader_->getHandle(), "color2");
-    } else {
-        this->cylinderShaderOR.Enable();
-        // set shader variables
-        glUniform4fv(this->cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(this->cylinderShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
-        glUniform3fv(this->cylinderShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
-        glUniform3fv(this->cylinderShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
-        glUniform2f(this->cylinderShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
-        glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
-        glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
-        glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
-        glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
-        // get the attribute locations
-        attribLocInParams = glGetAttribLocation(this->cylinderShaderOR, "inParams");
-        attribLocQuatC = glGetAttribLocation(this->cylinderShaderOR, "quatC");
-        attribLocColor1 = glGetAttribLocation(this->cylinderShaderOR, "color1");
-        attribLocColor2 = glGetAttribLocation(this->cylinderShaderOR, "color2");
-    }
+    cylinderShader_->use();
+    cylinderShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    cylinderShader_->setUniform("camIn", cam_pose.direction);
+    cylinderShader_->setUniform("camRight", cam_pose.right);
+    cylinderShader_->setUniform("camUp", cam_pose.up);
+    cylinderShader_->setUniform("MVP", MVP);
+    cylinderShader_->setUniform("MVinv", MVinv);
+    cylinderShader_->setUniform("MVPinv", MVPinv);
+    cylinderShader_->setUniform("MVPtransp", MVPtransp);
+    attribLocInParams = glGetAttribLocation(cylinderShader_->getHandle(), "inParams");
+    attribLocQuatC = glGetAttribLocation(cylinderShader_->getHandle(), "quatC");
+    attribLocColor1 = glGetAttribLocation(cylinderShader_->getHandle(), "color1");
+    attribLocColor2 = glGetAttribLocation(cylinderShader_->getHandle(), "color2");
 
     // enable vertex attribute arrays for the attribute locations
     glDisableClientState(GL_COLOR_ARRAY);
@@ -1162,29 +1005,15 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
     }
 
     // enable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        sphereShader_->use();
-        sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
-        sphereShader_->setUniform("camIn", cam_pose.direction);
-        sphereShader_->setUniform("camRight", cam_pose.right);
-        sphereShader_->setUniform("camUp", cam_pose.up);
-        sphereShader_->setUniform("MVP", MVP);
-        sphereShader_->setUniform("MVinv", MVinv);
-        sphereShader_->setUniform("MVPinv", MVPinv);
-        sphereShader_->setUniform("MVPtransp", MVPtransp);
-    } else {
-        this->sphereShaderOR.Enable();
-        // set shader variables
-        glUniform4fv(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
-        glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
-    }
+    sphereShader_->use();
+    sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    sphereShader_->setUniform("camIn", cam_pose.direction);
+    sphereShader_->setUniform("camRight", cam_pose.right);
+    sphereShader_->setUniform("camUp", cam_pose.up);
+    sphereShader_->setUniform("MVP", MVP);
+    sphereShader_->setUniform("MVinv", MVinv);
+    sphereShader_->setUniform("MVPinv", MVPinv);
+    sphereShader_->setUniform("MVPtransp", MVPtransp);
 
     // set vertex and color pointers and draw them
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -1275,29 +1104,15 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
     }
 
     // enable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        sphereShader_->use();
-        sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
-        sphereShader_->setUniform("camIn", cam_pose.direction);
-        sphereShader_->setUniform("camRight", cam_pose.right);
-        sphereShader_->setUniform("camUp", cam_pose.up);
-        sphereShader_->setUniform("MVP", MVP);
-        sphereShader_->setUniform("MVinv", MVinv);
-        sphereShader_->setUniform("MVPinv", MVPinv);
-        sphereShader_->setUniform("MVPtransp", MVPtransp);
-    } else {
-        this->sphereShaderOR.Enable();
-        // set shader variables
-        glUniform4fv(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
-        glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
-        glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
-        glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
-    }
+    sphereShader_->use();
+    sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    sphereShader_->setUniform("camIn", cam_pose.direction);
+    sphereShader_->setUniform("camRight", cam_pose.right);
+    sphereShader_->setUniform("camUp", cam_pose.up);
+    sphereShader_->setUniform("MVP", MVP);
+    sphereShader_->setUniform("MVinv", MVinv);
+    sphereShader_->setUniform("MVPinv", MVPinv);
+    sphereShader_->setUniform("MVPtransp", MVPtransp);
 
     // set vertex and color pointers and draw them
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -1558,24 +1373,12 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
     }
 
     // enable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        filterSphereShader_->use();
-        filterSphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
-        filterSphereShader_->setUniform("camIn", cam_pose.direction);
-        filterSphereShader_->setUniform("camRight", cam_pose.right);
-        filterSphereShader_->setUniform("camUp", cam_pose.up);
-        this->attribLocAtomFilter = glGetAttribLocation(filterSphereShader_->getHandle(), "filter");
-    } else {
-        this->filterSphereShaderOR.Enable();
-        // set shader variables
-        glUniform4fv(this->filterSphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
-        glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
-        glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
-        glUniform2f(this->filterSphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
-        // Set filter attribute
-        this->attribLocAtomFilter = glGetAttribLocation(this->filterSphereShaderOR.ProgramHandle(), "filter");
-    }
+    filterSphereShader_->use();
+    filterSphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    filterSphereShader_->setUniform("camIn", cam_pose.direction);
+    filterSphereShader_->setUniform("camRight", cam_pose.right);
+    filterSphereShader_->setUniform("camUp", cam_pose.up);
+    this->attribLocAtomFilter = glGetAttribLocation(filterSphereShader_->getHandle(), "filter");
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
@@ -1596,33 +1399,16 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
     glUseProgram(0);
 
     // enable cylinder shader
-    // enable cylinder shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        filterCylinderShader_->use();
-        filterCylinderShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
-        filterCylinderShader_->setUniform("camIn", cam_pose.direction);
-        filterCylinderShader_->setUniform("camRight", cam_pose.right);
-        filterCylinderShader_->setUniform("camUp", cam_pose.up);
-        attribLocInParams = glGetAttribLocation(filterCylinderShader_->getHandle(), "inParams");
-        attribLocQuatC = glGetAttribLocation(filterCylinderShader_->getHandle(), "quatC");
-        attribLocColor1 = glGetAttribLocation(filterCylinderShader_->getHandle(), "color1");
-        attribLocColor2 = glGetAttribLocation(filterCylinderShader_->getHandle(), "color2");
-        this->attribLocConFilter = glGetAttribLocation(filterCylinderShader_->getHandle(), "filter");
-    } else {
-        this->filterCylinderShaderOR.Enable();
-        // set shader variables
-        glUniform4fv(this->filterCylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(this->filterCylinderShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
-        glUniform3fv(this->filterCylinderShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
-        glUniform3fv(this->filterCylinderShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
-        glUniform2f(this->filterCylinderShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
-        // get the attribute locations
-        attribLocInParams = glGetAttribLocation(this->filterCylinderShaderOR, "inParams");
-        attribLocQuatC = glGetAttribLocation(this->filterCylinderShaderOR, "quatC");
-        attribLocColor1 = glGetAttribLocation(this->filterCylinderShaderOR, "color1");
-        attribLocColor2 = glGetAttribLocation(this->filterCylinderShaderOR, "color2");
-        this->attribLocConFilter = glGetAttribLocation(this->filterCylinderShaderOR, "filter");
-    }
+    filterCylinderShader_->use();
+    filterCylinderShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    filterCylinderShader_->setUniform("camIn", cam_pose.direction);
+    filterCylinderShader_->setUniform("camRight", cam_pose.right);
+    filterCylinderShader_->setUniform("camUp", cam_pose.up);
+    attribLocInParams = glGetAttribLocation(filterCylinderShader_->getHandle(), "inParams");
+    attribLocQuatC = glGetAttribLocation(filterCylinderShader_->getHandle(), "quatC");
+    attribLocColor1 = glGetAttribLocation(filterCylinderShader_->getHandle(), "color1");
+    attribLocColor2 = glGetAttribLocation(filterCylinderShader_->getHandle(), "color2");
+    this->attribLocConFilter = glGetAttribLocation(filterCylinderShader_->getHandle(), "filter");
 
     // enable vertex attribute arrays for the attribute locations
     glDisableClientState(GL_COLOR_ARRAY);
@@ -1697,24 +1483,12 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
     }
 
     // Enable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        filterSphereShader_->use();
-        filterSphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
-        filterSphereShader_->setUniform("camIn", cam_pose.direction);
-        filterSphereShader_->setUniform("camRight", cam_pose.right);
-        filterSphereShader_->setUniform("camUp", cam_pose.up);
-        this->attribLocAtomFilter = glGetAttribLocation(filterSphereShader_->getHandle(), "filter");
-    } else {
-        this->filterSphereShaderOR.Enable();
-        // set shader variables
-        glUniform4fv(this->filterSphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
-        glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
-        glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
-        glUniform2f(this->filterSphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
-        // Set filter attribute
-        this->attribLocAtomFilter = glGetAttribLocation(this->filterSphereShaderOR.ProgramHandle(), "filter");
-    }
+    filterSphereShader_->use();
+    filterSphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
+    filterSphereShader_->setUniform("camIn", cam_pose.direction);
+    filterSphereShader_->setUniform("camRight", cam_pose.right);
+    filterSphereShader_->setUniform("camUp", cam_pose.up);
+    this->attribLocAtomFilter = glGetAttribLocation(filterSphereShader_->getHandle(), "filter");
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);

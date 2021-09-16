@@ -223,6 +223,8 @@ namespace protein {
         megamol::core::CallerSlot bsDataCallerSlot;
         /** Slot to get the lights */
         megamol::core::CallerSlot getLightsSlot;
+        /** Slot to get the framebuffer */
+        megamol::core::CallerSlot getFramebufferSlot;
 
         /** camera information */
         core::view::Camera cam;
@@ -273,14 +275,6 @@ namespace protein {
         megamol::core::param::ParamSlot useNeighborColors;
         float currentZClipPos;
 
-        /** shader for the spheres (raycasting view) */
-        vislib::graphics::gl::GLSLShader sphereShaderOR;
-        /** shader for the cylinders (raycasting view) */
-        vislib::graphics::gl::GLSLShader cylinderShaderOR;
-        /** Shader that uses filter information */
-        vislib::graphics::gl::GLSLShader filterSphereShaderOR;
-        vislib::graphics::gl::GLSLShader filterCylinderShaderOR;
-
         // new shader programs
         std::shared_ptr<glowl::GLSLProgram> sphereShader_;
         std::shared_ptr<glowl::GLSLProgram> sphereClipPlaneShader_;
@@ -288,6 +282,7 @@ namespace protein {
         std::shared_ptr<glowl::GLSLProgram> cylinderClipPlaneShader_;
         std::shared_ptr<glowl::GLSLProgram> filterSphereShader_;
         std::shared_ptr<glowl::GLSLProgram> filterCylinderShader_;
+        std::shared_ptr<glowl::GLSLProgram> lightingShader_;
 
         // attribute locations for GLSL-Shader
         GLint attribLocInParams;
