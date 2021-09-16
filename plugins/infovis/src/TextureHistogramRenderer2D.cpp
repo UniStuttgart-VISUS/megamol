@@ -56,10 +56,16 @@ bool TextureHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenG
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount_[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount_[2]);
 
+    glGenBuffers(1, &minValueBuffer);
+    glGenBuffers(1, &maxValueBuffer);
+
     return true;
 }
 
-void TextureHistogramRenderer2D::releaseImpl() {}
+void TextureHistogramRenderer2D::releaseImpl() {
+    glDeleteBuffers(1, &minValueBuffer);
+    glDeleteBuffers(1, &maxValueBuffer);
+}
 
 bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     auto textureCall = textureDataCallerSlot_.CallAs<compositing::CallTexture2D>();
@@ -128,29 +134,24 @@ bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     // Use two buffers for min and max.
     // First numComponents values are for global values, after this numComponents values for each row.
 
+    const GLsizeiptr bufSize = (numComponents + numComponents * h) * sizeof(float);
+
     if (lastTexSize != glm::ivec2(data_->getWidth(), data_->getHeight()) || readFlagsCall->hasUpdate()) {
         readFlagsCall->getData()->validateFlagCount(data_->getWidth() * data_->getHeight());
         lastTexSize = glm::ivec2(data_->getWidth(), data_->getHeight());
+
+        glNamedBufferData(minValueBuffer, bufSize, nullptr, GL_STATIC_COPY);
+        glNamedBufferData(maxValueBuffer, bufSize, nullptr, GL_STATIC_COPY);
     }
     readFlagsCall->getData()->flags->bind(5);
 
     applySelections();
 
-    const GLsizeiptr bufSize = (numComponents + numComponents * h) * sizeof(float);
-
-    GLuint minValueBuffer;
-    glGenBuffers(1, &minValueBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, minValueBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufSize, nullptr, GL_STATIC_COPY);
     const float maxVal = std::numeric_limits<float>::max();
-    glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, &maxVal);
+    glClearNamedBufferData(minValueBuffer, GL_R32F, GL_RED, GL_FLOAT, &maxVal);
 
-    GLuint maxValueBuffer;
-    glGenBuffers(1, &maxValueBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxValueBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufSize, nullptr, GL_STATIC_COPY);
     const float minVal = std::numeric_limits<float>::lowest();
-    glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, &minVal);
+    glClearNamedBufferData(maxValueBuffer, GL_R32F, GL_RED, GL_FLOAT, &minVal);
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, minValueBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, maxValueBuffer);
@@ -177,14 +178,10 @@ bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     std::vector<float> minimums(numComponents);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, minValueBuffer);
-    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, numComponents * sizeof(float), minimums.data());
-    glDeleteBuffers(1, &minValueBuffer);
+    glGetNamedBufferSubData(minValueBuffer, 0, numComponents * sizeof(float), minimums.data());
 
     std::vector<float> maximums(numComponents);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxValueBuffer);
-    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, numComponents * sizeof(float), maximums.data());
-    glDeleteBuffers(1, &maxValueBuffer);
+    glGetNamedBufferSubData(maxValueBuffer, 0, numComponents * sizeof(float), maximums.data());
 
     setComponentHeaders(std::move(names), std::move(minimums), std::move(maximums));
 
