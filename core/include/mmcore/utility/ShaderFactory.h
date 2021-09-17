@@ -46,7 +46,8 @@ namespace {
             program->setDebugLabel(label);
             return program;
         } catch (glowl::GLSLProgramException const& ex) {
-            throw glowl::GLSLProgramException(translator.translateErrorLog(ex.what()));
+            throw glowl::GLSLProgramException(
+                "Error building shader program \"" + label + "\":\n" + translator.translateErrorLog(ex.what()));
         }
     }
 } // namespace

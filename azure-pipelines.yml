@@ -52,11 +52,12 @@ jobs:
 - job: Linux
   strategy:
     matrix:
-      'GCC9 / Make / Release':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
-        configuration: Release
-        generator: 'Unix Makefiles'
+      ## Temporarily disabled until more CI machines are available!
+      #'GCC9 / Make / Release':
+      #  cCompiler: gcc-9
+      #  cxxCompiler: g++-9
+      #  configuration: Release
+      #  generator: 'Unix Makefiles'
       'GCC9 / Make / Debug':
         cCompiler: gcc-9
         cxxCompiler: g++-9
