@@ -1810,7 +1810,7 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
             if (separator_index != std::string::npos) {
                 auto last_id_str = filename.substr(separator_index + 1);
                 std::istringstream(last_id_str) >> this->gui_state.screenshot_filepath_id; // 0 if failed
-                if (this->gui_state.screenshot_filepath_id = 0) {
+                if (this->gui_state.screenshot_filepath_id == 0) {
                     new_separator = true;
                 }
                 this->gui_state.screenshot_filepath_id++;
