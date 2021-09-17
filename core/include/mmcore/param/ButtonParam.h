@@ -36,7 +36,7 @@ namespace param {
          * Be aware, that if you do not assign a key, the button will not be
          * available from viewers without a GUI.
          */
-        ButtonParam(void);
+        ButtonParam();
 
         /**
          * Ctor.
@@ -111,27 +111,13 @@ namespace param {
          */
         virtual vislib::TString ValueString(void) const;
 
-        inline void SetKeyCode(const core::view::KeyCode& keycode) {
-            this->keycode = keycode;
-        }
-
-        inline void SetKey(const core::view::Key& key) {
-            this->keycode.key = key;
-        }
-
-        inline void SetModifiers(const core::view::Modifiers& mods) {
-            this->keycode.mods = mods;
-        }
-
-        inline void SetModifier(const core::view::Modifier& mod) {
-            this->keycode.mods = core::view::Modifiers(mod);
-        }
-
         inline core::view::KeyCode GetKeyCode(void) const {
             return this->keycode;
         }
 
     private:
+
+        void initialize();
 
         /** The key of this button */
         core::view::KeyCode keycode;

@@ -340,13 +340,6 @@ In order to register a GUI window, popup or notification within a frontend servi
         auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
         gui_window_request_resource.register_popup("<PopUp Title", std::weak_ptr<bool>(gui_open_popup), [&]() {
 
-            // Put your popup content here ...
-            ImGui::TextUnformatted("Hello World ...");
-            if (ImGui::Button("Cancel")) {
-                ImGui::CloseCurrentPopup();
-            }            
-        });
-
 ### GUI Notification
 
 - In the **frontend service header file (.h)** add a variable for opening the popup. If this variable is set to `true`, the popup is opened.

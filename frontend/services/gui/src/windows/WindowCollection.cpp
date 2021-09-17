@@ -8,6 +8,7 @@
 
 #include "WindowCollection.h"
 #include "Configurator.h"
+#include "HotkeyEditor.h"
 #include "LogConsole.h"
 #include "ParameterList.h"
 #include "PerformanceMonitor.h"
@@ -20,6 +21,7 @@ using namespace megamol::gui;
 
 WindowCollection::WindowCollection() : windows() {
 
+    this->windows.emplace_back(std::make_shared<HotkeyEditor>("Hotkey Editor"));
     this->windows.emplace_back(std::make_shared<LogConsole>("Log Console"));
     this->windows.emplace_back(std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true));
     this->windows.emplace_back(std::make_shared<PerformanceMonitor>("Performance Metrics"));
