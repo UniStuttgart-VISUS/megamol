@@ -109,6 +109,10 @@ private:
     core::CallerSlot m_input_texture_call;
 
     core::CallerSlot m_input_depth_texture_call;
+
+    core::CallerSlot m_input_flags_call;
+
+    glm::ivec2 m_last_tex_size = glm::ivec2(0, 0);
 };
 
 } // namespace compositing

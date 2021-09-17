@@ -20,7 +20,8 @@ io::MMGDDWriter::MMGDDWriter(void) : AbstractDataWriter(),
         filenameSlot("filename", "The path to the MMGDD file to be written"),
         dataSlot("data", "The slot requesting the data to be written") {
 
-    this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
+    this->filenameSlot.SetParameter(new core::param::FilePathParam(
+        "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"mmgdd"}));
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->dataSlot.SetCompatibleCall<GraphDataCallDescription>();

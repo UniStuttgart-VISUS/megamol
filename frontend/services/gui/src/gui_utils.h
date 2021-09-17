@@ -188,14 +188,10 @@ namespace gui {
         HOTKEY_CONFIGURATOR_MODULE_SEARCH,
         HOTKEY_CONFIGURATOR_PARAMETER_SEARCH,
         HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM,
-        HOTKEY_CONFIGURATOR_SAVE_PROJECT,
-        HOTKEY_WINDOW_CONFIGURATOR,
-        HOTKEY_WINDOW_TRANSFER_FUNCTION_EDITOR,
-        HOTKEY_WINDOW_LOG_CONSOLE,
-        HOTKEY_WINDOW_MAIN_PARAMETER_LIST,
-        HOTKEY_WINDOW_PERFORMANCE_MONITOR
+        HOTKEY_CONFIGURATOR_SAVE_PROJECT
     };
     struct HotkeyData_t {
+        std::string name;
         megamol::core::view::KeyCode keycode;
         bool is_pressed = false;
     };

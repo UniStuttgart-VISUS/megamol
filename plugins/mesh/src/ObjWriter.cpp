@@ -14,7 +14,8 @@ megamol::mesh::ObjWriter::ObjWriter()
     _rhs_mesh_slot.SetCompatibleCall<CallMeshDescription>();
     this->MakeSlotAvailable(&_rhs_mesh_slot);
 
-    this->_filename_slot << new core::param::FilePathParam("");
+    this->_filename_slot << new core::param::FilePathParam(
+        "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"obj"});
     this->MakeSlotAvailable(&this->_filename_slot);
 }
 
