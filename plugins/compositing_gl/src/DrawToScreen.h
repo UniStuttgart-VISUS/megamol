@@ -106,11 +106,16 @@ private:
     /** Shader program for deferred shading pass */
     std::unique_ptr<GLSLShader> m_drawToScreen_prgm;
 
+
     /** */
     core::CallerSlot m_input_texture_call;
 
     core::CallerSlot m_input_depth_texture_call;
 
+    core::CallerSlot m_input_flags_call;
+
+    glm::ivec2 m_last_tex_size = glm::ivec2(0, 0);
+    
     GLint m_screenRestoreFBO;
 };
 

@@ -1854,6 +1854,9 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             }
 
             ImGui::EndTabItem();
+
+        } else {
+            this->gui_canvas_hovered = false;
         }
 
         ImGui::PopID();

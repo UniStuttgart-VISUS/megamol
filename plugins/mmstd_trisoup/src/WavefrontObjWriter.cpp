@@ -22,7 +22,8 @@ trisoup::WavefrontObjWriter::WavefrontObjWriter(void) : AbstractDataWriter(),
     frameIDSlot("frameID", "The ID of the frame to be written"),
     dataSlot("data", "The slot requesting the data to be written") {
 
-    this->filenameSlot.SetParameter(new param::FilePathParam(""));
+    this->filenameSlot.SetParameter(
+        new param::FilePathParam("", megamol::core::param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->frameIDSlot.SetParameter(new param::IntParam(0, 0));

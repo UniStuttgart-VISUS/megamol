@@ -23,18 +23,18 @@ using namespace megamol::protein_calls;
 BindingSiteDataSource::BindingSiteDataSource( void ) : megamol::core::Module(),
         dataOutSlot( "dataout", "The slot providing the binding site data"),
         pdbFilenameSlot( "pdbFilename", "The PDB file containing the binding site information"),
-        colorTableFileParam( "ColorTableFilename", "The filename of the color table."),
+        colorTableFileParam( "ColorTableFilename", "The filename of the color table, e.g.: colors.txt"),
         enzymeModeParam("enzymeMode", "Activates the enzyme-mode, coloring only the relevant parts of the residues"),
         gxTypeFlag("gxType", "Flag whether the protein used is a gx type or not") {
             
-    this->pdbFilenameSlot << new param::FilePathParam("");
+    this->pdbFilenameSlot << new param::FilePathParam("", param::FilePathParam::Flag_File_RestrictExtension, {"pdb"});
     this->MakeSlotAvailable( &this->pdbFilenameSlot);
     
     this->dataOutSlot.SetCallback( BindingSiteCall::ClassName(), BindingSiteCall::FunctionName(BindingSiteCall::CallForGetData), &BindingSiteDataSource::getData);
     this->MakeSlotAvailable( &this->dataOutSlot);
     
     // fill color table with default values and set the filename param
-    this->colorTableFileParam.SetParameter(new param::FilePathParam("colors.txt"));
+    this->colorTableFileParam.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable( &this->colorTableFileParam);
     Color::ReadColorTableFromFile(
         this->colorTableFileParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),

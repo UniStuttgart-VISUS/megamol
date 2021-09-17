@@ -35,12 +35,13 @@ megamol::gui::Configurator::Configurator(
     assert(this->win_tfeditor_ptr != nullptr);
 
     // init hotkeys
-    this->hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = {
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = {"_hotkey_gui_configurator_module_search",
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = {
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = {"_hotkey_gui_configurator_param_search",
         core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = {core::view::KeyCode(core::view::Key::KEY_DELETE), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = {
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = {
+        "_hotkey_gui_configurator_delete_graph_entry", core::view::KeyCode(core::view::Key::KEY_DELETE), false};
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = {"_hotkey_gui_configurator_save_project",
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
         false};
 
@@ -104,7 +105,7 @@ bool megamol::gui::Configurator::Draw() {
     }
 
     // Update state -------------------------------------------------------
-    this->graph_state.hotkeys = this->hotkeys;
+    this->graph_state.hotkeys = this->win_hotkeys;
 
     // Process hotkeys
     /// HOTKEY_CONFIGURATOR_SAVE_PROJECT
@@ -153,7 +154,7 @@ bool megamol::gui::Configurator::Draw() {
     // Only reset 'externally' processed hotkeys
     this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].is_pressed = false;
     this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].is_pressed = false;
-    this->hotkeys = this->graph_state.hotkeys;
+    this->win_hotkeys = this->graph_state.hotkeys;
 
     return true;
 }
@@ -180,12 +181,13 @@ void megamol::gui::Configurator::PopUps() {
 
         ImGuiID selected_callslot_uid = selected_graph_ptr->GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
+        bool is_any_module_hovered = selected_graph_ptr->IsModuleHovered();
 
         bool valid_double_click =
-            (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
-                (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup));
+            (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHovered() &&
+                (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup) && (!is_any_module_hovered));
         bool valid_double_click_callslot =
-            (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
+            (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHovered() &&
                 (selected_callslot_uid != GUI_INVALID_ID) &&
                 ((!this->show_module_list_popup) || (this->last_selected_callslot_uid != selected_callslot_uid)));
 

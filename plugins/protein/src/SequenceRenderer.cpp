@@ -61,7 +61,7 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
     this->MakeSlotAvailable( &this->resCountPerRowParam);
     
     // fill color table with default values and set the filename param
-    this->colorTableFileParam.SetParameter(new param::FilePathParam("colors.txt"));
+    this->colorTableFileParam.SetParameter(new param::FilePathParam("colors.txt", param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable( &this->colorTableFileParam);
     Color::ReadColorTableFromFile(this->colorTableFileParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str(), this->colorTable);
     

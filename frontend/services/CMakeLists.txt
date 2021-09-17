@@ -18,6 +18,8 @@ if(BUILD_FRONTEND_SERVICES)
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "include/*.h"
     "include/*.hpp"
+    "command/*.h"
+    "command/*.hpp"
     "cuda/*h"
     "cuda/*hpp"
     "opengl_glfw/*.h"
@@ -34,7 +36,8 @@ if(BUILD_FRONTEND_SERVICES)
   file(GLOB_RECURSE gui_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.h" "gui/*.hpp")
 
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-    "cuda/*cpp"
+    "command/*.cpp"
+    "cuda/*.cpp"
     "opengl_glfw/*.cpp"
     "service_collection/*.cpp"
     "lua_service_wrapper/*.cpp"
@@ -52,6 +55,7 @@ if(BUILD_FRONTEND_SERVICES)
   set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PUBLIC
     "include"
+    "command"
     "cuda"
     "opengl_glfw"
     "service_collection"

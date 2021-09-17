@@ -23,7 +23,6 @@ using namespace vislib;
 ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>()
     , alphaParam("alpha", "The alpha value of the replacement rendering.")
     , replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer.")
-    , replacementKeyParam("hotkeyAssignment", "Choose hotkey for replacement rendering button.")
     , toggleReplacementParam("toggleReplacement", "Toggle replacement rendering.")
     , draw_replacement(false)
     , utils()
@@ -37,27 +36,12 @@ ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererMo
     alphaParam.SetParameter(new param::FloatParam(0.75f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&alphaParam);
 
-    this->toggleReplacementParam.SetParameter(new param::ButtonParam());
+    this->toggleReplacementParam.SetParameter(new param::ButtonParam(
+        frontend_resources::KeyCode{frontend_resources::Key::KEY_1, frontend_resources::Modifier::ALT}));
     this->MakeSlotAvailable(&this->toggleReplacementParam);
 
     this->replacementRenderingParam.SetParameter(new param::BoolParam(this->draw_replacement));
     this->MakeSlotAvailable(&this->replacementRenderingParam);
-
-    param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(KeyAssignment::KEY_ASSIGN_NONE));
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_NONE, "Choose key assignment for button.");
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_1, "Alt + 1");
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_2, "Alt + 2");
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_3, "Alt + 3");
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_4, "Alt + 4");
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_5, "Alt + 5");
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_6, "Alt + 6");
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_7, "Alt + 7");
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_8, "Alt + 8");
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_9, "Alt + 9");
-    tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_0, "Alt + 0");
-    this->replacementKeyParam << tmpEnum;
-    this->MakeSlotAvailable(&this->replacementKeyParam);
-    tmpEnum = nullptr;
 }
 
 
@@ -124,35 +108,6 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         this->toggleReplacementParam.ResetDirty();
         this->draw_replacement = !this->draw_replacement;
         this->replacementRenderingParam.Param<param::BoolParam>()->SetValue(this->draw_replacement, false);
-    }
-
-    if (this->replacementKeyParam.IsDirty()) {
-        this->replacementKeyParam.ResetDirty();
-
-        KeyAssignment newKey = static_cast<KeyAssignment>(this->replacementKeyParam.Param<param::EnumParam>()->Value());
-        core::view::Key key = core::view::Key::KEY_UNKNOWN;
-        switch (newKey) {
-            case(KeyAssignment::KEY_ASSIGN_1): key = core::view::Key::KEY_1; break;
-            case(KeyAssignment::KEY_ASSIGN_2): key = core::view::Key::KEY_2; break;
-            case(KeyAssignment::KEY_ASSIGN_3): key = core::view::Key::KEY_3; break;
-            case(KeyAssignment::KEY_ASSIGN_4): key = core::view::Key::KEY_4; break;
-            case(KeyAssignment::KEY_ASSIGN_5): key = core::view::Key::KEY_5; break;
-            case(KeyAssignment::KEY_ASSIGN_6): key = core::view::Key::KEY_6; break;
-            case(KeyAssignment::KEY_ASSIGN_7): key = core::view::Key::KEY_7; break;
-            case(KeyAssignment::KEY_ASSIGN_8): key = core::view::Key::KEY_8; break;
-            case(KeyAssignment::KEY_ASSIGN_9): key = core::view::Key::KEY_9; break;
-            case(KeyAssignment::KEY_ASSIGN_0): key = core::view::Key::KEY_0; break;
-            default: break;
-        }
-        // Set hotkey for button param 
-        if (key != core::view::Key::KEY_UNKNOWN) {
-            this->toggleReplacementParam.Param<param::ButtonParam>()->SetKey(key);
-            this->toggleReplacementParam.Param<param::ButtonParam>()->SetModifier(core::view::Modifier::ALT);
-        }
-        else {
-            this->toggleReplacementParam.Param<param::ButtonParam>()->SetKey(core::view::Key::KEY_UNKNOWN);
-            this->toggleReplacementParam.Param<param::ButtonParam>()->SetModifier(core::view::Modifier::NONE);
-        }
     }
 
     if (this->draw_replacement) {

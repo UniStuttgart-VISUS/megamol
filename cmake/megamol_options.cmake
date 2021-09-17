@@ -50,6 +50,14 @@ if (ENABLE_PROFILING)
   add_compile_definitions(PROFILING)
 endif()
 
+# CUE
+if (WIN32)
+  option(ENABLE_CUESDK "Enable CUE for highlighting hotkeys on Corsair Keyboards" OFF)
+  if (ENABLE_CUESDK)
+    add_compile_definitions(CUESDK_ENABLED)
+  endif()
+endif()
+
 # GLFW
 option(USE_GLFW "Use GLFW" ON)
 

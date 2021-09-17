@@ -183,7 +183,8 @@ moldyn::MMPLDDataSource::MMPLDDataSource(void) : view::AnimDataModule(),
         file(NULL), frameIdx(NULL), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
         clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data_hash(0) {
 
-    this->filename.SetParameter(new param::FilePathParam(""));
+    this->filename.SetParameter(
+        new param::FilePathParam("", core::param::FilePathParam::Flag_File_RestrictExtension, {"mmpld"}));
     this->filename.SetUpdateCallback(&MMPLDDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filename);
 

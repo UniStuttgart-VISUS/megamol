@@ -22,7 +22,8 @@ MMFTDataWriter::MMFTDataWriter(void) : core::AbstractDataWriter(),
         filenameSlot("filename", "The path to the MMFT file to be written"),
         dataSlot("data", "The slot requesting the data to be written") {
 
-    this->filenameSlot << new core::param::FilePathParam("");
+    this->filenameSlot << new core::param::FilePathParam(
+        "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"mmft"});
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->dataSlot.SetCompatibleCall<TableDataCallDescription>();
