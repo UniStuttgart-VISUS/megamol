@@ -10,8 +10,8 @@
 #pragma once
 
 
-#include "implot.h"
 #include "CommandRegistry.h"
+#include "implot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking_gl.h"

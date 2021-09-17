@@ -331,14 +331,14 @@ bool GUIManager::PostDraw() {
             return false;
         }
         // Check for existing imgui context
-        if (this->context == nullptr) {
+        if (this->imgui_context == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
         // Set ImGui context
-        ImGui::SetCurrentContext(this->context);
+        ImGui::SetCurrentContext(this->imgui_context);
         ImGuiIO& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
 
