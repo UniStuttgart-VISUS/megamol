@@ -176,7 +176,15 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                                 auto advar = io->InquireVariable<float>(var.name);
                                 advar.SetStepSelection({frameIDtoLoad, 1});
                                 auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                fc->shape = info[0].Count;
+                                if (info[0].Count.size() == 1) {
+                                    fc->shape.resize(1, 0);
+                                    for (auto in : info) {
+                                        fc->shape[0] += in.Count[0];
+                                    }
+                                    advar.SetSelection({{0}, fc->shape});
+                                } else {
+                                    fc->shape = info[0].Count;
+                                }
                                 std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                                 tmp_vec.resize(num);
 
@@ -197,7 +205,15 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                                 auto advar = io->InquireVariable<double>(var.name);
                                 advar.SetStepSelection({frameIDtoLoad, 1});
                                 auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                fc->shape = info[0].Count;
+                                if (info[0].Count.size() == 1) {
+                                    fc->shape.resize(1, 0);
+                                    for (auto in : info) {
+                                        fc->shape[0] += in.Count[0];
+                                    }
+                                    advar.SetSelection({{0}, fc->shape});
+                                } else {
+                                    fc->shape = info[0].Count;
+                                }
                                 std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                                 tmp_vec.resize(num);
 
@@ -218,7 +234,15 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                                 adios2::Variable<int32_t> advar = io->InquireVariable<int32_t>(var.name);
                                 advar.SetStepSelection({frameIDtoLoad, 1});
                                 auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                fc->shape = info[0].Count;
+                                if (info[0].Count.size() == 1) {
+                                    fc->shape.resize(1, 0);
+                                    for (auto in : info) {
+                                        fc->shape[0] += in.Count[0];
+                                    }
+                                    advar.SetSelection({{0}, fc->shape});
+                                } else {
+                                    fc->shape = info[0].Count;
+                                }
                                 std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                                 tmp_vec.resize(num);
 
@@ -238,7 +262,15 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                                 adios2::Variable<char> advar = io->InquireVariable<char>(var.name);
                                 advar.SetStepSelection({frameIDtoLoad, 1});
                                 auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                fc->shape = info[0].Count;
+                                if (info[0].Count.size() == 1) {
+                                    fc->shape.resize(1, 0);
+                                    for (auto in : info) {
+                                        fc->shape[0] += in.Count[0];
+                                    }
+                                    advar.SetSelection({{0}, fc->shape});
+                                } else {
+                                    fc->shape = info[0].Count;
+                                }
                                 std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                                 tmp_vec.resize(num);
 
@@ -258,7 +290,15 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                                     io->InquireVariable<uint64_t>(var.name);
                                 advar.SetStepSelection({frameIDtoLoad, 1});
                                 auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                fc->shape = info[0].Count;
+                                if (info[0].Count.size() == 1) {
+                                    fc->shape.resize(1,0);
+                                    for (auto in : info) {
+                                        fc->shape[0] += in.Count[0];
+                                    }
+                                    advar.SetSelection({{0}, fc->shape});
+                                } else {
+                                    fc->shape = info[0].Count;
+                                }
                                 std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                                 tmp_vec.resize(num);
 
@@ -278,7 +318,14 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                                 adios2::Variable<unsigned char> advar = io->InquireVariable<unsigned char>(var.name);
                                 advar.SetStepSelection({frameIDtoLoad, 1});
                                 auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                fc->shape = info[0].Count;
+                                if (info[0].Count.size() == 1) {
+                                    fc->shape.resize(1, 0);
+                                    for (auto in : info) {
+                                        fc->shape[0] += in.Count[0];
+                                    }
+                                } else {
+                                    fc->shape = info[0].Count;
+                                }
                                 std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                                 tmp_vec.resize(num);
 
@@ -297,7 +344,15 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                                 adios2::Variable<unsigned int> advar = io->InquireVariable<unsigned int>(var.name);
                                 advar.SetStepSelection({frameIDtoLoad, 1});
                                 auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                fc->shape = info[0].Count;
+                                if (info[0].Count.size() == 1) {
+                                    fc->shape.resize(1, 0);
+                                    for (auto in : info) {
+                                        fc->shape[0] += in.Count[0];
+                                    }
+                                    advar.SetSelection({{0}, fc->shape});
+                                } else {
+                                    fc->shape = info[0].Count;
+                                }
                                 std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                                 tmp_vec.resize(num);
 
@@ -317,7 +372,15 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                                 adios2::Variable<std::string> advar = io->InquireVariable<std::string>(var.name);
                                 advar.SetStepSelection({frameIDtoLoad, 1});
                                 auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                fc->shape = info[0].Count;
+                                if (info[0].Count.size() == 1) {
+                                    fc->shape.resize(1, 0);
+                                    for (auto in : info) {
+                                        fc->shape[0] += in.Count[0];
+                                    }
+                                    advar.SetSelection({{0}, fc->shape});
+                                } else {
+                                    fc->shape = info[0].Count;
+                                }
                                 std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                                 tmp_vec.resize(num);
 
