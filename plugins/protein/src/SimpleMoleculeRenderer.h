@@ -16,9 +16,11 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/view/light/CallLight.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 
+#include "glowl/BufferObject.hpp"
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
@@ -178,14 +180,6 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-        void RenderPointsFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
-
-        /**
-         * Test the filter module.
-         *
-         * @param mol        Pointer to the data call.
-         * @param atomPos    Pointer to the interpolated atom positions.
-         */
         void RenderLinesFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
@@ -203,6 +197,11 @@ namespace protein {
          * @param atomPos    Pointer to the interpolated atom positions.
          */
         void RenderSpacefillingFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
+
+        /**
+         *
+         */
+        void RenderLighting(const core::view::light::CallLight& lc);
 
         /**
          * Update all parameter slots.
@@ -284,6 +283,11 @@ namespace protein {
         std::shared_ptr<glowl::GLSLProgram> filterCylinderShader_;
         std::shared_ptr<glowl::GLSLProgram> lightingShader_;
 
+        // the local fbo
+        std::shared_ptr<glowl::FramebufferObject> localFramebufferObj_;
+        std::shared_ptr<glowl::FramebufferObject> usedFramebufferObj_;
+        uint32_t fbo_version_;
+
         // attribute locations for GLSL-Shader
         GLint attribLocInParams;
         GLint attribLocQuatC;
@@ -291,6 +295,22 @@ namespace protein {
         GLint attribLocColor2;
         GLint attribLocAtomFilter;
         GLint attribLocConFilter;
+
+        // buffer objects
+        enum Buffers : GLuint {
+            POSITION = 0,
+            COLOR = 1,
+            CYL_PARAMS = 2,
+            CYL_QUAT = 3,
+            CYL_COL1 = 4,
+            CYL_COL2 = 5,
+            FILTER = 6,
+            LIGHT_POSITIONAL = 7,
+            LIGHT_DIRECTIONAL = 8,
+            BUFF_COUNT = 9
+        };
+        GLuint vertex_array_;
+        std::array<std::unique_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers_;
 
         /** The current coloring mode */
         Color::ColoringMode currentColoringMode0;

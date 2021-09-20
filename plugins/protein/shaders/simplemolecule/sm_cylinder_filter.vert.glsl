@@ -3,8 +3,6 @@
 #include "simplemolecule/sm_common_defines.glsl"
 #include "simplemolecule/sm_common_input.glsl"
 
-uniform mat4 NormalM;
-
 attribute vec2 inParams;
 attribute vec4 quatC; // conjugate quaternion
 
@@ -62,15 +60,6 @@ void main(void) {
     tmp = MVinv[3]; // (C) by Christoph
     tmp.xyz -= objPos.xyz; // cam move
     camPos.xyz = rotMatT0 * tmp.x + rotMatT1 * tmp.y + rotMatT2 * tmp.z;
-    
-
-    // calculate light position in glyph space
-    // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = MVinv * gl_LightSource[0].position - objPos; // note: w is bullshit now!
-    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPos = MVinv * normalize( gl_LightSource[0].position);
-    lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
-    
 
     // send color to fragment shader
     gl_FrontColor = gl_Color;

@@ -1,12 +1,13 @@
-#version 110
+#version 430
 
 #include "simplemolecule/sm_common_defines.glsl"
 #include "lightdirectional.glsl"
 
-#include "simplemolecule/sm_common_input.glsl"
+#include "simplemolecule/sm_common_input_frag.glsl"
+//#include "simplemolecule/sm_common_gbuffer_output.glsl"
 
-varying float squarRad;
-varying float rad;
+in float squarRad;
+in float rad;
 
 void main(void) {
 
@@ -14,7 +15,7 @@ void main(void) {
     vec3 ray;
     float lambda;
     vec3 color;
-    vec3 sphereintersection = vec3( 0.0);
+    vec3 sphereintersection = vec3(0.0);
     vec3 normal;
 
     // transform fragment coordinates from window coordinates to view coordinates.
@@ -46,7 +47,7 @@ void main(void) {
     }
     else {
         // chose color for lighting
-        color = gl_Color.rgb;
+        color = move_color.rgb;
 		if( lambda < 0.0 ) discard;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
@@ -61,19 +62,20 @@ void main(void) {
 
     // phong lighting with directional light
     //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), gl_Color.w);
+    // gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), gl_Color.w);
+    gl_FragColor = vec4(color, 1);
     gl_FragDepth = gl_FragCoord.z;
 
     // calculate depth
 #ifdef DEPTH
-    vec4 Ding = vec4( sphereintersection + objPos.xyz, 1.0);
+    vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
     float depth = dot(MVPtransp[2], Ding);
     float depthW = dot(MVPtransp[3], Ding);
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
     
 #ifndef CLIP
     gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
-    gl_FragColor.rgb = (radicand < 0.0) ? gl_Color.rgb : gl_FragColor.rgb;
+    gl_FragColor.rgb = color.rgb
 #endif // CLIP
 
 #endif // DEPTH

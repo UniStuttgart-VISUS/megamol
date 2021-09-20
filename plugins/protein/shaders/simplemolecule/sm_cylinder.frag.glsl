@@ -1,15 +1,15 @@
-#version 110
+#version 430
 
 #include "simplemolecule/sm_common_defines.glsl"
 #include "lightdirectional.glsl"
 
-#include "simplemolecule/sm_common_input.glsl"
+#include "simplemolecule/sm_common_input_frag.glsl"
 
-varying vec3 radz;
+in vec3 radz;
 
-varying vec3 rotMatT0;
-varying vec3 rotMatT1; // rotation matrix from the quaternion
-varying vec3 rotMatT2;
+in vec3 rotMatT0;
+in vec3 rotMatT1; // rotation matrix from the quaternion
+in vec3 rotMatT2;
 
 void main(void) {
     vec4 coord;
@@ -69,20 +69,21 @@ void main(void) {
     vec3 normal = vec3(0.0, normalize(intersection.yz));
 
     // chose color for lighting
-    vec3 color = gl_Color.rgb;
+    vec3 color = move_color.rgb;
 
     // set fragment color (kroneml)
     if( cylPt1.x > 0.0 )
     {
-        color = gl_SecondaryColor.rgb;
+        color = move_color2.rgb;
     }
     else
     {
-        color = gl_Color.rgb;
+        color = move_color.rgb;
     }
 
     // phong lighting with directional light
-    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    gl_FragColor = vec4(color.xyz, 1);
 
 
     // calculate depth
@@ -99,7 +100,7 @@ void main(void) {
     float depthW = dot(MVPtransp[3], Ding);
 #ifndef CLIP
     if (radicand < 0.0) { 
-        gl_FragColor = gl_SecondaryColor;
+        gl_FragColor = move_color2;
         depth = 1.0;
         depthW = 1.0;
     }

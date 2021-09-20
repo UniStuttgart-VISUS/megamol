@@ -1,38 +1,29 @@
-#version 110
+#version 430
 
 #include "simplemolecule/sm_common_defines.glsl"
 
-#include "simplemolecule/sm_common_input.glsl"
+#include "simplemolecule/sm_common_input_vert.glsl"
 
-varying float squarRad;
-varying float rad;
+out float squarRad;
+out float rad;
 
 void main(void) {
 
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Vertex;
+    vec4 inPos = vert_position;
     rad = inPos.w;
     squarRad = rad * rad;
     inPos.w = 1.0;
-
     
     // object pivot point in object space    
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
-
 
     // calculate cam position
     camPos = MVinv[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
     
-
-    // calculate light position in glyph space
-    // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = MVinv * gl_LightSource[0].position - objPos;
-    // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPos = MVinv * normalize(gl_LightSource[0].position);
-    
     // send color to fragment shader
-    gl_FrontColor = gl_Color;
+    move_color = vec4(vert_color, 1);
 
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size

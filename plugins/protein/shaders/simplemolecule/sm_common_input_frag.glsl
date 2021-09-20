@@ -10,8 +10,10 @@ uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
 uniform mat4 NormalM;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
+in vec4 objPos;
+in vec4 camPos;
+in vec4 lightPos;
+in vec4 move_color;
+in vec4 move_color2;
 
 uniform vec2 planes;

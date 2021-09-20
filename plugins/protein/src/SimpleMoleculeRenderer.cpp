@@ -44,8 +44,6 @@ using namespace megamol::protein;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;
 
-//#define OLD_SHADERS
-
 /*
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
@@ -73,7 +71,11 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , clipPlaneTimeOffsetParam("clipPlane::timeOffset", "...")
         , clipPlaneDurationParam("clipPlane::Duration", "...")
         , useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own")
-        , currentZClipPos(-20) {
+        , currentZClipPos(-20)
+        , fbo_version_(0)
+        , vertex_array_(0)
+        , localFramebufferObj_(nullptr)
+        , usedFramebufferObj_(nullptr) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->molDataCallerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -196,6 +198,8 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
  * protein::SimpleMoleculeRenderer::~SimpleMoleculeRenderer (DTOR)
  */
 SimpleMoleculeRenderer::~SimpleMoleculeRenderer(void) {
+    localFramebufferObj_.reset();
+    usedFramebufferObj_.reset();
     this->Release();
 }
 
@@ -248,7 +252,9 @@ bool SimpleMoleculeRenderer::create(void) {
             std::filesystem::path("simplemolecule/sm_cylinder_filter.vert.glsl"),
             std::filesystem::path("simplemolecule/sm_cylinder.frag.glsl"));
 
-        // TODO shaders for the second render pass
+        lightingShader_ = core::utility::make_shared_glowl_shader("lighting", shdr_options,
+            std::filesystem::path("simplemolecule/sm_common_lighting.vert.glsl"),
+            std::filesystem::path("simplemolecule/sm_common_lighting.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
@@ -258,6 +264,66 @@ bool SimpleMoleculeRenderer::create(void) {
             "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception");
         return false;
     }
+
+    // generate local framebuffer
+    localFramebufferObj_ = std::make_shared<glowl::FramebufferObject>(1, 1);
+    localFramebufferObj_->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // surface albedo
+    localFramebufferObj_->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT);   // normals
+    localFramebufferObj_->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);          // clip space depth
+
+    // generate data buffers
+    buffers_[Buffers::POSITION] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[Buffers::COLOR] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[Buffers::CYL_PARAMS] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[Buffers::CYL_QUAT] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[Buffers::CYL_COL1] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[Buffers::CYL_COL2] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[Buffers::FILTER] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[Buffers::LIGHT_POSITIONAL] =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[Buffers::LIGHT_DIRECTIONAL] =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+
+    glGenVertexArrays(1, &vertex_array_);
+    glBindVertexArray(vertex_array_);
+
+    buffers_[Buffers::POSITION]->bind();
+    glEnableVertexAttribArray(Buffers::POSITION);
+    glVertexAttribPointer(Buffers::POSITION, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[Buffers::COLOR]->bind();
+    glEnableVertexAttribArray(Buffers::COLOR);
+    glVertexAttribPointer(Buffers::COLOR, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[Buffers::CYL_PARAMS]->bind();
+    glEnableVertexAttribArray(Buffers::CYL_PARAMS);
+    glVertexAttribPointer(Buffers::CYL_PARAMS, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[Buffers::CYL_QUAT]->bind();
+    glEnableVertexAttribArray(Buffers::CYL_QUAT);
+    glVertexAttribPointer(Buffers::CYL_QUAT, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[Buffers::CYL_COL1]->bind();
+    glEnableVertexAttribArray(Buffers::CYL_COL1);
+    glVertexAttribPointer(Buffers::CYL_COL1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[Buffers::CYL_COL2]->bind();
+    glEnableVertexAttribArray(Buffers::CYL_COL2);
+    glVertexAttribPointer(Buffers::CYL_COL2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    buffers_[Buffers::FILTER]->bind();
+    glEnableVertexAttribArray(Buffers::FILTER);
+    glVertexAttribIPointer(Buffers::FILTER, 1, GL_INT, 0, nullptr);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(Buffers::POSITION);
+    glDisableVertexAttribArray(Buffers::COLOR);
+    glDisableVertexAttribArray(Buffers::CYL_PARAMS);
+    glDisableVertexAttribArray(Buffers::CYL_QUAT);
+    glDisableVertexAttribArray(Buffers::CYL_COL1);
+    glDisableVertexAttribArray(Buffers::CYL_COL2);
+    glDisableVertexAttribArray(Buffers::FILTER);
 
     return true;
 }
@@ -289,12 +355,37 @@ bool SimpleMoleculeRenderer::GetExtents(core::view::CallRender3DGL& call) {
  * protein::SimpleMoleculeRenderer::Render
  */
 bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
+    ++fbo_version_;
+    auto call_fbo = call.GetFramebuffer();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     float callTime = call.Time();
 
     cam = call.GetCamera();
+
+    if (localFramebufferObj_->getWidth() != call_fbo->getWidth() ||
+        localFramebufferObj_->getHeight() != call_fbo->getHeight()) {
+        localFramebufferObj_->resize(call_fbo->getWidth(), call_fbo->getHeight());
+    }
+
+    localFramebufferObj_->bind();
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    call_fbo->bind(); // reset to default behavior
+
+    // if there is a fbo connected, use the connected one
+    usedFramebufferObj_ = localFramebufferObj_;
+    auto cfbo = getFramebufferSlot.CallAs<compositing::CallFramebufferGL>();
+    if (cfbo != nullptr) {
+        cfbo->operator()(compositing::CallFramebufferGL::CallGetMetaData);
+        cfbo->operator()(compositing::CallFramebufferGL::CallGetData);
+        auto fbo = cfbo->getData();
+        if (fbo != nullptr) {
+            usedFramebufferObj_ = fbo;
+        }
+    }
 
     // matrices
     view = cam.getViewMatrix();
@@ -308,8 +399,8 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
     // get viewpoint parameters for raycasting
     this->viewportStuff[0] = 0.0f;
     this->viewportStuff[1] = 0.0f;
-    this->viewportStuff[2] = call.GetFramebuffer()->getWidth();
-    this->viewportStuff[3] = call.GetFramebuffer()->getHeight();
+    this->viewportStuff[2] = call_fbo->getWidth();
+    this->viewportStuff[3] = call_fbo->getHeight();
     if (this->viewportStuff[2] < 1.0f)
         this->viewportStuff[2] = 1.0f;
     if (this->viewportStuff[3] < 1.0f)
@@ -590,6 +681,21 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
         this->vertCylinders[4 * cnt + 3] = 0.0f;
     }
 
+    // ---------- upload lists --------------
+    // We already upload all necessary cylinder information although they are needed after the sphere rendering pass.
+    // The only information not uploaded are the cylinder vertex positions, as the sphere vertex positions use the same buffer
+    buffers_[Buffers::POSITION]->rebuffer(this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+    buffers_[Buffers::COLOR]->rebuffer(
+        this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
+    buffers_[Buffers::CYL_PARAMS]->rebuffer(
+        this->inParaCylinders.PeekElements(), this->inParaCylinders.Count() * sizeof(float));
+    buffers_[Buffers::CYL_QUAT]->rebuffer(
+        this->quatCylinders.PeekElements(), this->quatCylinders.Count() * sizeof(float));
+    buffers_[Buffers::CYL_COL1]->rebuffer(
+        this->color1Cylinders.PeekElements(), this->color1Cylinders.Count() * sizeof(float));
+    buffers_[Buffers::CYL_COL2]->rebuffer(
+        this->color2Cylinders.PeekElements(), this->color2Cylinders.Count() * sizeof(float));
+
     // ---------- actual rendering ----------
 
     auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
@@ -605,6 +711,8 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
             "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
     }
 
+    glBindVertexArray(vertex_array_);
+
     // enable sphere shader
     sphereShader_->use();
     sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
@@ -615,16 +723,20 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
     sphereShader_->setUniform("MVinv", MVinv);
     sphereShader_->setUniform("MVPinv", MVPinv);
     sphereShader_->setUniform("MVPtransp", MVPtransp);
+    sphereShader_->setUniform("NormalM", NormalM);
+    sphereShader_->setUniform("planes", glm::vec2(near_plane, far_plane));
 
     // set vertex and color pointers and draw them
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
 
     // disable sphere shader
     glUseProgram(0);
+    glBindVertexArray(0);
+
+    // upload cylinder vertices
+    buffers_[Buffers::POSITION]->rebuffer(
+        this->vertCylinders.PeekElements(), this->vertCylinders.Count() * sizeof(float));
+    glBindVertexArray(vertex_array_);
 
     // enable cylinder shader
     cylinderShader_->use();
@@ -636,33 +748,15 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
     cylinderShader_->setUniform("MVinv", MVinv);
     cylinderShader_->setUniform("MVPinv", MVPinv);
     cylinderShader_->setUniform("MVPtransp", MVPtransp);
-    attribLocInParams = glGetAttribLocation(cylinderShader_->getHandle(), "inParams");
-    attribLocQuatC = glGetAttribLocation(cylinderShader_->getHandle(), "quatC");
-    attribLocColor1 = glGetAttribLocation(cylinderShader_->getHandle(), "color1");
-    attribLocColor2 = glGetAttribLocation(cylinderShader_->getHandle(), "color2");
+    cylinderShader_->setUniform("NormalM", NormalM);
+    cylinderShader_->setUniform("planes", glm::vec2(near_plane, far_plane));
 
-    // enable vertex attribute arrays for the attribute locations
-    glDisableClientState(GL_COLOR_ARRAY);
-    glEnableVertexAttribArray(this->attribLocInParams);
-    glEnableVertexAttribArray(this->attribLocQuatC);
-    glEnableVertexAttribArray(this->attribLocColor1);
-    glEnableVertexAttribArray(this->attribLocColor2);
-    // set vertex and attribute pointers and draw them
-    glVertexPointer(4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
-    glVertexAttribPointer(this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
-    glVertexAttribPointer(this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
-    glVertexAttribPointer(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
-    glVertexAttribPointer(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+    // draw everything
     glDrawArrays(GL_POINTS, 0, mol->ConnectionCount());
-    // disable vertex attribute arrays for the attribute locations
-    glDisableVertexAttribArray(this->attribLocInParams);
-    glDisableVertexAttribArray(this->attribLocQuatC);
-    glDisableVertexAttribArray(this->attribLocColor1);
-    glDisableVertexAttribArray(this->attribLocColor2);
-    glDisableClientState(GL_VERTEX_ARRAY);
 
     // disable cylinder shader
     glUseProgram(0);
+    glBindVertexArray(0);
 }
 
 /*
@@ -745,6 +839,22 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
         this->vertCylinders[4 * cnt + 3] = 0.0f;
     }
 
+    // ---------- upload lists --------------
+    // We already upload all necessary cylinder information although they are needed after the sphere rendering pass.
+    // The only information not uploaded are the cylinder vertex positions, as the sphere vertex positions use the same
+    // buffer
+    buffers_[Buffers::POSITION]->rebuffer(this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+    buffers_[Buffers::COLOR]->rebuffer(
+        this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
+    buffers_[Buffers::CYL_PARAMS]->rebuffer(
+        this->inParaCylinders.PeekElements(), this->inParaCylinders.Count() * sizeof(float));
+    buffers_[Buffers::CYL_QUAT]->rebuffer(
+        this->quatCylinders.PeekElements(), this->quatCylinders.Count() * sizeof(float));
+    buffers_[Buffers::CYL_COL1]->rebuffer(
+        this->color1Cylinders.PeekElements(), this->color1Cylinders.Count() * sizeof(float));
+    buffers_[Buffers::CYL_COL2]->rebuffer(
+        this->color2Cylinders.PeekElements(), this->color2Cylinders.Count() * sizeof(float));
+
     // ---------- actual rendering ----------
 
     auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
@@ -760,6 +870,8 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
             "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
     }
 
+    glBindVertexArray(vertex_array_);
+
     // enable sphere shader
     sphereShader_->use();
     sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
@@ -770,16 +882,20 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     sphereShader_->setUniform("MVinv", MVinv);
     sphereShader_->setUniform("MVPinv", MVPinv);
     sphereShader_->setUniform("MVPtransp", MVPtransp);
+    sphereShader_->setUniform("NormalM", NormalM);
+    sphereShader_->setUniform("planes", glm::vec2(near_plane, far_plane));
 
     // set vertex and color pointers and draw them
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
 
     // disable sphere shader
     glUseProgram(0);
+    glBindVertexArray(0);
+
+    // upload cylinder vertices
+    buffers_[Buffers::POSITION]->rebuffer(
+        this->vertCylinders.PeekElements(), this->vertCylinders.Count() * sizeof(float));
+    glBindVertexArray(vertex_array_);
 
     // enable cylinder shader
     cylinderShader_->use();
@@ -796,28 +912,12 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     attribLocColor1 = glGetAttribLocation(cylinderShader_->getHandle(), "color1");
     attribLocColor2 = glGetAttribLocation(cylinderShader_->getHandle(), "color2");
 
-    // enable vertex attribute arrays for the attribute locations
-    glDisableClientState(GL_COLOR_ARRAY);
-    glEnableVertexAttribArray(this->attribLocInParams);
-    glEnableVertexAttribArray(this->attribLocQuatC);
-    glEnableVertexAttribArray(this->attribLocColor1);
-    glEnableVertexAttribArray(this->attribLocColor2);
-    // set vertex and attribute pointers and draw them
-    glVertexPointer(4, GL_FLOAT, 0, this->vertCylinders.PeekElements());
-    glVertexAttribPointer(this->attribLocInParams, 2, GL_FLOAT, 0, 0, this->inParaCylinders.PeekElements());
-    glVertexAttribPointer(this->attribLocQuatC, 4, GL_FLOAT, 0, 0, this->quatCylinders.PeekElements());
-    glVertexAttribPointer(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
-    glVertexAttribPointer(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
+    // draw everything
     glDrawArrays(GL_POINTS, 0, mol->ConnectionCount());
-    // disable vertex attribute arrays for the attribute locations
-    glDisableVertexAttribArray(this->attribLocInParams);
-    glDisableVertexAttribArray(this->attribLocQuatC);
-    glDisableVertexAttribArray(this->attribLocColor1);
-    glDisableVertexAttribArray(this->attribLocColor2);
-    glDisableClientState(GL_VERTEX_ARRAY);
 
     // disable cylinder shader
     glUseProgram(0);
+    glBindVertexArray(0);
 }
 
 /*
@@ -989,6 +1089,10 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
         this->vertSpheres[4 * cnt + 3] = mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
     }
 
+    buffers_[Buffers::POSITION]->rebuffer(this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+    buffers_[Buffers::COLOR]->rebuffer(
+        this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
+
     // ---------- actual rendering ----------
 
     auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
@@ -1004,6 +1108,8 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
             "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
     }
 
+    glBindVertexArray(vertex_array_);
+
     // enable sphere shader
     sphereShader_->use();
     sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
@@ -1014,16 +1120,15 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
     sphereShader_->setUniform("MVinv", MVinv);
     sphereShader_->setUniform("MVPinv", MVPinv);
     sphereShader_->setUniform("MVPtransp", MVPtransp);
+    sphereShader_->setUniform("NormalM", NormalM);
+    sphereShader_->setUniform("planes", glm::vec2(near_plane, far_plane));
 
-    // set vertex and color pointers and draw them
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    // draw everything
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
 
     // disable sphere shader
     glUseProgram(0);
+    glBindVertexArray(0);
 }
 
 /*
@@ -1087,6 +1192,9 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
                                          this->probeRadiusParam.Param<param::FloatParam>()->Value();
     }
 
+    buffers_[Buffers::POSITION]->rebuffer(this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+    buffers_[Buffers::COLOR]->rebuffer(
+        this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
 
     // ---------- actual rendering ----------
 
@@ -1103,6 +1211,8 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
             "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
     }
 
+    glBindVertexArray(vertex_array_);
+
     // enable sphere shader
     sphereShader_->use();
     sphereShader_->setUniform("viewAttr", glm::make_vec4(viewportStuff));
@@ -1113,48 +1223,14 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
     sphereShader_->setUniform("MVinv", MVinv);
     sphereShader_->setUniform("MVPinv", MVPinv);
     sphereShader_->setUniform("MVPtransp", MVPtransp);
+    sphereShader_->setUniform("NormalM", NormalM);
+    sphereShader_->setUniform("planes", glm::vec2(near_plane, far_plane));
 
-    // set vertex and color pointers and draw them
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
 
     // disable sphere shader
     glUseProgram(0);
-}
-
-/*
- * renderPointsFilter
- *
- * Helper function to test the filter module.
- */
-void SimpleMoleculeRenderer::RenderPointsFilter(const MolecularDataCall* mol, const float* atomPos) {
-
-    vislib::Array<unsigned int> idx;
-    unsigned int i, visAtmCnt = 0;
-
-    idx.SetCapacityIncrement(1000);
-
-    // Get indices of visible atoms
-    for (i = 0; i < mol->AtomCount(); i++) {
-        if (mol->Filter()[i] == 1) {
-            idx.Add(i);
-            visAtmCnt++;
-        }
-    }
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-
-    glVertexPointer(3, GL_FLOAT, 0, atomPos);
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
-
-    glDrawElements(GL_POINTS, visAtmCnt, GL_UNSIGNED_INT, idx.PeekElements());
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
+    glBindVertexArray(0);
 }
 
 /*
@@ -1570,4 +1646,8 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
         this->molIdxList = vislib::StringTokeniser<vislib::CharTraitsA>::Split(tmpStr, ';', true);
         this->molIdxListParam.ResetDirty();
     }
+}
+
+void SimpleMoleculeRenderer::RenderLighting(const core::view::light::CallLight& lc) {
+    // TODO implement
 }

@@ -24,6 +24,8 @@ uniform float k_diff;
 uniform float k_spec;
 uniform float k_exp;
 
+in vec2 uv_coord;
+
 vec3 blinnPhong(vec3 normal, vec3 lightdirection, vec3 v){
     vec3 Colorout;
 
@@ -64,5 +66,11 @@ vec3 depthToWorldPos(float depth, vec2 uv, mat4 invview, mat4 invproj) {
 }
 
 void main(void) {
-    // TODO
+    vec4 albedo = texture(albedo_tx2D, uv_coord);
+    vec3 normal = texture(normal_tx2D, uv_coord).rgb;
+    float depth = texture(depth_tx2D, uv_coord).r; 
+
+    // TODO implement
+
+    gl_FragColor = vec4(albedo.xyz, 1);
 }
