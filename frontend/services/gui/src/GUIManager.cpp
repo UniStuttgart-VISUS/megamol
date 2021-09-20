@@ -380,7 +380,7 @@ bool GUIManager::PostDraw() {
         glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
         ImGui::Render();
         this->draw_data = ImGui::GetDrawData();
-        //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 
         // Loading new font -------------------------------------------------------
