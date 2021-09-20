@@ -40,6 +40,7 @@ UniFlagStorage::UniFlagStorage(void)
     this->MakeSlotAvailable(&this->writeCPUFlagsSlot);
 
     this->serializedFlags << new core::param::StringParam("");
+    this->serializedFlags.SetUpdateCallback(&UniFlagStorage::onJSONChanged);
     this->MakeSlotAvailable(&this->serializedFlags);
 }
 
@@ -178,9 +179,26 @@ nlohmann::json UniFlagStorage::make_bit_array(
     return the_array;
 }
 
+void UniFlagStorage::array_to_bits(const nlohmann::json& json, uint32_t flag_bit) {
+    for (auto& j: json) {
+        if (j.is_array()) {
+            int32_t from, to;
+            j[0].get_to(from);
+            j[1].get_to(to);
+            for (int32_t x = from; x <= to; ++x) {
+                (*theCPUData->flags)[x] |= flag_bit;
+            }
+        } else {
+            int32_t idx;
+            j.get_to(idx);
+            (*theCPUData->flags)[idx] |= flag_bit;
+        }
+    }
+}
+
 
 void UniFlagStorage::serializeCPUData() {
-    const auto& cdata = theCPUData.get()->flags;
+    const auto& cdata = theCPUData->flags;
 
     // enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2, SOFTSELECTED = 1 << 3 };
     std::vector<int32_t> enabled_starts, enabled_ends;
@@ -209,4 +227,38 @@ void UniFlagStorage::serializeCPUData() {
     //ser_data["softselected"] = make_bit_array(softselected_starts, softselected_ends);
 
     this->serializedFlags.Param<core::param::StringParam>()->SetValue(ser_data.dump().c_str());
+}
+
+void UniFlagStorage::deserializeCPUData() {
+    try {
+        auto j = nlohmann::json::parse(this->serializedFlags.Param<core::param::StringParam>()->Value().PeekBuffer());
+        // reset all flags
+        theCPUData->flags->assign(theCPUData->flags->size(), 0);
+        if (j.contains("enabled")) {
+            array_to_bits(j["enabled"], FlagStorage::ENABLED);
+        } else {
+            utility::log::Log::DefaultLog.WriteWarn("UniFlagStorage: serialized flags do not contain enabled items");
+        }
+        if (j.contains("filtered")) {
+            array_to_bits(j["filtered"], FlagStorage::FILTERED);
+        } else {
+            utility::log::Log::DefaultLog.WriteWarn("UniFlagStorage: serialized flags do not contain filtered items");
+        }
+        if (j.contains("selected")) {
+            array_to_bits(j["selected"], FlagStorage::SELECTED);
+        } else {
+            utility::log::Log::DefaultLog.WriteWarn("UniFlagStorage: serialized flags do not contain selected items");
+        }
+    } catch (nlohmann::detail::parse_error& e) {
+        utility::log::Log::DefaultLog.WriteError("UniFlagStorage: failed parsing serialized flags: %s", e.what());
+    }
+}
+
+bool UniFlagStorage::onJSONChanged(param::ParamSlot& slot) {
+    if (cpu_stale) {
+        GL2CPUCopy();
+    }
+    deserializeCPUData();
+    gpu_stale = true;
+    return true;
 }

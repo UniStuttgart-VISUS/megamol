@@ -140,7 +140,10 @@ namespace core {
             int32_t curr_bit_start);
         static nlohmann::json make_bit_array(
             const std::vector<int32_t>& bit_starts, const std::vector<int32_t>& bit_ends);
+        void array_to_bits(const nlohmann::json& json, uint32_t flag_bit);
         void serializeCPUData();
+        void deserializeCPUData();
+        bool onJSONChanged(param::ParamSlot& slot);
 
         /**
          * Helper to copy CPU flags to GL flags
@@ -176,7 +179,7 @@ namespace core {
 
         std::shared_ptr<FlagCollection_GL> theData;
         std::shared_ptr<FlagCollection_CPU> theCPUData;
-        bool cpu_stale = false, gpu_stale = false;
+        bool cpu_stale = true, gpu_stale = true;
         uint32_t version = 0;
     };
 
