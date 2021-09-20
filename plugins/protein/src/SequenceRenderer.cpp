@@ -47,12 +47,10 @@ SequenceRenderer::SequenceRenderer(void)
         , resCols(0)
         , resRows(0)
         , rowHeight(3.0f)
-        ,
 #ifndef USE_SIMPLE_FONT
-        theFont(FontInfo_Verdana)
-        ,
+        , theFont(FontInfo_Verdana)
 #endif // USE_SIMPLE_FONT
-        markerTextures(0)
+        , markerTextures(0)
         , resSelectionCall(nullptr)
         , leftMouseDown(false) {
 

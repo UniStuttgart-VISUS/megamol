@@ -21,7 +21,6 @@
 #include <png.h>
 #include <glm/gtx/quaternion.hpp>
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
 
 

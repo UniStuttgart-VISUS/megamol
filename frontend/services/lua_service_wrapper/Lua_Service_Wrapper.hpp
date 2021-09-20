@@ -43,6 +43,7 @@ public:
         std::string host_address;
         megamol::core::LuaAPI* lua_api_ptr = nullptr; // lua api object that will be used/called by the service wrapper only one level deep
         bool retry_socket_port = false;
+        bool show_version_notification = true;
     };
 
     // sometimes somebody wants to know the name of the service

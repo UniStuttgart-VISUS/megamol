@@ -7,6 +7,7 @@
 
 
 #include "GUI_Service.hpp"
+#include "CommandRegistry.h"
 #include "FrameStatistics.h"
 #include "Framebuffer_Events.h"
 #include "GUIManager.h"
@@ -44,18 +45,19 @@ namespace frontend {
         this->m_requestedResourceReferences.clear();
         this->m_providedResourceReferences.clear();
         this->m_requestedResourcesNames = {
-            "MegaMolGraph",                         // 0 - sync graph
-            "WindowEvents",                         // 1 - time, size, clipboard
-            "KeyboardEvents",                       // 2 - key press
-            "MouseEvents",                          // 3 - mouse click
-            "IOpenGL_Context",                      // 4 - graphics api for imgui context
-            "FramebufferEvents",                    // 5 - viewport size
-            "GLFrontbufferToPNG_ScreenshotTrigger", // 6 - trigger screenshot
-            "LuaScriptPaths",                       // 7 - current project path
-            "ProjectLoader",                        // 8 - trigger loading of new running project
-            "FrameStatistics",                      // 9 - current fps and ms value
-            "RuntimeConfig",                        // 10 - resource paths
-            "WindowManipulation"                    // 11 - GLFW window pointer
+            "MegaMolGraph",                              // 0 - sync graph
+            "WindowEvents",                              // 1 - time, size, clipboard
+            "KeyboardEvents",                            // 2 - key press
+            "MouseEvents",                               // 3 - mouse click
+            "IOpenGL_Context",                           // 4 - graphics api for imgui context
+            "FramebufferEvents",                         // 5 - viewport size
+            "GLFrontbufferToPNG_ScreenshotTrigger",      // 6 - trigger screenshot
+            "LuaScriptPaths",                            // 7 - current project path
+            "ProjectLoader",                             // 8 - trigger loading of new running project
+            "FrameStatistics",                           // 9 - current fps and ms value
+            "RuntimeConfig",                             // 10 - resource paths
+            "WindowManipulation",                        // 11 - GLFW window pointer
+            frontend_resources::CommandRegistry_Req_Name // 12 - Command registry
         };
 
         // init gui
@@ -139,11 +141,6 @@ namespace frontend {
         this->setShutdown(this->m_gui->GetTriggeredShutdown());
 
         // Check for updates in requested resources --------------------------------
-
-        /// MegaMolGraph = resource index 0
-        auto graph_resource_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>();
-        /// WARNING: Changing a constant type will lead to an undefined behavior!
-        this->m_megamol_graph = const_cast<megamol::core::MegaMolGraph*>(graph_resource_ptr);
 
         /// WindowEvents = resource index 1
         auto window_events =
@@ -305,18 +302,31 @@ namespace frontend {
 
     void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources) {
 
-        this->m_requestedResourceReferences = resources;
+        // (Called only once)
 
-        /// Get resource directories = resource index 10
-        // (Required to set only once)
+        this->m_requestedResourceReferences = resources;
         if (this->m_gui == nullptr) {
             return;
         }
+
+        /// MegaMolGraph = resource index 0
+        auto graph_resource_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>();
+        /// WARNING: Changing a constant type will lead to an undefined behavior!
+        this->m_megamol_graph = const_cast<megamol::core::MegaMolGraph*>(graph_resource_ptr);
+        assert(this->m_megamol_graph != nullptr);
+
+        /// Resource Directories = resource index 10
         auto& runtime_config =
             this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
         if (!runtime_config.resource_directories.empty()) {
             this->m_gui->SetResourceDirectories(runtime_config.resource_directories);
         }
+
+        /// Command Registry = resource index = 12
+        auto& command_registry = const_cast<megamol::frontend_resources::CommandRegistry&>(
+            this->m_requestedResourceReferences[12].getResource<megamol::frontend_resources::CommandRegistry>());
+        /// WARNING: Changing a constant type will lead to an undefined behavior!
+        this->m_gui->RegisterHotkeys(command_registry, *this->m_megamol_graph);
     }
 
 

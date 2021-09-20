@@ -11,7 +11,6 @@
 #include "mmcore/view/AbstractCallRenderView.h"
 #include "mmcore/view/Input.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
 
 

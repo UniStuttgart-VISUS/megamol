@@ -7,7 +7,6 @@
 
 #pragma once
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
 
 #include "FlagStorage.h"

@@ -6,7 +6,7 @@ pr:
 - master
 
 variables:
-  enablePlugins: '-DBUILD_PLUGIN_ADIOS_PLUGIN=ON -DBUILD_PLUGIN_ASTRO=ON -DBUILD_PLUGIN_IMAGEVIEWER2=ON -DBUILD_PLUGIN_MEGAMOL101=ON -DBUILD_PLUGIN_MMVTKM=ON -DBUILD_PLUGIN_REMOTE=ON'
+  enablePlugins: '-DBUILD_PLUGIN_ADIOS_PLUGIN=ON -DBUILD_PLUGIN_ASTRO=OFF -DBUILD_PLUGIN_IMAGEVIEWER2=OFF -DBUILD_PLUGIN_MEGAMOL101=ON -DBUILD_PLUGIN_MMVTKM=ON -DBUILD_PLUGIN_REMOTE=OFF'
 
 jobs:
 - job: Windows
@@ -52,11 +52,12 @@ jobs:
 - job: Linux
   strategy:
     matrix:
-      'GCC9 / Make / Release':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
-        configuration: Release
-        generator: 'Unix Makefiles'
+      ## Temporarily disabled until more CI machines are available!
+      #'GCC9 / Make / Release':
+      #  cCompiler: gcc-9
+      #  cxxCompiler: g++-9
+      #  configuration: Release
+      #  generator: 'Unix Makefiles'
       'GCC9 / Make / Debug':
         cCompiler: gcc-9
         cxxCompiler: g++-9

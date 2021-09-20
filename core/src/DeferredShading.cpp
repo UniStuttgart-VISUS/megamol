@@ -15,7 +15,8 @@ megamol::core::DeferredShading::DeferredShading()
     , getLightsSlot("lights", "Lights are retrieved over this slot.")
     , m_btf_filename_slot("BTF filename", "The name of the btf file to load") 
 {
-    this->m_btf_filename_slot << new core::param::FilePathParam("");
+    this->m_btf_filename_slot << new core::param::FilePathParam(
+        "", param::FilePathParam::Flag_File_RestrictExtension, {"btf"});
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 
     this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();

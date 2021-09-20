@@ -6,7 +6,6 @@
 #include <glm/matrix.hpp>
 #include <json.hpp>
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/glowl.h>
 
 #include "Renderer2D.h"

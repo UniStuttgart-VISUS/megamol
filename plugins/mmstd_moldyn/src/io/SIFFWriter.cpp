@@ -30,7 +30,8 @@ SIFFWriter::SIFFWriter(void) : AbstractDataWriter(),
         versionSlot("version", "The file format version to write"),
         dataSlot("data", "The slot requesting the data to be written") {
 
-    this->filenameSlot << new core::param::FilePathParam("");
+    this->filenameSlot << new core::param::FilePathParam(
+        "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"siff"});
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->asciiSlot << new core::param::BoolParam(false);

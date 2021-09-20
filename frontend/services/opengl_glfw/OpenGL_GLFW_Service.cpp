@@ -14,7 +14,6 @@
 #include <vector>
 
 #ifdef MEGAMOL_USE_BOOST_STACKTRACE
-#define BOOST_STACKTRACE_USE_BACKTRACE
 #include <boost/stacktrace.hpp>
 #endif
 

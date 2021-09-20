@@ -3,7 +3,6 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/view/Camera_2.h"
 
 #include "raygen.h"
 

@@ -12,7 +12,6 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/CallRender3D.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/FramebufferObject.hpp>
 
 namespace megamol {

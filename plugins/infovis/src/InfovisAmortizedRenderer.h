@@ -3,7 +3,6 @@
 
 #include <glm/matrix.hpp>
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/glowl.h>
 
 #include "mmcore/CalleeSlot.h"
