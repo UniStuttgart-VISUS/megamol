@@ -88,6 +88,9 @@ private:
     vislib::StringA getCommandLine(void);
     bool filenameChanged(core::param::ParamSlot& slot);
 
+    template<typename T, typename C>
+    void inquireRead(C container, const adios2Params var, const size_t frameIDtoLoad, const bool singleValue);
+
     /** The slot for requesting data */
     core::CalleeSlot getData;
 
@@ -117,5 +120,28 @@ private:
     std::vector<std::string> availVars;
     std::vector<std::string> availAttribs;
 };
+
+template<typename T, typename C>
+void adiosDataSource::inquireRead(
+    C container, const adios2Params var, const size_t frameIDtoLoad, const bool singleValue) {
+    container->singleValue = singleValue;
+    std::vector<T>& tmp_vec = container->getVec();
+    size_t num = 1;
+
+    if (var.isAttribute) {
+        auto advar = io->InquireAttribute<T>(var.name);
+        tmp_vec = advar.Data();
+    } else {
+        auto advar = io->InquireVariable<T>(var.name);
+        advar.SetStepSelection({frameIDtoLoad, 1});
+        container->shape = advar.Shape(frameIDtoLoad);
+        advar.SetSelection({advar.Start(), container->shape});
+        std::for_each(container->shape.begin(), container->shape.end(), [&](decltype(num) n) { num *= n; });
+        tmp_vec.resize(num);
+
+        reader->Get<T>(advar, tmp_vec);
+    }
+    dataMap[var.name] = std::move(container);
+}
 } /* end namespace adios */
 } /* end namespace megamol */

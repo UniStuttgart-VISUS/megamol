@@ -162,231 +162,31 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                             // num = std::stoi(var.second["Shape"]);
                             singleValue = false;
                         }
-                        auto num = 1;
                         if (var.params["Type"] == "float") {
-
                             auto fc = std::make_shared<FloatContainer>(FloatContainer());
-                            fc->singleValue = singleValue;
-                            std::vector<float>& tmp_vec = fc->getVec();
-
-                            if (var.isAttribute) {
-                                auto advar = io->InquireAttribute<float>(var.name);
-                                tmp_vec = advar.Data();
-                            } else {
-                                auto advar = io->InquireVariable<float>(var.name);
-                                advar.SetStepSelection({frameIDtoLoad, 1});
-                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                if (info[0].Count.size() == 1) {
-                                    fc->shape.resize(1, 0);
-                                    for (auto in : info) {
-                                        fc->shape[0] += in.Count[0];
-                                    }
-                                    advar.SetSelection({{0}, fc->shape});
-                                } else {
-                                    fc->shape = info[0].Count;
-                                }
-                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                                tmp_vec.resize(num);
-
-                                reader->Get<float>(advar, tmp_vec);
-                            }
-                            dataMap[var.name] = std::move(fc);
-
+                            inquireRead<float>(fc, var, frameIDtoLoad, singleValue);
                         } else if (var.params["Type"] == "double") {
-
                             auto fc = std::make_shared<DoubleContainer>(DoubleContainer());
-                            fc->singleValue = singleValue;
-                            std::vector<double>& tmp_vec = fc->getVec();
-
-                            if (var.isAttribute) {
-                                auto advar = io->InquireAttribute<double>(var.name);
-                                tmp_vec = advar.Data();
-                            } else {
-                                auto advar = io->InquireVariable<double>(var.name);
-                                advar.SetStepSelection({frameIDtoLoad, 1});
-                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                if (info[0].Count.size() == 1) {
-                                    fc->shape.resize(1, 0);
-                                    for (auto in : info) {
-                                        fc->shape[0] += in.Count[0];
-                                    }
-                                    advar.SetSelection({{0}, fc->shape});
-                                } else {
-                                    fc->shape = info[0].Count;
-                                }
-                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                                tmp_vec.resize(num);
-
-                                reader->Get<double>(advar, tmp_vec);
-                            }
-                            dataMap[var.name] = std::move(fc);
-
+                            inquireRead<double>(fc, var, frameIDtoLoad, singleValue);
                         } else if (var.params["Type"] == "int32_t") {
-
                             auto fc = std::make_shared<Int32Container>(Int32Container());
-                            fc->singleValue = singleValue;
-                            std::vector<int32_t>& tmp_vec = fc->getVec();
-
-                            if (var.isAttribute) {
-                                auto advar = io->InquireAttribute<int32_t>(var.name);
-                                tmp_vec = advar.Data();
-                            } else {
-                                adios2::Variable<int32_t> advar = io->InquireVariable<int32_t>(var.name);
-                                advar.SetStepSelection({frameIDtoLoad, 1});
-                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                if (info[0].Count.size() == 1) {
-                                    fc->shape.resize(1, 0);
-                                    for (auto in : info) {
-                                        fc->shape[0] += in.Count[0];
-                                    }
-                                    advar.SetSelection({{0}, fc->shape});
-                                } else {
-                                    fc->shape = info[0].Count;
-                                }
-                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                                tmp_vec.resize(num);
-
-                                reader->Get<int32_t>(advar, tmp_vec);
-                            }
-                            dataMap[var.name] = std::move(fc);
+                            inquireRead<int32_t>(fc, var, frameIDtoLoad, singleValue);
                         } else if (var.params["Type"] == "int8_t" || var.params["Type"] == "char") {
-
                             auto fc = std::make_shared<CharContainer>(CharContainer());
-                            fc->singleValue = singleValue;
-                            std::vector<char>& tmp_vec = fc->getVec();
-
-                            if (var.isAttribute) {
-                                auto advar = io->InquireAttribute<char>(var.name);
-                                tmp_vec = advar.Data();
-                            } else {
-                                adios2::Variable<char> advar = io->InquireVariable<char>(var.name);
-                                advar.SetStepSelection({frameIDtoLoad, 1});
-                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                if (info[0].Count.size() == 1) {
-                                    fc->shape.resize(1, 0);
-                                    for (auto in : info) {
-                                        fc->shape[0] += in.Count[0];
-                                    }
-                                    advar.SetSelection({{0}, fc->shape});
-                                } else {
-                                    fc->shape = info[0].Count;
-                                }
-                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                                tmp_vec.resize(num);
-
-                                reader->Get<char>(advar, tmp_vec);
-                            }
-                            dataMap[var.name] = std::move(fc);
+                            inquireRead<char>(fc, var, frameIDtoLoad, singleValue);
                         } else if (var.params["Type"] == "uint64_t") {
                             auto fc = std::make_shared<UInt64Container>(UInt64Container());
-                            fc->singleValue = singleValue;
-                            std::vector<uint64_t>& tmp_vec = fc->getVec();
-
-                            if (var.isAttribute) {
-                                auto advar = io->InquireAttribute<uint64_t>(var.name);
-                                tmp_vec = advar.Data();
-                            } else {
-                                adios2::Variable<uint64_t> advar =
-                                    io->InquireVariable<uint64_t>(var.name);
-                                advar.SetStepSelection({frameIDtoLoad, 1});
-                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                if (info[0].Count.size() == 1) {
-                                    fc->shape.resize(1,0);
-                                    for (auto in : info) {
-                                        fc->shape[0] += in.Count[0];
-                                    }
-                                    advar.SetSelection({{0}, fc->shape});
-                                } else {
-                                    fc->shape = info[0].Count;
-                                }
-                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                                tmp_vec.resize(num);
-
-                                reader->Get<uint64_t>(advar, tmp_vec);
-                            }
-                            dataMap[var.name] = std::move(fc);
+                            inquireRead<uint64_t>(fc, var, frameIDtoLoad, singleValue);
                         } else if ((var.params["Type"] == "unsigned char")
                             || (var.params["Type"] == "uint8_t")) {
                             auto fc = std::make_shared<UCharContainer>(UCharContainer());
-                            fc->singleValue = singleValue;
-                            std::vector<unsigned char>& tmp_vec = fc->getVec();
-
-                            if (var.isAttribute) {
-                                auto advar = io->InquireAttribute<unsigned char>(var.name);
-                                tmp_vec = advar.Data();
-                            } else {
-                                adios2::Variable<unsigned char> advar = io->InquireVariable<unsigned char>(var.name);
-                                advar.SetStepSelection({frameIDtoLoad, 1});
-                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                if (info[0].Count.size() == 1) {
-                                    fc->shape.resize(1, 0);
-                                    for (auto in : info) {
-                                        fc->shape[0] += in.Count[0];
-                                    }
-                                } else {
-                                    fc->shape = info[0].Count;
-                                }
-                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                                tmp_vec.resize(num);
-
-                                reader->Get<unsigned char>(advar, tmp_vec);
-                            }
-                            dataMap[var.name] = std::move(fc);
+                            inquireRead<unsigned char>(fc, var, frameIDtoLoad, singleValue);
                         } else if (var.params["Type"] == "uint32_t") {
                             auto fc = std::make_shared<UInt32Container>(UInt32Container());
-                            fc->singleValue = singleValue;
-                            std::vector<unsigned int>& tmp_vec = fc->getVec();
-
-                            if (var.isAttribute) {
-                                auto advar = io->InquireAttribute<unsigned int>(var.name);
-                                tmp_vec = advar.Data();
-                            } else {
-                                adios2::Variable<unsigned int> advar = io->InquireVariable<unsigned int>(var.name);
-                                advar.SetStepSelection({frameIDtoLoad, 1});
-                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                if (info[0].Count.size() == 1) {
-                                    fc->shape.resize(1, 0);
-                                    for (auto in : info) {
-                                        fc->shape[0] += in.Count[0];
-                                    }
-                                    advar.SetSelection({{0}, fc->shape});
-                                } else {
-                                    fc->shape = info[0].Count;
-                                }
-                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                                tmp_vec.resize(num);
-
-                                reader->Get<unsigned int>(advar, tmp_vec);
-                            }
-                            dataMap[var.name] = std::move(fc);
+                            inquireRead<uint32_t>(fc, var, frameIDtoLoad, singleValue);
                         } else if (var.params["Type"] == "string") {
-
                             auto fc = std::make_shared<StringContainer>(StringContainer());
-                            fc->singleValue = singleValue;
-                            std::vector<std::string>& tmp_vec = fc->getVec();
-
-                            if (var.isAttribute) {
-                                auto advar = io->InquireAttribute<std::string>(var.name);
-                                tmp_vec = advar.Data();
-                            } else {
-                                adios2::Variable<std::string> advar = io->InquireVariable<std::string>(var.name);
-                                advar.SetStepSelection({frameIDtoLoad, 1});
-                                auto info = reader->BlocksInfo(advar, frameIDtoLoad);
-                                if (info[0].Count.size() == 1) {
-                                    fc->shape.resize(1, 0);
-                                    for (auto in : info) {
-                                        fc->shape[0] += in.Count[0];
-                                    }
-                                    advar.SetSelection({{0}, fc->shape});
-                                } else {
-                                    fc->shape = info[0].Count;
-                                }
-                                std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
-                                tmp_vec.resize(num);
-
-                                reader->Get<std::string>(advar, tmp_vec);
-                            }
-                            dataMap[var.name] = std::move(fc);
+                            inquireRead<std::string>(fc, var, frameIDtoLoad, singleValue);
                         }
                     }
                 }
