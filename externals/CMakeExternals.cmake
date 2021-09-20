@@ -32,6 +32,27 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/asmjit/asmjit.git
       GIT_TAG "8474400e82c3ea65bd828761539e5d9b25f6bd83" )
 
+  # Corsair CUE SDK
+  elseif(NAME STREQUAL "CUESDK")
+    if (TARGET CUESDK)
+      return()
+    endif()
+    
+    FetchContent_Declare(
+      cuesdk_archive
+      URL https://github.com/CorsairOfficial/cue-sdk/releases/download/v3.0.378/CUESDK_3.0.378.zip)
+    FetchContent_GetProperties(cuesdk_archive)
+    if (NOT cuesdk_archive_POPULATED)
+      FetchContent_Populate(cuesdk_archive)
+      add_library(CUESDK SHARED IMPORTED GLOBAL)
+      set_target_properties(CUESDK PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${cuesdk_archive_SOURCE_DIR}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${cuesdk_archive_SOURCE_DIR}/redist/x64/CUESDK.x64_2017.dll"
+        IMPORTED_IMPLIB "${cuesdk_archive_SOURCE_DIR}/lib/x64/CUESDK.x64_2017.lib")
+      install(DIRECTORY "${cuesdk_archive_SOURCE_DIR}/redist/x64/" DESTINATION "bin" FILES_MATCHING PATTERN "*2017.dll")
+    endif()
+    
   # Delaunator
   elseif(NAME STREQUAL "Delaunator")
     if(TARGET Delaunator)
@@ -405,7 +426,7 @@ function(require_external NAME)
     endif()
 
     require_external(glfw)
-    external_get_property(glfw INSTALL_DIR)
+    external_get_property(glfw INSTALL_DIR)    
 
     if(WIN32)
       set(IMGUI_LIB "lib/imgui.lib")

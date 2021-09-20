@@ -1,5 +1,5 @@
 /*
- * Input.h
+ * KeyboardMouseInput.h
  *
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
@@ -10,6 +10,10 @@
 #include <bitset>
 #include <type_traits>
 #include <sstream> // stringstream
+#include <algorithm>
+#include <vector>
+#include <ostream>
+#include <iterator>
 
 namespace megamol {
 namespace frontend_resources {
@@ -200,6 +204,29 @@ public:
 
     inline int toInt() const { return static_cast<int>(bits.to_ulong()); }
 
+    inline std::string ToString() const {
+        std::vector<std::string> range;
+        const bool s = this->test(frontend_resources::Modifier::SHIFT);
+        const bool c = this->test(frontend_resources::Modifier::CTRL);
+        const bool a = this->test(frontend_resources::Modifier::ALT);
+        if (s) range.emplace_back("SHIFT");
+        if (c) range.emplace_back("CTRL");
+        if (a) range.emplace_back("ALT");
+        std::ostringstream out;
+        auto b = range.begin();
+        auto e = range.end();
+        if (b != e) {
+            std::copy(b, std::prev(e), std::ostream_iterator<std::string>(out, " + "));
+            b = std::prev(e);
+        }
+        if (b != e) {
+            out << *b;
+        }
+        return out.str();
+    }
+
+    inline void fromInt(int val) { bits = Bits(val); }
+
     inline bool none() const { return bits.none(); }
 
     inline bool test(Modifier mod) const { return (bits & Modifiers(mod).bits).any(); }
@@ -235,6 +262,10 @@ public:
     inline Modifiers& operator^=(const Modifiers& other) {
         bits = other.bits;
         return *this;
+    }
+
+    inline bool operator==(const Modifiers& other) const {
+        return other.equals(*this);
     }
 
 };
@@ -296,6 +327,10 @@ public:
         this->key = key;
     }
 
+    bool operator==(const KeyCode &other) const {
+        return (mods.equals(other.mods) && key == other.key);
+  }
+
     /**
      * Generates a human-readable ASCII String representing the key code.
      *
@@ -305,9 +340,10 @@ public:
 
         std::string msg;
 
-        if (this->mods.test(frontend_resources::Modifier::SHIFT)) msg += "SHIFT + ";
-        if (this->mods.test(frontend_resources::Modifier::CTRL)) msg += "CTRL + ";
-        if (this->mods.test(frontend_resources::Modifier::ALT)) msg += "ALT + ";
+        const auto mmsg = mods.ToString();
+        if (!mmsg.empty()) {
+            msg += mmsg + " + ";
+        }
 
         switch (this->key) {
             case (frontend_resources::Key::KEY_UNKNOWN) : msg += ""; break; // 'Unknown Key'
@@ -446,3 +482,27 @@ namespace input = frontend_resources;
 
 } /* end namespace frontend_resources */
 } /* end namespace megamol */
+
+namespace std {
+
+  template <>
+  struct hash<megamol::frontend_resources::KeyCode>
+  {
+    std::size_t operator()(const megamol::frontend_resources::KeyCode& k) const noexcept {
+      using std::size_t;
+      using std::hash;
+      using std::string;
+
+      return (static_cast<uint64_t>(k.key) << 32 | k.mods.toInt());
+    }
+  };
+
+  template <>
+  struct hash<megamol::frontend_resources::Modifiers>
+  {
+    std::size_t operator()(const megamol::frontend_resources::Modifiers& m) const noexcept {
+      return m.toInt();
+    }
+  };
+
+}

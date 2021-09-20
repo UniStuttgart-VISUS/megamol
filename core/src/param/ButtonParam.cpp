@@ -1,7 +1,7 @@
 /*
  * ButtonParam.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -15,44 +15,44 @@ using namespace megamol::core::param;
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(void) : AbstractParam(), keycode() {
-    this->InitPresentation(AbstractParamPresentation::ParamType::BUTTON);
+ButtonParam::ButtonParam() : AbstractParam(), keycode() {
+    initialize();
 }
 
 
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::KeyCode &keycode) : AbstractParam(),
-        keycode(keycode) {
-    this->InitPresentation(AbstractParamPresentation::ParamType::BUTTON);
+ButtonParam::ButtonParam(const core::view::KeyCode& keycode)
+        : AbstractParam(), keycode(keycode) {
+    initialize();
 }
 
 
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifiers &mods) : AbstractParam(), 
-        keycode(key, mods) {
-    this->InitPresentation(AbstractParamPresentation::ParamType::BUTTON);
+ButtonParam::ButtonParam(const core::view::Key& key, const core::view::Modifiers& mods)
+        : AbstractParam(), keycode(key, mods) {
+    initialize();
 }
 
 
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifier &mod) : AbstractParam(),
-        keycode(key, core::view::Modifiers(mod)) {
-    this->InitPresentation(AbstractParamPresentation::ParamType::BUTTON);
+ButtonParam::ButtonParam(const core::view::Key& key, const core::view::Modifier& mod)
+        : AbstractParam(), keycode(key, core::view::Modifiers(mod)) {
+    initialize();
 }
 
 
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const core::view::Key &key) : AbstractParam(), keycode() {
-    this->keycode.key = key;
-    this->InitPresentation(AbstractParamPresentation::ParamType::BUTTON);
+ButtonParam::ButtonParam(const core::view::Key& key)
+        : AbstractParam(), keycode(key) {
+    initialize();
 }
 
 
@@ -95,4 +95,8 @@ vislib::TString ButtonParam::ValueString(void) const {
 
     // intentionally empty
     return _T("");
+}
+
+void ButtonParam::initialize() {
+    this->InitPresentation(AbstractParamPresentation::ParamType::BUTTON);
 }

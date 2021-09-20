@@ -68,6 +68,7 @@ mmSetCliOption("interactive", "off")       -- CLI: --interactive=false
 mmSetCliOption("window",      "1920x1080") -- CLI: --window 1920x1080
 mmSetCliOption("khrdebug",    "off")       -- CLI: --khrdebug=false
 mmSetCliOption("privacynote", "on")        -- CLI: --privacynote=true
+mmSetCliOption("versionnote", "off")       -- CLI: --versionnote=false
 mmSetGlobalValue("arcball",   "off")       -- CLI: -g arcball:off
 
 

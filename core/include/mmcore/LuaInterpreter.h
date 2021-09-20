@@ -202,6 +202,8 @@ private:
 
     bool getDouble(int i, double& out);
 
+    bool getBool(int i, bool& out);
+
     /** print table on the stack somewhat */
     void printTable(std::stringstream& out);
 
@@ -392,9 +394,14 @@ bool megamol::core::LuaInterpreter<T>::RunString(
                         if (getDouble(1, r)) {
                             result = std::to_string(r);
                         } else {
-                            result = "Result is a complex type.";
-                            megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution returned complex type");
-                            good = false;
+                            bool b;
+                            if (getBool(1, b)) {
+                                result = std::to_string(b);
+                            } else {
+                                result = "Result is a complex type.";
+                                megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution returned complex type");
+                                good = false;
+                            }
                         }
                     }
                 }
@@ -424,6 +431,15 @@ template <class T> bool megamol::core::LuaInterpreter<T>::getDouble(int i, doubl
     int t = lua_type(L, i);
     if (t == LUA_TNUMBER) {
         out = lua_tonumber(L, i);
+        return true;
+    }
+    return false;
+}
+
+template <class T> bool megamol::core::LuaInterpreter<T>::getBool(int i, bool& out) {
+    int t = lua_type(L, i);
+    if (t == LUA_TBOOLEAN) {
+        out = lua_toboolean(L, i);
         return true;
     }
     return false;

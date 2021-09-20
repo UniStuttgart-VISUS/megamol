@@ -13,7 +13,8 @@ megamol::core::DeferredShading::DeferredShading()
     , getLightsSlot("lights", "Lights are retrieved over this slot.")
     , m_btf_filename_slot("BTF filename", "The name of the btf file to load") 
 {
-    this->m_btf_filename_slot << new core::param::FilePathParam("");
+    this->m_btf_filename_slot << new core::param::FilePathParam(
+        "", param::FilePathParam::Flag_File_RestrictExtension, {"btf"});
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 
     this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
@@ -54,7 +55,7 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3DGL& call) {
         m_deferred_shading_prgm = std::make_unique<GLSLShader>();
 
         auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.PeekBuffer());
+        std::string filename(vislib_filename.generic_u8string());
 
         vislib::graphics::gl::ShaderSource vert_shader_src;
         vislib::graphics::gl::ShaderSource frag_shader_src;

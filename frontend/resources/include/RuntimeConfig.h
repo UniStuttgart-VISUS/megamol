@@ -13,6 +13,8 @@
 #include <tuple>
 #include <optional>
 
+#include "mmcore/versioninfo.h"
+
 namespace megamol {
 namespace frontend_resources {
 
@@ -62,6 +64,7 @@ struct RuntimeConfig {
     bool gui_show = true;
     float gui_scale = 1.0f;
     bool screenshot_show_privacy_note = true;
+    bool show_version_note = true;
 
     bool remote_headnode                        = false;
     bool remote_rendernode                      = false;
@@ -89,6 +92,7 @@ struct RuntimeConfig {
         // clang-format off
         return std::string("RuntimeConfig values: "  ) +
             std::string("\n\tProgram invocation: "   ) + "\n\t\t" + program_invocation_string +
+            std::string("\n\tVersion: "              ) + MEGAMOL_CORE_COMP_REV + 
             std::string("\n\tConfiguration files: "  ) + summarize(configuration_files) +
             std::string("\n\tApplication directory: ") + application_directory +
             std::string("\n\tResource directories: " ) + summarize(resource_directories) +

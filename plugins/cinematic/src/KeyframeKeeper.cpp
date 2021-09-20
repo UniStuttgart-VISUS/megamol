@@ -521,7 +521,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->fileNameParam.IsDirty()) {
         this->fileNameParam.ResetDirty();
 
-        this->filename = std::string(this->fileNameParam.Param<param::FilePathParam>()->Value().PeekBuffer());
+        this->filename = this->fileNameParam.Param<param::FilePathParam>()->Value().generic_u8string();
     }
     // saveKeyframesParam -----------------------------------------------------
     if (this->saveKeyframesParam.IsDirty()) {
@@ -569,7 +569,6 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     ccc->SetTotalSimTime(this->totalSimTime);
     ccc->SetControlPointPosition(this->startCtrllPos, this->endCtrllPos);
     ccc->SetFps(this->fps);
-
 
     this->pendingTotalAnimTimePopUp(this->GetCoreInstance()->GetFrameID());
 
@@ -1195,12 +1194,12 @@ bool KeyframeKeeper::saveKeyframes() {
             std::setfill('0') << std::setw(2) << now->tm_min << 
             std::setfill('0') << std::setw(2) << now->tm_sec << ".kf";
         this->filename = stream.str();
-        this->fileNameParam.Param<param::FilePathParam>()->SetValue(vislib::StringA(this->filename.c_str()), false);
+        this->fileNameParam.Param<param::FilePathParam>()->SetValue(this->filename, false);
     } 
 
     try {
         std::ofstream outfile;
-        outfile.open(this->filename.c_str(), std::ios::binary);
+        outfile.open(this->filename, std::ios::binary);
         if (!outfile.good()) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to create keyframe file.");
             return false;
@@ -1352,18 +1351,23 @@ int KeyframeKeeper::getKeyframeIndex(std::vector<Keyframe>& keyframes, Keyframe 
 
 void megamol::cinematic::KeyframeKeeper::pendingTotalAnimTimePopUp(uint32_t frame_id) {
 
-    // Call only once per frame
+    // Call only once per frame (CallForGetUpdatedKeyframeData() is called multiple times per frame)
+    if (this->pendingTotalAnimTime == this->totalAnimTime) {
+        this->pendingTotalAnimTime = -1.0f;
+    }
     if ((this->pendingTotalAnimTime > 0.0f) && (this->frameId != frame_id)) {
 
         bool valid_imgui_scope =
             ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
         if (valid_imgui_scope) {
+
             const std::string popup_label = "Changed Total Animation Time##" + std::string(this->FullName());
             if (!ImGui::IsPopupOpen(popup_label.c_str())) {
                 ImGui::OpenPopup(popup_label.c_str());
             }
             if (ImGui::BeginPopupModal(popup_label.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-                ImGui::TextUnformatted("Scale animation time of keyframes \nwith new total animation time:");
+                ImGui::Text("Scale current animation time '%f' of keyframes \nwith new total animation time '%f'?",
+                    this->totalAnimTime, this->pendingTotalAnimTime);
                 if (ImGui::Button("Yes")) {
                     for (auto& kf : this->keyframes) {
                         float at = kf.GetAnimTime() / this->totalAnimTime * this->pendingTotalAnimTime;
@@ -1403,7 +1407,6 @@ void megamol::cinematic::KeyframeKeeper::pendingTotalAnimTimePopUp(uint32_t fram
             this->totalAnimTime = this->pendingTotalAnimTime;
             this->pendingTotalAnimTime = -1.0f;
         }
-
         this->frameId = frame_id;
     }
 }

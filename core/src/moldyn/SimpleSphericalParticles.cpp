@@ -33,7 +33,7 @@ moldyn::SimpleSphericalParticles::SimpleSphericalParticles(void)
     , vertDataType(VERTDATA_NONE)
     , vertPtr(nullptr)
     , vertStride(0)
-    , disabledNullChecks(false)
+    , disabledNullChecks(true)
     , isVAO(false)
     , clusterInfos(nullptr)
     , idDataType{IDDATA_NONE}

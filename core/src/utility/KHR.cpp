@@ -15,9 +15,8 @@ using namespace megamol::core::utility;
 
 
 int KHR::startDebug() {
-#if (!defined(_WIN32) && !defined(HAS_LIBUNWIND))
-    megamol::core::utility::log::Log::DefaultLog.WriteError("LibUnwind is required to use KHR debug.");
-    megamol::core::utility::log::Log::DefaultLog.WriteError("You need to set the CMake compiler flag USE_LIBUNWIND=true.");
+#if (!defined(_WIN32))
+    megamol::core::utility::log::Log::DefaultLog.WriteError("KHR debug is disabled, use new frontend!.");
     return 1;
 }
 #else
@@ -171,85 +170,5 @@ std::string KHR::getStack() {
     free(symbol);
     return output.str();
 }
-#else
-#ifdef HAS_LIBUNWIND
-int KHR::getFileAndLine(unw_word_t addr, char* file, size_t flen, int* line) {
-    static char buf[256];
-    char *p;
-
-    // prepare command to be executed
-    // our program need to be passed after the -e parameter
-    sprintf(buf, "/usr/bin/addr2line -C -e ./%s -f -i %lx", program_invocation_short_name, addr);
-
-    FILE* f = popen(buf, "r");
-
-    if (f == NULL) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("%s", buf);
-        return 0;
-    }
-
-    // get function name
-    fgets(buf, 256, f);
-
-    // get file and line
-    fgets(buf, 256, f);
-
-    if (buf[0] != '?') {
-        int l;
-        char *p = buf;
-
-        // file name is until ':'
-        while (*p != ':') {
-            p++;
-        }
-
-        *p++ = 0;
-        // after file name follows line number
-        strcpy(file, buf);
-        sscanf(p, "%d", line);
-    } else {
-        strcpy(file, "unknown");
-        *line = -1;
-    }
-
-    pclose(f);
-    return 1;
-}
-
-std::string KHR::getStack() {
-
-    unw_cursor_t cursor;
-    unw_context_t uc;
-    unw_word_t ip, sp, off;
-    unw_proc_info_t pi;
-    char file[256], name[256];
-    int line;
-    int status;
-    std::stringstream output;
-
-    unw_getcontext(&uc);
-    unw_init_local(&cursor, &uc);
-    while (unw_step(&cursor) > 0) {
-        unw_get_reg(&cursor, UNW_REG_IP, &ip);
-        unw_get_reg(&cursor, UNW_REG_SP, &sp);
-
-        unw_get_proc_name(&cursor, name, sizeof(name), &off);
-        getFileAndLine((long)ip, file, 256, &line);
-
-        if (line >= 0) {
-            char *realname;
-            realname = abi::__cxa_demangle(name, 0, 0, &status);
-
-            if (realname) {
-	        output << realname << ": " << file << ", " << line << std::endl;
-                free(realname);
-            } else {
-	        output << name << ": " << file << ", " << line << std::endl;
-            }
-        }
-    }
-    return output.str();
-}
-#endif
 #endif
 #endif
