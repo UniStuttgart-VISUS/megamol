@@ -160,4 +160,10 @@ void main(void) {
     move_color2.r = cyl_color2.r;
     move_color2.g = cyl_color2.g;
     move_color2.b = cyl_color2.b;
+
+    if(applyFiltering) {
+        if(vert_filter == 0) {
+            gl_PointSize = 0;
+        }
+    }
 }

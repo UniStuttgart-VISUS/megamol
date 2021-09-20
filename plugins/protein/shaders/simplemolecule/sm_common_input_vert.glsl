@@ -17,6 +17,11 @@ out vec4 move_color;
 out vec4 move_color2;
 
 uniform vec2 planes;
+uniform vec3 clipPlaneDir;
+uniform vec3 clipPlaneBase;
+
+uniform bool applyFiltering;
+uniform bool useClipPlane;
 
 layout (location = 0) in vec4 vert_position;
 layout (location = 1) in vec3 vert_color;

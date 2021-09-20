@@ -23,9 +23,6 @@
 #include "glowl/BufferObject.hpp"
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-
 
 namespace megamol {
 namespace protein {
@@ -129,10 +126,13 @@ namespace protein {
         /**
          * Render the molecular data in stick mode.
          *
-         * @param mol        Pointer to the data call.
-         * @param atomPos    Pointer to the interpolated atom positions.
+         * @param mol          Pointer to the data call.
+         * @param atomPos      Pointer to the interpolated atom positions.
+         * @param useFiltering Enables atom filtering in the renderer
+         * @param useClipplane Enables the a clipplane cutting in the renderer
          */
-        void RenderStick(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
+        void RenderStick(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos,
+            bool useFiltering = false, bool useClipplane = false);
 
         /**
          * Render the molecular data in ball-and-stick mode.
@@ -153,10 +153,13 @@ namespace protein {
         /**
          * Render the molecular data in spacefilling mode.
          *
-         * @param mol        Pointer to the data call.
-         * @param atomPos    Pointer to the interpolated atom positions.
+         * @param mol          Pointer to the data call.
+         * @param atomPos      Pointer to the interpolated atom positions.
+         * @param useFiltering Enables atom filtering in the renderer
+         * @param useClipplane Enables the a clipplane cutting in the renderer
          */
-        void RenderSpacefilling(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
+        void RenderSpacefilling(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos,
+            bool useFiltering = false, bool useClipplane = false);
 
         /**
          * Render the molecular data in spacefilling mode.
@@ -279,8 +282,6 @@ namespace protein {
         std::shared_ptr<glowl::GLSLProgram> sphereClipPlaneShader_;
         std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
         std::shared_ptr<glowl::GLSLProgram> cylinderClipPlaneShader_;
-        std::shared_ptr<glowl::GLSLProgram> filterSphereShader_;
-        std::shared_ptr<glowl::GLSLProgram> filterCylinderShader_;
         std::shared_ptr<glowl::GLSLProgram> lightingShader_;
 
         // the local fbo
@@ -340,7 +341,7 @@ namespace protein {
         /** second color array for cylinder */
         vislib::Array<float> color2Cylinders;
         /** Connections filter */
-        vislib::Array<float> conFilter;
+        vislib::Array<int> conFilter;
 
         // the list of molecular indices
         vislib::Array<vislib::StringA> molIdxList;

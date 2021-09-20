@@ -95,5 +95,9 @@ void main(void) {
     // for normal crowbaring on very small sprites
     lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
 
-    // gl_PointSize = 32.0;
+    if(applyFiltering) {
+        if(vert_filter == 0) {
+            gl_PointSize = 0;
+        }
+    }
 }
