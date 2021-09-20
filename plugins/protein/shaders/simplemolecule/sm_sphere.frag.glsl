@@ -60,6 +60,29 @@ void main(void) {
     normal = mix(-ray, normal, lightPos.w);
 #endif // SMALL_SPRITE_LIGHTING
 
+    if(useClipPlane) {
+        vec3 planeNormal = normalize( clipPlaneDir);
+        float d = -dot(planeNormal, clipPlaneBase - objPos.xyz);
+        float dist1 = dot(sphereintersection, planeNormal) + d;
+        float dist2 = d;
+        float t = -(dot( planeNormal, camPos.xyz) + d) / dot(planeNormal, ray);
+        vec3 planeintersect = camPos.xyz + t * ray;
+        if(dist1 > 0.0) { 
+            if(dist2 < rad) {
+                if( length(planeintersect) < rad ) {
+                    sphereintersection = planeintersect;
+                    normal = planeNormal;
+                    color *= 0.6;
+                } else {
+                    discard;
+                }
+            } else {
+                discard;
+            }
+        }
+    }
+
+
     // phong lighting with directional light
     //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     // gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), gl_Color.w);

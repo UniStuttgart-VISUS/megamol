@@ -72,13 +72,18 @@ void main(void) {
     vec3 color = move_color.rgb;
 
     // set fragment color (kroneml)
-    if( cylPt1.x > 0.0 )
-    {
+    if(cylPt1.x > 0.0 ) {
         color = move_color2.rgb;
-    }
-    else
-    {
+    } else {
         color = move_color.rgb;
+    }
+
+    if(useClipPlane) {
+        // cut with clipping plane
+        vec3 planeNormal = normalize(clipPlaneDir);
+        // Compute distance of the object from the plane
+        float d = -dot(planeNormal, clipPlaneBase - objPos.xyz);
+        if (d > 0.0) discard;
     }
 
     // phong lighting with directional light
