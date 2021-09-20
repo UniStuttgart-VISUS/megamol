@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mmcore/view/ContextToGL.h"
-
+#include "glad/glad_wgl.h"
 #include "CallRender3DCUDA.h"
 
 #include "cuda.h"
