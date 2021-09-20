@@ -30,7 +30,7 @@ namespace core {
      */
     class MEGAMOLCORE_API UniFlagStorage : public core::Module {
     public:
-        // enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2, SOFTSELECTED = 1 << 3 };
+        // enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2 };
 
         /**
          * Answer the name of this module.
@@ -133,6 +133,15 @@ namespace core {
          */
         bool writeMetaDataCallback(core::Call& caller);
 
+        void serializeData();
+        static void check_bits(uint32_t flag_bit, std::vector<int32_t>& bit_starts, std::vector<int32_t>& bit_ends,
+            int32_t& curr_bit_start, int32_t x, const std::shared_ptr<FlagStorage::FlagVectorType>& flags);
+        static void terminate_bit(const std::shared_ptr<FlagStorage::FlagVectorType>& flags, std::vector<int32_t>& bit_ends,
+            int32_t curr_bit_start);
+        static nlohmann::json make_bit_array(
+            const std::vector<int32_t>& bit_starts, const std::vector<int32_t>& bit_ends);
+        void serializeCPUData();
+
         /**
          * Helper to copy CPU flags to GL flags
          */
@@ -163,8 +172,11 @@ namespace core {
         /** The slot for writing the data */
         core::CalleeSlot writeCPUFlagsSlot;
 
+        core::param::ParamSlot serializedFlags;
+
         std::shared_ptr<FlagCollection_GL> theData;
         std::shared_ptr<FlagCollection_CPU> theCPUData;
+        bool cpu_stale = false, gpu_stale = false;
         uint32_t version = 0;
     };
 

@@ -31,7 +31,7 @@ namespace core {
  */
 class MEGAMOLCORE_API FlagStorage : public core::Module {
 public:
-    enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2, SOFTSELECTED = 1 << 3 };
+    enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2 };
 
     typedef uint32_t FlagItemType;
     typedef uint32_t FlagVersionType;
