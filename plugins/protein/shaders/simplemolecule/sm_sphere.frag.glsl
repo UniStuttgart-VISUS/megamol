@@ -4,7 +4,7 @@
 #include "lightdirectional.glsl"
 
 #include "simplemolecule/sm_common_input_frag.glsl"
-//#include "simplemolecule/sm_common_gbuffer_output.glsl"
+#include "simplemolecule/sm_common_gbuffer_output.glsl"
 
 in float squarRad;
 in float rad;
@@ -14,9 +14,9 @@ void main(void) {
     vec4 coord;
     vec3 ray;
     float lambda;
-    vec3 color;
+    vec3 color = vec3(0);
     vec3 sphereintersection = vec3(0.0);
-    vec3 normal;
+    vec3 normal = vec3(0);
 
     // transform fragment coordinates from window coordinates to view coordinates.
     coord = gl_FragCoord 
@@ -82,23 +82,29 @@ void main(void) {
         }
     }
 
-
     // phong lighting with directional light
     //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     // gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), gl_Color.w);
-    gl_FragColor = vec4(color, 1);
+    //gl_FragColor = vec4(color, 1);
+    albedo_out = vec4(color, 1);
     gl_FragDepth = gl_FragCoord.z;
+    depth_out = gl_FragCoord.z;
+    normal_out = normal;
 
     // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
     float depth = dot(MVPtransp[2], Ding);
     float depthW = dot(MVPtransp[3], Ding);
-    gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    float depthval = ((depth / depthW) + 1.0) * 0.5; 
+    gl_FragDepth = depthval;
+    depth_out = depthval;
     
 #ifndef CLIP
-    gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
-    gl_FragColor.rgb = color.rgb
+    gl_FragDepth = (radicand < 0.0) ? 1.0 : depthval;
+    depth_out = (radicand < 0.0) ? 1.0 : depthval;
+    //gl_FragColor = vec4(color, 1);
+    albedo_out = vec4(color, 1);
 #endif // CLIP
 
 #endif // DEPTH

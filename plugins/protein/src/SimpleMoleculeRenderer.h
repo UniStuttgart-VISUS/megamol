@@ -142,13 +142,6 @@ namespace protein {
          */
         void RenderBallAndStick(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
-        /**
-         * Render the molecular data in ball-and-stick mode.
-         *
-         * @param mol        Pointer to the data call.
-         * @param atomPos    Pointer to the interpolated atom positions.
-         */
-        void RenderStickClipPlane(megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Render the molecular data in spacefilling mode.
@@ -160,14 +153,6 @@ namespace protein {
          */
         void RenderSpacefilling(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos,
             bool useFiltering = false, bool useClipplane = false);
-
-        /**
-         * Render the molecular data in spacefilling mode.
-         *
-         * @param mol        Pointer to the data call.
-         * @param atomPos    Pointer to the interpolated atom positions.
-         */
-        void RenderSpacefillingClipPlane(megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
          * Render the molecular data in solvent accessible surface mode.
@@ -186,25 +171,9 @@ namespace protein {
         void RenderLinesFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
-         * Render the molecular data in stick mode.
-         *
-         * @param mol        Pointer to the data call.
-         * @param atomPos    Pointer to the interpolated atom positions.
+         * 
          */
-        void RenderStickFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
-
-        /**
-         * Render the molecular data in spacefilling mode.
-         *
-         * @param mol        Pointer to the data call.
-         * @param atomPos    Pointer to the interpolated atom positions.
-         */
-        void RenderSpacefillingFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
-
-        /**
-         *
-         */
-        void RenderLighting(const core::view::light::CallLight& lc);
+        void RenderLighting(void);
 
         /**
          * Update all parameter slots.
@@ -279,9 +248,7 @@ namespace protein {
 
         // new shader programs
         std::shared_ptr<glowl::GLSLProgram> sphereShader_;
-        std::shared_ptr<glowl::GLSLProgram> sphereClipPlaneShader_;
         std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
-        std::shared_ptr<glowl::GLSLProgram> cylinderClipPlaneShader_;
         std::shared_ptr<glowl::GLSLProgram> lightingShader_;
 
         // the local fbo

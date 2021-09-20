@@ -4,6 +4,7 @@
 #include "lightdirectional.glsl"
 
 #include "simplemolecule/sm_common_input_frag.glsl"
+#include "simplemolecule/sm_common_gbuffer_output.glsl"
 
 in vec3 radz;
 
@@ -67,6 +68,7 @@ void main(void) {
 	if( lambdas.x < 0.0 ) discard;
     vec3 intersection = camPos.xyz + ray * lambdas.x;
     vec3 normal = vec3(0.0, normalize(intersection.yz));
+    normal_out = normal;
 
     // chose color for lighting
     vec3 color = move_color.rgb;
@@ -88,8 +90,8 @@ void main(void) {
 
     // phong lighting with directional light
     //gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    gl_FragColor = vec4(color.xyz, 1);
-
+    //gl_FragColor = vec4(color.xyz, 1);
+    albedo_out = vec4(color.xyz, 1);
 
     // calculate depth
 #ifdef DEPTH
@@ -105,11 +107,14 @@ void main(void) {
     float depthW = dot(MVPtransp[3], Ding);
 #ifndef CLIP
     if (radicand < 0.0) { 
-        gl_FragColor = move_color2;
+        //gl_FragColor = move_color2;
+        albedo_out = move_color2;
         depth = 1.0;
         depthW = 1.0;
     }
 #endif // CLIP
-    gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    float dval = ((depth / depthW) + 1.0) * 0.5;
+    gl_FragDepth = dval;
+    depth_out = dval;
 #endif // DEPTH
 }

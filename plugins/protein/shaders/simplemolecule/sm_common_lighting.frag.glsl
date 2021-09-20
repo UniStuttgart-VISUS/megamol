@@ -15,14 +15,14 @@ uniform sampler2D albedo_tx2D;
 uniform sampler2D normal_tx2D;
 uniform sampler2D depth_tx2D;
 
-uniform vec4 ambientColor;
-uniform vec4 diffuseColor;
-uniform vec4 specularColor;
+uniform vec4 ambientColor = vec4(1);
+uniform vec4 diffuseColor = vec4(1);
+uniform vec4 specularColor = vec4(1);
 
-uniform float k_amb;
-uniform float k_diff;
-uniform float k_spec;
-uniform float k_exp;
+uniform float k_amb = 0.2;
+uniform float k_diff = 0.7;
+uniform float k_spec = 0.1;
+uniform float k_exp = 120.0;
 
 in vec2 uv_coord;
 
@@ -73,4 +73,11 @@ void main(void) {
     // TODO implement
 
     gl_FragColor = vec4(albedo.xyz, 1);
+    //gl_FragColor = blinnPhong(normal, vec3(0,0,1), )
+    //gl_FragColor = vec4(depth, depth, depth, 1);
+    gl_FragDepth = depth;
+
+    if(albedo.w == 0.0) {
+        discard;
+    }
 }
