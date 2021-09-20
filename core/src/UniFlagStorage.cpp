@@ -2,7 +2,9 @@
 #include "mmcore/UniFlagStorage.h"
 #include "mmcore/UniFlagCalls.h"
 #include "json.hpp"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/ShaderFactory.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -58,6 +60,16 @@ bool UniFlagStorage::create(void) {
         std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data.data(), num, GL_DYNAMIC_DRAW);
     this->theCPUData = std::make_shared<FlagCollection_CPU>();
     this->theCPUData->flags = std::make_shared<FlagStorage::FlagVectorType>(num, FlagStorage::ENABLED);
+
+    try {
+        auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        compressGPUFlagsProgram = core::utility::make_glowl_shader(
+            "compress_bitflags", shaderOptions, "core/compress_bitflags.comp.glsl");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("UniFlagStorage: could not compile compute shader: " + std::string(e.what())).c_str());
+        return false;
+    }
+
     return true;
 }
 
@@ -139,7 +151,10 @@ bool UniFlagStorage::writeMetaDataCallback(core::Call& caller) {
 }
 
 void UniFlagStorage::serializeData() {
-    
+    this->theData->flags->bind();
+    // TODO allocate the other buffers
+    // TODO bind params
+    // foreach bit: call compute shader, pray
 }
 
 void UniFlagStorage::check_bits(uint32_t flag_bit, std::vector<int32_t>& bit_starts, std::vector<int32_t>& bit_ends,
@@ -261,4 +276,16 @@ bool UniFlagStorage::onJSONChanged(param::ParamSlot& slot) {
     deserializeCPUData();
     gpu_stale = true;
     return true;
+}
+
+void UniFlagStorage::CPU2GLCopy() {
+    theData->validateFlagCount(theCPUData->flags->size());
+    theData->flags->bufferSubData(*(theCPUData->flags));
+}
+
+void UniFlagStorage::GL2CPUCopy() {
+    auto const num = theData->flags->getByteSize() / sizeof(uint32_t);
+    theCPUData->validateFlagCount(num);
+    glGetNamedBufferSubData(
+        theData->flags->getName(), 0, theData->flags->getByteSize(), theCPUData->flags->data());
 }

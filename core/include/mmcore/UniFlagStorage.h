@@ -9,6 +9,8 @@
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 
+#include <glowl/GLSLProgram.hpp>
+
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 #include "FlagCollections.h"
@@ -148,20 +150,12 @@ namespace core {
         /**
          * Helper to copy CPU flags to GL flags
          */
-        void CPU2GLCopy() {
-            theData->validateFlagCount(theCPUData->flags->size());
-            theData->flags->bufferSubData(*(theCPUData->flags));
-        }
+        void CPU2GLCopy();
 
         /**
          * Helper to copy GL flags to CPU flags
          */
-        void GL2CPUCopy() {
-            auto const num = theData->flags->getByteSize() / sizeof(uint32_t);
-            theCPUData->validateFlagCount(num);
-            glGetNamedBufferSubData(
-                theData->flags->getName(), 0, theData->flags->getByteSize(), theCPUData->flags->data());
-        }
+        void GL2CPUCopy();
 
         /** The slot for reading the data */
         core::CalleeSlot readFlagsSlot;
@@ -176,6 +170,8 @@ namespace core {
         core::CalleeSlot writeCPUFlagsSlot;
 
         core::param::ParamSlot serializedFlags;
+
+        std::unique_ptr<glowl::GLSLProgram> compressGPUFlagsProgram;
 
         std::shared_ptr<FlagCollection_GL> theData;
         std::shared_ptr<FlagCollection_CPU> theCPUData;

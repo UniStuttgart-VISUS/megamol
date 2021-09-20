@@ -51,6 +51,7 @@ layout(std430, binding = 7) buffer WorkgroupInclusivePrefix
 layout(local_size_x = 16) in;
 uniform int current_flag;
 uniform bool update_onoff;
+uniform uint num_flags;
 
 const uint FLAG_ENABLED_ON      = FLAG_ENABLED;
 const uint FLAG_FILTERED_ON     = FLAG_FILTERED;
@@ -185,6 +186,10 @@ void radix_sum_on(uint idx, uint flag) {
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
+    // TODO not sure whether this is safe
+    if (idx >= num_flags) {
+        return;
+    }
     if (update_onoff) {
         build_onoff(idx);
     }
