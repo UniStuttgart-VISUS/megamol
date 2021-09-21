@@ -117,20 +117,22 @@ Keep in mind that the caller by definition is "left" in the module graph and the
 - create a ```CallerSlot``` for ```DATACallWrite``` for *supplier*s
 
 #### Interaction with the ```DATA``` from outside:
-This must always follow the same order to avoid inconsistencies:
+This must always follow the same order to avoid inconsistencies.
+
+The following 'block' must be executed without the control flow leaving the current module, i.e. the only calls that are executed are the ones connected to the owner module that are part of the bidirectional flow.
 - if *consumer*: execute the reading:
   - issue the Call ```(*call)(DATACallRead::CallGetData)``` or your specialized version
   - check if something new is available: ```call::hasUpdate()```
   - overwrite/replace what notion you had of ```DATA``` if there is an incoming update
   - take note of the ```call::version()``` *V* of the incoming update.
-- if (also) *provider*:
+- if (also) *supplier*:
   - if you need to modify the ```DATA``` (parameters, other incoming data, or user input cause this, for example)
     - write the update
     - increase *V*
   - **ALWAYS** set the ```DATA``` in the ```DATACallWrite```, supplying *V*
   - **ALWAYS** issue the Call: ```(*call)(DATACallWrite::CallGetData)``` or your specialized version
 
-Since this should take place in the same callback, *V* does not need to be kept around beyond that, it will be re-fetched in the next cycle anyway.
+Since this should take place in the same callback, *V* **must** not be kept around beyond that, it must be re-fetched in the next cycle anyway: any calls that go downstream before or after the above block could potentially alter the ```DATA``` in the *owner*.
 
 #### *owner* Module:
 
