@@ -28,6 +28,7 @@
 #include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/PointLight.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -65,11 +66,17 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , molIdxListParam("molIdxList", "The list of molecule indices for RS computation:")
         , specialColorParam("color::specialColor", "The color for the specified molecules")
         , interpolParam("posInterpolation", "Enable positional interpolation between frames")
-        , offscreenRenderingParam("offscreenRendering", "Toggle offscreenRendering")
         , toggleZClippingParam("toggleZClip", "...")
         , clipPlaneTimeOffsetParam("clipPlane::timeOffset", "...")
         , clipPlaneDurationParam("clipPlane::Duration", "...")
         , useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own")
+        , ambientColorParam("lighting::ambientColor", "...")
+        , diffuseColorParam("lighting::diffuseColor", "...")
+        , specularColorParam("lighting::specularColor", "...")
+        , ambientFactorParam("lighting::ambientFactor", "...")
+        , diffuseFactorParam("lighting::diffuseFactor", "...")
+        , specularFactorParam("lighting::specularFactor", "...")
+        , exponentFactorParam("lighting::specularExponent", "...")
         , currentZClipPos(-20)
         , fbo_version_(0)
         , vertex_array_(0)
@@ -175,10 +182,6 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     // make the rainbow color table
     Color::MakeRainbowColorTable(100, this->rainbowColors);
 
-    // Toggle offscreen rendering
-    this->offscreenRenderingParam.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->offscreenRenderingParam);
-
     // Toggle Z-Clipping
     this->toggleZClippingParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->toggleZClippingParam);
@@ -189,6 +192,27 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
 
     this->clipPlaneDurationParam.SetParameter(new param::FloatParam(40.0f));
     this->MakeSlotAvailable(&this->clipPlaneDurationParam);
+
+    this->ambientColorParam.SetParameter(new param::ColorParam("#ffffff"));
+    this->MakeSlotAvailable(&this->ambientColorParam);
+
+    this->diffuseColorParam.SetParameter(new param::ColorParam("#ffffff"));
+    this->MakeSlotAvailable(&this->diffuseColorParam);
+
+    this->specularColorParam.SetParameter(new param::ColorParam("#ffffff"));
+    this->MakeSlotAvailable(&this->specularColorParam);
+
+    this->ambientFactorParam.SetParameter(new param::FloatParam(0.2f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->ambientFactorParam);
+
+    this->diffuseFactorParam.SetParameter(new param::FloatParam(0.7f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->diffuseFactorParam);
+
+    this->specularFactorParam.SetParameter(new param::FloatParam(0.1f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->specularFactorParam);
+
+    this->exponentFactorParam.SetParameter(new param::FloatParam(120.0f, 1.0f, 1000.0f));
+    this->MakeSlotAvailable(&this->exponentFactorParam);
 
     this->lastDataHash = 0;
 }
@@ -1193,7 +1217,46 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
 }
 
 void SimpleMoleculeRenderer::RenderLighting(void) {
+
+    auto call_light = this->getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return;
+        }
+    }
+
+    if (call_light->hasUpdate()) {
+        auto& lights = call_light->getData();
+
+        pointLights_.clear();
+        directionalLights_.clear();
+
+        auto point_lights = lights.get<core::view::light::PointLightType>();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+        for (auto& pl : point_lights) {
+            pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
+        }
+
+        for (auto& dl : distant_lights) {
+            if (dl.eye_direction) {
+                auto cam_dir = glm::normalize(cam.getPose().direction);
+                directionalLights_.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
+            } else {
+                directionalLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
+            }
+        }
+    }
+    buffers_[Buffers::LIGHT_POSITIONAL]->rebuffer(pointLights_);
+    buffers_[Buffers::LIGHT_DIRECTIONAL]->rebuffer(directionalLights_);
+
     lightingShader_->use();
+
+    buffers_[Buffers::LIGHT_POSITIONAL]->bind(1);
+    lightingShader_->setUniform("point_light_cnt", static_cast<GLint>(pointLights_.size()));
+
+    buffers_[Buffers::LIGHT_DIRECTIONAL]->bind(2);
+    lightingShader_->setUniform("distant_light_cnt", static_cast<GLint>(directionalLights_.size()));
 
     glActiveTexture(GL_TEXTURE0);
     usedFramebufferObj_->bindColorbuffer(0);
@@ -1206,6 +1269,19 @@ void SimpleMoleculeRenderer::RenderLighting(void) {
     glActiveTexture(GL_TEXTURE2);
     usedFramebufferObj_->bindColorbuffer(2);
     lightingShader_->setUniform("depth_tx2D", 2);
+
+    lightingShader_->setUniform("camPos", cam.getPose().position);
+
+    lightingShader_->setUniform(
+        "ambientColor", glm::make_vec4(this->ambientColorParam.Param<param::ColorParam>()->Value().data()));
+    lightingShader_->setUniform(
+        "diffuseColor", glm::make_vec4(this->diffuseColorParam.Param<param::ColorParam>()->Value().data()));
+    lightingShader_->setUniform(
+        "specularColor", glm::make_vec4(this->specularColorParam.Param<param::ColorParam>()->Value().data()));
+    lightingShader_->setUniform("k_amb", this->ambientFactorParam.Param<param::FloatParam>()->Value());
+    lightingShader_->setUniform("k_diff", this->diffuseFactorParam.Param<param::FloatParam>()->Value());
+    lightingShader_->setUniform("k_spec", this->specularFactorParam.Param<param::FloatParam>()->Value());
+    lightingShader_->setUniform("k_exp", this->exponentFactorParam.Param<param::FloatParam>()->Value());
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 

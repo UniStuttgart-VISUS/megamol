@@ -187,6 +187,9 @@ namespace protein {
         /**********************************************************************
          * variables
          **********************************************************************/
+        struct LightParams {
+            float x, y, z, intensity;
+        };
 
         /** MolecularDataCall caller slot */
         megamol::core::CallerSlot molDataCallerSlot;
@@ -234,8 +237,6 @@ namespace protein {
         megamol::core::param::ParamSlot specialColorParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
-        /** Toggle offscreen rendering */
-        megamol::core::param::ParamSlot offscreenRenderingParam;
         /** Toggle the use of geometry shaders for glyph raycasting */
         megamol::core::param::ParamSlot toggleZClippingParam;
         /**  */
@@ -244,6 +245,13 @@ namespace protein {
         megamol::core::param::ParamSlot clipPlaneDurationParam;
         /** Toggle use of neighborhood colors for own color */
         megamol::core::param::ParamSlot useNeighborColors;
+        megamol::core::param::ParamSlot ambientColorParam;
+        megamol::core::param::ParamSlot diffuseColorParam;
+        megamol::core::param::ParamSlot specularColorParam;
+        megamol::core::param::ParamSlot ambientFactorParam;
+        megamol::core::param::ParamSlot diffuseFactorParam;
+        megamol::core::param::ParamSlot specularFactorParam;
+        megamol::core::param::ParamSlot exponentFactorParam;
         float currentZClipPos;
 
         // new shader programs
@@ -255,6 +263,9 @@ namespace protein {
         std::shared_ptr<glowl::FramebufferObject> localFramebufferObj_;
         std::shared_ptr<glowl::FramebufferObject> usedFramebufferObj_;
         uint32_t fbo_version_;
+
+        std::vector<LightParams> pointLights_;
+        std::vector<LightParams> directionalLights_;
 
         // attribute locations for GLSL-Shader
         GLint attribLocInParams;
