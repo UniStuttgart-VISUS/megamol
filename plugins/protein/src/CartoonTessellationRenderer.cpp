@@ -1,22 +1,22 @@
 /*
- * CartoonTessellationRenderer2000GT.cpp
+ * CartoonTessellationRenderer.cpp
  *
  * Copyright (C) 2014 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "CartoonTessellationRenderer2000GT.h"
+#include "CartoonTessellationRenderer.h"
 #include <inttypes.h>
 #include <stdint.h>
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/light/PointLight.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/assert.h"
@@ -40,29 +40,29 @@ const GLuint SSBObindingPoint = 2;
 #define NGS_THE_INSTANCE "gl_VertexID"
 
 /*
- * moldyn::CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT
+ * moldyn::CartoonTessellationRenderer::CartoonTessellationRenderer
  */
-CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void)
-    : view::Renderer3DModuleGL()
-    , getDataSlot("getdata", "Connects to the data source")
-    , getLightsSlot("lights", "Lights are retrieved over this slot.")
-    , fences()
-    , currBuf(0)
-    , bufSize(32 * 1024 * 1024)
-    , numBuffers(3)
-    , scalingParam("scaling", "scaling factor for particle radii")
-    , sphereParam("spheres", "render atoms as spheres")
-    , lineParam("lines", "render backbone as GL_LINE")
-    , backboneParam("backbone", "render backbone as tubes")
-    , backboneWidthParam("backbone width", "the width of the backbone")
-    , materialParam("material", "ambient, diffuse, specular components + exponent")
-    , lineDebugParam("wireframe", "render in wireframe mode")
-    , buttonParam("reload shaders", "reload the shaders")
-    , colorInterpolationParam("color interpolation", "should the colors be interpolated?")
-    ,
-    // this variant should not need the fence
-    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT)
-    , singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) {
+CartoonTessellationRenderer::CartoonTessellationRenderer(void)
+        : view::Renderer3DModuleGL()
+        , getDataSlot("getdata", "Connects to the data source")
+        , getLightsSlot("lights", "Lights are retrieved over this slot.")
+        , fences()
+        , currBuf(0)
+        , bufSize(32 * 1024 * 1024)
+        , numBuffers(3)
+        , scalingParam("scaling", "scaling factor for particle radii")
+        , sphereParam("spheres", "render atoms as spheres")
+        , lineParam("lines", "render backbone as GL_LINE")
+        , backboneParam("backbone", "render backbone as tubes")
+        , backboneWidthParam("backbone width", "the width of the backbone")
+        , materialParam("material", "ambient, diffuse, specular components + exponent")
+        , lineDebugParam("wireframe", "render in wireframe mode")
+        , buttonParam("reload shaders", "reload the shaders")
+        , colorInterpolationParam("color interpolation", "should the colors be interpolated?")
+        ,
+        // this variant should not need the fence
+        singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT)
+        , singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) {
 
     this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -108,18 +108,20 @@ CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void)
 
 
 /*
- * moldyn::CartoonTessellationRenderer2000GT::~CartoonTessellationRenderer
+ * moldyn::CartoonTessellationRenderer::~CartoonTessellationRenderer
  */
-CartoonTessellationRenderer2000GT::~CartoonTessellationRenderer2000GT(void) { this->Release(); }
+CartoonTessellationRenderer::~CartoonTessellationRenderer(void) {
+    this->Release();
+}
 
-void CartoonTessellationRenderer2000GT::queueSignal(GLsync& syncObj) {
+void CartoonTessellationRenderer::queueSignal(GLsync& syncObj) {
     if (syncObj) {
         glDeleteSync(syncObj);
     }
     syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 }
 
-void CartoonTessellationRenderer2000GT::waitSignal(GLsync& syncObj) {
+void CartoonTessellationRenderer::waitSignal(GLsync& syncObj) {
     if (syncObj) {
         while (1) {
             GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
@@ -132,13 +134,15 @@ void CartoonTessellationRenderer2000GT::waitSignal(GLsync& syncObj) {
 
 
 /*
- * moldyn::SimpleSphereRenderer2000GT::create
+ * moldyn::SimpleSphereRenderer::create
  */
-bool CartoonTessellationRenderer2000GT::create(void) {
+bool CartoonTessellationRenderer::create(void) {
     using namespace vislib::graphics::gl;
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
-    if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions()) return false;
+    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
+        return false;
+    if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions())
+        return false;
 
     // vislib::graphics::gl::ShaderSource vert, frag;
     vert = new ShaderSource();
@@ -182,8 +186,8 @@ bool CartoonTessellationRenderer2000GT::create(void) {
             megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile tessellation shader: Unknown exception\n");
         return false;
     }
 
@@ -231,8 +235,8 @@ bool CartoonTessellationRenderer2000GT::create(void) {
             megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile tessellation shader: Unknown exception\n");
         return false;
     }
 
@@ -270,9 +274,9 @@ bool CartoonTessellationRenderer2000GT::create(void) {
 }
 
 /*
- * moldyn::SimpleSphereRenderer2000GT::release
+ * moldyn::SimpleSphereRenderer::release
  */
-void CartoonTessellationRenderer2000GT::release(void) {
+void CartoonTessellationRenderer::release(void) {
     glUnmapNamedBufferEXT(this->theSingleBuffer);
     for (auto& x : fences) {
         if (x) {
@@ -286,12 +290,12 @@ void CartoonTessellationRenderer2000GT::release(void) {
 }
 
 
-void CartoonTessellationRenderer2000GT::getBytesAndStride(MolecularDataCall& mol, unsigned int& colBytes,
+void CartoonTessellationRenderer::getBytesAndStride(MolecularDataCall& mol, unsigned int& colBytes,
     unsigned int& vertBytes, unsigned int& colStride, unsigned int& vertStride) {
     vertBytes = 0;
     colBytes = 0;
     // colBytes = vislib::math::Max(colBytes, 3 * 4U);
-    vertBytes = vislib::math::Max(vertBytes, (unsigned int)sizeof(CAlpha));
+    vertBytes = vislib::math::Max(vertBytes, (unsigned int) sizeof(CAlpha));
 
     colStride = 0;
     colStride = colStride < colBytes ? colBytes : colStride;
@@ -299,7 +303,7 @@ void CartoonTessellationRenderer2000GT::getBytesAndStride(MolecularDataCall& mol
     vertStride = vertStride < vertBytes ? vertBytes : vertStride;
 }
 
-void CartoonTessellationRenderer2000GT::getBytesAndStrideLines(MolecularDataCall& mol, unsigned int& colBytes,
+void CartoonTessellationRenderer::getBytesAndStrideLines(MolecularDataCall& mol, unsigned int& colBytes,
     unsigned int& vertBytes, unsigned int& colStride, unsigned int& vertStride) {
     vertBytes = 0;
     colBytes = 0;
@@ -315,9 +319,10 @@ void CartoonTessellationRenderer2000GT::getBytesAndStrideLines(MolecularDataCall
 /*
  * GetExtents
  */
-bool CartoonTessellationRenderer2000GT::GetExtents(view::CallRender3DGL& call) {
+bool CartoonTessellationRenderer::GetExtents(view::CallRender3DGL& call) {
     view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     MolecularDataCall* mol = this->getDataSlot.CallAs<MolecularDataCall>();
     if ((mol != NULL) && ((*mol)(MolecularDataCall::CallForGetExtent))) {
@@ -334,12 +339,13 @@ bool CartoonTessellationRenderer2000GT::GetExtents(view::CallRender3DGL& call) {
 /*
  *  getData
  */
-MolecularDataCall* CartoonTessellationRenderer2000GT::getData(unsigned int t, float& outScaling) {
+MolecularDataCall* CartoonTessellationRenderer::getData(unsigned int t, float& outScaling) {
     MolecularDataCall* mol = this->getDataSlot.CallAs<MolecularDataCall>();
     outScaling = 1.0f;
     if (mol != NULL) {
         mol->SetFrameID(t);
-        if (!(*mol)(MolecularDataCall::CallForGetExtent)) return NULL;
+        if (!(*mol)(MolecularDataCall::CallForGetExtent))
+            return NULL;
 
         // calculate scaling
         outScaling = mol->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
@@ -350,7 +356,8 @@ MolecularDataCall* CartoonTessellationRenderer2000GT::getData(unsigned int t, fl
         }
 
         mol->SetFrameID(t);
-        if (!(*mol)(MolecularDataCall::CallForGetData)) return NULL;
+        if (!(*mol)(MolecularDataCall::CallForGetData))
+            return NULL;
 
         return mol;
     } else {
@@ -361,17 +368,19 @@ MolecularDataCall* CartoonTessellationRenderer2000GT::getData(unsigned int t, fl
 /*
  * moldyn::SimpleSphereRenderer::Render
  */
-bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
+bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
 #ifdef DEBUG_BLAHBLAH
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
     view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
-    if (cr == NULL) return false;
+    if (cr == NULL)
+        return false;
 
     float scaling = 1.0f;
     MolecularDataCall* mol = this->getData(static_cast<unsigned int>(cr->Time()), scaling);
-    if (mol == NULL) return false;
+    if (mol == NULL)
+        return false;
 
     if (this->buttonParam.IsDirty()) {
         this->buttonParam.ResetDirty();
@@ -418,12 +427,12 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
                 ce.GetMsgA());
             return false;
         } catch (vislib::Exception e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: %s\n", e.GetMsgA());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to compile tessellation shader: %s\n", e.GetMsgA());
             return false;
         } catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: Unknown exception\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to compile tessellation shader: Unknown exception\n");
             return false;
         }
     }
@@ -448,8 +457,10 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
     float viewportStuff[4];
     ::glGetFloatv(GL_VIEWPORT, viewportStuff);
     glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    if (viewportStuff[2] < 1.0f)
+        viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f)
+        viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
@@ -516,7 +527,7 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
 
                 // is the current residue really an aminoacid?
                 if (mol->Residues()[aaIdx]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                    acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
+                    acid = (MolecularDataCall::AminoAcid*) (mol->Residues()[aaIdx]);
                 else
                     continue;
 
@@ -532,7 +543,7 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
                 calpha.dir[2] = mol->AtomPositions()[3 * acid->OIndex() + 2] - calpha.pos[2];
 
                 auto type = mol->SecondaryStructures()[secIdx].Type();
-                calpha.type = (int)type;
+                calpha.type = (int) type;
                 molSizes[molIdx]++;
 
                 // TODO do this on GPU?
@@ -670,7 +681,7 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
 
             UINT64 numVerts, vertCounter;
             numVerts = this->bufSize / vertStride;
-            const char* currVert = (const char*)(this->positionsCa[i].PeekElements());
+            const char* currVert = (const char*) (this->positionsCa[i].PeekElements());
             const char* currCol = 0;
             vertCounter = 0;
             while (vertCounter < this->positionsCa[i].Count() / 4) {
@@ -678,15 +689,15 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
                 const char* whence = currVert;
                 UINT64 vertsThisTime = vislib::math::Min(this->positionsCa[i].Count() / 4 - vertCounter, numVerts);
                 this->waitSignal(fences[currBuf]);
-                memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
+                memcpy(mem, whence, (size_t) vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRangeEXT(
-                    theSingleBuffer, bufSize * currBuf, (GLsizeiptr)vertsThisTime * vertStride);
+                    theSingleBuffer, bufSize * currBuf, (GLsizeiptr) vertsThisTime * vertStride);
                 glUniform1i(this->splineShader.ParameterLocation("instanceOffset"), 0);
 
                 glBindBufferRange(
                     GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
                 glPatchParameteri(GL_PATCH_VERTICES, 1);
-                glDrawArrays(GL_PATCHES, 0, (GLsizei)vertsThisTime - 3);
+                glDrawArrays(GL_PATCHES, 0, (GLsizei) vertsThisTime - 3);
                 this->queueSignal(fences[currBuf]);
 
                 currBuf = (currBuf + 1) % this->numBuffers;
@@ -727,9 +738,10 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
 
             if (point_lights.size() > 1) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[CartoonTessellationRenderer2000GT] Only one single 'Point Light' source is supported by this renderer");
+                    "[CartoonTessellationRenderer] Only one single 'Point Light' source is supported by this renderer");
             } else if (point_lights.empty()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[CartoonTessellationRenderer2000GT] No 'Point Light' found");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[CartoonTessellationRenderer] No 'Point Light' found");
             }
 
             for (auto const& light : point_lights) {
@@ -769,23 +781,23 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
         numVerts = this->bufSize / vertStride;
         UINT64 stride = 0;
 
-        for (int i = 0; i < (int)molSizes.size(); i++) {
+        for (int i = 0; i < (int) molSizes.size(); i++) {
             UINT64 vertCounter = 0;
             while (vertCounter < molSizes[i]) {
-                const char* currVert = (const char*)(&mainchain[(unsigned int)vertCounter + (unsigned int)stride]);
+                const char* currVert = (const char*) (&mainchain[(unsigned int) vertCounter + (unsigned int) stride]);
                 void* mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
                 const char* whence = currVert;
                 UINT64 vertsThisTime = vislib::math::Min(molSizes[i] - vertCounter, numVerts);
                 this->waitSignal(fences[currBuf]);
-                memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
+                memcpy(mem, whence, (size_t) vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRangeEXT(
-                    theSingleBuffer, bufSize * currBuf, (GLsizeiptr)vertsThisTime * vertStride);
+                    theSingleBuffer, bufSize * currBuf, (GLsizeiptr) vertsThisTime * vertStride);
                 glUniform1i(this->tubeShader.ParameterLocation("instanceOffset"), 0);
 
                 glBindBufferRange(
                     GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
                 glPatchParameteri(GL_PATCH_VERTICES, 1);
-                glDrawArrays(GL_PATCHES, 0, (GLsizei)(vertsThisTime - 3));
+                glDrawArrays(GL_PATCHES, 0, (GLsizei) (vertsThisTime - 3));
                 this->queueSignal(fences[currBuf]);
 
                 currBuf = (currBuf + 1) % this->numBuffers;

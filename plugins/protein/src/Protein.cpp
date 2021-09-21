@@ -12,7 +12,7 @@
 #include "VTIWriter.h"
 
 // 3D renderers
-#include "CartoonTessellationRenderer2000GT.h"
+#include "CartoonTessellationRenderer.h"
 #include "GLSLVolumeRenderer.h"
 #include "MoleculeCartoonRenderer.h"
 #include "MoleculeSESRenderer.h"
@@ -143,7 +143,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiPDBLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ColorModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer2000GT>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondFilter>();
