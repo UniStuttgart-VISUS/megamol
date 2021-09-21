@@ -28,6 +28,8 @@ uniform float k_diff = 0.7;
 uniform float k_spec = 0.1;
 uniform float k_exp = 120.0;
 
+uniform bool use_lambert = false;
+
 in vec2 uv_coord;
 
 vec3 blinnPhong(vec3 normal, vec3 lightdirection, vec3 v){
@@ -84,21 +86,25 @@ void main(void) {
             float d = length(light_dir);
             light_dir = normalize(light_dir);
             vec3 view_dir = normalize(camPos - world_pos);
-            reflected_light += lambert(normal, light_dir);
-            //reflected_light += blinnPhong(normal, light_dir, view_dir) * point_light_params[i].intensity * (1.0/(d*d));
+            if(use_lambert) {
+                reflected_light += lambert(normal, light_dir);
+            } else {
+                reflected_light += blinnPhong(normal, light_dir, view_dir) * point_light_params[i].intensity * (1.0/(d*d));
+            }
         }
         for(int i = 0; i < distant_light_cnt; ++i) {
             vec3 light_dir = -1.0 * vec3(distant_light_params[i].x, distant_light_params[i].y, distant_light_params[i].z);
             vec3 view_dir = normalize(camPos - world_pos);
-            reflected_light += lambert(normal, light_dir);
-            //reflected_light += blinnPhong(normal, light_dir, view_dir) * distant_light_params[i].intensity;
+            if(use_lambert){
+                reflected_light += lambert(normal, light_dir);
+            }else {
+                reflected_light += blinnPhong(normal, light_dir, view_dir) * distant_light_params[i].intensity;
+            }
         }
         retval.rgb = reflected_light * albedo.rgb;
     }
 
     gl_FragColor = vec4(retval.xyz, 1);
-    //gl_FragColor = blinnPhong(normal, vec3(0,0,1), )
-    //gl_FragColor = vec4(depth, depth, depth, 1);
     gl_FragDepth = depth;
 
     if(albedo.w == 0.0) {

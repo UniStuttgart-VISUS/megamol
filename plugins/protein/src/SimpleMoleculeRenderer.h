@@ -205,6 +205,7 @@ namespace protein {
         float viewportStuff[4];
         glm::mat4 view;
         glm::mat4 proj;
+        glm::mat4 invProj;
         glm::mat4 MVinv;
         glm::mat4 NormalM;
         glm::mat4 MVP;
@@ -252,6 +253,7 @@ namespace protein {
         megamol::core::param::ParamSlot diffuseFactorParam;
         megamol::core::param::ParamSlot specularFactorParam;
         megamol::core::param::ParamSlot exponentFactorParam;
+        megamol::core::param::ParamSlot useLambertParam;
         float currentZClipPos;
 
         // new shader programs

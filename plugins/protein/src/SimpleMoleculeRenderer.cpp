@@ -77,6 +77,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , diffuseFactorParam("lighting::diffuseFactor", "...")
         , specularFactorParam("lighting::specularFactor", "...")
         , exponentFactorParam("lighting::specularExponent", "...")
+        , useLambertParam("lighting::lambertShading", "If turned on, the local lighting uses lambert instead of Blinn-Phong.")
         , currentZClipPos(-20)
         , fbo_version_(0)
         , vertex_array_(0)
@@ -193,6 +194,9 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->clipPlaneDurationParam.SetParameter(new param::FloatParam(40.0f));
     this->MakeSlotAvailable(&this->clipPlaneDurationParam);
 
+    this->useLambertParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->useLambertParam);
+
     this->ambientColorParam.SetParameter(new param::ColorParam("#ffffff"));
     this->MakeSlotAvailable(&this->ambientColorParam);
 
@@ -205,10 +209,10 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->ambientFactorParam.SetParameter(new param::FloatParam(0.2f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->ambientFactorParam);
 
-    this->diffuseFactorParam.SetParameter(new param::FloatParam(0.7f, 0.0f, 1.0f));
+    this->diffuseFactorParam.SetParameter(new param::FloatParam(0.798f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->diffuseFactorParam);
 
-    this->specularFactorParam.SetParameter(new param::FloatParam(0.1f, 0.0f, 1.0f));
+    this->specularFactorParam.SetParameter(new param::FloatParam(0.02f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->specularFactorParam);
 
     this->exponentFactorParam.SetParameter(new param::FloatParam(120.0f, 1.0f, 1000.0f));
@@ -396,6 +400,7 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
     view = cam.getViewMatrix();
     proj = cam.getProjectionMatrix();
     MVinv = glm::inverse(view);
+    invProj = glm::inverse(proj);
     NormalM = glm::transpose(MVinv);
     MVP = proj * view;
     MVPinv = glm::inverse(MVP);
@@ -1223,9 +1228,12 @@ void SimpleMoleculeRenderer::RenderLighting(void) {
         if (!(*call_light)(0)) {
             return;
         }
+    } else {
+        pointLights_.clear();
+        directionalLights_.clear();
     }
 
-    if (call_light->hasUpdate()) {
+    if (call_light != nullptr && call_light->hasUpdate()) {
         auto& lights = call_light->getData();
 
         pointLights_.clear();
@@ -1250,6 +1258,11 @@ void SimpleMoleculeRenderer::RenderLighting(void) {
     buffers_[Buffers::LIGHT_POSITIONAL]->rebuffer(pointLights_);
     buffers_[Buffers::LIGHT_DIRECTIONAL]->rebuffer(directionalLights_);
 
+    if (pointLights_.empty() && directionalLights_.empty()) {
+        core::utility::log::Log::DefaultLog.WriteWarn("[SimpleMoleculeRenderer]: There are no directional or "
+                                                      "positional lights connected. Lighting not available.");
+    }
+
     lightingShader_->use();
 
     buffers_[Buffers::LIGHT_POSITIONAL]->bind(1);
@@ -1271,6 +1284,9 @@ void SimpleMoleculeRenderer::RenderLighting(void) {
     lightingShader_->setUniform("depth_tx2D", 2);
 
     lightingShader_->setUniform("camPos", cam.getPose().position);
+    lightingShader_->setUniform("inv_view_mx", this->MVinv);
+    lightingShader_->setUniform("inv_proj_mx", this->invProj);
+    lightingShader_->setUniform("use_lambert", this->useLambertParam.Param<param::BoolParam>()->Value());
 
     lightingShader_->setUniform(
         "ambientColor", glm::make_vec4(this->ambientColorParam.Param<param::ColorParam>()->Value().data()));
