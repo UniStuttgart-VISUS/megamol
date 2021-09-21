@@ -29,6 +29,7 @@ uniform float k_spec = 0.1;
 uniform float k_exp = 120.0;
 
 uniform bool use_lambert = false;
+uniform bool no_lighting = false;
 
 in vec2 uv_coord;
 
@@ -104,8 +105,12 @@ void main(void) {
         retval.rgb = reflected_light * albedo.rgb;
     }
 
-    gl_FragColor = vec4(retval.xyz, 1);
+    gl_FragColor = vec4(retval.xyz, albedo.w);
     gl_FragDepth = depth;
+
+    if(no_lighting) {
+        gl_FragColor = albedo;
+    }
 
     if(albedo.w == 0.0) {
         discard;
