@@ -121,7 +121,8 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-        void RenderLines(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
+        void RenderLines(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos,
+            bool useFiltering = false, bool useClipplane = false);
 
         /**
          * Render the molecular data in stick mode.
@@ -163,17 +164,11 @@ namespace protein {
         void RenderSAS(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
-         * Test the filter module.
+         * Renders the lighting pass
          *
-         * @param mol        Pointer to the data call.
-         * @param atomPos    Pointer to the interpolated atom positions.
+         * @param noShading  If set to true, there will be no shading performed
          */
-        void RenderLinesFilter(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
-
-        /**
-         * 
-         */
-        void RenderLighting(void);
+        void RenderLighting(bool noShading = false);
 
         /**
          * Update all parameter slots.
@@ -256,9 +251,10 @@ namespace protein {
         megamol::core::param::ParamSlot useLambertParam;
         float currentZClipPos;
 
-        // new shader programs
+        // shader programs
         std::shared_ptr<glowl::GLSLProgram> sphereShader_;
         std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
+        std::shared_ptr<glowl::GLSLProgram> lineShader_;
         std::shared_ptr<glowl::GLSLProgram> lightingShader_;
 
         // the local fbo
@@ -322,6 +318,12 @@ namespace protein {
         vislib::Array<float> color2Cylinders;
         /** Connections filter */
         vislib::Array<int> conFilter;
+        /** vertex array for points */
+        vislib::Array<float> vertPoints;
+        /** vertex array for lines */
+        vislib::Array<float> vertLines;
+        /** color array for the lines */
+        vislib::Array<float> colorLines;
 
         // the list of molecular indices
         vislib::Array<vislib::StringA> molIdxList;

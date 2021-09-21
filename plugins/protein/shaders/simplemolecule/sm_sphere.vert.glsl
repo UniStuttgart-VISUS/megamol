@@ -1,7 +1,6 @@
 #version 430
 
 #include "simplemolecule/sm_common_defines.glsl"
-
 #include "simplemolecule/sm_common_input_vert.glsl"
 
 out float squarRad;

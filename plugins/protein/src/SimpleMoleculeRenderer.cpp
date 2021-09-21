@@ -77,7 +77,8 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , diffuseFactorParam("lighting::diffuseFactor", "...")
         , specularFactorParam("lighting::specularFactor", "...")
         , exponentFactorParam("lighting::specularExponent", "...")
-        , useLambertParam("lighting::lambertShading", "If turned on, the local lighting uses lambert instead of Blinn-Phong.")
+        , useLambertParam(
+              "lighting::lambertShading", "If turned on, the local lighting uses lambert instead of Blinn-Phong.")
         , currentZClipPos(-20)
         , fbo_version_(0)
         , vertex_array_(0)
@@ -260,6 +261,10 @@ bool SimpleMoleculeRenderer::create(void) {
             std::filesystem::path("simplemolecule/sm_cylinder.vert.glsl"),
             std::filesystem::path("simplemolecule/sm_cylinder.frag.glsl"));
 
+        lineShader_ = core::utility::make_shared_glowl_shader("line", shdr_options,
+            std::filesystem::path("simplemolecule/sm_line.vert.glsl"),
+            std::filesystem::path("simplemolecule/sm_line.frag.glsl"));
+
         lightingShader_ = core::utility::make_shared_glowl_shader("lighting", shdr_options,
             std::filesystem::path("simplemolecule/sm_common_lighting.vert.glsl"),
             std::filesystem::path("simplemolecule/sm_common_lighting.frag.glsl"));
@@ -267,10 +272,12 @@ bool SimpleMoleculeRenderer::create(void) {
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());
+    } catch (std::exception const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception");
-        return false;
+            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception.");
     }
 
     // generate local framebuffer
@@ -535,7 +542,7 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
 
     // render data using the current rendering mode
     if (this->currentRenderMode == LINES) {
-        this->RenderLines(mol, posInter);
+        this->RenderLines(mol, posInter, false, this->toggleZClippingParam.Param<param::BoolParam>()->Value());
     } else if (this->currentRenderMode == STICK) {
         this->RenderStick(mol, posInter, false, this->toggleZClippingParam.Param<param::BoolParam>()->Value());
     } else if (this->currentRenderMode == BALL_AND_STICK) {
@@ -543,13 +550,13 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
     } else if (this->currentRenderMode == SPACEFILLING) {
         this->RenderSpacefilling(mol, posInter, false, this->toggleZClippingParam.Param<param::BoolParam>()->Value());
     } else if (this->currentRenderMode == SPACEFILL_FILTER) {
-        this->RenderSpacefilling(mol, posInter, true);
+        this->RenderSpacefilling(mol, posInter, true, this->toggleZClippingParam.Param<param::BoolParam>()->Value());
     } else if (this->currentRenderMode == SAS) {
         this->RenderSAS(mol, posInter);
     } else if (this->currentRenderMode == LINES_FILTER) {
-        this->RenderLinesFilter(mol, posInter);
+        this->RenderLines(mol, posInter, true, this->toggleZClippingParam.Param<param::BoolParam>()->Value());
     } else if (this->currentRenderMode == STICK_FILTER) {
-        this->RenderStick(mol, posInter, true);
+        this->RenderStick(mol, posInter, true, this->toggleZClippingParam.Param<param::BoolParam>()->Value());
     }
 
     delete[] pos0;
@@ -561,7 +568,7 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
 
     // perform the lighing pass only if no framebuffer is attached
     if (cfbo == nullptr) {
-        this->RenderLighting();
+        this->RenderLighting(this->currentRenderMode == LINES);
     }
 
     // unlock the current frame
@@ -573,23 +580,37 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
 /*
  * render the atom using lines and points
  */
-void SimpleMoleculeRenderer::RenderLines(const MolecularDataCall* mol, const float* atomPos) {
-    glDisable(GL_LIGHTING);
+void SimpleMoleculeRenderer::RenderLines(const MolecularDataCall* mol, const float* atomPos, bool useFiltering, bool useClipplane) {
+    this->vertPoints.SetCount(mol->AtomCount() * 4);
+    // will be drawn as GL_LINES so each line needs 2*4 input coordinates and 2 * 3 input color values
+    this->vertLines.SetCount(mol->ConnectionCount() * 8);
+    this->colorLines.SetCount(mol->ConnectionCount() * 6);
+
+    for (int cnt = 0; cnt < mol->AtomCount(); ++cnt) {
+        this->vertPoints[4 * cnt + 0] = atomPos[3 * cnt + 0];
+        this->vertPoints[4 * cnt + 1] = atomPos[3 * cnt + 1];
+        this->vertPoints[4 * cnt + 2] = atomPos[3 * cnt + 2];
+        this->vertPoints[4 * cnt + 3] = 1.0f;
+    }
+
+    glPointSize(5.0f);
     glLineWidth(2.0f);
     // ----- draw atoms as points -----
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    // set vertex and color pointers and draw them
-    glVertexPointer(3, GL_FLOAT, 0, atomPos);
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    buffers_[Buffers::POSITION]->rebuffer(vertPoints.PeekElements(), vertPoints.Count() * sizeof(float));
+    buffers_[Buffers::COLOR]->rebuffer(atomColorTable.PeekElements(), atomColorTable.Count() * sizeof(float));
+
+    glBindVertexArray(vertex_array_);
+    lightingShader_->use();
+
+    lightingShader_->setUniform("MVP", this->MVP);
+    lightingShader_->setUniform("MVPtransp", this->MVPtransp);
+    lightingShader_->setUniform("applyFiltering", useFiltering);
+
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
-    // disable sphere shader
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
+
 
     // ----- draw bonds as lines -----
     unsigned int cnt, atomIdx0, atomIdx1;
-    glBegin(GL_LINES);
     for (cnt = 0; cnt < mol->ConnectionCount(); ++cnt) {
         // get atom indices
         atomIdx0 = mol->Connection()[2 * cnt + 0];
@@ -599,14 +620,30 @@ void SimpleMoleculeRenderer::RenderLines(const MolecularDataCall* mol, const flo
                 vislib::math::Vector<float, 3>(&atomPos[atomIdx1 * 3]))
                 .Length() > 3.0f)
             continue;
-        // set colors and vertices of first atom
-        glColor3fv(&this->atomColorTable[atomIdx0 * 3]);
-        glVertex3f(atomPos[atomIdx0 * 3 + 0], atomPos[atomIdx0 * 3 + 1], atomPos[atomIdx0 * 3 + 2]);
-        // set colors and vertices of second atom
-        glColor3fv(&this->atomColorTable[atomIdx1 * 3]);
-        glVertex3f(atomPos[atomIdx1 * 3 + 0], atomPos[atomIdx1 * 3 + 1], atomPos[atomIdx1 * 3 + 2]);
+
+        vertLines[8 * cnt + 0] = atomPos[atomIdx0 * 3 + 0];
+        vertLines[8 * cnt + 1] = atomPos[atomIdx0 * 3 + 1];
+        vertLines[8 * cnt + 2] = atomPos[atomIdx0 * 3 + 2];
+        vertLines[8 * cnt + 3] = 1.0;
+        vertLines[8 * cnt + 4] = atomPos[atomIdx1 * 3 + 0];
+        vertLines[8 * cnt + 5] = atomPos[atomIdx1 * 3 + 1];
+        vertLines[8 * cnt + 6] = atomPos[atomIdx1 * 3 + 2];
+        vertLines[8 * cnt + 7] = 1.0;
+        colorLines[6 * cnt + 0] = atomColorTable[atomIdx0 * 3 + 0];
+        colorLines[6 * cnt + 1] = atomColorTable[atomIdx0 * 3 + 1];
+        colorLines[6 * cnt + 2] = atomColorTable[atomIdx0 * 3 + 2];
+        colorLines[6 * cnt + 3] = atomColorTable[atomIdx1 * 3 + 0];
+        colorLines[6 * cnt + 4] = atomColorTable[atomIdx1 * 3 + 1];
+        colorLines[6 * cnt + 5] = atomColorTable[atomIdx1 * 3 + 2];
     }
-    glEnd(); // GL_LINES
+    buffers_[Buffers::POSITION]->rebuffer(vertLines.PeekElements(), vertLines.Count() * sizeof(float));
+    buffers_[Buffers::COLOR]->rebuffer(colorLines.PeekElements(), colorLines.Count() * sizeof(float));
+
+    glDrawArrays(GL_LINES, 0, mol->ConnectionCount() * 2);
+
+    glUseProgram(0);
+    glBindVertexArray(0);
+
     glEnable(GL_LIGHTING);
 }
 
@@ -1077,83 +1114,6 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
 }
 
 /*
- * renderLinesFilter
- *
- * Helper function to test the filter module.
- */
-void SimpleMoleculeRenderer::RenderLinesFilter(const MolecularDataCall* mol, const float* atomPos) {
-
-    vislib::Array<unsigned int> visAtmIdx;
-    vislib::Array<unsigned int> visConIdx;
-
-    unsigned int visAtmCnt = 0, visConCnt = 0;
-    unsigned int m, at, c;
-    unsigned int firstAtmIdx, lastAtmIdx, firstConIdx, lastConIdx;
-
-    visAtmIdx.SetCapacityIncrement(2000);
-    visConIdx.SetCapacityIncrement(2000);
-
-    // Loop through all molecules
-    for (m = 0; m < mol->MoleculeCount(); m++) {
-
-        // If the molecule is visible
-        if (mol->Molecules()[m].Filter() == 1) {
-
-            // Get indices of all atoms in this molecule
-            firstAtmIdx = mol->Residues()[mol->Molecules()[m].FirstResidueIndex()]->FirstAtomIndex();
-
-            lastAtmIdx =
-                mol->Residues()[mol->Molecules()[m].FirstResidueIndex() + mol->Molecules()[m].ResidueCount() - 1]
-                    ->FirstAtomIndex() +
-                mol->Residues()[mol->Molecules()[m].FirstResidueIndex() + mol->Molecules()[m].ResidueCount() - 1]
-                    ->AtomCount() -
-                1;
-
-            for (at = firstAtmIdx; at <= lastAtmIdx; at++) {
-                visAtmIdx.Add(at);
-            }
-
-            visAtmCnt += (lastAtmIdx - firstAtmIdx + 1);
-
-            // Get indices of all connections in this molecule
-            if (mol->Molecules()[m].ConnectionCount() > 0) {
-
-                firstConIdx = mol->Molecules()[m].FirstConnectionIndex();
-
-                lastConIdx =
-                    mol->Molecules()[m].FirstConnectionIndex() + (mol->Molecules()[m].ConnectionCount() - 1) * 2;
-
-                for (c = firstConIdx; c <= lastConIdx; c += 2) {
-
-                    visConIdx.Add(mol->Connection()[c]);
-                    visConIdx.Add(mol->Connection()[c + 1]);
-                }
-                visConCnt += (lastConIdx - firstConIdx + 2);
-            }
-        }
-    }
-
-    glDisable(GL_LIGHTING);
-    glLineWidth(2.0f);
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-
-    glVertexPointer(3, GL_FLOAT, 0, atomPos);
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
-
-    // Draw visible atoms
-    glDrawElements(GL_POINTS, visAtmCnt, GL_UNSIGNED_INT, visAtmIdx.PeekElements());
-    // Draw vivisble bonds
-    glDrawElements(GL_LINES, visConCnt, GL_UNSIGNED_INT, visConIdx.PeekElements());
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-
-    glEnable(GL_LIGHTING);
-}
-
-/*
  * update parameters
  */
 void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, const protein_calls::BindingSiteCall* bs) {
@@ -1221,7 +1181,7 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
     }
 }
 
-void SimpleMoleculeRenderer::RenderLighting(void) {
+void SimpleMoleculeRenderer::RenderLighting(bool noShading) {
 
     auto call_light = this->getLightsSlot.CallAs<core::view::light::CallLight>();
     if (call_light != nullptr) {
@@ -1287,6 +1247,7 @@ void SimpleMoleculeRenderer::RenderLighting(void) {
     lightingShader_->setUniform("inv_view_mx", this->MVinv);
     lightingShader_->setUniform("inv_proj_mx", this->invProj);
     lightingShader_->setUniform("use_lambert", this->useLambertParam.Param<param::BoolParam>()->Value());
+    lightingShader_->setUniform("no_lighting", noShading);
 
     lightingShader_->setUniform(
         "ambientColor", glm::make_vec4(this->ambientColorParam.Param<param::ColorParam>()->Value().data()));
