@@ -144,6 +144,27 @@ function(require_external NAME)
       GIT_TAG "v1.3.0"
       INCLUDE_DIR "include")
 
+  # oneTBB
+  elseif(NAME STREQUAL "tbb")
+    if (TARGET tbb)
+      return()
+    endif()
+
+    set(TBB_LIB "lib/tbb<SUFFIX>.lib")
+
+    add_external_project(tbb STATIC
+      GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
+      GIT_TAG "v2021.3.0"
+      CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DTBB_TEST=OFF
+      DEBUG_SUFFIX _debug
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_LIB}"
+    )
+
+    add_external_library(tbb
+      LIBRARY ${TBB_LIB}
+      DEBUG_SUFFIX _debug
+    )
+
   # tinygltf
   elseif(NAME STREQUAL "tinygltf")
     if(TARGET tinygltf)
