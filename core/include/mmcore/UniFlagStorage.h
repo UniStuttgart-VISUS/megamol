@@ -7,11 +7,8 @@
 
 #pragma once
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
-
-#include <glowl/GLSLProgram.hpp>
-
 #include "vislib/graphics/gl/IncludeAllGL.h"
+#include <glowl/GLSLProgram.hpp>
 
 #include "FlagCollections.h"
 #include "FlagStorage.h"
