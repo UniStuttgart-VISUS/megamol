@@ -30,6 +30,7 @@ view::AbstractCallRender& view::AbstractCallRender::operator=(
     this->_instTime = rhs._instTime;
     this->_isInSituTime = rhs._isInSituTime;
     this->_backgroundCol = rhs._backgroundCol;
+    this->_viewResoltion = rhs._viewResoltion;
 
     return *this;
 }

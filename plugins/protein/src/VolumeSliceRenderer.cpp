@@ -24,7 +24,7 @@ using namespace megamol::core::utility::log;
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer (CTOR)
  */
-VolumeSliceRenderer::VolumeSliceRenderer( void ) : Renderer2DModule (),
+VolumeSliceRenderer::VolumeSliceRenderer( void ) : Renderer2DModuleGL (),
         volDataCallerSlot( "getData", "Connects the volume slice rendering with data storage" ) {
     // volume data caller slot
     this->volDataCallerSlot.SetCompatibleCall<VolumeSliceCallDescription>();

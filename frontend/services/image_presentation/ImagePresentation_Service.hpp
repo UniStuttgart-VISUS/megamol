@@ -11,6 +11,7 @@
 
 #include "ImagePresentationEntryPoints.h"
 #include "ImageWrapper.h"
+#include "ImagePresentationSink.h"
 
 #include <list>
 
@@ -46,6 +47,8 @@ public:
     // that are triggered to render something into images.
     // The resulting images are then presented in some appropriate way: drawn into a window, written to disk, sent via network, ...
     void RenderNextFrame();
+    void PresentRenderedImages();
+
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
     //
@@ -53,6 +56,8 @@ public:
     // void setShutdown(const bool s = true);
 
     using ImageWrapper = megamol::frontend_resources::ImageWrapper;
+    using ImagePresentationSink = frontend_resources::ImagePresentationSink;
+
     using EntryPointExecutionCallback =
         std::function<bool(
               void*
@@ -78,7 +83,7 @@ private:
         std::vector<megamol::frontend::FrontendResource> entry_point_resources;
 
         EntryPointExecutionCallback execute;
-        std::reference_wrapper<ImageWrapper> execution_result_image;
+        ImageWrapper execution_result_image;
     };
     std::list<GraphEntryPoint> m_entry_points;
 
@@ -87,7 +92,8 @@ private:
     bool rename_entry_point(std::string oldName, std::string newName);
     bool clear_entry_points();
 
-    std::list<ImageWrapper> m_wrapped_images;
+    std::list<ImagePresentationSink> m_presentation_sinks;
+    void present_images_to_glfw_window(std::vector<ImageWrapper> const& images);
 
     std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
     const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;

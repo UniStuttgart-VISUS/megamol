@@ -1027,9 +1027,6 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 
 
 bool SphereRenderer::Render(view::CallRender3DGL& call) {
-    auto const lhsFBO = call.GetFramebufferObject();
-    lhsFBO->Enable();
-
     // timer.BeginFrame();
 
     auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
@@ -1076,21 +1073,19 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     this->getClipData(this->curClipDat, this->curClipCol);
 
     // Camera 
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    // Generate complete snapshot and calculate matrices
-    //auto snap_content = thecam::snapshot_content::camera_coordinate_system; /// Will be overwritten in camera.inl calc_matrices() line 216ff ...
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    this->curCamPos = snapshot.position;
-    this->curCamView = snapshot.view_vector;
-    this->curCamRight = snapshot.right_vector;
-    this->curCamUp = snapshot.up_vector;
-    this->curCamNearClip = snapshot.frustum_near;
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
+    auto fbo = call.GetFramebuffer();
 
-    glm::mat4 view = viewTemp;
-    glm::mat4 proj = projTemp;
+    this->curCamPos = glm::vec4(cam_pose.position,1.0);
+    this->curCamView = glm::vec4(cam_pose.direction,1.0);
+    this->curCamUp = glm::vec4(cam_pose.up,1.0);
+    this->curCamRight = glm::vec4(glm::cross(cam_pose.direction, cam_pose.up), 1.0);
+    this->curCamNearClip = cam_intrinsics.near_plane;
+
     this->curMVinv = glm::inverse(view);
     this->curMVtransp = glm::transpose(view);
     this->curMVP = proj * view;
@@ -1141,13 +1136,12 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // Viewport
-    auto viewport = cam.resolution_gate();
-    this->curVpWidth = viewport.width();
-    this->curVpHeight = viewport.height();
+    this->curVpWidth = fbo->getWidth();
+    this->curVpHeight = fbo->getHeight();
     this->curViewAttrib[0] = 0.0f;
     this->curViewAttrib[1] = 0.0f;
-    this->curViewAttrib[2] = static_cast<float>(viewport.width());
-    this->curViewAttrib[3] = static_cast<float>(viewport.height());
+    this->curViewAttrib[2] = static_cast<float>(this->curVpWidth);
+    this->curViewAttrib[3] = static_cast<float>(this->curVpHeight);
     if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;
     if (this->curViewAttrib[3] < 1.0f) this->curViewAttrib[3] = 1.0f;
     this->curViewAttrib[2] = 2.0f / this->curViewAttrib[2];
@@ -1207,8 +1201,6 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // timer.EndFrame();
-
-    lhsFBO->Disable();
 
     return retval;
 }

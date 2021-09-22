@@ -84,9 +84,6 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
     if (cr == NULL)
         return false;
 
-    // Restore framebuffer that was bound on the way in
-    glBindFramebuffer(GL_FRAMEBUFFER, m_screenRestoreFBO);
-
     // get rhs texture call
     CallTexture2D* ct = this->m_input_texture_call.CallAs<CallTexture2D>();
     if (ct == NULL)
@@ -101,18 +98,8 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
         depth_texture = cdt->getData();
     }
 
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    auto width = cam.resolution_gate().width();
-    auto height = cam.resolution_gate().height();
-
-    // obtain camera information
-    //  core::view::Camera_2 cam(cr->GetCamera());
-    //  cam_type::snapshot_type snapshot;
-    //  cam_type::matrix_type view_tmp, proj_tmp;
-    //  cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    //  glm::mat4 view_mx = view_tmp;
-    //  glm::mat4 proj_mx = proj_tmp;
+    auto width = call.GetFramebuffer()->getWidth();
+    auto height = call.GetFramebuffer()->getHeight();
 
     // get input texture from call
     auto input_texture = ct->getData();
@@ -160,6 +147,4 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
 }
 
 void megamol::compositing::DrawToScreen::PreRender(core::view::CallRender3DGL& call) {
-
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_screenRestoreFBO);
 }

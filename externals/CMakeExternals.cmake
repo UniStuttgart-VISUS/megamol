@@ -82,7 +82,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glm
       GIT_REPOSITORY https://github.com/g-truc/glm.git
-      GIT_TAG "0.9.8")
+      GIT_TAG "0.9.9.8")
 
   # glowl
   elseif(NAME STREQUAL "glowl")
@@ -94,6 +94,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/invor/glowl.git
       GIT_TAG "v0.4f"
       INCLUDE_DIR "include")
+    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD)
 
   # json
   elseif(NAME STREQUAL "json")

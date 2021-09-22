@@ -12,15 +12,22 @@ using namespace megamol::infovis;
 
 void Renderer2D::computeDispatchSizes(
     uint64_t numItems, GLint const localSizes[3], GLint const maxCounts[3], GLuint dispatchCounts[3]) const {
-    const auto localSize = localSizes[0] * localSizes[1] * localSizes[2];
-    const uint64_t needed_groups = (numItems + localSize - 1) / localSize; // round up int div
-    dispatchCounts[0] = std::clamp<GLint>(needed_groups, 1, maxCounts[0]);
-    dispatchCounts[1] = std::clamp<GLint>((needed_groups + dispatchCounts[0] - 1) / dispatchCounts[0], 1, maxCounts[1]);
-    const auto tmp = dispatchCounts[0] * dispatchCounts[1];
-    dispatchCounts[2] = std::clamp<GLint>((needed_groups + tmp - 1) / tmp, 1, maxCounts[2]);
-    const uint64_t totalCounts = dispatchCounts[0] * dispatchCounts[1] * dispatchCounts[2];
-    ASSERT(totalCounts * localSize >= numItems);
-    ASSERT(totalCounts * localSize - numItems < localSize);
+    if (numItems > 0) {
+        const auto localSize = localSizes[0] * localSizes[1] * localSizes[2];
+        const uint64_t needed_groups = (numItems + localSize - 1) / localSize; // round up int div
+        dispatchCounts[0] = std::clamp<GLint>(needed_groups, 1, maxCounts[0]);
+        dispatchCounts[1] =
+            std::clamp<GLint>((needed_groups + dispatchCounts[0] - 1) / dispatchCounts[0], 1, maxCounts[1]);
+        const auto tmp = dispatchCounts[0] * dispatchCounts[1];
+        dispatchCounts[2] = std::clamp<GLint>((needed_groups + tmp - 1) / tmp, 1, maxCounts[2]);
+        const uint64_t totalCounts = dispatchCounts[0] * dispatchCounts[1] * dispatchCounts[2];
+        ASSERT(totalCounts * localSize >= numItems);
+        ASSERT(totalCounts * localSize - numItems < localSize);
+    } else {
+        dispatchCounts[0] = 0;
+        dispatchCounts[1] = 0;
+        dispatchCounts[2] = 0;
+    }
 }
 
 void Renderer2D::makeDebugLabel(GLenum identifier, GLuint name, const char* label) const {

@@ -16,7 +16,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/Verdana.inc"
@@ -26,7 +26,7 @@ namespace megamol {
 namespace protein {
 
 
-class VariantMatchRenderer : public megamol::core::view::Renderer2DModule {
+class VariantMatchRenderer : public megamol::core::view::Renderer2DModuleGL {
 
 public:
 

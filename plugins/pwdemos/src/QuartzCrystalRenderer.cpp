@@ -14,6 +14,8 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/utility/log/Log.h"
 
+#include <glm/ext.hpp>
+
 namespace megamol {
 namespace demos {
 
@@ -74,13 +76,9 @@ bool CrystalRenderer::Render(core::view::CallRender3DGL& call) {
 
     c.AssertMesh();
 
-	core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
-    glm::mat4 proj = projTemp;
-    glm::mat4 view = viewTemp;
+	core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();

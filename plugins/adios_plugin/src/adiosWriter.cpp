@@ -62,7 +62,7 @@ bool adiosWriter::create(void) {
     try {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Initializing with MPI");
         if (MpiInitialized) {
-            adiosInst = adios2::ADIOS(this->mpi_comm_, adios2::DebugON);
+            adiosInst = adios2::ADIOS(this->mpi_comm_);
         } else {
             adiosInst = adios2::ADIOS(adios2::DebugON);
         }

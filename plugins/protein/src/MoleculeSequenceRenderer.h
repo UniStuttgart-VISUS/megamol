@@ -1,7 +1,7 @@
 #ifndef MOLECULESEQUENCERENDERER_H
 #define MOLECULESEQUENCERENDERER_H
 
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
 
@@ -14,9 +14,7 @@ namespace core {
 }
 
 namespace protein {
-class MoleculeSequenceRenderer :
-	public megamol::core::view::Renderer2DModule
-{
+class MoleculeSequenceRenderer : public megamol::core::view::Renderer2DModuleGL {
 public:
     static const char *ClassName(void)
     {
