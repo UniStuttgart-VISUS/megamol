@@ -34,6 +34,9 @@ namespace core {
     public:
         // enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2 };
 
+        using index_type = int32_t;
+        using index_vector = std::vector<index_type>;
+
         /**
          * Answer the name of this module.
          *
@@ -136,16 +139,28 @@ namespace core {
         bool writeMetaDataCallback(core::Call& caller);
 
         void serializeData();
-        static void check_bits(uint32_t flag_bit, std::vector<int32_t>& bit_starts, std::vector<int32_t>& bit_ends,
-            int32_t& curr_bit_start, int32_t x, const std::shared_ptr<FlagStorage::FlagVectorType>& flags);
-        static void terminate_bit(const std::shared_ptr<FlagStorage::FlagVectorType>& flags, std::vector<int32_t>& bit_ends,
-            int32_t curr_bit_start);
-        static nlohmann::json make_bit_array(
-            const std::vector<int32_t>& bit_starts, const std::vector<int32_t>& bit_ends);
-        void array_to_bits(const nlohmann::json& json, uint32_t flag_bit);
+        static void check_bits(FlagStorage::FlagItemType flag_bit, index_vector& bit_starts, index_vector& bit_ends,
+            index_type& curr_bit_start, index_type x, const std::shared_ptr<FlagStorage::FlagVectorType>& flags);
+        static void terminate_bit(const std::shared_ptr<FlagStorage::FlagVectorType>& flags, index_vector& bit_ends,
+            index_type curr_bit_start);
+        static nlohmann::json make_bit_array(const index_vector& bit_starts, const index_vector& bit_ends);
+        void array_to_bits(const nlohmann::json& json, FlagStorage::FlagItemType flag_bit);
         void serializeCPUData();
         void deserializeCPUData();
         bool onJSONChanged(param::ParamSlot& slot);
+
+        /*class BitsChecker {
+            UniFlagStorage::index_vector enabled_starts, enabled_ends;
+            UniFlagStorage::index_vector filtered_starts, filtered_ends;
+            UniFlagStorage::index_vector selected_starts, selected_ends;
+            void operator()(const tbb::blocked_range<int32_t>& r) {
+                for (int32_t i = r.begin(); i != r.end(); ++i) {
+                    check_bits(FlagStorage::ENABLED, enabled_starts, enabled_ends, curr_enabled_start, i, cdata);
+                    check_bits(FlagStorage::FILTERED, filtered_starts, filtered_ends, curr_filtered_start, i, cdata);
+                    check_bits(FlagStorage::SELECTED, selected_starts, selected_ends, curr_selected_start, i, cdata);
+                }
+            }
+        };*/
 
         /**
          * Helper to copy CPU flags to GL flags

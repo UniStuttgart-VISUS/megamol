@@ -102,6 +102,7 @@ bool UniFlagStorage::writeDataCallback(core::Call& caller) {
         this->version = fc->version();
         cpu_stale = true;
 
+        // TODO try to avoid this and only fetch the serialization data from the GPU!!!! (if it works)
         GL2CPUCopy();
         serializeCPUData();
     }
@@ -157,8 +158,8 @@ void UniFlagStorage::serializeData() {
     // foreach bit: call compute shader, pray
 }
 
-void UniFlagStorage::check_bits(uint32_t flag_bit, std::vector<int32_t>& bit_starts, std::vector<int32_t>& bit_ends,
-    int32_t& curr_bit_start, int32_t x, const std::shared_ptr<FlagStorage::FlagVectorType>& flags) {
+void UniFlagStorage::check_bits(FlagStorage::FlagItemType flag_bit, index_vector& bit_starts, index_vector& bit_ends,
+    index_type& curr_bit_start, index_type x, const std::shared_ptr<FlagStorage::FlagVectorType>& flags) {
     auto& f = (*flags)[x];
     if ((f & flag_bit) > 0) {
         if (curr_bit_start == -1) {
@@ -173,14 +174,14 @@ void UniFlagStorage::check_bits(uint32_t flag_bit, std::vector<int32_t>& bit_sta
     }
 }
 
-void UniFlagStorage::terminate_bit(const std::shared_ptr<FlagStorage::FlagVectorType>& cdata, std::vector<int32_t>& bit_ends, int32_t curr_bit_start) {
+void UniFlagStorage::terminate_bit(
+    const std::shared_ptr<FlagStorage::FlagVectorType>& cdata, index_vector& bit_ends, index_type curr_bit_start) {
     if (curr_bit_start > -1) {
         bit_ends.push_back(cdata->size() - 1);
     }
 }
 
-nlohmann::json UniFlagStorage::make_bit_array(
-    const std::vector<int32_t>& bit_starts, const std::vector<int32_t>& bit_ends) {
+nlohmann::json UniFlagStorage::make_bit_array(const index_vector& bit_starts, const index_vector& bit_ends) {
     auto the_array = nlohmann::json::array();
     for (uint32_t x = 0; x < bit_starts.size(); ++x) {
         const auto& s = bit_starts[x];
@@ -194,17 +195,17 @@ nlohmann::json UniFlagStorage::make_bit_array(
     return the_array;
 }
 
-void UniFlagStorage::array_to_bits(const nlohmann::json& json, uint32_t flag_bit) {
+void UniFlagStorage::array_to_bits(const nlohmann::json& json, FlagStorage::FlagItemType flag_bit) {
     for (auto& j: json) {
         if (j.is_array()) {
-            int32_t from, to;
+            index_type from, to;
             j[0].get_to(from);
             j[1].get_to(to);
-            for (int32_t x = from; x <= to; ++x) {
+            for (index_type x = from; x <= to; ++x) {
                 (*theCPUData->flags)[x] |= flag_bit;
             }
         } else {
-            int32_t idx;
+            index_type idx;
             j.get_to(idx);
             (*theCPUData->flags)[idx] |= flag_bit;
         }
@@ -216,23 +217,20 @@ void UniFlagStorage::serializeCPUData() {
     const auto& cdata = theCPUData->flags;
 
     // enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2, SOFTSELECTED = 1 << 3 };
-    std::vector<int32_t> enabled_starts, enabled_ends;
-    std::vector<int32_t> filtered_starts, filtered_ends;
-    std::vector<int32_t> selected_starts, selected_ends;
-    //std::vector<int32_t> softselected_starts, softselected_ends;
-    int32_t curr_enabled_start = -1, curr_filtered_start = -1, curr_selected_start = -1; //, curr_softselected_start = -1;
+    index_vector enabled_starts, enabled_ends;
+    index_vector filtered_starts, filtered_ends;
+    index_vector selected_starts, selected_ends;
+    index_type curr_enabled_start = -1, curr_filtered_start = -1, curr_selected_start = -1;
 
-    for (int32_t x = 0; x < cdata->size(); ++x) {
+    for (index_type x = 0; x < cdata->size(); ++x) {
         check_bits(FlagStorage::ENABLED, enabled_starts, enabled_ends, curr_enabled_start, x, cdata);
         check_bits(FlagStorage::FILTERED, filtered_starts, filtered_ends, curr_filtered_start, x, cdata);
         check_bits(FlagStorage::SELECTED, selected_starts, selected_ends, curr_selected_start, x, cdata);
-        //check_bits(FlagStorage::SOFTSELECTED, softselected_starts, softselected_ends, curr_softselected_start, x, cdata);
     }
 
     terminate_bit(cdata, enabled_ends, curr_enabled_start);
     terminate_bit(cdata, filtered_ends, curr_filtered_start);
     terminate_bit(cdata, selected_ends, curr_selected_start);
-    //terminate_bit(cdata, softselected_ends, curr_softselected_start);
 
     ASSERT(enabled_starts.size() == enabled_ends.size());
     nlohmann::json ser_data;
