@@ -11,15 +11,16 @@
 
 
 #include "AbstractParameterGroupWidget.h"
-#include "mmcore/view/AbstractView3D.h"
+#include "ImageWidget_gl.h"
+#include "mmcore/utility/RenderUtils.h"
+#include "mmcore/view/CameraControllers.h"
 
 
 namespace megamol {
 namespace gui {
 
-
-    typedef megamol::core::view::AbstractView3D::DefaultView DefaultView_t;
-    typedef megamol::core::view::AbstractView3D::DefaultOrientation DefaultOrientation_t;
+    typedef megamol::core::view::Camera3DController::DefaultView DefaultView_t;
+    typedef megamol::core::view::Camera3DController::DefaultOrientation DefaultOrientation_t;
 
 
     /** ***********************************************************************
@@ -72,7 +73,7 @@ namespace gui {
         bool Check(bool only_check, ParamPtrVector_t& params) override;
 
         bool Draw(ParamPtrVector_t params, const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
-            megamol::core::utility::PickingBuffer* inout_picking_buffer) override;
+            megamol::core::utility::PickingBuffer* inout_picking_buffer, ImGuiID in_override_header_state) override;
 
     private:
         // VARIABLES --------------------------------------------------------------

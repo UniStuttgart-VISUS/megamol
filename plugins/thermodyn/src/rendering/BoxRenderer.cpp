@@ -100,11 +100,9 @@ bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::Cal
         return false;
     }
 
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    core::view::Camera_2::snapshot_type cam_snap;
-    core::view::Camera_2::matrix_type view, proj;
-    cam.calc_matrices(cam_snap, view, proj, core::thecam::snapshot_content::all);
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
 
     // upload data
     glBindVertexArray(vao_);

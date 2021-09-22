@@ -3,7 +3,6 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/view/Camera_2.h"
 
 #include "raygen.h"
 
@@ -121,32 +120,33 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
     }
 
     // Camera
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
     // Generate complete snapshot and calculate matrices
-    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
-    auto const depth_A = projTemp(2, 2);
-    auto const depth_B = projTemp(2, 3);
-    auto const depth_C = projTemp(3, 2);
+    // is this a) correct and b) actually needed for the new cam?
+    auto const depth_A = proj[2][2];//projTemp(2, 2);
+    auto const depth_B = proj[3][2]; // projTemp(2, 3);
+    auto const depth_C = proj[2][3]; //projTemp(3, 2);
     auto const depth_params = glm::vec3(depth_A, depth_B, depth_C);
-    auto curCamPos = snapshot.position;
-    auto curCamView = snapshot.view_vector;
-    auto curCamRight = snapshot.right_vector;
-    auto curCamUp = snapshot.up_vector;
+    auto curCamPos = cam_pose.position;
+    auto curCamView = cam_pose.direction;
+    auto curCamUp = cam_pose.up;
+    auto curCamRight = glm::cross(cam_pose.direction, cam_pose.up);
     // auto curCamNearClip = snapshot.frustum_near;
     auto curCamNearClip = 100;
-    auto curCamAspect = snapshot.resolution_aspect;
-    auto hfov = cam.half_aperture_angle_radians();
+    auto curCamAspect = cam_intrinsics.aspect;
+    auto hfov = cam_intrinsics.fovy / 2.0f;
 
     auto th = std::tan(hfov) * curCamNearClip;
     auto rw = th * curCamAspect;
 
-    _frame_state.camera_center = glm::vec3(curCamPos.x(), curCamPos.y(), curCamPos.z());
-    _frame_state.camera_front = glm::vec3(curCamView.x(), curCamView.y(), curCamView.z());
-    _frame_state.camera_right = glm::vec3(curCamRight.x(), curCamRight.y(), curCamRight.z());
-    _frame_state.camera_up = glm::vec3(curCamUp.x(), curCamUp.y(), curCamUp.z());
+    _frame_state.camera_center = glm::vec3(curCamPos.x, curCamPos.y, curCamPos.z);
+    _frame_state.camera_front = glm::vec3(curCamView.x, curCamView.y, curCamView.z);
+    _frame_state.camera_right = glm::vec3(curCamRight.x, curCamRight.y, curCamRight.z);
+    _frame_state.camera_up = glm::vec3(curCamUp.x, curCamUp.y, curCamUp.z);
 
     _frame_state.rw = rw;
     _frame_state.th = th;
@@ -159,11 +159,10 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
     _frame_state.depth_params = depth_params;
     _frame_state.intensity = intensity_slot_.Param<core::param::FloatParam>()->Value();
 
-    if (old_cam_snap.position != snapshot.position || old_cam_snap.view_vector != snapshot.view_vector ||
-        old_cam_snap.right_vector != snapshot.right_vector || old_cam_snap.up_vector != snapshot.up_vector ||
-        is_dirty()) {
+    if (old_cam_pose.position != cam_pose.position || old_cam_pose.direction != cam_pose.direction ||
+        old_cam_pose.up != cam_pose.up || is_dirty()) {
         _frame_state.frameIdx = 0;
-        old_cam_snap = snapshot;
+        old_cam_pose = cam_pose;
         reset_dirty();
     } else {
         ++_frame_state.frameIdx;

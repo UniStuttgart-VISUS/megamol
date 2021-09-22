@@ -24,8 +24,7 @@ using megamol::core::utility::log::Log;
  */
 view::HeadView::HeadView(void) : AbstractView(),
 viewSlot("view", "Connects to a view"),
-tickSlot("tick", "Connects to a module that needs a tick"),
-override_view_call(nullptr) {
+tickSlot("tick", "Connects to a module that needs a tick") {
 
     this->viewSlot.SetCompatibleCall<view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->viewSlot);
@@ -53,15 +52,6 @@ float view::HeadView::DefaultTime(double instTime) const {
 
 
 /*
- * view::HeadView::GetCameraSyncNumber
- */
-unsigned int view::HeadView::GetCameraSyncNumber(void) const {
-    Log::DefaultLog.WriteWarn("HeadView::GetCameraSyncNumber unsupported");
-    return 0u;
-}
-
-
-/*
  * view::HeadView::SerialiseCamera
  */
 void view::HeadView::SerialiseCamera(vislib::Serialiser& serialiser) const {
@@ -80,10 +70,8 @@ void view::HeadView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 /*
  * view::HeadView::Render
  */
-void view::HeadView::Render(const mmcRenderViewContext& context, Call* call) {
-    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
-
-    auto cam  = view->GetCamera();
+view::ImageWrapper view::HeadView::Render(double time, double instanceTime) {
+    CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
         std::unique_ptr<CallRenderViewGL> last_view_call = nullptr;
@@ -92,24 +80,16 @@ void view::HeadView::Render(const mmcRenderViewContext& context, Call* call) {
             last_view_call = std::make_unique<CallRenderViewGL>(*view);
             *view = *this->override_view_call;
         }
-        else {
-            //const_cast<vislib::math::Rectangle<int>&>(view->GetViewport()).Set(0, 0, this->width, this->height);
-            thecam::math::rectangle<int> rect;
-            rect.bottom() = 0;
-            rect.left() = 0;
-            rect.right() = this->width;
-            rect.top() = this->height;
-            cam.image_tile.operator()(rect);
-        }
 
-        view->SetInstanceTime(context.InstanceTime);
-        view->SetTime(static_cast<float>(context.Time));
+        view->SetInstanceTime(instanceTime);
+        view->SetTime(static_cast<float>(time));
 
         if (this->doHookCode()) {
             this->doBeforeRenderHook();
         }
 
         (*view)(CallRenderViewGL::CALL_RENDER);
+        auto fbo = view->GetFramebuffer();
 
         if (this->doHookCode()) {
             this->doAfterRenderHook();
@@ -118,16 +98,30 @@ void view::HeadView::Render(const mmcRenderViewContext& context, Call* call) {
         if (last_view_call != nullptr) {
             *view = *last_view_call;
         }
+
+        ImageWrapper::DataChannels channels =
+            ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+        unsigned int fbo_color_buffer_gl_handle =
+            fbo->getColorAttachment(0)->getTextureHandle(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+        size_t fbo_width = fbo->getWidth();
+        size_t fbo_height = fbo->getHeight();
+
+        return frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
     }
 
     auto* tick = this->tickSlot.CallAs<job::TickCall>();
 
-    if (tick != nullptr)
-    {
+    if (tick != nullptr) {
         (*tick)(0);
     }
+
+    return GetRenderingResult();
 }
 
+view::ImageWrapper megamol::core::view::HeadView::GetRenderingResult() const {
+    return frontend_resources::wrap_image<WrappedImageType::ByteArray>(
+        {0, 0}, nullptr, ImageWrapper::DataChannels::RGBA8);
+}
 
 /*
  * view::HeadView::ResetView
@@ -167,27 +161,14 @@ bool view::HeadView::OnRenderView(Call& call) {
 
     this->override_view_call = view;
 
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
+    double time = view->Time();
+    double instanceTime = view->InstanceTime();
 
-    context.Time = view->Time();
-    context.InstanceTime = view->InstanceTime();
-
-    this->Render(context, &call);
+    this->Render(time, instanceTime);
 
     this->override_view_call = nullptr;
 
     return true;
-}
-
-
-/*
- * view::HeadView::UpdateFreeze
- */
-void view::HeadView::UpdateFreeze(bool freeze) {
-    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
-
-    if (view != nullptr) (*view)(freeze ? CallRenderViewGL::CALL_FREEZE : CallRenderViewGL::CALL_UNFREEZE);
 }
 
 

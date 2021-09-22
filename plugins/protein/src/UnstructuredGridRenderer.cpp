@@ -162,10 +162,8 @@ bool protein::UnstructuredGridRenderer::Render(core::view::CallRender3DGL& call)
     if( cr3d == NULL ) return false;
 
     // Camera
-    cr3d->GetCamera(cameraInfo);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cameraInfo.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    cameraInfo = cr3d->GetCamera();
+    auto cam_pose = cameraInfo.get<megamol::core::view::Camera::Pose>();
 
     float callTime = cr3d->Time();
 
@@ -236,11 +234,8 @@ bool protein::UnstructuredGridRenderer::Render(core::view::CallRender3DGL& call)
 
     glScalef( scale, scale, scale);
 
-    float viewportStuff[4] = {
-        cameraInfo.image_tile().left(),
-        cameraInfo.image_tile().bottom(),
-        cameraInfo.image_tile().width(),
-        cameraInfo.image_tile().height()};
+    // TODO double-check whether this renderer is ever used with viewport != full fbo
+    float viewportStuff[4] = { 0, 0, cr3d->GetFramebuffer()->getWidth(), cr3d->GetFramebuffer()->getHeight()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -259,9 +254,9 @@ bool protein::UnstructuredGridRenderer::Render(core::view::CallRender3DGL& call)
     //glEnableClientState(GL_COLOR_ARRAY);
     // set shader variables
     glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, &cameraInfo.view_vector().x());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, &cameraInfo.right_vector().x());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, &cameraInfo.up_vector().x());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
     // draw points
     // set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, posInter);

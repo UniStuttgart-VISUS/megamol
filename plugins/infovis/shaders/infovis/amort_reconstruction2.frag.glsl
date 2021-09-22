@@ -2,10 +2,8 @@
 
 uniform sampler2DArray src_tex2D;
 
-uniform int frametype;
 uniform int h;
 uniform int w;
-uniform int approach;
 
 uniform mat4 mMa;
 uniform mat4 mMb;

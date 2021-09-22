@@ -7,19 +7,15 @@
 
 #ifndef MEGAMOL_CINEMATIC_KEYFRAMEMANIPULATORS_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAMEMANIPULATORS_H_INCLUDED
+#pragma once
+
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ButtonParam.h"
-
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/math/Cuboid.h"
-#include "mmcore/utility/log/Log.h"
-
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
+#include "mmcore/view/Camera.h"
 #include "Keyframe.h"
 #include "CinematicUtils.h"
+#include <glm/glm.hpp>
 
 
 namespace megamol {
@@ -42,7 +38,7 @@ namespace cinematic {
         void UpdateExtents(vislib::math::Cuboid<float>& inout_bbox);
 
         bool UpdateRendering(const std::shared_ptr<std::vector<Keyframe>> keyframes, Keyframe selected_keyframe, glm::vec3 first_ctrl_pos, glm::vec3 last_ctrl_pos,
-            const camera_state_type& minimal_snapshot, glm::vec2 viewport_dim, glm::mat4 mvp);
+             core::view::Camera const& camera, glm::vec2 viewport_dim, glm::mat4 mvp);
 
         bool PushRendering(CinematicUtils &utils);
 
@@ -119,7 +115,7 @@ namespace cinematic {
             glm::mat4 mvp;
             glm::vec3 first_ctrl_point;
             glm::vec3 last_ctrl_point;
-            camera_state_type cam_min_snapshot;
+            core::view::Camera cam;
             vislib::math::Cuboid<float> bbox;
             std::shared_ptr<Manipulator> hit;
             glm::vec2 last_mouse;
