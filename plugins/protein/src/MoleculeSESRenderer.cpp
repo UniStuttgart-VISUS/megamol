@@ -25,6 +25,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/PointLight.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"

@@ -33,30 +33,8 @@ uniform bool no_lighting = false;
 
 in vec2 uv_coord;
 
-vec3 blinnPhong(vec3 normal, vec3 lightdirection, vec3 v){
-    vec3 Colorout;
-
-    //Ambient Part
-    vec3 Camb = k_amb * ambientColor.rgb;
-
-    //Diffuse Part
-    vec3 Cdiff = diffuseColor.rgb * k_diff * clamp(dot(normal,lightdirection),0,1);
-
-    //Specular Part
-    vec3 h = normalize(v + lightdirection);
-    normal = normal / sqrt(normal.x*normal.x + normal.y*normal.y + normal.z*normal.z);
-    float costheta = clamp(dot(h,normal),0,1);
-    vec3 Cspek = specularColor.rgb * k_spec * ((k_exp + 2)/(2 * 3.141592f)) * pow(costheta, k_exp);
-
-    //Final Equation
-    Colorout = Camb + Cdiff + Cspek;
-    return Colorout;
-}
-
-float lambert(vec3 normal, vec3 light_dir)
-{
-    return clamp(dot(normal,light_dir),0.0,1.0);
-}
+#include "simplemolecule/sm_common_blinn_phong.glsl"
+#include "simplemolecule/sm_common_lambert.glsl"
 
 vec3 depthToWorldPos(float depth, vec2 uv, mat4 invview, mat4 invproj) {
     float z = depth * 2.0 - 1.0;
@@ -90,7 +68,7 @@ void main(void) {
             if(use_lambert) {
                 reflected_light += lambert(normal, light_dir);
             } else {
-                reflected_light += blinnPhong(normal, light_dir, view_dir) * point_light_params[i].intensity * (1.0/(d*d));
+                reflected_light += blinnPhong(normal, light_dir, view_dir, ambientColor, diffuseColor, specularColor, vec4(k_amb, k_diff, k_spec, k_exp)) * point_light_params[i].intensity * (1.0/(d*d));
             }
         }
         for(int i = 0; i < distant_light_cnt; ++i) {
@@ -99,7 +77,7 @@ void main(void) {
             if(use_lambert){
                 reflected_light += lambert(normal, light_dir);
             }else {
-                reflected_light += blinnPhong(normal, light_dir, view_dir) * distant_light_params[i].intensity;
+                reflected_light += blinnPhong(normal, light_dir, view_dir, ambientColor, diffuseColor, specularColor, vec4(k_amb, k_diff, k_spec, k_exp)) * distant_light_params[i].intensity;
             }
         }
         retval.rgb = reflected_light * albedo.rgb;
