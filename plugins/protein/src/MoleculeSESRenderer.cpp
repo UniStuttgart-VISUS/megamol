@@ -966,11 +966,11 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
     mol->Unlock();
 
     glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
+    glPopMatrix();
     glLoadIdentity();
 
     glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
+    glPopMatrix();
     glLoadIdentity();
 
     return true;
