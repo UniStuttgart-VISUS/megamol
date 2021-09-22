@@ -81,7 +81,7 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::ImageW
             std::chrono::high_resolution_clock::now() - render_view_context_timer_start)
             .count() / static_cast<double>(1000);
 
-        const double time = view.DefaultTime(time);
+        const double time = view.DefaultTime(instanceTime);
 
         result_image = view.Render(time, instanceTime);
     };
