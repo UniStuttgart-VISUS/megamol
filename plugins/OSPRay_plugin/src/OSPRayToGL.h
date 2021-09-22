@@ -16,6 +16,8 @@ inline constexpr auto ospray_to_gl_init_func = [](std::shared_ptr<glowl::Framebu
         glDeleteTextures(1, &fbo->data.depth_tex);
     }
     fbo = std::make_shared<core::view::CPUFramebuffer>();
+    fbo->width = width;
+    fbo->height = height;
 
     glGenTextures(1, (GLuint*) &fbo->data.col_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.col_tex);

@@ -155,6 +155,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
     if (fbo == nullptr) {
         return false;
     }
+    if (fbo->width == 0 && fbo->height == 0) return false;
+
     // bool triggered = false;
     if (_imgSize[0] != fbo->width ||
         _imgSize[1] != fbo->height || _accumulateSlot.IsDirty()) {
