@@ -22,8 +22,6 @@
 #include "ImagePresentation_Service.hpp"
 #include "Remote_Service.hpp"
 
-#include <glad/glad.h> /// XXX see temporary fix below
-
 
 static void log(std::string const& text) {
     const std::string msg = "Main: " + text;
@@ -225,8 +223,6 @@ int main(const int argc, const char** argv) {
 
             imagepresentation_service.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
-            /// XXX temporary fix to make sure that everything that happens post-draw ends up in default window fbo...
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
         }
 

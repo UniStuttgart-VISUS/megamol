@@ -250,6 +250,8 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
     static glfw_window_blit glfw_sink;
     // TODO: glfw_window_blit destuctor gets called after GL context died
 
+    glfw_sink.set_framebuffer_active();
+
     // glfw sink needs to know current glfw framebuffer size
     auto framebuffer_width = window_framebuffer_events.previous_state.width;
     auto framebuffer_height = window_framebuffer_events.previous_state.height;
