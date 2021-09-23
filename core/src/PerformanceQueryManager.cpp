@@ -43,7 +43,7 @@ void PerformanceQueryManager::ResetGLProfiling() {
 
 void PerformanceQueryManager::AdvanceGLProfiling() {
     if (all_calls.empty()) return;
-    starting_func = (starting_func + 1) % all_calls[starting_call]->profiling.GetFuncCount();
+    starting_func = (starting_func + 1) % all_calls[starting_call]->GetCallbackCount();
     if (starting_func == 0) {
         // we wrapped, advance to next call!
         starting_call = (starting_call + 1) % all_calls.size();

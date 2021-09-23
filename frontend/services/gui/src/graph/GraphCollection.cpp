@@ -647,7 +647,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                     gui_utils::CaseInsensitiveStringCompare(gcall.from, ccall.request.from) &&
                     gui_utils::CaseInsensitiveStringCompare(gcall.to, ccall.request.to)) {
                     const auto& profiling = ccall.callPtr->GetProfiling();
-                    auto func_count = profiling.GetFuncCount();
+                    auto func_count = ccall.callPtr->GetCallbackCount();
                     std::vector<gui::Call::Profiling> prof;
                     prof.resize(func_count);
                     for (uint32_t i = 0; i < func_count; i++) {
@@ -659,7 +659,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                         prof[i].agput = profiling.GetAverageGPUTime(i);
                         prof[i].ngpus = profiling.GetNumGPUSamples(i);
                         prof[i].hgpu = profiling.GetGPUHistory(i);
-                        prof[i].name = profiling.GetFuncName(i);
+                        prof[i].name = ccall.callPtr->GetCallbackName(i);
                     }
                     gcall.ptr.lock()->SetProfilingValues(prof);
                 }

@@ -104,12 +104,19 @@ namespace core {
             return caps;
         }
 
+        void SetCallbackNames(std::vector<std::string> names);
+
+        const std::string& GetCallbackName(uint32_t idx) const;
+
+        uint32_t GetCallbackCount() const {
+            return static_cast<uint32_t>(callback_names.size());
+        }
+
 #ifdef PROFILING
         const CallProfiling& GetProfiling() const { return profiling; }
 #endif
 
     private:
-
         /** The callee connected by this call */
         CalleeSlot *callee;
 
@@ -121,15 +128,14 @@ namespace core {
         /** The function id mapping */
         unsigned int *funcMap;
 
+        std::vector<std::string> callback_names;
+
+        inline static std::string err_out_of_bounds = "index out of bounds";
+
 #ifdef PROFILING
-        friend class MegaMolGraph;
         friend class PerformanceQueryManager;
 
         CallProfiling profiling;
-
-        void setProfilingInfo(std::vector<std::string> names) {
-            profiling.setProfilingInfo(std::move(names), this);
-        }
 #endif // PROFILING
     protected:
         CallCapabilities caps;

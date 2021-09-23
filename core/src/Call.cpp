@@ -24,7 +24,6 @@ using namespace megamol::core;
  * Call::Call
  */
 Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {
-    // intentionally empty
 }
 
 
@@ -92,4 +91,19 @@ bool Call::operator()(unsigned int func) {
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,
     //    res ? "true" : "false", this->callee == nullptr ? "no callee" : "from callee");
     return res;
+}
+
+void Call::SetCallbackNames(std::vector<std::string> names) {
+    callback_names = std::move(names);
+#ifdef PROFILING
+    profiling.SetParent(this);
+#endif
+}
+
+const std::string& Call::GetCallbackName(uint32_t idx) const {
+    if (idx < callback_names.size()) {
+        return callback_names[idx];
+    } else {
+        return err_out_of_bounds;
+    }
 }

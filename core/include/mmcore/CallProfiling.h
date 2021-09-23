@@ -31,8 +31,7 @@ namespace core {
         uint32_t GetNumGPUSamples(uint32_t func) const;
         std::array<double, PerformanceHistory::buffer_length> GetGPUHistory(uint32_t func) const;
 
-        uint32_t GetFuncCount() const;
-        const std::string& GetFuncName(uint32_t i) const;
+        void SetParent(Call *parent);
 
         void ShutdownProfiling() const;
 
@@ -43,11 +42,8 @@ namespace core {
         friend class Call;
         friend class PerformanceQueryManager;
 
-        void setProfilingInfo(std::vector<std::string> names, Call *parent);
-
         std::vector<PerformanceHistory> cpu_history;
         std::vector<PerformanceHistory> gpu_history;
-        std::vector<std::string> callback_names;
         Call *parent_call = nullptr;
         // this only works since the MegaMol build is static, otherwise a global round-robin could be a problem...
         inline static PerformanceQueryManager *qm = nullptr;
