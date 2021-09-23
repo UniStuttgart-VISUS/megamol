@@ -17,6 +17,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "tbb/tbb.h"
 
 namespace megamol {
 namespace core {
@@ -146,18 +147,89 @@ namespace core {
         void deserializeCPUData();
         bool onJSONChanged(param::ParamSlot& slot);
 
-        /*class BitsChecker {
-            UniFlagStorage::index_vector enabled_starts, enabled_ends;
-            UniFlagStorage::index_vector filtered_starts, filtered_ends;
-            UniFlagStorage::index_vector selected_starts, selected_ends;
+        class BitsChecker {
+        public:
             void operator()(const tbb::blocked_range<int32_t>& r) {
                 for (int32_t i = r.begin(); i != r.end(); ++i) {
-                    check_bits(FlagStorage::ENABLED, enabled_starts, enabled_ends, curr_enabled_start, i, cdata);
-                    check_bits(FlagStorage::FILTERED, filtered_starts, filtered_ends, curr_filtered_start, i, cdata);
-                    check_bits(FlagStorage::SELECTED, selected_starts, selected_ends, curr_selected_start, i, cdata);
+                    check_bits(FlagStorage::ENABLED, enabled_starts, enabled_ends, curr_enabled_start, i, flags);
+                    check_bits(FlagStorage::FILTERED, filtered_starts, filtered_ends, curr_filtered_start, i, flags);
+                    check_bits(FlagStorage::SELECTED, selected_starts, selected_ends, curr_selected_start, i, flags);
                 }
             }
-        };*/
+
+            BitsChecker(BitsChecker& b, tbb::split) : flags(b.flags) {
+                // what to do?
+            }
+
+            // when done, copies the result into the out parameters, so they can be identical to one or other.
+            void join_ranges(const index_vector& one_starts, const index_vector& one_ends, const index_vector& other_starts, const index_vector& other_ends, index_vector& out_starts, index_vector& out_ends) {
+                index_type my_pos = 0, other_pos = 0;
+                index_vector result_starts, result_ends;
+                while (my_pos < one_starts.size() && other_pos < other_starts.size()) {
+                    const auto mystart = one_starts[my_pos];
+                    const auto otherstart = other_starts[other_pos];
+                    const auto myend = one_ends[my_pos];
+                    const auto otherend = other_ends[other_pos];
+
+                    if (mystart < otherstart) {
+                        if (myend < otherstart - 1) {
+                            result_starts.push_back(mystart);
+                            result_ends.push_back(myend);
+                            my_pos++;
+                        } else {
+                            result_starts.push_back(mystart);
+                            result_ends.push_back(otherend);
+                            my_pos++;
+                            other_pos++;
+                        }
+                    } else {
+                        ASSERT(mystart != otherstart);
+                        if (otherend < mystart - 1) {
+                            result_starts.push_back(otherstart);
+                            result_ends.push_back(otherend);
+                            other_pos++;
+                        } else {
+                            result_starts.push_back(otherstart);
+                            result_ends.push_back(myend);
+                            my_pos++;
+                            other_pos++;
+                        }
+                    }
+                }
+                // push everything after *_pos in one go
+                const auto total_elems = one_starts.size() + other_starts.size();
+                if (my_pos < one_starts.size()) {
+                    result_starts.reserve(total_elems);
+                    result_starts.insert(result_starts.end(), one_starts.begin() + my_pos, one_starts.end());
+                    result_ends.reserve(total_elems);
+                    result_ends.insert(result_ends.end(), one_ends.begin() + my_pos, one_ends.end());
+                }
+                if (other_pos < other_starts.size()) {
+                    result_starts.reserve(total_elems);
+                    result_starts.insert(result_starts.end(), other_starts.begin() + my_pos, other_starts.end());
+                    result_ends.reserve(total_elems);
+                    result_ends.insert(result_ends.end(), other_ends.begin() + my_pos, other_ends.end());
+                }
+                out_starts = result_starts;
+                out_ends = result_ends;
+            }
+
+            void join(const BitsChecker& other) {
+
+                join_ranges(this->enabled_starts, this->enabled_ends, other.enabled_starts, other.enabled_ends, this->enabled_starts, this->enabled_ends);
+                join_ranges(this->filtered_starts, this->filtered_ends, other.filtered_starts, other.filtered_ends, this->filtered_starts, this->filtered_ends);
+                join_ranges(this->selected_starts, this->selected_ends, other.selected_starts, other.selected_ends, this->selected_starts, this->selected_ends);
+            }
+
+            BitsChecker(const std::shared_ptr<FlagStorage::FlagVectorType>& flags) : flags(flags) {}
+            
+        private:
+            index_vector enabled_starts, enabled_ends;
+            index_vector filtered_starts, filtered_ends;
+            index_vector selected_starts, selected_ends;
+            index_type curr_enabled_start = -1, curr_filtered_start = -1, curr_selected_start = -1;
+            const std::shared_ptr<FlagStorage::FlagVectorType>& flags;
+        };
 
         /**
          * Helper to copy CPU flags to GL flags
