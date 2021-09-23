@@ -59,6 +59,20 @@ namespace gui {
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
         void Update(const GraphItemsState_t& state);
 
+        inline bool DrawParameters(const std::string& in_search, bool in_extended, bool in_indent,
+            megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
+            ImGuiID in_override_header_state, megamol::core::utility::PickingBuffer* inout_picking_buffer) {
+
+            return this->gui_param_groups.Draw(this->parameters, in_search, in_extended, in_indent, in_scope,
+                tfeditor_ptr, in_override_header_state, inout_picking_buffer);
+        }
+
+        bool ParametersVisible();
+
+        bool StateToJSON(nlohmann::json& inout_json);
+
+        bool StateFromJSON(const nlohmann::json& in_json);
+
         // GET ----------------------------------------------------------------
 
         CallSlotPtr_t CallSlotPtr(ImGuiID callslot_uid);
@@ -102,9 +116,6 @@ namespace gui {
         }
         inline bool IsView() const {
             return this->is_view;
-        }
-        inline ParameterGroups& GUIParameterGroups() {
-            return this->gui_param_groups;
         }
         inline std::string GroupName() const {
             return this->group_name;

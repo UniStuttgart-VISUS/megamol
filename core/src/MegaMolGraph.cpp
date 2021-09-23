@@ -634,6 +634,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     }
 
 #ifdef PROFILING
+    // TODO: move to CallAutoDescription<T>::CreateCall() if possible
     std::vector<std::string> callbacks(call_description->FunctionCount());
     for (uint32_t x = 0; x < call_description->FunctionCount(); ++x) {
         callbacks[x] = call_description->FunctionName(x);

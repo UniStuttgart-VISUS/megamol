@@ -3,7 +3,6 @@
 
 #include <glm/matrix.hpp>
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/glowl.h>
 
 #include "mmcore/CalleeSlot.h"
@@ -12,7 +11,6 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/Renderer2DModule.h"
 
 #include "Renderer2D.h"
 
@@ -61,7 +59,7 @@ namespace infovis {
 
         bool makeShaders();
 
-        void setupAccel(int approach, int ow, int oh, int ssLevel);
+        void setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam);
 
         void doReconstruction(int approach, int w, int h, int ssLevel);
 
@@ -88,6 +86,11 @@ namespace infovis {
         GLuint amortizedFboA = 0;
         GLuint amortizedMsaaFboA = 0;
         GLuint amortizedPushFBO = 0;
+        std::shared_ptr<glowl::FramebufferObject> glowlFBO;
+        std::shared_ptr<glowl::FramebufferObject> glowlFBOms;
+        std::unique_ptr<glowl::Texture2D> texA;
+        std::unique_ptr<glowl::Texture2D> texB;
+        glowl::TextureLayout texstore_layout;
         GLuint msImageArray = 0;
         GLuint pushImage = 0;
         GLuint imageArrayA = 0;
@@ -106,10 +109,13 @@ namespace infovis {
         int windowWidth = 1;
         int windowHeight = 1;
 
-        GLint origFBO = 0;
+        std::shared_ptr<glowl::FramebufferObject> fbo = nullptr;
+
         int framesNeeded = 1;
         GLfloat modelViewMatrix_column[16];
         GLfloat projMatrix_column[16];
+        glm::mat4 projMatrix;
+        glm::mat4 mvMatrix;
         std::vector<glm::mat4> invMatrices;
         std::vector<glm::mat4> moveMatrices;
         std::vector<glm::fvec2> hammerPositions;

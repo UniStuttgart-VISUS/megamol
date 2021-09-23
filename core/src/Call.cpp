@@ -11,16 +11,10 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-#    include "mmcore/view/Renderer2DModule.h"
-#    include "mmcore/view/Renderer3DModule.h"
-#    include "mmcore/view/Renderer3DModuleGL.h"
 #    include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
 #ifdef PROFILING
-#    include "mmcore/view/Renderer3DModuleGL.h"
-#    include "mmcore/view/Renderer2DModule.h"
 #    include "mmcore/CoreInstance.h"
-#    include <ctime>
 #endif
 #include "mmcore/utility/log/Log.h"
 

@@ -11,13 +11,15 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 
+#include "glowl/FramebufferObject.hpp"
+
 namespace megamol::core::view {
 
 template<typename FBO>
-using INITFUNC = void(std::shared_ptr<vislib::graphics::gl::FramebufferObject>&, std::shared_ptr<FBO>&, int, int);
+using INITFUNC = void(std::shared_ptr<glowl::FramebufferObject>&, std::shared_ptr<FBO>&, int, int);
 
 template<typename FBO>
-using RENFUNC = void(std::shared_ptr<glowl::GLSLProgram>&, std::shared_ptr<vislib::graphics::gl::FramebufferObject>&,
+using RENFUNC = void(std::shared_ptr<glowl::GLSLProgram>&, std::shared_ptr<glowl::FramebufferObject>&,
     std::shared_ptr<FBO>&, int, int);
 
 template<typename CALL, INITFUNC<typename CALL::FBO_TYPE> init_func, RENFUNC<typename CALL::FBO_TYPE> ren_func,
@@ -221,13 +223,9 @@ bool ContextToGL<CALL, init_func, ren_func, CN, DESC>::Render(CallRender3DGL& ca
     auto cast_out = dynamic_cast<AbstractCallRender*>(cr);
     *cast_out = *cast_in;
 
-    Camera_2 cam;
-    call.GetCamera(cam);
-
-    auto width = cam.resolution_gate().width();
-    auto height = cam.resolution_gate().height();
-
-    auto lhs_fbo = call.GetFramebufferObject();
+    auto lhs_fbo = call.GetFramebuffer();
+    auto width = lhs_fbo->getWidth();
+    auto height = lhs_fbo->getHeight();
 
     if (!_framebuffer || width != viewport.x || height != viewport.y) {
         init_func(lhs_fbo, _framebuffer, width, height);
@@ -248,16 +246,13 @@ bool ContextToGL<CALL, init_func, ren_func, CN, DESC>::Render(CallRender3DGL& ca
 }
 
 inline void renderToFBO(std::shared_ptr<glowl::GLSLProgram>& shader,
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject>& lhs_fbo, GLuint color_tex, GLuint depth_tex, int width,
+    std::shared_ptr<glowl::FramebufferObject>& lhs_fbo, GLuint color_tex, GLuint depth_tex, int width,
     int height) {
     // draw into lhs fbo
-    if ((lhs_fbo->GetWidth() != width) || (lhs_fbo->GetHeight() != height)) {
-        lhs_fbo->Release();
-        lhs_fbo->Create(width, height);
+    if ((lhs_fbo->getWidth() != width) || (lhs_fbo->getHeight() != height)) {
+        lhs_fbo->resize(width, height);
     }
-    if (lhs_fbo->IsValid() && !lhs_fbo->IsEnabled()) {
-        lhs_fbo->Enable();
-    }
+    lhs_fbo->bind();
     shader->use();
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
@@ -281,9 +276,7 @@ inline void renderToFBO(std::shared_ptr<glowl::GLSLProgram>& shader,
     glDisable(GL_DEPTH_TEST);
 
     glUseProgram(0);
-    if (lhs_fbo->IsValid()) {
-        lhs_fbo->Disable();
-    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 } // namespace megamol::core::view

@@ -22,7 +22,6 @@
 
 #include "mesh/GPUMaterialCollection.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/Mesh.hpp"

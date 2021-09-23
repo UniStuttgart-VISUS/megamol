@@ -29,7 +29,7 @@ using megamol::core::utility::log::Log;
 /*
  * SequenceRenderer::SequenceRenderer (CTOR)
  */
-SequenceRenderer::SequenceRenderer( void ) : Renderer2DModule (),
+SequenceRenderer::SequenceRenderer( void ) : Renderer2DModuleGL (),
         dataCallerSlot( "getData", "Connects the sequence diagram rendering with data storage." ),
         bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage." ),
         resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage." ),

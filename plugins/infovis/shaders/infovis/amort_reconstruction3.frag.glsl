@@ -2,10 +2,8 @@
 
 uniform sampler2DArray src_tex2D;
 
-uniform int frametype;
 uniform int h;
 uniform int w;
-uniform int approach;
 uniform int ssLevel;
 
 layout (std430, binding = 7) buffer ssboMatrices{

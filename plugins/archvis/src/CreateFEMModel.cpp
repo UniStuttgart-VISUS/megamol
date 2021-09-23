@@ -6,6 +6,7 @@
 #include "FEMModel.h"
 
 megamol::archvis::CreateFEMModel::CreateFEMModel() : Module()
+    , m_version(0)
     , m_FEM_model(nullptr)
     , m_fem_param_0("First FEM model parameter", "First input for parameterized FEM model.")
     , m_fem_param_1("Second FEM model parameter", "Second input for parameterized FEM model.")
@@ -15,9 +16,8 @@ megamol::archvis::CreateFEMModel::CreateFEMModel() : Module()
     , m_deformation_floatTable_slot("displacements", "Displacement float table input call.")
     , m_node_input_hash(0)
     , m_element_input_hash(0)
-    , m_deform_input_hash(0)
-    , m_my_hash(0) {
-    this->m_getData_slot.SetCallback(FEMDataCall::ClassName(), "GetData", &CreateFEMModel::getDataCallback);
+    , m_deform_input_hash(0) {
+    this->m_getData_slot.SetCallback(CallFEMModel::ClassName(), "GetData", &CreateFEMModel::getDataCallback);
     this->MakeSlotAvailable(&this->m_getData_slot);
 
     //TODO GetExtents?
@@ -49,7 +49,7 @@ bool megamol::archvis::CreateFEMModel::create(void) {
 
 bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
 
-    FEMDataCall* cd = dynamic_cast<FEMDataCall*>(&caller);
+    CallFEMModel* cd = dynamic_cast<CallFEMModel*>(&caller);
     if (cd == NULL){
         return false;
     }
@@ -85,8 +85,7 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
 
         if (m_FEM_model != nullptr)
         {
-            cd->setFEMData(m_FEM_model);
-            cd->SetDataHash(this->m_my_hash);
+            cd->setData(m_FEM_model,m_version);
         }
         
         return true;
@@ -183,13 +182,12 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
         return false;
     }
 
-    this->m_my_hash++;
+    ++m_version;
     this->m_node_input_hash = node_ft->DataHash();
     this->m_element_input_hash = element_ft->DataHash();
     this->m_deform_input_hash = dynData_ft->DataHash();
 
-    cd->setFEMData(m_FEM_model);
-    cd->SetDataHash(this->m_my_hash);
+    cd->setData(m_FEM_model, ++m_version);
 
     return true;
 }
