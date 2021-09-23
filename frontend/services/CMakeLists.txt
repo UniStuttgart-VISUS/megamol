@@ -31,6 +31,7 @@ if(BUILD_FRONTEND_SERVICES)
     "project_loader/*.hpp"
     "image_presentation/*.hpp"
     "remote_service/*.hpp"
+    "profiling_service/*.hpp"
 #   "service_template/*.hpp"
     )
   file(GLOB_RECURSE gui_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.h" "gui/*.hpp")
@@ -65,6 +66,7 @@ if(BUILD_FRONTEND_SERVICES)
     "project_loader"
     "image_presentation"
     "remote_service"
+    "profiling_service"
     "gui/src"
    # "service_template"
   )
