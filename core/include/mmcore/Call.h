@@ -12,7 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 #include "CallCapabilities.h"
 #ifdef PROFILING
 #include "CallProfiling.h"
