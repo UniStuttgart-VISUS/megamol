@@ -15,7 +15,6 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 
@@ -111,7 +110,9 @@ private:
 
     core::CallerSlot m_input_depth_texture_call;
 
-    GLint m_screenRestoreFBO;
+    core::CallerSlot m_input_flags_call;
+
+    glm::ivec2 m_last_tex_size = glm::ivec2(0, 0);
 };
 
 } // namespace compositing

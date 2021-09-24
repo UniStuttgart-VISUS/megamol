@@ -6,7 +6,6 @@
 #include <glm/matrix.hpp>
 #include <json.hpp>
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/glowl.h>
 
 #include "Renderer2D.h"
@@ -18,7 +17,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallRender2DGL.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -134,15 +133,17 @@ namespace infovis {
 
         void pickIndicator(float x, float y, int& axis, int& index);
 
-        void assertData(core::view::CallRender2DGL& call);
+        bool assertData(core::view::CallRender2DGL& call);
 
         void computeScaling(void);
 
         void drawAxes(glm::mat4 ortho);
 
-        void drawDiscrete(const float otherColor[4], const float selectedColor[4], float tfColorFactor);
+        void drawDiscrete(
+            const float otherColor[4], const float selectedColor[4], float tfColorFactor, glm::ivec2 const& viewRes);
 
-        void drawItemsDiscrete(uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor);
+        void drawItemsDiscrete(
+            uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor, glm::ivec2 const& viewRes);
 
         void drawPickIndicator(float x, float y, float pickRadius, const float color[4]);
 
@@ -158,7 +159,7 @@ namespace infovis {
 
         void doFragmentCount();
 
-        void drawParcos(void);
+        void drawParcos(glm::ivec2 const& viewRes);
         void store_filters();
         void load_filters();
 
@@ -229,17 +230,15 @@ namespace infovis {
         float axisHeight;
         GLuint numTicks;
         float fontSize;
-        float windowAspect;
-        int windowWidth;
-        int windowHeight;
         float backgroundColor[4];
         core::BoundingBoxes_2 bounds;
+        core::view::Camera camera_cpy;                 //< local copy of last used camera
+        std::shared_ptr<glowl::FramebufferObject> fbo; //< last used framebuffer
+        glm::ivec2 viewRes;                            //< last used view resolution
         unsigned int lastTimeStep;
 
         GLuint columnCount;
         GLuint itemCount;
-        GLfloat modelViewMatrix_column[16];
-        GLfloat projMatrix_column[16];
 
         std::unique_ptr<glowl::GLSLProgram> drawAxesProgram;
         std::unique_ptr<glowl::GLSLProgram> drawScalesProgram;

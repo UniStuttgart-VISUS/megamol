@@ -27,7 +27,8 @@ MMPGDWriter::MMPGDWriter(void) : AbstractDataWriter(),
         filenameSlot("filename", "The path to the MMPGD file to be written"),
         dataSlot("data", "The slot requesting the data to be written") {
 
-    this->filenameSlot << new core::param::FilePathParam("");
+    this->filenameSlot << new core::param::FilePathParam(
+        "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"mmpgd"});
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->dataSlot.SetCompatibleCall<ParticleGridDataCallDescription>();
@@ -63,8 +64,8 @@ void MMPGDWriter::release(void) {
  */
 bool MMPGDWriter::run(void) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
-    if (filename.IsEmpty()) {
+    auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
+    if (filename.empty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "No file name specified. Abort.");
         return false;
@@ -77,10 +78,10 @@ bool MMPGDWriter::run(void) {
         return false;
     }
 
-    if (vislib::sys::File::Exists(filename)) {
+    if (vislib::sys::File::Exists(filename.native().c_str())) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
             "File %s already exists and will be overwritten.",
-            vislib::StringA(filename).PeekBuffer());
+            filename.generic_u8string().c_str());
     }
 
     vislib::math::Cuboid<float> bbox;
@@ -117,10 +118,11 @@ bool MMPGDWriter::run(void) {
     }
 
     vislib::sys::FastFile file;
-    if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
+    if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
+            vislib::sys::File::CREATE_OVERWRITE)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to create output file \"%s\". Abort.",
-            vislib::StringA(filename).PeekBuffer());
+            filename.generic_u8string().c_str());
         return false;
     }
 

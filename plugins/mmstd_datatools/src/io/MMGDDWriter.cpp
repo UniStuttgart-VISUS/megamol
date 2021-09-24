@@ -20,7 +20,8 @@ io::MMGDDWriter::MMGDDWriter(void) : AbstractDataWriter(),
         filenameSlot("filename", "The path to the MMGDD file to be written"),
         dataSlot("data", "The slot requesting the data to be written") {
 
-    this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
+    this->filenameSlot.SetParameter(new core::param::FilePathParam(
+        "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"mmgdd"}));
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->dataSlot.SetCompatibleCall<GraphDataCallDescription>();
@@ -42,7 +43,8 @@ void io::MMGDDWriter::release(void) {
 
 bool io::MMGDDWriter::run(void) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
+    vislib::TString filename(
+        this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
         return false;

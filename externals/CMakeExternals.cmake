@@ -32,6 +32,27 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/asmjit/asmjit.git
       GIT_TAG "8474400e82c3ea65bd828761539e5d9b25f6bd83" )
 
+  # Corsair CUE SDK
+  elseif(NAME STREQUAL "CUESDK")
+    if (TARGET CUESDK)
+      return()
+    endif()
+    
+    FetchContent_Declare(
+      cuesdk_archive
+      URL https://github.com/CorsairOfficial/cue-sdk/releases/download/v3.0.378/CUESDK_3.0.378.zip)
+    FetchContent_GetProperties(cuesdk_archive)
+    if (NOT cuesdk_archive_POPULATED)
+      FetchContent_Populate(cuesdk_archive)
+      add_library(CUESDK SHARED IMPORTED GLOBAL)
+      set_target_properties(CUESDK PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${cuesdk_archive_SOURCE_DIR}/include"
+        IMPORTED_CONFIGURATIONS "Release"
+        IMPORTED_LOCATION "${cuesdk_archive_SOURCE_DIR}/redist/x64/CUESDK.x64_2017.dll"
+        IMPORTED_IMPLIB "${cuesdk_archive_SOURCE_DIR}/lib/x64/CUESDK.x64_2017.lib")
+      install(DIRECTORY "${cuesdk_archive_SOURCE_DIR}/redist/x64/" DESTINATION "bin" FILES_MATCHING PATTERN "*2017.dll")
+    endif()
+    
   # Delaunator
   elseif(NAME STREQUAL "Delaunator")
     if(TARGET Delaunator)
@@ -61,7 +82,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glm
       GIT_REPOSITORY https://github.com/g-truc/glm.git
-      GIT_TAG "0.9.8")
+      GIT_TAG "0.9.9.8")
 
   # glowl
   elseif(NAME STREQUAL "glowl")
@@ -73,6 +94,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/invor/glowl.git
       GIT_TAG "bbad3fca5b37b32e4e5f96aeaa31897e12eba92d"
       INCLUDE_DIR "include")
+    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD)
 
   # json
   elseif(NAME STREQUAL "json")
@@ -109,6 +131,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(mmpld_io
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mmpld_io.git
+      GIT_TAG 0002c64e0be4dddc137e4fe37db4b96361bc79bd
       INCLUDE_DIR "include")
 
   # nanoflann
@@ -140,6 +163,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(sim_sort
       GIT_REPOSITORY https://github.com/alexstraub1990/simultaneous-sort.git
+      GIT_TAG 220fdf37fec2d9d3e3f7674194544ee70eb93ee7 # master on 2021-07-26, because nothing was specified here.
       INCLUDE_DIR "include")
 
   # Built libraries #####################################################
@@ -377,6 +401,7 @@ function(require_external NAME)
 
     add_external_project(IceT STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
+      GIT_TAG abf5bf2b92c0531170c8db2621b375065c7da7c4 # master on 2021-07-26, because nothing was specified here.
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
@@ -402,7 +427,7 @@ function(require_external NAME)
     endif()
 
     require_external(glfw)
-    external_get_property(glfw INSTALL_DIR)
+    external_get_property(glfw INSTALL_DIR)    
 
     if(WIN32)
       set(IMGUI_LIB "lib/imgui.lib")
@@ -621,6 +646,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(obj-io INTERFACE
       GIT_REPOSITORY https://github.com/thinks/obj-io.git
+      GIT_TAG bfe835200fdff49b45a6de4561741203f85ad028 # master on 2021-07-26, because nothing was specified here.
       INCLUDE_DIR "include/thinks")
 
   # qhull
@@ -661,6 +687,7 @@ function(require_external NAME)
 
     add_external_project(quickhull STATIC
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
+      GIT_TAG 4f65e0801b8f60c9a97da2dadbe63c2b46397694 # master on 2021-07-26, because nothing was specified here.
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/quickhull/CMakeLists.txt"

@@ -26,6 +26,7 @@
 #include <omp.h>
 #include "vislib/math/ShallowVector.h"
 #include <vector>
+#include <glm/ext.hpp>
 
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
@@ -462,29 +463,26 @@ void AOSphereRenderer::uploadCameraUniforms(megamol::core::view::CallRender3DGL&
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-	core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+	core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
 
-    const glm::vec4 camPos = snapshot.position;
-    const glm::vec4 camView = snapshot.view_vector;
-    const glm::vec4 camRight = snapshot.right_vector;
-    const glm::vec4 camUp = snapshot.up_vector;
+    glm::vec3 camView = cam_pose.direction;
+    glm::vec3 camUp = cam_pose.up;
+    glm::vec3 camRight = glm::cross(camView, camUp);
+    glm::vec3 camPos = cam_pose.position;
 
     glUniform4fvARB(sphereShader->ParameterLocation("viewAttr"), 1, viewportStuff);
     glUniform3fvARB(sphereShader->ParameterLocation("camIn"), 1, glm::value_ptr(camView));
     glUniform4fvARB(sphereShader->ParameterLocation("camPosIn"), 1, glm::value_ptr(camPos));
     glUniform3fvARB(sphereShader->ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
     glUniform3fvARB(sphereShader->ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
-    glUniform2f(sphereShader->ParameterLocation("frustumPlanes"), snapshot.frustum_near, snapshot.frustum_far);
+    glUniform2f(sphereShader->ParameterLocation("frustumPlanes"), cam_intrinsics.near_plane, cam_intrinsics.far_plane);
 
     glUniform4fvARB(sphereShader->ParameterLocation("clipDat"), 1, clipDat);
     glUniform3fvARB(sphereShader->ParameterLocation("clipCol"), 1, clipCol);
-
-	glm::mat4 proj = projTemp;
-    glm::mat4 view = viewTemp;
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();

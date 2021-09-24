@@ -17,6 +17,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/utility/RenderUtils.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -190,7 +191,7 @@ namespace protein {
         megamol::core::CallerSlot protRendererCallerSlot;
         
         // camera information
-        core::view::Camera_2 cameraInfo;
+        core::view::Camera cameraInfo;
         // scaling factor for the scene
         float scale;
         // translation of the scene
@@ -261,7 +262,7 @@ namespace protein {
         unsigned int atomCount;
 
         // FBO for rendering the protein
-        std::shared_ptr<vislib::graphics::gl::FramebufferObject> proteinFBO;
+        std::shared_ptr<glowl::FramebufferObject> proteinFBO;
 
         // volume texture
         GLuint volumeTex;
@@ -308,6 +309,9 @@ namespace protein {
 
         float *p;
         float *c;
+
+        // Render utility class used for drawing texture to framebuffer
+        core::utility::RenderUtils renderUtils;
     };
 
 

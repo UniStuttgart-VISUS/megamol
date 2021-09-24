@@ -40,6 +40,10 @@ inline rkcommon::math::vec3f convertToVec3f(std::array<float, 3> inp) {
         return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
 }
 
+inline rkcommon::math::vec3f convertToVec3f(std::array<float, 4> inp) {
+    return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
+}
+
 inline rkcommon::math::vec4f convertToVec4f(std::array<float, 4> inp) {
     return rkcommon::math::vec4f(inp[0], inp[1], inp[2], inp[3]);
 }
@@ -117,7 +121,7 @@ protected:
      * @param OSPRay camera object
      * @param CallRenderer3D object
      */
-    void setupOSPRayCamera(megamol::core::view::Camera_2& mmcam);
+    void setupOSPRayCamera(megamol::core::view::Camera& mmcam);
     void clearOSPRayStuff();
 
 
@@ -207,12 +211,12 @@ protected:
     // extend map
     OSPRayExtendMap _extendMap;
 
-    void fillLightArray(std::array<float,4> eyeDir);
+    void fillLightArray(std::array<float,3> eyeDir);
 
     long long int _ispcLimit = 1ULL << 30;
     long long int _numCreateGeo;
 
-    core::thecam::Projection_type _currentProjectionType = core::thecam::Projection_type::perspective;
+    core::view::Camera::ProjectionType _currentProjectionType = core::view::Camera::ProjectionType::PERSPECTIVE;
 };
 
 } // end namespace ospray

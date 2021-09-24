@@ -17,7 +17,6 @@
 #include <vector>
 #include <iostream>
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/Mesh.hpp"
 
 namespace megamol {

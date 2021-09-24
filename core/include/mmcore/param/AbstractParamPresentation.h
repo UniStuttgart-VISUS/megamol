@@ -143,7 +143,7 @@ public:
     *
     * @return The presentation name map.
     */
-    std::map<AbstractParamPresentation::Presentation, std::string>& GetPresentationNameMap(void) { return this->presentation_name_map; }
+    const std::map<AbstractParamPresentation::Presentation, std::string>& GetPresentationNameMap(void) { return this->presentation_name_map; }
 
     /**
     * Get presentation name.
@@ -161,9 +161,11 @@ public:
     *
     * @return The human readable name of the given parameter type.
     */
-    static const std::string GetTypeName(AbstractParamPresentation::ParamType type);
+    static std::string GetTypeName(AbstractParamPresentation::ParamType type);
 
-    /** De-/Serialization of parameters GUi state. */
+    /**
+     * De-/Serialization of parameters GUI state.
+     */
     bool StateFromJSON(const nlohmann::json& in_json, const std::string& param_fullname);
     bool StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
 

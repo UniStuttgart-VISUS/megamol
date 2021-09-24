@@ -31,7 +31,7 @@ protein_calls::SplitMergeCall *SplitMergeRenderer::FastMapWrapper::diagram;
 /*
  * SplitMergeRenderer::SplitMergeRenderer (CTOR)
  */
-SplitMergeRenderer::SplitMergeRenderer( void ) : Renderer2DModule (),
+SplitMergeRenderer::SplitMergeRenderer( void ) : Renderer2DModuleGL (),
         dataCallerSlot( "getData", "Connects the diagram rendering with data storage." ),
         selectionCallerSlot( "getSelection", "Connects the diagram rendering with selection storage." ),
         hiddenCallerSlot( "getHidden", "Connects the diagram rendering with visibility storage." ),

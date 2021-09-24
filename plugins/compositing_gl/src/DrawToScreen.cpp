@@ -6,17 +6,22 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 
 #include "compositing/CompositingCalls.h"
+#include "mmcore/UniFlagCalls.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen()
         : Renderer3DModuleGL()
         , m_drawToScreen_prgm(nullptr)
         , m_input_texture_call("InputTexture", "Access texture that is drawn to output screen")
-        , m_input_depth_texture_call("DepthTexture", "Access optional depth texture to write depth values to screen") {
+        , m_input_depth_texture_call("DepthTexture", "Access optional depth texture to write depth values to screen")
+        , m_input_flags_call("readFlagStorage", "Flag storage read input") {
     this->m_input_texture_call.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_texture_call);
 
     this->m_input_depth_texture_call.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_depth_texture_call);
+
+    m_input_flags_call.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    MakeSlotAvailable(&m_input_flags_call);
 }
 
 megamol::compositing::DrawToScreen::~DrawToScreen() {
@@ -79,9 +84,6 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
     if (cr == NULL)
         return false;
 
-    // Restore framebuffer that was bound on the way in
-    glBindFramebuffer(GL_FRAMEBUFFER, m_screenRestoreFBO);
-
     // get rhs texture call
     CallTexture2D* ct = this->m_input_texture_call.CallAs<CallTexture2D>();
     if (ct == NULL)
@@ -96,18 +98,24 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
         depth_texture = cdt->getData();
     }
 
-    // obtain camera information
-    //  core::view::Camera_2 cam(cr->GetCamera());
-    //  cam_type::snapshot_type snapshot;
-    //  cam_type::matrix_type view_tmp, proj_tmp;
-    //  cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    //  glm::mat4 view_mx = view_tmp;
-    //  glm::mat4 proj_mx = proj_tmp;
+    auto width = call.GetFramebuffer()->getWidth();
+    auto height = call.GetFramebuffer()->getHeight();
 
     // get input texture from call
     auto input_texture = ct->getData();
     if (input_texture == nullptr)
         return false;
+
+    auto readFlagsCall = m_input_flags_call.CallAs<core::FlagCallRead_GL>();
+    if (readFlagsCall != nullptr) {
+        (*readFlagsCall)(core::FlagCallRead_GL::CallGetData);
+
+        if (m_last_tex_size != glm::ivec2(input_texture->getWidth(), input_texture->getHeight()) || readFlagsCall->hasUpdate()) {
+            readFlagsCall->getData()->validateFlagCount(input_texture->getWidth() * input_texture->getHeight());
+            m_last_tex_size = glm::ivec2(input_texture->getWidth(), input_texture->getHeight());
+        }
+        readFlagsCall->getData()->flags->bind(5);
+    }
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -124,6 +132,10 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
         depth_texture->bindTexture();
         glUniform1i(m_drawToScreen_prgm->ParameterLocation("depth_tx2D"), 1);
 
+        glUniform1ui(m_drawToScreen_prgm->ParameterLocation("flags_available"), readFlagsCall != nullptr ? 1 : 0);
+        glUniform1ui(m_drawToScreen_prgm->ParameterLocation("frame_id"), this->GetCoreInstance()->GetFrameID());
+        glUniform2i(m_drawToScreen_prgm->ParameterLocation("viewport_resolution"), width, height);
+
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         m_drawToScreen_prgm->Disable();
@@ -135,6 +147,4 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
 }
 
 void megamol::compositing::DrawToScreen::PreRender(core::view::CallRender3DGL& call) {
-
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_screenRestoreFBO);
 }

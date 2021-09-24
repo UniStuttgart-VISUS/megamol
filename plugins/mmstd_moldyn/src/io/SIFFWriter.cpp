@@ -30,7 +30,8 @@ SIFFWriter::SIFFWriter(void) : AbstractDataWriter(),
         versionSlot("version", "The file format version to write"),
         dataSlot("data", "The slot requesting the data to be written") {
 
-    this->filenameSlot << new core::param::FilePathParam("");
+    this->filenameSlot << new core::param::FilePathParam(
+        "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"siff"});
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->asciiSlot << new core::param::BoolParam(false);
@@ -79,8 +80,8 @@ bool SIFFWriter::run(void) {
     using megamol::core::utility::log::Log;
     using vislib::Exception;
 
-    vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
-    if (filename.IsEmpty()) {
+    auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
+    if (filename.empty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
         return false;
     }
@@ -99,8 +100,8 @@ bool SIFFWriter::run(void) {
         return false;
     }
 
-    if (vislib::sys::File::Exists(filename)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "File %s already exists and will be overwritten.", vislib::StringA(filename).PeekBuffer());
+    if (vislib::sys::File::Exists(filename.native().c_str())) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
     }
 
     mpdc->SetFrameID(0, true);
@@ -110,8 +111,10 @@ bool SIFFWriter::run(void) {
     }
 
     vislib::sys::FastFile file;
-    if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.", vislib::StringA(filename).PeekBuffer());
+    if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
+            vislib::sys::File::CREATE_OVERWRITE)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
         return false;
     }
 

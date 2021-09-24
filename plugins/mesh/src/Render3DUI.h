@@ -8,7 +8,6 @@
 #ifndef RENDER_3D_UI_H_INCLUDED
 #define RENDER_3D_UI_H_INCLUDED
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
 
 #include "RenderMDIMesh.h"

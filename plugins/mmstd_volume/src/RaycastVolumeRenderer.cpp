@@ -28,6 +28,8 @@
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
 
+#include <glm/ext.hpp>
+
 #include "mmcore/view/light/DistantLight.h"
 
 using namespace megamol::stdplugin::volume;
@@ -185,11 +187,11 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3DGL>();
 
     // Camera
-    core::view::Camera_2 cam;
-    cr.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+    core::view::Camera cam = cr.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto cr_fbo = cr.GetFramebuffer();
 
     if (ci != nullptr) {
         auto cam = cr.GetCamera();
@@ -197,10 +199,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
 
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
             this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-            if (this->fbo.IsValid())
-                this->fbo.Release();
-            this->fbo.Create(cam.resolution_gate().width(), cam.resolution_gate().height(), GL_RGBA8, GL_RGBA,
-                GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+            if (this->fbo.IsValid()) this->fbo.Release();
+            this->fbo.Create(cr_fbo->getWidth(), cr_fbo->getHeight(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
             this->fbo.Enable();
         }
 
@@ -217,11 +218,11 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     }
 
     // create render target texture
-    if (this->m_render_target == nullptr || this->m_render_target->getWidth() != cam.resolution_gate().width() ||
-        this->m_render_target->getHeight() != cam.resolution_gate().height()) {
+    if (this->m_render_target == nullptr || this->m_render_target->getWidth() != cr_fbo->getWidth() ||
+        this->m_render_target->getHeight() != cr_fbo->getHeight()) {
 
-        glowl::TextureLayout render_tgt_layout(GL_RGBA8, cam.resolution_gate().width(), cam.resolution_gate().height(),
-            1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+        glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr_fbo->getWidth(), cr_fbo->getHeight(), 1,
+            GL_RGBA, GL_UNSIGNED_BYTE, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -230,8 +231,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
             std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
         // create normal target texture
-        glowl::TextureLayout normal_tgt_layout(GL_RGBA32F, cam.resolution_gate().width(),
-            cam.resolution_gate().height(), 1, GL_RGBA, GL_FLOAT, 1,
+        glowl::TextureLayout normal_tgt_layout(GL_RGBA32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1,
+            GL_RGBA, GL_FLOAT, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -240,8 +241,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
             std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
 
         // create depth target texture
-        glowl::TextureLayout depth_tgt_layout(GL_R32F, cam.resolution_gate().width(), cam.resolution_gate().height(), 1,
-            GL_R, GL_FLOAT, 1,
+        glowl::TextureLayout depth_tgt_layout(GL_R32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1, GL_R,
+            GL_FLOAT, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -292,7 +293,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
             for (auto& l : distant_lights) {
                 const auto use_eyedir = l.eye_direction;
                 if (use_eyedir) {
-                    auto view_vec = cam.view_vector();
+                    auto view_vec = cam_pose.direction;
                     l.direction[0] = view_vec[0];
                     l.direction[1] = view_vec[1];
                     l.direction[2] = view_vec[2];
@@ -312,8 +313,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     // setup
     compute_shdr->use();
 
-    compute_shdr->setUniform("view_mx", viewTemp);
-    compute_shdr->setUniform("proj_mx", projTemp);
+    compute_shdr->setUniform("view_mx", view);
+    compute_shdr->setUniform("proj_mx", proj);
 
     glm::vec2 rt_resolution;
     rt_resolution[0] = static_cast<float>(m_render_target->getWidth());

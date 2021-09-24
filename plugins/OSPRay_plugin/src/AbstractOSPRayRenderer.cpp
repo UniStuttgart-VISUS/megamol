@@ -32,6 +32,10 @@ namespace ospray {
         megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
     }
 
+    void ospStatusCallback(const char* msg) {
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("OSPRay Device Status: %s", msg);
+    };
+
     AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
             : core::view::Renderer3DModule()
             , _lightSlot("lights",
@@ -127,6 +131,18 @@ namespace ospray {
                 }
             }
             }
+            _device->setErrorCallback([](void *, OSPError error, const char *errorDetails) {
+                ospErrorCallback(error, errorDetails);
+                exit(error);
+                }
+            );
+            _device->setStatusCallback([](void*, const char* msg) { ospStatusCallback(msg); });
+#ifdef _DEBUG
+            _device->setParam("logLevel",OSP_LOG_DEBUG);
+#else
+            _device->setParam("logLevel", OSP_LOG_INFO);
+#endif
+            _device->setParam("warnAsError", true);
             _device->commit();
             _device->setCurrent();
         }
@@ -242,7 +258,7 @@ namespace ospray {
     }
 
 
-    void AbstractOSPRayRenderer::fillLightArray(std::array<float,4> eyeDir) {
+    void AbstractOSPRayRenderer::fillLightArray(std::array<float,3> eyeDir) {
         // clear current lights
         _lightArray.clear();
 
@@ -265,13 +281,13 @@ namespace ospray {
         for (auto dl : distant_lights) {
             light = ::ospray::cpp::Light("distant");
                 if (dl.eye_direction == true) {
-                    light.setParam("direction", convertToVec4f(eyeDir));
+                    light.setParam("direction", convertToVec3f(eyeDir));
                 } else {
                     light.setParam("direction", convertToVec3f(dl.direction));
                 }
             light.setParam("angularDiameter", dl.angularDiameter);
             light.setParam("intensity", dl.intensity);
-            light.setParam("color", convertToVec4f(dl.colour));
+            light.setParam("color", convertToVec3f(dl.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -281,7 +297,7 @@ namespace ospray {
             light.setParam("position", convertToVec3f(pl.position));
             light.setParam("radius", pl.radius);
             light.setParam("intensity", pl.intensity);
-            light.setParam("color", convertToVec4f(pl.colour));
+            light.setParam("color", convertToVec3f(pl.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -294,7 +310,7 @@ namespace ospray {
             light.setParam("penumbraAngle", sl.penumbraAngle);
             light.setParam("radius", sl.radius);
             light.setParam("intensity", sl.intensity);
-            light.setParam("color", convertToVec4f(sl.colour));
+            light.setParam("color", convertToVec3f(sl.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -305,7 +321,7 @@ namespace ospray {
             light.setParam("edge1", convertToVec3f(ql.edgeOne));
             light.setParam("edge2", convertToVec3f(ql.edgeTwo));
             light.setParam("intensity", ql.intensity);
-            light.setParam("color", convertToVec4f(ql.colour));
+            light.setParam("color", convertToVec3f(ql.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -319,7 +335,7 @@ namespace ospray {
                 _renderer->setParam("map_backplate", hdri_tex);
             }
             light.setParam("intensity", hl.intensity);
-            light.setParam("color", convertToVec4f(hl.colour));
+            light.setParam("color", convertToVec3f(hl.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -327,7 +343,8 @@ namespace ospray {
         for (auto al : ambient_lights) {
             light =::ospray::cpp::Light("ambient");
             light.setParam("intensity", al.intensity);
-            light.setParam("color", convertToVec4f(al.colour));
+            //light.setParam("color", convertToVec4f(al.colour));
+            light.setParam("color", convertToVec3f(al.colour));
             light.commit();
             _lightArray.emplace_back(light);
         }
@@ -339,9 +356,9 @@ namespace ospray {
         _renderer->setParam("pixelSamples", this->_rd_spp.Param<core::param::IntParam>()->Value());
         _renderer->setParam("maxPathLength", this->_rd_maxRecursion.Param<core::param::IntParam>()->Value());
 
-         if (this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
+         if (this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value() != "") {
             ::ospray::cpp::Texture bkgnd_tex =
-                this->TextureFromFile(this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value());
+                this->TextureFromFile(this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value().string().c_str());
             _renderer->setParam("map_backplate", bkgnd_tex);
         } else {
             _renderer->setParam("backgroundColor", convertToVec4f(bg_color));
@@ -362,47 +379,71 @@ namespace ospray {
     }
 
 
-    void AbstractOSPRayRenderer::setupOSPRayCamera(megamol::core::view::Camera_2& mmcam) {
-
-
+    void AbstractOSPRayRenderer::setupOSPRayCamera(megamol::core::view::Camera& mmcam) {
         // calculate image parts for e.g. screenshooter
         std::array<float, 2> imgStart = {0, 0};
         std::array<float, 2> imgEnd = {0, 0};
-        imgStart[0] = mmcam.image_tile().left() / static_cast<float>(mmcam.resolution_gate().width());
-        imgStart[1] = mmcam.image_tile().bottom() / static_cast<float>(mmcam.resolution_gate().height());
+        auto cam_pose = mmcam.get<core::view::Camera::Pose>();
+        auto cam_proj_type = mmcam.get<core::view::Camera::ProjectionType>();
 
-        imgEnd[0] = (mmcam.image_tile().left() + mmcam.image_tile().width()) /
-                    static_cast<float>(mmcam.resolution_gate().width());
-        imgEnd[1] = (mmcam.image_tile().bottom() + mmcam.image_tile().height()) /
-                    static_cast<float>(mmcam.resolution_gate().height());
-
-        if (_currentProjectionType != mmcam.projection_type() || !_camera){
-            if (mmcam.projection_type() == core::thecam::Projection_type::perspective) {
+        if (cam_proj_type == core::view::Camera::ProjectionType::PERSPECTIVE) {
+            if (_currentProjectionType != cam_proj_type || !_camera) {
                 _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
-                _currentProjectionType = core::thecam::Projection_type::perspective;
-            } else if (mmcam.projection_type() == core::thecam::Projection_type::orthographic) {
+                _currentProjectionType = core::view::Camera::ProjectionType::PERSPECTIVE;
+            }
+
+            auto cam_intrinsics = mmcam.get<core::view::Camera::PerspectiveParameters>();
+            imgStart[0] = cam_intrinsics.image_plane_tile.tile_start.x;
+            imgStart[1] = cam_intrinsics.image_plane_tile.tile_start.y;
+            imgEnd[0] = cam_intrinsics.image_plane_tile.tile_end.x;
+            imgEnd[1] = cam_intrinsics.image_plane_tile.tile_end.x;
+
+            _camera->setParam("aspect", static_cast<float>(cam_intrinsics.aspect));
+            _camera->setParam("nearClip", static_cast<float>(cam_intrinsics.near_plane));
+            _camera->setParam("fovy", glm::degrees(static_cast<float>(cam_intrinsics.fovy)));
+
+        } else if (cam_proj_type == core::view::Camera::ProjectionType::ORTHOGRAPHIC) {
+            if (_currentProjectionType != cam_proj_type || !_camera) {
                 _camera = std::make_shared<::ospray::cpp::Camera>("orthographic");
-                _currentProjectionType = core::thecam::Projection_type::orthographic;
-            } else {
-                core::utility::log::Log::DefaultLog.WriteWarn("[AbstractOSPRayRenderer] Projection type not supported. Falling back to perspective.");
+                _currentProjectionType = core::view::Camera::ProjectionType::ORTHOGRAPHIC;
+            }
+
+            auto cam_intrinsics = mmcam.get<core::view::Camera::OrthographicParameters>();
+            imgStart[0] = cam_intrinsics.image_plane_tile.tile_start.x;
+            imgStart[1] = cam_intrinsics.image_plane_tile.tile_start.y;
+            imgEnd[0] = cam_intrinsics.image_plane_tile.tile_end.x;
+            imgEnd[1] = cam_intrinsics.image_plane_tile.tile_end.x;
+
+            _camera->setParam("aspect", static_cast<float>(cam_intrinsics.aspect));
+            _camera->setParam("nearClip", static_cast<float>(cam_intrinsics.near_plane));
+            _camera->setParam("height",static_cast<float>(cam_intrinsics.frustrum_height));
+
+        } else {
+            core::utility::log::Log::DefaultLog.WriteWarn("[AbstractOSPRayRenderer] Projection type not supported. Falling back to perspective.");
+            if (_currentProjectionType != cam_proj_type || !_camera) {
                 _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
-                _currentProjectionType = core::thecam::Projection_type::perspective;
-            } //TODO: Implement panoramic camera
-        }
+                _currentProjectionType = core::view::Camera::ProjectionType::PERSPECTIVE;
+            }
+
+            auto cam_intrinsics = mmcam.get<core::view::Camera::PerspectiveParameters>();
+            imgStart[0] = cam_intrinsics.image_plane_tile.tile_start.x;
+            imgStart[1] = cam_intrinsics.image_plane_tile.tile_start.y;
+            imgEnd[0] = cam_intrinsics.image_plane_tile.tile_end.x;
+            imgEnd[1] = cam_intrinsics.image_plane_tile.tile_end.x;
+
+            _camera->setParam("aspect", static_cast<float>(cam_intrinsics.aspect));
+            _camera->setParam("nearClip", static_cast<float>(cam_intrinsics.near_plane));
+            _camera->setParam("fovy", glm::degrees(static_cast<float>(cam_intrinsics.fovy)));
+        } //TODO: Implement panoramic camera
+        
 
         // setup ospcam
         _camera->setParam("imageStart", convertToVec2f(imgStart));
         _camera->setParam("imageEnd", convertToVec2f(imgEnd));
-        _camera->setParam("aspect", static_cast<float>(mmcam.resolution_gate_aspect()));
-        _camera->setParam("nearClip", static_cast<float>(mmcam.near_clipping_plane()));
 
-        glm::vec4 eye_pos = mmcam.eye_position();
-        glm::vec4 view_vec = mmcam.view_vector();
-        glm::vec4 up_vec = mmcam.up_vector();
-        _camera->setParam("position", convertToVec3f(eye_pos));
-        _camera->setParam("direction", convertToVec3f(view_vec));
-        _camera->setParam("up", convertToVec3f(up_vec));
-        _camera->setParam("fovy", static_cast<float>(mmcam.aperture_angle()));
+        _camera->setParam("position", convertToVec3f(cam_pose.position));
+        _camera->setParam("direction", convertToVec3f(cam_pose.direction));
+        _camera->setParam("up", convertToVec3f(cam_pose.up));
 
         // ospSet1i(_camera, "architectural", 1);
          // TODO: ospSet1f(_camera, "apertureRadius", );
@@ -459,11 +500,11 @@ namespace ospray {
             {
             auto& container = std::get<objMaterial>(element.materialContainer->material);
             _materials[entry_first] = ::ospray::cpp::Material(this->_rd_type_string.c_str(), "obj");
-            _materials[entry_first].setParam("Kd", convertToVec3f(container.Kd));
-            _materials[entry_first].setParam("Ks", convertToVec3f(container.Ks));
-            _materials[entry_first].setParam("Ns", container.Ns);
+            _materials[entry_first].setParam("kd", convertToVec3f(container.Kd));
+            _materials[entry_first].setParam("ks", convertToVec3f(container.Ks));
+            _materials[entry_first].setParam("ns", container.Ns);
             _materials[entry_first].setParam("d", container.d);
-            _materials[entry_first].setParam("Tf", convertToVec3f(container.Tf));
+            _materials[entry_first].setParam("tf", convertToVec3f(container.Tf));
             }
             break;
         case LUMINOUS:

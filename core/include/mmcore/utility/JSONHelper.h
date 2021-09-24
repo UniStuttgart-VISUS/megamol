@@ -9,12 +9,9 @@
 #define MEGAMOL_UTILITY_JSONHELPER_INCLUDED
 
 
-#include <string>
-
-#include <json.hpp>
-
 #include "mmcore/utility/log/Log.h"
-#include "vislib/UTF8Encoder.h"
+#include <string>
+#include <json.hpp>
 
 
 namespace megamol {
@@ -64,17 +61,23 @@ namespace utility {
                                 node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                             return false;
                         }
-                    }
-                    else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, int>) {
+                    } else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, int>) {
                         if (json_value[i].is_number()) {
                             out_value[i] = json_value[i];
-                        }
-                        else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON ERROR - Couldn't read 'float' or 'int' value from json node '%s'. [%s, %s, line "
-                                "%d]\n",
-                                node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                            return false;
+                        } else {
+                            bool nan_case = false;
+                            if (json_value[i].is_string()) {
+                                if (json_value[i] == "null") {
+                                    out_value[i] = std::numeric_limits<T>::quiet_NaN();
+                                    nan_case = true;
+                                }
+                            }
+                            if (!nan_case) {
+                                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                    "JSON ERROR - Couldn't read 'float' or 'int' value from json node '%s'. [%s, %s, line %d]\n",
+                                    node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                                return false;
+                            }
                         }
                     }
                     else {
@@ -100,18 +103,7 @@ namespace utility {
                 else if constexpr (std::is_same_v<T, std::string>) {
                     if (json_value.is_string()) {
                         std::string value;
-                        json_value.get_to(value);
-                        // Decode to supports UTF-8
-                        vislib::StringA decoded_str;
-                        if (vislib::UTF8Encoder::Decode(decoded_str, vislib::StringA(value.c_str()))) {
-                            (*out_value) = std::string(decoded_str.PeekBuffer());
-                        }
-                        else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON ERROR - Unable to decode string of '%s'. [%s, %s, line %d]\n",
-                                node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                            return false;
-                        }
+                        json_value.get_to((*out_value));
                     }
                     else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -125,10 +117,20 @@ namespace utility {
                         json_value.get_to((*out_value));
                     }
                     else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON ERROR - Couldn't read 'float' or 'int' value from json node '%s'. [%s, %s, line %d]\n",
-                            node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                        return false;
+                        bool nan_case = false;
+                        if (json_value.is_string()) {
+                            if (json_value == "null") {
+                                (*out_value) = std::numeric_limits<T>::quiet_NaN();
+                                nan_case = true;
+                            }
+                        }
+                        if (!nan_case) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "JSON ERROR - Couldn't read 'float' or 'int' value from json node '%s'. [%s, %s, line "
+                                "%d]\n",
+                                node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                            return false;
+                        }
                     }
                 }
                 else {

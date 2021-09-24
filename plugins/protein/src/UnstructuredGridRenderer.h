@@ -104,7 +104,7 @@ private:
     core::param::ParamSlot sphereRadSlot;
 
     /// camera information
-    core::view::Camera_2 cameraInfo;
+    core::view::Camera cameraInfo;
 
     /// Shader for the spheres (raycasting view)
     vislib::graphics::gl::GLSLShader sphereShader;

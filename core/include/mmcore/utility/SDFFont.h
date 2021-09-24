@@ -15,25 +15,13 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/view/RenderUtils.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/utility/ResourceWrapper.h"
-
+#include "mmcore/utility/RenderUtils.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/CharTraits.h"
-#include "vislib/UTF8Encoder.h"
 
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtx/quaternion.hpp"
-#include "glm/gtc/type_ptr.hpp"
+#include <glm/glm.hpp>
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <fstream>
-
-#define SDFFONT_DEPRECATED_DRAWSTRING [[DEPRECATED("Use DrawString version providing explicit matrices!")]]
 
 namespace megamol {
 namespace core {
@@ -354,7 +342,7 @@ namespace utility {
          */
         void BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm, const float col[4]) const;
         void BatchDrawString(const glm::mat4& mvp, const float col[4]) const {
-            this->BatchDrawString(glm::mat4(), mvp, col);
+            this->BatchDrawString(glm::mat4(1.0f), mvp, col);
         }
 
         /**
@@ -368,7 +356,7 @@ namespace utility {
          */
         void BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm) const;
         void BatchDrawString(const glm::mat4& mvp) const {
-            this->BatchDrawString(glm::mat4(), mvp);
+            this->BatchDrawString(glm::mat4(1.0f), mvp);
         }
 
         /**
@@ -474,8 +462,9 @@ namespace utility {
         * @param a The rotation angle in degrees.
         * @param v The rotation axis.
         */
+        /// TODO XXX FIXME Currently not working ...
         inline void SetRotation(float a, glm::vec3 v) {
-            this->rotation = glm::quat((a * (float)M_PI / 180.0f), v.x, v.y, v.z);
+            this->rotation = glm::quat(glm::radians(a), v.x, v.y, v.z);
         }
 
         inline void SetRotation(float a, float x, float y, float z) {

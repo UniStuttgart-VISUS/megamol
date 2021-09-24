@@ -28,7 +28,7 @@ using namespace megamol::protein;
 /*
  * Diagram2DRenderer::Diagram2DRenderer (CTOR)
  */
-Diagram2DRenderer::Diagram2DRenderer( void ) : Renderer2DModule (),
+Diagram2DRenderer::Diagram2DRenderer( void ) : Renderer2DModuleGL (),
         dataCallerSlot( "getData", "Connects the diagram rendering with data storage." ), 
         resolutionParam( "resolution", "The plotting resolution of the diagram."),
         plotColorParam( "plotcolor", "The color used for plotting the diagram."),

@@ -7,10 +7,13 @@
 
 #ifndef MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
+#pragma once
+
 
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore/param/ParamSlot.h"
+#include "vislib/math/Cuboid.h"
 
 #include "CinematicUtils.h"
 
@@ -125,7 +128,6 @@ namespace cinematic {
 
         core::param::ParamSlot replacementRenderingParam;
         core::param::ParamSlot toggleReplacementParam;
-        core::param::ParamSlot replacementKeyParam;
         core::param::ParamSlot alphaParam;
 
     };

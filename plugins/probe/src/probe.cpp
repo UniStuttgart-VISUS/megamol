@@ -1,57 +1,42 @@
-/*
- * probe.cpp
- * Copyright (C) 2019 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019-2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
-
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "mmcore/versioninfo.h"
-#include "vislib/vislibversion.h"
-#include "ExtractMesh.h"
-#include "PlaceProbes.h"
-#include "SampleAlongProbes.h"
-#include "ProbeCalls.h"
-#include "ExtractProbeGeometry.h"
+
 #include "CallKDTree.h"
-#include "GenerateGlyphs.h"
-#include "SurfaceNets.h"
-#include "ExtractCenterline.h"
 #include "ConstructKDTree.h"
+#include "ExtractCenterline.h"
+#include "ExtractMesh.h"
+#include "ExtractProbeGeometry.h"
+#include "GenerateGlyphs.h"
+#include "PlaceProbes.h"
+#include "ProbeCalls.h"
+#include "SampleAlongProbes.h"
+#include "SurfaceNets.h"
 //#include "ManipulateMesh.h"
 #ifdef PROBE_HAS_OSPRAY
 #include "OSPRayGlyphGeometry.h"
 #endif
 
 namespace megamol::probe {
-    /** Implementing the instance class of this plugin */
-    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
-        REGISTERPLUGIN(plugin_instance)
+    class ProbePluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+        REGISTERPLUGIN(ProbePluginInstance)
+
     public:
-        /** ctor */
-        plugin_instance(void)
-            : ::megamol::core::utility::plugins::Plugin200Instance(
+        ProbePluginInstance()
+                : megamol::core::utility::plugins::AbstractPluginInstance(
+                      "probe", "Putting probes into data and render glyphs at the end of the probe."){};
 
-                /* machine-readable plugin assembly name */
-                "probe",
+        ~ProbePluginInstance(void) override = default;
 
-                /* human-readable plugin description */
-                "Putting probes into data and render glyphs at the end of the probe.") {
+        // Registers modules and calls
+        void registerClasses() override {
 
-            // here we could perform addition initialization
-        };
-        /** Dtor */
-        virtual ~plugin_instance(void) {
-            // here we could perform addition de-initialization
-        }
-        /** Registers modules and calls */
-        virtual void registerClasses(void) {
-
-            // register modules here:
-
+            // register modules
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractMesh>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::PlaceProbes>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::SampleAlongPobes>();
@@ -60,16 +45,14 @@ namespace megamol::probe {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::SurfaceNets>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractCenterline>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ConstructKDTree>();
-            //this->module_descriptions.RegisterAutoDescription<megamol::probe::ManipulateMesh>();
+            // this->module_descriptions.RegisterAutoDescription<megamol::probe::ManipulateMesh>();
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif
 
-            // register calls here:
-
+            // register calls
             this->call_descriptions.RegisterAutoDescription<megamol::probe::CallProbes>();
             this->call_descriptions.RegisterAutoDescription<megamol::probe::CallKDTree>();
-
         }
     };
 } // namespace megamol::probe

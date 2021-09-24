@@ -7,11 +7,15 @@
 
 #include "stdafx.h"
 #include "CinematicView.h"
-
+#include "CallKeyframeKeeper.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/thecam/utility/types.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
-#include "mmcore/MegaMolGraph.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
 
 using namespace megamol;
@@ -42,8 +46,6 @@ CinematicView::CinematicView(void)
         , frameFolderParam("cinematic::frameFolder", "Specify folder where the frame files should be stored.")
         , addSBSideToNameParam(
               "cinematic::addSBSideToName", "Toggle whether skybox side should be added to output filename")
-        , eyeParam("cinematic::stereo_eye", "Select eye position (for stereo view).")
-        , projectionParam("cinematic::stereo_projection", "Select camera projection.")
         , png_data()
         , utils()
         , deltaAnimTime(clock())
@@ -54,7 +56,8 @@ CinematicView::CinematicView(void)
         , sbSide(CinematicView::SkyboxSides::SKYBOX_NONE)
         , rendering(false)
         , fps(24)
-        , skyboxCubeMode(false) {
+        , skyboxCubeMode(false)
+        , cinematicFbo(nullptr) {
 
     // init callback
     this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
@@ -101,418 +104,451 @@ CinematicView::CinematicView(void)
     this->delayFirstRenderFrameParam.SetParameter(new param::FloatParam(1.0f));
     this->MakeSlotAvailable(&this->delayFirstRenderFrameParam);
 
-    this->frameFolderParam.SetParameter(new param::FilePathParam(""));
+    this->frameFolderParam.SetParameter(new param::FilePathParam("", param::FilePathParam::Flag_Directory_ToBeCreated));
     this->MakeSlotAvailable(&this->frameFolderParam);
 
     this->addSBSideToNameParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->addSBSideToNameParam);
-
-    param::EnumParam* enp = new param::EnumParam(static_cast<int>(megamol::core::thecam::Eye::mono));
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::mono), "Mono");
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::left), "Left");
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::centre), "Center");
-    enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::right), "Right");
-    this->eyeParam << enp;
-    this->MakeSlotAvailable(&this->eyeParam);
-    enp = nullptr;
-
-    param::EnumParam* pep = new param::EnumParam(static_cast<int>(megamol::core::thecam::Projection_type::perspective));
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::perspective), "Mono Perspective");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::orthographic), "Mono Orthographic");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::off_axis), "Stereo Off-Axis");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::parallel), "Stereo Prallel");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::toe_in), "Stereo Toe-In");
-    pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::converged), "Converged");
-    this->projectionParam << pep;
-    this->MakeSlotAvailable(&this->projectionParam);
-    pep = nullptr;
 }
 
 
 CinematicView::~CinematicView(void) {
 
-    if (this->_fbo != nullptr) {
-        if (this->_fbo->IsEnabled()) {
-            this->_fbo->Disable();
-        }
-        this->_fbo->Release();
-        this->_fbo.reset();
-    }
+    this->cinematicFbo.reset();
     this->render_to_file_cleanup();
     this->Release();
 }
 
 
-
-void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call) {
+ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
     // Get update data from keyframe keeper -----------------------------------
     auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
-    if (cr3d == nullptr) {
-        return;
-    }
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
-    if (ccc == nullptr) {
-        return;
-    }
-    if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData))
-        return;
-    ccc->SetBboxCenter(vislib_point_to_glm(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
-    ccc->SetTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
-    ccc->SetFps(this->fps);
-    if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData))
-        return;
 
-    // Initialise render utils once
-    if (!this->utils.Initialized()) {
-        if (!this->utils.Initialise(this->GetCoreInstance())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[CINEMATIC VIEW] [Render] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__,
-                __FUNCTION__, __LINE__);
-            return;
-        }
+    // init camera
+    if ((this->_camera.get<view::Camera::ProjectionType>() != view::Camera::PERSPECTIVE) &&
+        (this->_camera.get<view::Camera::ProjectionType>() != view::Camera::ORTHOGRAPHIC)) {
+        auto intrinsics = core::view::Camera::PerspectiveParameters();
+        intrinsics.fovy = 0.5f;
+        intrinsics.aspect = static_cast<float>(this->_fbo->getWidth()) / static_cast<float>(this->_fbo->getHeight());
+        intrinsics.near_plane = 0.01f;
+        intrinsics.far_plane = 100.0f;
+        /// intrinsics.image_plane_tile = ;
+        this->_camera.setPerspectiveProjection(intrinsics);
     }
 
-    // Update parameters ------------------------------------------------------
-    if (this->toggleAnimPlayParam.IsDirty()) {
-        this->toggleAnimPlayParam.ResetDirty();
-        this->playAnim = !this->playAnim;
-        if (this->playAnim) {
-            this->deltaAnimTime = clock();
-        }
-    }
-    if (this->selectedSkyboxSideParam.IsDirty()) {
-        this->selectedSkyboxSideParam.ResetDirty();
-        if (this->rendering) {
-            this->selectedSkyboxSideParam.Param<param::EnumParam>()->SetValue(static_cast<int>(this->sbSide), false);
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[CINEMATIC VIEW] [resHeightParam] Changes are not applied while rendering is running.");
-        } else {
-            this->sbSide = static_cast<CinematicView::SkyboxSides>(
-                this->selectedSkyboxSideParam.Param<param::EnumParam>()->Value());
-        }
-    }
-    if (this->skyboxCubeModeParam.IsDirty()) {
-        this->skyboxCubeModeParam.ResetDirty();
-        this->skyboxCubeMode = this->skyboxCubeModeParam.Param<param::BoolParam>()->Value();
-    }
-    if (this->resHeightParam.IsDirty()) {
-        this->resHeightParam.ResetDirty();
-        if (this->rendering) {
-            this->resHeightParam.Param<param::IntParam>()->SetValue(this->cineHeight, false);
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[CINEMATIC VIEW] [resHeightParam] Changes are not applied while rendering is running.");
-        } else {
-            this->cineHeight = this->resHeightParam.Param<param::IntParam>()->Value();
-        }
-    }
-    if (this->resWidthParam.IsDirty()) {
-        this->resWidthParam.ResetDirty();
-        if (this->rendering) {
-            this->resWidthParam.Param<param::IntParam>()->SetValue(this->cineWidth, false);
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[CINEMATIC VIEW] [resWidthParam] Changes are not applied while rendering is running.");
-        } else {
-            this->cineWidth = this->resWidthParam.Param<param::IntParam>()->Value();
-        }
-    }
-    if (this->fpsParam.IsDirty()) {
-        this->fpsParam.ResetDirty();
-        if (this->rendering) {
-            this->fpsParam.Param<param::IntParam>()->SetValue(static_cast<int>(this->fps), false);
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[CINEMATIC VIEW] [fpsParam] Changes are not applied while rendering is running.");
-        } else {
-            this->fps = static_cast<unsigned int>(this->fpsParam.Param<param::IntParam>()->Value());
-        }
-    }
-    if (this->renderParam.IsDirty()) {
-        this->renderParam.ResetDirty();
-        this->rendering = !this->rendering;
-        if (this->rendering) {
-            this->render_to_file_setup();
-        } else {
-            this->render_to_file_cleanup();
-        }
-    }
-    // Set (mono/stereo) projection for camera
-    if (this->projectionParam.IsDirty()) {
-        this->projectionParam.ResetDirty();
-        this->_camera.projection_type(static_cast<megamol::core::thecam::Projection_type>(
-            this->projectionParam.Param<param::EnumParam>()->Value()));
-    }
-    // Set eye position for camera
-    if (this->eyeParam.IsDirty()) {
-        this->eyeParam.ResetDirty();
-        this->_camera.eye(static_cast<megamol::core::thecam::Eye>(this->eyeParam.Param<param::EnumParam>()->Value()));
-    }
+    if ((cr3d != nullptr) && (ccc != nullptr)) {
 
-    // Time settings ----------------------------------------------------------
-    // Load animation time
-    if (this->rendering) {
-        if ((this->png_data.animTime < 0.0f) || (this->png_data.animTime > ccc->GetTotalAnimTime())) {
-            throw vislib::Exception("[CINEMATIC VIEW] Invalid animation time.", __FILE__, __LINE__);
-        }
-        ccc->SetSelectedKeyframeTime(this->png_data.animTime);
-        if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime))
-            return;
-    } else {
-        // If time is set by running ANIMATION
-        if (this->playAnim) {
-            clock_t tmpTime = clock();
-            clock_t cTime = tmpTime - this->deltaAnimTime;
-            this->deltaAnimTime = tmpTime;
-            float animTime = ccc->GetSelectedKeyframe().GetAnimTime() + ((float) cTime) / (float) (CLOCKS_PER_SEC);
-            if ((animTime < 0.0f) ||
-                (animTime > ccc->GetTotalAnimTime())) { // Reset time if max animation time is reached
-                animTime = 0.0f;
+        bool ccc_success = (*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData);
+        ccc_success &= (*ccc)(CallKeyframeKeeper::CallForSetSimulationData);
+
+        // Initialise render utils once
+        bool utils_success = this->utils.Initialized();
+        if (!utils_success) {
+            if (this->utils.Initialise(this->GetCoreInstance())) {
+                utils_success = true;
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[CINEMATIC VIEW] [Render] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__,
+                    __FUNCTION__, __LINE__);
             }
-            ccc->SetSelectedKeyframeTime(animTime);
-            if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime))
-                return;
-        }
-    }
-    Keyframe skf = ccc->GetSelectedKeyframe();
+        } 
 
-    // Load current simulation time to parameter
-    float simTime = skf.GetSimTime();
-    param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(2));
-    animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
+        if (ccc_success && utils_success) {
 
-    // Viewport ---------------------------------------------------------------
-    /// Viewport of camera will only be set when Base::Render(context) was called, so we have to grab it from OpenGL
-    glm::ivec4 viewport;
-    glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
-    const int vp_iw = viewport[2];
-    const int vp_ih = viewport[3];
-    const int vp_ih_reduced = vp_ih - static_cast<int>(this->utils.GetTextLineHeight());
-    const float vp_fw = static_cast<float>(vp_iw);
-    const float vp_fh = static_cast<float>(vp_ih);
-    const float vp_fh_reduced = static_cast<float>(vp_ih_reduced);
-    const float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
-    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
+            ccc->SetBboxCenter(vislib_point_to_glm(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
+            ccc->SetTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
+            ccc->SetFps(this->fps);
 
-    // FBO viewport
-    int fboWidth = vp_iw;
-    int fboHeight = vp_ih_reduced;
-    if (this->rendering) {
-        fboWidth = this->cineWidth;
-        fboHeight = this->cineHeight;
-    } else {
-        float vpRatio = vp_fw / vp_fh_reduced;
-        // Calculate reduced fbo width and height
-        if ((this->cineWidth < vp_iw) && (this->cineHeight < vp_ih_reduced)) {
-            fboWidth = this->cineWidth;
-            fboHeight = this->cineHeight;
-        } else {
-            fboWidth = vp_iw;
-            fboHeight = vp_ih_reduced;
-            if (cineRatio > vpRatio) {
-                fboHeight = (static_cast<int>(vp_fw / cineRatio));
-            } else if (cineRatio < vpRatio) {
-                fboWidth = (static_cast<int>(vp_fh_reduced * cineRatio));
+            // Update parameters ------------------------------------------------------
+            if (this->toggleAnimPlayParam.IsDirty()) {
+                this->toggleAnimPlayParam.ResetDirty();
+                this->playAnim = !this->playAnim;
+                if (this->playAnim) {
+                    this->deltaAnimTime = clock();
+                }
+            }
+            if (this->selectedSkyboxSideParam.IsDirty()) {
+                this->selectedSkyboxSideParam.ResetDirty();
+                if (this->rendering) {
+                    this->selectedSkyboxSideParam.Param<param::EnumParam>()->SetValue(
+                        static_cast<int>(this->sbSide), false);
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "[CINEMATIC VIEW] [resHeightParam] Changes are not applied while rendering is running.");
+                } else {
+                    this->sbSide = static_cast<CinematicView::SkyboxSides>(
+                        this->selectedSkyboxSideParam.Param<param::EnumParam>()->Value());
+                }
+            }
+            if (this->skyboxCubeModeParam.IsDirty()) {
+                this->skyboxCubeModeParam.ResetDirty();
+                this->skyboxCubeMode = this->skyboxCubeModeParam.Param<param::BoolParam>()->Value();
+            }
+            if (this->resHeightParam.IsDirty()) {
+                this->resHeightParam.ResetDirty();
+                if (this->rendering) {
+                    this->resHeightParam.Param<param::IntParam>()->SetValue(this->cineHeight, false);
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "[CINEMATIC VIEW] [resHeightParam] Changes are not applied while rendering is running.");
+                } else {
+                    this->cineHeight = this->resHeightParam.Param<param::IntParam>()->Value();
+                }
+            }
+            if (this->resWidthParam.IsDirty()) {
+                this->resWidthParam.ResetDirty();
+                if (this->rendering) {
+                    this->resWidthParam.Param<param::IntParam>()->SetValue(this->cineWidth, false);
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "[CINEMATIC VIEW] [resWidthParam] Changes are not applied while rendering is running.");
+                } else {
+                    this->cineWidth = this->resWidthParam.Param<param::IntParam>()->Value();
+                }
+            }
+            if (this->fpsParam.IsDirty()) {
+                this->fpsParam.ResetDirty();
+                if (this->rendering) {
+                    this->fpsParam.Param<param::IntParam>()->SetValue(static_cast<int>(this->fps), false);
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "[CINEMATIC VIEW] [fpsParam] Changes are not applied while rendering is running.");
+                } else {
+                    this->fps = static_cast<unsigned int>(this->fpsParam.Param<param::IntParam>()->Value());
+                }
+            }
+            if (this->renderParam.IsDirty()) {
+                this->renderParam.ResetDirty();
+                this->rendering = !this->rendering;
+                if (this->rendering) {
+                    this->render_to_file_setup();
+                } else {
+                    this->render_to_file_cleanup();
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Finished rendering.");
+                }
+            }
+
+            // Time settings ----------------------------------------------------------
+            // Load animation time
+            if (this->rendering) {
+                if ((this->png_data.animTime < 0.0f) || (this->png_data.animTime > ccc->GetTotalAnimTime())) {
+                    throw vislib::Exception("[CINEMATIC VIEW] Invalid animation time.", __FILE__, __LINE__);
+                }
+                ccc->SetSelectedKeyframeTime(this->png_data.animTime);
+            } else {
+                // If time is set by running ANIMATION
+                if (this->playAnim) {
+                    clock_t tmpTime = clock();
+                    clock_t cTime = tmpTime - this->deltaAnimTime;
+                    this->deltaAnimTime = tmpTime;
+                    float animTime =
+                        ccc->GetSelectedKeyframe().GetAnimTime() + static_cast<float>(cTime) / static_cast<float>(CLOCKS_PER_SEC);
+                    if ((animTime < 0.0f) ||
+                        (animTime > ccc->GetTotalAnimTime())) { // Reset time if max animation time is reached
+                        animTime = 0.0f;
+                    }
+                    ccc->SetSelectedKeyframeTime(animTime);
+                }
+            }
+
+            if ((*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) {
+                Keyframe skf = ccc->GetSelectedKeyframe();
+
+                // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
+                ccc->SetCameraState(std::make_shared<Camera>(this->_camera));
+                if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) {
+                    throw vislib::Exception(
+                        "[CINEMATIC VIEW] Could not propagate current camera to keyframe keeper.", __FILE__, __LINE__);
+                }
+
+                // Load current simulation time to this views animTimeParam = simulation time.
+                /// TODO XXX One frame dealy due to propagation in GetExtends in following frame?!
+                float simTime = skf.GetSimTime();
+                param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(2)); // animTimeSlot
+                auto frame_count = cr3d->TimeFramesCount();
+                animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(frame_count), true);
+
+                // Set camera parameters of selected keyframe for this view.
+                // But only if selected keyframe differs to last locally stored and shown keyframe.
+                if (this->shownKeyframe != skf) {
+                    this->shownKeyframe = skf;
+
+                    // Apply selected keyframe parameters only, if at least one valid keyframe exists.
+                    if (!ccc->GetKeyframes()->empty()) {
+                        // ! Using only a subset of the keyframe camera state (pose and fov/frustrum height)!
+                        auto pose = skf.GetCamera().get<Camera::Pose>();
+                        if (skf.GetCamera().get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                            auto skf_intrinsics = skf.GetCamera().get<Camera::PerspectiveParameters>();
+                            if (this->_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                                auto cam_intrinsics = this->_camera.get<Camera::PerspectiveParameters>();
+                                cam_intrinsics.fovy = skf_intrinsics.fovy;
+                                this->_camera = Camera(pose, cam_intrinsics);
+                            } else if (this->_camera.get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
+                                auto cam_intrinsics = this->_camera.get<Camera::OrthographicParameters>();
+                                Camera::PerspectiveParameters pers_intrinsics;
+                                pers_intrinsics.aspect = cam_intrinsics.aspect;
+                                pers_intrinsics.far_plane = cam_intrinsics.far_plane;
+                                pers_intrinsics.image_plane_tile = cam_intrinsics.image_plane_tile;
+                                pers_intrinsics.near_plane = cam_intrinsics.near_plane;
+                                pers_intrinsics.fovy = skf_intrinsics.fovy;
+                                this->_camera = Camera(pose, pers_intrinsics);
+                            } else {
+                                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                    "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                                    __LINE__);
+                            }
+                        } else if (skf.GetCamera().get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
+                            auto skf_intrinsics = skf.GetCamera().get<Camera::OrthographicParameters>();
+                            if (this->_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                                auto cam_intrinsics = this->_camera.get<Camera::PerspectiveParameters>();
+                                Camera::OrthographicParameters orth_intrinsics;
+                                orth_intrinsics.aspect = cam_intrinsics.aspect;
+                                orth_intrinsics.far_plane = cam_intrinsics.far_plane;
+                                orth_intrinsics.image_plane_tile = cam_intrinsics.image_plane_tile;
+                                orth_intrinsics.near_plane = cam_intrinsics.near_plane;
+                                orth_intrinsics.frustrum_height = skf_intrinsics.frustrum_height;
+                                this->_camera = Camera(pose, orth_intrinsics);
+                            } else if (this->_camera.get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
+                                auto cam_intrinsics = this->_camera.get<Camera::OrthographicParameters>();
+                                cam_intrinsics.frustrum_height = skf_intrinsics.frustrum_height;
+                                this->_camera = Camera(pose, cam_intrinsics);
+                            } else {
+                                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                    "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                                    __LINE__);
+                            }
+                        } else {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                                __LINE__);
+                        }
+                    } 
+                }
+
+                // Apply showing skybox side ONLY if new camera parameters are set.
+                // Non-permanent overwrite of selected keyframe camera by skybox camera settings.
+                if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
+                    auto pose = this->_camera.get<Camera::Pose>();
+                    const glm::vec3 cam_pos = pose.position;
+                    const glm::vec3 cam_right = pose.right;
+                    const glm::vec3 cam_up = pose.up;
+                    const glm::vec3 cam_view = pose.direction;
+
+                    glm::vec3 new_pos = cam_pos;
+                    glm::quat new_orientation;
+                    const float Rad180Degrees = glm::radians(180.0f);
+                    const float Rad90Degrees = glm::radians(90.0f);
+
+                    if (!this->skyboxCubeMode) {
+                        if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
+                            new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_right);
+                            new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_view);
+                        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
+                            new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_up);
+                        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
+                            new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_up);
+                        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
+                            new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_right);
+                        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
+                            new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_right);
+                        }
+                    } else {
+                        auto const center_ = cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter();
+                        const glm::vec3 center = glm::vec4(center_.X(), center_.Y(), center_.Z(), 1.0f);
+                        const float width = cr3d->AccessBoundingBoxes().BoundingBox().Width();
+                        const float height = cr3d->AccessBoundingBoxes().BoundingBox().Height();
+                        const float depth = cr3d->AccessBoundingBoxes().BoundingBox().Depth();
+                        if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_FRONT) {
+                            new_pos = center - depth * cam_view;
+                        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
+                            new_pos = center + depth * cam_view;
+                            new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_right);
+                            new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_view);
+                        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
+                            new_pos = center + width * cam_right;
+                            new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_up);
+                        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
+                            new_pos = center - width * cam_right;
+                            new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_up);
+                        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
+                            new_pos = center + height * cam_up;
+                            new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_right);
+                        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
+                            new_pos = center - height * cam_up;
+                            new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_right);
+                        }
+                    }
+                    // Apply new position, orientation and aperture angle to current camera.
+                    if (this->_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                        auto cam_intrinsics = this->_camera.get<Camera::PerspectiveParameters>();
+                        cam_intrinsics.fovy = 90.0f / 180.0f * 3.14f; /// TODO proper conversion deg to rad
+                        this->_camera = Camera(Camera::Pose(new_pos, new_orientation), cam_intrinsics);
+                    } else {
+
+                        /// TODO ?
+
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                            __LINE__);
+                    }
+                }
+
+                // Viewport ---------------------------------------------------------------
+                /// Assume current framebuffer resolution to be used as viewport resolution
+                const int vp_iw = this->_fbo->getWidth();
+                const int vp_ih = this->_fbo->getHeight();
+                const int vp_ih_reduced = vp_ih - static_cast<int>(this->utils.GetTextLineHeight());
+                const float vp_fw = static_cast<float>(vp_iw);
+                const float vp_fh = static_cast<float>(vp_ih);
+                const float vp_fh_reduced = static_cast<float>(vp_ih_reduced);
+                const float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
+                glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
+
+                // FBO viewport
+                int fboWidth = vp_iw;
+                int fboHeight = vp_ih_reduced;
+                if (this->rendering) {
+                    fboWidth = this->cineWidth;
+                    fboHeight = this->cineHeight;
+                } else {
+                    float vpRatio = vp_fw / vp_fh_reduced;
+                    // Calculate reduced fbo width and height
+                    if ((this->cineWidth < vp_iw) && (this->cineHeight < vp_ih_reduced)) {
+                        fboWidth = this->cineWidth;
+                        fboHeight = this->cineHeight;
+                    } else {
+                        fboWidth = vp_iw;
+                        fboHeight = vp_ih_reduced;
+                        if (cineRatio > vpRatio) {
+                            fboHeight = (static_cast<int>(vp_fw / cineRatio));
+                        } else if (cineRatio < vpRatio) {
+                            fboWidth = (static_cast<int>(vp_fh_reduced * cineRatio));
+                        }
+                    }
+                }
+                // Texture viewport
+                int texWidth = fboWidth;
+                int texHeight = fboHeight;
+                if ((texWidth > vp_iw) || ((texWidth < vp_iw) && (texHeight < vp_ih_reduced))) {
+                    texWidth = vp_iw;
+                    texHeight = static_cast<int>(vp_fw / cineRatio);
+                }
+                if ((texHeight > vp_ih_reduced) || ((texWidth < vp_iw) && (texHeight < vp_ih_reduced))) {
+                    texHeight = vp_ih_reduced;
+                    texWidth = static_cast<int>(vp_fh_reduced * cineRatio);
+                }
+
+                // Render to fbo ----------------------------------------------
+                const auto tmp_fbo = this->_fbo;
+                const auto tmp_cam = this->_camera;
+
+                if (this->cinematicFbo == nullptr) {
+                    this->cinematicFbo = std::make_shared<glowl::FramebufferObject>(fboWidth, fboHeight);
+                    this->cinematicFbo->createColorAttachment(GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE);
+                } else {
+                    if ((this->cinematicFbo->getWidth() != fboWidth) ||
+                        (this->cinematicFbo->getHeight() != fboHeight)) {
+                        this->cinematicFbo->resize(fboWidth, fboHeight);
+                    }
+                }
+                this->_fbo = this->cinematicFbo;
+
+                auto pose = this->_camera.get<Camera::Pose>();
+                if (this->_camera.get<Camera::ProjectionType>() == Camera::PERSPECTIVE) {
+                    auto cam_intrinsics = this->_camera.get<Camera::PerspectiveParameters>();
+                    cam_intrinsics.aspect = static_cast<float>(fboWidth) / static_cast<float>(fboHeight);
+                    this->_camera = Camera(pose, cam_intrinsics);
+                } else if (this->_camera.get<Camera::ProjectionType>() == Camera::ORTHOGRAPHIC) {
+                    auto cam_intrinsics = this->_camera.get<Camera::OrthographicParameters>();
+                    cam_intrinsics.aspect = static_cast<float>(fboWidth) / static_cast<float>(fboHeight);
+                    this->_camera = Camera(pose, cam_intrinsics);
+                } else {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[Camera] Found no valid projection. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                }
+
+                Base::Render(time, instanceTime);
+
+                this->_fbo = tmp_fbo;
+                this->_camera = tmp_cam;
+
+                // Write frame to file
+                if (this->rendering) {
+                    // Lock writing frame to file for specific time
+                    std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->png_data.start_time);
+                    if (diff.count() >
+                        static_cast<double>(this->delayFirstRenderFrameParam.Param<param::FloatParam>()->Value())) {
+                        this->png_data.write_lock = 0;
+                    }
+                    this->render_to_file_write();
+                }
+
+                // Render Decoration ------------------------------------------
+                this->_fbo->bind();
+
+                // Set letter box background 
+                auto bgcol = this->BkgndColour();
+                this->utils.SetBackgroundColor(bgcol);
+                bgcol = this->utils.Color(CinematicUtils::Colors::LETTER_BOX);
+                this->utils.SetBackgroundColor(bgcol);
+                glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+                glClearDepth(1.0f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glViewport(0, 0, vp_fw, vp_fh);
+
+                // Push fbo texture 
+                float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
+                float left = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
+                float bottom = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;
+                float up = (vp_fh_reduced - static_cast<float>(texHeight)) / 2.0f;
+                glm::vec3 pos_bottom_left = {left, bottom, 1.0f};
+                glm::vec3 pos_upper_left = {left, up, 1.0f};
+                glm::vec3 pos_upper_right = {right, up, 1.0f};
+                glm::vec3 pos_bottom_right = {right, bottom, 1.0f};
+                this->utils.Push2DColorTexture(this->cinematicFbo->getColorAttachment(0)->getName(), pos_bottom_left,
+                    pos_upper_left, pos_upper_right, pos_bottom_right, true, glm::vec4(0.0f), true);
+
+                // Push menu 
+                std::string leftLabel = " CINEMATIC ";
+                std::string midLabel = "";
+                if (this->rendering) {
+                    midLabel = " ! RENDERING IN PROGRESS ! ";
+                } else if (this->playAnim) {
+                    midLabel = " Playing Animation ";
+                }
+                std::string rightLabel = "";
+                this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, glm::vec2(vp_fw, vp_fh), 1.0f);
+
+                // Draw 2D 
+                this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
+
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
         }
     }
-    // Texture viewport
-    int texWidth = fboWidth;
-    int texHeight = fboHeight;
-    if ((texWidth > vp_iw) || ((texWidth < vp_iw) && (texHeight < vp_ih_reduced))) {
-        texWidth = vp_iw;
-        texHeight = static_cast<int>(vp_fw / cineRatio);
-    }
-    if ((texHeight > vp_ih_reduced) || ((texWidth < vp_iw) && (texHeight < vp_ih_reduced))) {
-        texHeight = vp_ih_reduced;
-        texWidth = static_cast<int>(vp_fh_reduced * cineRatio);
-    }
 
-    // Set camera settings ----------------------------------------------------
-    auto res = cam_type::screen_size_type(glm::ivec2(fboWidth, fboHeight));
-    this->_camera.resolution_gate(res);
-    auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, fboHeight, fboWidth, 0}); // left, top, right, bottom!
-    this->_camera.image_tile(tile);
-
-    // Set camera parameters of selected keyframe for this view.
-    // But only if selected keyframe differs to last locally stored and shown keyframe.
-    if (this->shownKeyframe != skf) {
-        this->shownKeyframe = skf;
-
-        // Apply selected keyframe parameters only, if at least one valid keyframe exists.
-        if (!ccc->GetKeyframes()->empty()) {
-            // ! Using only a subset of the keyframe camera state !
-            auto pos = skf.GetCameraState().position;
-            this->_camera.position(glm::vec4(pos[0], pos[1], pos[2], 1.0f));
-            auto ori = skf.GetCameraState().orientation;
-            this->_camera.orientation(glm::quat(ori[3], ori[0], ori[1], ori[2]));
-            auto aper = skf.GetCameraState().half_aperture_angle_radians;
-            this->_camera.half_aperture_angle_radians(aper);
-        } else {
-            this->ResetView();
-        }
-    }
-
-    // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
-    cam_type::minimal_state_type camera_state;
-    this->_camera.get_minimal_state(camera_state);
-    ccc->SetCameraState(std::make_shared<camera_state_type>(camera_state));
-    if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe))
-        return;
-
-    // Apply showing skybox side ONLY if new camera parameters are set.
-    // Non-permanent overwrite of selected keyframe camera by skybox camera settings.
-    if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
-        cam_type::snapshot_type snapshot;
-        this->_camera.take_snapshot(snapshot, thecam::snapshot_content::all);
-
-        glm::vec4 snap_pos = snapshot.position;
-        glm::vec4 snap_right = snapshot.right_vector;
-        glm::vec4 snap_up = snapshot.up_vector;
-        glm::vec4 snap_view = snapshot.view_vector;
-
-        glm::vec3 cam_right = static_cast<glm::vec3>(snap_right);
-        glm::vec3 cam_up = static_cast<glm::vec3>(snap_up);
-        glm::vec3 cam_view = static_cast<glm::vec3>(snap_view);
-
-        glm::vec4 new_pos = snap_pos;
-        glm::quat new_orientation;
-        const float Rad180Degrees = glm::radians(180.0f);
-        const float Rad90Degrees = glm::radians(90.0f);
-
-        if (!this->skyboxCubeMode) {
-            if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
-                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_right);
-                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_view);
-            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
-                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_up);
-            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
-                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_up);
-            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
-                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_right);
-            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
-                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_right);
-            }
-        } else {
-            auto const center_ = cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter();
-            const glm::vec4 center = glm::vec4(center_.X(), center_.Y(), center_.Z(), 1.0f);
-            const float width = cr3d->AccessBoundingBoxes().BoundingBox().Width();
-            const float height = cr3d->AccessBoundingBoxes().BoundingBox().Height();
-            const float depth = cr3d->AccessBoundingBoxes().BoundingBox().Depth();
-            if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_FRONT) {
-                new_pos = center - depth * snap_view;
-            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
-                new_pos = center + depth * snap_view;
-                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_right);
-                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_view);
-            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
-                new_pos = center + width * snap_right;
-                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_up);
-            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
-                new_pos = center - width * snap_right;
-                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_up);
-            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
-                new_pos = center + height * snap_up;
-                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_right);
-            } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
-                new_pos = center - height * snap_up;
-                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_right);
-            }
-        }
-        // Apply new position, orientation and aperture angle to current camera.
-        this->_camera.position(new_pos);
-        this->_camera.orientation(new_orientation);
-        this->_camera.aperture_angle(90.0f);
-    }
-
-    // Render to texture ------------------------------------------------------------
-    if (!this->_fbo->IsValid() || (this->_fbo->GetWidth() != fboWidth) ||
-        (this->_fbo->GetHeight() != fboHeight)) {
-        if (!this->_fbo->Create(fboWidth, fboHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[CINEMATIC VIEW] Unable to create image framebuffer object. [%s, %s, line %d]\n ", __FILE__,
-                __FUNCTION__, __LINE__);
-            return;
-        }
-    }
-
-    if (auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call)) {
-        gpu_call->SetFramebufferObject(this->_fbo);
-        gpu_call->SetBackgroundColor(this->BkgndColour());
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "CallRenderViewGL required to set framebuffer object. [%s, %s, line %d]\n ", __FILE__, __FUNCTION__,
-            __LINE__);
-        return;
-    }
-
-    Base::Render(context, call);
-
-    // Write frame to file
-    if (this->rendering) {
-        // Check if fbo in cr3d was reset by renderer to indicate that no new frame is available (e.g. see
-        // remote/FBOCompositor2 Render())
-        this->png_data.write_lock = ((cr3d->GetFramebufferObject() != nullptr) ? (0) : (1));
-        if (this->png_data.write_lock > 0) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[CINEMATIC RENDERING] Waiting for next frame (Received empty FBO from renderer) ...\n");
-        }
-        // Lock writing frame to file for specific tim
-        std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->png_data.start_time);
-        if (diff.count() < static_cast<double>(this->delayFirstRenderFrameParam.Param<param::FloatParam>()->Value())) {
-            this->png_data.write_lock = 1;
-        }
-        this->render_to_file_write();
-    }
-
-    // Actual Rendering -------------------------------------------------------
-  
-    // Set letter box background ----------------------------------------------
-    auto bgcol = this->BkgndColour();
-    this->utils.SetBackgroundColor(bgcol);
-    bgcol = this->utils.Color(CinematicUtils::Colors::LETTER_BOX);
-    this->utils.SetBackgroundColor(bgcol);
-    glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glViewport(0, 0, vp_fw, vp_fh);
-
-    // Push fbo texture -------------------------------------------------------
-    float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
-    float left = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
-    float bottom = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;
-    float up = (vp_fh_reduced - static_cast<float>(texHeight)) / 2.0f;
-    glm::vec3 pos_bottom_left = {left, bottom, 0.0f};
-    glm::vec3 pos_upper_left = {left, up, 0.0f};
-    glm::vec3 pos_upper_right = {right, up, 0.0f};
-    glm::vec3 pos_bottom_right = {right, bottom, 0.0f};
-    this->utils.Push2DColorTexture(this->_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left,
-        pos_upper_right, pos_bottom_right, true, glm::vec4(0.0f), true);
-    
-    // Push menu --------------------------------------------------------------
-    std::string leftLabel = " CINEMATIC ";
-    std::string midLabel = "";
-    if (this->rendering) {
-        midLabel = " ! RENDERING IN PROGRESS ! ";
-    } else if (this->playAnim) {
-        midLabel = " Playing Animation ";
-    }
-    std::string rightLabel = "";
-    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, glm::vec2(vp_fw, vp_fh));
-
-    // Draw 2D ----------------------------------------------------------------
-    this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
-
+    return GetRenderingResult();
 }
 
 
 bool CinematicView::render_to_file_setup() {
 
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
-    if (ccc == nullptr)
+    if (ccc == nullptr) {
         return false;
+    }
 
     // init png data struct
-    this->png_data.bpp = 3;
+    if (this->cinematicFbo->getColorAttachment(0)->getFormat() == GL_RGB) {
+        this->png_data.bpp = 3;
+    }  else if (this->cinematicFbo->getColorAttachment(0)->getFormat() == GL_RGBA) {
+        this->png_data.bpp = 4;
+    }
+    else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[CINEMATIC VIEW] [render_to_file_setup] Unknown color attachment format. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+        this->rendering = false;
+        return false;
+    }
     this->png_data.width = static_cast<unsigned int>(this->cineWidth);
     this->png_data.height = static_cast<unsigned int>(this->cineHeight);
     this->png_data.buffer = nullptr;
@@ -559,12 +595,13 @@ bool CinematicView::render_to_file_setup() {
     struct tm nowdata;
     now = &nowdata;
     localtime_s(now, &t);
-#else  /* defined(_WIN32) && (_MSC_VER >= 1400) */
+#else /* defined(_WIN32) && (_MSC_VER >= 1400) */
     now = localtime(&t);
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
     frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%02ifps", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday,
         now->tm_hour, now->tm_min, now->tm_sec, this->fps);
-    this->png_data.path = static_cast<vislib::StringA>(this->frameFolderParam.Param<param::FilePathParam>()->Value());
+    this->png_data.path = static_cast<vislib::StringA>(
+        this->frameFolderParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
     if (this->png_data.path.IsEmpty()) {
         this->png_data.path = vislib::sys::Path::Concatenate(vislib::sys::Path::GetCurrentDirectoryA(), frameFolder);
     }
@@ -579,7 +616,11 @@ bool CinematicView::render_to_file_setup() {
             "[CINEMATIC VIEW] [render_to_file_setup] Cannot allocate image buffer.", __FILE__, __LINE__);
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
+    // Stop accidentially running animation in view
+    param::ParamSlot* animParam = static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(0)); // animPlaySlot
+    animParam->Param<param::BoolParam>()->SetValue(false);
+
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Started rendering of complete animation...");
 
     return true;
 }
@@ -651,9 +692,24 @@ bool CinematicView::render_to_file_write() {
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
-        if (this->_fbo->GetColourTexture(this->png_data.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
-            throw vislib::Exception(
-                "[CINEMATIC VIEW] [render_to_file_write] Unable to read color texture. ", __FILE__, __LINE__);
+        {
+            /// XXX Throws OpenGL error 1282 (Invalid Operation) - only available since OpenGL 4.5 ...
+            /// glGetTextureImage(this->cinematicFbo->getColorAttachment(0)->getName(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+            /// this->png_data.width * this->png_data.height, this->png_data.buffer);
+            auto err = glGetError();
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, this->cinematicFbo->getColorAttachment(0)->getName());
+            if (glGetError() == GL_NO_ERROR) {
+                glGetTexImage(GL_TEXTURE_2D, 0, this->cinematicFbo->getColorAttachment(0)->getFormat(),
+                    this->cinematicFbo->getColorAttachment(0)->getType(), this->png_data.buffer);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glDisable(GL_TEXTURE_2D);
+            err = glGetError();
+            if (err != GL_NO_ERROR) {
+                throw vislib::Exception(
+                    "[CINEMATIC VIEW] [render_to_file_write] Unable to read color texture. ", __FILE__, __LINE__);
+            }
         }
 
         BYTE** rows = nullptr;
@@ -687,7 +743,7 @@ bool CinematicView::render_to_file_write() {
         try {
             this->png_data.file.Close();
         } catch (...) {}
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "[CINEMATIC VIEW] [render_to_file_write] Wrote png file %d for animation time %f ...\n", this->png_data.cnt,
             this->png_data.animTime);
 
@@ -704,7 +760,7 @@ bool CinematicView::render_to_file_write() {
 
         /// XXX Handling this case is actually only necessary when rendering is done via FBOCompositor
         /// XXX Rendering crashes - WHY?
-        // XXX Rendering last frame with animation time = total animation time is otherwise no problem
+        /// XXX Rendering last frame with animation time = total animation time is otherwise no problem
         // if (this->png_data.animTime == ccc->GetTotalAnimTime()) {
         //    this->png_data.animTime -= 0.000005f;
         //} else
@@ -713,6 +769,7 @@ bool CinematicView::render_to_file_write() {
         auto lastFrame = static_cast<unsigned int>(this->lastRenderFrameParam.Param<param::IntParam>()->Value());
         if ((this->png_data.animTime > ccc->GetTotalAnimTime()) || (this->png_data.cnt > lastFrame)) {
             this->render_to_file_cleanup();
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Finished rendering.");
             return false;
         }
     }
@@ -758,8 +815,6 @@ bool CinematicView::render_to_file_cleanup() {
             "[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.infoptr is not nullptr. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
     }
-
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
 
     return true;
 }

@@ -11,17 +11,17 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
-#include "vislib/String.h"
-#include "vislib/tchar.h"
-#include "vislib/types.h"
+#include <filesystem>
 
 
 namespace megamol {
 namespace core {
 namespace param {
 
+    /// See MegaMol development guide for utf8 related explanations ///
 
     /**
      * class for file path parameter objects
@@ -29,62 +29,36 @@ namespace param {
     class MEGAMOLCORE_API FilePathParam : public AbstractParam {
     public:
 
-        /**
-         * No flags set
-         */
-        static const UINT32 FLAG_NONE;
+        enum FilePathFlags_ : uint32_t {
+            Flag_File                           = 1 << 0,
+            Flag_Directory                      = 1 << 1,
+            Flag_NoExistenceCheck               = 1 << 2,
+            Flag_RestrictExtension              = 1 << 3,
+            /// Convenience flags:
+            Flag_File_RestrictExtension         = Flag_File | Flag_RestrictExtension,
+            Flag_File_ToBeCreated               = Flag_File | Flag_NoExistenceCheck,
+            Flag_File_ToBeCreatedWithRestrExts  = Flag_File | Flag_NoExistenceCheck | Flag_RestrictExtension,
+            Flag_Directory_ToBeCreated          = Flag_Directory | Flag_NoExistenceCheck
+        };
 
-        /**
-         * Flag that the file path must not be changed by the framework
-         */
-        static const UINT32 FLAG_NOPATHCHANGE;
-
-        /**
-         * Flag that the framework should not search for the file
-         */
-        static const UINT32 FLAG_NOEXISTANCECHECK;
-
-        /**
-         * Flags FLAG_NOPATHCHANGE and FLAG_NOEXISTANCECHECK combined
-         */
-        static const UINT32 FLAG_TOBECREATED;
+        typedef uint32_t Flags_t;
+        typedef std::vector<std::string> Extensions_t;
 
         /**
          * Ctor.
          *
          * @param initVal The initial value
          * @param flags The flags for the parameter
+         * @param exts The required file extensions for the parameter
          */
-        FilePathParam(const vislib::StringA& initVal, UINT32 flags = FLAG_NONE);
-
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         * @param flags The flags for the parameter
-         */
-        FilePathParam(const vislib::StringW& initVal, UINT32 flags = FLAG_NONE);
-
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         * @param flags The flags for the parameter
-         */
-        FilePathParam(const char *initVal, UINT32 flags = FLAG_NONE);
-
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         * @param flags The flags for the parameter
-         */
-        FilePathParam(const wchar_t *initVal, UINT32 flags = FLAG_NONE);
+        FilePathParam(const std::filesystem::path& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
+        FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
+        FilePathParam(const char* initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
 
         /**
          * Dtor.
          */
-        virtual ~FilePathParam(void);
+        ~FilePathParam() override = default;
 
         /**
          * Returns a machine-readable definition of the parameter.
@@ -92,7 +66,7 @@ namespace param {
          * @param outDef A memory block to receive a machine-readable
          *               definition of the parameter.
          */
-        virtual void Definition(vislib::RawStorage& outDef) const;
+        void Definition(vislib::RawStorage& outDef) const override;
 
         /**
          * Tries to parse the given string as value for this parameter and
@@ -103,7 +77,7 @@ namespace param {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool ParseValue(const vislib::TString& v);
+        bool ParseValue(const vislib::TString& v) override;
 
         /**
          * Sets the value of the parameter and optionally sets the dirty flag
@@ -113,77 +87,66 @@ namespace param {
          * @param setDirty If 'true' the dirty flag of the owning parameter
          *                 slot is set and the update callback might be called.
          */
-        void SetValue(const vislib::StringA& v, bool setDirty = true);
+        void SetValue(const std::filesystem::path& v, bool setDirty = true);
+        void SetValue(const std::string& v, bool setDirty = true);
+        void SetValue(const char* v, bool setDirty = true);
 
         /**
-         * Sets the value of the parameter and optionally sets the dirty flag
-         * of the owning parameter slot.
-         *
-         * @param v the new value for the parameter
-         * @param setDirty If 'true' the dirty flag of the owning parameter
-         *                 slot is set and the update callback might be called.
-         */
-        void SetValue(const vislib::StringW& v, bool setDirty = true);
-
-        /**
-         * Sets the value of the parameter and optionally sets the dirty flag
-         * of the owning parameter slot.
-         *
-         * @param v the new value for the parameter
-         * @param setDirty If 'true' the dirty flag of the owning parameter
-         *                 slot is set and the update callback might be called.
-         */
-        void SetValue(const char *v, bool setDirty = true);
-
-        /**
-         * Sets the value of the parameter and optionally sets the dirty flag
-         * of the owning parameter slot.
-         *
-         * @param v the new value for the parameter
-         * @param setDirty If 'true' the dirty flag of the owning parameter
-         *                 slot is set and the update callback might be called.
-         */
-        void SetValue(const wchar_t *v, bool setDirty = true);
-
-        /**
-         * Gets the value of the parameter
+         * Gets the value of the parameter utf8 encoded for loading of files.
          *
          * @return The value of the parameter
          */
-        inline const vislib::TString& Value(void) const {
-            return this->val;
+        std::filesystem::path Value() const {
+            return this->value;
         }
 
         /**
-         * Returns the value of the parameter as string.
+         * Returns the value of the parameter as utf8 decoded string for storing in project file.
          *
          * @return The value of the parameter as string.
          */
-        virtual vislib::TString ValueString(void) const;
+        vislib::TString ValueString() const override {
+            return vislib::TString(this->value.generic_u8string().c_str());
+        }
 
         /**
-         * Gets the value of the parameter
+         * Gets the file path parameter flags
          *
-         * @return The value of the parameter
+         * @return The flags
          */
-        inline operator const vislib::TString&(void) const {
-            return this->val;
+        inline Flags_t GetFlags() const {
+            return this->flags;
         }
+
+        /**
+         * Gets the required file extensions
+         *
+         * @return The file extensions
+         */
+        inline const Extensions_t& GetExtensions() const {
+            return this->extensions;
+        }
+
+        /**
+         * Function checks if path is valid for given flags
+         *
+         * @return Return 0 for success, flags with failed check otherwise.
+         */
+        static Flags_t ValidatePath(const std::filesystem::path& p, const Extensions_t& , Flags_t f);
 
     private:
 
         /** The flags of the parameter */
-        UINT32 flags;
+        const Flags_t flags;
 
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
-        /** The value of the parameter */
-        vislib::TString val;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
+        /** The accepted file extension(s).
+         * Leave empty to allow all extensions.
+         * Only considered when Flag_RestrictExtension is set.
+         */
+        const Extensions_t extensions;
 
+        /** The file or directory path */
+        std::filesystem::path value;
     };
 
 

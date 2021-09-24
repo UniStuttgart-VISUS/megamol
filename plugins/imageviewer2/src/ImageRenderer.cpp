@@ -177,31 +177,6 @@ bool imageviewer2::ImageRenderer::create(void) {
  */
 bool imageviewer2::ImageRenderer::GetExtents(view::CallRender3DGL& call) {
 
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-
-    // Generate complete snapshot and calculate matrices
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-
-    auto CamPos = snapshot.position;
-    auto CamView = snapshot.view_vector;
-    auto CamRight = snapshot.right_vector;
-    auto CamUp = snapshot.up_vector;
-    auto CamNearClip = snapshot.frustum_near;
-    auto Eye = cam.eye();
-    bool rightEye = (Eye == core::thecam::Eye::right);
-
-    glm::mat4 view = viewTemp;
-    glm::mat4 proj = projTemp;
-    auto MVinv = glm::inverse(view);
-    auto MVP = proj * view;
-    auto MVPinv = glm::inverse(MVP);
-    auto MVPtransp = glm::transpose(MVP);
-
-    if (!assertImage(rightEye)) return false;
-
     call.SetTimeFramesCount(1);
     call.AccessBoundingBoxes().Clear();
     call.AccessBoundingBoxes().SetBoundingBox(
@@ -260,7 +235,8 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
         if (!imgcConnected) {
             filenameSlot->ResetDirty();
         }
-        const vislib::TString& filename = filenameSlot->Param<param::FilePathParam>()->Value();
+        const vislib::TString& filename =
+            filenameSlot->Param<param::FilePathParam>()->Value().generic_u8string().c_str();
         static vislib::graphics::BitmapImage img;
         // static ::sg::graphics::PngBitmapCodec codec;
         // codec.Image() = &img;
@@ -498,24 +474,15 @@ bool imageviewer2::ImageRenderer::initMPI() {
  */
 bool imageviewer2::ImageRenderer::Render(view::CallRender3DGL& call) {
 
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
+    auto const lhsFBO = call.GetFramebuffer();
+    lhsFBO->bindToDraw();
+    glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
 
-    // Generate complete snapshot and calculate matrices
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    // TODO bug currently not implemented, need to fetch eye from frontend.
+    bool rightEye = false;
 
-    auto CamPos = snapshot.position;
-    auto CamView = snapshot.view_vector;
-    auto CamRight = snapshot.right_vector;
-    auto CamUp = snapshot.up_vector;
-    auto CamNearClip = snapshot.frustum_near;
-    auto Eye = cam.eye();
-    bool rightEye = (Eye == core::thecam::Eye::right);
-
-    glm::mat4 view = viewTemp;
-    glm::mat4 proj = projTemp;
+    glm::mat4 view = call.GetCamera().getViewMatrix();
+    glm::mat4 proj = call.GetCamera().getProjectionMatrix();
     auto MVinv = glm::inverse(view);
     auto MVP = proj * view;
     auto MVPinv = glm::inverse(MVP);
@@ -561,7 +528,6 @@ bool imageviewer2::ImageRenderer::Render(view::CallRender3DGL& call) {
         buffers_initialized = true;
     }
 
-    // param::ParamSlot *filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
     ::glEnable(GL_TEXTURE_2D);
     if (!assertImage(rightEye)) return false;
 
@@ -587,6 +553,8 @@ bool imageviewer2::ImageRenderer::Render(view::CallRender3DGL& call) {
     ::glBindTexture(GL_TEXTURE_2D, 0);
     ::glDisable(GL_TEXTURE_2D);
     ::glDisable(GL_DEPTH_TEST);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }

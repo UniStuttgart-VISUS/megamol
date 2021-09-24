@@ -19,6 +19,7 @@
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cfloat>
+#include <glm/ext.hpp>
 
 
 namespace megamol {
@@ -90,26 +91,23 @@ bool QuartzTexRenderer::Render(core::view::CallRender3DGL& call) {
     this->assertTypeTexture(*tdc);
     
 	// camera setup
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto fbo = call.GetFramebuffer();
 
-    // Generate complete snapshot and calculate matrices
-    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
-    glm::vec4 viewport = glm::vec4(0, 0, cam.resolution_gate().width(), cam.resolution_gate().height());
+    glm::vec4 viewport = glm::vec4(0, 0, fbo->getWidth(), fbo->getHeight());
     if (viewport.z < 1.0f) viewport.z = 1.0f;
     if (viewport.w < 1.0f) viewport.w = 1.0f;
     float shaderPointSize = vislib::math::Max(viewport.z, viewport.w);
     viewport = glm::vec4(0, 0, 2.f / viewport.z, 2.f / viewport.w);
 
-    glm::vec4 camView = snapshot.view_vector;
-    glm::vec4 camRight = snapshot.right_vector;
-    glm::vec4 camUp = snapshot.up_vector;
-    glm::vec4 camPos = snapshot.position;
+    glm::vec3 camView = cam_pose.direction;
+    glm::vec3 camUp = cam_pose.up;
+    glm::vec3 camRight = glm::cross(camView, camUp);
+    glm::vec3 camPos = cam_pose.position;
 
-    glm::mat4 view = viewTemp;
-    glm::mat4 proj = projTemp;
     glm::mat4 MVinv = glm::inverse(view);
     glm::mat4 MVP = proj * view;
     glm::mat4 MVPinv = glm::inverse(MVP);

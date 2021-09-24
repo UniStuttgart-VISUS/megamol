@@ -41,16 +41,20 @@ mcu_graphics::ScreenShotComments::png_comments mcu_graphics::ScreenShotComments:
 }
 
 
-std::string mcu_graphics::ScreenShotComments::GetProjectFromPNG(const std::string filename) {
+std::string mcu_graphics::ScreenShotComments::GetProjectFromPNG(const std::filesystem::path filename) {
     std::string content;
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (!png) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("ScreenShotComments::GetProjectFromPNG: Unable to create png struct");
     } else {
-        FILE* fp = fopen(filename.c_str(), "rb");
+#ifdef _MSC_VER
+        FILE* fp = _wfopen(filename.native().c_str(), L"rb");
+#else
+        FILE* fp = fopen(filename.native().c_str(), "rb");
+#endif
         if (fp == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "ScreenShotComments::GetProjectFromPNG: Unable to open png file \"%s\"", filename.c_str());
+                "ScreenShotComments::GetProjectFromPNG: Unable to open png file \"%s\"", filename.generic_u8string().c_str());
         } else {
             png_infop info = png_create_info_struct(png);
             if (!info) {

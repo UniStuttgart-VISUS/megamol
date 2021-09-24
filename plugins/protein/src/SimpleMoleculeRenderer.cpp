@@ -515,14 +515,11 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
 
     float callTime = call.Time();
 
-    call.GetCamera(this->cam);
-
-    // Generate complete snapshot and calculate matrices
-    cam.calc_matrices(this->snapshot, this->viewTemp, this->projTemp, thecam::snapshot_content::all);
+    cam = call.GetCamera();
 
     // matrices
-    view = viewTemp;
-    proj = projTemp;
+    view = cam.getViewMatrix();
+    proj = cam.getProjectionMatrix();
     MVinv = glm::inverse(view);
     NormalM = glm::transpose(MVinv);
     MVP = proj * view;
@@ -532,8 +529,8 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
     // get viewpoint parameters for raycasting
     this->viewportStuff[0] = 0.0f;
     this->viewportStuff[1] = 0.0f;
-    this->viewportStuff[2] = this->cam.resolution_gate().width();
-    this->viewportStuff[3] = this->cam.resolution_gate().height();
+    this->viewportStuff[2] = call.GetFramebuffer()->getWidth();
+    this->viewportStuff[3] = call.GetFramebuffer()->getHeight();
     if (this->viewportStuff[2] < 1.0f)
         this->viewportStuff[2] = 1.0f;
     if (this->viewportStuff[3] < 1.0f)
@@ -817,6 +814,19 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
 
     // ---------- actual rendering ----------
 
+    auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
+
+    float near_plane = 0.0;
+    float far_plane = 0.0;
+    try {
+        auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
+        near_plane = cam_intrinsics.near_plane;
+        far_plane = cam_intrinsics.far_plane;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
+    }
+
     // Don't use geometry shader
     if (this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
@@ -825,12 +835,9 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
             this->sphereShader.Enable();
             // set shader variables
             glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
-            glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
-            glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
+            glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
+            glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -839,13 +846,10 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
             this->sphereShaderOR.Enable();
             // set shader variables
             glUniform4fv(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fv(this->sphereShaderOR.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
-            glUniform3fv(this->sphereShaderOR.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
-            glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
-            glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+            glUniform3fv(this->sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
+            glUniform3fv(this->sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
+            glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
+            glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -892,12 +896,9 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
 
             // Set shader variables
             glUniform4fv(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fv(this->sphereShaderGeom.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
-            glUniform3fv(this->sphereShaderGeom.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
-            glUniform3fv(this->sphereShaderGeom.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glUniform3fv(this->sphereShaderGeom.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
+            glUniform3fv(this->sphereShaderGeom.ParameterLocation("camRight"), 1, glm::value_ptr(cam_pose.right));
+            glUniform3fv(this->sphereShaderGeom.ParameterLocation("camUp"), 1, glm::value_ptr(cam_pose.up));
             glUniformMatrix4fv(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
             glUniformMatrix4fv(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
             glUniform4fv(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
@@ -915,12 +916,11 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
 
             // Set shader variables
             glUniform4fv(this->sphereShaderGeomOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fv(this->sphereShaderGeomOR.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glUniform3fv(this->sphereShaderGeomOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->sphereShaderGeomOR.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->sphereShaderGeomOR.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+                glm::value_ptr(cam_pose.up));
             glUniformMatrix4fv(this->sphereShaderGeomOR.ParameterLocation("modelview"), 1, false, modelMatrix_column);
             glUniformMatrix4fv(this->sphereShaderGeomOR.ParameterLocation("proj"), 1, false, projMatrix_column);
             glUniform4fv(this->sphereShaderGeomOR.ParameterLocation("lightPos"), 1, lightPos);
@@ -969,12 +969,11 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
             this->cylinderShader.Enable();
             // set shader variables
             glUniform4fv(this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fv(this->cylinderShader.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glUniform3fv(this->cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->cylinderShader.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->cylinderShader.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+                glm::value_ptr(cam_pose.up));
             glUniformMatrix4fv(this->cylinderShader.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->cylinderShader.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->cylinderShader.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -990,13 +989,13 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
             // set shader variables
             glUniform4fv(this->cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->cylinderShaderOR.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->cylinderShaderOR.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->cylinderShaderOR.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+                glm::value_ptr(cam_pose.up));
             glUniform2f(
-                this->cylinderShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+                this->cylinderShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
             glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -1059,11 +1058,11 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
         // Set shader variables
         glUniform4fv(this->cylinderShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(this->cylinderShaderGeom.ParameterLocation("camIn"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glm::value_ptr(cam_pose.direction));
         glUniform3fv(this->cylinderShaderGeom.ParameterLocation("camRight"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+            glm::value_ptr(cam_pose.right));
         glUniform3fv(this->cylinderShaderGeom.ParameterLocation("camUp"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glm::value_ptr(cam_pose.up));
         glUniformMatrix4fv(this->cylinderShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
         glUniformMatrix4fv(this->cylinderShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
         glUniform4fv(this->cylinderShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
@@ -1191,6 +1190,19 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
 
     // ---------- actual rendering ----------
 
+    auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
+
+    float near_plane = 0.0;
+    float far_plane = 0.0;
+    try {
+        auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
+        near_plane = cam_intrinsics.near_plane;
+        far_plane = cam_intrinsics.far_plane;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
+    }
+
     // Don't use geometry shader
     if (this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
@@ -1200,11 +1212,11 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
             // set shader variables
             glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+                glm::value_ptr(cam_pose.up));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -1214,12 +1226,12 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
             // set shader variables
             glUniform4fv(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
-            glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+                glm::value_ptr(cam_pose.up));
+            glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -1263,11 +1275,11 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
         // Set shader variables
         glUniform4fv(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(this->sphereShaderGeom.ParameterLocation("camIn"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glm::value_ptr(cam_pose.direction));
         glUniform3fv(this->sphereShaderGeom.ParameterLocation("camRight"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+            glm::value_ptr(cam_pose.right));
         glUniform3fv(this->sphereShaderGeom.ParameterLocation("camUp"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glm::value_ptr(cam_pose.up));
         glUniformMatrix4fv(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
         glUniformMatrix4fv(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
         glUniform4fv(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
@@ -1305,11 +1317,11 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
             // set shader variables
             glUniform4fv(this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->cylinderShader.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->cylinderShader.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->cylinderShader.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+                glm::value_ptr(cam_pose.up));
             glUniformMatrix4fv(this->cylinderShader.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->cylinderShader.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->cylinderShader.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -1325,13 +1337,13 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
             // set shader variables
             glUniform4fv(this->cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->cylinderShaderOR.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->cylinderShaderOR.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->cylinderShaderOR.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+                glm::value_ptr(cam_pose.up));
             glUniform2f(
-                this->cylinderShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+                this->cylinderShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
             glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -1393,11 +1405,11 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
         // Set shader variables
         glUniform4fv(this->cylinderShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(this->cylinderShaderGeom.ParameterLocation("camIn"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glm::value_ptr(cam_pose.direction));
         glUniform3fv(this->cylinderShaderGeom.ParameterLocation("camRight"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+            glm::value_ptr(cam_pose.right));
         glUniform3fv(this->cylinderShaderGeom.ParameterLocation("camUp"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glm::value_ptr(cam_pose.up));
         glUniformMatrix4fv(this->cylinderShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
         glUniformMatrix4fv(this->cylinderShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
         glUniform4fv(this->cylinderShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
@@ -1522,17 +1534,30 @@ void SimpleMoleculeRenderer::RenderStickClipPlane(MolecularDataCall* mol, const 
 
     // ---------- actual rendering ----------
 
+    auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
+
+    float near_plane = 0.0;
+    float far_plane = 0.0;
+    try {
+        auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
+        near_plane = cam_intrinsics.near_plane;
+        far_plane = cam_intrinsics.far_plane;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
+    }
+
     /// Draw spheres ///
 
     this->sphereClipPlaneShader.Enable();
     // set shader variables
     glUniform4fv(this->sphereClipPlaneShader.ParameterLocation("viewAttr"), 1, viewportStuff);
     glUniform3fv(this->sphereClipPlaneShader.ParameterLocation("camIn"), 1,
-        glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+        glm::value_ptr(cam_pose.direction));
     glUniform3fv(this->sphereClipPlaneShader.ParameterLocation("camRight"), 1,
-        glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+        glm::value_ptr(cam_pose.right));
     glUniform3fv(this->sphereClipPlaneShader.ParameterLocation("camUp"), 1,
-        glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+        glm::value_ptr(cam_pose.up));
     glUniform3f(this->sphereClipPlaneShader.ParameterLocation("clipPlaneDir"), 0.0, 0.0,
         mol->AccessBoundingBoxes().ObjectSpaceBBox().Back());
     glUniform3f(this->sphereClipPlaneShader.ParameterLocation("clipPlaneBase"), 0.0, 0.0, this->currentZClipPos);
@@ -1549,11 +1574,11 @@ void SimpleMoleculeRenderer::RenderStickClipPlane(MolecularDataCall* mol, const 
     this->cylinderClipPlaneShader.Enable();
     glUniform4fv(this->cylinderClipPlaneShader.ParameterLocation("viewAttr"), 1, viewportStuff);
     glUniform3fv(this->cylinderClipPlaneShader.ParameterLocation("camIn"), 1,
-        glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+        glm::value_ptr(cam_pose.direction));
     glUniform3fv(this->cylinderClipPlaneShader.ParameterLocation("camRight"), 1,
-        glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+        glm::value_ptr(cam_pose.right));
     glUniform3fv(this->cylinderClipPlaneShader.ParameterLocation("camUp"), 1,
-        glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+        glm::value_ptr(cam_pose.up));
     // get the attribute locations
     attribLocInParams = glGetAttribLocation(this->cylinderClipPlaneShader, "inParams");
     attribLocQuatC = glGetAttribLocation(this->cylinderClipPlaneShader, "quatC");
@@ -1604,6 +1629,19 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
 
     // ---------- actual rendering ----------
 
+    auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
+
+    float near_plane = 0.0;
+    float far_plane = 0.0;
+    try {
+        auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
+        near_plane = cam_intrinsics.near_plane;
+        far_plane = cam_intrinsics.far_plane;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
+    }
+
     // Don't use geometry shader
     if (this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
@@ -1613,11 +1651,11 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
             // set shader variables
             glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+                glm::value_ptr(cam_pose.up));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -1627,12 +1665,12 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
             // set shader variables
             glUniform4fv(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
-            glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+                glm::value_ptr(cam_pose.up));
+            glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -1665,11 +1703,11 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
             // Set shader variables
             glUniform4fv(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->sphereShaderGeom.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->sphereShaderGeom.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->sphereShaderGeom.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+                glm::value_ptr(cam_pose.up));
             glUniformMatrix4fv(
                 this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, glm::value_ptr(this->view));
             glUniformMatrix4fv(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, glm::value_ptr(this->proj));
@@ -1685,11 +1723,11 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
             // Set shader variables
             glUniform4fv(this->sphereShaderGeomOR.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->sphereShaderGeomOR.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->sphereShaderGeomOR.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->sphereShaderGeomOR.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+                glm::value_ptr(cam_pose.up));
             glUniformMatrix4fv(
                 this->sphereShaderGeomOR.ParameterLocation("modelview"), 1, false, glm::value_ptr(this->view));
             glUniformMatrix4fv(
@@ -1747,15 +1785,17 @@ void SimpleMoleculeRenderer::RenderSpacefillingClipPlane(MolecularDataCall* mol,
 
     // ---------- actual rendering ----------
 
+    auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
+
     this->sphereClipPlaneShader.Enable();
     // set shader variables
     glUniform4fv(this->sphereClipPlaneShader.ParameterLocation("viewAttr"), 1, viewportStuff);
     glUniform3fv(this->sphereClipPlaneShader.ParameterLocation("camIn"), 1,
-        glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+        glm::value_ptr(cam_pose.direction));
     glUniform3fv(this->sphereClipPlaneShader.ParameterLocation("camRight"), 1,
-        glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+        glm::value_ptr(cam_pose.right));
     glUniform3fv(this->sphereClipPlaneShader.ParameterLocation("camUp"), 1,
-        glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+        glm::value_ptr(cam_pose.up));
     glUniform3f(this->sphereClipPlaneShader.ParameterLocation("clipPlaneDir"), 0.0, 0.0,
         mol->AccessBoundingBoxes().ObjectSpaceBBox().Back());
     glUniform3f(this->sphereClipPlaneShader.ParameterLocation("clipPlaneBase"), 0.0, 0.0, this->currentZClipPos);
@@ -1794,6 +1834,19 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
 
     // ---------- actual rendering ----------
 
+    auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
+
+    float near_plane = 0.0;
+    float far_plane = 0.0;
+    try {
+        auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
+        near_plane = cam_intrinsics.near_plane;
+        far_plane = cam_intrinsics.far_plane;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
+    }
+
     // Don't use geometry shader
     if (this->toggleGeomShaderParam.Param<param::BoolParam>()->Value() == false) {
 
@@ -1803,11 +1856,11 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
             // set shader variables
             glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+                glm::value_ptr(cam_pose.up));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -1817,12 +1870,12 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
             // set shader variables
             glUniform4fv(this->sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camIn"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+                glm::value_ptr(cam_pose.direction));
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camRight"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+                glm::value_ptr(cam_pose.right));
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1,
-                glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
-            glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+                glm::value_ptr(cam_pose.up));
+            glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -1866,11 +1919,11 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
         // Set shader variables
         glUniform4fv(this->sphereShaderGeom.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(this->sphereShaderGeom.ParameterLocation("camIn"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glm::value_ptr(cam_pose.direction));
         glUniform3fv(this->sphereShaderGeom.ParameterLocation("camRight"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+            glm::value_ptr(cam_pose.right));
         glUniform3fv(this->sphereShaderGeom.ParameterLocation("camUp"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glm::value_ptr(cam_pose.up));
         glUniformMatrix4fv(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, modelMatrix_column);
         glUniformMatrix4fv(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, projMatrix_column);
         glUniform4fv(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
@@ -2134,6 +2187,18 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
 
     // ---------- actual rendering ----------
 
+    auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
+
+    float near_plane = 0.0;
+    float far_plane = 0.0;
+    try {
+        auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
+        near_plane = cam_intrinsics.near_plane;
+        far_plane = cam_intrinsics.far_plane;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
+    }
 
     // enable sphere shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
@@ -2141,11 +2206,11 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
         // set shader variables
         glUniform4fv(this->filterSphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(this->filterSphereShader.ParameterLocation("camIn"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glm::value_ptr(cam_pose.direction));
         glUniform3fv(this->filterSphereShader.ParameterLocation("camRight"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+            glm::value_ptr(cam_pose.right));
         glUniform3fv(this->filterSphereShader.ParameterLocation("camUp"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glm::value_ptr(cam_pose.up));
         // Set filter attribute
         this->attribLocAtomFilter = glGetAttribLocation(this->filterSphereShader.ProgramHandle(), "filter");
     } else {
@@ -2153,13 +2218,13 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
         // set shader variables
         glUniform4fv(this->filterSphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camIn"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glm::value_ptr(cam_pose.direction));
         glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camRight"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+            glm::value_ptr(cam_pose.right));
         glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camUp"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glm::value_ptr(cam_pose.up));
         glUniform2f(
-            this->filterSphereShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+            this->filterSphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
         // Set filter attribute
         this->attribLocAtomFilter = glGetAttribLocation(this->filterSphereShaderOR.ProgramHandle(), "filter");
     }
@@ -2193,11 +2258,11 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
         // set shader variables
         glUniform4fv(this->filterCylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(this->filterCylinderShader.ParameterLocation("camIn"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glm::value_ptr(cam_pose.direction));
         glUniform3fv(this->filterCylinderShader.ParameterLocation("camRight"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+            glm::value_ptr(cam_pose.right));
         glUniform3fv(this->filterCylinderShader.ParameterLocation("camUp"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glm::value_ptr(cam_pose.up));
         // get the attribute locations
         attribLocInParams = glGetAttribLocation(this->filterCylinderShader, "inParams");
         attribLocQuatC = glGetAttribLocation(this->filterCylinderShader, "quatC");
@@ -2209,13 +2274,13 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
         // set shader variables
         glUniform4fv(this->filterCylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(this->filterCylinderShaderOR.ParameterLocation("camIn"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glm::value_ptr(cam_pose.direction));
         glUniform3fv(this->filterCylinderShaderOR.ParameterLocation("camRight"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+            glm::value_ptr(cam_pose.right));
         glUniform3fv(this->filterCylinderShaderOR.ParameterLocation("camUp"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glm::value_ptr(cam_pose.up));
         glUniform2f(
-            this->filterCylinderShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+            this->filterCylinderShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
         // get the attribute locations
         attribLocInParams = glGetAttribLocation(this->filterCylinderShaderOR, "inParams");
         attribLocQuatC = glGetAttribLocation(this->filterCylinderShaderOR, "quatC");
@@ -2287,6 +2352,18 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
 
     // ---------- actual rendering ----------
 
+    auto cam_pose = cam.get<megamol::core::view::Camera::Pose>();
+
+    float near_plane = 0.0;
+    float far_plane = 0.0;
+    try {
+        auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
+        near_plane = cam_intrinsics.near_plane;
+        far_plane = cam_intrinsics.far_plane;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
+    }
 
     // Enable sphere shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
@@ -2294,11 +2371,11 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
         // set shader variables
         glUniform4fv(this->filterSphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(this->filterSphereShader.ParameterLocation("camIn"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glm::value_ptr(cam_pose.direction));
         glUniform3fv(this->filterSphereShader.ParameterLocation("camRight"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+            glm::value_ptr(cam_pose.right));
         glUniform3fv(this->filterSphereShader.ParameterLocation("camUp"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glm::value_ptr(cam_pose.up));
         // Set filter attribute
         this->attribLocAtomFilter = glGetAttribLocation(this->filterSphereShader.ProgramHandle(), "filter");
     } else {
@@ -2306,13 +2383,13 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
         // set shader variables
         glUniform4fv(this->filterSphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camIn"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.view_vector)));
+            glm::value_ptr(cam_pose.direction));
         glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camRight"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
+            glm::value_ptr(cam_pose.right));
         glUniform3fv(this->filterSphereShaderOR.ParameterLocation("camUp"), 1,
-            glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
+            glm::value_ptr(cam_pose.up));
         glUniform2f(
-            this->filterSphereShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+            this->filterSphereShaderOR.ParameterLocation("zValues"), near_plane, far_plane);
         // Set filter attribute
         this->attribLocAtomFilter = glGetAttribLocation(this->filterSphereShaderOR.ProgramHandle(), "filter");
     }

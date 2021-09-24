@@ -27,7 +27,8 @@ DatRawWriter::DatRawWriter(void)
     , frameIDSlot("frameID", "The id of the data frame that will be written")
     , dataSlot("data", "The slot requesting the data to be written") {
 
-    this->filenameSlot.SetParameter(new param::FilePathParam(""));
+    this->filenameSlot.SetParameter(
+        new param::FilePathParam("", megamol::core::param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->filenameSlot);
 
     this->frameIDSlot.SetParameter(new param::IntParam(0, 0));
@@ -57,7 +58,7 @@ void DatRawWriter::release(void) {}
  */
 bool DatRawWriter::run(void) {
     using megamol::core::utility::log::Log;
-    std::string filepath(this->filenameSlot.Param<param::FilePathParam>()->Value().PeekBuffer());
+    std::string filepath(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_u8string());
     if (filepath.empty()) {
         Log::DefaultLog.WriteError("No file path specified. Abort.");
         return false;

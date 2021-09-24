@@ -220,7 +220,8 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
         disableCompressionSlot("disableCompressionSlot", "set compression level to 0"),
         running(false),
         animLastFrameTime(std::numeric_limits<decltype(animLastFrameTime)>::lowest()),
-        outputCounter(0) {
+        outputCounter(0),
+        currentFbo(nullptr) {
 
     this->viewNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
@@ -235,7 +236,7 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
     this->tileHeightSlot << new param::IntParam(1080, 1);
     this->MakeSlotAvailable(&this->tileHeightSlot);
 
-    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png", param::FilePathParam::FLAG_TOBECREATED);
+    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png", param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, { "png" });
     if (!reducedParameters) this->MakeSlotAvailable(&this->imageFilenameSlot);
 
     param::EnumParam* bkgnd = new param::EnumParam(0);
@@ -317,7 +318,7 @@ bool view::special::ScreenShooter::Terminate(void) {
  * view::special::ScreenShooter::release
  */
 bool view::special::ScreenShooter::create(void) {
-    currentFbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    currentFbo = std::make_shared<glowl::FramebufferObject>(1,1);
     return true;
 }
 
@@ -349,7 +350,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
     data.tileWidth = data.imgWidth;
     data.tileHeight = data.imgHeight;
 
-    vislib::TString filename = this->imageFilenameSlot.Param<param::FilePathParam>()->Value();
+    vislib::TString filename =
+        this->imageFilenameSlot.Param<param::FilePathParam>()->Value().generic_u8string().c_str();
     float frameTime = -1.0f;
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
         param::ParamSlot* time = this->findTimeParam(view);
@@ -406,12 +408,6 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         return;
     }
 
-    if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Failed to create Screenshot: Unable to initialize framebuffer extensions.");
-        return;
-    }
-
     data.tmpFiles[0] = vislib::sys::File::CreateTempFile();
     if (data.tmpFiles[0] == NULL) {
         Log::DefaultLog.WriteMsg(
@@ -430,7 +426,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
     BYTE* buffer = NULL;
     vislib::sys::FastFile file;
     bool rollback = false;
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> overlayfbo;
+    std::shared_ptr<glowl::FramebufferObject> overlayfbo;
     float bckcolalpha = 1.0f;
 
     try {
@@ -472,9 +468,15 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         if ((data.imgWidth <= data.tileWidth) && (data.imgHeight <= data.tileHeight)) {
             // we can render the whole image in just one call!
 
-            if (!currentFbo->Create(data.imgWidth, data.imgHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                    vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
-                throw vislib::Exception("Unable to create image framebuffer object.", __FILE__, __LINE__);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+            try {
+                currentFbo = std::make_shared<glowl::FramebufferObject>(data.imgWidth, data.imgHeight, glowl::FramebufferObject::DEPTH24);
+                currentFbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+                // TODO: check completness and throw if not?
+            } catch (glowl::FramebufferObjectException const& exc) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[ScreenShooter] Unable to create framebuffer object: %s\n", exc.what());
             }
 
             buffer = new BYTE[data.imgWidth * data.imgHeight * data.bpp];
@@ -482,7 +484,6 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 throw vislib::Exception("Cannot allocate image buffer.", __FILE__, __LINE__);
             }
 
-            crv.ResetAll();
             switch (bkgndMode) {
             case 0:
                 crv.SetBackgroundColor(view->BkgndColour());
@@ -502,20 +503,25 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             default: /* don't set bkgnd */
                 break;
             }
-            int vp[4];
-            glGetIntegerv(GL_VIEWPORT, vp);
-            crv.SetFramebufferObject(currentFbo);
+            
+            crv.SetFramebuffer(currentFbo);
             crv.SetTime(frameTime);
-            crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
-                static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
+            //crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
+            //    static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
             view->OnRenderView(crv); // glClear by SFX
-            view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
+            //view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
             glFlush();
 
-            if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
-                GL_NO_ERROR) {
-                throw vislib::Exception("Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
+            currentFbo->bindToRead(0);
+            glGetError();
+            glReadPixels(0, 0, currentFbo->getWidth(), currentFbo->getHeight(), (bkgndMode == 1) ? GL_RGBA : GL_RGB,
+                GL_UNSIGNED_BYTE, buffer);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+            if (glGetError() != GL_NO_ERROR) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[ScreenShooter] Failed to create Screenshot: Cannot read image data.\n");
             }
+
             if (bkgndMode == 1) {
                 // fixing alpha from premultiplied to postmultiplied
                 for (UINT x = 0; x < data.imgWidth; x++) {
@@ -569,9 +575,16 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 throw vislib::Exception("Cannot allocate temporary image buffer", __FILE__, __LINE__);
             }
 
-            if (!currentFbo->Create(data.tileWidth, data.tileHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                    vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
-                throw vislib::Exception("Unable to create image framebuffer object.", __FILE__, __LINE__);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+            try {
+                currentFbo = std::make_shared<glowl::FramebufferObject>(
+                    data.tileWidth, data.tileHeight, glowl::FramebufferObject::DEPTH24);
+                currentFbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+                // TODO: check completness and throw if not?
+            } catch (glowl::FramebufferObjectException const& exc) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[ScreenShooter] Unable to create framebuffer object: %s\n", exc.what());
             }
 
             int xSteps = (data.imgWidth / data.tileWidth) + (((data.imgWidth % data.tileWidth) != 0) ? 1 : 0);
@@ -585,19 +598,24 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             glGetIntegerv(GL_VIEWPORT, vp);
 
             // overlay for user information
-            overlayfbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
-            if (overlayfbo != NULL) {
-                if (overlayfbo->Create(vp[0] + vp[2], vp[1] + vp[3], GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                        vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
-                    crv.ResetAll();
-                    crv.SetFramebufferObject(overlayfbo);
-                    crv.SetTime(frameTime);
-                    view->OnRenderView(crv); // glClear by SFX
-                    /// view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
-                    glFlush();
-                } else {
-                    overlayfbo.reset();
-                }
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+            try {
+                overlayfbo = std::make_shared<glowl::FramebufferObject>(
+                    vp[0] + vp[2], vp[1] + vp[3], glowl::FramebufferObject::DEPTH24);
+                overlayfbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+                // TODO: check completness and throw if not?
+            } catch (glowl::FramebufferObjectException const& exc) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[ScreenShooter] Unable to create framebuffer object: %s\n", exc.what());
+                overlayfbo = nullptr;
+            }
+            if (overlayfbo != nullptr) {
+                crv.SetFramebuffer(overlayfbo);
+                crv.SetTime(frameTime);
+                view->OnRenderView(crv); // glClear by SFX
+                /// view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
+                glFlush();
             }
 
             // start writing
@@ -634,21 +652,21 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                     if (overlayfbo != NULL) {
                         float tx, ty, tw, th;
 
-                        tx = static_cast<float>(tileX) * static_cast<float>(overlayfbo->GetWidth()) /
+                        tx = static_cast<float>(tileX) * static_cast<float>(overlayfbo->getWidth()) /
                              static_cast<float>(data.imgWidth);
-                        ty = static_cast<float>(tileY) * static_cast<float>(overlayfbo->GetHeight()) /
+                        ty = static_cast<float>(tileY) * static_cast<float>(overlayfbo->getHeight()) /
                              static_cast<float>(data.imgHeight);
-                        tw = static_cast<float>(tileW) * static_cast<float>(overlayfbo->GetWidth()) /
+                        tw = static_cast<float>(tileW) * static_cast<float>(overlayfbo->getWidth()) /
                              static_cast<float>(data.imgWidth);
-                        th = static_cast<float>(tileH) * static_cast<float>(overlayfbo->GetHeight()) /
+                        th = static_cast<float>(tileH) * static_cast<float>(overlayfbo->getHeight()) /
                              static_cast<float>(data.imgHeight);
 
                         glDrawBuffer(GL_FRONT);
                         glMatrixMode(GL_PROJECTION);
                         glLoadIdentity();
                         glTranslatef(-1.0f, -1.0f, 0.0f);
-                        glScalef(2.0f / static_cast<float>(overlayfbo->GetWidth()),
-                            2.0f / static_cast<float>(overlayfbo->GetHeight()), 1.0f);
+                        glScalef(2.0f / static_cast<float>(overlayfbo->getWidth()),
+                            2.0f / static_cast<float>(overlayfbo->getHeight()), 1.0f);
                         glMatrixMode(GL_MODELVIEW);
                         glLoadIdentity();
                         glDisable(GL_LIGHTING);
@@ -690,7 +708,6 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                     }
 
                     // render a tile
-                    crv.ResetAll();
                     switch (bkgndMode) {
                     case 0:
                         crv.SetBackgroundColor(view->BkgndColour());
@@ -715,19 +732,24 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                         break;
                     }
 
-                    crv.SetFramebufferObject(currentFbo);
+                    crv.SetFramebuffer(currentFbo);
                     crv.SetTime(frameTime);
-                    crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
-                        static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
-                        static_cast<float>(tileH));
+                    // TODO how should the screenshot tiling be done in the furture?
+                    //crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
+                    //    static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
+                    //    static_cast<float>(tileH));
                     view->OnRenderView(crv); // glClear by SFX
                     /// view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
                     glFlush();
 
-                    if (currentFbo->GetColourTexture(
-                            buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
-                        throw vislib::Exception(
-                            "Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
+                    currentFbo->bindToRead(0);
+                    glGetError();
+                    glReadPixels(0, 0, currentFbo->getWidth(), currentFbo->getHeight(),
+                        (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, buffer);
+                    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+                    if (glGetError() != GL_NO_ERROR) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[ScreenShooter] Failed to create Screenshot: Cannot read image data.\n");
                     }
                     if (bkgndMode == 1) {
                         // fixing alpha from premultiplied to postmultiplied
@@ -756,13 +778,13 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                     if (overlayfbo != NULL) {
                         float tx, ty, tw, th;
 
-                        tx = static_cast<float>(tileX) * static_cast<float>(overlayfbo->GetWidth()) /
+                        tx = static_cast<float>(tileX) * static_cast<float>(overlayfbo->getWidth()) /
                              static_cast<float>(data.imgWidth);
-                        ty = static_cast<float>(tileY) * static_cast<float>(overlayfbo->GetHeight()) /
+                        ty = static_cast<float>(tileY) * static_cast<float>(overlayfbo->getHeight()) /
                              static_cast<float>(data.imgHeight);
-                        tw = static_cast<float>(tileW) * static_cast<float>(overlayfbo->GetWidth()) /
+                        tw = static_cast<float>(tileW) * static_cast<float>(overlayfbo->getWidth()) /
                              static_cast<float>(data.imgWidth);
-                        th = static_cast<float>(tileH) * static_cast<float>(overlayfbo->GetHeight()) /
+                        th = static_cast<float>(tileH) * static_cast<float>(overlayfbo->getHeight()) /
                              static_cast<float>(data.imgHeight);
                         tx -= 1.0f;
                         ty -= 1.0f;
@@ -773,8 +795,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                         glMatrixMode(GL_PROJECTION);
                         glLoadIdentity();
                         glTranslatef(-1.0f, -1.0f, 0.0f);
-                        glScalef(2.0f / static_cast<float>(overlayfbo->GetWidth()),
-                            2.0f / static_cast<float>(overlayfbo->GetHeight()), 1.0f);
+                        glScalef(2.0f / static_cast<float>(overlayfbo->getWidth()),
+                            2.0f / static_cast<float>(overlayfbo->getHeight()), 1.0f);
                         glMatrixMode(GL_MODELVIEW);
                         glLoadIdentity();
                         glDisable(GL_LIGHTING);
@@ -782,20 +804,20 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                         glDisable(GL_BLEND);
                         glEnable(GL_TEXTURE_2D);
                         glDisable(GL_CULL_FACE);
-                        overlayfbo->BindColourTexture();
+                        overlayfbo->bindColorbuffer(0);
 
                         glBegin(GL_QUADS);
-                        glTexCoord2f(tx / static_cast<float>(overlayfbo->GetWidth()),
-                            ty / static_cast<float>(overlayfbo->GetHeight()));
+                        glTexCoord2f(tx / static_cast<float>(overlayfbo->getWidth()),
+                            ty / static_cast<float>(overlayfbo->getHeight()));
                         glVertex2f(tx, ty);
-                        glTexCoord2f(tx / static_cast<float>(overlayfbo->GetWidth()),
-                            (ty + th) / static_cast<float>(overlayfbo->GetHeight()));
+                        glTexCoord2f(tx / static_cast<float>(overlayfbo->getWidth()),
+                            (ty + th) / static_cast<float>(overlayfbo->getHeight()));
                         glVertex2f(tx, ty + th);
-                        glTexCoord2f((tx + tw) / static_cast<float>(overlayfbo->GetWidth()),
-                            (ty + th) / static_cast<float>(overlayfbo->GetHeight()));
+                        glTexCoord2f((tx + tw) / static_cast<float>(overlayfbo->getWidth()),
+                            (ty + th) / static_cast<float>(overlayfbo->getHeight()));
                         glVertex2f(tx + tw, ty + th);
-                        glTexCoord2f((tx + tw) / static_cast<float>(overlayfbo->GetWidth()),
-                            ty / static_cast<float>(overlayfbo->GetHeight()));
+                        glTexCoord2f((tx + tw) / static_cast<float>(overlayfbo->getWidth()),
+                            ty / static_cast<float>(overlayfbo->getHeight()));
                         glVertex2f(tx + tw, ty);
                         glEnd();
 
@@ -831,9 +853,6 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         t2.Join();
     }
     if (overlayfbo != nullptr) {
-        try {
-            overlayfbo->Release();
-        } catch (...) {}
         overlayfbo.reset();
     }
     if (data.pngPtr != NULL) {
@@ -869,7 +888,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         delete data.tmpFiles[1];
     }
     delete[] buffer;
-    currentFbo->Release();
+    currentFbo.reset();
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Screen shot stored");
 
@@ -914,7 +933,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
  * view::special::ScreenShooter::createScreenshot
  */
 void view::special::ScreenShooter::createScreenshot(const std::string& filename) {
-    this->imageFilenameSlot.Param<param::FilePathParam>()->SetValue(filename.c_str());
+    this->imageFilenameSlot.Param<param::FilePathParam>()->SetValue(filename);
 
     triggerButtonClicked(this->triggerButtonSlot);
 }

@@ -7,6 +7,15 @@
 
 #include "stdafx.h"
 #include "TrackingShotRenderer.h"
+#include "CallKeyframeKeeper.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/FilePathParam.h"
 
 
 using namespace megamol;
@@ -47,9 +56,6 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModuleGL()
             this->MakeSlotAvailable(&(*slot));
         }
     }
-
-    // Load spline interpolation keyframes at startup
-    this->stepsParam.ForceSetDirty();
 }
 
 
@@ -159,34 +165,31 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     }
 
     // Init rendering ---------------------------------------------------------
+    auto const lhsFBO = call.GetFramebuffer();
+    lhsFBO->bind();
+
     glm::vec4 back_color;
     glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
     this->utils.SetBackgroundColor(back_color);
 
     // Get current camera
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    glm::vec4 snap_pos = snapshot.position;
-    glm::vec4 snap_view = snapshot.view_vector;
-    glm::vec3 cam_pos = static_cast<glm::vec3>(snap_pos);
-    glm::vec3 cam_view = static_cast<glm::vec3>(snap_view);
-    glm::mat4 view = viewTemp;
-    glm::mat4 proj = projTemp;
+    core::view::Camera camera = call.GetCamera();
+    auto view = camera.getViewMatrix();
+    auto proj = camera.getProjectionMatrix();
     glm::mat4 mvp = proj * view;
+    auto cam_pose = camera.get<core::view::Camera::Pose>();
 
-    glm::vec2 viewport;
-    viewport.x = static_cast<float>(cam.resolution_gate().width());
-    viewport.y = static_cast<float>(cam.resolution_gate().height());
-    glm::mat4 ortho = glm::ortho(0.0f, viewport.x, 0.0f, viewport.y, -1.0f, 1.0f);
+    // Get current viewport
+    const float vp_fw = static_cast<float>(lhsFBO->getWidth());
+    const float vp_fh = static_cast<float>(lhsFBO->getHeight());
+    const glm::vec2 vp_dim = {vp_fw, vp_fh};
+
+    // Get matrix for orthogonal projection of 2D rendering
+    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
 
     // Push manipulators ------------------------------------------------------
     if (keyframes->size() > 0) {
-        cam_type::minimal_state_type camera_state;
-        cam.get_minimal_state(camera_state);
-        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera_state, viewport, mvp);
+        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera, vp_dim, mvp);
         this->manipulators.PushRendering(this->utils);
     }
 
@@ -202,15 +205,15 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         for (int i = 0; i < (keyframeCount - 1); i++) {
             glm::vec3 start = interpolKeyframes->operator[](i);
             glm::vec3 end = interpolKeyframes->operator[](i + 1);
-            this->utils.PushLinePrimitive(start, end, this->lineWidth, cam_view, cam_pos, color);
+            this->utils.PushLinePrimitive(start, end, this->lineWidth, cam_pose.direction, cam_pose.position, color);
         }
     }
 
     // Draw 3D ---------------------------------------------------------------
-    this->utils.DrawAll(mvp, viewport);
+    this->utils.DrawAll(mvp, vp_dim);
 
     // Push hotkey list ------------------------------------------------------
-    this->utils.HotkeyWindow(this->showHelpText, ortho, viewport);
+    this->utils.HotkeyWindow(this->showHelpText, ortho, vp_dim);
 
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " TRACKING SHOT ";
@@ -219,10 +222,12 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     if (this->showHelpText) {
         rightLabel = " [Shift+h] Hide Hotkeys ";
     }
-    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, viewport);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, vp_dim, 1.0f);
 
     // Draw 2D ---------------------------------------------------------------
-    this->utils.DrawAll(ortho, viewport);
+    this->utils.DrawAll(ortho, vp_dim);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }

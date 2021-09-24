@@ -1,5 +1,7 @@
 #include "../include/mmcore/DeferredShading.h"
 
+#include <glm/ext.hpp>
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/view/light/PointLight.h"
@@ -13,7 +15,8 @@ megamol::core::DeferredShading::DeferredShading()
     , getLightsSlot("lights", "Lights are retrieved over this slot.")
     , m_btf_filename_slot("BTF filename", "The name of the btf file to load") 
 {
-    this->m_btf_filename_slot << new core::param::FilePathParam("");
+    this->m_btf_filename_slot << new core::param::FilePathParam(
+        "", param::FilePathParam::Flag_File_RestrictExtension, {"btf"});
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 
     this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
@@ -38,12 +41,9 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3DGL& call) {
     if (cr == NULL) return false;
 
     // obtain camera information
-    core::view::Camera_2 cam(cr->GetCamera());
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_tmp, proj_tmp;
-    cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    glm::mat4 view_mx = view_tmp;
-    glm::mat4 proj_mx = proj_tmp;
+    core::view::Camera cam = cr->GetCamera();
+    glm::mat4 view_mx = cam.getViewMatrix();
+    glm::mat4 proj_mx = cam.getProjectionMatrix();
 
     //glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //m_GBuffer->bindToRead(0);
@@ -54,7 +54,7 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3DGL& call) {
         m_deferred_shading_prgm = std::make_unique<GLSLShader>();
 
         auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.PeekBuffer());
+        std::string filename(vislib_filename.generic_u8string());
 
         vislib::graphics::gl::ShaderSource vert_shader_src;
         vislib::graphics::gl::ShaderSource frag_shader_src;

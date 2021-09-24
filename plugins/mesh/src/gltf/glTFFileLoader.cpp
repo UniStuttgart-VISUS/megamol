@@ -26,7 +26,8 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "Disconnect", &GlTFFileLoader::disconnectGltfCallback);
     this->MakeSlotAvailable(&this->m_gltf_slot);
 
-    this->m_glTFFilename_slot << new core::param::FilePathParam("");
+    this->m_glTFFilename_slot << new core::param::FilePathParam(
+        "", core::param::FilePathParam::Flag_File_RestrictExtension, {"gltf"});
     this->MakeSlotAvailable(&this->m_glTFFilename_slot);
 }
 
@@ -46,7 +47,8 @@ bool megamol::mesh::GlTFFileLoader::getGltfDataCallback(core::Call& caller) {
 
     if (gltf_call->version() < m_version) {
         gltf_call->setData(
-            {std::string(m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value()), m_gltf_model}, m_version);
+            {m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string(), m_gltf_model},
+            m_version);
     }
 
     return true;
@@ -98,9 +100,9 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         bbox[0] = std::numeric_limits<float>::max();
         bbox[1] = std::numeric_limits<float>::max();
         bbox[2] = std::numeric_limits<float>::max();
-        bbox[3] = std::numeric_limits<float>::min();
-        bbox[4] = std::numeric_limits<float>::min();
-        bbox[5] = std::numeric_limits<float>::min();
+        bbox[3] = std::numeric_limits<float>::lowest();
+        bbox[4] = std::numeric_limits<float>::lowest();
+        bbox[5] = std::numeric_limits<float>::lowest();
 
         auto model = m_gltf_model;
 
@@ -175,7 +177,8 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
                         attrib_byte_stride, attrib_byte_offset, attrib_semantic});
                 }
 
-                std::string identifier = std::string(m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value()) +
+                std::string identifier =
+                    m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string() +
                                          model->meshes[mesh_idx].name + "_" + std::to_string(primitive_idx);
                 m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
                 m_mesh_access_collection.second.push_back(identifier);
@@ -234,8 +237,8 @@ bool megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
     if (this->m_glTFFilename_slot.IsDirty()) {
         m_glTFFilename_slot.ResetDirty();
 
-        auto vislib_filename = m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.PeekBuffer());
+        auto filename =
+            m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string();
         m_gltf_model = std::make_shared<tinygltf::Model>();
 
         if (filename != "") {

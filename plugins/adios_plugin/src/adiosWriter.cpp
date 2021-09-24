@@ -22,7 +22,8 @@ adiosWriter::adiosWriter(void)
     , encodingSlot("encoding","Specifiy encoding")
     , io(nullptr) {
 
-    this->filename.SetParameter(new core::param::FilePathParam(""));
+    this->filename.SetParameter(
+        new core::param::FilePathParam("", megamol::core::param::FilePathParam::Flag_Directory_ToBeCreated));
     this->MakeSlotAvailable(&this->filename);
 
     this->getData.SetCompatibleCall<CallADIOSDataDescription>();
@@ -61,7 +62,7 @@ bool adiosWriter::create(void) {
     try {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Initializing with MPI");
         if (MpiInitialized) {
-            adiosInst = adios2::ADIOS(this->mpi_comm_, adios2::DebugON);
+            adiosInst = adios2::ADIOS(this->mpi_comm_);
         } else {
             adiosInst = adios2::ADIOS(adios2::DebugON);
         }
@@ -199,7 +200,7 @@ bool adiosWriter::run() {
 
         try {
             if (!this->writer) {
-                std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
+                auto fname = this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string();
 #ifdef _WIN32
                 std::replace(fname.begin(), fname.end(), '/', '\\');
 #endif

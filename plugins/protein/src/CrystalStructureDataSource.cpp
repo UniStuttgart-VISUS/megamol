@@ -35,9 +35,9 @@ using namespace megamol::core::utility::log;
 protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimDataModule(),
         dataOutSlot("dataout", "The slot providing the loaded data"),
         dataChkptCallerSlot("chkptData", "The caller slot to connect a chkpt-source."),
-        fileFramesSlot("fileFrames", "The path to the frame file."),
-        fileAtomsSlot("fileAtoms", "The path to the atom file"),
-        fileCellsSlot("fileCells", "The path to the file containing cells"),
+        fileFramesSlot("fileFrames", "The path to the frame file, e.g.: /PathToFile/bto_625000at_500fr.bin"),
+        fileAtomsSlot("fileAtoms", "The path to the atom file, e.g.: /PathToFile/bto_625000at.bin"),
+        fileCellsSlot("fileCells", "The path to the file containing cells, e.g.: /PathToFile/bto_625000at_cells.bin"),
         frameCacheSizeParam("frameCacheSize", "The size of the frame cache"),
         displOffsParam("displOffs", "The frame offset for displacement vectors"),
         dSourceParam("dipoleScr", "The dipole source"),
@@ -45,11 +45,11 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimData
         frameCnt(0)  {
 
     // Filename slots
-    this->fileFramesSlot << new core::param::FilePathParam("/PathToFile/bto_625000at_500fr.bin");
+    this->fileFramesSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->fileFramesSlot);
-    this->fileCellsSlot << new core::param::FilePathParam("/PathToFile/bto_625000at_cells.bin");
+    this->fileCellsSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->fileCellsSlot);
-    this->fileAtomsSlot << new core::param::FilePathParam("/PathToFile/bto_625000at.bin");
+    this->fileAtomsSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->fileAtomsSlot);
 
     // Data caller slot for chkpt source
@@ -336,8 +336,7 @@ bool protein::CrystalStructureDataSource::loadFiles() {
     if(!fileAtoms.is_open()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Could not open file %s",
                 this->ClassName(),
-                this->fileAtomsSlot.Param<core::param::FilePathParam>()
-                    ->Value().PeekBuffer());
+                this->fileAtomsSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return false;
     }
 
@@ -376,7 +375,7 @@ bool protein::CrystalStructureDataSource::loadFiles() {
     if(!fileFrames) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Could not open file %s",
                 this->ClassName(),
-                this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer());
+            this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return false;
     }
 
@@ -399,7 +398,7 @@ bool protein::CrystalStructureDataSource::loadFiles() {
     if(!fileCells) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Could not open file %s",
                 this->ClassName(),
-                this->fileCellsSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer());
+            this->fileCellsSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return false;
     }
     
@@ -627,7 +626,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
         if (!file.good()) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "CrystalStructureDataSource::Frame: Could not open file %s",
-                    this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer());
+                this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             return false;
         }
         file.seekg(0, std::ios::beg);
@@ -645,7 +644,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
         if(!file.good()) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "CrystalStructureDataSource::Frame: Could not parse file %s (invalid filepointer %i)",
-                    this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer(),
+                this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
                     static_cast<int>(file.tellg()));
             return false;
         }
@@ -687,7 +686,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
         if (!file.good()) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "CrystalStructureDataSource::Frame: Could not open file %s",
-                    this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer());
+                this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             return false;
         }
         file.seekg(0, std::ios::beg);
@@ -705,7 +704,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
         if(!file.good()) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "CrystalStructureDataSource::Frame: Could not parse file %s (invalid filepointer %i)",
-                    this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer(),
+                this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
                     static_cast<int>(file.tellg()));
             return false;
         }
@@ -753,7 +752,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
         if (!file.good()) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "CrystalStructureDataSource::Frame: Could not open file %s",
-                    this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer());
+                this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             return false;
         }
 
@@ -927,7 +926,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
         if (!file.good()) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "CrystalStructureDataSource::Frame: Could not open file %s",
-                    this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer());
+                this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             return false;
         }
 
@@ -997,7 +996,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
         if (!file.good()) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "CrystalStructureDataSource::Frame: Could not open file %s",
-                    this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().PeekBuffer());
+                this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             return false;
         }
 

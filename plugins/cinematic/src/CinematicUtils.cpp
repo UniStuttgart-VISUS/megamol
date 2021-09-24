@@ -14,7 +14,7 @@
 using namespace megamol::cinematic;
 
 
-CinematicUtils::CinematicUtils(void) : core::view::RenderUtils()
+CinematicUtils::CinematicUtils(void) : core::utility::RenderUtils()
     , font(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
     , init_once(false)
     , menu_font_size(20.0f)
@@ -134,13 +134,14 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
 }
 
 
-void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp) {
+void CinematicUtils::PushMenu(const glm::mat4& ortho, const std::string& left_label, const std::string& middle_label, const std::string& right_label, glm::vec2 dim_vp, float depth) {
 
     this->gui_update();
    
     // Push menu background quad
-    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, 0.0f), glm::vec3(0.0f, dim_vp.y - this->menu_height, 0.0f), 
-        glm::vec3(dim_vp.x, dim_vp.y - this->menu_height, 0.0f), glm::vec3(dim_vp.x, dim_vp.y, 0.0f), this->Color(CinematicUtils::Colors::MENU));
+    this->PushQuadPrimitive(glm::vec3(0.0f, dim_vp.y, depth), glm::vec3(0.0f, dim_vp.y - this->menu_height, depth), 
+        glm::vec3(dim_vp.x, dim_vp.y - this->menu_height, depth), glm::vec3(dim_vp.x, dim_vp.y, depth),
+        this->Color(CinematicUtils::Colors::MENU));
 
     // Push menu labels
     float vpWhalf = dim_vp.x / 2.0f;
@@ -184,19 +185,20 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
         auto column_flags = ImGuiTableColumnFlags_WidthStretch;
 
         if (ImGui::Begin("[Cinematic] HOTKEYS", &inout_show, window_flags)) {
-            if (ImGui::CollapsingHeader("  GLOBAL###cinematic_global_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  GLOBAL##cinematic_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_global_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + A", "Apply current settings to selected/new keyframe.");
                     this->gui_table_row("SHIFT + D", "Delete selected keyframe.");
                     this->gui_table_row("SHIFT + S", "Save keyframes to file.");
                     this->gui_table_row("SHIFT + L", "Load keyframes from file.");
-                    this->gui_table_row("SHIFT + Z", "Undo keyframe changes (US Keyboard).");
-                    this->gui_table_row("SHIFT + Y", "Redo keyframe changes (US Keyboard).");
+                    this->gui_table_row("SHIFT + Z", "Undo keyframe changes (QUERTY keyboard layout).");
+                    this->gui_table_row("SHIFT + Y", "Redo keyframe changes (QUERTY keyboard layout).");
+                    this->gui_table_row("LEFT Mouse Button", "Select keyframe or drag manipulator.");
                     ImGui::EndTable();
                 }
             }
-            if (ImGui::CollapsingHeader("  TRACKING SHOT###cinematic_tracking_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  TRACKING SHOT##cinematic_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_tracking_shot_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + Q", "Toggle different manipulators for the selected keyframe.");
@@ -205,7 +207,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     ImGui::EndTable();
                 }
             }
-            if (ImGui::CollapsingHeader("  CINEMATIC###cinematic_cineamtic_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  CINEMATIC##cinematic_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_cinematic_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + R", "Start/Stop rendering complete animation.");
@@ -213,7 +215,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     ImGui::EndTable();
                 }
             }
-            if (ImGui::CollapsingHeader("  TIMELINE###cinematic_timeline_header", header_flags)) {
+            if (ImGui::CollapsingHeader("  TIMELINE##cinematic_header", header_flags)) {
                 if (ImGui::BeginTable("cinematic_timeline_hotkeys", 2, table_flags)) {
                     ImGui::TableSetupColumn("", column_flags);
                     this->gui_table_row("SHIFT + RIGHT/LEFT Arrow", "Move selected keyframe on animation time axis.");
@@ -224,7 +226,7 @@ void CinematicUtils::HotkeyWindow(bool& inout_show, const glm::mat4& ortho, glm:
                     this->gui_table_row("LEFT Mouse Button", "Select keyframe.");
                     this->gui_table_row("MIDDLE Mouse Button", "Axes scaling in mouse direction.");
                     this->gui_table_row("RIGHT Mouse Button", "Drag & drop keyframe / pan axes.");
-                    /// XXX Calcualation is not correct yet ...
+                    /// TODO XXX Calcualation is not correct yet ...
                     //this->gui_table_row("SHIFT + v","Set same velocity between all keyframes (Experimental).");
                     ImGui::EndTable();
                 }
@@ -273,9 +275,14 @@ float CinematicUtils::GetTextLineWidth(const std::string& text_line) {
 }
 
 
-void CinematicUtils::SetTextRotation(float a, float x, float y, float z) {
+void CinematicUtils::SetTextRotation(float a, glm::vec3 vec) {
 
-    this->font.SetRotation(a, x, y, z);
+    this->font.SetRotation(a, vec);
+}
+
+void CinematicUtils::ResetTextRotation(void) {
+
+    this->font.ResetRotation();
 }
 
 
@@ -287,7 +294,7 @@ const float CinematicUtils::lightness(glm::vec4 background) const {
 
 void megamol::cinematic::CinematicUtils::gui_update(void) {
 
-    this->menu_font_size   = ImGui::GetFontSize() * 1.5f;
+    this->menu_font_size = ImGui::GetFontSize() * 1.5f;
     this->menu_height = this->menu_font_size; // +ImGui::GetFrameHeightWithSpacing();
 }
 

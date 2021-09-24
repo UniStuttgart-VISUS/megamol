@@ -14,10 +14,6 @@
 
 #include "glowl/FramebufferObject.hpp"
 
-#include "cudaGL.h"
-
-#include "optix/CallContext.h"
-
 #include "miss.h"
 #include "raygen.h"
 
@@ -116,7 +112,7 @@ private:
 
     std::size_t _in_data_hash = std::numeric_limits<std::size_t>::max();
 
-    cam_type::snapshot_type old_cam_snap;
+    core::view::Camera::Pose old_cam_pose;
 
     glm::vec4 old_bg = glm::vec4(-1);
 

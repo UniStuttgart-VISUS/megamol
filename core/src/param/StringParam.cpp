@@ -15,36 +15,36 @@ using namespace megamol::core::param;
 /*
  * StringParam::StringParam
  */
-StringParam::StringParam(const vislib::StringA& initVal)
-        : AbstractParam(), val(initVal) {
+StringParam::StringParam(const vislib::StringA& initVal) : AbstractParam(), val() {
     this->InitPresentation(AbstractParamPresentation::ParamType::STRING);
+    this->SetValue(initVal);
 }
 
 
 /*
  * StringParam::StringParam
  */
-StringParam::StringParam(const vislib::StringW& initVal)
-        : AbstractParam(), val(initVal) {
+StringParam::StringParam(const vislib::StringW& initVal) : AbstractParam(), val() {
     this->InitPresentation(AbstractParamPresentation::ParamType::STRING);
+    this->SetValue(initVal);
 }
 
 
 /*
  * StringParam::StringParam
  */
-StringParam::StringParam(const char *initVal)
-        : AbstractParam(), val(initVal) {
+StringParam::StringParam(const char *initVal) : AbstractParam(), val() {
     this->InitPresentation(AbstractParamPresentation::ParamType::STRING);
+    this->SetValue(initVal);
 }
 
 
 /*
  * StringParam::StringParam
  */
-StringParam::StringParam(const wchar_t *initVal)
-        : AbstractParam(), val(initVal) {
+StringParam::StringParam(const wchar_t *initVal) : AbstractParam(), val() {
     this->InitPresentation(AbstractParamPresentation::ParamType::STRING);
+    this->SetValue(initVal);
 }
 
 

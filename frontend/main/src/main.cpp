@@ -11,6 +11,7 @@
 #include "GlobalValueStore.h"
 
 #include "CUDA_Service.hpp"
+#include "Command_Service.hpp"
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
@@ -19,6 +20,9 @@
 #include "Screenshot_Service.hpp"
 #include "ProjectLoader_Service.hpp"
 #include "ImagePresentation_Service.hpp"
+#include "Remote_Service.hpp"
+
+#include <glad/glad.h> /// XXX see temporary fix below
 
 
 static void log(std::string const& text) {
@@ -116,6 +120,7 @@ int main(const int argc, const char** argv) {
     luaConfig.lua_api_ptr = &lua_api;
     luaConfig.host_address = config.lua_host_address;
     luaConfig.retry_socket_port = config.lua_host_port_retry;
+    luaConfig.show_version_notification = config.show_version_note;
     lua_service_wrapper.setPriority(0);
 
     megamol::frontend::ProjectLoader_Service projectloader_service;
@@ -125,6 +130,7 @@ int main(const int argc, const char** argv) {
     megamol::frontend::ImagePresentation_Service imagepresentation_service;
     megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
     imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
+    megamol::frontend::Command_Service command_service;
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -152,9 +158,18 @@ int main(const int argc, const char** argv) {
     services.add(framestatistics_service, &framestatisticsConfig);
     services.add(projectloader_service, &projectloaderConfig);
     services.add(imagepresentation_service, &imagepresentationConfig);
+    services.add(command_service, nullptr);
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
 #endif
+
+    megamol::frontend::Remote_Service remote_service;
+    megamol::frontend::Remote_Service::Config remoteConfig;
+    if (auto remote_session_role = handle_remote_session_config(config, remoteConfig); !remote_session_role.empty()) {
+        openglConfig.windowTitlePrefix += remote_session_role;
+        remote_service.setPriority(lua_service_wrapper.getPriority() - 1); // remote does stuff before everything else, even before lua
+        services.add(remote_service, &remoteConfig);
+    }
 
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
@@ -166,6 +181,7 @@ int main(const int argc, const char** argv) {
 
     const megamol::core::factories::ModuleDescriptionManager& moduleProvider = core.GetModuleDescriptionManager();
     const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
+
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
@@ -209,8 +225,12 @@ int main(const int argc, const char** argv) {
 
             imagepresentation_service.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
+            /// XXX temporary fix to make sure that everything that happens post-draw ends up in default window fbo...
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
         }
+
+        imagepresentation_service.PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
 
