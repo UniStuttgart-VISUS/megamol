@@ -565,12 +565,9 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
             }
 
             // obtain camera information
-            core::view::Camera_2 cam = callCamera->getData();
-            cam_type::snapshot_type snapshot;
-            cam_type::matrix_type viewTmp, projTmp;
-            cam.calc_matrices(snapshot, viewTmp, projTmp, core::thecam::snapshot_content::all);
-            glm::mat4 viewMx = viewTmp;
-            glm::mat4 projMx = projTmp;
+            core::view::Camera cam = callCamera->getData();
+            glm::mat4 viewMx = cam.getViewMatrix();
+            glm::mat4 projMx = cam.getViewMatrix();
             
 
             if (normalUpdate || depthUpdate || m_settingsHaveChanged || m_updateCausedByNormalSlotChange) {

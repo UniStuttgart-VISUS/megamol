@@ -25,7 +25,7 @@
 
 #include <variant>
 
-#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -36,7 +36,7 @@
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture2DArray.hpp"
 #include "glowl/Texture2DView.hpp"
-#include "compositing/Sampler.hpp"
+#include "glowl/Sampler.hpp"
 
 #include <glm/glm.hpp>
 

@@ -37,7 +37,7 @@ function(require_external NAME)
     if (TARGET CUESDK)
       return()
     endif()
-    
+
     FetchContent_Declare(
       cuesdk_archive
       URL https://github.com/CorsairOfficial/cue-sdk/releases/download/v3.0.378/CUESDK_3.0.378.zip)
@@ -52,7 +52,7 @@ function(require_external NAME)
         IMPORTED_IMPLIB "${cuesdk_archive_SOURCE_DIR}/lib/x64/CUESDK.x64_2017.lib")
       install(DIRECTORY "${cuesdk_archive_SOURCE_DIR}/redist/x64/" DESTINATION "bin" FILES_MATCHING PATTERN "*2017.dll")
     endif()
-    
+
   # Delaunator
   elseif(NAME STREQUAL "Delaunator")
     if(TARGET Delaunator)
@@ -92,7 +92,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "bbad3fca5b37b32e4e5f96aeaa31897e12eba92d"
+      GIT_TAG "d7aa3d4c5c9568b8bb275c8cfaee1d6c5d7049b5"
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD)
 
@@ -427,7 +427,7 @@ function(require_external NAME)
     endif()
 
     require_external(glfw)
-    external_get_property(glfw INSTALL_DIR)    
+    external_get_property(glfw INSTALL_DIR)
 
     if(WIN32)
       set(IMGUI_LIB "lib/imgui.lib")
