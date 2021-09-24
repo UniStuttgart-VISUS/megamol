@@ -892,8 +892,8 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     densityFBO.BindColourTexture();
 
     GLuint groupCounts[3] = {
-        static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[0]) / counterWorkgroupSize[0]))),
-        static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[1]) / counterWorkgroupSize[1]))), 1};
+        static_cast<GLuint>((std::max) (1.0f, std::ceil(float(invocations[0]) / counterWorkgroupSize[0]))),
+        static_cast<GLuint>((std::max) (1.0f, std::ceil(float(invocations[1]) / counterWorkgroupSize[1]))), 1};
 
     this->enableProgramAndBind(minMaxProgram);
 

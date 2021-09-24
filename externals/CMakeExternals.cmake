@@ -151,19 +151,19 @@ function(require_external NAME)
       return()
     endif()
 
-    set(TBB_LIB "lib/tbb<SUFFIX>.lib")
+    set(TBB_LIB "lib/tbb12.lib")
+    set(TBB_DLL "bin/tbb12.dll")
 
-    add_external_project(tbb STATIC
+    add_external_project(tbb SHARED
       GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
       GIT_TAG "v2021.3.0"
-      CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DTBB_TEST=OFF
-      DEBUG_SUFFIX _debug
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_LIB}"
+      CMAKE_ARGS -DTBB_TEST=OFF
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_DLL}"
     )
 
     add_external_library(tbb
-      LIBRARY ${TBB_LIB}
-      DEBUG_SUFFIX _debug
+      LIBRARY "${TBB_DLL}"
+      IMPORT_LIBRARY "${TBB_LIB}"
     )
 
   # tinygltf

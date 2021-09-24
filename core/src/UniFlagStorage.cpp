@@ -88,6 +88,10 @@ bool UniFlagStorage::readDataCallback(core::Call& caller) {
         gpu_stale = false;
     }
 
+    // this is for debugging only
+    //GL2CPUCopy();
+    //serializeCPUData();
+
     fc->setData(this->theData, this->version);
     return true;
 }
@@ -102,7 +106,8 @@ bool UniFlagStorage::writeDataCallback(core::Call& caller) {
         this->version = fc->version();
         cpu_stale = true;
 
-        // TODO try to avoid this and only fetch the serialization data from the GPU!!!! (if it works)
+        // TODO try to avoid this and only fetch the serialization data from the GPU!!!! (if and when it works)
+        // actually with TBB performance is fine already haha
         GL2CPUCopy();
         serializeCPUData();
     }
@@ -153,9 +158,10 @@ bool UniFlagStorage::writeMetaDataCallback(core::Call& caller) {
 
 void UniFlagStorage::serializeData() {
     this->theData->flags->bind();
-    // TODO allocate the other buffers
+    // TODO allocate the buffers
     // TODO bind params
     // foreach bit: call compute shader, pray
+    // download stuff
 }
 
 void UniFlagStorage::check_bits(FlagStorage::FlagItemType flag_bit, index_vector& bit_starts, index_vector& bit_ends,
@@ -212,6 +218,18 @@ void UniFlagStorage::array_to_bits(const nlohmann::json& json, FlagStorage::Flag
     }
 }
 
+UniFlagStorage::index_type UniFlagStorage::array_max(const nlohmann::json& json) {
+    if (json.empty()) return 0;
+    auto& j = json.back();
+    index_type end = 0;
+    if (j.is_array()) {
+        j[1].get_to(end);
+    } else {
+        j.get_to(end);
+    }
+    return end;
+}
+
 
 void UniFlagStorage::serializeCPUData() {
     const auto& cdata = theCPUData->flags;
@@ -222,31 +240,62 @@ void UniFlagStorage::serializeCPUData() {
     index_vector selected_starts, selected_ends;
     index_type curr_enabled_start = -1, curr_filtered_start = -1, curr_selected_start = -1;
 
+#if 0
+    const auto startSerialTime = std::chrono::high_resolution_clock::now();
     for (index_type x = 0; x < cdata->size(); ++x) {
         check_bits(FlagStorage::ENABLED, enabled_starts, enabled_ends, curr_enabled_start, x, cdata);
         check_bits(FlagStorage::FILTERED, filtered_starts, filtered_ends, curr_filtered_start, x, cdata);
         check_bits(FlagStorage::SELECTED, selected_starts, selected_ends, curr_selected_start, x, cdata);
     }
-
     terminate_bit(cdata, enabled_ends, curr_enabled_start);
     terminate_bit(cdata, filtered_ends, curr_filtered_start);
     terminate_bit(cdata, selected_ends, curr_selected_start);
-
+    const auto endSerialTime = std::chrono::high_resolution_clock::now();
     ASSERT(enabled_starts.size() == enabled_ends.size());
+    ASSERT(filtered_starts.size() == filtered_ends.size());
+    ASSERT(selected_starts.size() == selected_ends.size());
     nlohmann::json ser_data;
     ser_data["enabled"] = make_bit_array(enabled_starts, enabled_ends);
     ser_data["filtered"] = make_bit_array(filtered_starts, filtered_ends);
     ser_data["selected"] = make_bit_array(selected_starts, selected_ends);
-    //ser_data["softselected"] = make_bit_array(softselected_starts, softselected_ends);
-
+    const std::chrono::duration<double, std::milli> diffSerialMillis = endSerialTime - startSerialTime;
+    Log::DefaultLog.WriteInfo("serial reduction: %lf ms", diffSerialMillis.count());
     this->serializedFlags.Param<core::param::StringParam>()->SetValue(ser_data.dump().c_str());
+#else
+    const auto startParallelTime = std::chrono::high_resolution_clock::now();
+    BitsChecker bc(cdata);
+    tbb::parallel_reduce(tbb::blocked_range<int32_t>(0, static_cast<int32_t>(cdata->size()), 50000), bc);
+    const auto endParallelTime = std::chrono::high_resolution_clock::now();
+    ASSERT(bc.enabled_starts.size() == bc.enabled_ends.size());
+    ASSERT(bc.filtered_starts.size() == bc.filtered_ends.size());
+    ASSERT(bc.selected_starts.size() == bc.selected_ends.size());
+    nlohmann::json parallel_data;
+    parallel_data["enabled"] = make_bit_array(bc.enabled_starts, bc.enabled_ends);
+    parallel_data["filtered"] = make_bit_array(bc.filtered_starts, bc.filtered_ends);
+    parallel_data["selected"] = make_bit_array(bc.selected_starts, bc.selected_ends);
+    const std::chrono::duration<double, std::milli> diffParallelMillis = endParallelTime - startParallelTime;
+    Log::DefaultLog.WriteInfo("parallel reduction: %lf ms", diffParallelMillis.count());
+    this->serializedFlags.Param<core::param::StringParam>()->SetValue(parallel_data.dump().c_str());
+#endif
+    //ASSERT(parallel_data.dump() == ser_data.dump());
 }
 
 void UniFlagStorage::deserializeCPUData() {
     try {
         auto j = nlohmann::json::parse(this->serializedFlags.Param<core::param::StringParam>()->Value().PeekBuffer());
+        index_type num_flags = 10;
         // reset all flags
-        theCPUData->flags->assign(theCPUData->flags->size(), 0);
+        if (j.contains("enabled")) {
+            num_flags = std::max(array_max(j["enabled"]), num_flags);
+        }
+        if (j.contains("filtered")) {
+            num_flags = std::max(array_max(j["filtered"]), num_flags);
+        }
+        if (j.contains("selected")) {
+            num_flags = std::max(array_max(j["selected"]), num_flags);
+        }
+        theCPUData->flags->resize(num_flags + 1, 0);
+        //theCPUData->flags->assign(theCPUData->flags->size(), 0);
         if (j.contains("enabled")) {
             array_to_bits(j["enabled"], FlagStorage::ENABLED);
         } else {
