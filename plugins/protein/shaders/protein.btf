@@ -69,14 +69,14 @@ uniform mat4 MVP;
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying float squarRad;
-varying float rad;
+out vec4 objPos;
+out vec4 camPos;
+out vec4 lightPos;
+out float squarRad;
+out float rad;
 
 #ifdef RETICLE
-varying vec2 centerFragment;
+out vec2 centerFragment;
 #endif // RETICLE
 
 void main(void) {
@@ -821,14 +821,14 @@ uniform mat4 MVP;
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying float squarRad;
-varying float rad;
+in vec4 objPos;
+in vec4 camPos;
+in vec4 lightPos;
+in float squarRad;
+in float rad;
 
 #ifdef RETICLE
-varying vec2 centerFragment;
+in vec2 centerFragment;
 #endif // RETICLE
 
 void main(void) {
@@ -8609,7 +8609,7 @@ float dot1( vec3 v1)
     </snippet>
 
     <shader name="sphereVertex">
-      <snippet type="version">120</snippet>
+      <snippet type="version">430</snippet>
       <snippet name="commondefines"/>
       <snippet type="string">
         <!--
@@ -8623,20 +8623,31 @@ uniform vec3 camUp;
 uniform vec3 camRight;
 #endif // CALC_CAM_SYS
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying float squarRad;
-varying float rad;
+uniform mat4 view;
+uniform mat4 proj;
+uniform mat4 viewInverse;
+uniform mat4 mvp;
+uniform mat4 mvpinverse;
+uniform mat4 mvptransposed;
+
+out vec4 objPos;
+out vec4 camPos;
+out vec4 lightPos;
+out float squarRad;
+out float rad;
+out vec3 move_color;
 
 #ifdef RETICLE
-varying vec2 centerFragment;
+out vec2 centerFragment;
 #endif // RETICLE
+
+layout (location = 0) in vec4 vert_position;
+layout (location = 1) in vec3 vert_color;
 
 void main(void) {
 
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Vertex;
+    vec4 inPos = vert_position;
     rad = inPos.w;
     squarRad = rad * rad;
     inPos.w = 1.0;
@@ -8645,17 +8656,18 @@ void main(void) {
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
-    camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    camPos = viewInverse[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
 
     // calculate light position in glyph space
     // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    //lightPos = viewInverse * gl_LightSource[0].position - objPos;
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
+    //lightPos = viewInverse * normalize( gl_LightSource[0].position);
+    lightPos = vec4(0, 0, 0, 1); // Dummy value
 
     // send color to fragment shader
-    gl_FrontColor = gl_Color;
+    move_color = vert_color;
 
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
@@ -8667,9 +8679,9 @@ void main(void) {
 
 #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
+    tmp = viewInverse[3] + viewInverse[2];
     vec3 camIn = normalize(tmp.xyz);
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
+    tmp = viewInverse[3] + viewInverse[1];
     vec3 camUp = tmp.xyz;
     vec3 camRight = normalize(cross(camIn, camUp));
     camUp = cross(camIn, camRight);
@@ -8708,25 +8720,25 @@ void main(void) {
 
     // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -8760,7 +8772,7 @@ void main(void) {
     </shader>
 
     <shader name="sphereFragment">
-      <snippet type="version">120</snippet>
+      <snippet type="version">430</snippet>
       <snippet name="commondefines"/>
       <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
@@ -8770,11 +8782,19 @@ uniform vec3 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying float squarRad;
-varying float rad;
+uniform mat4 view;
+uniform mat4 proj;
+uniform mat4 viewInverse;
+uniform mat4 mvp;
+uniform mat4 mvpinverse;
+uniform mat4 mvptransposed;
+
+in vec4 objPos;
+in vec4 camPos;
+in vec4 lightPos;
+in float squarRad;
+in float rad;
+in vec3 move_color;
 
 void main(void) {
     vec4 coord;
@@ -8788,7 +8808,7 @@ void main(void) {
 
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = mvpinverse * coord;
     coord /= coord.w;
     coord -= objPos; // ... and to glyph space
 
@@ -8827,7 +8847,7 @@ void main(void) {
 #ifdef SFB_DEMO
     vec3 color = vec3( 0.70f, 0.8f, 0.4f);
 #else
-    vec3 color = gl_Color.rgb;
+    vec3 color = move_color.rgb;
     // uniform color
     //color = vec3( 0.98, 0.23, 0.0); // for VIS
     //color = vec3( 0.17, 0.5, 0.8);
@@ -8843,12 +8863,13 @@ void main(void) {
 
     // phong lighting with directional light
     gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    gl_FragColor = vec4(color,1.0);
 
     // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
-    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    float depth = dot(mvptransposed[2], Ding);
+    float depthW = dot(mvptransposed[3], Ding);
 #ifdef OGL_DEPTH_SES
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
 #else
@@ -9156,7 +9177,7 @@ void main(void) {
     </shader>
 
     <shader name="torusVertex">
-      <snippet type="version">120</snippet>
+      <snippet type="version">430</snippet>
       <snippet name="commondefines"/>
       <snippet type="string">
         <!--
@@ -9170,42 +9191,50 @@ uniform vec3 camUp;
 uniform vec3 camRight;
 #endif // CALC_CAM_SYS
 
-attribute vec3 inParams;         // inner and outer radius of the torus (r and R) and maximum angle
-attribute vec4 quatC;             // conjugate quaternion
-attribute vec4 inSphere;        // everything inside this sphere (x,y,z,rad) is visible
-attribute vec4 inColors;        // coded colors (x,y) and d of plane and maximum distance from plane
-attribute vec3 inCuttingPlane;    // cutting plane for 'pie slice'-cutting
+uniform mat4 view;
+uniform mat4 proj;
+uniform mat4 viewInverse;
+uniform mat4 mvp;
+uniform mat4 mvpinverse;
+uniform mat4 mvptransposed;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying vec4 radii;
-varying vec4 visibilitySphere;
+layout (location = 0) in vec4 vert_position;
+layout (location = 1) in vec4 vert_color;
+layout (location = 2) in vec3 torus_params;
+layout (location = 3) in vec4 torus_quat;
+layout (location = 4) in vec4 torus_sphere;
+layout (location = 5) in vec3 torus_cuttingplane;
 
-varying vec3 rotMatT0;
-varying vec3 rotMatT1; // rotation matrix from the quaternion
-varying vec3 rotMatT2;
+out vec4 objPos;
+out vec4 camPos;
+out vec4 lightPos;
+out vec4 radii;
+out vec4 visibilitySphere;
 
-varying float maxAngle;
+out vec3 rotMatT0;
+out vec3 rotMatT1; // rotation matrix from the quaternion
+out vec3 rotMatT2;
 
-varying vec4 colors;
-varying vec3 cuttingPlane;
+out float maxAngle;
+
+out vec4 colors;
+out vec3 cuttingPlane;
 
 void main(void) {
     const vec4 quatConst = vec4(1.0, -1.0, 0.5, 0.0);
     vec4 tmp, tmp1;
 
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Vertex;
+    vec4 inPos = vert_position;
 
-    radii.x = inParams.x;
+    radii.x = torus_params.x;
     radii.y = radii.x * radii.x;
-    radii.z = inParams.y;
+    radii.z = torus_params.y;
     radii.w =  radii.z * radii.z;
     
-    maxAngle = inParams.z;
+    maxAngle = torus_params.z;
     
-    colors = inColors;
+    colors = vert_color;
     
     inPos.w = 1.0;
     
@@ -9214,39 +9243,40 @@ void main(void) {
 
     // orientation quaternion to inverse rotation matrix conversion
     // Begin: Holy code!
-    tmp = quatC.xzyw * quatC.yxzw;                        // tmp <- (xy, xz, yz, ww)
-    tmp1 = quatC * quatC.w;                                    // tmp1 <- (xw, yw, zw, %)
+    tmp = torus_quat.xzyw * torus_quat.yxzw;                        // tmp <- (xy, xz, yz, ww)
+    tmp1 = torus_quat * torus_quat.w;                                    // tmp1 <- (xw, yw, zw, %)
     tmp1.w = -quatConst.z;                                // tmp1 <- (xw, yw, zw, -0.5)
 
     rotMatT0.xyz = tmp1.wzy * quatConst.xxy + tmp.wxy;    // matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
-    rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;                // matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
+    rotMatT0.x = torus_quat.x * torus_quat.x + rotMatT0.x;                // matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
     rotMatT0 = rotMatT0 + rotMatT0;                     // matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
 
     rotMatT1.xyz = tmp1.zwx * quatConst.yxx + tmp.xwz;     // matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
-    rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;             // matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
+    rotMatT1.y = torus_quat.y * torus_quat.y + rotMatT1.y;             // matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
     rotMatT1 = rotMatT1 + rotMatT1;                     // matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
 
     rotMatT2.xyz = tmp1.yxw * quatConst.xyx + tmp.yzw;     // matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
-    rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;             // matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
+    rotMatT2.z = torus_quat.z * torus_quat.z + rotMatT2.z;             // matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
     rotMatT2 = rotMatT2 + rotMatT2;                     // matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)    
     // End: Holy code!
 
     // rotate and copy the visibility sphere
-    visibilitySphere.xyz = rotMatT0 * inSphere.x + rotMatT1 * inSphere.y + rotMatT2 * inSphere.z;
-    visibilitySphere.w = inSphere.w;
+    visibilitySphere.xyz = rotMatT0 * torus_sphere.x + rotMatT1 * torus_sphere.y + rotMatT2 * torus_sphere.z;
+    visibilitySphere.w = torus_sphere.w;
     
-    cuttingPlane = rotMatT0 * inCuttingPlane.x + rotMatT1 * inCuttingPlane.y + rotMatT2 * inCuttingPlane.z;
+    cuttingPlane = rotMatT0 * torus_cuttingplane.x + rotMatT1 * torus_cuttingplane.y + rotMatT2 * torus_cuttingplane.z;
     
     // calculate cam position
-    tmp = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    tmp = viewInverse[3]; // (C) by Christoph
     tmp.xyz -= objPos.xyz; // cam move
     camPos.xyz = rotMatT0 * tmp.x + rotMatT1 * tmp.y + rotMatT2 * tmp.z;
 
     // calculate light position in glyph space
     // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    //lightPos = viewInverse * gl_LightSource[0].position - objPos;
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
+    //lightPos = viewInverse * normalize( gl_LightSource[0].position);
+    lightPos = vec4(0,0,0,1); // Dummy
     lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     
     // Sphere-Touch-Plane-Approach
@@ -9258,9 +9288,9 @@ void main(void) {
 
 #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
+    tmp = viewInverse[3] + viewInverse[2];
     vec3 camIn = normalize(tmp.xyz);
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
+    tmp = viewInverse[3] + viewInverse[1];
     vec3 camUp = tmp.xyz;
     vec3 camRight = normalize(cross(camIn, camUp));
     camUp = cross(camIn, camRight);
@@ -9285,7 +9315,7 @@ void main(void) {
     dd = vec2(1.0) / d;
 
     ////p = (radii.x + radii.z)*(radii.x + radii.z) * dd;
-    p = inSphere.w*inSphere.w * dd;
+    p = torus_sphere.w*torus_sphere.w * dd;
     q = d - p;
     h = sqrt(p * q);
     //h = vec2(0.0);
@@ -9300,27 +9330,27 @@ void main(void) {
 
     // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     ////testPos = objPos.xyz + cpj1 + cpm1;
-    testPos = inSphere.xyz + objPos.xyz + cpj1 + cpm1;    
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    testPos = torus_sphere.xyz + objPos.xyz + cpj1 + cpm1;    
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     ////testPos = objPos.xyz + cpj2 + cpm2;
-    testPos = inSphere.xyz + objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    testPos = torus_sphere.xyz + objPos.xyz + cpj2 + cpm2;
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -9340,7 +9370,7 @@ void main(void) {
     </shader>
 
     <shader name="torusFragment">
-      <snippet type="version">120</snippet>
+      <snippet type="version">430</snippet>
       <snippet name="commondefines"/>
       <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="rootsolver"/>
@@ -9351,20 +9381,27 @@ uniform vec3 zValues;
 uniform vec3 fogCol;
 uniform float alpha = 0.5;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying vec4 radii;
-varying vec4 visibilitySphere;
+uniform mat4 view;
+uniform mat4 proj;
+uniform mat4 viewInverse;
+uniform mat4 mvp;
+uniform mat4 mvpinverse;
+uniform mat4 mvptransposed;
 
-varying vec3 rotMatT0;
-varying vec3 rotMatT1; // rotation matrix from the quaternion
-varying vec3 rotMatT2;
+in vec4 objPos;
+in vec4 camPos;
+in vec4 lightPos;
+in vec4 radii;
+in vec4 visibilitySphere;
 
-varying float maxAngle;
+in vec3 rotMatT0;
+in vec3 rotMatT1; // rotation matrix from the quaternion
+in vec3 rotMatT2;
 
-varying vec4 colors;
-varying vec3 cuttingPlane;
+in float maxAngle;
+
+in vec4 colors;
+in vec3 cuttingPlane;
 -->
       </snippet>
       <snippet name="decodecolor"/>
@@ -9380,7 +9417,7 @@ void main(void) {
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = mvpinverse * coord;
     coord /= coord.w;
     coord -= objPos; // ... and move
 
@@ -9497,7 +9534,8 @@ void main(void) {
 #endif
 
     // phong lighting with directional light
-    gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
+    //gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
+    gl_FragColor = vec4(color, 1.0);
     gl_FragDepth = gl_FragCoord.z;
     
     // calculate depth
@@ -9510,8 +9548,8 @@ void main(void) {
     intersection += objPos.xyz;
 
     vec4 Ding = vec4( intersection, 1.0);
-    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    float depth = dot(mvptransposed[2], Ding);
+    float depthW = dot(mvptransposed[3], Ding);
 #ifdef OGL_DEPTH_SES
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
 #else
@@ -10412,7 +10450,7 @@ void main(void) {
     </shader>
 
     <shader name="sphericaltriangleVertex">
-      <snippet type="version">130</snippet>
+      <snippet type="version">430</snippet>
       <snippet name="commondefines"/>
       <snippet type="string">
         <!--
@@ -10420,65 +10458,71 @@ void main(void) {
     uniform vec3 zValues;
     uniform vec3 fogCol;
     uniform vec2 texOffset;
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 viewInverse;
+    uniform mat4 mvp;
     
     #ifndef CALC_CAM_SYS
     uniform vec3 camIn;
     uniform vec3 camUp;
     uniform vec3 camRight;
     #endif // CALC_CAM_SYS
+
+    layout (location = 0) in vec4 vert_position;
+    layout (location = 1) in vec3 vert_color;
+    layout (location = 2) in vec4 tri_attrib1;
+    layout (location = 3) in vec4 tri_attrib2;
+    layout (location = 4) in vec4 tri_attrib3;
+    layout (location = 5) in vec3 tri_tex_coord1;
+    layout (location = 6) in vec3 tri_tex_coord2;
+    layout (location = 7) in vec3 tri_tex_coord3;
     
-    attribute vec4 attribVec1;
-    attribute vec4 attribVec2;
-    attribute vec4 attribVec3;
-    attribute vec3 attribColors;
-    attribute vec3 attribTexCoord1;
-    attribute vec3 attribTexCoord2;
-    attribute vec3 attribTexCoord3;
+    out vec4 objPos;
+    out vec4 camPos;
+    out vec4 lightPos;
     
-    varying vec4 objPos;
-    varying vec4 camPos;
-    varying vec4 lightPos;
-    
-    varying vec4 inVec1;
-    varying vec4 inVec2;
-    varying vec4 inVec3;
-    varying vec3 inColors;
-    varying vec3 texCoord1;
-    varying vec3 texCoord2;
-    varying vec3 texCoord3;
+    out vec4 inVec1;
+    out vec4 inVec2;
+    out vec4 inVec3;
+    out vec3 inColors;
+    out vec3 texCoord1;
+    out vec3 texCoord2;
+    out vec3 texCoord3;
     
     void main(void) {
-    inVec1 = attribVec1;
-    inVec2 = attribVec2;
-    inVec3 = attribVec3;
-    inColors = attribColors;
+    inVec1 = tri_attrib1;
+    inVec2 = tri_attrib2;
+    inVec3 = tri_attrib3;
+    inColors = vert_color;
     
-    texCoord1 = attribTexCoord1;
-    texCoord2 = attribTexCoord2;
-    texCoord3 = attribTexCoord3;
+    texCoord1 = tri_tex_coord1;
+    texCoord2 = tri_tex_coord2;
+    texCoord3 = tri_tex_coord3;
     
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Vertex;
+    vec4 inPos = vert_position;
     inVec1.w = inPos.w;
     inVec2.w = inPos.w * inPos.w;
     inPos.w = 1.0;
     
     // DEBUG
-    //texCoord2.xy = vec2( attribVec1.w, attribVec2.w);
+    //texCoord2.xy = vec2( tri_attrib1.w, tri_attrib2.w);
     
     // object pivot point in object space    
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
     
     // calculate cam position
-    camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    camPos = viewInverse[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
     
     // calculate light position in glyph space
     // USE THIS LINE TO GET POSITIONAL LIGHTING
-    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos;
+    //lightPos = viewInverse * gl_LightSource[0].position - objPos;
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
-    lightPos = gl_ModelViewMatrixInverse * normalize( gl_LightSource[0].position);
-    
+    //lightPos = viewInverse * normalize( gl_LightSource[0].position);
+    lightPos = vec4(0,0,0,1); // dummy
+
     // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
     
@@ -10489,9 +10533,9 @@ void main(void) {
     
     #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
+    tmp = viewInverse[3] + viewInverse[2];
     vec3 camIn = normalize(tmp.xyz);
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
+    tmp = viewInverse[3] + viewInverse[1];
     vec3 camUp = tmp.xyz;
     vec3 camRight = normalize(cross(camIn, camUp));
     camUp = cross(camIn, camRight);
@@ -10530,25 +10574,25 @@ void main(void) {
     
     // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
     
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
     
     testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
     
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -10567,7 +10611,7 @@ void main(void) {
     </shader>
 
     <shader name="sphericaltriangleFragment">
-      <snippet type="version">130</snippet>
+      <snippet type="version">430</snippet>
       <snippet name="commondefines"/>
       <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
@@ -10582,18 +10626,25 @@ uniform vec2 texOffset;
 uniform sampler2D tex;
 uniform float alpha = 0.5;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
+uniform mat4 view;
+uniform mat4 proj;
+uniform mat4 viewInverse;
+uniform mat4 mvp;
+uniform mat4 mvpinverse;
+uniform mat4 mvptransposed;
 
-varying vec4 inVec1;
-varying vec4 inVec2;
-varying vec4 inVec3;
-varying vec3 inColors;
+in vec4 objPos;
+in vec4 camPos;
+in vec4 lightPos;
 
-varying vec3 texCoord1;
-varying vec3 texCoord2;
-varying vec3 texCoord3;
+in vec4 inVec1;
+in vec4 inVec2;
+in vec4 inVec3;
+in vec3 inColors;
+
+in vec3 texCoord1;
+in vec3 texCoord2;
+in vec3 texCoord3;
 
 -->
       </snippet>
@@ -10615,7 +10666,7 @@ void main(void) {
         + vec4(-1.0, -1.0, -1.0, 1.0);
     
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = mvpinverse * coord;
     coord /= coord.w;
     coord -= objPos; // ... and to glyph space
 
@@ -10741,14 +10792,15 @@ void main(void) {
 #endif
 
     // phong lighting with directional light
-    gl_FragColor = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    //gl_FragColor = vec4( LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    gl_FragColor = vec4(color,1.0);
     gl_FragDepth = gl_FragCoord.z;
     
     // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
-    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    float depth = dot(mvptransposed[2], Ding);
+    float depthW = dot(mvptransposed[3], Ding);
 #ifdef OGL_DEPTH_SES
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
 #else

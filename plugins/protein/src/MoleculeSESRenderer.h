@@ -16,6 +16,7 @@
 #include <vector>
 #include "Color.h"
 #include "ReducedSurface.h"
+#include "glowl/BufferObject.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
@@ -312,8 +313,6 @@ namespace protein {
         megamol::core::param::ParamSlot molIdxListParam;
         /** parameter slot for color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;
-        /** Parameter to toggle offscreen rendering */
-        megamol::core::param::ParamSlot offscreenRenderingParam;
         megamol::core::param::ParamSlot probeRadiusSlot;
 
         bool usePuxels;
@@ -321,7 +320,6 @@ namespace protein {
         bool drawRS;
         bool drawSES;
         bool drawSAS;
-        bool offscreenRendering;
 
         /** the reduced surface(s) */
         std::vector<std::vector<ReducedSurface*>> reducedSurfaceAllFrames;
@@ -332,15 +330,12 @@ namespace protein {
         vislib::graphics::gl::GLSLShader cylinderShader;
         // shader for the spheres (raycasting view)
         vislib::graphics::gl::GLSLShader sphereShader;
-        vislib::graphics::gl::GLSLShader sphereShaderOR;
         // shader for the spheres with clipped interior (raycasting view)
         vislib::graphics::gl::GLSLShader sphereClipInteriorShader;
         // shader for the spherical triangles (raycasting view)
         vislib::graphics::gl::GLSLShader sphericalTriangleShader;
-        vislib::graphics::gl::GLSLShader sphericalTriangleShaderOR;
         // shader for torus (raycasting view)
         vislib::graphics::gl::GLSLShader torusShader;
-        vislib::graphics::gl::GLSLShader torusShaderOR;
         // shader for per pixel lighting (polygonal view)
         vislib::graphics::gl::GLSLShader lightShader;
         // shader for 1D gaussian filtering (postprocessing)
@@ -399,6 +394,11 @@ namespace protein {
          * on the current Framebuffer or screen
          */
         void puxelsDraw();
+
+        /**
+         * updates and uploads all arrays according to the incoming light information
+         */
+        void UpdateLights();
 
         ////////////
 
@@ -499,6 +499,49 @@ namespace protein {
         vislib::Array<vislib::StringA> molIdxList;
         // flag for SES computation (false = one SES per molecule)
         bool computeSesPerMolecule;
+
+        glm::mat4 view_;
+        glm::mat4 proj_;
+        glm::mat4 invview_;
+        glm::mat4 transview_;
+        glm::mat4 invproj_;
+        glm::mat4 invtransview_;
+        glm::mat4 mvp_;
+        glm::mat4 mvpinverse_;
+        glm::mat4 mvptranspose_;
+
+        std::unique_ptr<glowl::BufferObject> sphereVertexBuffer_;
+        std::unique_ptr<glowl::BufferObject> sphereColorBuffer_;
+        
+        std::unique_ptr<glowl::BufferObject> torusVertexBuffer_;
+        std::unique_ptr<glowl::BufferObject> torusColorBuffer_;
+        std::unique_ptr<glowl::BufferObject> torusParamsBuffer_;
+        std::unique_ptr<glowl::BufferObject> torusQuaternionBuffer_;
+        std::unique_ptr<glowl::BufferObject> torusSphereBuffer_;
+        std::unique_ptr<glowl::BufferObject> torusCuttingPlaneBuffer_;
+        
+        std::unique_ptr<glowl::BufferObject> triaVertexBuffer_;
+        std::unique_ptr<glowl::BufferObject> triaColorBuffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttrib1Buffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttrib2Buffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttrib3Buffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttribTexCoord1Buffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttribTexCoord2Buffer_;
+        std::unique_ptr<glowl::BufferObject> triaAttribTexCoord3Buffer_;
+
+        std::unique_ptr<glowl::BufferObject> pointLightBuffer_;
+        std::unique_ptr<glowl::BufferObject> directionalLightBuffer_;
+
+        GLuint vertexArraySphere_;
+        GLuint vertexArrayTorus_;
+        GLuint vertexArrayTria_;
+
+        struct LightParams {
+            float x, y, z, intensity;
+        };
+
+        std::vector<LightParams> pointLights_;
+        std::vector<LightParams> directionalLights_;
     };
 
 } /* end namespace protein */
