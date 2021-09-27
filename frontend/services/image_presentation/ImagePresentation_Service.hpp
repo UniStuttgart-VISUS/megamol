@@ -67,6 +67,7 @@ public:
 
     struct RenderInputsUpdate {
         virtual ~RenderInputsUpdate(){};
+        virtual void update() {};
     };
 
 private:
@@ -108,6 +109,9 @@ private:
     map_resources(std::vector<std::string> const& requests);
     const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;
 
+    // feeds view render inputs with framebuffer size from FramebufferEvents resource, if not configured otherwise
+    std::pair<unsigned int, unsigned int> m_window_framebuffer_size = {0, 0};
+    std::function<std::pair<unsigned int, unsigned int>()> m_framebuffer_size_from_resource_handler;
 };
 
 } // namespace frontend

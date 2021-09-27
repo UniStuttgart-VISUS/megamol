@@ -78,6 +78,10 @@ bool ImagePresentation_Service::init(const Config& config) {
         , "GUIState"
     };
 
+    m_framebuffer_size_from_resource_handler = [&]() -> std::pair<unsigned int, unsigned int> {
+        return {m_window_framebuffer_size.first, m_window_framebuffer_size.second};
+    };
+
     log("initialized successfully");
     return true;
 }
@@ -97,6 +101,9 @@ void ImagePresentation_Service::setRequestedResources(std::vector<FrontendResour
     this->m_requestedResourceReferences = resources;
 
     m_frontend_resources_ptr = & m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>();
+
+    auto& framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
+    m_window_framebuffer_size = {framebuffer_events.previous_state.width, framebuffer_events.previous_state.height};
 }
 #define m_frontend_resources (*m_frontend_resources_ptr)
 
@@ -104,7 +111,11 @@ void ImagePresentation_Service::updateProvidedResources() {
 }
 
 void ImagePresentation_Service::digestChangedRequestedResources() {
+    auto& framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
 
+    if (framebuffer_events.size_events.size()) {
+        m_window_framebuffer_size = {framebuffer_events.size_events.back().width, framebuffer_events.size_events.back().height};
+    }
 }
 
 void ImagePresentation_Service::resetProvidedResources() {
@@ -118,6 +129,9 @@ void ImagePresentation_Service::postGraphRender() {
 
 void ImagePresentation_Service::RenderNextFrame() {
     for (auto& entry : m_entry_points) {
+
+        entry.entry_point_data->update();
+
         entry.execute(entry.modulePtr, entry.entry_point_resources, entry.execution_result_image);
     }
 }
@@ -168,6 +182,14 @@ namespace {
     struct ViewRenderInputs : public ImagePresentation_Service::RenderInputsUpdate {
         // individual inputs used by view for rendering of next frame
         megamol::frontend_resources::RenderInput render_input;
+
+        // sets (local) fbo resolution of render_input from various sources
+        std::function<std::pair<unsigned int, unsigned int>()> render_input_framebuffer_size_handler;
+
+        void update() override {
+            auto fbo_size = render_input_framebuffer_size_handler();
+            render_input.local_view_framebuffer_resolution = {fbo_size.first, fbo_size.second};
+        }
     };
 } // namespace
 #define accessViewRenderInput(unique_ptr) (*static_cast<ViewRenderInputs*>(unique_ptr.get()))
@@ -193,7 +215,7 @@ std::tuple<
         // which are not global resources but managed for each entry point individually
         if (request == "ViewRenderInput") {
             unique_data = std::make_unique<ViewRenderInputs>();
-            accessViewRenderInput(unique_data).render_input.local_view_framebuffer_resolution = {600, 400};
+            accessViewRenderInput(unique_data).render_input_framebuffer_size_handler = m_framebuffer_size_from_resource_handler;
 
             // wrap render input for view in locally handled resource
             resources.push_back({request, accessViewRenderInput(unique_data).render_input});
