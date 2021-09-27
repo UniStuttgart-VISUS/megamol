@@ -68,17 +68,21 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::Render
         started_timer = true;
     }
 
-    const auto render = [&]() {
-        const double instanceTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::high_resolution_clock::now() - render_view_context_timer_start)
-            .count() / static_cast<double>(1000);
+    const double instanceTime_sec = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now() - render_view_context_timer_start)
+        .count() / static_cast<double>(1000);
 
-        const double time = view.DefaultTime(instanceTime);
+    const double time_sec = view.DefaultTime(instanceTime_sec);
 
-        result_image = view.Render(time, instanceTime);
-    };
-    
-    render();
+    // copy render inputs from frontend so we can update time
+    auto renderinput = render_input;
+
+    renderinput.instanceTime_sec = instanceTime_sec;
+    renderinput.time_sec = time_sec;
+
+    view.Resize(renderinput.local_view_framebuffer_resolution.x, renderinput.local_view_framebuffer_resolution.y);
+
+    result_image = view.Render(renderinput.time_sec, renderinput.instanceTime_sec);
 }
 
 std::vector<std::string> get_view_runtime_resources_requests() {
@@ -108,8 +112,6 @@ bool view_rendering_execution(
     
     return true;
 }
-
-
 
 } /* end namespace view */
 } /* end namespace core */
