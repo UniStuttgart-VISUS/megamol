@@ -154,6 +154,10 @@ function(require_external NAME)
     set(TBB_LIB "lib/tbb12.lib")
     set(TBB_DLL "bin/tbb12.dll")
 
+    if (MSVC)
+      set(EXTERNAL_EXE_LINKER_FLAGS "${EXTERNAL_EXE_LINKER_FLAGS} /NODEFAULTLIB:tbb12_debug.lib" CACHE STRING "" FORCE)
+    endif()
+
     add_external_project(tbb SHARED
       GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
       GIT_TAG "v2021.3.0"
