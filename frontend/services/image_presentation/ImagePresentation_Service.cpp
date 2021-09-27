@@ -16,6 +16,8 @@
 #include "ImageWrapper_to_GLTexture.h"
 #include "ImagePresentation_Sinks.hpp"
 
+#include "LuaCallbacksCollection.h"
+
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
@@ -76,6 +78,7 @@ bool ImagePresentation_Service::init(const Config& config) {
         , "WindowManipulation"
         , "FramebufferEvents"
         , "GUIState"
+        , "RegisterLuaCallbacks"
     };
 
     m_framebuffer_size_from_resource_handler = [&]() -> std::pair<unsigned int, unsigned int> {
@@ -104,6 +107,8 @@ void ImagePresentation_Service::setRequestedResources(std::vector<FrontendResour
 
     auto& framebuffer_events = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FramebufferEvents>();
     m_window_framebuffer_size = {framebuffer_events.previous_state.width, framebuffer_events.previous_state.height};
+
+    fill_lua_callbacks();
 }
 #define m_frontend_resources (*m_frontend_resources_ptr)
 
@@ -311,6 +316,47 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
 
     window_manipulation.swap_buffers();
 }
+
+void ImagePresentation_Service::fill_lua_callbacks() {
+    using megamol::frontend_resources::LuaCallbacksCollection;
+    using Error = megamol::frontend_resources::LuaCallbacksCollection::Error;
+    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
+    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
+    using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
+    using BoolResult = megamol::frontend_resources::LuaCallbacksCollection::BoolResult;
+
+    LuaCallbacksCollection callbacks;
+
+    callbacks.add<VoidResult, std::string, int, int>(
+        "mmSetViewFramebufferSize",
+        "(string view, int width, int height)\n\tSet framebuffer dimensions of view to width x height.",
+        {[&](std::string view, int width, int height) -> VoidResult
+        {
+            if (width <= 0 || height <= 0) {
+                return Error {"framebuffer dimensions must be positive, but given values are: " + std::to_string(width) + " x " + std::to_string(height)};
+            }
+
+            auto entry_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),
+            [&](GraphEntryPoint& entry) {
+                return entry.moduleName == view;
+            });
+
+            if (entry_it == m_entry_points.end()) {
+                return Error {"no view found with name: " + view};
+            }
+
+            accessViewRenderInput(entry_it->entry_point_data).render_input_framebuffer_size_handler =
+            [=]() -> std::pair<unsigned int, unsigned int> {
+                return {width, height};
+            };
+
+            return VoidResult{};
+        }});
+
+    auto& register_callbacks = m_requestedResourceReferences[4].getResource<std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)>>();
+    register_callbacks(callbacks);
+}
+
 
 } // namespace frontend
 } // namespace megamol

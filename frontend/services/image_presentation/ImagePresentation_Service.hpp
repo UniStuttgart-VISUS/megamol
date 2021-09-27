@@ -112,6 +112,8 @@ private:
     // feeds view render inputs with framebuffer size from FramebufferEvents resource, if not configured otherwise
     std::pair<unsigned int, unsigned int> m_window_framebuffer_size = {0, 0};
     std::function<std::pair<unsigned int, unsigned int>()> m_framebuffer_size_from_resource_handler;
+
+    void fill_lua_callbacks();
 };
 
 } // namespace frontend
