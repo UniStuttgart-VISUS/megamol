@@ -85,6 +85,47 @@ bool ImagePresentation_Service::init(const Config& config) {
         return {m_window_framebuffer_size.first, m_window_framebuffer_size.second};
     };
 
+    m_viewport_tile_handler =
+        [&]() -> ViewportTile
+        {
+            return {m_framebuffer_size_handler(), {0.0, 0.0}, {1.0, 1.0}};
+        };
+
+    if (config.local_viewport_tile.has_value()) {
+        auto value = config.local_viewport_tile.value();
+
+        auto global_size = value.global_framebuffer_resolution;
+        auto tile_start = value.tile_start_pixel;
+        auto tile_size = value.tile_resolution;
+
+        auto diff = [](auto const& point, auto const& size) -> DoublePair {
+            return {point.first / static_cast<double>(size.first), point.second / static_cast<double>(size.second)};
+        };
+
+        DoublePair start = diff(tile_start, global_size);
+        DoublePair end = diff(UintPair{tile_start.first+tile_size.first,tile_start.second+tile_size.second}, global_size);
+
+        m_framebuffer_size_handler = [=]() -> UintPair {
+            return {tile_size.first, tile_size.second};
+        };
+
+        m_viewport_tile_handler =
+            [=]() -> ViewportTile
+            {
+                return {{global_size.first, global_size.second}, start, end};
+            };
+    }
+
+    // if framebuffer size is set via CLI
+    // overwrite the framebuffer size handler maybe set by the tile CLI option (see above)
+    if (config.local_framebuffer_resolution.has_value()) {
+        auto value = config.local_framebuffer_resolution.value();
+
+        m_framebuffer_size_handler = [=]() -> UintPair {
+            return {value.first, value.second};
+        };
+    }
+
     log("initialized successfully");
     return true;
 }
@@ -190,10 +231,16 @@ namespace {
 
         // sets (local) fbo resolution of render_input from various sources
         std::function<ImagePresentation_Service::UintPair()> render_input_framebuffer_size_handler;
+        std::function<ImagePresentation_Service::ViewportTile()> render_input_tile_handler;
 
         void update() override {
             auto fbo_size = render_input_framebuffer_size_handler();
             render_input.local_view_framebuffer_resolution = {fbo_size.first, fbo_size.second};
+
+            auto tile = render_input_tile_handler();
+            render_input.global_framebuffer_resolution = {tile.global_resolution.first, tile.global_resolution.second};
+            render_input.local_tile_relative_begin = {tile.tile_start_normalized.first, tile.tile_start_normalized.second};
+            render_input.local_tile_relative_end = {tile.tile_end_normalized.first, tile.tile_end_normalized.second};
         }
     };
 } // namespace
@@ -221,6 +268,7 @@ std::tuple<
         if (request == "ViewRenderInput") {
             unique_data = std::make_unique<ViewRenderInputs>();
             accessViewRenderInput(unique_data).render_input_framebuffer_size_handler = m_framebuffer_size_handler;
+            accessViewRenderInput(unique_data).render_input_tile_handler = m_viewport_tile_handler;
 
             // wrap render input for view in locally handled resource
             resources.push_back({request, accessViewRenderInput(unique_data).render_input});

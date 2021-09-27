@@ -129,6 +129,7 @@ private:
     // feeds view render inputs with framebuffer size from FramebufferEvents resource, if not configured otherwise
     UintPair m_window_framebuffer_size = {0, 0};
     std::function<UintPair()> m_framebuffer_size_handler;
+    std::function<ViewportTile()> m_viewport_tile_handler;
 
     void fill_lua_callbacks();
 };
