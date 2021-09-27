@@ -82,6 +82,33 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::Render
 
     view.Resize(renderinput.local_view_framebuffer_resolution.x, renderinput.local_view_framebuffer_resolution.y);
 
+    auto camera = view.GetCamera();
+
+    Camera::AspectRatio aspect = {renderinput.global_framebuffer_resolution.x / static_cast<float>(renderinput.global_framebuffer_resolution.y)};
+    Camera::ImagePlaneTile tile = {renderinput.local_tile_relative_begin, renderinput.local_tile_relative_end};
+
+    switch (camera.getProjectionType()) {
+        case Camera::ProjectionType::ORTHOGRAPHIC:{
+            auto intrinsics = camera.get<Camera::OrthographicParameters>();
+            intrinsics.aspect = aspect;
+            intrinsics.image_plane_tile = tile;
+            camera.setOrthographicProjection(intrinsics);
+            break;
+        }
+        case Camera::ProjectionType::PERSPECTIVE: {
+            auto intrinsics = camera.get<Camera::PerspectiveParameters>();
+            intrinsics.aspect = aspect;
+            intrinsics.image_plane_tile = tile;
+            camera.setPerspectiveProjection(intrinsics);
+            break;
+        }
+        case Camera::ProjectionType::UNKNOWN:
+        default:
+            break;
+    }
+
+    view.SetCamera(camera);
+
     result_image = view.Render(renderinput.time_sec, renderinput.instanceTime_sec);
 }
 
