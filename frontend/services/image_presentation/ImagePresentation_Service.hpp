@@ -21,8 +21,24 @@ namespace frontend {
 class ImagePresentation_Service final : public AbstractFrontendService {
 public:
     using UintPair = std::pair<unsigned int, unsigned int>;
+    using DoublePair = std::pair<double, double>;
+
+    struct ViewportTile {
+        UintPair global_resolution;
+        DoublePair tile_start_normalized;
+        DoublePair tile_end_normalized;
+    };
 
     struct Config {
+        struct Tile {
+            UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling
+            UintPair tile_start_pixel;
+            UintPair tile_resolution;
+        };
+        std::optional<Tile> local_viewport_tile = std::nullopt; // defaults to local framebuffer == local tile
+
+        // e.g. window resolution or powerwall projector resolution, will be applied to all views/entry points
+        std::optional<UintPair> local_framebuffer_resolution = std::nullopt;
     };
 
     std::string serviceName() const override { return "ImagePresentation_Service"; }

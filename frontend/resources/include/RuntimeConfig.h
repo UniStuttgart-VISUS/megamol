@@ -67,6 +67,16 @@ struct RuntimeConfig {
     bool screenshot_show_privacy_note = true;
     bool show_version_note = true;
 
+    struct Tile {
+        UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling
+        UintPair tile_start_pixel;
+        UintPair tile_resolution;
+    };
+    std::optional<Tile> local_viewport_tile = std::nullopt; // defaults to local framebuffer == local tile
+
+    // e.g. window resolution or powerwall projector resolution, will be applied to all views/entry points
+    std::optional<UintPair> local_framebuffer_resolution = std::nullopt;
+
     bool remote_headnode                        = false;
     bool remote_rendernode                      = false;
     bool remote_mpirendernode                   = false;

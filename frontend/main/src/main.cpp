@@ -127,6 +127,14 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::ImagePresentation_Service imagepresentation_service;
     megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
+    imagepresentationConfig.local_framebuffer_resolution = config.local_framebuffer_resolution;
+    imagepresentationConfig.local_viewport_tile = config.local_viewport_tile.has_value()
+        ? std::make_optional(megamol::frontend::ImagePresentation_Service::Config::Tile{
+            config.local_viewport_tile.value().global_framebuffer_resolution,
+            config.local_viewport_tile.value().tile_start_pixel,
+            config.local_viewport_tile.value().tile_resolution
+        })
+        : std::nullopt;
     imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
     megamol::frontend::Command_Service command_service;
 #ifdef MM_CUDA_ENABLED
