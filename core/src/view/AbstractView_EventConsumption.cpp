@@ -58,13 +58,6 @@ void view_consume_window_events(AbstractView& view, megamol::frontend::FrontendR
     }
 }
 
-void view_consume_framebuffer_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
-    GET_RESOURCE(FramebufferEvents)//{
-        for (auto& e: events.size_events)
-            view.Resize(static_cast<unsigned int>(e.width), static_cast<unsigned int>(e.height));
-    }
-}
-
 // this is a weird place to measure passed program time, but we do it here so we satisfy _mmcRenderViewContext and nobody else needs to know
 static std::chrono::high_resolution_clock::time_point render_view_context_timer_start;
 
