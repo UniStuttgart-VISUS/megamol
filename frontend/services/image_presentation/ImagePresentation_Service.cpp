@@ -164,31 +164,58 @@ static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
     throw std::exception();
 }
 
-std::vector<FrontendResource> ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
-    std::vector<FrontendResource> result;
+namespace {
+    struct ViewRenderInputs : public ImagePresentation_Service::RenderInputsUpdate {
+        // individual inputs used by view for rendering of next frame
+        megamol::frontend_resources::RenderInput render_input;
+    };
+} // namespace
+#define accessViewRenderInput(unique_ptr) (*static_cast<ViewRenderInputs*>(unique_ptr.get()))
+
+std::tuple<
+    std::vector<FrontendResource>,
+    std::unique_ptr<ImagePresentation_Service::RenderInputsUpdate>
+> ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
+
+    std::vector<FrontendResource> resources;
+
+    // this unique_data/reindering input handler thing is a bit convoluted but the idea is that we want to give the view (or any other type of entry point)
+    // the ability to get updated with newest frame data, e.g. framebuffer size
+    // but we also want to maintain the "empty" handler throughout the code path to avoid checking for a null ptr
+    auto unique_data = std::make_unique<RenderInputsUpdate>();
 
     for (auto& request: requests) {
         auto find_it = std::find_if(m_frontend_resources.begin(), m_frontend_resources.end(),
             [&](FrontendResource const& resource) { return resource.getIdentifier() == request; });
         bool found_request = find_it != m_frontend_resources.end();
 
+        // intercept view requests for individual rendering inputs
+        // which are not global resources but managed for each entry point individually
+        if (request == "ViewRenderInput") {
+            unique_data = std::make_unique<ViewRenderInputs>();
+            accessViewRenderInput(unique_data).render_input.local_view_framebuffer_resolution = {600, 400};
+
+            // wrap render input for view in locally handled resource
+            resources.push_back({request, accessViewRenderInput(unique_data).render_input});
+            continue;
+        }
 
         if (!found_request) {
             log_error("could not find requested resource " + request);
             return {};
         }
 
-        result.push_back(*find_it);
+        resources.push_back(*find_it);
     }
 
-    return result;
+    return {resources, std::move(unique_data)};
 }
 
 bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
     auto [execute_etry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
 
     auto resource_requests = entry_resource_requests();
-    auto resources = map_resources(resource_requests);
+    auto [resources, unique_data] = map_resources(resource_requests);
 
     if (resources.empty() && !resource_requests.empty()) {
         log_error("could not assign resources requested by entry point " + name + ". Entry point not created.");
@@ -199,6 +226,7 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
         name,
         module_raw_ptr,
         resources,
+        std::move(unique_data), // render inputs and their update
         execute_etry,
         {name} // image
         });

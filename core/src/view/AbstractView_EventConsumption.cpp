@@ -68,7 +68,7 @@ void view_consume_framebuffer_events(AbstractView& view, megamol::frontend::Fron
 // this is a weird place to measure passed program time, but we do it here so we satisfy _mmcRenderViewContext and nobody else needs to know
 static std::chrono::high_resolution_clock::time_point render_view_context_timer_start;
 
-void view_poke_rendering(AbstractView& view, megamol::frontend_resources::ImageWrapper& result_image) {
+void view_poke_rendering(AbstractView& view, megamol::frontend_resources::RenderInput const& render_input, megamol::frontend_resources::ImageWrapper& result_image) {
     static bool started_timer = false;
     if (!started_timer) {
         render_view_context_timer_start = std::chrono::high_resolution_clock::now();
@@ -89,7 +89,7 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::ImageW
 }
 
 std::vector<std::string> get_view_runtime_resources_requests() {
-    return {"KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents"};
+    return {"ViewRenderInput", "KeyboardEvents", "MouseEvents", "WindowEvents"};
 }
 
 bool view_rendering_execution(
@@ -107,12 +107,11 @@ bool view_rendering_execution(
     
     megamol::core::view::AbstractView& view = *view_ptr;
     
-    // resources are in order of initial requests from get_gl_view_runtime_resources_requests()
-    megamol::core::view::view_consume_keyboard_events(view, resources[0]);
-    megamol::core::view::view_consume_mouse_events(view, resources[1]);
-    megamol::core::view::view_consume_window_events(view, resources[2]);
-    megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
-    megamol::core::view::view_poke_rendering(view, result_image);
+    // resources are in order of initial requests from get_view_runtime_resources_requests()
+    megamol::core::view::view_consume_keyboard_events(view, resources[1]);
+    megamol::core::view::view_consume_mouse_events(view, resources[2]);
+    megamol::core::view::view_consume_window_events(view, resources[3]);
+    megamol::core::view::view_poke_rendering(view, resources[0].getResource<megamol::frontend_resources::RenderInput>(), result_image);
     
     return true;
 }

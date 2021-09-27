@@ -65,6 +65,10 @@ public:
             , ImageWrapper&
             )>;
 
+    struct RenderInputsUpdate {
+        virtual ~RenderInputsUpdate(){};
+    };
+
 private:
 
     std::vector<FrontendResource> m_providedResourceReferences;
@@ -81,6 +85,8 @@ private:
         std::string moduleName;
         void* modulePtr = nullptr;
         std::vector<megamol::frontend::FrontendResource> entry_point_resources;
+        // pimpl to some implementation handling rendering input data
+        std::unique_ptr<RenderInputsUpdate> entry_point_data = std::make_unique<RenderInputsUpdate>();
 
         EntryPointExecutionCallback execute;
         ImageWrapper execution_result_image;
@@ -95,7 +101,11 @@ private:
     std::list<ImagePresentationSink> m_presentation_sinks;
     void present_images_to_glfw_window(std::vector<ImageWrapper> const& images);
 
-    std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
+    std::tuple<
+        std::vector<FrontendResource>,
+        std::unique_ptr<RenderInputsUpdate>
+    >
+    map_resources(std::vector<std::string> const& requests);
     const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;
 
 };
