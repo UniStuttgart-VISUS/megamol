@@ -81,7 +81,7 @@ bool ImagePresentation_Service::init(const Config& config) {
         , "RegisterLuaCallbacks"
     };
 
-    m_framebuffer_size_from_resource_handler = [&]() -> std::pair<unsigned int, unsigned int> {
+    m_framebuffer_size_handler = [&]() -> UintPair {
         return {m_window_framebuffer_size.first, m_window_framebuffer_size.second};
     };
 
@@ -189,7 +189,7 @@ namespace {
         megamol::frontend_resources::RenderInput render_input;
 
         // sets (local) fbo resolution of render_input from various sources
-        std::function<std::pair<unsigned int, unsigned int>()> render_input_framebuffer_size_handler;
+        std::function<ImagePresentation_Service::UintPair()> render_input_framebuffer_size_handler;
 
         void update() override {
             auto fbo_size = render_input_framebuffer_size_handler();
@@ -220,7 +220,7 @@ std::tuple<
         // which are not global resources but managed for each entry point individually
         if (request == "ViewRenderInput") {
             unique_data = std::make_unique<ViewRenderInputs>();
-            accessViewRenderInput(unique_data).render_input_framebuffer_size_handler = m_framebuffer_size_from_resource_handler;
+            accessViewRenderInput(unique_data).render_input_framebuffer_size_handler = m_framebuffer_size_handler;
 
             // wrap render input for view in locally handled resource
             resources.push_back({request, accessViewRenderInput(unique_data).render_input});
@@ -346,7 +346,7 @@ void ImagePresentation_Service::fill_lua_callbacks() {
             }
 
             accessViewRenderInput(entry_it->entry_point_data).render_input_framebuffer_size_handler =
-            [=]() -> std::pair<unsigned int, unsigned int> {
+            [=]() -> UintPair {
                 return {width, height};
             };
 

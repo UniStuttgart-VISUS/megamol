@@ -20,6 +20,7 @@ namespace frontend {
 
 class ImagePresentation_Service final : public AbstractFrontendService {
 public:
+    using UintPair = std::pair<unsigned int, unsigned int>;
 
     struct Config {
     };
@@ -110,8 +111,8 @@ private:
     const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;
 
     // feeds view render inputs with framebuffer size from FramebufferEvents resource, if not configured otherwise
-    std::pair<unsigned int, unsigned int> m_window_framebuffer_size = {0, 0};
-    std::function<std::pair<unsigned int, unsigned int>()> m_framebuffer_size_from_resource_handler;
+    UintPair m_window_framebuffer_size = {0, 0};
+    std::function<UintPair()> m_framebuffer_size_handler;
 
     void fill_lua_callbacks();
 };
