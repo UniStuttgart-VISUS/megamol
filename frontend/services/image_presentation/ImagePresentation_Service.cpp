@@ -146,8 +146,6 @@ using EntryPointInitFunctions =
 std::tuple<
     // rendering execution function
     EntryPointExecutionCallback,
-    // set inital state function
-    EntryPointExecutionCallback,
     // get requested resources function
     std::function<std::vector<std::string>()>
 >;
@@ -157,7 +155,6 @@ static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
         if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr); view_ptr != nullptr) {
             return EntryPointInitFunctions{
                 std::function{megamol::core::view::view_rendering_execution},
-                std::function{megamol::core::view::view_init_rendering_state},
                 std::function{megamol::core::view::get_gl_view_runtime_resources_requests}
             };
         }
@@ -188,7 +185,7 @@ std::vector<FrontendResource> ImagePresentation_Service::map_resources(std::vect
 }
 
 bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
-    auto [execute_etry, init_entry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
+    auto [execute_etry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
 
     auto resource_requests = entry_resource_requests();
     auto resources = map_resources(resource_requests);
@@ -207,12 +204,6 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
         });
 
     auto& entry_point = m_entry_points.back();
-
-    if (!init_entry(entry_point.modulePtr, entry_point.entry_point_resources, entry_point.execution_result_image)) {
-        log_error("init function for entry point " + entry_point.moduleName + " failed. Entry point not created.");
-        m_entry_points.pop_back();
-        return false;
-    }
 
     return true;
 }

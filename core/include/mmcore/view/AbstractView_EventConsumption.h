@@ -37,14 +37,6 @@ namespace view {
         , megamol::frontend_resources::ImageWrapper& result_image
     );
 
-    // before rendering the first frame views need to know the current framebuffer size
-    // because they may have beed added to the graph after the initial framebuffer size event, we need this init callback to give them that info
-    MEGAMOLCORE_API bool view_init_rendering_state(
-          void* module_ptr
-        , std::vector<megamol::frontend::FrontendResource> const& resources
-        , megamol::frontend_resources::ImageWrapper& result_image
-    );
-
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */

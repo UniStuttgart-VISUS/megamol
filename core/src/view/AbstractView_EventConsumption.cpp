@@ -118,47 +118,7 @@ bool view_rendering_execution(
     return true;
 }
 
-bool view_init_rendering_state(
-      void* module_ptr
-    , std::vector<megamol::frontend::FrontendResource> const& resources
-    , megamol::frontend_resources::ImageWrapper& result_image
-) {
-    megamol::core::view::AbstractView* view_ptr =
-        dynamic_cast<megamol::core::view::AbstractView*>(static_cast<megamol::core::Module*>(module_ptr));
 
-    if (!view_ptr) {
-        std::cout << "error. module is not a view module. could not use as rendering entry point." << std::endl;
-        return false;
-    }
-    
-    megamol::core::view::AbstractView& view = *view_ptr;
-
-    // fake resize events for view to consume
-    auto& framebuffer_events = const_cast<megamol::frontend_resources::FramebufferEvents&>(resources[3].getResource<megamol::frontend_resources::FramebufferEvents>());
-    auto& framebuffer_size = framebuffer_events.previous_state;
-    framebuffer_events.size_events.push_back(framebuffer_size);
-    
-    auto& window_events = const_cast<megamol::frontend_resources::WindowEvents&>(resources[2].getResource<megamol::frontend_resources::WindowEvents>());
-    auto& window_width = window_events.previous_state.width;
-    auto& window_height = window_events.previous_state.height;
-    if(window_width <= 1 || window_height <= 1) {
-        window_width = framebuffer_size.width;
-        window_height = framebuffer_size.height;
-    }
-    window_events.size_events.push_back({window_width, window_height});
-    
-    auto& mouse_events = const_cast<megamol::frontend_resources::MouseEvents&>(resources[1].getResource<megamol::frontend_resources::MouseEvents>());
-    mouse_events.position_events.push_back({
-        mouse_events.previous_state.x_cursor_position,
-        mouse_events.previous_state.y_cursor_position});
-
-    // resources are in order of initial requests from get_gl_view_runtime_resources_requests()
-    megamol::core::view::view_consume_mouse_events(view, resources[1]);
-    megamol::core::view::view_consume_window_events(view, resources[2]);
-    megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
-
-    return true;
-}
 
 } /* end namespace view */
 } /* end namespace core */
