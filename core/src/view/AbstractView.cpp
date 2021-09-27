@@ -154,6 +154,10 @@ void megamol::core::view::AbstractView::SetCamera(Camera camera, bool isMutable)
     _cameraIsMutable = isMutable;
 }
 
+megamol::core::view::Camera megamol::core::view::AbstractView::GetCamera() const {
+    return _camera;
+}
+
 void megamol::core::view::AbstractView::CalcCameraClippingPlanes(float border) {
     if (_cameraIsMutable) {
         auto cam_pose = _camera.get<Camera::Pose>();
