@@ -25,6 +25,7 @@ struct RuntimeConfig {
     // general stuff
     using Path = std::string;
     using StringPair = std::pair<std::string/*Config*/, std::string/*Value*/>;
+    using UintPair = std::pair<unsigned int, unsigned int>;
 
     std::vector<Path> configuration_files = {"megamol_config.lua"};               // set only via (multiple) --config in CLI
     std::vector<std::string> configuration_file_contents = {};
@@ -51,8 +52,8 @@ struct RuntimeConfig {
     bool opengl_vsync = false;
     std::optional<std::tuple<unsigned int /*major*/, unsigned int /*minor*/, bool /*true=>core, false=>compat*/>>
         opengl_context_version = {{4, 6, false/*compat*/}};
-    std::optional<std::pair<unsigned int /*width*/,unsigned int /*height*/>> window_size = std::nullopt; // if not set, GLFW service will open window with 3/4 of monitor resolution 
-    std::optional<std::pair<unsigned int /*x*/,unsigned int /*y*/>>          window_position = std::nullopt;
+    std::optional<UintPair> window_size = std::nullopt; // if not set, GLFW service will open window with 3/4 of monitor resolution 
+    std::optional<UintPair> window_position = std::nullopt;
     enum WindowMode {
         fullscreen   = 1 << 0,
         nodecoration = 1 << 1,
