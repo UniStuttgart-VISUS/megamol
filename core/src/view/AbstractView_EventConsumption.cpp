@@ -10,7 +10,6 @@
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
 #include "Window_Events.h"
-#include "IOpenGL_Context.h"
 
 #include <chrono>
 
@@ -89,7 +88,7 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::ImageW
     render();
 }
 
-std::vector<std::string> get_gl_view_runtime_resources_requests() {
+std::vector<std::string> get_view_runtime_resources_requests() {
     return {"KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents"};
 }
 

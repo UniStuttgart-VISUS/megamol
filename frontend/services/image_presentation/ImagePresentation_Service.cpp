@@ -155,7 +155,7 @@ static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
         if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr); view_ptr != nullptr) {
             return EntryPointInitFunctions{
                 std::function{megamol::core::view::view_rendering_execution},
-                std::function{megamol::core::view::get_gl_view_runtime_resources_requests}
+                std::function{megamol::core::view::get_view_runtime_resources_requests},
             };
         }
     }

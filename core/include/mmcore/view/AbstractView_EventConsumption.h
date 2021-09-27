@@ -29,7 +29,7 @@ namespace view {
     // to do this right we should be able to as a view object which runtime resources it expects (keyboard inputs, gl context)
     // and just pass those resources to the view when rendering a frame
     // until we implement the 'optimal' approach, this is the best we can do
-    MEGAMOLCORE_API std::vector<std::string> get_gl_view_runtime_resources_requests();
+    MEGAMOLCORE_API std::vector<std::string> get_view_runtime_resources_requests();
 
     MEGAMOLCORE_API bool view_rendering_execution(
           void* module_ptr
