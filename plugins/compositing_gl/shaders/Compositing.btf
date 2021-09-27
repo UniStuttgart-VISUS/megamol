@@ -16,7 +16,7 @@
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/textureAlphaCompositing_c.glsl</snippet>
     </shader>
-    
+
     <shader name="textureDepthCompositing">
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/textureDepthCompositing_c.glsl</snippet>
@@ -35,6 +35,11 @@
     <shader name="fxaa">
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/fxaa_c.glsl</snippet>
+    </shader>
+
+    <shader name="smaa">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/smaa_c.glsl</snippet>
     </shader>
 
     <shader name="lambert">
