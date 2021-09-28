@@ -204,7 +204,7 @@ void view::AbstractTileView::initTileViewParameters(void) {
     v = this->getRelevantConfigValue("tvview");
     if (!v.IsEmpty()) {
         try {
-            if (!this->virtSizeSlot.Param<param::Vector2fParam>()->ParseValue(v)) {
+            if (!this->virtSizeSlot.Param<param::Vector2fParam>()->ParseValue(v.PeekBuffer())) {
                 throw new vislib::Exception("ex", __FILE__, __LINE__);
             }
         } catch(...) {
@@ -215,7 +215,7 @@ void view::AbstractTileView::initTileViewParameters(void) {
     v = this->getRelevantConfigValue("tvtile");
     if (!v.IsEmpty()) {
         try {
-            if (!this->tileSlot.Param<param::Vector4fParam>()->ParseValue(v)) {
+            if (!this->tileSlot.Param<param::Vector4fParam>()->ParseValue(v.PeekBuffer())) {
                 throw new vislib::Exception("ex", __FILE__, __LINE__);
             }
         } catch(...) {
@@ -263,7 +263,7 @@ void view::AbstractTileView::checkParameters(void) {
  * view::AbstractTileView::setTile
  */
 bool view::AbstractTileView::setTile(const vislib::TString& val) {
-    return this->tileSlot.Param<param::Vector4fParam>()->ParseValue(val);
+    return this->tileSlot.Param<param::Vector4fParam>()->ParseValue(val.PeekBuffer());
 }
 
 

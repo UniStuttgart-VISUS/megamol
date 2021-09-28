@@ -659,7 +659,7 @@ bool VisIttDataSource::getExtentCallback(core::Call& caller) {
 void VisIttDataSource::findFilterColumn(void) {
 
     this->filterIndex = UINT_MAX;
-    vislib::StringA filtCol(this->filterColumn.Param<core::param::StringParam>()->Value());
+    vislib::StringA filtCol(this->filterColumn.Param<core::param::StringParam>()->Value().c_str());
     filtCol.TrimSpaces();
     for (SIZE_T i = 0; i < this->header.Count(); i++) {
         vislib::Pair<vislib::StringA, unsigned int>& hi = this->header[i];
@@ -709,7 +709,7 @@ void VisIttDataSource::findIdColumn(void) {
  */
 void VisIttDataSource::findTypeColumn(void) {
     this->typeIndex = UINT_MAX;
-    vislib::StringA typeCol(this->splitTypesNameSlots.Param<core::param::StringParam>()->Value());
+    vislib::StringA typeCol(this->splitTypesNameSlots.Param<core::param::StringParam>()->Value().c_str());
     for (SIZE_T i = 0; i < this->header.Count(); i++) {
         vislib::Pair<vislib::StringA, unsigned int>& hi = this->header[i];
         if (hi.First().Equals(typeCol)) {

@@ -76,7 +76,7 @@ void moldyn::ParticleListFilter::release(void) {
 }
 
 vislib::Array<unsigned int> moldyn::ParticleListFilter::getSelectedLists() {
-    vislib::StringA str = this->includedListsSlot.Param<megamol::core::param::StringParam>()->Value();
+    vislib::StringA str = this->includedListsSlot.Param<megamol::core::param::StringParam>()->Value().c_str();
     vislib::StringTokeniserA sta(str, ',');
     vislib::Array<unsigned int> result;
     while(sta.HasNext()) {
@@ -119,7 +119,7 @@ bool moldyn::ParticleListFilter::getDataCallback(Call& call) {
                 str2.Format("%u%s", inMpdc->AccessParticles(i).GetGlobalType(), (i == cnt - 1) ? "" : ", ");
                 str.Append(str2);
             }
-            this->includedListsSlot.Param<megamol::core::param::StringParam>()->SetValue(str);
+            this->includedListsSlot.Param<megamol::core::param::StringParam>()->SetValue(str.PeekBuffer());
         }
         vislib::Array<unsigned int> included = this->getSelectedLists();
         if (this->includedListsSlot.IsDirty()) {

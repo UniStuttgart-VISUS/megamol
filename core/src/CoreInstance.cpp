@@ -1332,7 +1332,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             vislib::TString val;
             vislib::UTF8Encoder::Decode(val, psr.Second());
 
-            if (!p->ParseValue(val)) {
+            if (!p->ParseValue(val.PeekBuffer())) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Setting parameter \"%s\" to \"%s\": ParseValue failed.",
                     psr.First().PeekBuffer(), psr.Second().PeekBuffer());
                 continue;
@@ -1380,7 +1380,7 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                     vislib::TString val;
                     vislib::UTF8Encoder::Decode(val, pr.Value());
 
-                    if (!p->ParseValue(val)) {
+                    if (!p->ParseValue(val.PeekBuffer())) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "Setting parameter \"%s\" to \"%s\": ParseValue failed.", pr.Key().PeekBuffer(),
                             pr.Value().PeekBuffer());
@@ -1788,7 +1788,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
     vislib::SmartPtr<core::param::AbstractParam> lastParam;
     while ((param = this->FindParameter(paramName, quiet)) != nullptr) {
         lastParam = param;
-        paramName = param->ValueString();
+        paramName = param->ValueString().c_str();
     }
     return lastParam;
 }
@@ -2060,7 +2060,7 @@ std::string megamol::core::CoreInstance::SerializeGraph() {
                 if (slot) {
                     const auto bp = slot->Param<param::ButtonParam>();
                     if (!bp) {
-                        std::string val = slot->Parameter()->ValueString().PeekBuffer();
+                        std::string val = slot->Parameter()->ValueString();
 
                         // Encode to UTF-8 string
                         vislib::StringA valueString;
@@ -2405,7 +2405,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
                     Log::LEVEL_WARN, "Unable to decode parameter value for %s\n", paramName.PeekBuffer());
                 continue;
             }
-            ps->Parameter()->ParseValue(value);
+            ps->Parameter()->ParseValue(value.PeekBuffer());
             // printf("    Param: %s to %s\n", paramName.PeekBuffer(), paramValue.PeekBuffer());
         }
         // printf("\n");
@@ -2648,12 +2648,12 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
 #ifdef WIN32
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
                 // however, that does not compile under linux
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #endif
                 WriteLineToFile(outfile, "\" />-->\n");
             } else {
@@ -2661,12 +2661,12 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
 #ifdef WIN32
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
                 // however, that does not compile under linux
-                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #endif
                 WriteLineToFile(outfile, "\" />\n");
             }
@@ -3119,7 +3119,7 @@ void megamol::core::CoreInstance::applyConfigParams(
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                 "Initializing parameter \"%s\" to \"%s\"", nameA.PeekBuffer(),
                 vislib::StringA(pvr.Second()).PeekBuffer());
-            p->ParseValue(pvr.Second());
+            p->ParseValue(pvr.Second().PeekBuffer());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "Unable to set parameter \"%s\" to \"%s\": parameter not found", nameA.PeekBuffer(),
@@ -3142,7 +3142,7 @@ void megamol::core::CoreInstance::applyConfigParams(
         if (!p.IsNull()) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Setting parameter \"%s\" to \"%s\"",
                 nameA.PeekBuffer(), vislib::StringA(pvr.Second()).PeekBuffer());
-            p->ParseValue(pvr.Second());
+            p->ParseValue(pvr.Second().PeekBuffer());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                 "Unable to set parameter \"%s\" to \"%s\": parameter not found", nameA.PeekBuffer(),

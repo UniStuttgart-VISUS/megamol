@@ -193,7 +193,7 @@ void CSVDataSource::assertData(void) {
         if (headerNamesSlot.Param<core::param::BoolParam>()->Value()) firstDatRow++;
         if (headerTypesSlot.Param<core::param::BoolParam>()->Value()) firstDatRow++;
 
-        auto comment = this->commentPrefixSlot.Param<core::param::StringParam>()->Value();
+        auto comment = vislib::StringA(this->commentPrefixSlot.Param<core::param::StringParam>()->Value().c_str());
         if (!comment.IsEmpty()) {
                 // Skip comments at the beginning of the file.
             while (firstHeaRow < file.Count()) {
@@ -205,7 +205,7 @@ void CSVDataSource::assertData(void) {
             }
         }
 
-        vislib::StringA colSep(this->colSepSlot.Param<core::param::StringParam>()->Value());
+        vislib::StringA colSep(this->colSepSlot.Param<core::param::StringParam>()->Value().c_str());
         if (colSep.IsEmpty()) {
             // Detect column separator
             const char ColSepCanidates[] = { '\t', ';', ',', '|' };

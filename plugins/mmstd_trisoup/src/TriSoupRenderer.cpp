@@ -278,7 +278,7 @@ bool TriSoupRenderer::Render(view::CallRender3DGL& call) {
     //::glColor3f(1.0f, 1.0f, 1.0f);
     float r, g, b;
     this->colorSlot.ResetDirty();
-    utility::ColourParser::FromString(this->colorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->colorSlot.Param<param::StringParam>()->Value().c_str(), r, g, b);
     ::glColor3f(r, g, b);
 
     for (unsigned int i = 0; i < ctmd->Count(); i++) {

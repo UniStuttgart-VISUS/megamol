@@ -1005,7 +1005,7 @@ void ParallelCoordinatesRenderer2D::store_filters() {
 
 void ParallelCoordinatesRenderer2D::load_filters() {
     try {
-        auto j = nlohmann::json::parse(this->filterStateSlot.Param<core::param::StringParam>()->Value().PeekBuffer());
+        auto j = nlohmann::json::parse(this->filterStateSlot.Param<core::param::StringParam>()->Value());
         int i = 0;
         for (auto& f : j) {
             if (i < this->filters.size()) {

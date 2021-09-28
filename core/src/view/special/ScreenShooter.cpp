@@ -929,7 +929,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
     using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->triggerButtonSlot);
 
-    vislib::StringA mvn(this->viewNameSlot.Param<param::StringParam>()->Value());
+    vislib::StringA mvn(this->viewNameSlot.Param<param::StringParam>()->Value().c_str());
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "ScreenShot of \"%s\" requested", mvn.PeekBuffer());
 
     vislib::sys::AutoLock lock(this->ModuleGraphLock());
@@ -1004,7 +1004,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
  * view::special::ScreenShooter::findTimeParam
  */
 param::ParamSlot* view::special::ScreenShooter::findTimeParam(view::AbstractView* view) {
-    vislib::TString name(this->animTimeParamNameSlot.Param<param::StringParam>()->Value());
+    vislib::TString name(this->animTimeParamNameSlot.Param<param::StringParam>()->Value().c_str());
     param::ParamSlot* timeSlot = nullptr;
 
     if (name.IsEmpty()) {

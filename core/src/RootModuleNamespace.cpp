@@ -215,7 +215,7 @@ void RootModuleNamespace::SerializeGraph(vislib::RawStorage& outmem) {
             if (param->Parameter().IsNull()) continue;
             if (param->Param<param::ButtonParam>() != NULL) continue; // ignore button parameters (we do not want to press them)
             paramName.Append(param->FullName());
-            vislib::TString v = param->Parameter()->ValueString();
+            vislib::TString v = param->Parameter()->ValueString().c_str();
             vislib::StringA vUTF8;
             vislib::UTF8Encoder::Encode(vUTF8, v);
             paramValue.Append(vUTF8);

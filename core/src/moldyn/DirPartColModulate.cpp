@@ -160,8 +160,8 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
 
     if (rebuildColour) {
         float bcR, bcG, bcB, r, g, b, v;
-        vislib::graphics::ColourParser::FromString(this->baseColourSlot.Param<param::StringParam>()->Value(), bcR, bcG, bcB);
-        vislib::StringA attrName(this->attributeSlot.Param<param::StringParam>()->Value());
+        vislib::graphics::ColourParser::FromString(this->baseColourSlot.Param<param::StringParam>()->Value().c_str(), bcR, bcG, bcB);
+        vislib::StringA attrName(this->attributeSlot.Param<param::StringParam>()->Value().c_str());
         unsigned int attrIdx = inCvd->FindAttribute(attrName);
         if (attrIdx == UINT_MAX) {
             try {

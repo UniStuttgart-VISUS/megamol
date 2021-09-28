@@ -31,14 +31,14 @@ view::special::AnaglyphStereoView::AnaglyphStereoView(void)
     this->leftColour[1] = 1.0f;
     this->leftColour[2] = 0.0f;
     this->leftColourSlot << new param::StringParam(utility::ColourParser::ToString(
-        this->leftColour[0], this->leftColour[1], this->leftColour[2]));
+        this->leftColour[0], this->leftColour[1], this->leftColour[2]).PeekBuffer());
     this->MakeSlotAvailable(&this->leftColourSlot);
 
     this->rightColour[0] = 1.0f;
     this->rightColour[1] = 0.0f;
     this->rightColour[2] = 1.0f;
     this->rightColourSlot << new param::StringParam(utility::ColourParser::ToString(
-        this->rightColour[0], this->rightColour[1], this->rightColour[2]));
+        this->rightColour[0], this->rightColour[1], this->rightColour[2]).PeekBuffer());
     this->MakeSlotAvailable(&this->rightColourSlot);
 
     param::EnumParam *presets = new param::EnumParam(0);
@@ -123,22 +123,22 @@ void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& conte
             if (preset != 0) {
                 this->leftColourSlot.Param<param::StringParam>()->SetValue(
                     utility::ColourParser::ToString(
-                    this->leftColour[0], this->leftColour[1], this->leftColour[2]), false);
+                    this->leftColour[0], this->leftColour[1], this->leftColour[2]).PeekBuffer(), false);
                 this->rightColourSlot.Param<param::StringParam>()->SetValue(
                     utility::ColourParser::ToString(
-                    this->rightColour[0], this->rightColour[1], this->rightColour[2]), false);
+                    this->rightColour[0], this->rightColour[1], this->rightColour[2]).PeekBuffer(), false);
             }
         }
     }
     if (this->leftColourSlot.IsDirty()) {
         this->leftColourSlot.ResetDirty();
-        utility::ColourParser::FromString(this->leftColourSlot.Param<param::StringParam>()->Value(),
+        utility::ColourParser::FromString(this->leftColourSlot.Param<param::StringParam>()->Value().c_str(),
             this->leftColour[0], this->leftColour[1], this->leftColour[2]);
         this->colourPresetsSlot.Param<param::EnumParam>()->SetValue(0);
     }
     if (this->rightColourSlot.IsDirty()) {
         this->rightColourSlot.ResetDirty();
-        utility::ColourParser::FromString(this->rightColourSlot.Param<param::StringParam>()->Value(),
+        utility::ColourParser::FromString(this->rightColourSlot.Param<param::StringParam>()->Value().c_str(),
             this->rightColour[0], this->rightColour[1], this->rightColour[2]);
         this->colourPresetsSlot.Param<param::EnumParam>()->SetValue(0);
     }

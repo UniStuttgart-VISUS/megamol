@@ -536,7 +536,7 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
  * AbstractView::onRestoreCamera
  */
 bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
-    if (!this->_cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
+    if (!this->_cameraSettingsSlot.Param<param::StringParam>()->Value().empty()) {
         std::string camstring(this->_cameraSettingsSlot.Param<param::StringParam>()->Value());
         cam_type::minimal_state_type minstate;
         if (!this->_cameraSerializer.deserialize(minstate, camstring)) {
