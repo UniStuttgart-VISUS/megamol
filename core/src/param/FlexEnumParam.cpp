@@ -45,7 +45,7 @@ void megamol::core::param::FlexEnumParam::ClearValues(void) {
 /*
  * FlexEnumParam::Definition
  */
-void FlexEnumParam::Definition(vislib::RawStorage& outDef) const {
+std::string FlexEnumParam::Definition() const {
     vislib::StringA utf8;
     unsigned int s = 6;
     unsigned int c = 0;
@@ -54,6 +54,7 @@ void FlexEnumParam::Definition(vislib::RawStorage& outDef) const {
     }
     s += sizeof(unsigned int);
 
+    vislib::RawStorage outDef;
     outDef.AssertSize(s);
     memcpy(outDef.AsAt<char>(0), "MMFENU", 6);
     s = 6 + sizeof(unsigned int);
@@ -64,15 +65,20 @@ void FlexEnumParam::Definition(vislib::RawStorage& outDef) const {
         c++;
     }
     *outDef.AsAt<unsigned int>(6) = c;
+
+    std::string return_str;
+    return_str.resize(outDef.GetSize());
+    std::copy(outDef.AsAt<char>(0), outDef.AsAt<char>(0) + outDef.GetSize(), return_str.begin());
+    return return_str;
 }
 
 
 /*
  * FlexEnumParam::ParseValue
  */
-bool FlexEnumParam::ParseValue(const vislib::TString& v) {
+bool FlexEnumParam::ParseValue(std::string const& v) {
     try {
-        this->SetValue(std::string(T2A(v)));
+        this->SetValue(v);
         return true;
         //auto iter = this->values.find(std::string(T2A(v)));
         //if (iter == this->values.end()) {
@@ -115,6 +121,6 @@ void FlexEnumParam::SetValue(const std::string& v, bool setDirty) {
 /*
  * FlexEnumParam::ValueString
  */
-vislib::TString FlexEnumParam::ValueString(void) const {
-    return A2T(val.c_str());
+std::string FlexEnumParam::ValueString(void) const {
+    return val;
 }
