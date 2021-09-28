@@ -53,6 +53,7 @@
 #include "mmcore/view/View3D.h"
 #include "mmcore/view/ContextToGL.h"
 #include "mmcore/ResourceTestModule.h"
+#include "mmcore/param/GenericParamModule.h"
 
 using namespace megamol::core;
 
@@ -107,4 +108,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<DeferredShading>();
     instance.RegisterAutoDescription<view::View3D>();
     instance.RegisterAutoDescription<ResourceTestModule>();
+    instance.RegisterAutoDescription<param::FloatParamModule>();
+    instance.RegisterAutoDescription<param::IntParamModule>();
 }
