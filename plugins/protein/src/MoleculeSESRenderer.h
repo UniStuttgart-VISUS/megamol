@@ -290,7 +290,6 @@ namespace protein {
 
         megamol::core::param::ParamSlot postprocessingParam;
         megamol::core::param::ParamSlot rendermodeParam;
-        megamol::core::param::ParamSlot puxelsParam;
         /** parameter slot for coloring mode */
         megamol::core::param::ParamSlot coloringModeParam0;
         /** parameter slot for coloring mode */
@@ -315,8 +314,6 @@ namespace protein {
         megamol::core::param::ParamSlot colorTableFileParam;
         megamol::core::param::ParamSlot probeRadiusSlot;
 
-        bool usePuxels;
-        bool allowPuxels;
         bool drawRS;
         bool drawSES;
         bool drawSAS;
@@ -345,55 +342,6 @@ namespace protein {
         vislib::graphics::gl::GLSLShader silhouetteShader;
         // shader for cheap transparency (postprocessing/blending)
         vislib::graphics::gl::GLSLShader transparencyShader;
-
-        ////////////
-        // puxels //
-        ////////////
-        // shader for clearing the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelClearShader;
-        // shader for reordering the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelOrderShader;
-        // shader for drawing the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelDrawShader;
-        // shader for rendering the reduced surface into the puxel buffer
-        vislib::graphics::gl::GLSLComputeShader puxelRenderReducedSurfaceShader;
-
-        // atomic counter for next
-        GLuint puxelsAtomicBufferNextId;
-        // buffer containing the puxels header
-        GLuint puxelsBufferHeader;
-        // buffer containing the puxels data
-        GLuint puxelsBufferData;
-        // size of the puxels data buffer in bytes
-        const int puxelSizeBuffer;
-
-        /**
-         * (Re)initializes the buffers needed for Puxel rendering.
-         */
-        void puxelsCreateBuffers();
-
-        /**
-         * Calls the puxelClearShader shader and resets all values of
-         * puxelsBufferHeaderand puxelsAtomicBufferNextId to zero.
-         */
-        void puxelsClear();
-
-        /**
-         * Renders a reduced surface of the molecule for later discarding internal fragments.
-         */
-        void puxelRenderReducedSurface();
-
-        /**
-         * Calls the puxelOrderShader shader and orders each puxel tube
-         * according to the depth of the fragments.
-         */
-        void puxelsReorder();
-
-        /**
-         * Calls the puxelBlend shader and displays the contents of the puxel buffer
-         * on the current Framebuffer or screen
-         */
-        void puxelsDraw();
 
         /**
          * updates and uploads all arrays according to the incoming light information
