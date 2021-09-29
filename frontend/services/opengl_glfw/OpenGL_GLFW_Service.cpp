@@ -41,10 +41,6 @@
 #include <functional>
 #include <iostream>
 
-#ifdef PROFILING
-#include <cassert>
-#include "mmcore/Call.h"
-#endif
 #include "mmcore/utility/log/Log.h"
 
 static const std::string service_name = "OpenGL_GLFW_Service: ";
