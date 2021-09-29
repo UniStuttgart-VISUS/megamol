@@ -24,6 +24,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore/utility/ShaderFactory.h"
+#include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/PointLight.h"
@@ -52,7 +54,6 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
         , getLightsSlot("getLights", "Connects the protein SES rendering with light sources")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , postprocessingParam("postProcessingMode", "Enable Postprocessing Mode: ")
-        , rendermodeParam("renderingMode", "Choose Render Mode: ")
         , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
         , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
         , cmWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
@@ -121,16 +122,6 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     ppm->SetTypePair(SILHOUETTE, "Silhouette");
     // ppm->SetTypePair( TRANSPARENCY, "Transparency");
     this->postprocessingParam << ppm;
-
-    // ----- choose current render mode -----
-    this->currentRendermode = GPU_RAYCASTING;
-    // this->currentRendermode = POLYGONAL;
-    // this->currentRendermode = POLYGONAL_GPU;
-    // this->currentRendermode = GPU_RAYCASTING_INTERIOR_CLIPPING;
-    // this->currentRendermode = GPU_SIMPLIFIED;
-    param::EnumParam* rm = new param::EnumParam(int(this->currentRendermode));
-    rm->SetTypePair(GPU_RAYCASTING, "GPU Ray Casting");
-    this->rendermodeParam << rm;
 
     // ----- set the default color for the silhouette -----
     this->SetSilhouetteColor(1.0f, 1.0f, 1.0f);
@@ -240,7 +231,6 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->preComputationDone = false;
 
     // export parameters
-    this->MakeSlotAvailable(&this->rendermodeParam);
     this->MakeSlotAvailable(&this->postprocessingParam);
     this->MakeSlotAvailable(&this->silhouettecolorParam);
     this->MakeSlotAvailable(&this->sigmaParam);
@@ -325,6 +315,31 @@ bool MoleculeSESRenderer::create(void) {
     if (!ci)
         return false;
 
+    try {
+        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(ci->GetShaderPaths());
+
+        sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
+            std::filesystem::path("moleculeses/mses_sphere.vert.glsl"),
+            std::filesystem::path("moleculeses/mses_sphere.frag.glsl"));
+
+        torusShader_ = core::utility::make_shared_glowl_shader("torus", shdr_options,
+            std::filesystem::path("moleculeses/mses_torus.vert.glsl"),
+            std::filesystem::path("moleculeses/mses_torus.frag.glsl"));
+
+        sphericalTriangleShader_ = core::utility::make_shared_glowl_shader("sphericaltriangle", shdr_options,
+            std::filesystem::path("moleculeses/mses_spherical_triangle.vert.glsl"),
+            std::filesystem::path("moleculeses/mses_spherical_triangle.frag.glsl"));
+    } catch (glowl::GLSLProgramException const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());
+    } catch (std::exception const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception.");
+    }
+
     ////////////////////////////////////////////////////
     // load the shader source for the sphere renderer //
     ////////////////////////////////////////////////////
@@ -396,31 +411,6 @@ bool MoleculeSESRenderer::create(void) {
             Log::LEVEL_ERROR, "%s: Unable to create spherical triangle shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
-
-    //////////////////////////////////////////////////////////////////////////
-    // load the shader source for the sphere renderer with clipped interior //
-    //////////////////////////////////////////////////////////////////////////
-    /*
-fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
-    // vertex shader
-    vertSrc.Append( this->shaderSnippetFactory().Create("commondefines",
-            "protein", Utility::ShaderSnippetFactory::GLSL_COMMON_SHADER));
-    vertSrc.Append( this->shaderSnippetFactory().Create("sphereSES_clipinterior",
-        "protein", Utility::ShaderSnippetFactory::GLSL_VERTEX_SHADER));
-    // fragment shader
-    fragSrc.Append( this->shaderSnippetFactory().Create("commondefines",
-            "protein", Utility::ShaderSnippetFactory::GLSL_COMMON_SHADER));
-    fragSrc.Append( this->shaderSnippetFactory().Create("lightdirectional",
-            "protein", Utility::ShaderSnippetFactory::GLSL_COMMON_SHADER));
-    fragSrc.Append( this->shaderSnippetFactory().Create("sphereSES_clipinterior",
-        "protein", Utility::ShaderSnippetFactory::GLSL_FRAGMENT_SHADER));
-    // create the shader
-    this->sphereClipInteriorShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    //clear fragment source
-    fragSrc.Clear();
-    //clear vertex source
-    vertSrc.Clear();
-    */
 
     //////////////////////////////////////////////////////
     // load the shader files for the per pixel lighting //
@@ -513,26 +503,6 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
             this->ClassName(), e.GetMsgA());
         return false;
     }
-
-    //////////////////////////////////////////////////////
-    // load the shader files for transparency           //
-    //////////////////////////////////////////////////////
-    /*
-    // version 120
-    fragSrc.Append(vertSrc.Append(new ShaderSource::VersionSnippet(120)));
-    // vertex shader
-    vertSrc.Append( this->shaderSnippetFactory().Create("transparency",
-        "protein", Utility::ShaderSnippetFactory::GLSL_VERTEX_SHADER));
-    // fragment shader
-    fragSrc.Append( this->shaderSnippetFactory().Create("transparency",
-        "protein", Utility::ShaderSnippetFactory::GLSL_FRAGMENT_SHADER));
-    // create the shader
-    this->transparencyShader.Create( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    //clear fragment source
-    fragSrc.Clear();
-    //clear vertex source
-    vertSrc.Clear();
-    */
 
     //////////////////////////////////////////////////////
     // load the shader source for the cylinder renderer //
@@ -787,43 +757,39 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
     this->UpdateLights();
 
     // ==================== Precomputations ====================
+    this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
 
-    if (this->currentRendermode == GPU_RAYCASTING) {
-
-        this->probeRadius = this->probeRadiusSlot.Param<param::FloatParam>()->Value();
-
-        // init the reduced surfaces
-        if (this->reducedSurface.empty()) {
-            time_t t = clock();
-            // create the reduced surface
-            unsigned int chainIds;
-            if (!this->computeSesPerMolecule) {
-                this->reducedSurface.push_back(new ReducedSurface(mol, this->probeRadius));
-                this->reducedSurface.back()->ComputeReducedSurface();
+    // init the reduced surfaces
+    if (this->reducedSurface.empty()) {
+        time_t t = clock();
+        // create the reduced surface
+        unsigned int chainIds;
+        if (!this->computeSesPerMolecule) {
+            this->reducedSurface.push_back(new ReducedSurface(mol, this->probeRadius));
+            this->reducedSurface.back()->ComputeReducedSurface();
+        } else {
+            // if no molecule indices are given, compute the SES for all molecules
+            if (this->molIdxList.IsEmpty()) {
+                for (chainIds = 0; chainIds < mol->MoleculeCount(); ++chainIds) {
+                    this->reducedSurface.push_back(new ReducedSurface(chainIds, mol, this->probeRadius));
+                    this->reducedSurface.back()->ComputeReducedSurface();
+                }
             } else {
-                // if no molecule indices are given, compute the SES for all molecules
-                if (this->molIdxList.IsEmpty()) {
-                    for (chainIds = 0; chainIds < mol->MoleculeCount(); ++chainIds) {
-                        this->reducedSurface.push_back(new ReducedSurface(chainIds, mol, this->probeRadius));
-                        this->reducedSurface.back()->ComputeReducedSurface();
-                    }
-                } else {
-                    // else compute the SES for all selected molecules
-                    for (chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds) {
-                        this->reducedSurface.push_back(
-                            new ReducedSurface(atoi(this->molIdxList[chainIds]), mol, this->probeRadius));
-                        this->reducedSurface.back()->ComputeReducedSurface();
-                    }
+                // else compute the SES for all selected molecules
+                for (chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds) {
+                    this->reducedSurface.push_back(
+                        new ReducedSurface(atoi(this->molIdxList[chainIds]), mol, this->probeRadius));
+                    this->reducedSurface.back()->ComputeReducedSurface();
                 }
             }
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-                "%s: RS computed in: %f s\n", this->ClassName(), (double(clock() - t) / double(CLOCKS_PER_SEC)));
         }
-        // update the data / the RS
-        for (cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS) {
-            if (this->reducedSurface[cntRS]->UpdateData(1.0f, 5.0f)) {
-                this->ComputeRaycastingArrays(cntRS);
-            }
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+            "%s: RS computed in: %f s\n", this->ClassName(), (double(clock() - t) / double(CLOCKS_PER_SEC)));
+    }
+    // update the data / the RS
+    for (cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS) {
+        if (this->reducedSurface[cntRS]->UpdateData(1.0f, 5.0f)) {
+            this->ComputeRaycastingArrays(cntRS);
         }
     }
 
@@ -837,8 +803,7 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
             this->midGradColorParam.Param<param::ColorParam>()->Value(),
             this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
         // compute the data needed for the current render mode
-        if (this->currentRendermode == GPU_RAYCASTING)
-            this->ComputeRaycastingArrays();
+        this->ComputeRaycastingArrays();
         // set the precomputation of the data as done
         this->preComputationDone = true;
     }
@@ -888,9 +853,7 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // render the SES
-    if (this->currentRendermode == GPU_RAYCASTING) {
-        this->RenderSESGpuRaycasting(mol);
-    }
+    this->RenderSESGpuRaycasting(mol);
 
     //////////////////////////////////
     // apply postprocessing effects //
@@ -935,11 +898,6 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
         this->postprocessing =
             static_cast<PostprocessingMode>(this->postprocessingParam.Param<param::EnumParam>()->Value());
         this->postprocessingParam.ResetDirty();
-    }
-    if (this->rendermodeParam.IsDirty()) {
-        this->currentRendermode = static_cast<RenderMode>(this->rendermodeParam.Param<param::EnumParam>()->Value());
-        this->rendermodeParam.ResetDirty();
-        this->preComputationDone = false;
     }
     if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
         this->currentColoringMode0 =
@@ -1369,61 +1327,25 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
 
             glBindVertexArray(vertexArrayTorus_);
             // enable torus shader
-            this->torusShader.Enable();
+            torusShader_->use();
             // set shader variables
-            glUniform4fvARB(this->torusShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-            glUniform3fvARB(this->torusShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-            glUniform3fvARB(this->torusShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-            glUniform3fvARB(this->torusShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-            glUniform3fARB(this->torusShader.ParameterLocation("zValues"), fogStart, nearplane, farplane);
-            glUniform3fARB(this->torusShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-            glUniform1fARB(this->torusShader.ParameterLocation("alpha"), this->transparency);
-            glUniformMatrix4fv(this->torusShader.ParameterLocation("view"), 1, GL_FALSE, glm::value_ptr(view_));
-            glUniformMatrix4fv(this->torusShader.ParameterLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj_));
-            glUniformMatrix4fv(
-                this->torusShader.ParameterLocation("viewInverse"), 1, GL_FALSE, glm::value_ptr(invview_));
-            glUniformMatrix4fv(this->torusShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_));
-            glUniformMatrix4fv(
-                this->torusShader.ParameterLocation("mvpinverse"), 1, GL_FALSE, glm::value_ptr(mvpinverse_));
-            glUniformMatrix4fv(
-                this->torusShader.ParameterLocation("mvptransposed"), 1, GL_FALSE, glm::value_ptr(mvptranspose_));
-// get attribute locations
-#if 0
-            attribInParams = glGetAttribLocationARB(this->torusShader, "inParams");
-            attribQuatC = glGetAttribLocationARB(this->torusShader, "quatC");
-            attribInSphere = glGetAttribLocationARB(this->torusShader, "inSphere");
-            attribInColors = glGetAttribLocationARB(this->torusShader, "inColors");
-            attribInCuttingPlane = glGetAttribLocationARB(this->torusShader, "inCuttingPlane");
+            torusShader_->setUniform("viewAttr", viewportStuff);
+            torusShader_->setUniform("camIn", camdir);
+            torusShader_->setUniform("camRight", right);
+            torusShader_->setUniform("camUp", up);
+            torusShader_->setUniform("zValues", fogStart, nearplane, farplane);
+            torusShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
+            torusShader_->setUniform("alpha", this->transparency);
+            torusShader_->setUniform("view", view_);
+            torusShader_->setUniform("proj", proj_);
+            torusShader_->setUniform("viewInverse", invview_);
+            torusShader_->setUniform("mvp", mvp_);
+            torusShader_->setUniform("mvpinverse", mvpinverse_);
+            torusShader_->setUniform("mvptransposed", mvptranspose_);
 
-// set color to orange
-            glColor3f(1.0f, 0.75f, 0.0f);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            // enable vertex attribute arrays for the attribute locations
-            glEnableVertexAttribArrayARB(attribInParams);
-            glEnableVertexAttribArrayARB(attribQuatC);
-            glEnableVertexAttribArrayARB(attribInSphere);
-            glEnableVertexAttribArrayARB(attribInColors);
-            glEnableVertexAttribArrayARB(attribInCuttingPlane);
-            // set vertex and attribute pointers and draw them
-            glVertexAttribPointerARB(attribInParams, 3, GL_FLOAT, 0, 0, this->torusInParamArray[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribQuatC, 4, GL_FLOAT, 0, 0, this->torusQuatCArray[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribInSphere, 4, GL_FLOAT, 0, 0, this->torusInSphereArray[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribInColors, 4, GL_FLOAT, 0, 0, this->torusColors[cntRS].PeekElements());
-            glVertexAttribPointerARB(
-                attribInCuttingPlane, 3, GL_FLOAT, 0, 0, this->torusInCuttingPlaneArray[cntRS].PeekElements());
-            glVertexPointer(3, GL_FLOAT, 0, this->torusVertexArray[cntRS].PeekElements());
-#endif
             glDrawArrays(GL_POINTS, 0, ((unsigned int) this->torusVertexArray[cntRS].Count()) / 3);
-// disable vertex attribute arrays for the attribute locations
-#if 0
-            glDisableVertexAttribArrayARB(attribInParams);
-            glDisableVertexAttribArrayARB(attribQuatC);
-            glDisableVertexAttribArrayARB(attribInSphere);
-            glDisableVertexAttribArrayARB(attribInColors);
-            glDisableVertexAttribArrayARB(attribInCuttingPlane);
-            glDisableClientState(GL_VERTEX_ARRAY);
-#endif
-            this->torusShader.Disable();
+
+            glUseProgram(0);
             glBindVertexArray(0);
 
             /////////////////////////////////////////////////
@@ -1458,80 +1380,28 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             glBindTexture(GL_TEXTURE_2D, singularityTexture[cntRS]);
             glBindVertexArray(vertexArrayTria_);
             // enable spherical triangle shader
-            this->sphericalTriangleShader.Enable();
+            sphericalTriangleShader_->use();
 
-            glUniform4fvARB(
-                this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-            glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-            glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-            glUniform3fvARB(this->sphericalTriangleShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-            glUniform3fARB(this->sphericalTriangleShader.ParameterLocation("zValues"), fogStart, nearplane, farplane);
-            glUniform3fARB(
-                this->sphericalTriangleShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-            glUniform2fARB(this->sphericalTriangleShader.ParameterLocation("texOffset"),
-                1.0f / (float) this->singTexWidth[cntRS], 1.0f / (float) this->singTexHeight[cntRS]);
-            glUniform1fARB(this->sphericalTriangleShader.ParameterLocation("alpha"), this->transparency);
-            glUniformMatrix4fv(
-                this->sphericalTriangleShader.ParameterLocation("view"), 1, GL_FALSE, glm::value_ptr(view_));
-            glUniformMatrix4fv(
-                this->sphericalTriangleShader.ParameterLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj_));
-            glUniformMatrix4fv(
-                this->sphericalTriangleShader.ParameterLocation("viewInverse"), 1, GL_FALSE, glm::value_ptr(invview_));
-            glUniformMatrix4fv(
-                this->sphericalTriangleShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_));
-            glUniformMatrix4fv(this->sphericalTriangleShader.ParameterLocation("mvpinverse"), 1, GL_FALSE,
-                glm::value_ptr(mvpinverse_));
-            glUniformMatrix4fv(this->sphericalTriangleShader.ParameterLocation("mvptransposed"), 1, GL_FALSE,
-                glm::value_ptr(mvptranspose_));
+            sphericalTriangleShader_->setUniform("viewAttr", viewportStuff);
+            sphericalTriangleShader_->setUniform("camIn", camdir);
+            sphericalTriangleShader_->setUniform("camRight", right);
+            sphericalTriangleShader_->setUniform("camUp", up);
+            sphericalTriangleShader_->setUniform("zValues", fogStart, nearplane, farplane);
+            sphericalTriangleShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
+            sphericalTriangleShader_->setUniform(
+                "texOffset", 1.0f / (float) this->singTexWidth[cntRS], 1.0f / (float) this->singTexHeight[cntRS]);
+            sphericalTriangleShader_->setUniform("alpha", this->transparency);
+            sphericalTriangleShader_->setUniform("view", view_);
+            sphericalTriangleShader_->setUniform("proj", proj_);
+            sphericalTriangleShader_->setUniform("viewInverse", invview_);
+            sphericalTriangleShader_->setUniform("mvp", mvp_);
+            sphericalTriangleShader_->setUniform("mvpinverse", mvpinverse_);
+            sphericalTriangleShader_->setUniform("mvptransposed", mvptranspose_);
 
-#if 0
-            // get attribute locations
-            attribVec1 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribVec1");
-            attribVec2 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribVec2");
-            attribVec3 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribVec3");
-            attribTexCoord1 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribTexCoord1");
-            attribTexCoord2 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribTexCoord2");
-            attribTexCoord3 = glGetAttribLocationARB(this->sphericalTriangleShader, "attribTexCoord3");
-            attribColors = glGetAttribLocationARB(this->sphericalTriangleShader, "attribColors");
-
-            // set color to turquoise
-            glColor3f(0.0f, 0.75f, 1.0f);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            // enable vertex attribute arrays for the attribute locations
-            glEnableVertexAttribArrayARB(attribVec1);
-            glEnableVertexAttribArrayARB(attribVec2);
-            glEnableVertexAttribArrayARB(attribVec3);
-            glEnableVertexAttribArrayARB(attribTexCoord1);
-            glEnableVertexAttribArrayARB(attribTexCoord2);
-            glEnableVertexAttribArrayARB(attribTexCoord3);
-            glEnableVertexAttribArrayARB(attribColors);
-            // set vertex and attribute pointers and draw them
-            glVertexAttribPointerARB(attribVec1, 4, GL_FLOAT, 0, 0, this->sphericTriaVec1[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribVec2, 4, GL_FLOAT, 0, 0, this->sphericTriaVec2[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribVec3, 4, GL_FLOAT, 0, 0, this->sphericTriaVec3[cntRS].PeekElements());
-            glVertexAttribPointerARB(
-                attribTexCoord1, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord1[cntRS].PeekElements());
-            glVertexAttribPointerARB(
-                attribTexCoord2, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord2[cntRS].PeekElements());
-            glVertexAttribPointerARB(
-                attribTexCoord3, 3, GL_FLOAT, 0, 0, this->sphericTriaTexCoord3[cntRS].PeekElements());
-            glVertexAttribPointerARB(attribColors, 3, GL_FLOAT, 0, 0, this->sphericTriaColors[cntRS].PeekElements());
-            glVertexPointer(4, GL_FLOAT, 0, this->sphericTriaVertexArray[cntRS].PeekElements());
-#endif
             glDrawArrays(GL_POINTS, 0, ((unsigned int) this->sphericTriaVertexArray[cntRS].Count()) / 4);
-#if 0
-            // disable vertex attribute arrays for the attribute locations
-            glDisableVertexAttribArrayARB(attribVec1);
-            glDisableVertexAttribArrayARB(attribVec2);
-            glDisableVertexAttribArrayARB(attribVec3);
-            glDisableVertexAttribArrayARB(attribTexCoord1);
-            glDisableVertexAttribArrayARB(attribTexCoord2);
-            glDisableVertexAttribArrayARB(attribTexCoord3);
-            glDisableVertexAttribArrayARB(attribColors);
-            glDisableClientState(GL_VERTEX_ARRAY);
-#endif
+
             // disable spherical triangle shader
-            this->sphericalTriangleShader.Disable();
+            glUseProgram(0);
             // unbind texture
             glBindVertexArray(0);
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -1540,44 +1410,33 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
         /////////////////////////////////////
         // ray cast the spheres on the GPU //
         /////////////////////////////////////
-        if (this->currentRendermode == GPU_RAYCASTING) {
-            this->sphereVertexBuffer_->rebuffer(
-                this->sphereVertexArray[cntRS].PeekElements(), this->sphereVertexArray[cntRS].Count() * sizeof(float));
-            this->sphereColorBuffer_->rebuffer(
-                this->sphereColors[cntRS].PeekElements(), this->sphereColors[cntRS].Count() * sizeof(float));
-            glBindVertexArray(vertexArraySphere_);
+        this->sphereVertexBuffer_->rebuffer(
+            this->sphereVertexArray[cntRS].PeekElements(), this->sphereVertexArray[cntRS].Count() * sizeof(float));
+        this->sphereColorBuffer_->rebuffer(
+            this->sphereColors[cntRS].PeekElements(), this->sphereColors[cntRS].Count() * sizeof(float));
+        glBindVertexArray(vertexArraySphere_);
 
-            this->sphereShader.Enable();
+        sphereShader_->use();
 
-            // set shader variables
-            glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-            glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
-            glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
-            glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(up));
-            glUniform3fARB(this->sphereShader.ParameterLocation("zValues"), fogStart, nearplane, farplane);
-            glUniform3fARB(this->sphereShader.ParameterLocation("fogCol"), fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
-            glUniform1fARB(this->sphereShader.ParameterLocation("alpha"), this->transparency);
-            glUniformMatrix4fv(this->sphereShader.ParameterLocation("view"), 1, GL_FALSE, glm::value_ptr(view_));
-            glUniformMatrix4fv(this->sphereShader.ParameterLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj_));
-            glUniformMatrix4fv(
-                this->sphereShader.ParameterLocation("viewInverse"), 1, GL_FALSE, glm::value_ptr(invview_));
-            glUniformMatrix4fv(this->sphereShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_));
-            glUniformMatrix4fv(
-                this->sphereShader.ParameterLocation("mvpinverse"), 1, GL_FALSE, glm::value_ptr(mvpinverse_));
-            glUniformMatrix4fv(
-                this->sphereShader.ParameterLocation("mvptransposed"), 1, GL_FALSE, glm::value_ptr(mvptranspose_));
-        } else { // GPU_RAYCASTING_INTERIOR_CLIPPING
-            this->sphereClipInteriorShader.Enable();
-        }
+        // set shader variables
+        sphereShader_->setUniform("viewAttr", viewportStuff);
+        sphereShader_->setUniform("camIn", camdir);
+        sphereShader_->setUniform("camRight", right);
+        sphereShader_->setUniform("camUp", up);
+        sphereShader_->setUniform("zValues", fogStart, nearplane, farplane);
+        sphereShader_->setUniform("fogCol", fogCol.GetX(), fogCol.GetY(), fogCol.GetZ());
+        sphereShader_->setUniform("alpha", this->transparency);
+        sphereShader_->setUniform("view", view_);
+        sphereShader_->setUniform("proj", proj_);
+        sphereShader_->setUniform("viewInverse", invview_);
+        sphereShader_->setUniform("mvp", mvp_);
+        sphereShader_->setUniform("mvpinverse", mvpinverse_);
+        sphereShader_->setUniform("mvptransposed", mvptranspose_);
 
         glDrawArrays(GL_POINTS, 0, ((unsigned int) this->sphereVertexArray[cntRS].Count()) / 4);
 
         // disable sphere shader
-        if (this->currentRendermode == GPU_RAYCASTING) {
-            this->sphereShader.Disable();
-        } else { // GPU_RAYCASTING_INTERIOR_CLIPPING
-            this->sphereClipInteriorShader.Disable();
-        }
+        glUseProgram(0);
         glBindVertexArray(0);
     }
 

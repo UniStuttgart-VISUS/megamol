@@ -17,6 +17,7 @@
 #include "Color.h"
 #include "ReducedSurface.h"
 #include "glowl/BufferObject.hpp"
+#include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
@@ -289,7 +290,6 @@ namespace protein {
         core::view::Camera MoleculeSESRenderercameraInfo;
 
         megamol::core::param::ParamSlot postprocessingParam;
-        megamol::core::param::ParamSlot rendermodeParam;
         /** parameter slot for coloring mode */
         megamol::core::param::ParamSlot coloringModeParam0;
         /** parameter slot for coloring mode */
@@ -343,6 +343,10 @@ namespace protein {
         // shader for cheap transparency (postprocessing/blending)
         vislib::graphics::gl::GLSLShader transparencyShader;
 
+        std::shared_ptr<glowl::GLSLProgram> torusShader_;
+        std::shared_ptr<glowl::GLSLProgram> sphereShader_;
+        std::shared_ptr<glowl::GLSLProgram> sphericalTriangleShader_;
+
         /**
          * updates and uploads all arrays according to the incoming light information
          */
@@ -365,8 +369,6 @@ namespace protein {
         /** 'true' if the data for the current render mode is computed, 'false' otherwise */
         bool preComputationDone;
 
-        /** current render mode */
-        RenderMode currentRendermode;
         /** The current coloring mode */
         Color::ColoringMode currentColoringMode0;
         Color::ColoringMode currentColoringMode1;
@@ -460,14 +462,14 @@ namespace protein {
 
         std::unique_ptr<glowl::BufferObject> sphereVertexBuffer_;
         std::unique_ptr<glowl::BufferObject> sphereColorBuffer_;
-        
+
         std::unique_ptr<glowl::BufferObject> torusVertexBuffer_;
         std::unique_ptr<glowl::BufferObject> torusColorBuffer_;
         std::unique_ptr<glowl::BufferObject> torusParamsBuffer_;
         std::unique_ptr<glowl::BufferObject> torusQuaternionBuffer_;
         std::unique_ptr<glowl::BufferObject> torusSphereBuffer_;
         std::unique_ptr<glowl::BufferObject> torusCuttingPlaneBuffer_;
-        
+
         std::unique_ptr<glowl::BufferObject> triaVertexBuffer_;
         std::unique_ptr<glowl::BufferObject> triaColorBuffer_;
         std::unique_ptr<glowl::BufferObject> triaAttrib1Buffer_;
