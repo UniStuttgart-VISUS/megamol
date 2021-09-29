@@ -16,6 +16,9 @@
 
 #include "compositing/CompositingCalls.h"
 
+#include "SMAAAreaTex.h"
+#include "SMAASearchTex.h"
+
 megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     , m_version(0)
     , m_output_texture(nullptr)
@@ -81,9 +84,16 @@ bool megamol::compositing::AntiAliasing::create() {
     glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
     glowl::TextureLayout smaa_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1);
     m_output_texture = std::make_shared<glowl::Texture2D>("screenspace_effect_output", tx_layout, nullptr);
-    m_intermediate_texture = std::make_shared<glowl::Texture2D>("screenspace_effect_intermediate", tx_layout, nullptr);
     m_edges_tex = std::make_shared<glowl::Texture2D>("smaa_edges_tex", smaa_layout, nullptr);
     m_blend_tex = std::make_shared<glowl::Texture2D>("smaa_blend_tex", smaa_layout, nullptr);
+
+    // lookup textures for smaa
+    // TODO: check textures in nsight or similar to see if textures are correctly loaded
+    // TODO: do this in here? or every frame in the corresponding if below
+    glowl::TextureLayout area_layout(GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, 1, GL_RG, GL_UNSIGNED_BYTE, 1);
+    glowl::TextureLayout search_layout(GL_R8, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1, GL_RED, GL_UNSIGNED_BYTE, 1);
+    m_area_tex = std::make_shared<glowl::Texture2D>("smaa_area_tex", area_layout, areaTexBytes);
+    m_search_tex = std::make_shared<glowl::Texture2D>("smaa_search_tex", search_layout, searchTexBytes);
 
     return true;
 }
@@ -117,12 +127,12 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 }
             };
 
+        auto input_tx2D = call_input->getData();
+
         // fxaa
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
             if (call_input == NULL)
                 return false;
-
-            auto input_tx2D = call_input->getData();
 
             setupOutputTexture(input_tx2D, m_output_texture);
 

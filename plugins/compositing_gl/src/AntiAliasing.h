@@ -83,14 +83,17 @@ private:
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
 
-    /** Texture that can store intermediate results for multi-pass effect, e.g. ssao with blur */
-    std::shared_ptr<glowl::Texture2D> m_intermediate_texture;
-
     /** Texture to store edges from edges detection */
     std::shared_ptr<glowl::Texture2D> m_edges_tex;
 
     /** Texture holding the blending factors for the coverage areas */
     std::shared_ptr<glowl::Texture2D> m_blend_tex;
+
+    /** Texture holding the blending factors for the coverage areas */
+    std::shared_ptr<glowl::Texture2D> m_area_tex;
+
+    /** Texture holding the blending factors for the coverage areas */
+    std::shared_ptr<glowl::Texture2D> m_search_tex;
 
     /** Hash value to keep track of update to the output texture */
     size_t m_output_texture_hash;
