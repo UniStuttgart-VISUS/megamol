@@ -8,7 +8,7 @@ inline constexpr char ospraytogl_name[] = "OSPRayToGL";
 
 inline constexpr char ospraytogl_desc[] = "Merges content to the input GL buffer";
 
-inline constexpr auto ospray_to_gl_init_func = [](std::shared_ptr<vislib::graphics::gl::FramebufferObject>& lhs_fbo,
+inline constexpr auto ospray_to_gl_init_func = [](std::shared_ptr<glowl::FramebufferObject>& lhs_fbo,
                                                    std::shared_ptr<core::view::CPUFramebuffer>& fbo, int width,
                                                    int height) -> void {
     if (fbo != nullptr) {
@@ -16,6 +16,8 @@ inline constexpr auto ospray_to_gl_init_func = [](std::shared_ptr<vislib::graphi
         glDeleteTextures(1, &fbo->data.depth_tex);
     }
     fbo = std::make_shared<core::view::CPUFramebuffer>();
+    fbo->width = width;
+    fbo->height = height;
 
     glGenTextures(1, (GLuint*) &fbo->data.col_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.col_tex);
@@ -37,7 +39,7 @@ inline constexpr auto ospray_to_gl_init_func = [](std::shared_ptr<vislib::graphi
 };
 
 inline constexpr auto ospray_to_gl_ren_func =
-    [](std::shared_ptr<glowl::GLSLProgram>& shader, std::shared_ptr<vislib::graphics::gl::FramebufferObject>& lhs_fbo,
+    [](std::shared_ptr<glowl::GLSLProgram>& shader, std::shared_ptr<glowl::FramebufferObject>& lhs_fbo,
         std::shared_ptr<core::view::CPUFramebuffer>& fbo, int width, int height) -> void {
     glBindTexture(GL_TEXTURE_2D, fbo->data.col_tex);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, fbo->colorBuffer.data());

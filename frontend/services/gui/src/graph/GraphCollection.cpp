@@ -1517,13 +1517,7 @@ std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std
             state_json.erase(GUI_JSON_TAG_GUISTATE_PARAMETERS);
         } catch (...) {}
         for (auto& module_ptr : graph_ptr->Modules()) {
-            std::string module_full_name = module_ptr->FullName();
-            // Parameter Groups
-            module_ptr->GUIParameterGroups().StateToJSON(state_json, module_full_name);
-            // Parameters
-            for (auto& param : module_ptr->Parameters()) {
-                param.StateToJSON(state_json, param.FullNameProject());
-            }
+            module_ptr->StateToJSON(state_json);
         }
         loaded_state = state_json.dump(); // No line feed
 
@@ -1556,14 +1550,7 @@ bool megamol::gui::GraphCollection::load_state_from_file(const std::string& file
 
             // Read GUI state of parameters (groups)
             for (auto& module_ptr : graph_ptr->Modules()) {
-                std::string module_full_name = module_ptr->FullName();
-                // Parameter Groups
-                module_ptr->GUIParameterGroups().StateFromJSON(json, module_full_name);
-                // Parameters
-                for (auto& param : module_ptr->Parameters()) {
-                    param.StateFromJSON(json, param.FullNameProject());
-                    param.ForceSetGUIStateDirty();
-                }
+                module_ptr->StateFromJSON(json);
             }
 
             // Read GUI_JSON_TAG_PROJECT graph state

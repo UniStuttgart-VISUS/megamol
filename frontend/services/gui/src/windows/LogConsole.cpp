@@ -28,9 +28,8 @@ int megamol::gui::LogBuffer::sync() {
                 if (seperator_index != std::string::npos) {
                     unsigned int log_level = megamol::core::utility::log::Log::LEVEL_NONE;
                     auto level_str = new_message.substr(0, seperator_index);
-                    try {
-                        log_level = std::stoi(level_str);
-                    } catch (...) {}
+                    log_level = std::stoi(level_str);
+                    std::istringstream(level_str) >> log_level; // 0 if failed = LEVEL_NONE
                     if (log_level != megamol::core::utility::log::Log::LEVEL_NONE) {
                         this->messages.push_back({log_level, new_message});
                         extracted_new_message = true;

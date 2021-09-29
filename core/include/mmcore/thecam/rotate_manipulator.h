@@ -7,9 +7,10 @@
 #    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include <glm/gtx/rotate_vector.hpp>
+
 #include "mmcore/thecam/manipulator_base.h"
-#include "mmcore/thecam/math/functions.h"
-#include "mmcore/thecam/utility/config.h"
+#include "mmcore/view/Camera.h"
 
 namespace megamol {
 namespace core {
@@ -25,15 +26,12 @@ public:
     /** The type of the camera to be manipulated by the manipulator. */
     typedef typename manipulator_base<T>::camera_type camera_type;
 
-    /** The mathematical traits of the camera. */
-    typedef typename manipulator_base<T>::maths_type maths_type;
-
     // Typedef all mathematical types we need in the manipulator.
-    typedef typename maths_type::point_type point_type;
-    typedef typename maths_type::quaternion_type quaternion_type;
-    typedef typename maths_type::screen_type screen_type;
-    typedef typename maths_type::vector_type vector_type;
-    typedef typename maths_type::world_type world_type;
+    typedef typename glm::vec4 point_type;
+    typedef typename glm::quat quaternion_type;
+    typedef int screen_type;
+    typedef typename glm::vec4 vector_type;
+    typedef float world_type;
 
     /**
      * Constructor using a specific angle

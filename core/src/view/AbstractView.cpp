@@ -30,6 +30,7 @@ using megamol::core::utility::log::Log;
 view::AbstractView::AbstractView(void)
         : Module()
         , _firstImg(false)
+        , _cameraIsMutable(true)
         , _rhsRenderSlot("rendering", "Connects the view to a Renderer")
         , _lhsRenderSlot("render", "Connects modules requesting renderings")
         , _cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
@@ -51,6 +52,8 @@ view::AbstractView::AbstractView(void)
               "This only works if you use .lua project files")
         , _resetViewSlot("view::resetView", "Triggers the reset of the view")
         , _resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
+        , _showLookAt("showLookAt", "Flag showing the look at point")
+        , _showViewCubeParam("view::showViewCube", "Shows view cube.")
         , _hooks()
         , _timeCtrl()
         , _bkgndColSlot("backCol", "The views background colour") {
@@ -70,11 +73,6 @@ view::AbstractView::AbstractView(void)
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
-    // CallRenderView
-    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::OnResetView);
     // this->MakeSlotAvailable(&this->renderSlot);
@@ -106,6 +104,12 @@ view::AbstractView::AbstractView(void)
 
     this->_resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->_resetViewOnBBoxChangeSlot);
+
+    this->_showLookAt.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->_showLookAt);
+
+    this->_showViewCubeParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->_showViewCubeParam);
 
     for (unsigned int i = 0; this->_timeCtrl.GetSlot(i) != NULL; i++) {
         this->MakeSlotAvailable(this->_timeCtrl.GetSlot(i));
@@ -145,65 +149,91 @@ bool view::AbstractView::IsParamRelevant(
     return ano->IsParamRelevant(searched, param);
 }
 
-
-/*
- * view::AbstractView::DesiredWindowPosition
- */
-bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
-        int *h, bool *nd) {
-    Module *tm = dynamic_cast<Module*>(this);
-    if (tm != NULL) {
-
-        // this is not working properly if the main module/view is placed at top namespace root
-        //vislib::StringA name(tm->Name());
-        //if (tm->Parent() != NULL) name = tm->Parent()->Name();
-        vislib::StringA name(tm->GetDemiRootName());
-
-        if (name.IsEmpty()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 1200,
-                "View does not seem to have a name. Odd.");
-        } else {
-            name.Append("-Window");
-
-            if (tm->GetCoreInstance()->Configuration().IsConfigValueSet(name)) {
-                if (this->desiredWindowPosition(
-                        tm->GetCoreInstance()->Configuration().ConfigValue(name),
-                        x, y, w, h, nd)) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
-                        "Loaded desired window geometry from \"%s\"", name.PeekBuffer());
-                    return true;
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
-                        "Unable to load desired window geometry from \"%s\"", name.PeekBuffer());
-                }
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 1200,
-                    "Unable to find window geometry settings \"%s\"", name.PeekBuffer());
-            }
-        }
-
-        name = "*-Window";
-
-        if (tm->GetCoreInstance()->Configuration().IsConfigValueSet(name)) {
-            if (this->desiredWindowPosition(
-                    tm->GetCoreInstance()->Configuration().ConfigValue(name),
-                    x, y, w, h, nd)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
-                    "Loaded desired window geometry from \"%s\"", name.PeekBuffer());
-                return true;
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 200,
-                    "Unable to load desired window geometry from \"%s\"", name.PeekBuffer());
-            }
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 1200,
-                "Unable to find window geometry settings \"%s\"", name.PeekBuffer());
-        }
-    }
-
-    return false;
+void megamol::core::view::AbstractView::SetCamera(Camera camera, bool isMutable) {
+    _camera = camera;
+    _cameraIsMutable = isMutable;
 }
 
+void megamol::core::view::AbstractView::CalcCameraClippingPlanes(float border) {
+    if (_cameraIsMutable) {
+        auto cam_pose = _camera.get<Camera::Pose>();
+        glm::vec3 front = cam_pose.direction;
+        glm::vec3 pos = cam_pose.position;
+
+        float dist, minDist, maxDist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetLeftBottomBack().PeekCoordinates()) - pos);
+        minDist = maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetLeftBottomFront().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetLeftTopBack().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetLeftTopFront().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetRightBottomBack().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetRightBottomFront().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetRightTopBack().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetRightTopFront().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        minDist -= border;
+        maxDist += border;
+
+        // since the minDist is broken, we fix it here
+        minDist = maxDist * 0.001f;
+
+        auto cam_proj_type = _camera.get<Camera::ProjectionType>();
+
+        if (cam_proj_type == Camera::ProjectionType::PERSPECTIVE) {
+            auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+            if (!(std::abs(cam_intrinsics.near_plane - minDist) < 0.00001f) ||
+                !(std::abs(cam_intrinsics.far_plane - maxDist) < 0.00001f)) {
+                // TODO set intrinsics with minDist and maxDist
+            }
+        } else if (cam_proj_type == Camera::ProjectionType::ORTHOGRAPHIC) {
+            auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+            if (!(std::abs(cam_intrinsics.near_plane - minDist) < 0.00001f) ||
+                !(std::abs(cam_intrinsics.far_plane - maxDist) < 0.00001f)) {
+                // TODO set intrinsics with minDist and maxDist
+            }
+        } else {
+            // print warning
+        }
+        
+        
+    }
+}
 
 /*
  * view::AbstractView::OnRenderView
@@ -213,120 +243,13 @@ bool view::AbstractView::OnRenderView(Call& call) {
         "AbstractView::OnRenderView", __FILE__, __LINE__);
 }
 
-/*
- * view::AbstractView::desiredWindowPosition
- */
-bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
-        int *x, int *y, int *w, int *h, bool *nd) {
-    vislib::StringW v = str;
-    int vi = -1;
-    v.TrimSpaces();
-
-    if (x != NULL) { *x = INT_MIN; }
-    if (y != NULL) { *y = INT_MIN; }
-    if (w != NULL) { *w = INT_MIN; }
-    if (h != NULL) { *h = INT_MIN; }
-    if (nd != NULL) { *nd = false; }
-
-    while (!v.IsEmpty()) {
-        if ((v[0] == L'X') || (v[0] == L'x')) {
-            vi = 0;
-        } else if ((v[0] == L'Y') || (v[0] == L'y')) {
-            vi = 1;
-        } else if ((v[0] == L'W') || (v[0] == L'w')) {
-            vi = 2;
-        } else if ((v[0] == L'H') || (v[0] == L'h')) {
-            vi = 3;
-        } else if ((v[0] == L'N') || (v[0] == L'n')) {
-            vi = 4;
-        } else if ((v[0] == L'D') || (v[0] == L'd')) {
-            if (nd != NULL) {
-                *nd = (vi == 4);
-            }
-            vi = 4;
-        } else {
-            Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_WARN,
-                "Unexpected character %s in window position definition.\n",
-                vislib::StringA(vislib::StringA(v)[0], 1).PeekBuffer());
-            break;
-        }
-        v = v.Substring(1);
-        v.TrimSpaces();
-
-        if (vi == 4) continue; // [n]d are not followed by a number
-
-        if (vi >= 0) {
-            // now we want to parse a double :-/
-            int cp = 0;
-            int len = v.Length();
-            while ((cp < len) && (((v[cp] >= L'0') && (v[cp] <= L'9'))
-                    || (v[cp] == L'+') /*|| (v[cp] == L'.')
-                    || (v[cp] == L',') */|| (v[cp] == L'-')
-                    /*|| (v[cp] == L'e') || (v[cp] == L'E')*/)) {
-                cp++;
-            }
-
-            try {
-                int i = vislib::CharTraitsW::ParseInt(v.Substring(0, cp));
-                switch (vi) {
-                    case 0 :
-                        if (x != NULL) { *x = i; }
-                        break;
-                    case 1 :
-                        if (y != NULL) { *y = i; }
-                        break;
-                    case 2 :
-                        if (w != NULL) { *w = i; }
-                        break;
-                    case 3 :
-                        if (h != NULL) { *h = i; }
-                        break;
-                }
-            } catch(...) {
-                const char *str = "unknown";
-                switch (vi) {
-                    case 0 : str = "X"; break;
-                    case 1 : str = "Y"; break;
-                    case 2 : str = "W"; break;
-                    case 3 : str = "H"; break;
-                }
-                vi = -1;
-                Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_WARN,
-                    "Unable to parse value for %s.\n", str);
-            }
-
-            v = v.Substring(cp);
-        }
-
-    }
-
-    return true;
-}
-
-/*
- * AbstractView::Resize
- */
-void view::AbstractView::Resize(unsigned int width, unsigned int height) {
-    if (this->_camera.resolution_gate().width() != width || this->_camera.resolution_gate().height() != height) {
-        this->_camera.resolution_gate(cam_type::screen_size_type(static_cast<LONG>(width), static_cast<LONG>(height)));
-    }
-    if (this->_camera.image_tile().width() != width || this->_camera.image_tile().height() != height) {
-        this->_camera.image_tile(cam_type::screen_rectangle_type(
-            std::array<int, 4>({0, static_cast<int>(height), static_cast<int>(width), 0})));
-    }
-}
-
-void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext& context) {
-    float simulationTime = static_cast<float>(context.Time);
-    float instTime = static_cast<float>(context.InstanceTime);
+void megamol::core::view::AbstractView::beforeRender(double time, double instanceTime) {
+    float simulationTime = static_cast<float>(time);
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
 
-    glm::ivec4 currentViewport;
     AbstractCallRender* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
 
     auto bkgndCol = this->BkgndColour();
@@ -336,7 +259,6 @@ void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext&
     }
 
     cr->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
-
     
     if ((*cr)(AbstractCallRender::FnGetExtents)) {
         if (!(cr->AccessBoundingBoxes() == this->_bboxs) && cr->AccessBoundingBoxes().IsAnyValid()) {
@@ -378,23 +300,15 @@ void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext&
         std::chrono::time_point_cast<std::chrono::milliseconds>(this->_lastFrameTime).time_since_epoch())
                                .count());
 
-    this->_camera.CalcClipping(this->_bboxs.ClipBox(), 0.1f);
+    CalcCameraClippingPlanes(0.1f);
 }
 
-void megamol::core::view::AbstractView::afterRender(const mmcRenderViewContext& context) {
+void megamol::core::view::AbstractView::afterRender() {
     // this->lastFrameParams->CopyFrom(this->OnGetCamParams, false);
 
     if (this->doHookCode()) {
         this->doAfterRenderHook();
     }
-}
-
-/*
- * view::AbstractView::unpackMouseCoordinates
- */
-void view::AbstractView::unpackMouseCoordinates(float &x, float &y) {
-    // intentionally empty
-    // do something smart in the derived classes
 }
 
 /*
@@ -484,9 +398,7 @@ bool view::AbstractView::OnMouseScrollCallback(Call& call) {
  */
 bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
     // save the current camera, too
-    view::Camera_2::minimal_state_type minstate;
-    this->_camera.get_minimal_state(minstate);
-    this->_savedCameras[10].first = minstate;
+    this->_savedCameras[10].first = _camera;
     this->_savedCameras[10].second = true;
     this->_cameraSerializer.setPrettyMode(false);
     std::string camstring = this->_cameraSerializer.serialize(this->_savedCameras[10].first);
@@ -538,12 +450,12 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
 bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
     if (!this->_cameraSettingsSlot.Param<param::StringParam>()->Value().empty()) {
         std::string camstring(this->_cameraSettingsSlot.Param<param::StringParam>()->Value());
-        cam_type::minimal_state_type minstate;
-        if (!this->_cameraSerializer.deserialize(minstate, camstring)) {
+        Camera cam;
+        if (!this->_cameraSerializer.deserialize(cam, camstring)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "The entered camera string was not valid. No change of the camera has been performed");
         } else {
-            this->_camera = minstate;
+            this->_camera = cam;
             return true;
         }
     }

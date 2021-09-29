@@ -13,7 +13,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/ShaderFactory.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Camera_2.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"
 
@@ -178,16 +177,12 @@ bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
 
     cr3d->AccessBoundingBoxes() = cs->AccessBoundingBoxes();
 
-    core::view::Camera_2 localCam;
-    cr3d->GetCamera(localCam);
+    core::view::Camera cam = cr3d->GetCamera();
 
-    cam_type::snapshot_type camsnap;
-    cam_type::matrix_type viewCam, projCam;
-    localCam.calc_matrices(camsnap, viewCam, projCam);
-
-    glm::mat4 view = viewCam;
-    glm::mat4 proj = projCam;
-    glm::mat4 mvp = projCam * viewCam;
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto mvp = proj * view;
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
 
     // start the rendering
 
@@ -213,15 +208,12 @@ bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
         this->sphereShader->setUniform("mvp", mvp);
         this->sphereShader->setUniform("view", view);
         this->sphereShader->setUniform("proj", proj);
-        this->sphereShader->setUniform(
-            "camRight", camsnap.right_vector.x(), camsnap.right_vector.y(), camsnap.right_vector.z());
-        this->sphereShader->setUniform("camUp", camsnap.up_vector.x(), camsnap.up_vector.y(), camsnap.up_vector.z());
-        this->sphereShader->setUniform("camPos", camsnap.position.x(), camsnap.position.y(), camsnap.position.z());
-        this->sphereShader->setUniform(
-            "camDir", camsnap.view_vector.x(), camsnap.view_vector.y(), camsnap.view_vector.z());
+        this->sphereShader->setUniform("camRight", cam_pose.right.x, cam_pose.right.y, cam_pose.right.z);
+        this->sphereShader->setUniform("camUp", cam_pose.up.x, cam_pose.up.y, cam_pose.up.z);
+        this->sphereShader->setUniform("camPos", cam_pose.position.x, cam_pose.position.y, cam_pose.position.z);
+        this->sphereShader->setUniform("camDir", cam_pose.direction.x, cam_pose.direction.y, cam_pose.direction.z);
         this->sphereShader->setUniform(
             "scalingFactor", this->sizeScalingSlot.Param<core::param::FloatParam>()->Value());
-
     } else {
         this->simpleShader->setUniform("mvp", mvp);
     }

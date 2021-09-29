@@ -10,8 +10,10 @@
 
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "glm/gtx/quaternion.hpp"
-#include "glm/gtc/type_ptr.hpp"
+
+#include <fstream>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 using namespace megamol::core::utility;
@@ -635,11 +637,11 @@ void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float 
         glm::vec4 p3(tmpP23x, tmpP03y, gz, 0.0f);
 
         /// Apply rotation
-        glm::mat4 rotMat = glm::toMat4(this->rotation);
-        p0 = rotMat * p0;
-        p1 = rotMat * p1;
-        p2 = rotMat * p2;
-        p3 = rotMat * p3;
+        glm::mat4 rotation_matrix = glm::toMat4(this->rotation);
+        p0 = rotation_matrix * p0;
+        p1 = rotation_matrix * p1;
+        p2 = rotation_matrix * p2;
+        p3 = rotation_matrix * p3;
 
         // Set position data:
         posData[glyphIter * 18 + 0]  = p0.x; 

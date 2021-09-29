@@ -71,13 +71,6 @@ public:
     virtual float DefaultTime(double instTime) const;
 
     /**
-     * Answer the camera synchronization number.
-     *
-     * @return The camera synchronization number
-     */
-    virtual unsigned int GetCameraSyncNumber(void) const;
-
-    /**
      * Serialises the camera of the view
      *
      * @param serialiser Serialises the camera of the view
@@ -96,7 +89,9 @@ public:
      *
      * @param context
      */
-    virtual void Render(const mmcRenderViewContext& context, Call* call) override;
+    virtual ImageWrapper Render(double time, double instanceTime) override;
+
+    ImageWrapper GetRenderingResult() const override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -120,15 +115,6 @@ public:
      * @return The return value
      */
     virtual bool OnRenderView(Call& call);
-
-    /**
-     * Freezes, updates, or unfreezes the view onto the scene (not the
-     * rendering, but camera settings, timing, etc).
-     *
-     * @param freeze true means freeze or update freezed settings,
-     *               false means unfreeze
-     */
-    virtual void UpdateFreeze(bool freeze);
 
     virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 

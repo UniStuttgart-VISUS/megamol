@@ -88,6 +88,9 @@ namespace frontend {
                         this->m_providedStateResource.provide_gui_scale = [&](float scale) -> void {
                             return this->resource_provide_gui_scale(scale);
                         };
+                        this->m_providedStateResource.provide_gui_render = [&]() -> void {
+                            this->resource_provide_gui_render();
+                        };
                         this->resource_provide_gui_visibility(config.gui_show);
                         this->resource_provide_gui_scale(config.gui_scale);
 
@@ -385,6 +388,14 @@ namespace frontend {
 
         if (this->m_gui != nullptr) {
             this->m_gui->RegisterWindow(name, func);
+        }
+    }
+
+
+    void GUI_Service::resource_provide_gui_render() {
+
+        if (this->m_gui != nullptr) {
+            this->m_gui->DrawUiToScreen();
         }
     }
 

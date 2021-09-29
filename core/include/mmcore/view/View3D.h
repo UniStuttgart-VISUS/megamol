@@ -7,13 +7,23 @@
 
 #pragma once
 
-#include "mmcore/view/AbstractView3D.h"
+#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/BaseView.h"
+#include "mmcore/view/CameraControllers.h"
+#include "mmcore/view/CPUFramebuffer.h"
 
 namespace megamol {
 namespace core {
 namespace view {
 
-class MEGAMOLCORE_API View3D : public view::AbstractView3D {
+    inline constexpr auto cpu_fbo_resize = [](std::shared_ptr<CPUFramebuffer>& fbo, int width,
+                                              int height) -> void {
+        fbo->width = width;
+        fbo->height = height;
+        // TODO reallocate buffer?
+    };
+
+class MEGAMOLCORE_API View3D : public view::BaseView<CallRenderView, Camera3DController> {
 
 public:
     /**
@@ -30,13 +40,6 @@ public:
      */
     static const char* Description(void) { return "View 3D module"; }
 
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) { return true; }
-
     /** Ctor. */
     View3D(void);
 
@@ -48,11 +51,24 @@ public:
      *
      * @param context
      */
-    virtual void Render(const mmcRenderViewContext& context, Call* call);
+    virtual ImageWrapper Render(double time, double instanceTime) override;
 
- protected:
- 
-    std::shared_ptr<CPUFramebuffer> _framebuffer;
+    ImageWrapper GetRenderingResult() const override;
+
+    /**
+     * Resizes the framebuffer object and calls base class function that sets camera aspect ratio if applicable.
+     *
+     * @param width The new width.
+     * @param height The new height.
+     */
+    virtual void Resize(unsigned int width, unsigned int height) override;
+
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 };
 
 } // namespace view

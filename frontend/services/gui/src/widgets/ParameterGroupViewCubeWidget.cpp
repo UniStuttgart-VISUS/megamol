@@ -385,10 +385,10 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
     // Create view/model and projection matrices
     const auto rotation = glm::inverse(
         glm::mat4_cast(glm::quat(cube_orientation.w, cube_orientation.x, cube_orientation.y, cube_orientation.z)));
-    const float dist = 2.0f / std::tan(megamol::core::thecam::math::angle_deg2rad(30.0f) / 2.0f);
+    const float dist = 2.0f / std::tan(glm::radians(30.0f) / 2.0f);
     glm::mat4 model(1.0f);
     model[3][2] = -dist;
-    const auto proj = glm::perspective(megamol::core::thecam::math::angle_deg2rad(30.0f), 1.0f, 0.1f, 100.0f);
+    const auto proj = glm::perspective(glm::radians(30.0f), 1.0f, 0.1f, 100.0f);
 
     // Set state
     const auto culling = glIsEnabled(GL_CULL_FACE);
@@ -647,7 +647,8 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
 
 
 bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
+    megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer,
+    ImGuiID in_override_header_state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         log::Log::DefaultLog.WriteError(
@@ -703,7 +704,8 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
         if (in_scope == Parameter::WidgetScope::LOCAL) {
             // LOCAL
 
-            ParameterGroups::DrawGroupedParameters(this->name, params, in_search, in_scope, nullptr, GUI_INVALID_ID);
+            ParameterGroups::DrawGroupedParameters(
+                this->name, params, in_search, in_scope, nullptr, in_override_header_state);
 
             return true;
 

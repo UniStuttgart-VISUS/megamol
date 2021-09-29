@@ -17,7 +17,6 @@
 #include <variant>
 #include <vector>
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"

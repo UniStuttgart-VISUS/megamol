@@ -42,13 +42,6 @@ namespace view {
         virtual float DefaultTime(double instTime) const;
 
         /**
-         * Answer the camera synchronization number.
-         *
-         * @return The camera synchronization number
-         */
-        virtual unsigned int GetCameraSyncNumber(void) const;
-
-        /**
          * Serialises the camera of the view
          *
          * @param serialiser Serialises the camera of the view
@@ -75,15 +68,6 @@ namespace view {
          * @param height The new height.
          */
         virtual void Resize(unsigned int width, unsigned int height);
-
-        /**
-         * Freezes, updates, or unfreezes the view onto the scene (not the
-         * rendering, but camera settings, timing, etc).
-         *
-         * @param freeze true means freeze or update freezed settings,
-         *               false means unfreeze
-         */
-        virtual void UpdateFreeze(bool freeze);
 
         virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 

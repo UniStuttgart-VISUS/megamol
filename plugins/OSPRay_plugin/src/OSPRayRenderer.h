@@ -108,7 +108,7 @@ private:
     bool _transformation_has_changed;
     bool _clipping_geo_changed;
 
-    core::view::Camera_2 _cam;
+    core::view::Camera _cam;
     float _time;
     size_t _frameID;
 
@@ -117,7 +117,7 @@ private:
     // OSPRay textures
     std::vector<uint32_t> _fb;
     std::vector<float> _db;
-    void getOpenGLDepthFromOSPPerspective(std::vector<float>& db, cam_type::matrix_type projTemp);
+    void getOpenGLDepthFromOSPPerspective(std::vector<float>& db);
 
     bool _renderer_has_changed;
 

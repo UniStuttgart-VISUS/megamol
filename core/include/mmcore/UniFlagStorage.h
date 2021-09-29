@@ -7,8 +7,6 @@
 
 #pragma once
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
-
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 #include "FlagCollections.h"

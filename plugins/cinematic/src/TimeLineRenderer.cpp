@@ -7,6 +7,13 @@
 
 #include "stdafx.h"
 #include "TimeLineRenderer.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol;
@@ -17,8 +24,11 @@ using namespace megamol::cinematic;
 
 using namespace vislib;
 
+#define CCTLR_Z_BACK   (0.0f)
+#define CCTLR_Z_MIDDLE (0.25f)
+#define CCTLR_Z_FRONT  (0.75f)
 
-TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
+TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModuleGL()
     , keyframeKeeperSlot("keyframeData", "Connects to the KeyframeKeeper")
     , moveRightFrameParam("gotoRightFrame", "Move to right animation time frame.")
     , moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame.")
@@ -131,18 +141,26 @@ bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
 
 bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
 
-    auto const lhsFBO = call.GetFramebufferObject();
-    lhsFBO->Enable();
+    auto lhsFbo = call.GetFramebuffer();
+    lhsFbo->bind();
 
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    glm::vec2 current_viewport;
-    current_viewport.x = static_cast<float>(cam.resolution_gate().width());
-    current_viewport.y = static_cast<float>(cam.resolution_gate().height());
-    glm::mat4 ortho = glm::ortho(0.0f, current_viewport.x, 0.0f, current_viewport.y, -1.0f, 1.0f);
+    // Get camera 
+    view::Camera camera = call.GetCamera();
+    auto cam_pose = camera.getPose();
+    glm::vec3 cam_pos = cam_pose.position;
+    glm::vec3 cam_view = cam_pose.direction;
+    glm::vec3 cam_up = cam_pose.up; 
+    auto view = camera.getViewMatrix();
+    auto proj = camera.getProjectionMatrix();
+    glm::mat4 ortho = proj * view;
 
-    if ((current_viewport != this->viewport) || (this->lineHeight != this->utils.GetTextLineHeight())) {
-        this->viewport = current_viewport;
+    // Get viewport
+    const float vp_fw = static_cast<float>(lhsFbo->getWidth());
+    const float vp_fh = static_cast<float>(lhsFbo->getHeight());
+    const glm::vec2 vp_dim = {vp_fw, vp_fh};
+
+    if ((this->viewport != vp_dim) || (this->lineHeight != this->utils.GetTextLineHeight())) {
+        this->viewport = vp_dim;
         this->lineHeight = this->utils.GetTextLineHeight();
 
         // Set axes position depending on font size
@@ -240,9 +258,6 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     float start_x, start_y, end_x, end_y, x, y;
     glm::vec3 start, end;
     glm::vec4 color;
-    glm::vec3 cam_view = { 0.0f, 0.0f, -1.0f };
-    glm::vec3 cam_pos = { 0.0f, 0.0f, 1.0f };
-    glm::vec3 origin = { this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, 0.0f };
     float yAxisValue = 0.0f;
     auto cbc = call.BackgroundColor();
     glm::vec4 back_color = glm::vec4(static_cast<float>(cbc[0]) / 255.0f, static_cast<float>(cbc[1]) / 255.0f, static_cast<float>(cbc[2]) / 255.0f, 1.0f);
@@ -250,33 +265,37 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     auto skf = ccc->GetSelectedKeyframe();
 
     // Push rulers ------------------------------------------------------------
+    glm::vec3 origin = {this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, CCTLR_Z_BACK};
+
     color = this->utils.Color(CinematicUtils::Colors::FOREGROUND);
     // Draw x axis ruler lines
-    start = glm::vec3(this->axes[Axis::X].startPos.x - this->rulerMarkHeight, this->axes[Axis::X].startPos.y, 0.0f);
-    end = glm::vec3(this->axes[Axis::X].endPos.x + this->rulerMarkHeight, this->axes[Axis::X].endPos.y, 0.0f);
+    start = glm::vec3(this->axes[Axis::X].startPos.x - this->rulerMarkHeight, this->axes[Axis::X].startPos.y, CCTLR_Z_BACK);
+    end = glm::vec3(this->axes[Axis::X].endPos.x + this->rulerMarkHeight, this->axes[Axis::X].endPos.y, CCTLR_Z_BACK);
     this->utils.PushLinePrimitive(start, end, 2.5f, cam_view, cam_pos, color);
     float loop_max = this->axes[Axis::X].length + (this->axes[Axis::X].segmSize / 2.0f);
     for (float f = this->axes[Axis::X].scaleOffset; f <= loop_max; f = f + this->axes[Axis::X].segmSize) {
         if (f >= 0.0f) {
-            start = origin + glm::vec3(f, 0.0f, 0.0f);
-            end = origin + glm::vec3(f, -this->rulerMarkHeight, 0.0f);
+            start = origin + glm::vec3(f, 0.0f, CCTLR_Z_BACK);
+            end = origin + glm::vec3(f, -this->rulerMarkHeight, CCTLR_Z_BACK);
             this->utils.PushLinePrimitive(start, end, 2.5f, cam_view, cam_pos, color);
         }
     }
     // Push y axis ruler lines
-    start = glm::vec3(this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y - this->rulerMarkHeight, 0.0f);
-    end = glm::vec3(this->axes[Axis::Y].endPos.x, this->axes[Axis::Y].endPos.y + this->rulerMarkHeight, 0.0f);
+    start = glm::vec3(this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y - this->rulerMarkHeight, CCTLR_Z_BACK);
+    end = glm::vec3(this->axes[Axis::Y].endPos.x, this->axes[Axis::Y].endPos.y + this->rulerMarkHeight, CCTLR_Z_BACK);
     this->utils.PushLinePrimitive(start, end, 2.5f, cam_view, cam_pos, color);
     loop_max = this->axes[Axis::Y].length + (this->axes[Axis::Y].segmSize / 2.0f);
     for (float f = this->axes[Axis::Y].scaleOffset; f <= loop_max; f = f + this->axes[Axis::Y].segmSize) {
         if (f >= 0.0f) {
-            start = origin + glm::vec3(-this->rulerMarkHeight, f, 0.0f);
-            end = origin + glm::vec3(0.0f, f, 0.0f);
+            start = origin + glm::vec3(-this->rulerMarkHeight, f, CCTLR_Z_BACK);
+            end = origin + glm::vec3(0.0f, f, CCTLR_Z_BACK);
             this->utils.PushLinePrimitive(start, end, 2.5f, cam_view, cam_pos, color);
         }
     }
 
     // Push line strip between keyframes --------------------------------------
+    origin = {this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, CCTLR_Z_MIDDLE};
+
     if (keyframes->size() > 0) {
         color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
         // First vertex
@@ -295,8 +314,8 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
                 default: break;
             }
             end_y = this->axes[Axis::Y].scaleOffset  + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
-            start = origin + glm::vec3(start_x, start_y, 0.0f);
-            end = origin + glm::vec3(end_x, end_y, 0.0f);
+            start = origin + glm::vec3(start_x, start_y, CCTLR_Z_MIDDLE);
+            end = origin + glm::vec3(end_x, end_y, CCTLR_Z_MIDDLE);
             this->utils.PushLinePrimitive(start, end, 2.0f, cam_view, cam_pos, color);
             start_x = end_x;
             start_y = end_y;
@@ -309,8 +328,8 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
             default: break;
         }
         end_y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
-        start = origin + glm::vec3(start_x, start_y, 0.0f);
-        end = origin + glm::vec3(end_x, end_y, 0.0f);
+        start = origin + glm::vec3(start_x, start_y, CCTLR_Z_MIDDLE);
+        end = origin + glm::vec3(end_x, end_y, CCTLR_Z_MIDDLE);
         this->utils.PushLinePrimitive(start, end, 2.0f, cam_view, cam_pos, color);
     }
 
@@ -319,8 +338,8 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     loop_max = this->axes[Axis::X].length + (frameFrac / 2.0f);
     for (float f = this->axes[Axis::X].scaleOffset; f <= loop_max; f = (f + frameFrac)) {
         if (f >= 0.0f) {
-            start = origin + glm::vec3(f, 0.0f, 0.0f);
-            end = origin + glm::vec3(f, this->rulerMarkHeight, 0.0f);
+            start = origin + glm::vec3(f, 0.0f, CCTLR_Z_MIDDLE);
+            end = origin + glm::vec3(f, this->rulerMarkHeight, CCTLR_Z_MIDDLE);
             this->utils.PushLinePrimitive(start, end, 1.0f, cam_view, cam_pos, this->utils.Color(CinematicUtils::Colors::FRAME_MARKER));
         }
     }
@@ -354,11 +373,11 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
         color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SELECTED);
         this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, (this->keyframeMarkSize*0.75f), color);
-        start = origin + glm::vec3(x, 0.0f, 0.0f);
-        end = origin + glm::vec3(x, y, 0.0f);
+        start = origin + glm::vec3(x, 0.0f, CCTLR_Z_MIDDLE);
+        end = origin + glm::vec3(x, y, CCTLR_Z_MIDDLE);
         this->utils.PushLinePrimitive(start, end, 1.0f, cam_view, cam_pos, color);
-        start = origin + glm::vec3(0.0f, y, 0.0f);
-        end = origin + glm::vec3(x, y, 0.0f);
+        start = origin + glm::vec3(0.0f, y, CCTLR_Z_MIDDLE);
+        end = origin + glm::vec3(x, y, CCTLR_Z_MIDDLE);
         this->utils.PushLinePrimitive(start, end, 1.0f, cam_view, cam_pos, color);
     }
 
@@ -417,11 +436,18 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         default: break;
     }
     strWidth = this->utils.GetTextLineWidth(caption);
-    this->utils.SetTextRotation(90.0f, 0.0f, 0.0f, 1.0f);
+    /// TODO Fix SDFFont text rotation...
+    /*
+    this->utils.SetTextRotation(70.0f, cam_view);
     this->utils.Push2DText(ortho, caption,
         this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, // x
-        (-1.0f) * this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f * this->lineHeight); // y
-    this->utils.SetTextRotation(0.0f, 0.0f, 0.0f, 0.0f);
+        this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f * this->lineHeight); // y
+    this->utils.ResetTextRotation();
+    */
+    // TEMP
+    strWidth = this->utils.GetTextLineWidth(caption);
+    this->utils.Push2DText(ortho, caption, this->axes[Axis::X].startPos.x - strWidth / 2.0f,
+        this->axes[Axis::Y].endPos.y + this->lineHeight + this->rulerMarkHeight);
 
     // Push menu --------------------------------------------------------------
     auto activeKeyframe = (this->dragDropActive) ? (this->dragDropKeyframe) : (skf);
@@ -436,12 +462,12 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     std::string leftLabel = " TIMELINE ";
     std::string midLabel = stream.str();
     std::string rightLabel = "";
-    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, this->viewport);
+    this->utils.PushMenu(ortho, leftLabel, midLabel, rightLabel, this->viewport, 0.0f);
 
     // Draw all ---------------------------------------------------------------
     this->utils.DrawAll(ortho, this->viewport);
 
-    lhsFBO->Disable();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }
@@ -449,10 +475,10 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
 void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color) {
 
     // Push texture markers
-    glm::vec3 pos_bottom_left  = { pos_x - (size / 2.0f), pos_y, 1.0f };
-    glm::vec3 pos_upper_left   = { pos_x - (size / 2.0f), pos_y + size, 1.0f };
-    glm::vec3 pos_upper_right  = { pos_x + (size / 2.0f), pos_y + size, 1.0f };
-    glm::vec3 pos_bottom_right = { pos_x + (size / 2.0f), pos_y, 1.0f };
+    glm::vec3 pos_bottom_left = {pos_x - (size / 2.0f), pos_y, CCTLR_Z_FRONT};
+    glm::vec3 pos_upper_left = {pos_x - (size / 2.0f), pos_y + size, CCTLR_Z_FRONT};
+    glm::vec3 pos_upper_right = {pos_x + (size / 2.0f), pos_y + size, CCTLR_Z_FRONT};
+    glm::vec3 pos_bottom_right = {pos_x + (size / 2.0f), pos_y, CCTLR_Z_FRONT};
     this->utils.Push2DColorTexture(
         this->texture_id, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
 }
@@ -718,7 +744,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
 
     // Store current mouse position
     this->mouseX = (float)static_cast<int>(x);
-    this->mouseY = (float)static_cast<int>(y);
+    this->mouseY = this->viewport.y - (float)static_cast<int>(y);
 
     // LEFT-CLICK --- keyframe selection
     if (this->mouseButton == MouseButton::BUTTON_LEFT) {

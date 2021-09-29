@@ -14,7 +14,6 @@
 #include <vector>
 
 #ifdef MEGAMOL_USE_BOOST_STACKTRACE
-#define BOOST_STACKTRACE_USE_BACKTRACE
 #include <boost/stacktrace.hpp>
 #endif
 
@@ -334,6 +333,11 @@ void megamol::frontend_resources::WindowManipulation::set_window_position(const 
 
 void megamol::frontend_resources::WindowManipulation::set_swap_interval(const unsigned int wait_frames) const {
     glfwSwapInterval(wait_frames);
+}
+
+void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
+    glfwSwapBuffers(reinterpret_cast<GLFWwindow*>(window_ptr));
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 }
 
 void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fullscreen action) const {
@@ -792,14 +796,6 @@ void OpenGL_GLFW_Service::preGraphRender() {
 }
 
 void OpenGL_GLFW_Service::postGraphRender() {
-    // end frame timer
-    // update window name
-
-    ::glfwSwapBuffers(m_pimpl->glfwContextWindowPtr);
-
-    //::glfwMakeContextCurrent(window_ptr);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-    //::glfwMakeContextCurrent(nullptr);
 
     do_every_second();
 }

@@ -9,7 +9,6 @@
 
 #include <memory>
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/glowl.h>
 
 #include "mmcore/CallerSlot.h"

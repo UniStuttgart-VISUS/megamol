@@ -474,27 +474,15 @@ bool imageviewer2::ImageRenderer::initMPI() {
  */
 bool imageviewer2::ImageRenderer::Render(view::CallRender3DGL& call) {
 
-    auto const lhsFBO = call.GetFramebufferObject();
-    lhsFBO->Enable();
+    auto const lhsFBO = call.GetFramebuffer();
+    lhsFBO->bindToDraw();
+    glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
 
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
+    // TODO bug currently not implemented, need to fetch eye from frontend.
+    bool rightEye = false;
 
-    // Generate complete snapshot and calculate matrices
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-
-    auto CamPos = snapshot.position;
-    auto CamView = snapshot.view_vector;
-    auto CamRight = snapshot.right_vector;
-    auto CamUp = snapshot.up_vector;
-    auto CamNearClip = snapshot.frustum_near;
-    auto Eye = cam.eye();
-    bool rightEye = (Eye == core::thecam::Eye::right);
-
-    glm::mat4 view = viewTemp;
-    glm::mat4 proj = projTemp;
+    glm::mat4 view = call.GetCamera().getViewMatrix();
+    glm::mat4 proj = call.GetCamera().getProjectionMatrix();
     auto MVinv = glm::inverse(view);
     auto MVP = proj * view;
     auto MVPinv = glm::inverse(MVP);
@@ -540,7 +528,6 @@ bool imageviewer2::ImageRenderer::Render(view::CallRender3DGL& call) {
         buffers_initialized = true;
     }
 
-    // param::ParamSlot *filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
     ::glEnable(GL_TEXTURE_2D);
     if (!assertImage(rightEye)) return false;
 
@@ -567,7 +554,7 @@ bool imageviewer2::ImageRenderer::Render(view::CallRender3DGL& call) {
     ::glDisable(GL_TEXTURE_2D);
     ::glDisable(GL_DEPTH_TEST);
 
-    lhsFBO->Disable();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }

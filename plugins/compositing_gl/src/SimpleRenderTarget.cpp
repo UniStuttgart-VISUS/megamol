@@ -5,9 +5,10 @@
 #include "compositing/CompositingCalls.h"
 
 megamol::compositing::SimpleRenderTarget::SimpleRenderTarget() 
-    : Renderer3DModuleGL()
+    : RendererModule<core::view::CallRender3DGL>()
     , m_version(0)
     , m_GBuffer(nullptr)
+    , m_last_used_camera(glm::mat4(1.0f),glm::mat4(1.0f))
     , m_color_render_target("Color", "Access the color render target texture")
     , m_normal_render_target("Normals", "Access the normals render target texture")
     , m_depth_render_target("Depth", "Access the depth render target texture")
@@ -43,6 +44,9 @@ megamol::compositing::SimpleRenderTarget::SimpleRenderTarget()
     this->m_framebuffer_slot.SetCallback(
         CallFramebufferGL::ClassName(), "GetMetaData", &SimpleRenderTarget::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_framebuffer_slot);
+
+    this->MakeSlotAvailable(&this->chainRenderSlot);
+    this->MakeSlotAvailable(&this->renderSlot);
 }
 
 megamol::compositing::SimpleRenderTarget::~SimpleRenderTarget() { 
@@ -63,36 +67,46 @@ bool megamol::compositing::SimpleRenderTarget::create() {
 void megamol::compositing::SimpleRenderTarget::release() {
 }
 
-bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender3DGL& call) { 
-    return true; 
+bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender3DGL& call) {
+    core::view::CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<core::view::CallRender3DGL>();
+    if (chainedCall != nullptr) {
+        *chainedCall = call;
+        bool retVal = (*chainedCall)(core::view::AbstractCallRender::FnGetExtents);
+        call = *chainedCall;
+    }
+    return true;
 }
 
-bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3DGL& call) { 
-
+bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3DGL& call) {
     ++m_version;
 
     m_last_used_camera = call.GetCamera();
 
-    GLfloat viewport[4];
-    glGetFloatv(GL_VIEWPORT, viewport);
+    auto call_fbo = call.GetFramebuffer();
 
-    if (m_GBuffer->getWidth() != viewport[2] || m_GBuffer->getHeight() != viewport[3]) {
-        m_GBuffer->resize(viewport[2], viewport[3]);
+    if (m_GBuffer->getWidth() != call_fbo->getWidth() || m_GBuffer->getHeight() != call_fbo->getHeight()) {
+        m_GBuffer->resize(call_fbo->getWidth(), call_fbo->getHeight());
     }
 
+    // this framebuffer will use 0 clear color because it uses alpha transparency during
+    // compositing and final presentating to screen anyway
     m_GBuffer->bind();
-
-    // get clear color
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // TODO: query old clear color, set 0 clear color, reset old clear color? -> wtf, profit!
+    core::view::CallRender3DGL* chained_call = this->chainRenderSlot.CallAs<core::view::CallRender3DGL>();
+    if (chained_call != nullptr) {
+        *chained_call = call;
+
+        chained_call->SetFramebuffer(m_GBuffer);
+
+        if (!((*chained_call)(core::view::AbstractCallRender::FnRender))) {
+            return false;
+        }
+    }
 
     return true; 
-}
-
-void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3DGL& call)
-{
 }
 
 bool megamol::compositing::SimpleRenderTarget::getColorRenderTarget(core::Call& caller) {

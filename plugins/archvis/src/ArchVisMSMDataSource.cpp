@@ -23,10 +23,6 @@
 #include "stdafx.h"
 #include "ArchVisMSMDataSource.h"
 
-#define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#include "tiny_gltf.h"
-
 using namespace megamol::archvis;
 
 ArchVisMSMDataSource::ArchVisMSMDataSource() :
@@ -39,7 +35,7 @@ ArchVisMSMDataSource::ArchVisMSMDataSource() :
 	m_snd_IPAddr_slot("Send IP adress", "The ip adress for sending data"),
 	m_snd_port_slot("Send port", "The port for sending data"),
 	m_rcv_socket_connected(false),
-	font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL),
+	font("Evolventa-SansSerif", core::utility::SDFFont::RENDERMODE_FILL),
 	m_last_spawn_time(std::chrono::steady_clock::now()),
 	m_last_update_time(std::chrono::steady_clock::now())
 {
@@ -78,7 +74,8 @@ ArchVisMSMDataSource::ArchVisMSMDataSource() :
 		this->m_snd_socket.Create(vislib::net::Socket::ProtocolFamily::FAMILY_INET, vislib::net::Socket::Type::TYPE_STREAM, vislib::net::Socket::Protocol::PROTOCOL_TCP);
 	}
 	catch (vislib::net::SocketException e) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Socket Exception during startup/create: %s", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            ("Socket Exception during startup/create: %s", e.GetMsgA()));
 	}
 	
 	//std::cout << "Socket Endpoint: " << endpoint.ToStringA() << std::endl;
@@ -164,7 +161,8 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 			this->m_rcv_socket.Send(greeting.c_str(), greeting.length());
 		}
 		catch (vislib::net::SocketException e) {
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Socket Exception during connection: %s", e.GetMsgA());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                ("Socket Exception during connection: %s", e.GetMsgA()));
 			return false;
 		}
 	}
@@ -185,7 +183,8 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 			//this->m_snd_socket.Send(greeting.c_str(), greeting.length());
 		}
 		catch (vislib::net::SocketException e) {
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Socket Exception during connection: %s", e.GetMsgA());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                ("Socket Exception during connection: %s", e.GetMsgA()));
 			return false;
 		}
 	}
@@ -420,8 +419,7 @@ void ArchVisMSMDataSource::parseInputElementList(
 	}
 }
 
-void ArchVisMSMDataSource::updateMSMTransform()
-{
+void ArchVisMSMDataSource::updateMSMTransform() {
 	for (auto& particle : m_text_particles)
 	{
 		std::string label = particle.text;
@@ -438,7 +436,8 @@ void ArchVisMSMDataSource::updateMSMTransform()
 		
 		//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 		//font.SetBillboard(true);
-		font.DrawString(c, x, y, z, 0.03f, false, label.c_str(), core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
+		//font.DrawString(mvp,c, x, y, z, 0.03f, false, label.c_str(), core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
+        //TODO move string rendering to a render module       
 	}
 }
 
