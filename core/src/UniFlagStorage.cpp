@@ -107,6 +107,7 @@ bool UniFlagStorage::writeDataCallback(core::Call& caller) {
         cpu_stale = true;
 
         // TODO try to avoid this and only fetch the serialization data from the GPU!!!! (if and when it works)
+        // see compress_bitflags.comp.glsl (never tested yet!)
         // actually with TBB performance is fine already haha
         GL2CPUCopy();
         serializeCPUData();
