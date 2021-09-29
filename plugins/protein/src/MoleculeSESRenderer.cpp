@@ -242,9 +242,6 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     // export parameters
     this->MakeSlotAvailable(&this->rendermodeParam);
     this->MakeSlotAvailable(&this->postprocessingParam);
-#ifdef WITH_PUXELS
-    this->MakeSlotAvailable(&this->puxelsParam);
-#endif
     this->MakeSlotAvailable(&this->silhouettecolorParam);
     this->MakeSlotAvailable(&this->sigmaParam);
     this->MakeSlotAvailable(&this->lambdaParam);
@@ -1374,17 +1371,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             // enable torus shader
             this->torusShader.Enable();
             // set shader variables
-
-            // puxels
-#ifdef WITH_PUXELS
-            glUniform1ui(this->torusShader.ParameterLocation("width"), this->cameraInfo->TileRect().Width());
-            glUniform1ui(this->torusShader.ParameterLocation("height"), this->cameraInfo->TileRect().Height());
-            glUniform1ui(this->torusShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
-            glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
-#endif
-
             glUniform4fvARB(this->torusShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
             glUniform3fvARB(this->torusShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
             glUniform3fvARB(this->torusShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
@@ -1437,14 +1423,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             glDisableVertexAttribArrayARB(attribInCuttingPlane);
             glDisableClientState(GL_VERTEX_ARRAY);
 #endif
-            // enable torus shader
-
-            // puxels
-#ifdef WITH_PUXELS
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-            glMemoryBarrier(GL_ATOMIC_COUNTER_BARRIER_BIT);
-#endif
-
             this->torusShader.Disable();
             glBindVertexArray(0);
 
@@ -1481,18 +1459,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             glBindVertexArray(vertexArrayTria_);
             // enable spherical triangle shader
             this->sphericalTriangleShader.Enable();
-            // set shader variables
-#ifdef WITH_PUXELS
-            // puxels
-            glUniform1ui(
-                this->sphericalTriangleShader.ParameterLocation("width"), this->cameraInfo->TileRect().Width());
-            glUniform1ui(
-                this->sphericalTriangleShader.ParameterLocation("height"), this->cameraInfo->TileRect().Height());
-            glUniform1ui(this->sphericalTriangleShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
-            glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
-#endif
 
             glUniform4fvARB(
                 this->sphericalTriangleShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
@@ -1564,13 +1530,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             glDisableVertexAttribArrayARB(attribColors);
             glDisableClientState(GL_VERTEX_ARRAY);
 #endif
-
-            // puxels
-#ifdef WITH_PUXELS
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-            glMemoryBarrier(GL_ATOMIC_COUNTER_BARRIER_BIT);
-#endif
-
             // disable spherical triangle shader
             this->sphericalTriangleShader.Disable();
             // unbind texture
@@ -1591,17 +1550,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             this->sphereShader.Enable();
 
             // set shader variables
-
-#ifdef WITH_PUXELS
-            // puxels
-            glUniform1ui(this->sphereShader.ParameterLocation("width"), this->cameraInfo->TileRect().Width());
-            glUniform1ui(this->sphereShader.ParameterLocation("height"), this->cameraInfo->TileRect().Height());
-            glUniform1ui(this->sphereShader.ParameterLocation("puxels_use"), this->usePuxels ? 1 : 0);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);
-            glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, puxelsAtomicBufferNextId);
-#endif
-
             glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
             glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(camdir));
             glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(right));
@@ -1624,12 +1572,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
 
         glDrawArrays(GL_POINTS, 0, ((unsigned int) this->sphereVertexArray[cntRS].Count()) / 4);
 
-#ifdef WITH_PUXELS
-        // puxels
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        glMemoryBarrier(GL_ATOMIC_COUNTER_BARRIER_BIT);
-#endif
-
         // disable sphere shader
         if (this->currentRendermode == GPU_RAYCASTING) {
             this->sphereShader.Disable();
@@ -1637,11 +1579,6 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             this->sphereClipInteriorShader.Disable();
         }
         glBindVertexArray(0);
-#ifdef WITH_PUXELS
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-        glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 5, 0);
-#endif
     }
 
     // delete pointers
@@ -2672,12 +2609,6 @@ void MoleculeSESRenderer::deinitialise(void) {
     this->vfilterShader.Release();
     this->silhouetteShader.Release();
     this->transparencyShader.Release();
-
-#ifdef WITH_PUXELS
-    this->puxelClearShader.Release();
-    this->puxelOrderShader.Release();
-    this->puxelDrawShader.Release();
-#endif
 }
 
 
