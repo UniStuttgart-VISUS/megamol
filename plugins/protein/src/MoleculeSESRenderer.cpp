@@ -265,8 +265,6 @@ MoleculeSESRenderer::~MoleculeSESRenderer(void) {
     this->cylinderShader.Release();
     this->sphereShader.Release();
     this->sphereClipInteriorShader.Release();
-    this->sphericalTriangleShader.Release();
-    this->torusShader.Release();
     this->lightShader.Release();
     this->hfilterShader.Release();
     this->vfilterShader.Release();
@@ -361,54 +359,6 @@ bool MoleculeSESRenderer::create(void) {
     } catch (vislib::Exception e) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    ///////////////////////////////////////////////////
-    // load the shader source for the torus renderer //
-    ///////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::torusVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for torus shader", this->ClassName());
-        return false;
-    }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::torusFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName());
-        return false;
-    }
-
-    try {
-        if (!this->torusShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create torus shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    ////////////////////////////////////////////////////////////////
-    // load the shader source for the spherical triangle renderer //
-    ////////////////////////////////////////////////////////////////
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphericaltriangleVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source for spherical triangle shader", this->ClassName());
-        return false;
-    }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::ses::sphericaltriangleFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName());
-        return false;
-    }
-
-    try {
-        if (!this->sphericalTriangleShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create spherical triangle shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
@@ -2461,8 +2411,6 @@ void MoleculeSESRenderer::deinitialise(void) {
     this->cylinderShader.Release();
     this->sphereShader.Release();
     this->sphereClipInteriorShader.Release();
-    this->sphericalTriangleShader.Release();
-    this->torusShader.Release();
     this->lightShader.Release();
     this->hfilterShader.Release();
     this->vfilterShader.Release();

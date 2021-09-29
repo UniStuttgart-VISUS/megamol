@@ -329,10 +329,6 @@ namespace protein {
         vislib::graphics::gl::GLSLShader sphereShader;
         // shader for the spheres with clipped interior (raycasting view)
         vislib::graphics::gl::GLSLShader sphereClipInteriorShader;
-        // shader for the spherical triangles (raycasting view)
-        vislib::graphics::gl::GLSLShader sphericalTriangleShader;
-        // shader for torus (raycasting view)
-        vislib::graphics::gl::GLSLShader torusShader;
         // shader for per pixel lighting (polygonal view)
         vislib::graphics::gl::GLSLShader lightShader;
         // shader for 1D gaussian filtering (postprocessing)
