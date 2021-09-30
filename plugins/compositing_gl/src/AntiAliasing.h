@@ -70,6 +70,15 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
+    /**
+    * Function for launching compute shaders
+    */
+    void launchProgram(
+        const std::unique_ptr<vislib::graphics::gl::GLSLComputeShader>& prgm,
+        std::shared_ptr<glowl::Texture2D> input,
+        const char* input_id,
+        std::shared_ptr<glowl::Texture2D> output);
+
     typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
     uint32_t m_version;
@@ -77,8 +86,10 @@ private:
     /** Shader program for fxaa */
     std::unique_ptr<GLSLComputeShader> m_fxaa_prgm;
 
-    /** Shader program for smaa */
-    std::unique_ptr<GLSLComputeShader> m_smaa_prgm;
+    /** Shader programs for smaa */
+    std::unique_ptr<GLSLComputeShader> m_smaa_edge_detection_prgm;
+    std::unique_ptr<GLSLComputeShader> m_smaa_blending_weight_calculation_prgm;
+    std::unique_ptr<GLSLComputeShader> m_smaa_neighborhood_blending_prgm;
 
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
@@ -100,6 +111,18 @@ private:
 
     /** Parameter for selecting the screen space effect that is computed, e.g. ssao, fxaa,... */
     megamol::core::param::ParamSlot m_mode;
+
+    /** Parameter for selecting the smaa quality level
+    * as stated in the original work http://www.iryoku.com/smaa/
+    * LOW    (60% of the quality)
+    * MEDIUM (80% of the quality)
+    * HIGH   (95% of the quality)
+    * ULTRA  (99% of the quality)
+    */
+    megamol::core::param::ParamSlot m_smaa_quality;
+
+    /** Parameter for choosing the edge detection technique: based on Luma, Color, or Depth */
+    megamol::core::param::ParamSlot m_smaa_detection_base;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
