@@ -358,9 +358,6 @@ namespace protein {
         // is comparison mode enabled?
         bool compare;
 
-        // is the geometry shader (and OGL V2) supported?
-        bool geomShaderSupported;
-
         // has the hybrid CARTOON render mode to be prepared?
         bool prepareCartoonHybrid;
         // has the CPU CARTOON render mode to be prepared?
