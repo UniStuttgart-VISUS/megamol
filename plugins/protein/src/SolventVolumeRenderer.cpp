@@ -18,13 +18,13 @@
 #include "VolumeSliceCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/ColorParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
@@ -598,7 +598,8 @@ void protein::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall* mol) {
 
     auto solventColorMode =
         static_cast<Color::ColoringMode>(this->coloringModeSolventParam.Param<param::EnumParam>()->Value());
-    auto polymerColorMode = static_cast<Color::ColoringMode>(this->coloringModePolymerParam.Param<param::EnumParam>()->Value());
+    auto polymerColorMode =
+        static_cast<Color::ColoringMode>(this->coloringModePolymerParam.Param<param::EnumParam>()->Value());
 
     for (unsigned int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++) {
         const MolecularDataCall::Residue* residue = mol->Residues()[residueIdx];
@@ -1651,7 +1652,8 @@ void protein::SolventVolumeRenderer::ParameterRefresh(view::CallRender3DGL* call
         this->coloringModeVolSurfParam.ResetDirty();
         /* hydrogen statistics map surface by residue color -> only residue coloring makes sense for solvent here */
         if (this->coloringModeVolSurfParam.Param<param::EnumParam>()->Value() == VOlCM_HydrogenBondStats)
-            this->coloringModeSolventParam.Param<param::EnumParam>()->SetValue(static_cast<int>(Color::ColoringMode::RESIDUE));
+            this->coloringModeSolventParam.Param<param::EnumParam>()->SetValue(
+                static_cast<int>(Color::ColoringMode::RESIDUE));
         this->forceUpdateVolumeTexture = true;
         this->forceUpdateColoringMode = true;
     }

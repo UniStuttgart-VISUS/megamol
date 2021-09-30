@@ -580,7 +580,8 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
 /*
  * render the atom using lines and points
  */
-void SimpleMoleculeRenderer::RenderLines(const MolecularDataCall* mol, const float* atomPos, bool useFiltering, bool useClipplane) {
+void SimpleMoleculeRenderer::RenderLines(
+    const MolecularDataCall* mol, const float* atomPos, bool useFiltering, bool useClipplane) {
     this->vertPoints.SetCount(mol->AtomCount() * 4);
     // will be drawn as GL_LINES so each line needs 2*4 input coordinates and 2 * 3 input color values
     this->vertLines.SetCount(mol->ConnectionCount() * 8);
