@@ -101,14 +101,14 @@ protein::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
     this->MakeSlotAvailable(&this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
-    this->SetColoringMode(Color::ELEMENT);
+    this->SetColoringMode(Color::ColoringMode::ELEMENT);
     param::EnumParam* cm = new param::EnumParam(int(this->currentColoringMode));
     MolecularDataCall* mol = new MolecularDataCall();
     unsigned int cCnt;
     Color::ColoringMode cMode;
     for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol); ++cCnt) {
         cMode = Color::GetModeByIndex(mol, cCnt);
-        cm->SetTypePair(cMode, Color::GetName(cMode).c_str());
+        cm->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
     }
     delete mol;
     this->coloringModeParam << cm;

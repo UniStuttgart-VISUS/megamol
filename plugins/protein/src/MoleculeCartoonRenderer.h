@@ -15,6 +15,7 @@
 #include "BSpline.h"
 #include "CallColor.h"
 #include "Color.h"
+#include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
@@ -74,7 +75,7 @@ namespace protein {
         /** Dtor. */
         virtual ~MoleculeCartoonRenderer(void);
 
-        enum CartoonRenderMode {
+        enum class CartoonRenderMode {
             CARTOON = 0,
             CARTOON_SIMPLE = 1,
             CARTOON_CPU = 2,
@@ -83,7 +84,7 @@ namespace protein {
             CARTOON_TUBE_ONLY = 5
         };
 
-        enum RenderSource { RENDER_NORMAL = 0, RENDER_COMPARISON_BASE = 1 };
+        enum class RenderSource { RENDER_NORMAL = 0, RENDER_COMPARISON_BASE = 1 };
 
 
         /**********************************************************************
@@ -104,9 +105,6 @@ namespace protein {
         inline unsigned int GetNumberOfTubeSegments(void) const {
             return numberOfTubeSeg;
         };
-
-        /** Get the color of a certain atom of the protein. */
-        const float* GetProteinAtomColor(unsigned int idx);
 
         /**********************************************************************
          * 'set'-functions

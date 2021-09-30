@@ -143,7 +143,8 @@ private:
      */
     virtual bool Render(core::view::CallRender3DGL& call);
     void UpdateColorTable(megamol::protein_calls::MolecularDataCall* mol);
-    void ColorAtom(float* atomColor, megamol::protein_calls::MolecularDataCall* mol, int polymerColorMode,
+    void ColorAtom(float* atomColor, megamol::protein_calls::MolecularDataCall* mol,
+        Color::ColoringMode polymerColorMode,
         int atomIdx, int residueIdx);
 
     /**

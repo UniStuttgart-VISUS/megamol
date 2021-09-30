@@ -103,20 +103,20 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring modes
-    this->currentColoringMode0 = Color::CHAIN;
-    this->currentColoringMode1 = Color::STRUCTURE;
+    this->currentColoringMode0 = Color::ColoringMode::CHAIN;
+    this->currentColoringMode1 = Color::ColoringMode::STRUCTURE;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode0));
     param::EnumParam* cm1 = new param::EnumParam(int(this->currentColoringMode1));
-    param::EnumParam* scm = new param::EnumParam(int(Color::ELEMENT));
+    param::EnumParam* scm = new param::EnumParam(int(Color::ColoringMode::ELEMENT));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     unsigned int cCnt;
     Color::ColoringMode cMode;
     for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
         cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        cm0->SetTypePair(cMode, Color::GetName(cMode).c_str());
-        cm1->SetTypePair(cMode, Color::GetName(cMode).c_str());
-        scm->SetTypePair(cMode, Color::GetName(cMode).c_str());
+        cm0->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+        cm1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+        scm->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -134,17 +134,17 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     // --- set the render mode ---
     // SetRenderMode(CARTOON);
     // SetRenderMode(CARTOON_SIMPLE);
-    SetRenderMode(CARTOON_LINE);
+    SetRenderMode(CartoonRenderMode::CARTOON_LINE);
     // SetRenderMode(CARTOON_GPU);
     param::EnumParam* rm = new param::EnumParam(int(this->currentRenderMode));
     if (this->geomShaderSupported) {
-        rm->SetTypePair(CARTOON, "Cartoon Hybrid");
-        rm->SetTypePair(CARTOON_SIMPLE, "Cartoon Hybrid (simple)");
-        rm->SetTypePair(CARTOON_GPU, "Cartoon GPU");
+        rm->SetTypePair(static_cast<int>(CartoonRenderMode::CARTOON), "Cartoon Hybrid");
+        rm->SetTypePair(static_cast<int>(CartoonRenderMode::CARTOON_SIMPLE), "Cartoon Hybrid (simple)");
+        rm->SetTypePair(static_cast<int>(CartoonRenderMode::CARTOON_GPU), "Cartoon GPU");
         // rm->SetTypePair ( CARTOON_TUBE_ONLY, "Tubes only" );
     }
-    rm->SetTypePair(CARTOON_CPU, "Cartoon CPU");
-    rm->SetTypePair(CARTOON_LINE, "Cartoon Lines");
+    rm->SetTypePair(static_cast<int>(CartoonRenderMode::CARTOON_CPU), "Cartoon CPU");
+    rm->SetTypePair(static_cast<int>(CartoonRenderMode::CARTOON_LINE), "Cartoon Lines");
     this->renderingModeParam << rm;
     this->MakeSlotAvailable(&this->renderingModeParam);
 
@@ -827,7 +827,8 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
     glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
 
-    if ((this->currentRenderMode == CARTOON || this->currentRenderMode == CARTOON_SIMPLE) &&
+    if ((this->currentRenderMode == CartoonRenderMode::CARTOON ||
+            this->currentRenderMode == CartoonRenderMode::CARTOON_SIMPLE) &&
         this->geomShaderSupported) {
         // ------------------------------------------------------------
         // --- CARTOON                                              ---
@@ -836,7 +837,7 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         this->RenderCartoonHybrid(mol, posInter);
     }
 
-    if (this->currentRenderMode == CARTOON_CPU) {
+    if (this->currentRenderMode == CartoonRenderMode::CARTOON_CPU) {
         // ------------------------------------------------------------
         // --- CARTOON_CPU                                          ---
         // --- render the protein using OpenGL primitives           ---
@@ -844,7 +845,7 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         this->RenderCartoonCPU(mol, posInter);
     }
 
-    if (this->currentRenderMode == CARTOON_LINE) {
+    if (this->currentRenderMode == CartoonRenderMode::CARTOON_LINE) {
         // ------------------------------------------------------------
         // --- CARTOON_LINE                                         ---
         // --- render the protein using OpenGL lines                ---
@@ -852,7 +853,7 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         this->RenderCartoonLineCPU(mol, posInter);
     }
 
-    if (this->currentRenderMode == CARTOON_GPU) {
+    if (this->currentRenderMode == CartoonRenderMode::CARTOON_GPU) {
         // ------------------------------------------------------------
         // --- CARTOON_GPU                                          ---
         // --- render the protein using only GLSL geometry shaders  ---
@@ -860,7 +861,7 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         this->RenderCartoonGPU(mol, posInter);
     }
 
-    if (this->currentRenderMode == CARTOON_TUBE_ONLY) {
+    if (this->currentRenderMode == CartoonRenderMode::CARTOON_TUBE_ONLY) {
         // ------------------------------------------------------------
         // --- CARTOON_TUBE_ONLY                                          ---
         // --- render the protein using only GLSL geometry shaders  ---
@@ -1357,7 +1358,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
     glGetFloatv(GL_VIEWPORT, curVP);
 
     // enable tube shader
-    if (this->currentRenderMode == CARTOON)
+    if (this->currentRenderMode == CartoonRenderMode::CARTOON)
         this->tubeShader.Enable();
     else
         this->tubeSimpleShader.Enable();
@@ -1371,7 +1372,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
     glUseProgram(0);
 
     // enable arrow shader
-    if (this->currentRenderMode == CARTOON)
+    if (this->currentRenderMode == CartoonRenderMode::CARTOON)
         this->arrowShader.Enable();
     else
         this->arrowSimpleShader.Enable();
@@ -1382,7 +1383,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
     glUseProgram(0);
 
     // enable helix shader
-    if (this->currentRenderMode == CARTOON)
+    if (this->currentRenderMode == CartoonRenderMode::CARTOON)
         this->helixShader.Enable();
     else
         this->helixSimpleShader.Enable();
@@ -2650,7 +2651,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly(const MolecularDataCall* 
     glGetFloatv(GL_VIEWPORT, curVP);
 
     // enable tube shader
-    if (this->currentRenderMode == CARTOON)
+    if (this->currentRenderMode == CartoonRenderMode::CARTOON)
         this->tubeShader.Enable();
     else
         this->tubeSimpleShader.Enable();

@@ -53,15 +53,15 @@ MolecularBezierData::MolecularBezierData(void)
     this->inDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
-    core::param::EnumParam* colMode1 = new core::param::EnumParam(Color::STRUCTURE);
-    core::param::EnumParam* colMode2 = new core::param::EnumParam(Color::BFACTOR);
+    core::param::EnumParam* colMode1 = new core::param::EnumParam(static_cast<int>(Color::ColoringMode::STRUCTURE));
+    core::param::EnumParam* colMode2 = new core::param::EnumParam(static_cast<int>(Color::ColoringMode::BFACTOR));
 
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     for (unsigned int cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
         Color::ColoringMode cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        colMode1->SetTypePair(cMode, Color::GetName(cMode).c_str());
-        colMode2->SetTypePair(cMode, Color::GetName(cMode).c_str());
+        colMode1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+        colMode2->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
     }
 
     this->color1Slot << colMode1;

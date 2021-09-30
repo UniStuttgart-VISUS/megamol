@@ -125,13 +125,13 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer(void)
     this->MakeSlotAvailable(&this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
-    param::EnumParam* polymerCMEnum = new param::EnumParam(int(Color::ELEMENT));
+    param::EnumParam* polymerCMEnum = new param::EnumParam(int(Color::ColoringMode::ELEMENT));
     MolecularDataCall* mol = new MolecularDataCall();
     Color::ColoringMode cMode;
     unsigned int numClrModes = Color::GetNumOfColoringModes(mol);
     for (unsigned int cCnt = 0; cCnt < numClrModes; ++cCnt) {
         cMode = Color::GetModeByIndex(mol, cCnt);
-        polymerCMEnum->SetTypePair(cMode, Color::GetName(cMode).c_str());
+        polymerCMEnum->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
     }
     delete mol;
 
@@ -518,10 +518,10 @@ bool SolventVolumeRenderer::getVolumeData(core::Call& call) {
 
 
 void protein::SolventVolumeRenderer::ColorAtom(
-    float* atomColor, MolecularDataCall* mol, int colorMode, int atomIdx, int residueIdx) {
+    float* atomColor, MolecularDataCall* mol, Color::ColoringMode colorMode, int atomIdx, int residueIdx) {
     switch (colorMode) {
     default:
-    case Color::ELEMENT: {
+    case Color::ColoringMode::ELEMENT: {
 #if 1
         const unsigned char* c = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Colour();
         atomColor[0] = c[0] / 255.0f;
@@ -535,25 +535,25 @@ void protein::SolventVolumeRenderer::ColorAtom(
         atomColor[2] = c.Z();
 #endif
     } break;
-    case Color::RESIDUE: {
+    case Color::ColoringMode::RESIDUE: {
         int resTypeIdx = mol->Residues()[residueIdx]->Type();
         vislib::math::Vector<float, 3>& c = this->colorLookupTable[resTypeIdx % this->colorLookupTable.Count()];
         atomColor[0] = c.X();
         atomColor[1] = c.Y();
         atomColor[2] = c.Z();
     } break;
-    case Color::STRUCTURE: {
+    case Color::ColoringMode::STRUCTURE: {
         ; // MolecularDataCall::SecStructure::TYPE_HELIX, TYPE_COIL etc
     } break;
-    case Color::BFACTOR: {
+    case Color::ColoringMode::BFACTOR: {
         ;
     } break;
-    case Color::CHARGE: {
+    case Color::ColoringMode::CHARGE: {
         ;
     } break;
-    case Color::OCCUPANCY:
+    case Color::ColoringMode::OCCUPANCY:
         break;
-    case Color::CHAIN: {
+    case Color::ColoringMode::CHAIN: {
         const MolecularDataCall::Residue* residue = mol->Residues()[residueIdx];
         int moleculeIdx = residue->MoleculeIndex();
         int chainIdx = mol->Molecules()[moleculeIdx].ChainIndex();
@@ -562,7 +562,7 @@ void protein::SolventVolumeRenderer::ColorAtom(
         atomColor[1] = c.Y();
         atomColor[2] = c.Z();
     } break;
-    case Color::MOLECULE: {
+    case Color::ColoringMode::MOLECULE: {
         const MolecularDataCall::Residue* residue = mol->Residues()[residueIdx];
         int moleculeIdx = residue->MoleculeIndex();
         vislib::math::Vector<float, 3>& c = this->colorLookupTable[moleculeIdx % this->colorLookupTable.Count()];
@@ -570,7 +570,7 @@ void protein::SolventVolumeRenderer::ColorAtom(
         atomColor[1] = c.Y();
         atomColor[2] = c.Z();
     } break;
-    case Color::RAINBOW:
+    case Color::ColoringMode::RAINBOW:
         break;
     }
 }
@@ -596,8 +596,9 @@ void protein::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall* mol) {
 
     float* atomColorTablePtr = &this->atomColorTable[0];
 
-    int solventColorMode = this->coloringModeSolventParam.Param<param::EnumParam>()->Value();
-    int polymerColorMode = this->coloringModePolymerParam.Param<param::EnumParam>()->Value();
+    auto solventColorMode =
+        static_cast<Color::ColoringMode>(this->coloringModeSolventParam.Param<param::EnumParam>()->Value());
+    auto polymerColorMode = static_cast<Color::ColoringMode>(this->coloringModePolymerParam.Param<param::EnumParam>()->Value());
 
     for (unsigned int residueIdx = 0; residueIdx < mol->ResidueCount(); residueIdx++) {
         const MolecularDataCall::Residue* residue = mol->Residues()[residueIdx];
@@ -1650,7 +1651,7 @@ void protein::SolventVolumeRenderer::ParameterRefresh(view::CallRender3DGL* call
         this->coloringModeVolSurfParam.ResetDirty();
         /* hydrogen statistics map surface by residue color -> only residue coloring makes sense for solvent here */
         if (this->coloringModeVolSurfParam.Param<param::EnumParam>()->Value() == VOlCM_HydrogenBondStats)
-            this->coloringModeSolventParam.Param<param::EnumParam>()->SetValue(Color::RESIDUE);
+            this->coloringModeSolventParam.Param<param::EnumParam>()->SetValue(static_cast<int>(Color::ColoringMode::RESIDUE));
         this->forceUpdateVolumeTexture = true;
         this->forceUpdateColoringMode = true;
     }

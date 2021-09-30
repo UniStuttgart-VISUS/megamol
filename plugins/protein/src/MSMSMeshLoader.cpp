@@ -88,8 +88,8 @@ MSMSMeshLoader::MSMSMeshLoader(void)
     Color::MakeRainbowColorTable(100, this->rainbowColors);
 
     // coloring modes
-    param::EnumParam* cm0 = new param::EnumParam(int(Color::CHAIN));
-    param::EnumParam* cm1 = new param::EnumParam(int(Color::ELEMENT));
+    param::EnumParam* cm0 = new param::EnumParam(int(Color::ColoringMode::CHAIN));
+    param::EnumParam* cm1 = new param::EnumParam(int(Color::ColoringMode::ELEMENT));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     PerAtomFloatCall* pa = new PerAtomFloatCall();
@@ -97,8 +97,8 @@ MSMSMeshLoader::MSMSMeshLoader(void)
     Color::ColoringMode cMode;
     for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs, pa); ++cCnt) {
         cMode = Color::GetModeByIndex(mol, bs, pa, cCnt);
-        cm0->SetTypePair(cMode, Color::GetName(cMode).c_str());
-        cm1->SetTypePair(cMode, Color::GetName(cMode).c_str());
+        cm0->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+        cm1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -350,7 +350,8 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(attIdx)[i];
 
                     // create hightmap colours or read per atom colours
-                    if (currentColoringMode0 == Color::HEIGHTMAP_COL || currentColoringMode0 == Color::HEIGHTMAP_VAL) {
+                    if (currentColoringMode0 == Color::ColoringMode::HEIGHTMAP_COL ||
+                        currentColoringMode0 == Color::ColoringMode::HEIGHTMAP_VAL) {
                         col = std::vector<unsigned char>(3, 0);
                         dist =
                             sqrt(pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
@@ -362,7 +363,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
                         dist /= max_dist;
 
-                        if (currentColoringMode0 == Color::HEIGHTMAP_COL) {
+                        if (currentColoringMode0 == Color::ColoringMode::HEIGHTMAP_COL) {
                             col[0] = static_cast<unsigned char>(
                                 (1.0f - alpha) * colours[bin][0] + alpha * colours[bin + 1][0]);
                             col[1] = static_cast<unsigned char>(
@@ -387,7 +388,8 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                             static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i] * 3 + 2] * 255);
                     }
 
-                    if (currentColoringMode1 == Color::HEIGHTMAP_COL || currentColoringMode1 == Color::HEIGHTMAP_VAL) {
+                    if (currentColoringMode1 == Color::ColoringMode::HEIGHTMAP_COL ||
+                        currentColoringMode1 == Color::ColoringMode::HEIGHTMAP_VAL) {
                         col = std::vector<unsigned char>(3, 0);
                         dist =
                             sqrt(pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
@@ -399,7 +401,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
                         dist /= max_dist;
 
-                        if (currentColoringMode1 == Color::HEIGHTMAP_COL) {
+                        if (currentColoringMode1 == Color::ColoringMode::HEIGHTMAP_COL) {
                             col[0] = static_cast<unsigned char>(
                                 (1.0f - alpha) * colours[bin][0] + alpha * colours[bin + 1][0]);
                             col[1] = static_cast<unsigned char>(

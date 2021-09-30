@@ -26,7 +26,7 @@ namespace protein {
         typedef std::array<float, 4> ColorType;
 
         /** The names of the coloring modes */
-        enum ColoringMode {
+        enum class ColoringMode {
             ELEMENT = 0,
             STRUCTURE = 1,
             RAINBOW = 2,
