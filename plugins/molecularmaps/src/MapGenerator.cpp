@@ -4271,9 +4271,7 @@ bool MapGenerator::Render(core::view::CallRender3DGL& call) {
     // Determine the data that is rendered based on the Display mode and
     // update the renderer with the new data.
     if (this->display_param.Param<param::EnumParam>()->Value() == DisplayMode::PROTEIN) {
-        if (this->display_param.Param<param::EnumParam>()->Value() == DisplayMode::PROTEIN) {
-            this->triMeshRenderer.update(&this->faces, &this->vertices, &this->vertexColors, &this->normals);
-        }
+        this->triMeshRenderer.update(&this->faces, &this->vertices, &this->vertexColors, &this->normals);
     } else if (this->display_param.Param<param::EnumParam>()->Value() == DisplayMode::SHADOW) {
         // Get the AO texture.
         auto vector = this->aoCalculator.getVertexShadows();
