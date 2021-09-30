@@ -265,16 +265,8 @@ namespace protein {
         std::vector<LightParams> pointLights_;
         std::vector<LightParams> directionalLights_;
 
-        // attribute locations for GLSL-Shader
-        GLint attribLocInParams;
-        GLint attribLocQuatC;
-        GLint attribLocColor1;
-        GLint attribLocColor2;
-        GLint attribLocAtomFilter;
-        GLint attribLocConFilter;
-
         // buffer objects
-        enum Buffers : GLuint {
+        enum class Buffers : GLuint {
             POSITION = 0,
             COLOR = 1,
             CYL_PARAMS = 2,
@@ -287,7 +279,7 @@ namespace protein {
             BUFF_COUNT = 9
         };
         GLuint vertex_array_;
-        std::array<std::unique_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers_;
+        std::array<std::unique_ptr<glowl::BufferObject>, static_cast<int>(Buffers::BUFF_COUNT)> buffers_;
 
         /** The current coloring mode */
         Color::ColoringMode currentColoringMode0;

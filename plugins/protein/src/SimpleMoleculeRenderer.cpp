@@ -287,58 +287,65 @@ bool SimpleMoleculeRenderer::create(void) {
     localFramebufferObj_->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);          // clip space depth
 
     // generate data buffers
-    buffers_[Buffers::POSITION] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    buffers_[Buffers::COLOR] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    buffers_[Buffers::CYL_PARAMS] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    buffers_[Buffers::CYL_QUAT] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    buffers_[Buffers::CYL_COL1] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    buffers_[Buffers::CYL_COL2] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    buffers_[Buffers::FILTER] = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    buffers_[Buffers::LIGHT_POSITIONAL] =
+    buffers_[static_cast<int>(Buffers::POSITION)] =
+        std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[static_cast<int>(Buffers::COLOR)] =
+        std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[static_cast<int>(Buffers::CYL_PARAMS)] =
+        std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[static_cast<int>(Buffers::CYL_QUAT)] =
+        std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[static_cast<int>(Buffers::CYL_COL1)] =
+        std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[static_cast<int>(Buffers::CYL_COL2)] =
+        std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[static_cast<int>(Buffers::FILTER)] =
+        std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    buffers_[static_cast<int>(Buffers::LIGHT_POSITIONAL)] =
         std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    buffers_[Buffers::LIGHT_DIRECTIONAL] =
+    buffers_[static_cast<int>(Buffers::LIGHT_DIRECTIONAL)] =
         std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
     glGenVertexArrays(1, &vertex_array_);
     glBindVertexArray(vertex_array_);
 
-    buffers_[Buffers::POSITION]->bind();
-    glEnableVertexAttribArray(Buffers::POSITION);
-    glVertexAttribPointer(Buffers::POSITION, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    buffers_[static_cast<int>(Buffers::POSITION)]->bind();
+    glEnableVertexAttribArray(static_cast<int>(Buffers::POSITION));
+    glVertexAttribPointer(static_cast<int>(Buffers::POSITION), 4, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    buffers_[Buffers::COLOR]->bind();
-    glEnableVertexAttribArray(Buffers::COLOR);
-    glVertexAttribPointer(Buffers::COLOR, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    buffers_[static_cast<int>(Buffers::COLOR)]->bind();
+    glEnableVertexAttribArray(static_cast<int>(Buffers::COLOR));
+    glVertexAttribPointer(static_cast<int>(Buffers::COLOR), 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    buffers_[Buffers::CYL_PARAMS]->bind();
-    glEnableVertexAttribArray(Buffers::CYL_PARAMS);
-    glVertexAttribPointer(Buffers::CYL_PARAMS, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    buffers_[static_cast<int>(Buffers::CYL_PARAMS)]->bind();
+    glEnableVertexAttribArray(static_cast<int>(Buffers::CYL_PARAMS));
+    glVertexAttribPointer(static_cast<int>(Buffers::CYL_PARAMS), 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    buffers_[Buffers::CYL_QUAT]->bind();
-    glEnableVertexAttribArray(Buffers::CYL_QUAT);
-    glVertexAttribPointer(Buffers::CYL_QUAT, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    buffers_[static_cast<int>(Buffers::CYL_QUAT)]->bind();
+    glEnableVertexAttribArray(static_cast<int>(Buffers::CYL_QUAT));
+    glVertexAttribPointer(static_cast<int>(Buffers::CYL_QUAT), 4, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    buffers_[Buffers::CYL_COL1]->bind();
-    glEnableVertexAttribArray(Buffers::CYL_COL1);
-    glVertexAttribPointer(Buffers::CYL_COL1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    buffers_[static_cast<int>(Buffers::CYL_COL1)]->bind();
+    glEnableVertexAttribArray(static_cast<int>(Buffers::CYL_COL1));
+    glVertexAttribPointer(static_cast<int>(Buffers::CYL_COL1), 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    buffers_[Buffers::CYL_COL2]->bind();
-    glEnableVertexAttribArray(Buffers::CYL_COL2);
-    glVertexAttribPointer(Buffers::CYL_COL2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    buffers_[static_cast<int>(Buffers::CYL_COL2)]->bind();
+    glEnableVertexAttribArray(static_cast<int>(Buffers::CYL_COL2));
+    glVertexAttribPointer(static_cast<int>(Buffers::CYL_COL2), 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    buffers_[Buffers::FILTER]->bind();
-    glEnableVertexAttribArray(Buffers::FILTER);
-    glVertexAttribIPointer(Buffers::FILTER, 1, GL_INT, 0, nullptr);
+    buffers_[static_cast<int>(Buffers::FILTER)]->bind();
+    glEnableVertexAttribArray(static_cast<int>(Buffers::FILTER));
+    glVertexAttribIPointer(static_cast<int>(Buffers::FILTER), 1, GL_INT, 0, nullptr);
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisableVertexAttribArray(Buffers::POSITION);
-    glDisableVertexAttribArray(Buffers::COLOR);
-    glDisableVertexAttribArray(Buffers::CYL_PARAMS);
-    glDisableVertexAttribArray(Buffers::CYL_QUAT);
-    glDisableVertexAttribArray(Buffers::CYL_COL1);
-    glDisableVertexAttribArray(Buffers::CYL_COL2);
-    glDisableVertexAttribArray(Buffers::FILTER);
+    glDisableVertexAttribArray(static_cast<int>(Buffers::POSITION));
+    glDisableVertexAttribArray(static_cast<int>(Buffers::COLOR));
+    glDisableVertexAttribArray(static_cast<int>(Buffers::CYL_PARAMS));
+    glDisableVertexAttribArray(static_cast<int>(Buffers::CYL_QUAT));
+    glDisableVertexAttribArray(static_cast<int>(Buffers::CYL_COL1));
+    glDisableVertexAttribArray(static_cast<int>(Buffers::CYL_COL2));
+    glDisableVertexAttribArray(static_cast<int>(Buffers::FILTER));
 
     return true;
 }
@@ -597,8 +604,10 @@ void SimpleMoleculeRenderer::RenderLines(
     glPointSize(5.0f);
     glLineWidth(2.0f);
     // ----- draw atoms as points -----
-    buffers_[Buffers::POSITION]->rebuffer(vertPoints.PeekElements(), vertPoints.Count() * sizeof(float));
-    buffers_[Buffers::COLOR]->rebuffer(atomColorTable.PeekElements(), atomColorTable.Count() * sizeof(float));
+    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
+        vertPoints.PeekElements(), vertPoints.Count() * sizeof(float));
+    buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(
+        atomColorTable.PeekElements(), atomColorTable.Count() * sizeof(float));
 
     glBindVertexArray(vertex_array_);
     lightingShader_->use();
@@ -637,8 +646,9 @@ void SimpleMoleculeRenderer::RenderLines(
         colorLines[6 * cnt + 4] = atomColorTable[atomIdx1 * 3 + 1];
         colorLines[6 * cnt + 5] = atomColorTable[atomIdx1 * 3 + 2];
     }
-    buffers_[Buffers::POSITION]->rebuffer(vertLines.PeekElements(), vertLines.Count() * sizeof(float));
-    buffers_[Buffers::COLOR]->rebuffer(colorLines.PeekElements(), colorLines.Count() * sizeof(float));
+    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
+        vertLines.PeekElements(), vertLines.Count() * sizeof(float));
+    buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(colorLines.PeekElements(), colorLines.Count() * sizeof(float));
 
     glDrawArrays(GL_LINES, 0, mol->ConnectionCount() * 2);
 
@@ -741,18 +751,19 @@ void SimpleMoleculeRenderer::RenderStick(
     // We already upload all necessary cylinder information although they are needed after the sphere rendering pass.
     // The only information not uploaded are the cylinder vertex positions, as the sphere vertex positions use the same
     // buffer
-    buffers_[Buffers::POSITION]->rebuffer(this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
-    buffers_[Buffers::COLOR]->rebuffer(
+    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
+        this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+    buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(
         this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
-    buffers_[Buffers::CYL_PARAMS]->rebuffer(
+    buffers_[static_cast<int>(Buffers::CYL_PARAMS)]->rebuffer(
         this->inParaCylinders.PeekElements(), this->inParaCylinders.Count() * sizeof(float));
-    buffers_[Buffers::CYL_QUAT]->rebuffer(
+    buffers_[static_cast<int>(Buffers::CYL_QUAT)]->rebuffer(
         this->quatCylinders.PeekElements(), this->quatCylinders.Count() * sizeof(float));
-    buffers_[Buffers::CYL_COL1]->rebuffer(
+    buffers_[static_cast<int>(Buffers::CYL_COL1)]->rebuffer(
         this->color1Cylinders.PeekElements(), this->color1Cylinders.Count() * sizeof(float));
-    buffers_[Buffers::CYL_COL2]->rebuffer(
+    buffers_[static_cast<int>(Buffers::CYL_COL2)]->rebuffer(
         this->color2Cylinders.PeekElements(), this->color2Cylinders.Count() * sizeof(float));
-    buffers_[Buffers::FILTER]->rebuffer(mol->Filter(), mol->AtomCount() * sizeof(int));
+    buffers_[static_cast<int>(Buffers::FILTER)]->rebuffer(mol->Filter(), mol->AtomCount() * sizeof(int));
 
     // ---------- actual rendering ----------
 
@@ -796,9 +807,10 @@ void SimpleMoleculeRenderer::RenderStick(
     glBindVertexArray(0);
 
     // upload cylinder vertices
-    buffers_[Buffers::POSITION]->rebuffer(
+    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
         this->vertCylinders.PeekElements(), this->vertCylinders.Count() * sizeof(float));
-    buffers_[Buffers::FILTER]->rebuffer(this->conFilter.PeekElements(), this->conFilter.Count() * sizeof(int));
+    buffers_[static_cast<int>(Buffers::FILTER)]->rebuffer(
+        this->conFilter.PeekElements(), this->conFilter.Count() * sizeof(int));
     glBindVertexArray(vertex_array_);
 
     // enable cylinder shader
@@ -911,16 +923,17 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     // We already upload all necessary cylinder information although they are needed after the sphere rendering pass.
     // The only information not uploaded are the cylinder vertex positions, as the sphere vertex positions use the same
     // buffer
-    buffers_[Buffers::POSITION]->rebuffer(this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
-    buffers_[Buffers::COLOR]->rebuffer(
+    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
+        this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+    buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(
         this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
-    buffers_[Buffers::CYL_PARAMS]->rebuffer(
+    buffers_[static_cast<int>(Buffers::CYL_PARAMS)]->rebuffer(
         this->inParaCylinders.PeekElements(), this->inParaCylinders.Count() * sizeof(float));
-    buffers_[Buffers::CYL_QUAT]->rebuffer(
+    buffers_[static_cast<int>(Buffers::CYL_QUAT)]->rebuffer(
         this->quatCylinders.PeekElements(), this->quatCylinders.Count() * sizeof(float));
-    buffers_[Buffers::CYL_COL1]->rebuffer(
+    buffers_[static_cast<int>(Buffers::CYL_COL1)]->rebuffer(
         this->color1Cylinders.PeekElements(), this->color1Cylinders.Count() * sizeof(float));
-    buffers_[Buffers::CYL_COL2]->rebuffer(
+    buffers_[static_cast<int>(Buffers::CYL_COL2)]->rebuffer(
         this->color2Cylinders.PeekElements(), this->color2Cylinders.Count() * sizeof(float));
 
     // ---------- actual rendering ----------
@@ -961,7 +974,7 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     glBindVertexArray(0);
 
     // upload cylinder vertices
-    buffers_[Buffers::POSITION]->rebuffer(
+    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
         this->vertCylinders.PeekElements(), this->vertCylinders.Count() * sizeof(float));
     glBindVertexArray(vertex_array_);
 
@@ -975,10 +988,6 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     cylinderShader_->setUniform("MVinv", MVinv);
     cylinderShader_->setUniform("MVPinv", MVPinv);
     cylinderShader_->setUniform("MVPtransp", MVPtransp);
-    attribLocInParams = glGetAttribLocation(cylinderShader_->getHandle(), "inParams");
-    attribLocQuatC = glGetAttribLocation(cylinderShader_->getHandle(), "quatC");
-    attribLocColor1 = glGetAttribLocation(cylinderShader_->getHandle(), "color1");
-    attribLocColor2 = glGetAttribLocation(cylinderShader_->getHandle(), "color2");
 
     // draw everything
     glDrawArrays(GL_POINTS, 0, mol->ConnectionCount());
@@ -1007,10 +1016,11 @@ void SimpleMoleculeRenderer::RenderSpacefilling(
         this->vertSpheres[4 * cnt + 3] = mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
     }
 
-    buffers_[Buffers::POSITION]->rebuffer(this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
-    buffers_[Buffers::COLOR]->rebuffer(
+    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
+        this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+    buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(
         this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
-    buffers_[Buffers::FILTER]->rebuffer(mol->Filter(), mol->AtomCount() * sizeof(int));
+    buffers_[static_cast<int>(Buffers::FILTER)]->rebuffer(mol->Filter(), mol->AtomCount() * sizeof(int));
 
     // ---------- actual rendering ----------
 
@@ -1073,8 +1083,9 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
                                          this->probeRadiusParam.Param<param::FloatParam>()->Value();
     }
 
-    buffers_[Buffers::POSITION]->rebuffer(this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
-    buffers_[Buffers::COLOR]->rebuffer(
+    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
+        this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+    buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(
         this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
 
     // ---------- actual rendering ----------
@@ -1216,8 +1227,8 @@ void SimpleMoleculeRenderer::RenderLighting(bool noShading) {
             }
         }
     }
-    buffers_[Buffers::LIGHT_POSITIONAL]->rebuffer(pointLights_);
-    buffers_[Buffers::LIGHT_DIRECTIONAL]->rebuffer(directionalLights_);
+    buffers_[static_cast<int>(Buffers::LIGHT_POSITIONAL)]->rebuffer(pointLights_);
+    buffers_[static_cast<int>(Buffers::LIGHT_DIRECTIONAL)]->rebuffer(directionalLights_);
 
     if (pointLights_.empty() && directionalLights_.empty()) {
         core::utility::log::Log::DefaultLog.WriteWarn("[SimpleMoleculeRenderer]: There are no directional or "
@@ -1226,10 +1237,10 @@ void SimpleMoleculeRenderer::RenderLighting(bool noShading) {
 
     lightingShader_->use();
 
-    buffers_[Buffers::LIGHT_POSITIONAL]->bind(1);
+    buffers_[static_cast<int>(Buffers::LIGHT_POSITIONAL)]->bind(1);
     lightingShader_->setUniform("point_light_cnt", static_cast<GLint>(pointLights_.size()));
 
-    buffers_[Buffers::LIGHT_DIRECTIONAL]->bind(2);
+    buffers_[static_cast<int>(Buffers::LIGHT_DIRECTIONAL)]->bind(2);
     lightingShader_->setUniform("distant_light_cnt", static_cast<GLint>(directionalLights_.size()));
 
     glActiveTexture(GL_TEXTURE0);
