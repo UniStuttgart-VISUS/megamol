@@ -15,6 +15,7 @@
 #include "BSpline.h"
 #include "CallColor.h"
 #include "Color.h"
+#include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -315,8 +316,36 @@ namespace protein {
         vislib::graphics::gl::GLSLGeometryShader arrowSplineShader;
         vislib::graphics::gl::GLSLGeometryShader helixSplineShader;
 
-        vislib::graphics::gl::GLSLShader sphereShader;
-        vislib::graphics::gl::GLSLShader cylinderShader;
+        std::shared_ptr<glowl::GLSLProgram> sphereShader_;
+        std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
+
+        // buffer objects
+        // the 6 is missing to match the buffers of 
+        enum class Buffers : GLuint {
+            POSITION = 0,
+            COLOR = 1,
+            CYL_PARAMS = 2,
+            CYL_QUAT = 3,
+            CYL_COL1 = 4,
+            CYL_COL2 = 5,
+            FILTER = 6,
+            LIGHT_POSITIONAL = 7,
+            LIGHT_DIRECTIONAL = 8,
+            BUFF_COUNT = 9
+        };
+
+        GLuint vertex_array_spheres_;
+        std::array<std::unique_ptr<glowl::BufferObject>, static_cast<int>(Buffers::BUFF_COUNT)> buffers_;
+
+        glm::mat4 MVP;
+        glm::mat4 MVinv;
+        glm::mat4 MVPinv;
+        glm::mat4 MVPtransp;
+        glm::mat4 NormalM;
+        glm::mat4 view;
+        glm::mat4 proj;
+        glm::mat4 invProj;
+        glm::vec2 planes;
 
         // current render mode
         CartoonRenderMode currentRenderMode;
@@ -328,12 +357,6 @@ namespace protein {
 
         // is comparison mode enabled?
         bool compare;
-
-        // attribute locations for GLSL-Shader
-        GLint attribLocInParams;
-        GLint attribLocQuatC;
-        GLint attribLocColor1;
-        GLint attribLocColor2;
 
         // is the geometry shader (and OGL V2) supported?
         bool geomShaderSupported;
