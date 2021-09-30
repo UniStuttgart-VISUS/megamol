@@ -14,7 +14,11 @@ megamol_plugin(molecularmaps
 
 if (molecularmaps_PLUGIN_ENABLED)
 
-  set(CMAKE_CUDA_ARCHITECTURES 61)
+  if(NOT CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
+    message(FATAL_ERROR "Molecularmaps currently only supports CUDA Version 11 or above. The version found was CUDA ${CUDA_VERSION_MAJOR} (${CMAKE_CUDA_COMPILER_VERSION}). Please turn off the Molecularmaps plugin or install a correct version of CUDA." )
+  endif()
+
+  set(CMAKE_CUDA_ARCHITECTURES 52)
   set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
 
   get_filename_component(cuda_compiler_directory "${CMAKE_CUDA_COMPILER}" DIRECTORY)
@@ -22,18 +26,16 @@ if (molecularmaps_PLUGIN_ENABLED)
   file(GLOB_RECURSE cuda_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cu")
   file(GLOB_RECURSE cuda_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cuh")
   file(GLOB_RECURSE cuda_helpers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/helper_includes/*.h")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
 
   # Set language to CUDA for respective files.
   set_source_files_properties(cuda_source_files PROPERTIES LANGUAGE CUDA)
-  set_source_files_properties(source_files PROPERTIES LANGUAGE CPP)
 
   # Target definition
   target_sources(molecularmaps PRIVATE ${cuda_header_files} ${cuda_source_files})
   set_target_properties(molecularmaps PROPERTIES CUDA_STANDARD 17)
 
   target_include_directories(molecularmaps PUBLIC "src/helper_includes")
-  target_link_libraries(molecularmaps PRIVATE glad)
+  target_link_libraries(molecularmaps PRIVATE vislib glad)
 
   if(NOT MSVC)
     get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
