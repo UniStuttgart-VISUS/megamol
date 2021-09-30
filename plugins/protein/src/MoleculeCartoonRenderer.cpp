@@ -50,7 +50,6 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
         , molDataCallerSlot("getdata", "Connects the protein rendering with protein data storage")
         , getLightsSlot("getlights", "Connects the protein rendering with light sources")
         , molRendererCallerSlot("renderMolecule", "Connects the cartoon rendering with another molecule renderer")
-        , molRendererORCallerSlot("renderMoleculeOR", "Connects the cartoon rendering with another molecule renderer")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , renderingModeParam("renderingMode", "Rendering Mode")
         , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
@@ -63,7 +62,6 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
         , midGradColorParam("color::midGradColor", "The color for the middle value for gradient coloring")
         , maxGradColorParam("color::maxGradColor", "The color for the maximum value for gradient coloring")
         , stickRadiusParam("stickRadius", "The radius for stick rendering")
-        , offscreenRenderingParam("offscreenRendering", "Toggle offscreen rendering")
         , interpolParam("posInterpolation", "Enable positional interpolation between frames")
         , compareParam("comparison::compare", "Enable comparing between two different molecules")
         , molColorCallerSlot("getcolor", "Connects the protein rendering with the color computation module")
@@ -82,9 +80,6 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
 
     this->molRendererCallerSlot.SetCompatibleCall<view::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->molRendererCallerSlot);
-
-    this->molRendererORCallerSlot.SetCompatibleCall<view::CallRender3DGLDescription>();
-    this->MakeSlotAvailable(&this->molRendererORCallerSlot);
 
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
@@ -173,10 +168,6 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     // fill color table with default values and set the filename param
     this->stickRadiusParam.SetParameter(new param::FloatParam(0.3f, 0.0f));
     this->MakeSlotAvailable(&this->stickRadiusParam);
-
-    // Toggle offscreen rendering
-    this->offscreenRenderingParam.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->offscreenRenderingParam);
 
     this->compareParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->compareParam);
@@ -326,19 +317,6 @@ bool MoleculeCartoonRenderer::create(void) {
         this->tubeShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
         this->tubeShader.Link();
 
-        // Load tube shader for offscreen rendering
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-                "protein::cartoon::cartoon::fragmentOR", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
-            return false;
-        }
-        this->tubeORShader.Compile(
-            vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-        this->tubeORShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
-        this->tubeORShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-        this->tubeORShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-        this->tubeORShader.Link();
-
         //////////////////////////////////////////////////
         // load the shader sources for the arrow shader //
         //////////////////////////////////////////////////
@@ -364,19 +342,6 @@ bool MoleculeCartoonRenderer::create(void) {
         this->arrowShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
         this->arrowShader.Link();
 
-        // Load arrow shader for offscreen rendering
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-                "protein::cartoon::cartoon::fragmentOR", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
-            return false;
-        }
-        this->arrowORShader.Compile(
-            vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-        this->arrowORShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
-        this->arrowORShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-        this->arrowORShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-        this->arrowORShader.Link();
-
         /////////////////////////////////////////////////
         // load the shader sources for the helix shader //
         /////////////////////////////////////////////////
@@ -401,19 +366,6 @@ bool MoleculeCartoonRenderer::create(void) {
         this->helixShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
         this->helixShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
         this->helixShader.Link();
-
-        // Load helix shader for offscreen rendering
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-                "protein::cartoon::cartoon::fragmentOR", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
-            return false;
-        }
-        this->helixORShader.Compile(
-            vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-        this->helixORShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
-        this->helixORShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-        this->helixORShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-        this->helixORShader.Link();
 
         /////////////////////////////////////////////////
         // load the shader sources for the tube shader //
@@ -639,55 +591,6 @@ bool MoleculeCartoonRenderer::create(void) {
         return false;
     }
 
-    //////////////////////////////////////////////////////
-    // load the shader files for offscreen sphere raycasting //
-    //////////////////////////////////////////////////////
-    // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for offscreen sphere shader", this->ClassName());
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentOR", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for offscreen sphere shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->sphereShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create offscreen sphere shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-
-    //////////////////////////////////////////////////////
-    // load the shader files for offscreen cylinder raycasting //
-    //////////////////////////////////////////////////////
-    // Load cylinder shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%: Unable to load vertex shader source for offscreen cylinder shader", this->ClassName());
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragmentOR", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source for offscreen cylinder shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->cylinderShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create offscreen cylinder shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
     // get the attribute locations
     attribLocInParams = glGetAttribLocationARB(this->cylinderShader, "inParams");
     attribLocQuatC = glGetAttribLocationARB(this->cylinderShader, "quatC");
@@ -732,16 +635,9 @@ bool MoleculeCartoonRenderer::GetExtents(view::CallRender3DGL& call) {
     // Get the pointer to CallRender3D (protein renderer) or CallRenderDeferred3D
     // if offscreen rendering is enabled
 
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        view::CallRender3DGL* molrencr3d = this->molRendererCallerSlot.CallAs<view::CallRender3DGL>();
-        if (molrencr3d) {
-            (*molrencr3d)(core::view::AbstractCallRender::FnGetExtents);
-        }
-    } else {
-        view::CallRender3DGL* molrencr3d = this->molRendererORCallerSlot.CallAs<view::CallRender3DGL>();
-        if (molrencr3d) {
-            (*molrencr3d)(core::view::AbstractCallRender::FnGetExtents); // GetExtents
-        }
+    view::CallRender3DGL* molrencr3d = this->molRendererCallerSlot.CallAs<view::CallRender3DGL>();
+    if (molrencr3d) {
+        (*molrencr3d)(core::view::AbstractCallRender::FnGetExtents);
     }
 
     return true;
@@ -763,11 +659,7 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
 
     // get the pointer to AbstractCallRender (molecule renderer)
     view::AbstractCallRender* molrencr3d;
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        molrencr3d = this->molRendererCallerSlot.CallAs<view::AbstractCallRender>();
-    } else {
-        molrencr3d = this->molRendererORCallerSlot.CallAs<view::AbstractCallRender>();
-    }
+    molrencr3d = this->molRendererCallerSlot.CallAs<view::AbstractCallRender>();
 
     // get pointer to BindingSiteCall
     BindingSiteCall* bs = this->bsDataCallerSlot.CallAs<BindingSiteCall>();
@@ -1465,81 +1357,40 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
     glGetFloatv(GL_VIEWPORT, curVP);
 
     // enable tube shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        if (this->currentRenderMode == CARTOON)
-            this->tubeShader.Enable();
-        else
-            this->tubeSimpleShader.Enable();
-    } else {
-        this->tubeORShader.Enable();
-        glUniform2fARB(this->tubeORShader.ParameterLocation("zValues"), camera.get<core::view::Camera::NearPlane>(),
-            camera.get<core::view::Camera::FarPlane>());
-        glUniform2fARB(this->tubeORShader.ParameterLocation("winSize"), curVP[2], curVP[3]);
-    }
+    if (this->currentRenderMode == CARTOON)
+        this->tubeShader.Enable();
+    else
+        this->tubeSimpleShader.Enable();
+
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, this->vertTube);
     glColorPointer(3, GL_FLOAT, 0, this->colorsParamsTube);
     glDrawArrays(GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountTube * 6);
     // disable tube shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        if (this->currentRenderMode == CARTOON)
-            this->tubeShader.Disable();
-        else
-            this->tubeSimpleShader.Disable();
-    } else {
-        this->tubeORShader.Disable();
-    }
+    glUseProgram(0);
 
     // enable arrow shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        if (this->currentRenderMode == CARTOON)
-            this->arrowShader.Enable();
-        else
-            this->arrowSimpleShader.Enable();
-    } else {
-        this->arrowORShader.Enable();
-        glUniform2fARB(this->arrowORShader.ParameterLocation("zValues"), camera.get<core::view::Camera::NearPlane>(),
-            camera.get<core::view::Camera::FarPlane>());
-        glUniform2fARB(this->arrowORShader.ParameterLocation("winSize"), curVP[2], curVP[3]);
-    }
+    if (this->currentRenderMode == CARTOON)
+        this->arrowShader.Enable();
+    else
+        this->arrowSimpleShader.Enable();
     glVertexPointer(3, GL_FLOAT, 0, this->vertArrow);
     glColorPointer(3, GL_FLOAT, 0, this->colorsParamsArrow);
     glDrawArrays(GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountArrow * 6);
     // disable arrow shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        if (this->currentRenderMode == CARTOON)
-            this->arrowShader.Disable();
-        else
-            this->arrowSimpleShader.Disable();
-    } else {
-        this->arrowORShader.Disable();
-    }
+    glUseProgram(0);
 
     // enable helix shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        if (this->currentRenderMode == CARTOON)
-            this->helixShader.Enable();
-        else
-            this->helixSimpleShader.Enable();
-    } else {
-        this->helixORShader.Enable();
-        glUniform2fARB(this->helixORShader.ParameterLocation("zValues"), camera.get<core::view::Camera::NearPlane>(),
-            camera.get<core::view::Camera::FarPlane>());
-        glUniform2fARB(this->helixORShader.ParameterLocation("winSize"), curVP[2], curVP[3]);
-    }
+    if (this->currentRenderMode == CARTOON)
+        this->helixShader.Enable();
+    else
+        this->helixSimpleShader.Enable();
     glVertexPointer(3, GL_FLOAT, 0, this->vertHelix);
     glColorPointer(3, GL_FLOAT, 0, this->colorsParamsHelix);
     glDrawArrays(GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountHelix * 6);
     // disable helix shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        if (this->currentRenderMode == CARTOON)
-            this->helixShader.Disable();
-        else
-            this->helixSimpleShader.Disable();
-    } else {
-        this->helixORShader.Disable();
-    }
+    glUseProgram(0);
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
@@ -2272,7 +2123,7 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(const MolecularDataCall* mol, flo
     glNormalPointer(GL_FLOAT, 0, this->normalHelix);
     glDrawArrays(GL_QUADS, 0, this->totalCountHelix * 16);
 
-    this->lightShader.Disable();
+    glUseProgram(0);
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
@@ -2562,9 +2413,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
 
                 glEnd(); // GL_LINES_ADJACENCY_EXT
 
-                this->helixSplineShader.Disable();
-                this->arrowSplineShader.Disable();
-                this->tubeSplineShader.Disable();
+                glUseProgram(0);
             }
         }
     }
@@ -2801,31 +2650,17 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly(const MolecularDataCall* 
     glGetFloatv(GL_VIEWPORT, curVP);
 
     // enable tube shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        if (this->currentRenderMode == CARTOON)
-            this->tubeShader.Enable();
-        else
-            this->tubeSimpleShader.Enable();
-    } else {
-        this->tubeORShader.Enable();
-        glUniform2fARB(this->tubeORShader.ParameterLocation("zValues"), camera.get<core::view::Camera::NearPlane>(),
-            camera.get<core::view::Camera::FarPlane>());
-        glUniform2fARB(this->tubeORShader.ParameterLocation("winSize"), curVP[2], curVP[3]);
-    }
+    if (this->currentRenderMode == CARTOON)
+        this->tubeShader.Enable();
+    else
+        this->tubeSimpleShader.Enable();
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, this->vertTube);
     glColorPointer(3, GL_FLOAT, 0, this->colorsParamsTube);
     glDrawArrays(GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountTube * 6);
     // disable tube shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        if (this->currentRenderMode == CARTOON)
-            this->tubeShader.Disable();
-        else
-            this->tubeSimpleShader.Disable();
-    } else {
-        this->tubeORShader.Disable();
-    }
+    glUseProgram(0);
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
@@ -3038,62 +2873,31 @@ void MoleculeCartoonRenderer::RenderStick(
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     // enable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->sphereShader.Enable();
-        // set shader variables
-        glUniform4fvARB(sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(camera_pose.direction));
-        glUniform3fvARB(sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(camera_pose.right));
-        glUniform3fvARB(sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(camera_pose.up));
-    } else {
-        this->sphereShaderOR.Enable();
-        // set shader variables
-        glUniform4fvARB(sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(camera_pose.direction));
-        glUniform3fvARB(sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(camera_pose.right));
-        glUniform3fvARB(sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(camera_pose.up));
-        glUniform2fARB(sphereShaderOR.ParameterLocation("zValues"), camera.get<core::view::Camera::NearPlane>(),
-            camera.get<core::view::Camera::FarPlane>());
-    }
+    this->sphereShader.Enable();
+    // set shader variables
+    glUniform4fvARB(sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(camera_pose.direction));
+    glUniform3fvARB(sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(camera_pose.right));
+    glUniform3fvARB(sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(camera_pose.up));
     // set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, vertSpheres.PeekElements());
     glColorPointer(3, GL_FLOAT, 0, colorSpheres.PeekElements());
     glDrawArrays(GL_POINTS, 0, totalAtomCnt);
     // disable sphere shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->sphereShader.Disable();
-    } else {
-        this->sphereShaderOR.Disable();
-    }
+    glUseProgram(0);
 
     // enable cylinder shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->cylinderShader.Enable();
-        // set shader variables
-        glUniform4fvARB(cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(camera_pose.direction));
-        glUniform3fvARB(cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(camera_pose.right));
-        glUniform3fvARB(cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(camera_pose.up));
-        // get the attribute locations
-        attribLocInParams = glGetAttribLocationARB(cylinderShader, "inParams");
-        attribLocQuatC = glGetAttribLocationARB(cylinderShader, "quatC");
-        attribLocColor1 = glGetAttribLocationARB(cylinderShader, "color1");
-        attribLocColor2 = glGetAttribLocationARB(cylinderShader, "color2");
-    } else {
-        this->cylinderShaderOR.Enable();
-        // set shader variables
-        glUniform4fvARB(cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(cylinderShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(camera_pose.direction));
-        glUniform3fvARB(cylinderShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(camera_pose.right));
-        glUniform3fvARB(cylinderShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(camera_pose.up));
-        glUniform2fARB(cylinderShaderOR.ParameterLocation("zValues"), camera.get<core::view::Camera::NearPlane>(),
-            camera.get<core::view::Camera::FarPlane>());
-        // get the attribute locations
-        attribLocInParams = glGetAttribLocationARB(cylinderShaderOR, "inParams");
-        attribLocQuatC = glGetAttribLocationARB(cylinderShaderOR, "quatC");
-        attribLocColor1 = glGetAttribLocationARB(cylinderShaderOR, "color1");
-        attribLocColor2 = glGetAttribLocationARB(cylinderShaderOR, "color2");
-    }
+    this->cylinderShader.Enable();
+    // set shader variables
+    glUniform4fvARB(cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(camera_pose.direction));
+    glUniform3fvARB(cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(camera_pose.right));
+    glUniform3fvARB(cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(camera_pose.up));
+    // get the attribute locations
+    attribLocInParams = glGetAttribLocationARB(cylinderShader, "inParams");
+    attribLocQuatC = glGetAttribLocationARB(cylinderShader, "quatC");
+    attribLocColor1 = glGetAttribLocationARB(cylinderShader, "color1");
+    attribLocColor2 = glGetAttribLocationARB(cylinderShader, "color2");
 
     // enable vertex attribute arrays for the attribute locations
     glDisableClientState(GL_COLOR_ARRAY);
@@ -3115,9 +2919,5 @@ void MoleculeCartoonRenderer::RenderStick(
     glDisableVertexAttribArrayARB(attribLocColor2);
     glDisableClientState(GL_VERTEX_ARRAY);
     // disable cylinder shader
-    if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        this->cylinderShader.Disable();
-    } else {
-        this->cylinderShaderOR.Disable();
-    }
+    glUseProgram(0);
 }

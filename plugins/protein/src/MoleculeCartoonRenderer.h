@@ -261,8 +261,6 @@ namespace protein {
         megamol::core::CallerSlot molDataCallerSlot;
         // caller slot
         megamol::core::CallerSlot molRendererCallerSlot;
-        // caller slot for offscreen rendering
-        megamol::core::CallerSlot molRendererORCallerSlot;
         /** BindingSiteCall caller slot */
         megamol::core::CallerSlot bsDataCallerSlot;
         // caller slot for protein coloring
@@ -296,8 +294,6 @@ namespace protein {
         megamol::core::param::ParamSlot maxGradColorParam;
         /** parameter slot for stick radius */
         megamol::core::param::ParamSlot stickRadiusParam;
-        /** parameter slot for offscreen rendering */
-        megamol::core::param::ParamSlot offscreenRenderingParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
         /** parameter slot for disabling rendering except protein */
@@ -320,14 +316,9 @@ namespace protein {
         vislib::graphics::gl::GLSLGeometryShader tubeSplineShader;
         vislib::graphics::gl::GLSLGeometryShader arrowSplineShader;
         vislib::graphics::gl::GLSLGeometryShader helixSplineShader;
-        vislib::graphics::gl::GLSLGeometryShader tubeORShader;
-        vislib::graphics::gl::GLSLGeometryShader arrowORShader;
-        vislib::graphics::gl::GLSLGeometryShader helixORShader;
 
         vislib::graphics::gl::GLSLShader sphereShader;
         vislib::graphics::gl::GLSLShader cylinderShader;
-        vislib::graphics::gl::GLSLShader sphereShaderOR;
-        vislib::graphics::gl::GLSLShader cylinderShaderOR;
 
         // current render mode
         CartoonRenderMode currentRenderMode;
