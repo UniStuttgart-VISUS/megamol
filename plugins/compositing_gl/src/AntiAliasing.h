@@ -91,6 +91,9 @@ private:
     std::unique_ptr<GLSLComputeShader> m_smaa_blending_weight_calculation_prgm;
     std::unique_ptr<GLSLComputeShader> m_smaa_neighborhood_blending_prgm;
 
+    /** SMAA intermediate texture layout */
+    glowl::TextureLayout m_smaa_layout;
+
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
 
@@ -122,7 +125,7 @@ private:
     megamol::core::param::ParamSlot m_smaa_quality;
 
     /** Parameter for choosing the edge detection technique: based on Luma, Color, or Depth */
-    megamol::core::param::ParamSlot m_smaa_detection_base;
+    megamol::core::param::ParamSlot m_smaa_detection_technique;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
