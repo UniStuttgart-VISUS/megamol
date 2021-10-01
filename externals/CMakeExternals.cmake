@@ -116,7 +116,6 @@ function(require_external NAME)
     endif()
 
     add_external_headeronly_project(libcxxopts
-      DEPENDS libzmq
       GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
       # we are waiting for v3 which brings allowing unrecognized options
       #GIT_TAG "v2.1.1"
@@ -575,7 +574,7 @@ function(require_external NAME)
 
   # libzmq / libcppzmq
   elseif(NAME STREQUAL "libzmq" OR NAME STREQUAL "libcppzmq")
-    if(TARGET libzmq)
+    if(TARGET libzmq OR TARGET libcppzmq)
       return()
     endif()
 
