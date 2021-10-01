@@ -93,12 +93,12 @@ bool megamol::compositing::AntiAliasing::create() {
         if (!m_smaa_blending_weight_calculation_prgm->Link())
             return false;
 
-        /*if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::neighborhoodBlendingCS", compute_smaa_neighborhood_blending_src))
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::neighborhoodBlendingCS", compute_smaa_neighborhood_blending_src))
             return false;
         if (!m_smaa_neighborhood_blending_prgm->Compile(compute_smaa_neighborhood_blending_src.Code(), compute_smaa_neighborhood_blending_src.Count()))
             return false;
         if (!m_smaa_neighborhood_blending_prgm->Link())
-            return false;*/
+            return false;
 
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
@@ -188,13 +188,13 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             };
 
         auto input_tx2D = call_input->getData();
+        setupOutputTexture(input_tx2D, m_output_texture);
 
         // fxaa
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
             if (call_input == NULL)
                 return false;
 
-            setupOutputTexture(input_tx2D, m_output_texture);
 
             launchProgram(m_fxaa_prgm, input_tx2D, "src_tx2D", m_output_texture);
         }
@@ -215,7 +215,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             glm::vec4 rt_metrics = glm::vec4(
                 1.f / (float) input_width, 1.f / (float) input_height, (float) input_width, (float) input_height);
 
-            // TODO: one program for all?
+            // TODO: one program for all? one mega shaders with barriers?
             // edge detection
             m_smaa_edge_detection_prgm->Enable();
 
@@ -257,14 +257,36 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             m_smaa_blending_weight_calculation_prgm->Enable();
 
 
-            //// final step: neighborhood blending
-            //m_smaa_neighborhood_blending_prgm->Enable();
-            //m_smaa_neighborhood_blending_prgm->Disable();
+            // final step: neighborhood blending
+            m_smaa_neighborhood_blending_prgm->Enable();
+
+            glActiveTexture(GL_TEXTURE0);
+            input_tx2D->bindTexture();
+            glUniform1i(m_smaa_neighborhood_blending_prgm->ParameterLocation("g_colorTex"), 0);
+            glActiveTexture(GL_TEXTURE1);
+            m_blend_tex->bindTexture();
+            glUniform1i(m_smaa_neighborhood_blending_prgm->ParameterLocation("g_blendingWeightsTex"), 1);
+            // only used for temporal reprojection
+            /*glActiveTexture(GL_TEXTURE2);
+            m_velocity_tex->bindTexture();
+            glUniform1i(m_smaa_neighborhood_blending_prgm->ParameterLocation("g_velocityTex"), 2);*/
+            glUniform4fv(
+                m_smaa_neighborhood_blending_prgm->ParameterLocation("SMAA_RT_METRICS"), 1,
+                glm::value_ptr(rt_metrics));
+
+            m_output_texture->bindImage(0, GL_WRITE_ONLY);
+
+            m_smaa_neighborhood_blending_prgm->Dispatch(static_cast<int>(std::ceil(rt_metrics[2] / 8.0f)),
+                static_cast<int>(std::ceil(rt_metrics[3] / 8.0f)), 1);
+
+            m_smaa_neighborhood_blending_prgm->Disable();
 
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, 0);
             // TODO: in smaaneighborhoodblending the reads and writes must be in srgb (and only there!)
+            // TODO: remove texture access macros (or wrapper macros in general)
+            // TODO: check all the macros used in shader code
         }
     }
 

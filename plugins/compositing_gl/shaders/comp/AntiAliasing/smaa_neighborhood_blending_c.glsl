@@ -25,3 +25,106 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+layout(local_size_x = 8, local_size_y = 8) in;
+
+//-----------------------------------------------------------------------------
+// UNIFORMS
+uniform vec4 SMAA_RT_METRICS;
+uniform sampler2D g_colorTex;
+uniform sampler2D g_blendingWeightsTex;
+uniform sampler2D g_velocityTex;
+layout(rgba16f, binding = 0) uniform image2D g_output;
+
+
+/**
+ * Conditional move:
+ */
+void SMAAMovc(bvec2 cond, inout vec2 variable, vec2 value) {
+    if (cond.x) variable.x = value.x;
+    if (cond.y) variable.y = value.y;
+}
+
+void SMAAMovc(bvec4 cond, inout vec4 variable, vec4 value) {
+    SMAAMovc(cond.xy, variable.xy, value.xy);
+    SMAAMovc(cond.zw, variable.zw, value.zw);
+}
+
+//-----------------------------------------------------------------------------
+// Neighborhood Blending Pixel Shader (Third Pass)
+vec4 SMAANeighborhoodBlendingPS(vec2 texcoord,
+                                  vec4 offset,
+                                  sampler2D colorTex,
+                                  sampler2D blendTex
+                                  #if SMAA_REPROJECTION
+                                  , sampler2D velocityTex
+                                  #endif
+                                  ) {
+    // Fetch the blending weights for current pixel:
+    vec4 a;
+    a.x = texture(blendTex, offset.xy).a; // Right
+    a.y = texture(blendTex, offset.zw).g; // Top
+    a.wz = texture(blendTex, texcoord).xz; // Bottom / Left
+
+    // Is there any blending weight with a value greater than 0.0?
+    if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) < 1e-5) {
+        vec4 color = textureLod(colorTex, texcoord, 0.0);
+
+        #if SMAA_REPROJECTION
+        vec2 velocity = SMAA_DECODE_VELOCITY(textureLod(velocityTex, texcoord, 0.0));
+
+        // Pack velocity into the alpha channel:
+        color.a = sqrt(5.0 * length(velocity));
+        #endif
+
+        return color;
+    } else {
+        bool h = max(a.x, a.z) > max(a.y, a.w); // max(horizontal) > max(vertical)
+
+        // Calculate the blending offsets:
+        vec4 blendingOffset = vec4(0.0, a.y, 0.0, a.w);
+        vec2 blendingWeight = a.yw;
+        SMAAMovc(bvec4(h, h, h, h), blendingOffset, vec4(a.x, 0.0, a.z, 0.0));
+        SMAAMovc(bvec2(h, h), blendingWeight, a.xz);
+        blendingWeight /= dot(blendingWeight, vec2(1.0, 1.0));
+
+        // Calculate the texture coordinates:
+        vec4 blendingCoord = fma(blendingOffset, vec4(SMAA_RT_METRICS.xy, -SMAA_RT_METRICS.xy), texcoord.xyxy);
+
+        // We exploit bilinear filtering to mix current pixel with the chosen
+        // neighbor:
+        vec4 color = blendingWeight.x * textureLod(colorTex, blendingCoord.xy, 0.0);
+        color += blendingWeight.y * textureLod(colorTex, blendingCoord.zw, 0.0);
+
+        #if SMAA_REPROJECTION
+        // Antialias velocity for proper reprojection in a later stage:
+        vec2 velocity = blendingWeight.x * SMAA_DECODE_VELOCITY(textureLod(velocityTex, blendingCoord.xy, 0.0));
+        velocity += blendingWeight.y * SMAA_DECODE_VELOCITY(textureLod(velocityTex, blendingCoord.zw, 0.0));
+
+        // Pack velocity into the alpha channel:
+        color.a = sqrt(5.0 * length(velocity));
+        #endif
+
+        return color;
+    }
+}
+
+void main() {
+    vec3 inPos = gl_GlobalInvocationID.xyz;
+
+    // Minor: could be optimized with rt_metrics I believe, see shaders from assao
+    vec2 texCoords = (2.f * inPos.xy + vec2(1.f)) / (2.f * vec2(SMAA_RT_METRICS.zw));
+
+    vec4 offset = fma(SMAA_RT_METRICS.xyxy, vec4( 1.0, 0.0, 0.0, 1.0), texCoords.xyxy);
+
+    vec4 final = SMAANeighborhoodBlendingPS(texCoords,
+        offset,
+        g_colorTex,
+        g_blendingWeightsTex
+        #if SMAA_REPROJECTION
+        , g_velocityTex
+        #endif
+    );
+
+    imageStore(g_output, ivec2(inPos.xy), final);
+}

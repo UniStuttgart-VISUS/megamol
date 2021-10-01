@@ -26,11 +26,10 @@
  * SOFTWARE.
  */
 
-//-----------------------------------------------------------------------------
-// UNIFORMS
 layout(local_size_x = 8, local_size_y = 8) in;
 
-
+//-----------------------------------------------------------------------------
+// UNIFORMS
 uniform vec4 SMAA_RT_METRICS;
 uniform sampler2D g_edgesTex;
 uniform sampler2D g_areaTex;
@@ -321,7 +320,6 @@ vec2 SMAAArea(sampler2D areaTex, vec2 dist, float e1, float e2, float offset) {
 
 //-----------------------------------------------------------------------------
 // Corner Detection Functions
-
 void SMAADetectHorizontalCornerPattern(sampler2D edgesTex, inout vec2 weights, vec4 texcoord, vec2 d) {
     #if !defined(SMAA_DISABLE_CORNER_DETECTION)
     vec2 leftRight = step(d.xy, d.yx);
@@ -359,7 +357,6 @@ void SMAADetectVerticalCornerPattern(sampler2D edgesTex, inout vec2 weights, vec
 
 //-----------------------------------------------------------------------------
 // Blending Weight Calculation Pixel Shader (Second Pass)
-
 vec4 SMAABlendingWeightCalculationPS(vec2 texcoord,
                                        vec2 pixcoord,
                                        vec4 offset[3],
@@ -465,7 +462,7 @@ vec4 SMAABlendingWeightCalculationPS(vec2 texcoord,
 void main() {
     vec3 inPos = gl_GlobalInvocationID.xyz;
 
-    // Minor: could be optimized I believe
+    // Minor: could be optimized with rt_metrics I believe, see shaders from assao
     vec2 texCoords = (2.f * inPos.xy + vec2(1.f)) / (2.f * vec2(SMAA_RT_METRICS.zw));
 
     vec4 offset[3];

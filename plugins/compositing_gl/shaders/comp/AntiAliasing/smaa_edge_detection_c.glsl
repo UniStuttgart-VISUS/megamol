@@ -26,12 +26,10 @@
  * SOFTWARE.
  */
 
+layout(local_size_x = 8, local_size_y = 8) in;
 
 //-----------------------------------------------------------------------------
 // UNIFORMS
-layout(local_size_x = 8, local_size_y = 8) in;
-
-
 uniform int technique;
 uniform vec4 SMAA_RT_METRICS;
 uniform sampler2D g_depthTex;
@@ -41,7 +39,6 @@ layout(rgba8, binding = 0) uniform image2D g_edgesTex;
 
 //-----------------------------------------------------------------------------
 // Misc functions
-
 /**
  * Gathers current pixel, and the top-left neighbors.
  */
@@ -254,13 +251,3 @@ void main() {
 
     imageStore(g_edgesTex, ivec2(inPos.xy), vec4(edges, 0.0, 0.0));
 }
-
-/**
- * Edge Detection Vertex Shader
- */
-// void SMAAEdgeDetectionVS(vec2 texcoord,
-//                          out vec4 offset[3]) {
-//     offset[0] = fma(SMAA_RT_METRICS.xyxy, vec4(-1.0, 0.0, 0.0, -1.0), texcoord.xyxy);
-//     offset[1] = fma(SMAA_RT_METRICS.xyxy, vec4( 1.0, 0.0, 0.0,  1.0), texcoord.xyxy);
-//     offset[2] = fma(SMAA_RT_METRICS.xyxy, vec4(-2.0, 0.0, 0.0, -2.0), texcoord.xyxy);
-// }
