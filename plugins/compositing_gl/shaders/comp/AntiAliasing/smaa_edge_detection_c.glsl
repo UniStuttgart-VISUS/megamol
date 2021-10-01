@@ -252,7 +252,6 @@ void main() {
         edges = SMAADepthEdgeDetectionPS(texCoords, offset, g_depthTex);
     }
 
-
     imageStore(g_edgesTex, ivec2(inPos.xy), vec4(edges, 0.0, 0.0));
 }
 
