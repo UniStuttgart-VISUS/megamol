@@ -30,7 +30,6 @@ layout(local_size_x = 8, local_size_y = 8) in;
 
 //-----------------------------------------------------------------------------
 // UNIFORMS
-uniform vec4 SMAA_RT_METRICS;
 uniform sampler2D g_colorTex;
 uniform sampler2D g_blendingWeightsTex;
 uniform sampler2D g_velocityTex;
@@ -71,7 +70,7 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord,
         vec4 color = textureLod(colorTex, texcoord, 0.0);
 
         #if SMAA_REPROJECTION
-        vec2 velocity = SMAA_DECODE_VELOCITY(textureLod(velocityTex, texcoord, 0.0));
+        vec2 velocity = textureLod(velocityTex, texcoord, 0.0).rg;
 
         // Pack velocity into the alpha channel:
         color.a = sqrt(5.0 * length(velocity));
@@ -89,7 +88,7 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord,
         blendingWeight /= dot(blendingWeight, vec2(1.0, 1.0));
 
         // Calculate the texture coordinates:
-        vec4 blendingCoord = fma(blendingOffset, vec4(SMAA_RT_METRICS.xy, -SMAA_RT_METRICS.xy), texcoord.xyxy);
+        vec4 blendingCoord = fma(blendingOffset, vec4(g_SMAAConsts.SMAA_RT_METRICS.xy, -g_SMAAConsts.SMAA_RT_METRICS.xy), texcoord.xyxy);
 
         // We exploit bilinear filtering to mix current pixel with the chosen
         // neighbor:
@@ -98,8 +97,8 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord,
 
         #if SMAA_REPROJECTION
         // Antialias velocity for proper reprojection in a later stage:
-        vec2 velocity = blendingWeight.x * SMAA_DECODE_VELOCITY(textureLod(velocityTex, blendingCoord.xy, 0.0));
-        velocity += blendingWeight.y * SMAA_DECODE_VELOCITY(textureLod(velocityTex, blendingCoord.zw, 0.0));
+        vec2 velocity = blendingWeight.x * textureLod(velocityTex, blendingCoord.xy, 0.0).rg;
+        velocity += blendingWeight.y * textureLod(velocityTex, blendingCoord.zw, 0.0).rg;
 
         // Pack velocity into the alpha channel:
         color.a = sqrt(5.0 * length(velocity));
@@ -113,9 +112,9 @@ void main() {
     vec3 inPos = gl_GlobalInvocationID.xyz;
 
     // Minor: could be optimized with rt_metrics I believe, see shaders from assao
-    vec2 texCoords = (2.f * inPos.xy + vec2(1.f)) / (2.f * vec2(SMAA_RT_METRICS.zw));
+    vec2 texCoords = (2.f * inPos.xy + vec2(1.f)) / (2.f * vec2(g_SMAAConsts.SMAA_RT_METRICS.zw));
 
-    vec4 offset = fma(SMAA_RT_METRICS.xyxy, vec4( 1.0, 0.0, 0.0, 1.0), texCoords.xyxy);
+    vec4 offset = fma(g_SMAAConsts.SMAA_RT_METRICS.xyxy, vec4( 1.0, 0.0, 0.0, 1.0), texCoords.xyxy);
 
     vec4 final = SMAANeighborhoodBlendingPS(texCoords,
         offset,

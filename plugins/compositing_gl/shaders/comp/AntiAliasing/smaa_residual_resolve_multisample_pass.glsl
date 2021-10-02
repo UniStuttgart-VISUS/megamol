@@ -590,13 +590,7 @@ vec2 SMAACalculatePredicatedThreshold(vec2 texcoord,
 // Vertex Shaders
 
 
-/**
- * Neighborhood Blending Vertex Shader
- */
-void SMAANeighborhoodBlendingVS(vec2 texcoord,
-                                out vec4 offset) {
-    offset = fma(SMAA_RT_METRICS.xyxy, vec4( 1.0, 0.0, 0.0,  1.0), texcoord.xyxy);
-}
+
 #endif // SMAA_INCLUDE_VS
 
 
@@ -615,65 +609,7 @@ void SMAANeighborhoodBlendingVS(vec2 texcoord,
 
 
 
-//-----------------------------------------------------------------------------
-// Neighborhood Blending Pixel Shader (Third Pass)
 
-vec4 SMAANeighborhoodBlendingPS(vec2 texcoord,
-                                  vec4 offset,
-                                  sampler2D colorTex,
-                                  sampler2D blendTex
-                                  #if SMAA_REPROJECTION
-                                  , sampler2D velocityTex
-                                  #endif
-                                  ) {
-    // Fetch the blending weights for current pixel:
-    vec4 a;
-    a.x = texture(blendTex, offset.xy).a; // Right
-    a.y = texture(blendTex, offset.zw).g; // Top
-    a.wz = texture(blendTex, texcoord).xz; // Bottom / Left
-
-    // Is there any blending weight with a value greater than 0.0?
-    if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) < 1e-5) {
-        vec4 color = textureLod(colorTex, texcoord, 0.0);
-
-        #if SMAA_REPROJECTION
-        vec2 velocity = SMAA_DECODE_VELOCITY(textureLod(velocityTex, texcoord, 0.0));
-
-        // Pack velocity into the alpha channel:
-        color.a = sqrt(5.0 * length(velocity));
-        #endif
-
-        return color;
-    } else {
-        bool h = max(a.x, a.z) > max(a.y, a.w); // max(horizontal) > max(vertical)
-
-        // Calculate the blending offsets:
-        vec4 blendingOffset = vec4(0.0, a.y, 0.0, a.w);
-        vec2 blendingWeight = a.yw;
-        SMAAMovc(bvec4(h, h, h, h), blendingOffset, vec4(a.x, 0.0, a.z, 0.0));
-        SMAAMovc(bvec2(h, h), blendingWeight, a.xz);
-        blendingWeight /= dot(blendingWeight, vec2(1.0, 1.0));
-
-        // Calculate the texture coordinates:
-        vec4 blendingCoord = fma(blendingOffset, vec4(SMAA_RT_METRICS.xy, -SMAA_RT_METRICS.xy), texcoord.xyxy);
-
-        // We exploit bilinear filtering to mix current pixel with the chosen
-        // neighbor:
-        vec4 color = blendingWeight.x * textureLod(colorTex, blendingCoord.xy, 0.0);
-        color += blendingWeight.y * textureLod(colorTex, blendingCoord.zw, 0.0);
-
-        #if SMAA_REPROJECTION
-        // Antialias velocity for proper reprojection in a later stage:
-        vec2 velocity = blendingWeight.x * SMAA_DECODE_VELOCITY(textureLod(velocityTex, blendingCoord.xy, 0.0));
-        velocity += blendingWeight.y * SMAA_DECODE_VELOCITY(textureLod(velocityTex, blendingCoord.zw, 0.0));
-
-        // Pack velocity into the alpha channel:
-        color.a = sqrt(5.0 * length(velocity));
-        #endif
-
-        return color;
-    }
-}
 
 //-----------------------------------------------------------------------------
 // Temporal Resolve Pixel Shader (Optional Pass)

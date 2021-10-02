@@ -31,7 +31,6 @@ layout(local_size_x = 8, local_size_y = 8) in;
 //-----------------------------------------------------------------------------
 // UNIFORMS
 uniform int technique;
-uniform vec4 SMAA_RT_METRICS;
 uniform sampler2D g_depthTex;
 uniform sampler2D g_colorTex;
 layout(rgba8, binding = 0) uniform image2D g_edgesTex;
@@ -45,7 +44,7 @@ layout(rgba8, binding = 0) uniform image2D g_edgesTex;
 vec3 SMAAGatherNeighbours(vec2 texcoord,
                             vec4 offset[3],
                             sampler2D tex) {
-    return textureGather(tex, texcoord + SMAA_RT_METRICS.xy * vec2(-0.5, -0.5)).grb;
+    return textureGather(tex, texcoord + g_SMAAConsts.SMAA_RT_METRICS.xy * vec2(-0.5, -0.5)).grb;
 }
 
 /**
@@ -56,10 +55,9 @@ vec2 SMAACalculatePredicatedThreshold(vec2 texcoord,
                                         sampler2D predicationTex) {
     vec3 neighbours = SMAAGatherNeighbours(texcoord, offset, predicationTex);
     vec2 delta = abs(neighbours.xx - neighbours.yz);
-    vec2 edges = step(SMAA_PREDICATION_THRESHOLD, delta);
-    return SMAA_PREDICATION_SCALE * SMAA_THRESHOLD * (1.0 - SMAA_PREDICATION_STRENGTH * edges);
+    vec2 edges = step(g_SMAAConsts.SMAA_PREDICATION_THRESHOLD, delta);
+    return g_SMAAConsts.SMAA_PREDICATION_SCALE * g_SMAAConsts.SMAA_THRESHOLD * (1.0 - g_SMAAConsts.SMAA_PREDICATION_STRENGTH * edges);
 }
-
 //
 //-----------------------------------------------------------------------------
 
@@ -84,7 +82,7 @@ vec2 SMAALumaEdgeDetectionPS(vec2 texcoord,
     #if SMAA_PREDICATION
     vec2 threshold = SMAACalculatePredicatedThreshold(texcoord, offset, predicationTex);
     #else
-    vec2 threshold = vec2(SMAA_THRESHOLD, SMAA_THRESHOLD);
+    vec2 threshold = vec2(g_SMAAConsts.SMAA_THRESHOLD);
     #endif
 
     // Calculate lumas:
@@ -121,7 +119,7 @@ vec2 SMAALumaEdgeDetectionPS(vec2 texcoord,
     float finalDelta = max(maxDelta.x, maxDelta.y);
 
     // Local contrast adaptation:
-    edges.xy *= step(finalDelta, SMAA_LOCAL_CONTRAST_ADAPTATION_FACTOR * delta.xy);
+    edges.xy *= step(finalDelta, g_SMAAConsts.SMAA_LOCAL_CONTRAST_ADAPTATION_FACTOR * delta.xy);
 
     return edges;
 }
@@ -143,7 +141,7 @@ vec2 SMAAColorEdgeDetectionPS(vec2 texcoord,
     #if SMAA_PREDICATION
     vec2 threshold = SMAACalculatePredicatedThreshold(texcoord, offset, predicationTex);
     #else
-    vec2 threshold = vec2(SMAA_THRESHOLD, SMAA_THRESHOLD);
+    vec2 threshold = vec2(g_SMAAConsts.SMAA_THRESHOLD);
     #endif
 
     // Calculate color deltas:
@@ -191,7 +189,7 @@ vec2 SMAAColorEdgeDetectionPS(vec2 texcoord,
     float finalDelta = max(maxDelta.x, maxDelta.y);
 
     // Local contrast adaptation:
-    edges.xy *= step(finalDelta, SMAA_LOCAL_CONTRAST_ADAPTATION_FACTOR * delta.xy);
+    edges.xy *= step(finalDelta, g_SMAAConsts.SMAA_LOCAL_CONTRAST_ADAPTATION_FACTOR * delta.xy);
 
     return edges;
 }
@@ -204,7 +202,7 @@ vec2 SMAADepthEdgeDetectionPS(vec2 texcoord,
                                 sampler2D depthTex) {
     vec3 neighbours = SMAAGatherNeighbours(texcoord, offset, depthTex);
     vec2 delta = abs(neighbours.xx - vec2(neighbours.y, neighbours.z));
-    vec2 edges = step(SMAA_DEPTH_THRESHOLD, delta);
+    vec2 edges = step(g_SMAAConsts.SMAA_DEPTH_THRESHOLD, delta);
 
     if (dot(edges, vec2(1.0, 1.0)) == 0.0) {
         //discard;
@@ -219,12 +217,12 @@ void main() {
     vec3 inPos = gl_GlobalInvocationID.xyz;
 
     // Minor: could be optimized I believe
-    vec2 texCoords = (2.f * inPos.xy + vec2(1.f)) / (2.f * vec2(SMAA_RT_METRICS.zw));
+    vec2 texCoords = (2.f * inPos.xy + vec2(1.f)) / (2.f * vec2(g_SMAAConsts.SMAA_RT_METRICS.zw));
 
     vec4 offset[3];
-    offset[0] = fma(SMAA_RT_METRICS.xyxy, vec4(-1.0, 0.0, 0.0, -1.0), texCoords.xyxy);
-    offset[1] = fma(SMAA_RT_METRICS.xyxy, vec4( 1.0, 0.0, 0.0,  1.0), texCoords.xyxy);
-    offset[2] = fma(SMAA_RT_METRICS.xyxy, vec4(-2.0, 0.0, 0.0, -2.0), texCoords.xyxy);
+    offset[0] = fma(g_SMAAConsts.SMAA_RT_METRICS.xyxy, vec4(-1.0, 0.0, 0.0, -1.0), texCoords.xyxy);
+    offset[1] = fma(g_SMAAConsts.SMAA_RT_METRICS.xyxy, vec4( 1.0, 0.0, 0.0,  1.0), texCoords.xyxy);
+    offset[2] = fma(g_SMAAConsts.SMAA_RT_METRICS.xyxy, vec4(-2.0, 0.0, 0.0, -2.0), texCoords.xyxy);
 
     vec2 edges = vec2(0.0);
 
@@ -249,5 +247,5 @@ void main() {
         edges = SMAADepthEdgeDetectionPS(texCoords, offset, g_depthTex);
     }
 
-    imageStore(g_edgesTex, ivec2(inPos.xy), vec4(edges, 0.0, 0.0));
+    imageStore(g_edgesTex, ivec2(inPos.xy), vec4(edges, rt_snd.x, 0.0));
 }
