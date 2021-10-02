@@ -74,7 +74,7 @@ float SMAASearchLength(sampler2D searchTex, vec2 e, float offset) {
     return textureLod(searchTex, fma(scale, e, bias), 0.0).r;
 }
 
-#if !defined(SMAA_DISABLE_DIAG_DETECTION)
+
 /**
  * Allows to decode two binary values from a bilinear-filtered access.
  */
@@ -226,7 +226,6 @@ vec2 SMAACalculateDiagWeights(sampler2D edgesTex, sampler2D areaTex, vec2 texcoo
 
     return weights;
 }
-#endif
 
 /**
  * Horizontal/vertical search functions for the 2nd pass.
@@ -320,37 +319,41 @@ vec2 SMAAArea(sampler2D areaTex, vec2 dist, float e1, float e2, float offset) {
 //-----------------------------------------------------------------------------
 // Corner Detection Functions
 void SMAADetectHorizontalCornerPattern(sampler2D edgesTex, inout vec2 weights, vec4 texcoord, vec2 d) {
-    #if !defined(SMAA_DISABLE_CORNER_DETECTION)
-    vec2 leftRight = step(d.xy, d.yx);
-    vec2 rounding = (1.0 - g_SMAAConsts.SMAA_CORNER_ROUNDING_NORM) * leftRight;
+    //#if !defined(SMAA_DISABLE_CORNER_DETECTION)
+    if(g_SMAAConsts.SMAA_DISABLE_CORNER_DETECTION == 0) {
+        vec2 leftRight = step(d.xy, d.yx);
+        vec2 rounding = (1.0 - g_SMAAConsts.SMAA_CORNER_ROUNDING_NORM) * leftRight;
 
-    rounding /= leftRight.x + leftRight.y; // Reduce blending for pixels in the center of a line.
+        rounding /= leftRight.x + leftRight.y; // Reduce blending for pixels in the center of a line.
 
-    vec2 factor = vec2(1.0, 1.0);
-    factor.x -= rounding.x * textureLodOffset(edgesTex, texcoord.xy, 0.0, ivec2(0,  1)).r;
-    factor.x -= rounding.y * textureLodOffset(edgesTex, texcoord.zw, 0.0, ivec2(1,  1)).r;
-    factor.y -= rounding.x * textureLodOffset(edgesTex, texcoord.xy, 0.0, ivec2(0, -2)).r;
-    factor.y -= rounding.y * textureLodOffset(edgesTex, texcoord.zw, 0.0, ivec2(1, -2)).r;
+        vec2 factor = vec2(1.0, 1.0);
+        factor.x -= rounding.x * textureLodOffset(edgesTex, texcoord.xy, 0.0, ivec2(0,  1)).r;
+        factor.x -= rounding.y * textureLodOffset(edgesTex, texcoord.zw, 0.0, ivec2(1,  1)).r;
+        factor.y -= rounding.x * textureLodOffset(edgesTex, texcoord.xy, 0.0, ivec2(0, -2)).r;
+        factor.y -= rounding.y * textureLodOffset(edgesTex, texcoord.zw, 0.0, ivec2(1, -2)).r;
 
-    weights *= clamp(factor, 1.0, 0.0);
-    #endif
+        weights *= clamp(factor, 1.0, 0.0);
+    }
+    //#endif
 }
 
 void SMAADetectVerticalCornerPattern(sampler2D edgesTex, inout vec2 weights, vec4 texcoord, vec2 d) {
-    #if !defined(SMAA_DISABLE_CORNER_DETECTION)
-    vec2 leftRight = step(d.xy, d.yx);
-    vec2 rounding = (1.0 - g_SMAAConsts.SMAA_CORNER_ROUNDING_NORM) * leftRight;
+    //#if !defined(SMAA_DISABLE_CORNER_DETECTION)
+    if(g_SMAAConsts.SMAA_DISABLE_CORNER_DETECTION == 0) {
+        vec2 leftRight = step(d.xy, d.yx);
+        vec2 rounding = (1.0 - g_SMAAConsts.SMAA_CORNER_ROUNDING_NORM) * leftRight;
 
-    rounding /= leftRight.x + leftRight.y;
+        rounding /= leftRight.x + leftRight.y;
 
-    vec2 factor = vec2(1.0, 1.0);
-    factor.x -= rounding.x * textureLodOffset(edgesTex, texcoord.xy, 0.0, ivec2( 1, 0)).g;
-    factor.x -= rounding.y * textureLodOffset(edgesTex, texcoord.zw, 0.0, ivec2( 1, 1)).g;
-    factor.y -= rounding.x * textureLodOffset(edgesTex, texcoord.xy, 0.0, ivec2(-2, 0)).g;
-    factor.y -= rounding.y * textureLodOffset(edgesTex, texcoord.zw, 0.0, ivec2(-2, 1)).g;
+        vec2 factor = vec2(1.0, 1.0);
+        factor.x -= rounding.x * textureLodOffset(edgesTex, texcoord.xy, 0.0, ivec2( 1, 0)).g;
+        factor.x -= rounding.y * textureLodOffset(edgesTex, texcoord.zw, 0.0, ivec2( 1, 1)).g;
+        factor.y -= rounding.x * textureLodOffset(edgesTex, texcoord.xy, 0.0, ivec2(-2, 0)).g;
+        factor.y -= rounding.y * textureLodOffset(edgesTex, texcoord.zw, 0.0, ivec2(-2, 1)).g;
 
-    weights *= clamp(factor, 0.0, 1.0);
-    #endif
+        weights *= clamp(factor, 0.0, 1.0);
+    }
+    //#endif
 }
 
 
@@ -368,56 +371,60 @@ vec4 SMAABlendingWeightCalculationPS(vec2 texcoord,
     vec2 e = texture(edgesTex, texcoord).rg;
 
     if (e.g > 0.0) { // Edge at north
-        #if !defined(SMAA_DISABLE_DIAG_DETECTION)
-        // Diagonals have both north and west edges, so searching for them in
-        // one of the boundaries is enough.
-        weights.rg = SMAACalculateDiagWeights(edgesTex, areaTex, texcoord, e, subsampleIndices);
+        //#if !defined(SMAA_DISABLE_DIAG_DETECTION)
+        if(g_SMAAConsts.SMAA_DISABLE_DIAG_DETECTION == 0) {
+            // Diagonals have both north and west edges, so searching for them in
+            // one of the boundaries is enough.
+            weights.rg = SMAACalculateDiagWeights(edgesTex, areaTex, texcoord, e, subsampleIndices);
+        }
 
         // We give priority to diagonals, so if we find a diagonal we skip
         // horizontal/vertical processing.
-        if (weights.r == -weights.g) { // weights.r + weights.g == 0.0
-        #endif
+        // weights.r + weights.g == 0.0
+        if (((g_SMAAConsts.SMAA_DISABLE_DIAG_DETECTION == 0) && (weights.r == -weights.g))
+                || (g_SMAAConsts.SMAA_DISABLE_DIAG_DETECTION == 1))
+        {
+        //#endif
+            vec2 d;
 
-        vec2 d;
+            // Find the distance to the left:
+            vec3 coords;
+            coords.x = SMAASearchXLeft(edgesTex, searchTex, offset[0].xy, offset[2].x);
+            coords.y = offset[1].y; // offset[1].y = texcoord.y - 0.25 * SMAA_RT_METRICS.y (@CROSSING_OFFSET)
+            d.x = coords.x;
 
-        // Find the distance to the left:
-        vec3 coords;
-        coords.x = SMAASearchXLeft(edgesTex, searchTex, offset[0].xy, offset[2].x);
-        coords.y = offset[1].y; // offset[1].y = texcoord.y - 0.25 * SMAA_RT_METRICS.y (@CROSSING_OFFSET)
-        d.x = coords.x;
+            // Now fetch the left crossing edges, two at a time using bilinear
+            // filtering. Sampling at -0.25 (see @CROSSING_OFFSET) enables to
+            // discern what value each edge has:
+            float e1 = textureLod(edgesTex, coords.xy, 0.0).r;
 
-        // Now fetch the left crossing edges, two at a time using bilinear
-        // filtering. Sampling at -0.25 (see @CROSSING_OFFSET) enables to
-        // discern what value each edge has:
-        float e1 = textureLod(edgesTex, coords.xy, 0.0).r;
+            // Find the distance to the right:
+            coords.z = SMAASearchXRight(edgesTex, searchTex, offset[0].zw, offset[2].y);
+            d.y = coords.z;
 
-        // Find the distance to the right:
-        coords.z = SMAASearchXRight(edgesTex, searchTex, offset[0].zw, offset[2].y);
-        d.y = coords.z;
+            // We want the distances to be in pixel units (doing this here allow to
+            // better interleave arithmetic and memory accesses):
+            d = abs(round(fma(g_SMAAConsts.SMAA_RT_METRICS.zz, d, -pixcoord.xx)));
 
-        // We want the distances to be in pixel units (doing this here allow to
-        // better interleave arithmetic and memory accesses):
-        d = abs(round(fma(g_SMAAConsts.SMAA_RT_METRICS.zz, d, -pixcoord.xx)));
+            // SMAAArea below needs a sqrt, as the areas texture is compressed
+            // quadratically:
+            vec2 sqrt_d = sqrt(d);
 
-        // SMAAArea below needs a sqrt, as the areas texture is compressed
-        // quadratically:
-        vec2 sqrt_d = sqrt(d);
+            // Fetch the right crossing edges:
+            float e2 = textureLodOffset(edgesTex, coords.zy, 0.0, ivec2(1, 0)).r;
 
-        // Fetch the right crossing edges:
-        float e2 = textureLodOffset(edgesTex, coords.zy, 0.0, ivec2(1, 0)).r;
+            // Ok, we know how this pattern looks like, now it is time for getting
+            // the actual area:
+            weights.rg = SMAAArea(areaTex, sqrt_d, e1, e2, subsampleIndices.y);
 
-        // Ok, we know how this pattern looks like, now it is time for getting
-        // the actual area:
-        weights.rg = SMAAArea(areaTex, sqrt_d, e1, e2, subsampleIndices.y);
+            // Fix corners:
+            coords.y = texcoord.y;
+            SMAADetectHorizontalCornerPattern(edgesTex, weights.rg, coords.xyzy, d);
 
-        // Fix corners:
-        coords.y = texcoord.y;
-        SMAADetectHorizontalCornerPattern(edgesTex, weights.rg, coords.xyzy, d);
-
-        #if !defined(SMAA_DISABLE_DIAG_DETECTION)
+        //#if !defined(SMAA_DISABLE_DIAG_DETECTION)
         } else
             e.r = 0.0; // Skip vertical processing.
-        #endif
+        //#endif
     }
 
     if (e.r > 0.0) { // Edge at west

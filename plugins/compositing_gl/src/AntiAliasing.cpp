@@ -30,16 +30,16 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "FXAA");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "No AA");
-    this->m_mode.SetUpdateCallback(&megamol::compositing::AntiAliasing::setSettingsCallback);
+    this->m_mode.SetUpdateCallback(&megamol::compositing::AntiAliasing::visibilityCallback);
     this->MakeSlotAvailable(&this->m_mode);
-
+    
     this->m_smaa_quality << new megamol::core::param::EnumParam(2);
     this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "LOW");
     this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "MEDIUM");
     this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "HIGH");
     this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "ULTRA");
     this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "CUSTOM");
-    this->m_smaa_quality.SetUpdateCallback(&megamol::compositing::AntiAliasing::visibilityCallback);
+    this->m_smaa_quality.SetUpdateCallback(&megamol::compositing::AntiAliasing::setSettingsCallback);
     this->MakeSlotAvailable(&this->m_smaa_quality);
 
     this->m_smaa_detection_technique << new megamol::core::param::EnumParam(0);
@@ -189,6 +189,8 @@ bool megamol::compositing::AntiAliasing::setSettingsCallback(core::param::ParamS
         m_smaa_constants.Corner_rounding = 25;
         m_smaa_constants.Corner_rounding_norm = m_smaa_constants.Corner_rounding / 100.f;
     }
+
+    // TODO: rebuffer ssbo here?
 
     return true;
 }
