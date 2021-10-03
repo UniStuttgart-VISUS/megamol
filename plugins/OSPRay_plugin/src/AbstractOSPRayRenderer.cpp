@@ -258,7 +258,7 @@ namespace ospray {
     }
 
 
-    void AbstractOSPRayRenderer::fillLightArray(std::array<float,4> eyeDir) {
+    void AbstractOSPRayRenderer::fillLightArray(std::array<float,3> eyeDir) {
         // clear current lights
         _lightArray.clear();
 
@@ -281,7 +281,7 @@ namespace ospray {
         for (auto dl : distant_lights) {
             light = ::ospray::cpp::Light("distant");
                 if (dl.eye_direction == true) {
-                    light.setParam("direction", convertToVec4f(eyeDir));
+                    light.setParam("direction", convertToVec3f(eyeDir));
                 } else {
                     light.setParam("direction", convertToVec3f(dl.direction));
                 }
@@ -379,47 +379,71 @@ namespace ospray {
     }
 
 
-    void AbstractOSPRayRenderer::setupOSPRayCamera(megamol::core::view::Camera_2& mmcam) {
-
-
+    void AbstractOSPRayRenderer::setupOSPRayCamera(megamol::core::view::Camera& mmcam) {
         // calculate image parts for e.g. screenshooter
         std::array<float, 2> imgStart = {0, 0};
         std::array<float, 2> imgEnd = {0, 0};
-        imgStart[0] = mmcam.image_tile().left() / static_cast<float>(mmcam.resolution_gate().width());
-        imgStart[1] = mmcam.image_tile().bottom() / static_cast<float>(mmcam.resolution_gate().height());
+        auto cam_pose = mmcam.get<core::view::Camera::Pose>();
+        auto cam_proj_type = mmcam.get<core::view::Camera::ProjectionType>();
 
-        imgEnd[0] = (mmcam.image_tile().left() + mmcam.image_tile().width()) /
-                    static_cast<float>(mmcam.resolution_gate().width());
-        imgEnd[1] = (mmcam.image_tile().bottom() + mmcam.image_tile().height()) /
-                    static_cast<float>(mmcam.resolution_gate().height());
-
-        if (_currentProjectionType != mmcam.projection_type() || !_camera){
-            if (mmcam.projection_type() == core::thecam::Projection_type::perspective) {
+        if (cam_proj_type == core::view::Camera::ProjectionType::PERSPECTIVE) {
+            if (_currentProjectionType != cam_proj_type || !_camera) {
                 _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
-                _currentProjectionType = core::thecam::Projection_type::perspective;
-            } else if (mmcam.projection_type() == core::thecam::Projection_type::orthographic) {
+                _currentProjectionType = core::view::Camera::ProjectionType::PERSPECTIVE;
+            }
+
+            auto cam_intrinsics = mmcam.get<core::view::Camera::PerspectiveParameters>();
+            imgStart[0] = cam_intrinsics.image_plane_tile.tile_start.x;
+            imgStart[1] = cam_intrinsics.image_plane_tile.tile_start.y;
+            imgEnd[0] = cam_intrinsics.image_plane_tile.tile_end.x;
+            imgEnd[1] = cam_intrinsics.image_plane_tile.tile_end.x;
+
+            _camera->setParam("aspect", static_cast<float>(cam_intrinsics.aspect));
+            _camera->setParam("nearClip", static_cast<float>(cam_intrinsics.near_plane));
+            _camera->setParam("fovy", glm::degrees(static_cast<float>(cam_intrinsics.fovy)));
+
+        } else if (cam_proj_type == core::view::Camera::ProjectionType::ORTHOGRAPHIC) {
+            if (_currentProjectionType != cam_proj_type || !_camera) {
                 _camera = std::make_shared<::ospray::cpp::Camera>("orthographic");
-                _currentProjectionType = core::thecam::Projection_type::orthographic;
-            } else {
-                core::utility::log::Log::DefaultLog.WriteWarn("[AbstractOSPRayRenderer] Projection type not supported. Falling back to perspective.");
+                _currentProjectionType = core::view::Camera::ProjectionType::ORTHOGRAPHIC;
+            }
+
+            auto cam_intrinsics = mmcam.get<core::view::Camera::OrthographicParameters>();
+            imgStart[0] = cam_intrinsics.image_plane_tile.tile_start.x;
+            imgStart[1] = cam_intrinsics.image_plane_tile.tile_start.y;
+            imgEnd[0] = cam_intrinsics.image_plane_tile.tile_end.x;
+            imgEnd[1] = cam_intrinsics.image_plane_tile.tile_end.x;
+
+            _camera->setParam("aspect", static_cast<float>(cam_intrinsics.aspect));
+            _camera->setParam("nearClip", static_cast<float>(cam_intrinsics.near_plane));
+            _camera->setParam("height",static_cast<float>(cam_intrinsics.frustrum_height));
+
+        } else {
+            core::utility::log::Log::DefaultLog.WriteWarn("[AbstractOSPRayRenderer] Projection type not supported. Falling back to perspective.");
+            if (_currentProjectionType != cam_proj_type || !_camera) {
                 _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
-                _currentProjectionType = core::thecam::Projection_type::perspective;
-            } //TODO: Implement panoramic camera
-        }
+                _currentProjectionType = core::view::Camera::ProjectionType::PERSPECTIVE;
+            }
+
+            auto cam_intrinsics = mmcam.get<core::view::Camera::PerspectiveParameters>();
+            imgStart[0] = cam_intrinsics.image_plane_tile.tile_start.x;
+            imgStart[1] = cam_intrinsics.image_plane_tile.tile_start.y;
+            imgEnd[0] = cam_intrinsics.image_plane_tile.tile_end.x;
+            imgEnd[1] = cam_intrinsics.image_plane_tile.tile_end.x;
+
+            _camera->setParam("aspect", static_cast<float>(cam_intrinsics.aspect));
+            _camera->setParam("nearClip", static_cast<float>(cam_intrinsics.near_plane));
+            _camera->setParam("fovy", glm::degrees(static_cast<float>(cam_intrinsics.fovy)));
+        } //TODO: Implement panoramic camera
+        
 
         // setup ospcam
         _camera->setParam("imageStart", convertToVec2f(imgStart));
         _camera->setParam("imageEnd", convertToVec2f(imgEnd));
-        _camera->setParam("aspect", static_cast<float>(mmcam.resolution_gate_aspect()));
-        _camera->setParam("nearClip", static_cast<float>(mmcam.near_clipping_plane()));
 
-        glm::vec4 eye_pos = mmcam.eye_position();
-        glm::vec4 view_vec = mmcam.view_vector();
-        glm::vec4 up_vec = mmcam.up_vector();
-        _camera->setParam("position", convertToVec3f(eye_pos));
-        _camera->setParam("direction", convertToVec3f(view_vec));
-        _camera->setParam("up", convertToVec3f(up_vec));
-        _camera->setParam("fovy", static_cast<float>(mmcam.aperture_angle()));
+        _camera->setParam("position", convertToVec3f(cam_pose.position));
+        _camera->setParam("direction", convertToVec3f(cam_pose.direction));
+        _camera->setParam("up", convertToVec3f(cam_pose.up));
 
         // ospSet1i(_camera, "architectural", 1);
          // TODO: ospSet1f(_camera, "apertureRadius", );

@@ -19,7 +19,7 @@ using namespace megamol::core;
 /*
  * view::special::ChronoGraph::ChronoGraph
  */
-view::special::ChronoGraph::ChronoGraph() : view::Renderer2DModule() {
+view::special::ChronoGraph::ChronoGraph() : view::Renderer2DModuleGL() {
     // intentionally empty
 }
 

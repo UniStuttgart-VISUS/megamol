@@ -33,7 +33,7 @@ using namespace megamol::protein;
 /*
  * VariantMatchRenderer::VariantMatchRenderer
  */
-VariantMatchRenderer::VariantMatchRenderer(void) : Renderer2DModule () ,
+VariantMatchRenderer::VariantMatchRenderer(void) : Renderer2DModuleGL () ,
         dataCallerSlot("getData", "Connects the rendering with data storage" ),
         minColSlot("minCol", "..." ),
         maxColSlot("maxCol", "..." ),

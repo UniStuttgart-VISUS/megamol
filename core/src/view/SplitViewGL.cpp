@@ -12,8 +12,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallRenderViewGL.h"
 
-#include "vislib/Trace.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/Trace.h"
 
 
 using namespace megamol;
@@ -23,25 +23,26 @@ using megamol::core::utility::log::Log;
 enum Orientation { HORIZONTAL = 0, VERTICAL = 1 };
 
 view::SplitViewGL::SplitViewGL()
-    : AbstractView()
-    , _render1Slot("render1", "Connects to the view 1 (left or top)")
-    , _render2Slot("render2", "Connects to the view 2 (right or bottom)")
-    , _splitOrientationSlot("split.orientation", "Splitter orientation")
-    , _splitPositionSlot("split.pos", "Splitter position")
-    , _splitWidthSlot("split.width", "Splitter width")
-    , _splitColourSlot("split.colour", "Splitter colour")
-    , _enableTimeSyncSlot("timeLord",
-          "Enables time synchronization between the connected views. The time of this view is then used instead")
-    , _inputToBothSlot("inputToBoth", "Forward input to both child views")
-    , _clientArea()
-    , _clientArea1()
-    , _clientArea2()
-    , _fbo1()
-    , _fbo2()
-    , _focus(0)
-    , _mouseX(0.0f)
-    , _mouseY(0.0f)
-    , _dragSplitter(false) {
+        : AbstractView()
+        , _render1Slot("render1", "Connects to the view 1 (left or top)")
+        , _render2Slot("render2", "Connects to the view 2 (right or bottom)")
+        , _splitOrientationSlot("split.orientation", "Splitter orientation")
+        , _splitPositionSlot("split.pos", "Splitter position")
+        , _splitWidthSlot("split.width", "Splitter width")
+        , _splitColourSlot("split.colour", "Splitter colour")
+        , _enableTimeSyncSlot("timeLord",
+              "Enables time synchronization between the connected views. The time of this view is then used instead")
+        , _inputToBothSlot("inputToBoth", "Forward input to both child views")
+        , _clientArea()
+        , _clientArea1()
+        , _clientArea2()
+        , _fboFull(nullptr)
+        , _fbo1(nullptr)
+        , _fbo2(nullptr)
+        , _focus(0)
+        , _mouseX(0.0f)
+        , _mouseY(0.0f)
+        , _dragSplitter(false) {
 
     this->_lhsRenderSlot.SetCallback(
         view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
@@ -59,10 +60,6 @@ view::SplitViewGL::SplitViewGL()
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderViewGL
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
@@ -95,33 +92,19 @@ view::SplitViewGL::SplitViewGL()
     this->MakeSlotAvailable(&this->_inputToBothSlot);
 }
 
-view::SplitViewGL::~SplitViewGL(void) { this->Release(); }
-
-float view::SplitViewGL::DefaultTime(double instTime) const { return this->_timeCtrl.Time(instTime); }
-
-unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
-    Log::DefaultLog.WriteWarn("SplitViewGL::GetCameraSyncNumber unsupported");
-    return 0u;
+view::SplitViewGL::~SplitViewGL(void) {
+    this->Release();
 }
 
-void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) {
-    // TODO: Affinity
-    float time = static_cast<float>(context.Time);
+float view::SplitViewGL::DefaultTime(double instTime) const {
+    return this->_timeCtrl.Time(instTime);
+}
+
+
+view::ImageWrapper view::SplitViewGL::Render(double time, double instanceTime) {
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
-    }
-
-    unsigned int vpw = 0;
-    unsigned int vph = 0;
-
-    if (call == nullptr) {
-        vpw = _camera.image_tile().width();
-        vph = _camera.image_tile().height();
-    } else {
-        auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
-        vpw = gpu_call->GetFramebufferObject()->GetWidth();
-        vph = gpu_call->GetFramebufferObject()->GetHeight();
     }
 
     if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
@@ -140,10 +123,10 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
         }
     }
 
-    //float sp = this->splitPositionSlot.Param<param::FloatParam>()->Value();
-    //float shw = this->splitWidthSlot.Param<param::FloatParam>()->Value() * 0.5f;
-    //auto so = static_cast<Orientation>(this->splitOrientationSlot.Param<param::EnumParam>()->Value());
-    //if (so == HORIZONTAL) {
+    // float sp = this->splitPositionSlot.Param<param::FloatParam>()->Value();
+    // float shw = this->splitWidthSlot.Param<param::FloatParam>()->Value() * 0.5f;
+    // auto so = static_cast<Orientation>(this->splitOrientationSlot.Param<param::EnumParam>()->Value());
+    // if (so == HORIZONTAL) {
     //    auto oc = this->overrideCall;
     //    float splitpos = oc->VirtualWidth() * sp;
 
@@ -168,17 +151,11 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
     //} else {
     //}
 
-    if (this->_splitPositionSlot.IsDirty() || this->_splitOrientationSlot.IsDirty() || this->_splitWidthSlot.IsDirty() ||
-        !this->_fbo1->IsValid() || !this->_fbo2->IsValid() ||
-        !vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(vpw)) ||
-        !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(vph))) {
-        this->updateSize(vpw, vph);
-
-        // is the following even needed here?
-        if (call != nullptr) {
-            auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
-            gpu_call->GetFramebufferObject()->Enable();
-        }
+    if (this->_splitPositionSlot.IsDirty() || this->_splitOrientationSlot.IsDirty() ||
+        this->_splitWidthSlot.IsDirty() || this->_fbo1 == nullptr || this->_fbo2 == nullptr ||
+        !vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(_fboFull->getWidth())) ||
+        !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(_fboFull->getHeight()))) {
+        this->updateSize(_fboFull->getWidth(), _fboFull->getHeight());
     }
 
     // Propagate viewport changes to connected views.
@@ -199,57 +176,35 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
     propagateViewport(this->render1(), this->_clientArea1);
     propagateViewport(this->render2(), this->_clientArea2);
 
-    auto renderAndBlit = [&](std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo, CallRenderViewGL* crv,
+    auto renderAndBlit = [&](std::shared_ptr<glowl::FramebufferObject> view_fbo,
+                             std::shared_ptr<glowl::FramebufferObject> subview_fbo, CallRenderViewGL* crv,
                              const vislib::math::Rectangle<float>& ca) {
         if (crv == nullptr) {
             return;
         }
-        crv->SetFramebufferObject(fbo);
-        crv->SetInstanceTime(context.InstanceTime);
+        crv->SetFramebuffer(subview_fbo);
+        crv->SetInstanceTime(instanceTime);
         crv->SetTime(-1.0f);
 
         if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
             crv->SetTime(static_cast<float>(time));
         }
 
-#if defined(DEBUG) || defined(_DEBUG)
-        unsigned int otl = vislib::Trace::GetInstance().GetLevel();
-        vislib::Trace::GetInstance().SetLevel(0);
-#endif /* DEBUG || _DEBUG */
-        fbo->Enable();
-#if defined(DEBUG) || defined(_DEBUG)
-        vislib::Trace::GetInstance().SetLevel(otl);
-#endif /* DEBUG || _DEBUG */
-
         // Defer render call to subview that should clear (if it does not,
         // non-splitview rendering will be broken as well).
         (*crv)(CallRenderViewGL::CALL_RENDER);
 
-#if defined(DEBUG) || defined(_DEBUG)
-        vislib::Trace::GetInstance().SetLevel(0);
-#endif /* DEBUG || _DEBUG */
-        fbo->Disable();
-#if defined(DEBUG) || defined(_DEBUG)
-        vislib::Trace::GetInstance().SetLevel(otl);
-#endif /* DEBUG || _DEBUG */
-
-        if (call != nullptr) {
-            auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
-            gpu_call->GetFramebufferObject()->Enable();
-        }
+        // TODO SplitViewGL need its own full view fbo
 
         // Bind and blit framebuffer.
-        GLint binding, readBuffer;
-        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &binding);
-        glGetIntegerv(GL_READ_BUFFER, &readBuffer);
+        view_fbo->bind();
 
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->GetID());
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
-        glBlitFramebuffer(0, 0, fbo->GetWidth(), fbo->GetHeight(), ca.Left(), this->_clientArea.Height() - ca.Top(),
-            ca.Right(), this->_clientArea.Height() - ca.Bottom(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        subview_fbo->bindToRead(0);
+        glBlitFramebuffer(0, 0, subview_fbo->getWidth(), subview_fbo->getHeight(), ca.Left(),
+            this->_clientArea.Height() - ca.Top(), ca.Right(), this->_clientArea.Height() - ca.Bottom(),
+            GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, binding);
-        glReadBuffer(readBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     };
 
     // Draw the splitter through clearing without overplotting.
@@ -257,23 +212,39 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
     ::glClearColor(splitColour[0], splitColour[1], splitColour[2], 1.0f);
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    renderAndBlit(this->_fbo1, this->render1(), this->_clientArea1);
-    renderAndBlit(this->_fbo2, this->render2(), this->_clientArea2);
+    renderAndBlit(_fboFull, this->_fbo1, this->render1(), this->_clientArea1);
+    renderAndBlit(_fboFull, this->_fbo2, this->render2(), this->_clientArea2);
+
+    return GetRenderingResult();
+}
+
+view::ImageWrapper megamol::core::view::SplitViewGL::GetRenderingResult() const {
+    ImageWrapper::DataChannels channels =
+        ImageWrapper::DataChannels::RGBA8; // vislib::graphics::gl::FramebufferObject seems to use RGBA8
+    unsigned int fbo_color_buffer_gl_handle =
+        _fboFull->getColorAttachment(0)->getName(); // IS THIS SAFE?? IS THIS THE COLOR BUFFER??
+    size_t fbo_width = _fboFull->getWidth();
+    size_t fbo_height = _fboFull->getHeight();
+
+    return frontend_resources::wrap_image({fbo_width, fbo_height}, fbo_color_buffer_gl_handle, channels);
 }
 
 bool view::SplitViewGL::GetExtents(core::Call& call) {
     if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
         auto cr = this->render1();
-        if (!(*cr)(CallRenderViewGL::CALL_EXTENTS)) return false;
+        if (!(*cr)(CallRenderViewGL::CALL_EXTENTS))
+            return false;
         auto time = cr->TimeFramesCount();
         auto insitu = cr->IsInSituTime();
         cr = this->render2();
-        if (!(*cr)(CallRenderViewGL::CALL_EXTENTS)) return false;
+        if (!(*cr)(CallRenderViewGL::CALL_EXTENTS))
+            return false;
         time = std::min(time, cr->TimeFramesCount());
         insitu = insitu && cr->IsInSituTime();
 
         CallRenderViewGL* crv = dynamic_cast<CallRenderViewGL*>(&call);
-        if (crv == nullptr) return false;
+        if (crv == nullptr)
+            return false;
         crv->SetTimeFramesCount(time);
         crv->SetIsInSituTime(insitu);
     }
@@ -282,39 +253,49 @@ bool view::SplitViewGL::GetExtents(core::Call& call) {
 
 void view::SplitViewGL::ResetView() {
     for (auto crv : {this->render1(), this->render2()}) {
-        if (crv != nullptr) (*crv)(CallRenderViewGL::CALL_RESETVIEW);
+        if (crv != nullptr)
+            (*crv)(CallRenderViewGL::CALL_RESETVIEW);
     }
 }
 
 void view::SplitViewGL::Resize(unsigned int width, unsigned int height) {
-    AbstractView::Resize(width,height);
 
-    if (!vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(width)) ||
-        !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(height))) {
+    if ((width != _fboFull->getWidth() || height != _fboFull->getHeight() && width != 0 && height != 0)) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+        try {
+            _fboFull = std::make_shared<glowl::FramebufferObject>(width, height);
+            _fboFull->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+        } catch (glowl::BaseException const& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[SplitView] Unable to create framebuffer object: %s\n", exc.what());
+        }
+    }
+
+    if ((!vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(width)) ||
+            !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(height))) &&
+        width != 0 && height != 0) {
         this->updateSize(width, height);
     }
 }
 
 bool view::SplitViewGL::OnRenderView(Call& call) {
     auto* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
-    if (crv == nullptr) return false;
+    if (crv == nullptr)
+        return false;
 
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
-    context.Time = crv->Time();
-    if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value() && context.Time < 0.0) {
-        context.Time = this->DefaultTime(crv->InstanceTime());
+    auto time = crv->Time();
+    if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value() && time < 0.0) {
+        time = this->DefaultTime(crv->InstanceTime());
     }
-    context.InstanceTime = crv->InstanceTime();
-    this->Render(context, &call);
+    auto instanceTime = crv->InstanceTime();
+
+    auto fbo = _fboFull;
+    _fboFull = crv->GetFramebuffer();
+    this->Render(time, instanceTime);
+    _fboFull = fbo;
 
     return true;
-}
-
-void view::SplitViewGL::UpdateFreeze(bool freeze) {
-    for (auto crv : {this->render1(), this->render2()}) {
-        if (crv != nullptr) (*crv)(freeze ? CallRenderViewGL::CALL_FREEZE : CallRenderViewGL::CALL_UNFREEZE);
-    }
 }
 
 bool view::SplitViewGL::OnKey(Key key, KeyAction action, Modifiers mods) {
@@ -339,7 +320,8 @@ bool view::SplitViewGL::OnKey(Key key, KeyAction action, Modifiers mods) {
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderViewGL::FnOnKey)) return false;
+            if (!(*crv)(view::CallRenderViewGL::FnOnKey))
+                return false;
         }
     }
 
@@ -366,7 +348,8 @@ bool view::SplitViewGL::OnChar(unsigned int codePoint) {
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderViewGL::FnOnChar)) return false;
+            if (!(*crv)(view::CallRenderViewGL::FnOnChar))
+                return false;
         }
     }
 
@@ -402,7 +385,8 @@ bool view::SplitViewGL::OnMouseButton(MouseButton button, MouseButtonAction acti
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderViewGL::FnOnMouseButton)) return false;
+            if (!(*crv)(view::CallRenderViewGL::FnOnMouseButton))
+                return false;
         }
     }
 
@@ -456,7 +440,8 @@ bool view::SplitViewGL::OnMouseMove(double x, double y) {
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderViewGL::FnOnMouseMove)) return false;
+            if (!(*crv)(view::CallRenderViewGL::FnOnMouseMove))
+                return false;
         }
     }
 
@@ -485,7 +470,8 @@ bool view::SplitViewGL::OnMouseScroll(double dx, double dy) {
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderViewGL::FnOnMouseScroll)) return false;
+            if (!(*crv)(view::CallRenderViewGL::FnOnMouseScroll))
+                return false;
         }
     }
 
@@ -493,19 +479,15 @@ bool view::SplitViewGL::OnMouseScroll(double dx, double dy) {
 }
 
 bool view::SplitViewGL::create() {
-    this->_fbo1 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
-    this->_fbo2 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    _fboFull = std::make_shared<glowl::FramebufferObject>(1, 1);
+    _fbo1 = std::make_shared<glowl::FramebufferObject>(1, 1);
+    _fbo2 = std::make_shared<glowl::FramebufferObject>(1, 1);
     return true;
 }
 
 void view::SplitViewGL::release() {
-    if (this->_fbo1->IsValid()) this->_fbo1->Release();
-    if (this->_fbo2->IsValid()) this->_fbo2->Release();
-}
-
-void view::SplitViewGL::unpackMouseCoordinates(float& x, float& y) {
-    x *= this->_clientArea.Width();
-    y *= this->_clientArea.Height();
+    _fbo1.reset();
+    _fbo2.reset();
 }
 
 void view::SplitViewGL::updateSize(size_t width, size_t height) {
@@ -517,19 +499,28 @@ void view::SplitViewGL::updateSize(size_t width, size_t height) {
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
 #endif /* DEBUG || _DEBUG */
-    if (this->_fbo1->IsValid()) this->_fbo1->Release();
-    this->_fbo1->Create(
-        static_cast<unsigned int>(this->_clientArea1.Width()), static_cast<unsigned int>(this->_clientArea1.Height()));
-    this->_fbo1->Disable();
 
-    if (this->_fbo2->IsValid()) this->_fbo2->Release();
-    this->_fbo2->Create(
-        static_cast<unsigned int>(this->_clientArea2.Width()), static_cast<unsigned int>(this->_clientArea2.Height()));
-    this->_fbo2->Disable();
+    if (width != 0 && height != 0) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+        try {
+            _fbo1 = std::make_shared<glowl::FramebufferObject>(static_cast<unsigned int>(this->_clientArea1.Width()),
+                static_cast<unsigned int>(this->_clientArea1.Height()));
+            _fbo1->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+            _fbo2 = std::make_shared<glowl::FramebufferObject>(static_cast<unsigned int>(this->_clientArea2.Width()),
+                static_cast<unsigned int>(this->_clientArea2.Height()));
+            _fbo2->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+            // TODO: check completness and throw if not?
+        } catch (glowl::BaseException const& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[SplitView] Unable to create framebuffer object: %s\n", exc.what());
+        }
+    }
+
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
-
 }
 
 void view::SplitViewGL::adjustClientAreas() {
@@ -543,13 +534,14 @@ void view::SplitViewGL::adjustClientAreas() {
     if (so == HORIZONTAL) {
         this->_clientArea1.Set(this->_clientArea.Left(), this->_clientArea.Bottom(),
             this->_clientArea.Left() + this->_clientArea.Width() * sp - shw, this->_clientArea.Top());
-        this->_clientArea2.Set(this->_clientArea.Left() + this->_clientArea.Width() * sp + shw, this->_clientArea.Bottom(),
-            this->_clientArea.Right(), this->_clientArea.Top());
+        this->_clientArea2.Set(this->_clientArea.Left() + this->_clientArea.Width() * sp + shw,
+            this->_clientArea.Bottom(), this->_clientArea.Right(), this->_clientArea.Top());
     } else {
         this->_clientArea1.Set(this->_clientArea.Left(), this->_clientArea.Bottom(), this->_clientArea.Right(),
             this->_clientArea.Bottom() + this->_clientArea.Height() * sp - shw);
-        this->_clientArea2.Set(this->_clientArea.Left(), this->_clientArea.Bottom() + this->_clientArea.Height() * sp + shw,
-            this->_clientArea.Right(), this->_clientArea.Top());
+        this->_clientArea2.Set(this->_clientArea.Left(),
+            this->_clientArea.Bottom() + this->_clientArea.Height() * sp + shw, this->_clientArea.Right(),
+            this->_clientArea.Top());
     }
 
     this->_clientArea1.EnforcePositiveSize();

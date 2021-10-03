@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/factories/ModuleAutoDescription.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 
 
 namespace megamol {
@@ -24,7 +24,7 @@ namespace special {
     /**
      * A simple 2d renderer which just creates a circle
      */
-    class ChronoGraph : public view::Renderer2DModule {
+    class ChronoGraph : public view::Renderer2DModuleGL {
     public:
 
         /**

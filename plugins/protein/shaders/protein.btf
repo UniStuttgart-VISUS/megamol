@@ -660,7 +660,7 @@ void main(void) {
     <shader name="sphereFragmentCB">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -805,7 +805,7 @@ if(puxels_use != 0)
     <shader name="sphereFragment">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -952,7 +952,7 @@ if(puxels_use != 0)
     <shader name="sphereFragmentOR">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -1105,7 +1105,7 @@ void main(void) {
     <shader name="sphereFragmentGeom">
       <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_ARB_gpu_shader5 : enable
@@ -1214,7 +1214,7 @@ void main(void) {
     <shader name="sphereFragmentGeomOR">
       <snippet type="version">330</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
 <!--
 #extension GL_ARB_gpu_shader5 : enable
@@ -1479,7 +1479,7 @@ void main(void) {
     <shader name="sphereClipPlaneFragment">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform vec4 viewAttr;
@@ -2382,7 +2382,7 @@ void main(void) {
     <shader name="cylinderFragment">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -2551,7 +2551,7 @@ void main(void) {
     <shader name="cylinderFragmentGeom">
       <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_ARB_gpu_shader5 : enable
@@ -2929,7 +2929,7 @@ void main(void) {
 <shader name="cylinderClipPlaneFragment">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -3580,7 +3580,7 @@ void main()
     <shader name="arrowVertex">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
@@ -3792,7 +3792,7 @@ void main(void) {
     <shader name="arrowVertexGeom">
       <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform mat4 modelview;
@@ -3818,7 +3818,7 @@ void main(void) {
     <shader name="arrowFragment">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 // #undef CLIP
@@ -3994,7 +3994,7 @@ void main(void) {
     <shader name="arrowGeom">
       <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_ARB_gpu_shader5 : enable
@@ -4223,7 +4223,7 @@ void main(void) {
     <shader name="arrowFragmentGeom">
       <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 // #undef CLIP
@@ -4803,7 +4803,7 @@ void main(void) {
     <shader name="filterCylinderFragment">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 
@@ -8762,7 +8762,7 @@ void main(void) {
     <shader name="sphereFragment">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform vec4 viewAttr;
@@ -8902,7 +8902,7 @@ void main(void) {
     <shader name="sphereFragmentNew">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform vec4 viewAttr;
@@ -9020,7 +9020,7 @@ void main(void) {
     <shader name="sphereFragmentOR">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 uniform vec4 viewAttr;
@@ -9342,7 +9342,7 @@ void main(void) {
     <shader name="torusFragment">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="rootsolver"/>
       <snippet type="string">
         <!--
@@ -9556,7 +9556,7 @@ void main(void) {
     <shader name="torusFragmentOR">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="rootsolver"/>
       <snippet type="string">
         <!--
@@ -9774,7 +9774,7 @@ void main(void) {
         <shader name="torusFragmentPuxels">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="rootsolver"/>
       <snippet type="string">
         <!--
@@ -10237,7 +10237,7 @@ void main(void) {
     <shader name="torusFragment2">
       <snippet type="version">120</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet name="rootsolver"/>
       <snippet type="string">
         <!--
@@ -10569,7 +10569,7 @@ void main(void) {
     <shader name="sphericaltriangleFragment">
       <snippet type="version">130</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_EXT_gpu_shader4 : enable
@@ -10789,7 +10789,7 @@ if(puxels_use != 0)
     <shader name="sphericaltriangleFragmentPuxels">
       <snippet type="version">130</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_EXT_gpu_shader4 : enable
@@ -11116,7 +11116,7 @@ void main(void) {
     <shader name="sphericaltriangleFragmentOR">
       <snippet type="version">130</snippet>
       <snippet name="commondefines"/>
-      <snippet name="::common::lighting::simple"/>
+      <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
       <snippet type="string">
         <!--
 #extension GL_EXT_gpu_shader4 : enable
