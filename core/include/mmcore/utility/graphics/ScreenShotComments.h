@@ -42,8 +42,12 @@ public:
     static bool EndsWithCaseInsensitive(const std::string& filename, const std::string& suffix);
 
 private:
+    std::string getFileVersion(const char* path);
+    void init_moduleInfo();
+
     comments_storage_map the_comments;
     png_comments the_vector;
+    std::string m_moduleInfo;
 };
 
 } // namespace graphics

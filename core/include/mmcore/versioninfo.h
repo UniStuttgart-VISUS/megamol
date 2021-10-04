@@ -21,6 +21,8 @@ namespace core {
 MEGAMOLCORE_API extern int const MEGAMOL_VERSION_MAJOR;
 MEGAMOLCORE_API extern int const MEGAMOL_VERSION_MINOR;
 MEGAMOLCORE_API extern char const* MEGAMOL_GIT_HASH;
+MEGAMOLCORE_API extern char const* MEGAMOL_STATUS_REMOTE;
+MEGAMOLCORE_API extern char const* MEGAMOL_REMOTE_URL;
 } /* end namespace core */
 } /* end namespace megamol */
 

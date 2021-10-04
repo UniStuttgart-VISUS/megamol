@@ -124,3 +124,6 @@ foreach(d ${DEP_LIST})
   check_mmdep(${plugin} "${SINGLE_LIST}")
 endforeach()
 unset(DEP_LIST CACHE)
+
+# CMake State
+include(global_variables)

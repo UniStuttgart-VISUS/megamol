@@ -55,13 +55,13 @@ if(BUILD_CORE)
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include")
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include" "${CMAKE_BINARY_DIR}/config")
   target_link_libraries(${PROJECT_NAME} 
     PUBLIC vislib glm glowl zlib libpng json lua megamol-shader-factory expat frontend_resources libcppzmq libzmq
     PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service) # abstract render api used by MegaMolGraph
 
   if(UNIX)
-    target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
+    target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs dl)
   endif()
 
   if (ENABLE_CUESDK)
@@ -71,6 +71,7 @@ if(BUILD_CORE)
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
+    target_link_libraries(${PROJECT_NAME} PRIVATE Version)
   endif()
 
   if(MPI_C_FOUND)
