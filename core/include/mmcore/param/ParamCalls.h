@@ -8,8 +8,30 @@
 
 namespace megamol::core::param {
 
+template<typename DataType, typename MetaDataType>
+class AbstractParamCall : public GenericCall<DataType, MetaDataType> {
+public:
+    static unsigned int FunctionCount() {
+        return 2;
+    }
+
+    static const unsigned int CallGetData = 0;
+
+    static const unsigned int CallSetData = 1;
+
+    static const char* FunctionName(unsigned int idx) {
+        switch (idx) {
+        case CallGetData:
+            return "GetData";
+        case CallSetData:
+            return "SetData";
+        }
+        return NULL;
+    }
+};
+
 template<typename ParamType>
-class ParamCall : public GenericVersionedCall<typename ParamType::Value_T, EmptyMetaData> {
+class ParamCall : public AbstractParamCall<typename ParamType::Value_T, EmptyMetaData> {
 public:
     using Param = ParamType;
 };

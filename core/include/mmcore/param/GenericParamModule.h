@@ -12,7 +12,7 @@ class GenericParamModule : public core::Module {
 public:
     GenericParamModule();
 
-    virtual ~GenericParamModule();  
+    virtual ~GenericParamModule();
 
     /**
      * Answers whether this module is available on the current system.
@@ -31,6 +31,8 @@ protected:
 private:
     bool get_data_cb(core::Call& c);
 
+    bool set_data_cb(core::Call& c);
+
     core::CalleeSlot value_out_slot_;
 
     core::param::ParamSlot param_;
@@ -42,8 +44,8 @@ private:
 
 template<typename T>
 inline GenericParamModule<T>::GenericParamModule() : value_out_slot_("valueOut", ""), param_("param", "") {
-    value_out_slot_.SetCallback(
-        T::ClassName(), T::FunctionName(0), &GenericParamModule::get_data_cb);
+    value_out_slot_.SetCallback(T::ClassName(), T::FunctionName(T::CallGetData), &GenericParamModule::get_data_cb);
+    value_out_slot_.SetCallback(T::ClassName(), T::FunctionName(T::CallSetData), &GenericParamModule::set_data_cb);
     MakeSlotAvailable(&value_out_slot_);
 
     param_ << new typename T::Param(0);
@@ -72,9 +74,22 @@ inline bool GenericParamModule<T>::get_data_cb(core::Call& c) {
     if (param_.IsDirty()) {
         val_ = param_.Param<typename T::Param>()->Value();
         ++version_;
+        param_.ResetDirty();
     }
 
     outCall->setData(val_, version_);
+
+    return true;
+}
+
+template<typename T>
+inline bool GenericParamModule<T>::set_data_cb(core::Call& c) {
+    auto outCall = dynamic_cast<T*>(&c);
+    if (outCall == nullptr)
+        return false;
+
+    val_ = outCall->getData();
+    param_.Param<typename T::Param>()->SetValue(val_);
 
     return true;
 }
