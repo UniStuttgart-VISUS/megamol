@@ -37,15 +37,17 @@ namespace compositing {
     private:
 
         bool getDataCallback(core::Call& caller);
+        bool getMetaDataCallback(core::Call& caller);
 
         /** Slot for loading the .png file */
-        core::param::ParamSlot m_filename_mlot;
+        core::param::ParamSlot m_filename_slot;
 
         /** Slot for requesting the output textures from this module, i.e. lhs connection */
         megamol::core::CalleeSlot m_output_tex_slot;
 
         /** Texture that holds the data from the loaded .png file */
         std::shared_ptr<glowl::Texture2D> m_output_texture;
+        glowl::TextureLayout m_output_layout;
 
         uint32_t m_version;
     };
