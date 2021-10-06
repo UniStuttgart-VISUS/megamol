@@ -92,11 +92,11 @@ bool PNGDataSource::getDataCallback(core::Call& caller) {
                     }
                 }
                 
-                ++m_version;
                 m_output_layout.width = image.width;
                 m_output_layout.height = image.height;
                 m_output_texture->reload(m_output_layout, tx2D_buffer.data());
 
+                ++m_version;
                 m_filename_slot.ResetDirty();
             }
         }

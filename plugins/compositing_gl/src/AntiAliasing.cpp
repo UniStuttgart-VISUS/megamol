@@ -31,7 +31,7 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     , m_smaa_quality("QualityLevel", "Sets smaa quality level")
     , m_smaa_detection_technique("EdgeDetection", "Sets smaa edge detection base: luma, color, or depth")
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
-    , m_input_tex_slot("InputTexture", "Connects an optional input texture")
+    , m_input_tex_slot("InputTexture", "Connects the input texture")
 {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA");
@@ -196,8 +196,6 @@ bool megamol::compositing::AntiAliasing::setSettingsCallback(core::param::ParamS
         m_smaa_constants.Corner_rounding = 25;
         m_smaa_constants.Corner_rounding_norm = m_smaa_constants.Corner_rounding / 100.f;
     }
-
-    // TODO: rebuffer ssbo here?
 
     return true;
 }
