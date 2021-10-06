@@ -6,10 +6,10 @@
 
 #include "megamol_build_info.h"
 
-const std::string megamol::build_info::MEGAMOL_GIT_HASH = "@GIT_HASH@";
-const std::string megamol::build_info::MEGAMOL_GIT_BRANCH_NAME = "@GIT_BRANCH_NAME@";
-const std::string megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL = "@GIT_BRANCH_NAME_FULL@";
-const std::string megamol::build_info::MEGAMOL_GIT_ORIGIN_NAME = "@GIT_ORIGIN_NAME@";
-const std::string megamol::build_info::MEGAMOL_GIT_REMOTE_URL = "@GIT_REMOTE_URL@";
-const std::string megamol::build_info::MEGAMOL_GIT_DIFF = R"MMDelim(@GIT_DIFF@)MMDelim";
-const std::string megamol::build_info::MEGAMOL_CMAKE_CACHE = R"MMDelim(@MM_CMAKE_CACHE@)MMDelim";
+constexpr std::string_view megamol::build_info::MEGAMOL_GIT_HASH = "@GIT_HASH@";
+constexpr std::string_view megamol::build_info::MEGAMOL_GIT_BRANCH_NAME = "@GIT_BRANCH_NAME@";
+constexpr std::string_view megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL = "@GIT_BRANCH_NAME_FULL@";
+constexpr std::string_view megamol::build_info::MEGAMOL_GIT_ORIGIN_NAME = "@GIT_ORIGIN_NAME@";
+constexpr std::string_view megamol::build_info::MEGAMOL_GIT_REMOTE_URL = "@GIT_REMOTE_URL@";
+constexpr std::string_view megamol::build_info::MEGAMOL_GIT_DIFF = R"MMDelim(@GIT_DIFF@)MMDelim";
+constexpr std::string_view megamol::build_info::MEGAMOL_CMAKE_CACHE = R"MMDelim(@MM_CMAKE_CACHE@)MMDelim";

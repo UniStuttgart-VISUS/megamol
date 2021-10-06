@@ -21,7 +21,7 @@ namespace megamol {
 namespace core {
     inline int const MEGAMOL_VERSION_MAJOR = megamol::build_info::MEGAMOL_VERSION_MAJOR;
     inline int const MEGAMOL_VERSION_MINOR = megamol::build_info::MEGAMOL_VERSION_MINOR;
-    inline char const* MEGAMOL_GIT_HASH = megamol::build_info::MEGAMOL_GIT_HASH.c_str();
+    inline char const* MEGAMOL_GIT_HASH = "TODO";
     inline char const* MEGAMOL_STATUS_REMOTE;
     inline char const* MEGAMOL_REMOTE_URL;
 } /* end namespace core */

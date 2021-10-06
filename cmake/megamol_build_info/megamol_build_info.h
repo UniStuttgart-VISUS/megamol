@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-#include <string>
+#include <string_view>
 
 namespace megamol::build_info {
     // Configure time
@@ -12,11 +12,11 @@ namespace megamol::build_info {
     extern const int MEGAMOL_VERSION_MINOR;
 
     // Build time
-    extern const std::string MEGAMOL_GIT_HASH;
-    extern const std::string MEGAMOL_GIT_BRANCH_NAME;
-    extern const std::string MEGAMOL_GIT_BRANCH_NAME_FULL;
-    extern const std::string MEGAMOL_GIT_ORIGIN_NAME;
-    extern const std::string MEGAMOL_GIT_REMOTE_URL;
-    extern const std::string MEGAMOL_GIT_DIFF;
-    extern const std::string MEGAMOL_CMAKE_CACHE;
+    extern const std::string_view MEGAMOL_GIT_HASH;
+    extern const std::string_view MEGAMOL_GIT_BRANCH_NAME;
+    extern const std::string_view MEGAMOL_GIT_BRANCH_NAME_FULL;
+    extern const std::string_view MEGAMOL_GIT_ORIGIN_NAME;
+    extern const std::string_view MEGAMOL_GIT_REMOTE_URL;
+    extern const std::string_view MEGAMOL_GIT_DIFF;
+    extern const std::string_view MEGAMOL_CMAKE_CACHE;
 }
