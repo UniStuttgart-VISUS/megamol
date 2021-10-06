@@ -1,3 +1,10 @@
+/*
+ * AntiAliasing.cpp
+ *
+ * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
+ */
+
 #include "stdafx.h"
 #include "AntiAliasing.h"
 
