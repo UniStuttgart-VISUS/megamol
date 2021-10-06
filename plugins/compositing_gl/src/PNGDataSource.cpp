@@ -91,7 +91,7 @@ bool PNGDataSource::getDataCallback(core::Call& caller) {
                         tx2D_buffer[4 * id + 3] = image_buffer[4 * flip_id + 3]; // A
                     }
                 }
-                
+
                 m_output_layout.width = image.width;
                 m_output_layout.height = image.height;
                 m_output_texture->reload(m_output_layout, tx2D_buffer.data());
@@ -103,7 +103,6 @@ bool PNGDataSource::getDataCallback(core::Call& caller) {
 
         png_image_free(&image);
     }
-
 
     if (lhs_tc->version() < m_version) {
         lhs_tc->setData(m_output_texture, m_version);

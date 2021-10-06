@@ -32,6 +32,7 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     , m_smaa_detection_technique("EdgeDetection", "Sets smaa edge detection base: luma, color, or depth")
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
     , m_input_tex_slot("InputTexture", "Connects the input texture")
+    , m_settings_have_changed(false)
 {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA");
@@ -197,6 +198,8 @@ bool megamol::compositing::AntiAliasing::setSettingsCallback(core::param::ParamS
         m_smaa_constants.Corner_rounding_norm = m_smaa_constants.Corner_rounding / 100.f;
     }
 
+    m_settings_have_changed = true;
+
     return true;
 }
 
@@ -208,6 +211,8 @@ bool megamol::compositing::AntiAliasing::visibilityCallback(core::param::ParamSl
         m_smaa_quality.Param<core::param::EnumParam>()->SetGUIVisible(false);
         m_smaa_detection_technique.Param<core::param::EnumParam>()->SetGUIVisible(false);
     }
+
+    m_settings_have_changed = true;
 
     return true;
 }
@@ -240,10 +245,12 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
     if(call_input != NULL) { if (!(*call_input)(0)) return false; }
 
     bool something_has_changed =
-        (call_input != NULL ? call_input->hasUpdate() : false);
+        (call_input != NULL ? call_input->hasUpdate() : false)
+        || m_settings_have_changed;
 
     if (something_has_changed) {
         ++m_version;
+        m_settings_have_changed = false;
 
         std::function<void(std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt)>
             setupOutputTexture = [](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
@@ -261,8 +268,10 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
         auto input_tx2D = call_input->getData();
         setupOutputTexture(input_tx2D, m_output_texture);
 
+        int mode = this->m_mode.Param<core::param::EnumParam>()->Value();
+
         // smaa
-        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        if (mode == 0) {
             int input_width = input_tx2D->getWidth();
             int input_height = input_tx2D->getHeight();
 
@@ -353,15 +362,48 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             // TODO: in smaaneighborhoodblending the reads and writes must be in srgb (and only there!)
         }
         // fxaa
-        else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        else if (mode == 1) {
             if (call_input == NULL)
                 return false;
 
-            launchProgram(m_fxaa_prgm, input_tx2D, "src_tx2D", m_output_texture);
+            //launchProgram(m_fxaa_prgm, input_tx2D, "src_tx2D", m_output_texture);
+
+            m_fxaa_prgm->Enable();
+
+            glActiveTexture(GL_TEXTURE0);
+            input_tx2D->bindTexture();
+            glUniform1i(m_fxaa_prgm->ParameterLocation("src_tx2D"), 0);
+            glUniform1i(m_fxaa_prgm->ParameterLocation("no_aa"), 0);
+
+            m_output_texture->bindImage(0, GL_WRITE_ONLY);
+
+            m_fxaa_prgm->Dispatch(static_cast<int>(std::ceil(m_output_texture->getWidth() / 8.0f)),
+                static_cast<int>(std::ceil(m_output_texture->getHeight() / 8.0f)), 1);
+
+            m_fxaa_prgm->Disable();
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
         // no aa
-        else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-            m_output_texture = input_tx2D;
+        else if (mode == 2) {
+            // TODO: better way to do this?
+            m_fxaa_prgm->Enable();
+
+            glActiveTexture(GL_TEXTURE0);
+            input_tx2D->bindTexture();
+            glUniform1i(m_fxaa_prgm->ParameterLocation("src_tx2D"), 0);
+            glUniform1i(m_fxaa_prgm->ParameterLocation("no_aa"), 1);
+
+            m_output_texture->bindImage(0, GL_WRITE_ONLY);
+
+            m_fxaa_prgm->Dispatch(static_cast<int>(std::ceil(m_output_texture->getWidth() / 8.0f)),
+                static_cast<int>(std::ceil(m_output_texture->getHeight() / 8.0f)), 1);
+
+            m_fxaa_prgm->Disable();
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
 

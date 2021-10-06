@@ -193,6 +193,9 @@ private:
 
     /** Slot for optionally querying an input texture, i.e. a rhs connection */
     megamol::core::CallerSlot m_input_tex_slot;
+
+
+    bool m_settings_have_changed;
 };
 
 } // namespace compositing
