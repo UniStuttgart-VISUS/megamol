@@ -46,7 +46,7 @@ inline GenericParamModule<T>::GenericParamModule() : value_out_slot_("valueOut",
         T::ClassName(), T::FunctionName(0), &GenericParamModule::get_data_cb);
     MakeSlotAvailable(&value_out_slot_);
 
-    param_ << new T::Param(0);
+    param_ << new typename T::Param(0);
     MakeSlotAvailable(&param_);
 }
 
@@ -70,7 +70,7 @@ inline bool GenericParamModule<T>::get_data_cb(core::Call& c) {
         return false;
 
     if (param_.IsDirty()) {
-        val_ = param_.Param<T::Param>()->Value();
+        val_ = param_.Param<typename T::Param>()->Value();
         ++version_;
     }
 
