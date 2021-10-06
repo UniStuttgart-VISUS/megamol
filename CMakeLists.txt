@@ -35,8 +35,8 @@ set(MEGAMOL_CORE_DIR ${MEGAMOL_DIR}/core)
 set(MEGAMOL_CONSOLE_DIR ${MEGAMOL_DIR}/console)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
-# Versions
-include(global_versioninfo)
+# MegaMol build info library (version + config)
+include(megamol_build_info)
 
 # MegaMol options
 include(megamol_options)
@@ -124,6 +124,3 @@ foreach(d ${DEP_LIST})
   check_mmdep(${plugin} "${SINGLE_LIST}")
 endforeach()
 unset(DEP_LIST CACHE)
-
-# CMake State
-include(global_variables)

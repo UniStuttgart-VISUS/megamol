@@ -35,7 +35,6 @@ if(BUILD_CORE)
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
   file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/*")
-  set(version_files ${CMAKE_BINARY_DIR}/version/MMCoreVersionInfo.cpp)
 
   list(REMOVE_ITEM source_files
     "src/moldyn/D3D11SimpleSphereRenderer.cpp"
@@ -52,16 +51,16 @@ if(BUILD_CORE)
     )
 
   # Target definition
-  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include" "${CMAKE_BINARY_DIR}/config")
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glm glowl zlib libpng json lua megamol-shader-factory expat frontend_resources libcppzmq libzmq
+    PUBLIC vislib glm glowl zlib libpng json lua megamol-shader-factory expat frontend_resources libcppzmq libzmq megamol_build_info
     PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service) # abstract render api used by MegaMolGraph
 
   if(UNIX)
-    target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs dl)
+    target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
   endif()
 
   if (ENABLE_CUESDK)
@@ -100,7 +99,6 @@ if(BUILD_CORE)
   endforeach()
   source_group("Shaders" FILES ${shader_files})
   source_group("Resources" FILES ${resource_files})
-  source_group("Version" FILES ${version_files})
 
   # Installation rules for generated files
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

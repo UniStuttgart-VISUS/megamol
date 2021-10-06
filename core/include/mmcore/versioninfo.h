@@ -15,14 +15,15 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/productversion.h"
+#include "megamol_build_info.h"
 
 namespace megamol {
 namespace core {
-MEGAMOLCORE_API extern int const MEGAMOL_VERSION_MAJOR;
-MEGAMOLCORE_API extern int const MEGAMOL_VERSION_MINOR;
-MEGAMOLCORE_API extern char const* MEGAMOL_GIT_HASH;
-MEGAMOLCORE_API extern char const* MEGAMOL_STATUS_REMOTE;
-MEGAMOLCORE_API extern char const* MEGAMOL_REMOTE_URL;
+    inline int const MEGAMOL_VERSION_MAJOR = megamol::build_info::MEGAMOL_VERSION_MAJOR;
+    inline int const MEGAMOL_VERSION_MINOR = megamol::build_info::MEGAMOL_VERSION_MINOR;
+    inline char const* MEGAMOL_GIT_HASH = megamol::build_info::MEGAMOL_GIT_HASH.c_str();
+    inline char const* MEGAMOL_STATUS_REMOTE;
+    inline char const* MEGAMOL_REMOTE_URL;
 } /* end namespace core */
 } /* end namespace megamol */
 
