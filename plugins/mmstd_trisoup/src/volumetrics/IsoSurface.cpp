@@ -120,7 +120,7 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
 
         unsigned int attrIdx = UINT_MAX;
         if (recalc) {
-            vislib::StringA attrName(this->attributeSlot.Param<core::param::StringParam>()->Value());
+            vislib::StringA attrName(this->attributeSlot.Param<core::param::StringParam>()->Value().c_str());
             attrIdx = cvd->FindAttribute(attrName);
             if (attrIdx == UINT_MAX) {
                 try {

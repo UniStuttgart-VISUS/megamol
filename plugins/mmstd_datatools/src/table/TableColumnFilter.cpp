@@ -75,7 +75,7 @@ bool TableColumnFilter::processData(core::Call &c) {
             auto rows_count = inCall->GetRowsCount();
             auto in_data = inCall->GetData();
 
-            auto selectionString = this->selectionStringSlot.Param<core::param::StringParam>()->Value();
+            auto selectionString = vislib::TString(this->selectionStringSlot.Param<core::param::StringParam>()->Value().c_str());
             selectionString.Remove(vislib::TString(" "));
             auto st = vislib::StringTokeniserW(selectionString, vislib::TString(";"));
             auto selectors = st.Split(selectionString, vislib::TString(";"));

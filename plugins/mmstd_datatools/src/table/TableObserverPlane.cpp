@@ -192,14 +192,14 @@ bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::vie
     //float incr = this->slotTimeIncrement.Param<core::param::FloatParam>()->Value();
     float sliceOff = this->slotSliceOffset.Param<core::param::FloatParam>()->Value();
     int numFrames = end - start + 1;
-    int xcol = this->getColumnIndex(this->slotColumnX.Param<core::param::StringParam>()->Value());
-    int ycol = this->getColumnIndex(this->slotColumnY.Param<core::param::StringParam>()->Value());
-    int zcol = this->getColumnIndex(this->slotColumnZ.Param<core::param::StringParam>()->Value());
+    int xcol = this->getColumnIndex(this->slotColumnX.Param<core::param::StringParam>()->Value().c_str());
+    int ycol = this->getColumnIndex(this->slotColumnY.Param<core::param::StringParam>()->Value().c_str());
+    int zcol = this->getColumnIndex(this->slotColumnZ.Param<core::param::StringParam>()->Value().c_str());
     int strat = this->slotObservationStrategy.Param<core::param::EnumParam>()->Value();
 
     if (xcol == -1 || ycol == -1 || zcol == -1) return false;
 
-    int rcol = this->getColumnIndex(this->slotColumnRadius.Param<core::param::StringParam>()->Value());
+    int rcol = this->getColumnIndex(this->slotColumnRadius.Param<core::param::StringParam>()->Value().c_str());
     bool useGlobRad = this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 1;
     if (!useGlobRad && rcol == -1) return false;
     float globalRad = this->slotGlobalRadius.Param<core::param::FloatParam>()->Value();

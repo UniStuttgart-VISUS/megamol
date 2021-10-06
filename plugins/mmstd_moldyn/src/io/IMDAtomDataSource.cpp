@@ -915,7 +915,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
         this->colourSlot.ResetDirty();
         float r, g, b;
         if (core::utility::ColourParser::FromString(
-                this->colourSlot.Param<core::param::StringParam>()->Value(), r, g, b)) {
+                this->colourSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b)) {
             this->defCol[0] =
                 static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(r * 255.0f), 0, 255));
             this->defCol[1] =
@@ -925,7 +925,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to parse default colour \"%s\"\n",
-                vislib::StringA(this->colourSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
+                this->colourSlot.Param<core::param::StringParam>()->Value().c_str());
         }
     }
     vislib::Array<int> colMode(this->posData.Count(), this->colourModeSlot.Param<core::param::EnumParam>()->Value(),
@@ -939,7 +939,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
         this->dircolourSlot.ResetDirty();
         float r, g, b;
         if (core::utility::ColourParser::FromString(
-                this->dircolourSlot.Param<core::param::StringParam>()->Value(), r, g, b)) {
+                this->dircolourSlot.Param<core::param::StringParam>()->Value().c_str(), r, g, b)) {
             this->dirdefCol[0] =
                 static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(r * 255.0f), 0, 255));
             this->dirdefCol[1] =
@@ -949,7 +949,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to parse default dir::colour \"%s\"\n",
-                vislib::StringA(this->dircolourSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
+                this->dircolourSlot.Param<core::param::StringParam>()->Value().c_str());
         }
     }
     int dircolMode = this->dircolourModeSlot.Param<core::param::EnumParam>()->Value();
@@ -1154,9 +1154,9 @@ void IMDAtomDataSource::assertData(void) {
     bool machineLittleEndian = ((endianTestBytes[0] == 0x78) && (endianTestBytes[1] == 0x56) &&
                                 (endianTestBytes[2] == 0x34) && (endianTestBytes[3] == 0x12));
 
-    vislib::StringA dirXColName = this->dirXColNameSlot.Param<core::param::StringParam>()->Value();
-    vislib::StringA dirYColName = this->dirYColNameSlot.Param<core::param::StringParam>()->Value();
-    vislib::StringA dirZColName = this->dirZColNameSlot.Param<core::param::StringParam>()->Value();
+    vislib::StringA dirXColName = this->dirXColNameSlot.Param<core::param::StringParam>()->Value().c_str();
+    vislib::StringA dirYColName = this->dirYColNameSlot.Param<core::param::StringParam>()->Value().c_str();
+    vislib::StringA dirZColName = this->dirZColNameSlot.Param<core::param::StringParam>()->Value().c_str();
     INT_PTR dirXCol = dirXColName.IsEmpty() ? -1 : header.captions.IndexOf(dirXColName);
     INT_PTR dirYCol = dirYColName.IsEmpty() ? -1 : header.captions.IndexOf(dirYColName);
     INT_PTR dirZCol = dirZColName.IsEmpty() ? -1 : header.captions.IndexOf(dirZColName);
@@ -1477,9 +1477,9 @@ bool IMDAtomDataSource::readData(
     vislib::PtrArray<vislib::RawStorageWriter> dirWriters;
 
     bool normaliseDir = this->dirNormDirSlot.Param<core::param::BoolParam>()->Value();
-    vislib::StringA dirXColName = this->dirXColNameSlot.Param<core::param::StringParam>()->Value();
-    vislib::StringA dirYColName = this->dirYColNameSlot.Param<core::param::StringParam>()->Value();
-    vislib::StringA dirZColName = this->dirZColNameSlot.Param<core::param::StringParam>()->Value();
+    vislib::StringA dirXColName = this->dirXColNameSlot.Param<core::param::StringParam>()->Value().c_str();
+    vislib::StringA dirYColName = this->dirYColNameSlot.Param<core::param::StringParam>()->Value().c_str();
+    vislib::StringA dirZColName = this->dirZColNameSlot.Param<core::param::StringParam>()->Value().c_str();
     INT_PTR dirXCol = dirXColName.IsEmpty() ? -1 : header.captions.IndexOf(dirXColName);
     INT_PTR dirYCol = dirYColName.IsEmpty() ? -1 : header.captions.IndexOf(dirYColName);
     INT_PTR dirZCol = dirZColName.IsEmpty() ? -1 : header.captions.IndexOf(dirZColName);
@@ -1490,7 +1490,7 @@ bool IMDAtomDataSource::readData(
 
     if (true) {
         // type from column
-        vislib::StringA typecolname(this->typeColumnSlot.Param<core::param::StringParam>()->Value());
+        vislib::StringA typecolname(this->typeColumnSlot.Param<core::param::StringParam>()->Value().c_str());
 
         // 1. exact match
         for (SIZE_T i = 0; i < header.captions.Count(); i++) {
@@ -1533,7 +1533,7 @@ bool IMDAtomDataSource::readData(
 
     if (this->colourModeSlot.Param<core::param::EnumParam>()->Value() == 1) {
         // column colouring mode
-        vislib::StringA colcolname(this->colourColumnSlot.Param<core::param::StringParam>()->Value());
+        vislib::StringA colcolname(this->colourColumnSlot.Param<core::param::StringParam>()->Value().c_str());
 
         // 1. exact match
         for (SIZE_T i = 0; i < header.captions.Count(); i++) {
@@ -1576,7 +1576,7 @@ bool IMDAtomDataSource::readData(
 
     if (dircolMode == 1) {
         // column colouring mode
-        vislib::StringA dircolcolname(this->dircolourColumnSlot.Param<core::param::StringParam>()->Value());
+        vislib::StringA dircolcolname(this->dircolourColumnSlot.Param<core::param::StringParam>()->Value().c_str());
         // 1. exact match
         for (SIZE_T i = 0; i < header.captions.Count(); i++) {
             if (header.captions[i].Equals(dircolcolname)) {
