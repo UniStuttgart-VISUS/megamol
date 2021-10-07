@@ -17,6 +17,7 @@
 namespace megamol::optix_hpg {
 extern "C" const char embedded_raygen_programs[];
 extern "C" const char embedded_miss_programs[];
+extern "C" const char embedded_miss_occlusion_programs[];
 } // namespace megamol::optix_hpg
 
 
@@ -63,7 +64,7 @@ void megamol::optix_hpg::Renderer::setup() {
         &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
         MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_MISS,
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_GENERIC, "miss_program"}});
-    miss_occlusion_module_ = MMOptixModule(embedded_miss_programs, optix_ctx_->GetOptiXContext(),
+    miss_occlusion_module_ = MMOptixModule(embedded_miss_occlusion_programs, optix_ctx_->GetOptiXContext(),
         &optix_ctx_->GetModuleCompileOptions(), &optix_ctx_->GetPipelineCompileOptions(),
         MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_MISS,
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_GENERIC, "miss_program_occlusion"}});
@@ -127,9 +128,12 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
     auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
     // Generate complete snapshot and calculate matrices
     // is this a) correct and b) actually needed for the new cam?
-    auto const depth_A = proj[2][2];//projTemp(2, 2);
-    auto const depth_B = proj[3][2]; // projTemp(2, 3);
-    auto const depth_C = proj[2][3]; //projTemp(3, 2);
+    //auto const depth_A = proj[2][2];//projTemp(2, 2);
+    //auto const depth_B = proj[3][2]; // projTemp(2, 3);
+    //auto const depth_C = proj[2][3]; //projTemp(3, 2);
+    auto const depth_A = proj[2][2]; // projTemp(2, 2);
+    auto const depth_B = proj[2][3]; // projTemp(2, 3);
+    auto const depth_C = proj[3][2]; // projTemp(3, 2);
     auto const depth_params = glm::vec3(depth_A, depth_B, depth_C);
     auto curCamPos = cam_pose.position;
     auto curCamView = cam_pose.direction;
@@ -185,11 +189,12 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
 
         rebuild_sbt = true;
 
-        auto num_groups = 2 + in_geo->get_num_programs();
+        auto num_groups = 3 + in_geo->get_num_programs();
         std::vector<OptixProgramGroup> groups;
         groups.reserve(num_groups);
         groups.push_back(raygen_module_);
         groups.push_back(miss_module_);
+        groups.push_back(miss_occlusion_module_);
         std::for_each(in_geo->get_program_groups(), in_geo->get_program_groups() + in_geo->get_num_programs(),
             [&groups](OptixProgramGroup const el) { groups.push_back(el); });
 

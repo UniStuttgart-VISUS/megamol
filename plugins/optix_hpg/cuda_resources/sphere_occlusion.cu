@@ -14,7 +14,8 @@
 namespace megamol {
 namespace optix_hpg {
     namespace device {
-        //inline __device__ void intersectSphere(const Particle& particle, const float particleRadius, const Ray& ray) {
+        // inline __device__ void intersectSphere(const Particle& particle, const float particleRadius, const Ray& ray)
+        // {
         //    // Raytracing Gems Intersection Code (Chapter 7)
         //    const glm::vec3 pos = glm::vec3(particle.pos);
         //    const glm::vec3 oc = ray.origin - pos;
@@ -46,19 +47,19 @@ namespace optix_hpg {
         MM_OPTIX_INTERSECTION_KERNEL(sphere_intersect)() {
             //// printf("ISEC\n");
 
-            //const int primID = optixGetPrimitiveIndex();
+            // const int primID = optixGetPrimitiveIndex();
 
-            //const auto& self = getProgramData<SphereGeoData>();
+            // const auto& self = getProgramData<SphereGeoData>();
 
-            //auto const ray =
+            // auto const ray =
             //    Ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
 
-            //const Particle& particle = self.particleBufferPtr[primID];
+            // const Particle& particle = self.particleBufferPtr[primID];
             //// float tmp_hit_t = ray.tmax;
             ///*if (intersectSphere(particle, particle.pos.w, ray, tmp_hit_t)) {
             //    optixReportIntersection(tmp_hit_t, 0);
             //}*/
-            //intersectSphere(particle, particle.pos.w, ray);
+            // intersectSphere(particle, particle.pos.w, ray);
 
             kernel_sphere_intersect();
         }
@@ -98,52 +99,52 @@ namespace optix_hpg {
         // Modified 2021 MegaMol Dev Team
         //
 
-        MM_OPTIX_CLOSESTHIT_KERNEL(sphere_closesthit)() {
-            //const int primID = optixGetPrimitiveIndex();
-            //PerRayData& prd = getPerRayData<PerRayData>();
-            ///*prd.primID = primID;
-            //prd.t = optixGetRayTmax();*/
+        //MM_OPTIX_CLOSESTHIT_KERNEL(sphere_closesthit)() {
+        //    // const int primID = optixGetPrimitiveIndex();
+        //    // PerRayData& prd = getPerRayData<PerRayData>();
+        //    ///*prd.primID = primID;
+        //    // prd.t = optixGetRayTmax();*/
 
-            //const auto& self = getProgramData<SphereGeoData>();
+        //    // const auto& self = getProgramData<SphereGeoData>();
 
-            //Ray ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
-
-
-            //const Particle& particle = self.particleBufferPtr[primID];
-            //glm::vec3 P = ray.origin + ray.tmax * ray.direction;
-            //glm::vec3 N = glm::normalize(P - glm::vec3(particle.pos));
-
-            //glm::vec3 ffN = faceforward(N, -ray.direction, N);
-
-            //glm::vec3 geo_col = glm::vec3(self.globalColor);
-            //if (self.hasColorData) {
-            //    geo_col = glm::vec3(self.colorBufferPtr[primID]);
-            //}
-
-            //set_depth(prd, ray.tmax);
-            //lighting(prd, geo_col, P, ffN);
-
-            kernel_sphere_closest_hit();
-        }
+        //    // Ray ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
 
 
-        //MM_OPTIX_CLOSESTHIT_KERNEL(sphere_closesthit_occlusion)() {
-        //    /*PerRayData& prd = getPerRayData<PerRayData>();
-        //    prd.inShadow = true;*/
-        //    optixSetPayload_0(1);
+        //    // const Particle& particle = self.particleBufferPtr[primID];
+        //    // glm::vec3 P = ray.origin + ray.tmax * ray.direction;
+        //    // glm::vec3 N = glm::normalize(P - glm::vec3(particle.pos));
+
+        //    // glm::vec3 ffN = faceforward(N, -ray.direction, N);
+
+        //    // glm::vec3 geo_col = glm::vec3(self.globalColor);
+        //    // if (self.hasColorData) {
+        //    //    geo_col = glm::vec3(self.colorBufferPtr[primID]);
+        //    //}
+
+        //    // set_depth(prd, ray.tmax);
+        //    // lighting(prd, geo_col, P, ffN);
+
+        //    kernel_sphere_closest_hit();
         //}
 
 
-        MM_OPTIX_BOUNDS_KERNEL(sphere_bounds)(const void* geomData, box3f& primBounds, const unsigned int primID) {
+         MM_OPTIX_CLOSESTHIT_KERNEL(sphere_closesthit_occlusion)() {
+            /*PerRayData& prd = getPerRayData<PerRayData>();
+            prd.inShadow = true;*/
+            optixSetPayload_0(1);
+        }
+
+
+        MM_OPTIX_BOUNDS_KERNEL(sphere_bounds_occlusion)(const void* geomData, box3f& primBounds, const unsigned int primID) {
             ///*const SphereGeoData& self = *(const SphereGeoData*) geomData;
 
-            //const Particle& particle = self.particleBufferPtr[primID];*/
-            //Particle const* particles = (Particle const*) geomData;
-            //Particle const& particle = particles[primID];
+            // const Particle& particle = self.particleBufferPtr[primID];*/
+            // Particle const* particles = (Particle const*) geomData;
+            // Particle const& particle = particles[primID];
 
 
-            //primBounds.lower = glm::vec3(particle.pos) - particle.pos.w;
-            //primBounds.upper = glm::vec3(particle.pos) + particle.pos.w;
+            // primBounds.lower = glm::vec3(particle.pos) - particle.pos.w;
+            // primBounds.upper = glm::vec3(particle.pos) + particle.pos.w;
 
             //// printf("BOUNDS: %d with radius %f and box %f %f %f %f %f %f\n", primID, self.radius,
             //// primBounds.lower.x, primBounds.lower.y, primBounds.lower.z, primBounds.upper.x, primBounds.upper.y,

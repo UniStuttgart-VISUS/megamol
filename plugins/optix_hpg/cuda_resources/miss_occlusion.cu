@@ -6,15 +6,15 @@
 namespace megamol {
 namespace optix_hpg {
     namespace device {
-        MM_OPTIX_MISS_KERNEL(miss_program)() {
+        /*MM_OPTIX_MISS_KERNEL(miss_program)() {
             PerRayData& prd = getPerRayData<PerRayData>();
             const auto& self = getProgramData<MissData>();
 
             prd.radiance = glm::vec3(self.bg);
             prd.done = true;
-        }
+        }*/
 
-        //MM_OPTIX_MISS_KERNEL(miss_program_occlusion)() {}
+        MM_OPTIX_MISS_KERNEL(miss_program_occlusion)() {}
     } // namespace device
 } // namespace optix_hpg
 } // namespace megamol
