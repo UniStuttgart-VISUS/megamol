@@ -1,8 +1,8 @@
 #include "Renderer.h"
 
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
 #include "raygen.h"
 
@@ -109,6 +109,8 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
 
     bool rebuild_sbt = false;
 
+    ++_frame_state.frameIdx;
+
     if (viewport != _current_fb_size) {
         _sbt_raygen_record.data.fbSize = glm::uvec2(viewport.Width(), viewport.Height());
         _sbt_raygen_record.data.col_surf = call.GetFramebuffer()->colorBuffer;
@@ -122,54 +124,62 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
 
     // Camera
     core::view::Camera cam = call.GetCamera();
-    auto view = cam.getViewMatrix();
-    auto proj = cam.getProjectionMatrix();
+
     auto cam_pose = cam.get<core::view::Camera::Pose>();
     auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
-    // Generate complete snapshot and calculate matrices
-    // is this a) correct and b) actually needed for the new cam?
-    //auto const depth_A = proj[2][2];//projTemp(2, 2);
-    //auto const depth_B = proj[3][2]; // projTemp(2, 3);
-    //auto const depth_C = proj[2][3]; //projTemp(3, 2);
-    auto const depth_A = proj[2][2]; // projTemp(2, 2);
-    auto const depth_B = proj[2][3]; // projTemp(2, 3);
-    auto const depth_C = proj[3][2]; // projTemp(3, 2);
-    auto const depth_params = glm::vec3(depth_A, depth_B, depth_C);
-    auto curCamPos = cam_pose.position;
-    auto curCamView = cam_pose.direction;
-    auto curCamUp = cam_pose.up;
-    auto curCamRight = glm::cross(cam_pose.direction, cam_pose.up);
-    // auto curCamNearClip = snapshot.frustum_near;
-    auto curCamNearClip = 100;
-    auto curCamAspect = cam_intrinsics.aspect;
-    auto hfov = cam_intrinsics.fovy / 2.0f;
 
-    auto th = std::tan(hfov) * curCamNearClip;
-    auto rw = th * curCamAspect;
+    if (!(cam_intrinsics == old_cam_intrinsics)) {
+        auto proj = cam.getProjectionMatrix();
+        // Generate complete snapshot and calculate matrices
+        // is this a) correct and b) actually needed for the new cam?
+        // auto const depth_A = proj[2][2];//projTemp(2, 2);
+        // auto const depth_B = proj[3][2]; // projTemp(2, 3);
+        // auto const depth_C = proj[2][3]; //projTemp(3, 2);
+        auto const depth_A = proj[2][2]; // projTemp(2, 2);
+        auto const depth_B = proj[2][3]; // projTemp(2, 3);
+        auto const depth_C = proj[3][2]; // projTemp(3, 2);
+        auto const depth_params = glm::vec3(depth_A, depth_B, depth_C);
+        _frame_state.depth_params = depth_params;
 
-    _frame_state.camera_center = glm::vec3(curCamPos.x, curCamPos.y, curCamPos.z);
-    _frame_state.camera_front = glm::vec3(curCamView.x, curCamView.y, curCamView.z);
-    _frame_state.camera_right = glm::vec3(curCamRight.x, curCamRight.y, curCamRight.z);
-    _frame_state.camera_up = glm::vec3(curCamUp.x, curCamUp.y, curCamUp.z);
+        auto curCamNearClip = 100;
+        auto curCamAspect = cam_intrinsics.aspect;
+        auto hfov = cam_intrinsics.fovy / 2.0f;
 
-    _frame_state.rw = rw;
-    _frame_state.th = th;
-    _frame_state.near = curCamNearClip;
+        auto th = std::tan(hfov) * curCamNearClip;
+        auto rw = th * curCamAspect;
 
-    _frame_state.samplesPerPixel = spp_slot_.Param<core::param::IntParam>()->Value();
-    _frame_state.maxBounces = max_bounces_slot_.Param<core::param::IntParam>()->Value();
-    _frame_state.accumulate = accumulate_slot_.Param<core::param::BoolParam>()->Value();
+        _frame_state.rw = rw;
+        _frame_state.th = th;
+        _frame_state.near = curCamNearClip;
 
-    _frame_state.depth_params = depth_params;
-    _frame_state.intensity = intensity_slot_.Param<core::param::FloatParam>()->Value();
+        _frame_state.frameIdx = 0;
+        old_cam_intrinsics = cam_intrinsics;
+    }
 
-    if (old_cam_pose.position != cam_pose.position || old_cam_pose.direction != cam_pose.direction ||
-        old_cam_pose.up != cam_pose.up || is_dirty()) {
+    if (!(cam_pose == old_cam_pose)) {
+        auto curCamPos = cam_pose.position;
+        auto curCamView = cam_pose.direction;
+        auto curCamUp = cam_pose.up;
+        auto curCamRight = glm::cross(cam_pose.direction, cam_pose.up);
+        // auto curCamNearClip = snapshot.frustum_near;
+        _frame_state.camera_center = glm::vec3(curCamPos.x, curCamPos.y, curCamPos.z);
+        _frame_state.camera_front = glm::vec3(curCamView.x, curCamView.y, curCamView.z);
+        _frame_state.camera_right = glm::vec3(curCamRight.x, curCamRight.y, curCamRight.z);
+        _frame_state.camera_up = glm::vec3(curCamUp.x, curCamUp.y, curCamUp.z);
+
         _frame_state.frameIdx = 0;
         old_cam_pose = cam_pose;
+    }
+
+    if (is_dirty()) {
+        _frame_state.samplesPerPixel = spp_slot_.Param<core::param::IntParam>()->Value();
+        _frame_state.maxBounces = max_bounces_slot_.Param<core::param::IntParam>()->Value();
+        _frame_state.accumulate = accumulate_slot_.Param<core::param::BoolParam>()->Value();
+
+        _frame_state.intensity = intensity_slot_.Param<core::param::FloatParam>()->Value();
+
+        _frame_state.frameIdx = 0;
         reset_dirty();
-    } else {
-        ++_frame_state.frameIdx;
     }
 
     if (old_bg != call.BackgroundColor()) {
@@ -180,23 +190,28 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
         rebuild_sbt = true;
     }
 
-    CUDA_CHECK_ERROR(
-        cuMemcpyHtoDAsync(_frame_state_buffer, &_frame_state, sizeof(_frame_state), optix_ctx_->GetExecStream()));
-
-    if (in_geo->FrameID() != _frame_id || in_geo->DataHash() != _in_data_hash) {
+    if (_frame_id != in_geo->FrameID() || _in_data_hash != in_geo->DataHash()) {
         _sbt_raygen_record.data.world = *in_geo->get_handle();
         _frame_state.frameIdx = 0;
 
         rebuild_sbt = true;
+        _frame_id = in_geo->FrameID();
+        _in_data_hash = in_geo->DataHash();
+    }
 
-        auto num_groups = 3 + in_geo->get_num_programs();
+    if (in_geo->has_program_update()) {
+        _frame_state.frameIdx = 0;
+
+        auto const& [geo_progs, num_geo_progs] = in_geo->get_program_groups();
+
+        auto num_groups = 3 + num_geo_progs;
         std::vector<OptixProgramGroup> groups;
         groups.reserve(num_groups);
         groups.push_back(raygen_module_);
         groups.push_back(miss_module_);
         groups.push_back(miss_occlusion_module_);
-        std::for_each(in_geo->get_program_groups(), in_geo->get_program_groups() + in_geo->get_num_programs(),
-            [&groups](OptixProgramGroup const el) { groups.push_back(el); });
+        std::for_each(
+            geo_progs, geo_progs + num_geo_progs, [&groups](OptixProgramGroup const el) { groups.push_back(el); });
 
         std::size_t log_size = 2048;
         std::string log;
@@ -204,16 +219,16 @@ bool megamol::optix_hpg::Renderer::Render(CallRender3DCUDA& call) {
 
         OPTIX_CHECK_ERROR(optixPipelineCreate(optix_ctx_->GetOptiXContext(), &optix_ctx_->GetPipelineCompileOptions(),
             &optix_ctx_->GetPipelineLinkOptions(), groups.data(), groups.size(), log.data(), &log_size, &_pipeline));
-
-
-        _frame_id = in_geo->FrameID();
-        _in_data_hash = in_geo->DataHash();
     }
 
-    if (rebuild_sbt) {
+    CUDA_CHECK_ERROR(
+        cuMemcpyHtoDAsync(_frame_state_buffer, &_frame_state, sizeof(_frame_state), optix_ctx_->GetExecStream()));
+
+    if (rebuild_sbt || in_geo->has_sbt_update()) {
+        auto const& [geo_records, num_geo_records, geo_records_stride] = in_geo->get_record();
         sbt_.SetSBT(&_sbt_raygen_record, sizeof(_sbt_raygen_record), nullptr, 0, sbt_miss_records_.data(),
-            sizeof(SBTRecord<device::MissData>), sbt_miss_records_.size(), in_geo->get_record(),
-            in_geo->get_record_stride(), in_geo->get_num_records(), nullptr, 0, 0, optix_ctx_->GetExecStream());
+            sizeof(SBTRecord<device::MissData>), sbt_miss_records_.size(), geo_records, geo_records_stride,
+            num_geo_records, nullptr, 0, 0, optix_ctx_->GetExecStream());
     }
 
     OPTIX_CHECK_ERROR(
@@ -248,6 +263,13 @@ bool megamol::optix_hpg::Renderer::create() {
     } else {
         return false;
     }
+
+    _frame_state.samplesPerPixel = spp_slot_.Param<core::param::IntParam>()->Value();
+    _frame_state.maxBounces = max_bounces_slot_.Param<core::param::IntParam>()->Value();
+    _frame_state.accumulate = accumulate_slot_.Param<core::param::BoolParam>()->Value();
+
+    _frame_state.intensity = intensity_slot_.Param<core::param::FloatParam>()->Value();
+
     return true;
 }
 

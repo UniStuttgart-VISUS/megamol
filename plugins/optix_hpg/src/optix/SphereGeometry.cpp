@@ -13,7 +13,7 @@
 namespace megamol::optix_hpg {
 extern "C" const char embedded_sphere_programs[];
 extern "C" const char embedded_sphere_occlusion_programs[];
-}
+} // namespace megamol::optix_hpg
 
 
 megamol::optix_hpg::SphereGeometry::SphereGeometry() : _out_geo_slot("outGeo", ""), _in_data_slot("inData", "") {
@@ -68,6 +68,8 @@ void megamol::optix_hpg::SphereGeometry::init(Context const& ctx) {
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "sphere_intersect"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "sphere_closesthit_occlusion"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds_occlusion"}});
+
+    ++program_version;
 
     // OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_module_, &_sbt_record));
 }
@@ -187,6 +189,8 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_occlusion_module_, &sbt_record_occlusion));
         sbt_record_occlusion.data = sbt_record.data;
         sbt_records_.push_back(sbt_record_occlusion);
+
+        ++sbt_version;
     }
 
     OptixAccelBuildOptions accelOptions = {};
@@ -217,7 +221,6 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
     //////////////////////////////////////
     // end geometry
     //////////////////////////////////////
-
 
     return true;
 }
@@ -256,11 +259,9 @@ bool megamol::optix_hpg::SphereGeometry::get_data_cb(core::Call& c) {
     program_groups_[1] = sphere_occlusion_module_;
 
     out_geo->set_handle(&_geo_handle);
-    out_geo->set_program_groups(program_groups_.data());
-    out_geo->set_num_programs(2);
-    out_geo->set_record(sbt_records_.data());
-    out_geo->set_record_stride(sizeof(SBTRecord<device::SphereGeoData>));
-    out_geo->set_num_records(sbt_records_.size());
+    out_geo->set_program_groups(program_groups_.data(), program_groups_.size(), program_version);
+    out_geo->set_record(
+        sbt_records_.data(), sbt_records_.size(), sizeof(SBTRecord<device::SphereGeoData>), sbt_version);
 
     return true;
 }

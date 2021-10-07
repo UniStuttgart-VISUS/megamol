@@ -114,6 +114,8 @@ private:
 
     core::view::Camera::Pose old_cam_pose;
 
+    core::view::Camera::PerspectiveParameters old_cam_intrinsics;
+
     glm::vec4 old_bg = glm::vec4(-1);
 
     std::unique_ptr<Context> optix_ctx_;
