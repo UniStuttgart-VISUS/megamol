@@ -61,6 +61,9 @@ execute_process(COMMAND
 string(TIMESTAMP BUILD_TIMESTAMP "%s" UTC)
 string(TIMESTAMP BUILD_TIME "" UTC)
 
+# License
+file(READ ${PROJECT_DIR}/LICENSE MEGAMOL_LICENSE)
+
 # Cache
 file(READ ${CMAKE_BINARY_DIR}/CMakeCache.txt MM_CMAKE_CACHE)
 
