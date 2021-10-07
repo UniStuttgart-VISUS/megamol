@@ -7,36 +7,11 @@
 #include "stdafx.h"
 #include "AboutInfo.h"
 #include "mmcore/api/MegaMolCore.h"
-#include "mmcore/versioninfo.h"
 #include "versioninfo.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include "vislib/UnsupportedOperationException.h"
 #include <iostream>
-
-
-/*
- * megamol::console::utility::AboutInfo::LibFileNameFormatString
- */
-const char *
-megamol::console::utility::AboutInfo::LibFileNameFormatString(void) {
-    return 
-#ifdef _WIN32
-#if defined(WINVER)
-#if (WINVER >= 0x0501)
-        //""    // Window
-#endif /* (WINVER >= 0x0501) */
-#endif /* defined(WINVER) */
-#else /* _WIN32 */
-        "lib"    // Linux
-#endif /* _WIN32 */
-        "%s" // MEGAMOL_FILENAME_BITSD 
-#if !defined(_WIN32) && (defined(DEBUG) || defined(_DEBUG))
-    "d"
-#endif
-        MEGAMOL_DLL_FILENAME_EXT;
-}
-
 
 /*
  * megamol::console::utility::AboutInfo::PrintGreeting

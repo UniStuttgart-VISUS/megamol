@@ -13,15 +13,13 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/productversion.h"          // core file
-#include "mmcore/versioninfo.h"
-
+#include "megamol_build_info.h"
 #include "vislib/VersionNumber.h"
 #include "vislib/String.h"
 
-#define MEGAMOL_CONSOLE_MAJOR_VER MEGAMOL_CORE_MAJOR_VER
-#define MEGAMOL_CONSOLE_MINOR_VER MEGAMOL_CORE_MINOR_VER
-#define MEGAMOL_CONSOLE_REV MEGAMOL_CORE_COMP_REV
+#define MEGAMOL_CONSOLE_MAJOR_VER megamol::build_info::MEGAMOL_VERSION_MAJOR
+#define MEGAMOL_CONSOLE_MINOR_VER megamol::build_info::MEGAMOL_VERSION_MINOR
+#define MEGAMOL_CONSOLE_REV megamol::build_info::MEGAMOL_GIT_HASH
 
 
 #if (MEGAMOL_CORE_API_DIRTY == 1) || (MEGAMOL_CONSOLE_DIRTY == 1)
@@ -36,7 +34,7 @@
 #define MEGAMOL_CONSOLE_VERSION MEGAMOL_CONSOLE_MAJOR_VER, MEGAMOL_CONSOLE_MINOR_VER, MEGAMOL_CONSOLE_REV
 #define MEGAMOL_CONSOLE_VERSION_STR MEGAMOL_STRINGIZE(MEGAMOL_CONSOLE_VERSION)
 
-#define MEGAMOL_CONSOLE_COPYRIGHT "Copyright (c) 2006 - " MEGAMOL_STRINGIZE(MEGAMOL_VERSION_YEAR) " by " MEGAMOL_PRODUCT_COMPANY "\n" \
+#define MEGAMOL_CONSOLE_COPYRIGHT "Copyright (c) 2006 - 2021 by MegaMol Dev Team\n" \
     "Alle Rechte vorbehalten.\n" \
     "All rights reserved.\n" MEGAMOL_CONSOLE_DIRTYTEXT
 

@@ -28,13 +28,12 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/productversion.h"
 #include "mmcore/profiler/Manager.h"
 #include "mmcore/utility/APIValueUtil.h"
 #include "mmcore/utility/ProjectParser.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 #include "mmcore/utility/xml/XmlReader.h"
-#include "mmcore/versioninfo.h"
+#include "megamol_build_info.h"
 #include "vislib/GUID.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/StringConverter.h"
@@ -2010,7 +2009,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 
 std::string megamol::core::CoreInstance::SerializeGraph() {
 
-    std::string serVersion = std::string("mmCheckVersion(\"") + std::string(MEGAMOL_CORE_COMP_REV) + "\")";
+    std::string serVersion = std::string("mmCheckVersion(\"") + std::string(megamol::build_info::MEGAMOL_GIT_HASH) + "\")";
     std::string serInstances;
     std::string serModules;
     std::string serCalls;

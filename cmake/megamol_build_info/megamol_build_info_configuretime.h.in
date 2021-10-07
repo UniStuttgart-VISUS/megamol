@@ -1,0 +1,13 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+#pragma once
+
+namespace megamol::build_info {
+    inline constexpr int MEGAMOL_VERSION_MAJOR = @PROJECT_VERSION_MAJOR@;
+    inline constexpr int MEGAMOL_VERSION_MINOR = @PROJECT_VERSION_MINOR@;
+    inline constexpr int MEGAMOL_VERSION_PATCH = @PROJECT_VERSION_PATCH@;
+    inline constexpr char const* MEGAMOL_VERSION = "@PROJECT_VERSION@";
+}

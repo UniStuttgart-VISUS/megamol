@@ -13,7 +13,7 @@
 #include <tuple>
 #include <optional>
 
-#include "mmcore/versioninfo.h"
+#include "megamol_build_info.h"
 
 namespace megamol {
 namespace frontend_resources {
@@ -92,7 +92,7 @@ struct RuntimeConfig {
         // clang-format off
         return std::string("RuntimeConfig values: "  ) +
             std::string("\n\tProgram invocation: "   ) + "\n\t\t" + program_invocation_string +
-            std::string("\n\tVersion: "              ) + MEGAMOL_CORE_COMP_REV + 
+            std::string("\n\tVersion: "              ) + std::string(megamol::build_info::MEGAMOL_GIT_HASH) +
             std::string("\n\tConfiguration files: "  ) + summarize(configuration_files) +
             std::string("\n\tApplication directory: ") + application_directory +
             std::string("\n\tResource directories: " ) + summarize(resource_directories) +

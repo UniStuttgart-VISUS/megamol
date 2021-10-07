@@ -57,8 +57,12 @@ execute_process(COMMAND
   OUTPUT_VARIABLE GIT_DIFF
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+# Time
+string(TIMESTAMP BUILD_TIMESTAMP "%s" UTC)
+string(TIMESTAMP BUILD_TIME "" UTC)
+
 # Cache
 file(READ ${CMAKE_BINARY_DIR}/CMakeCache.txt MM_CMAKE_CACHE)
 
 # Write to sourcefile
-configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.cpp.in ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.cpp @ONLY)
+configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.h.in ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.h @ONLY)

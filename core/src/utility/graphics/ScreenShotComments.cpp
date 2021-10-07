@@ -1,6 +1,6 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 
-#include "mmcore/versioninfo.h"
+#include "megamol_build_info.h"
 #include "mmcore/utility/DateTime.h"
 #include "mmconfig.h"
 
@@ -26,10 +26,10 @@ mcu_graphics::ScreenShotComments::ScreenShotComments(std::string const& project_
     the_comments["MegaMol project"] = project_configuration;
     //the_comments["Copyright"] = "";
     the_comments["Creation Time"] = utility::DateTime::CurrentDateTimeFormatted();
-    the_comments["Software"] = "MegaMol " + std::to_string(megamol::core::MEGAMOL_VERSION_MAJOR) + "." + std::to_string(MEGAMOL_CORE_MINOR_VER) + "." + MEGAMOL_CORE_COMP_REV;
+    the_comments["Software"] = "MegaMol " + std::string(megamol::build_info::MEGAMOL_VERSION) + "-" + std::string(megamol::build_info::MEGAMOL_GIT_HASH);
     the_comments["CMakeCache"] = CMake_Cache;
-    the_comments["RemoteBranch"] = megamol::core::MEGAMOL_STATUS_REMOTE;
-    the_comments["RemoteURL"] = megamol::core::MEGAMOL_REMOTE_URL;
+    the_comments["RemoteBranch"] = megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL;
+    the_comments["RemoteURL"] = megamol::build_info::MEGAMOL_GIT_REMOTE_URL;
     the_comments["Environment"] = m_moduleInfo;
 
     //the_comments["Disclaimer"] = "";

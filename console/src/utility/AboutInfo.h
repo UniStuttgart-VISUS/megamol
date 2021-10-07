@@ -27,16 +27,6 @@ namespace utility {
     public:
 
         /**
-         * Answers a print format string for dynamic library file names 
-         * following the MegaMol file name specifications.
-         * As printf formating values a single string must be specified as
-         * main name of the file. The result will be something similar like
-         * this, depending on the current build and operating system:
-         *  'lib<BASE>64d.so' or '<BASE>32.dll'
-         */
-        static const char * LibFileNameFormatString(void);
-
-        /**
          * Prints a greeting text to 'stdout'.
          */
         static void PrintGreeting(void);

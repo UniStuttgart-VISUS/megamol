@@ -7,8 +7,8 @@
 
 
 #include "GraphCollection.h"
+#include "megamol_build_info.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/versioninfo.h"
 #include "mmcore/view/AbstractView.h"
 
 
@@ -1126,8 +1126,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                     }
                 }
 
-                projectstr = std::string("mmCheckVersion(\"") + std::string(MEGAMOL_CORE_COMP_REV) + "\") \n" +
-                             confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
+                projectstr = std::string("mmCheckVersion(\"") + std::string(megamol::build_info::MEGAMOL_GIT_HASH) +
+                             "\") \n" + confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
                              confParams.str() + "\n" + state_json;
 
                 graph_ptr->ResetDirty();

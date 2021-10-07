@@ -18,7 +18,6 @@
 #include "mmcore/JobInstance.h"
 #include "mmcore/factories/ObjectDescription.h"
 #include "mmcore/factories/ObjectDescriptionManager.h"
-#include "mmcore/versioninfo.h"
 #include "mmcore/param/ParamHandle.h"
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/ViewDescription.h"
@@ -28,6 +27,8 @@
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/CallerSlot.h"
+
+#include "megamol_build_info.h"
 
 #include "vislib/assert.h"
 #include "vislib/sys/CriticalSection.h"
@@ -97,9 +98,9 @@ void mmCoreMain(int argc, char *argv[]) {
 MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void) {
     mmcBinaryVersionInfo* rv = static_cast<mmcBinaryVersionInfo*>(malloc(sizeof(mmcBinaryVersionInfo)));
 
-    rv->VersionNumber[0] = (const char*)MEGAMOL_CORE_MAJOR_VER;
-    rv->VersionNumber[1] = (const char*)MEGAMOL_CORE_MINOR_VER;
-    rv->VersionNumber[2] = MEGAMOL_CORE_COMP_REV;
+    rv->VersionNumber[0] = (const char*)megamol::build_info::MEGAMOL_VERSION_MAJOR;
+    rv->VersionNumber[1] = (const char*)megamol::build_info::MEGAMOL_VERSION_MINOR;
+    rv->VersionNumber[2] = megamol::build_info::MEGAMOL_GIT_HASH;
 
 
     rv->SystemType = MMC_OSYSTEM_UNKNOWN;
@@ -129,21 +130,23 @@ MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void) {
 #endif /* MEGAMOL_GLUT_ISDIRTY */
         ;
 
-    const char *src = MEGAMOL_CORE_NAME;
+    const char *src = "MegaMol Core";
     size_t buf_len = ::strlen(src);
     char *buf = static_cast<char*>(::malloc(buf_len + 1));
     ::memcpy(buf, src, buf_len);
     buf[buf_len] = 0;
     rv->NameStr = buf;
 
-    src = MEGAMOL_CORE_COPYRIGHT;
+    src = "Copyright (c) 2006 - 2021 by MegaMol Team: VISUS (Universitaet Stuttgart, Germany), TU Dresden (Dresden, Germany)\n"
+        "Alle Rechte vorbehalten.\n"
+        "All rights reserved.\n";
     buf_len = ::strlen(src);
     buf = static_cast<char*>(::malloc(buf_len + 1));
     ::memcpy(buf, src, buf_len);
     buf[buf_len] = 0;
     rv->CopyrightStr = buf;
 
-    src = MEGAMOL_CORE_COMMENTS;
+    src = "";
     buf_len = ::strlen(src);
     buf = static_cast<char*>(::malloc(buf_len + 1));
     ::memcpy(buf, src, buf_len);
