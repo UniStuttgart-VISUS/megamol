@@ -14,6 +14,7 @@ namespace megamol::build_info {
     inline constexpr char const* MEGAMOL_GIT_ORIGIN_NAME = "@GIT_ORIGIN_NAME@";
     inline constexpr char const* MEGAMOL_GIT_REMOTE_URL = "@GIT_REMOTE_URL@";
     inline constexpr char const* MEGAMOL_GIT_DIFF = R"MM_Delim(@GIT_DIFF@)MM_Delim";
+    inline constexpr int MEGAMOL_GIT_IS_DIRTY = @GIT_IS_DIRTY@;
     inline constexpr char const* MEGAMOL_LICENSE = R"MM_Delim(@MEGAMOL_LICENSE@)MM_Delim";
     inline constexpr char const* MEGAMOL_CMAKE_CACHE = R"MM_Delim(@MM_CMAKE_CACHE@)MM_Delim";
 }
