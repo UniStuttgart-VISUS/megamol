@@ -20,3 +20,8 @@ target_compile_features(megamol_build_info INTERFACE cxx_std_17)
 target_include_directories(megamol_build_info INTERFACE ${INFO_BIN_DIR})
 
 add_dependencies(megamol_build_info megamol_build_info_script)
+
+# Install large build info files as resource
+
+# Cache
+install(FILES ${CMAKE_BINARY_DIR}/CMakeCache.txt DESTINATION "share/resources/megamol_build_info")

@@ -65,8 +65,5 @@ string(TIMESTAMP BUILD_TIME "" UTC)
 # License
 file(READ ${PROJECT_DIR}/LICENSE MEGAMOL_LICENSE)
 
-# Cache
-file(READ ${CMAKE_BINARY_DIR}/CMakeCache.txt MM_CMAKE_CACHE)
-
 # Write to sourcefile
 configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.h.in ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.h @ONLY)

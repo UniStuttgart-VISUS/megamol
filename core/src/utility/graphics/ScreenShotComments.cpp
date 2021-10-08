@@ -26,7 +26,7 @@ mcu_graphics::ScreenShotComments::ScreenShotComments(std::string const& project_
     //the_comments["Copyright"] = "";
     the_comments["Creation Time"] = utility::DateTime::CurrentDateTimeFormatted();
     the_comments["Software"] = "MegaMol " + std::string(megamol::build_info::MEGAMOL_VERSION) + "-" + std::string(megamol::build_info::MEGAMOL_GIT_HASH);
-    the_comments["CMakeCache"] = std::string(megamol::build_info::MEGAMOL_CMAKE_CACHE);
+    //the_comments["CMakeCache"] = std::string(megamol::build_info::MEGAMOL_CMAKE_CACHE); // TODO load from resources
     the_comments["RemoteBranch"] = megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL;
     the_comments["RemoteURL"] = megamol::build_info::MEGAMOL_GIT_REMOTE_URL;
     the_comments["Environment"] = m_moduleInfo;
