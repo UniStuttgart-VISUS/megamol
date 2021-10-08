@@ -1,4 +1,5 @@
 # Clone external script
+find_package(Git REQUIRED)
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND

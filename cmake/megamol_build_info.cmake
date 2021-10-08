@@ -17,7 +17,6 @@ configure_file(${INFO_SRC_DIR}/megamol_build_info_configuretime.h.in ${INFO_BIN_
 # Define the library
 add_library(megamol_build_info INTERFACE)
 target_compile_features(megamol_build_info INTERFACE cxx_std_17)
-set_target_properties(megamol_build_info PROPERTIES CXX_EXTENSIONS OFF)
 target_include_directories(megamol_build_info INTERFACE ${INFO_BIN_DIR})
 
 add_dependencies(megamol_build_info megamol_build_info_script)
