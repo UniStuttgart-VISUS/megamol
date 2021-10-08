@@ -15,6 +15,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
 
@@ -27,34 +28,94 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     , m_version(0)
     , m_output_texture(nullptr)
     , m_output_texture_hash(0)
-    , m_mode("Mode", "Sets antialiasing technqiue, e.g. smaa, fxaa, no aa")
+    , m_mode("Mode", "Sets antialiasing technqiue: SMAA, FXAA, no AA")
     , m_smaa_quality("QualityLevel", "Sets smaa quality level")
-    , m_smaa_detection_technique("EdgeDetection", "Sets smaa edge detection base: luma, color, or depth")
-    , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
+    , m_smaa_threshold("Threshold", "Sets smaa threshold")
+    , m_smaa_max_search_steps("MaxSearchSteps", "Sets smaa max search steps")
+    , m_smaa_max_search_steps_diag("MaxDiagSearchSteps", "Sets smaa max diagonal search steps")
+    , m_smaa_disable_diag_detection("DisableDiagDetection",
+            "Enables/Disables diagonal detection. If set to false, diagonal detection is enabled")
+    , m_smaa_disable_corner_detection("DisableCornerDetection",
+            "Enables/Disables corner detection. If set to false, corner detection is enabled")
+    , m_smaa_corner_rounding("CornerRounding", "Sets smaa corner rounding parameter")
+    , m_smaa_detection_technique(
+            "EdgeDetection", "Sets smaa edge detection base: luma, color, or depth. Use depth only when a depth "
+                            "texture can be provided as it is mandatory to have one")
+    , m_smaa_view("Output", "Sets the texture to view: final output, edges or weights. Edges or weights should "
+                            "only be used when directly connected to the screen for debug purposes")
+    , m_output_tex_slot("OutputTexture", "Gives access to the resulting output texture")
     , m_input_tex_slot("InputTexture", "Connects the input texture")
     , m_settings_have_changed(false)
 {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "FXAA");
-    this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "No AA");
+    this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "None");
     this->m_mode.SetUpdateCallback(&megamol::compositing::AntiAliasing::visibilityCallback);
     this->MakeSlotAvailable(&this->m_mode);
     
     this->m_smaa_quality << new megamol::core::param::EnumParam(2);
-    this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "LOW");
-    this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "MEDIUM");
-    this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "HIGH");
-    this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "ULTRA");
-    this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "CUSTOM");
+    this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Low");
+    this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Medium");
+    this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "High");
+    this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "Ultra");
+    this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "Custom");
     this->m_smaa_quality.SetUpdateCallback(&megamol::compositing::AntiAliasing::setSettingsCallback);
     this->MakeSlotAvailable(&this->m_smaa_quality);
 
+    this->m_smaa_threshold << new megamol::core::param::FloatParam(0.1f, 0.f, 0.5f);
+    this->m_smaa_threshold.Param<core::param::FloatParam>()->SetGUIVisible(false);
+    this->m_smaa_threshold.SetUpdateCallback(&megamol::compositing::AntiAliasing::setCustomSettingsCallback);
+    this->m_smaa_threshold.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
+    this->MakeSlotAvailable(&this->m_smaa_threshold);
+
+    this->m_smaa_max_search_steps << new megamol::core::param::IntParam(16, 0, 112);
+    this->m_smaa_max_search_steps.Param<core::param::IntParam>()->SetGUIVisible(false);
+    this->m_smaa_max_search_steps.SetUpdateCallback(&megamol::compositing::AntiAliasing::setCustomSettingsCallback);
+    this->m_smaa_max_search_steps.Parameter()->SetGUIPresentation(
+        core::param::AbstractParamPresentation::Presentation::Drag);
+    this->MakeSlotAvailable(&this->m_smaa_max_search_steps);
+
+    this->m_smaa_max_search_steps_diag << new megamol::core::param::IntParam(8, 0, 20);
+    this->m_smaa_max_search_steps_diag.Param<core::param::IntParam>()->SetGUIVisible(false);
+    this->m_smaa_max_search_steps_diag.SetUpdateCallback(
+        &megamol::compositing::AntiAliasing::setCustomSettingsCallback);
+    this->m_smaa_max_search_steps_diag.Parameter()->SetGUIPresentation(
+        core::param::AbstractParamPresentation::Presentation::Drag);
+    this->MakeSlotAvailable(&this->m_smaa_max_search_steps_diag);
+
+    this->m_smaa_disable_diag_detection << new megamol::core::param::BoolParam(false);
+    this->m_smaa_disable_diag_detection.Param<core::param::BoolParam>()->SetGUIVisible(false);
+    this->m_smaa_disable_diag_detection.SetUpdateCallback(
+        &megamol::compositing::AntiAliasing::setCustomSettingsCallback);
+    this->MakeSlotAvailable(&this->m_smaa_disable_diag_detection);
+
+    this->m_smaa_disable_corner_detection << new megamol::core::param::BoolParam(false);
+    this->m_smaa_disable_corner_detection.Param<core::param::BoolParam>()->SetGUIVisible(false);
+    this->m_smaa_disable_corner_detection.SetUpdateCallback(
+        &megamol::compositing::AntiAliasing::setCustomSettingsCallback);
+    this->MakeSlotAvailable(&this->m_smaa_disable_corner_detection);
+
+    this->m_smaa_corner_rounding << new megamol::core::param::IntParam(25, 0, 100);
+    this->m_smaa_corner_rounding.Param<core::param::IntParam>()->SetGUIVisible(false);
+    this->m_smaa_corner_rounding.SetUpdateCallback(&megamol::compositing::AntiAliasing::setCustomSettingsCallback);
+    this->m_smaa_corner_rounding.Parameter()->SetGUIPresentation(
+        core::param::AbstractParamPresentation::Presentation::Drag);
+    this->MakeSlotAvailable(&this->m_smaa_corner_rounding);
+
     this->m_smaa_detection_technique << new megamol::core::param::EnumParam(0);
-    this->m_smaa_detection_technique.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "LUMA");
-    this->m_smaa_detection_technique.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "COLOR");
-    this->m_smaa_detection_technique.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "DEPTH");
+    this->m_smaa_detection_technique.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Luma");
+    this->m_smaa_detection_technique.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Color");
+    this->m_smaa_detection_technique.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Depth");
     this->MakeSlotAvailable(&this->m_smaa_detection_technique);
+
+    this->m_smaa_view << new megamol::core::param::EnumParam(0);
+    this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Result");
+    this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Edges");
+    this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Weights");
+    this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "AreaTex");
+    this->m_smaa_view.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "SearchTex");
+    this->MakeSlotAvailable(&this->m_smaa_view);
 
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &AntiAliasing::getDataCallback);
     this->m_output_tex_slot.SetCallback(
@@ -87,29 +148,27 @@ bool megamol::compositing::AntiAliasing::create() {
         if (!m_fxaa_prgm->Link())
             return false;
 
-        std::cout << "check0 \n";
-
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::edgeDetectionCS", compute_smaa_edge_detection_src))
             return false;
         if (!m_smaa_edge_detection_prgm->Compile(compute_smaa_edge_detection_src.Code(), compute_smaa_edge_detection_src.Count()))
             return false;
         if (!m_smaa_edge_detection_prgm->Link())
             return false;
-        std::cout << "check1 \n";
+        
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::blendingWeightsCalculationCS", compute_smaa_blending_weights_src))
             return false;
         if (!m_smaa_blending_weight_calculation_prgm->Compile(compute_smaa_blending_weights_src.Code(), compute_smaa_blending_weights_src.Count()))
             return false;
         if (!m_smaa_blending_weight_calculation_prgm->Link())
             return false;
-        std::cout << "check2 \n";
+        
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::neighborhoodBlendingCS", compute_smaa_neighborhood_blending_src))
             return false;
         if (!m_smaa_neighborhood_blending_prgm->Compile(compute_smaa_neighborhood_blending_src.Code(), compute_smaa_neighborhood_blending_src.Count()))
             return false;
         if (!m_smaa_neighborhood_blending_prgm->Link())
             return false;
-        std::cout << "check3 \n";
+        
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
@@ -142,6 +201,33 @@ bool megamol::compositing::AntiAliasing::create() {
 
     glowl::TextureLayout area_layout(GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, 1, GL_RG, GL_UNSIGNED_BYTE, 1, int_params, {});
     glowl::TextureLayout search_layout(GL_R8, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1, GL_RED, GL_UNSIGNED_BYTE, 1, int_params, {});
+
+
+    // need to flip image around horizontal axis
+    //m_area.resize(AREATEX_SIZE);
+    //for (size_t y = 0; y < AREATEX_HEIGHT; ++y) {
+    //    for (size_t x = 0; x < AREATEX_WIDTH; ++x) {
+    //        size_t id = x + y * AREATEX_WIDTH;
+
+    //        size_t flip_id = x + (AREATEX_HEIGHT - 1 - y) * AREATEX_WIDTH;
+
+    //        m_area[2 * id + 0] = areaTexBytes[2 * flip_id + 0];     // R
+    //        m_area[2 * id + 1] = areaTexBytes[2 * flip_id + 1]; // R
+    //    }
+    //}
+
+    //m_search.resize(SEARCHTEX_SIZE);
+    //for (size_t y = 0; y < SEARCHTEX_HEIGHT; ++y) {
+    //    for (size_t x = 0; x < SEARCHTEX_WIDTH; ++x) {
+    //        size_t id = x + y * SEARCHTEX_WIDTH;
+
+    //        size_t flip_id = x + (SEARCHTEX_HEIGHT - 1 - y) * SEARCHTEX_WIDTH;
+
+    //        m_search[id + 0] = searchTexBytes[flip_id + 0]; // R
+    //    }
+    //}
+
+    // TODO: flip y coordinate in texture accesses in shadercode and also flip textures here?
     m_area_tex = std::make_shared<glowl::Texture2D>("smaa_area_tex", area_layout, areaTexBytes);
     m_search_tex = std::make_shared<glowl::Texture2D>("smaa_search_tex", search_layout, searchTexBytes);
 
@@ -198,6 +284,58 @@ bool megamol::compositing::AntiAliasing::setSettingsCallback(core::param::ParamS
         m_smaa_constants.Corner_rounding_norm = m_smaa_constants.Corner_rounding / 100.f;
     }
 
+
+    // custom
+    if (slot.Param<core::param::EnumParam>()->Value() == 4) {
+        this->m_smaa_threshold.Param<core::param::FloatParam>()->SetValue(m_smaa_custom_constants.Smaa_threshold);
+        this->m_smaa_max_search_steps.Param<core::param::IntParam>()->SetValue(
+            m_smaa_custom_constants.Max_search_steps);
+        this->m_smaa_max_search_steps_diag.Param<core::param::IntParam>()->SetValue(
+            m_smaa_custom_constants.Max_search_steps_diag);
+        this->m_smaa_disable_diag_detection.Param<core::param::BoolParam>()->SetValue(
+            m_smaa_custom_constants.Disable_diag_detection);
+        this->m_smaa_disable_corner_detection.Param<core::param::BoolParam>()->SetValue(
+            m_smaa_custom_constants.Disable_corner_detection);
+        this->m_smaa_corner_rounding.Param<core::param::IntParam>()->SetValue(m_smaa_custom_constants.Corner_rounding);
+
+        m_smaa_constants = m_smaa_custom_constants;
+
+        this->m_smaa_threshold.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        this->m_smaa_max_search_steps.Param<core::param::IntParam>()->SetGUIVisible(true);
+        this->m_smaa_max_search_steps_diag.Param<core::param::IntParam>()->SetGUIVisible(true);
+        this->m_smaa_disable_diag_detection.Param<core::param::BoolParam>()->SetGUIVisible(true);
+        this->m_smaa_disable_corner_detection.Param<core::param::BoolParam>()->SetGUIVisible(true);
+        this->m_smaa_corner_rounding.Param<core::param::IntParam>()->SetGUIVisible(true);
+    } else {
+        this->m_smaa_threshold.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        this->m_smaa_max_search_steps.Param<core::param::IntParam>()->SetGUIVisible(false);
+        this->m_smaa_max_search_steps_diag.Param<core::param::IntParam>()->SetGUIVisible(false);
+        this->m_smaa_disable_diag_detection.Param<core::param::BoolParam>()->SetGUIVisible(false);
+        this->m_smaa_disable_corner_detection.Param<core::param::BoolParam>()->SetGUIVisible(false);
+        this->m_smaa_corner_rounding.Param<core::param::IntParam>()->SetGUIVisible(false);
+    }
+
+    m_settings_have_changed = true;
+
+    return true;
+}
+
+bool megamol::compositing::AntiAliasing::setCustomSettingsCallback(core::param::ParamSlot& slot) {
+    m_smaa_constants.Smaa_threshold = this->m_smaa_threshold.Param<core::param::FloatParam>()->Value();
+    m_smaa_constants.Smaa_depth_threshold = 0.1f * m_smaa_constants.Smaa_threshold;
+    m_smaa_constants.Max_search_steps = this->m_smaa_max_search_steps.Param<core::param::IntParam>()->Value();
+    m_smaa_constants.Max_search_steps_diag = this->m_smaa_max_search_steps_diag.Param<core::param::IntParam>()->Value();
+    m_smaa_constants.Disable_diag_detection =
+        this->m_smaa_disable_diag_detection.Param<core::param::BoolParam>()->Value();
+    m_smaa_constants.Disable_corner_detection =
+        this->m_smaa_disable_corner_detection.Param<core::param::BoolParam>()->Value();
+    m_smaa_constants.Corner_rounding = this->m_smaa_corner_rounding.Param<core::param::IntParam>()->Value();
+    m_smaa_constants.Corner_rounding_norm = m_smaa_constants.Corner_rounding / 100.f;
+
+    // keep a backup from the custom settings, so if custom is selected again
+    // the previous values are loaded
+    m_smaa_custom_constants = m_smaa_constants;
+
     m_settings_have_changed = true;
 
     return true;
@@ -207,9 +345,11 @@ bool megamol::compositing::AntiAliasing::visibilityCallback(core::param::ParamSl
     if (slot.Param<core::param::EnumParam>()->Value() == 0) {
         m_smaa_quality.Param<core::param::EnumParam>()->SetGUIVisible(true);
         m_smaa_detection_technique.Param<core::param::EnumParam>()->SetGUIVisible(true);
+        m_smaa_view.Param<core::param::EnumParam>()->SetGUIVisible(true);
     } else {
         m_smaa_quality.Param<core::param::EnumParam>()->SetGUIVisible(false);
         m_smaa_detection_technique.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        m_smaa_view.Param<core::param::EnumParam>()->SetGUIVisible(false);
     }
 
     m_settings_have_changed = true;
@@ -246,11 +386,13 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
     bool something_has_changed =
         (call_input != NULL ? call_input->hasUpdate() : false)
-        || m_settings_have_changed;
+        || m_settings_have_changed
+        || this->m_smaa_detection_technique.IsDirty();
 
     if (something_has_changed) {
         ++m_version;
         m_settings_have_changed = false;
+        this->m_smaa_detection_technique.ResetDirty();
 
         std::function<void(std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt)>
             setupOutputTexture = [](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
@@ -407,11 +549,37 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
         }
     }
 
-    if (lhs_tc->version() < m_version) {
-        lhs_tc->setData(m_output_texture, m_version);
+    if (lhs_tc->version() < m_version || this->m_smaa_view.IsDirty()) {
+        int view = this->m_smaa_view.Param<core::param::EnumParam>()->Value();
+
+        switch (view) {
+        case 0:
+            lhs_tc->setData(m_output_texture, m_version);
+            break;
+        case 1:
+            lhs_tc->setData(m_edges_tex, m_version);
+            break;
+        case 2:
+            lhs_tc->setData(m_blend_tex, m_version);
+            break;
+        case 3:
+            lhs_tc->setData(m_area_tex, m_version);
+            break;
+        case 4:
+            lhs_tc->setData(m_search_tex, m_version);
+            break;
+        default:
+            lhs_tc->setData(m_output_texture, m_version);
+            break;
+        }
+
+        this->m_smaa_view.ResetDirty();
     }
 
     return true;
 }
+
+// TODO: use launchProgram to reduce the re-usage of code
+// (basically 5 times the same code within prgm->enable/disable)
 
 bool megamol::compositing::AntiAliasing::getMetaDataCallback(core::Call& caller) { return true; }

@@ -39,8 +39,15 @@ namespace compositing {
         bool getDataCallback(core::Call& caller);
         bool getMetaDataCallback(core::Call& caller);
 
+
         /** Slot for loading the .png file */
         core::param::ParamSlot m_filename_slot;
+
+        /** Slot for showing the image width. Read-only */
+        core::param::ParamSlot m_image_width_slot;
+
+        /** Slot for showing the image height. Read-only */
+        core::param::ParamSlot m_image_height_slot;
 
         /** Slot for requesting the output textures from this module, i.e. lhs connection */
         megamol::core::CalleeSlot m_output_tex_slot;

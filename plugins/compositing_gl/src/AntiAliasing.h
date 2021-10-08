@@ -130,6 +130,7 @@ private:
 
     bool visibilityCallback(core::param::ParamSlot& slot);
     bool setSettingsCallback(core::param::ParamSlot& slot);
+    bool setCustomSettingsCallback(core::param::ParamSlot& slot);
 
     void launchProgram(
         const std::unique_ptr<GLSLComputeShader>& prgm,
@@ -137,6 +138,9 @@ private:
         const char* uniform_id,
         std::shared_ptr<glowl::Texture2D> output);
 
+
+    std::vector<unsigned char> m_area;
+    std::vector<unsigned char> m_search;
 
     uint32_t m_version;
 
@@ -150,6 +154,7 @@ private:
 
     /** Configurable settings for smaa */
     SMAAConstants m_smaa_constants;
+    SMAAConstants m_smaa_custom_constants;
     std::shared_ptr<glowl::BufferObject> m_ssbo_constants;
 
     /** SMAA intermediate texture layout */
@@ -176,6 +181,9 @@ private:
     /** Parameter for selecting the antialiasing technique, e.g. smaa, fxaa, no aa */
     megamol::core::param::ParamSlot m_mode;
 
+    /** Parameter for selecting which texture to show, e.g. final output, edges, or weights */
+    megamol::core::param::ParamSlot m_smaa_view;
+
     /** Parameter for selecting the smaa quality level
     * as stated in the original work http://www.iryoku.com/smaa/
     * LOW    (60% of the quality)
@@ -184,6 +192,24 @@ private:
     * ULTRA  (99% of the quality)
     */
     megamol::core::param::ParamSlot m_smaa_quality;
+
+    /** Slot for smaa threshold parameter */
+    megamol::core::param::ParamSlot m_smaa_threshold;
+
+    /** Slot for smaa maximum search steps parameter */
+    megamol::core::param::ParamSlot m_smaa_max_search_steps;
+
+    /** Slot for smaa maximum diag search steps parameter */
+    megamol::core::param::ParamSlot m_smaa_max_search_steps_diag;
+
+    /** Slot for smaa diag detection disable parameter */
+    megamol::core::param::ParamSlot m_smaa_disable_diag_detection;
+
+    /** Slot for smaa corner detection disable parameter */
+    megamol::core::param::ParamSlot m_smaa_disable_corner_detection;
+
+    /** Slot for smaa corner rounding parameter */
+    megamol::core::param::ParamSlot m_smaa_corner_rounding;
 
     /** Parameter for choosing the edge detection technique: based on Luma, Color, or Depth */
     megamol::core::param::ParamSlot m_smaa_detection_technique;
