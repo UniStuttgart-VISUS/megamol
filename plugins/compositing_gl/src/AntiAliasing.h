@@ -132,11 +132,11 @@ private:
     bool setSettingsCallback(core::param::ParamSlot& slot);
     bool setCustomSettingsCallback(core::param::ParamSlot& slot);
 
-    void launchProgram(
-        const std::unique_ptr<GLSLComputeShader>& prgm,
-        std::shared_ptr<glowl::Texture2D> input,
-        const char* uniform_id,
-        std::shared_ptr<glowl::Texture2D> output);
+    void dispatchComputeShader(const std::unique_ptr<GLSLComputeShader>& prgm,
+        const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>>& inputs,
+        std::shared_ptr<glowl::Texture2D> output,
+        const std::vector<std::pair<const char*, int>>& uniforms,
+        const std::shared_ptr<glowl::BufferObject>& ssbo = nullptr);
 
 
     std::vector<unsigned char> m_area;

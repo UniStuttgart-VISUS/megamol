@@ -1,7 +1,7 @@
 uniform sampler2D src_tx2D;
-uniform int no_aa;
+uniform int disable_aa;
 
-layout(rgba16) writeonly uniform image2D tgt_tx2D;
+layout(rgba16f) writeonly uniform image2D tgt_tx2D;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -12,8 +12,7 @@ void main()
     ivec2 pixel_coords = ivec2(gID.xy);
     ivec2 tgt_resolution = imageSize (tgt_tx2D);
 
-
-    if(no_aa == 0) {
+    if(disable_aa == 0) {
         if (pixel_coords.x >= tgt_resolution.x || pixel_coords.y >= tgt_resolution.y) {
             return;
         }

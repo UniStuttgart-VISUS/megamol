@@ -357,16 +357,27 @@ bool megamol::compositing::AntiAliasing::visibilityCallback(core::param::ParamSl
     return true;
 }
 
-void megamol::compositing::AntiAliasing::launchProgram(
+void megamol::compositing::AntiAliasing::dispatchComputeShader(
     const std::unique_ptr<GLSLComputeShader>& prgm,
-    std::shared_ptr<glowl::Texture2D> input,
-    const char* uniform_id,
-    std::shared_ptr<glowl::Texture2D> output) {
+    const std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>>& inputs,
+    std::shared_ptr<glowl::Texture2D> output,
+    const std::vector<std::pair<const char*, int>>& uniforms,
+    const std::shared_ptr<glowl::BufferObject>& ssbo) {
     prgm->Enable();
 
-    glActiveTexture(GL_TEXTURE0);
-    input->bindTexture();
-    glUniform1i(prgm->ParameterLocation(uniform_id), 0);
+    for (size_t i = 0; i < inputs.size(); ++i) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        inputs[i].first->bindTexture();
+        glUniform1i(prgm->ParameterLocation(inputs[i].second), i);
+    }
+
+    for (const auto& uniform : uniforms) {
+        glUniform1i(prgm->ParameterLocation(uniform.first), uniform.second);
+    }
+
+    if (ssbo != nullptr) {
+        ssbo->bind(0);
+    }
 
     output->bindImage(0, GL_WRITE_ONLY);
 
@@ -374,6 +385,9 @@ void megamol::compositing::AntiAliasing::launchProgram(
         static_cast<int>(std::ceil(output->getHeight() / 8.0f)), 1);
 
     prgm->Disable();
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
@@ -433,119 +447,49 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
             GLint technique = m_smaa_detection_technique.Param<core::param::EnumParam>()->Value();
             GLint preset = m_smaa_quality.Param<core::param::EnumParam>()->Value();
 
+
             // TODO: one program for all? one mega shaders with barriers?
             // edge detection
-            m_smaa_edge_detection_prgm->Enable();
+            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>> inputs = {{input_tx2D, "g_colorTex"}};
+            std::vector<std::pair<const char*, int>> uniforms = {{"technique", technique}};
 
-            glActiveTexture(GL_TEXTURE0);
-            input_tx2D->bindTexture();
-            glUniform1i(m_smaa_edge_detection_prgm->ParameterLocation("g_colorTex"), 0);
-            glUniform1i(m_smaa_edge_detection_prgm->ParameterLocation("technique"), technique);
-
-            m_edges_tex->bindImage(0, GL_WRITE_ONLY);
-
-            m_ssbo_constants->bind(0);
-
-            m_smaa_edge_detection_prgm->Dispatch(
-                static_cast<int>(std::ceil(input_width / 8.0f)), static_cast<int>(std::ceil(input_height / 8.0f)), 1);
-
-            m_smaa_edge_detection_prgm->Disable();
+            dispatchComputeShader(m_smaa_edge_detection_prgm, inputs, m_edges_tex, uniforms, m_ssbo_constants);
 
 
             // blending weights calculation
-            m_smaa_blending_weight_calculation_prgm->Enable();
+            inputs.clear();
+            inputs = {{m_edges_tex, "g_edgesTex"}, {m_area_tex, "g_areaTex"}, {m_search_tex, "g_searchTex"}};
 
-            glActiveTexture(GL_TEXTURE0);
-            m_edges_tex->bindTexture();
-            glUniform1i(m_smaa_blending_weight_calculation_prgm->ParameterLocation("g_edgesTex"), 0);
-            glActiveTexture(GL_TEXTURE1);
-            m_area_tex->bindTexture();
-            glUniform1i(m_smaa_blending_weight_calculation_prgm->ParameterLocation("g_areaTex"), 1);
-            glActiveTexture(GL_TEXTURE2);
-            m_search_tex->bindTexture();
-            glUniform1i(m_smaa_blending_weight_calculation_prgm->ParameterLocation("g_searchTex"), 2);
-
-            m_blend_tex->bindImage(0, GL_WRITE_ONLY);
-
-            m_ssbo_constants->bind(0);
-
-            m_smaa_blending_weight_calculation_prgm->Dispatch(
-                static_cast<int>(std::ceil(input_width / 8.0f)), static_cast<int>(std::ceil(input_height / 8.0f)), 1);
-
-            m_smaa_blending_weight_calculation_prgm->Enable();
+            dispatchComputeShader(m_smaa_blending_weight_calculation_prgm, inputs, m_blend_tex, {}, m_ssbo_constants);
 
 
             // final step: neighborhood blending
-            m_smaa_neighborhood_blending_prgm->Enable();
+            inputs.clear();
+            inputs = {{input_tx2D, "g_colorTex"}, {m_blend_tex, "g_blendingWeightsTex"}};
 
-            glActiveTexture(GL_TEXTURE0);
-            input_tx2D->bindTexture();
-            glUniform1i(m_smaa_neighborhood_blending_prgm->ParameterLocation("g_colorTex"), 0);
-            glActiveTexture(GL_TEXTURE1);
-            m_blend_tex->bindTexture();
-            glUniform1i(m_smaa_neighborhood_blending_prgm->ParameterLocation("g_blendingWeightsTex"), 1);
+            dispatchComputeShader(
+                m_smaa_neighborhood_blending_prgm, inputs, m_output_texture, {}, m_ssbo_constants);
             // only used for temporal reprojection
             /*glActiveTexture(GL_TEXTURE2);
             m_velocity_tex->bindTexture();
             glUniform1i(m_smaa_neighborhood_blending_prgm->ParameterLocation("g_velocityTex"), 2);*/
 
-            m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
-            m_ssbo_constants->bind(0);
-
-            m_smaa_neighborhood_blending_prgm->Dispatch(
-                static_cast<int>(std::ceil(input_width / 8.0f)), static_cast<int>(std::ceil(input_height / 8.0f)), 1);
-
-            m_smaa_neighborhood_blending_prgm->Disable();
-
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, 0);
             // TODO: in smaaneighborhoodblending the reads and writes must be in srgb (and only there!)
         }
         // fxaa
         else if (mode == 1) {
-            if (call_input == NULL)
-                return false;
+            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>> inputs = {{input_tx2D, "src_tx2D"}};
+            std::vector<std::pair<const char*, int>> uniforms = {{"disable_aa", 0}};
 
-            //launchProgram(m_fxaa_prgm, input_tx2D, "src_tx2D", m_output_texture);
-
-            m_fxaa_prgm->Enable();
-
-            glActiveTexture(GL_TEXTURE0);
-            input_tx2D->bindTexture();
-            glUniform1i(m_fxaa_prgm->ParameterLocation("src_tx2D"), 0);
-            glUniform1i(m_fxaa_prgm->ParameterLocation("no_aa"), 0);
-
-            m_output_texture->bindImage(0, GL_WRITE_ONLY);
-
-            m_fxaa_prgm->Dispatch(static_cast<int>(std::ceil(m_output_texture->getWidth() / 8.0f)),
-                static_cast<int>(std::ceil(m_output_texture->getHeight() / 8.0f)), 1);
-
-            m_fxaa_prgm->Disable();
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, 0);
+            dispatchComputeShader(m_fxaa_prgm, inputs, m_output_texture, uniforms);
         }
         // no aa
         else if (mode == 2) {
-            // TODO: better way to do this?
-            m_fxaa_prgm->Enable();
+            std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>> inputs = {{input_tx2D, "src_tx2D"}};
+            std::vector<std::pair<const char*, int>> uniforms = {{"disable_aa", 1}};
 
-            glActiveTexture(GL_TEXTURE0);
-            input_tx2D->bindTexture();
-            glUniform1i(m_fxaa_prgm->ParameterLocation("src_tx2D"), 0);
-            glUniform1i(m_fxaa_prgm->ParameterLocation("no_aa"), 1);
-
-            m_output_texture->bindImage(0, GL_WRITE_ONLY);
-
-            m_fxaa_prgm->Dispatch(static_cast<int>(std::ceil(m_output_texture->getWidth() / 8.0f)),
-                static_cast<int>(std::ceil(m_output_texture->getHeight() / 8.0f)), 1);
-
-            m_fxaa_prgm->Disable();
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, 0);
+            dispatchComputeShader(m_fxaa_prgm, inputs, m_output_texture, uniforms);
         }
     }
 
@@ -578,8 +522,5 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
     return true;
 }
-
-// TODO: use launchProgram to reduce the re-usage of code
-// (basically 5 times the same code within prgm->enable/disable)
 
 bool megamol::compositing::AntiAliasing::getMetaDataCallback(core::Call& caller) { return true; }
