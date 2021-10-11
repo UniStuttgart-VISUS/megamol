@@ -1,0 +1,16 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+#pragma once
+
+const uint64_t megamol::build_info::MEGAMOL_BUILD_TIMESTAMP = @BUILD_TIMESTAMP@;
+const uint32_t megamol::build_info::MEGAMOL_GIT_IS_DIRTY = @GIT_IS_DIRTY@;
+
+char const* megamol::build_info::MEGAMOL_BUILD_TIME = "@BUILD_TIME@";
+char const* megamol::build_info::MEGAMOL_GIT_HASH = "@GIT_HASH@";
+char const* megamol::build_info::MEGAMOL_GIT_BRANCH_NAME = "@GIT_BRANCH_NAME@";
+char const* megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL = "@GIT_BRANCH_NAME_FULL@";
+char const* megamol::build_info::MEGAMOL_GIT_ORIGIN_NAME = "@GIT_ORIGIN_NAME@";
+char const* megamol::build_info::MEGAMOL_GIT_REMOTE_URL = "@GIT_REMOTE_URL@";

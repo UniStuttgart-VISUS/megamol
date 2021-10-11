@@ -54,7 +54,7 @@ execute_process(COMMAND
 execute_process(COMMAND
   ${GIT_EXECUTABLE} diff --exit-code HEAD
   WORKING_DIRECTORY "${PROJECT_DIR}"
-  OUTPUT_VARIABLE GIT_DIFF
+  OUTPUT_QUIET
   RESULTS_VARIABLE GIT_IS_DIRTY
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 
@@ -62,8 +62,5 @@ execute_process(COMMAND
 string(TIMESTAMP BUILD_TIMESTAMP "%s" UTC)
 string(TIMESTAMP BUILD_TIME "" UTC)
 
-# License
-file(READ ${PROJECT_DIR}/LICENSE MEGAMOL_LICENSE)
-
 # Write to sourcefile
-configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.h.in ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.h @ONLY)
+configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.cpp.in ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.cpp @ONLY)
