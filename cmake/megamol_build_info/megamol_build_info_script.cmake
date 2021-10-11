@@ -54,13 +54,24 @@ execute_process(COMMAND
 execute_process(COMMAND
   ${GIT_EXECUTABLE} diff --exit-code HEAD
   WORKING_DIRECTORY "${PROJECT_DIR}"
-  OUTPUT_QUIET
+  OUTPUT_VARIABLE GIT_DIFF
   RESULTS_VARIABLE GIT_IS_DIRTY
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # Time
 string(TIMESTAMP BUILD_TIMESTAMP "%s" UTC)
 string(TIMESTAMP BUILD_TIME "" UTC)
+
+# License
+file(READ ${PROJECT_DIR}/LICENSE MEGAMOL_LICENSE)
+
+# Cache
+#file(READ ${CMAKE_BINARY_DIR}/CMakeCache.txt MM_CMAKE_CACHE)
+set(MM_CMAKE_CACHE "")
+file(STRINGS ${CMAKE_BINARY_DIR}/CMakeCache.txt MM_CMAKE_CACHE_LIST ENCODING UTF-8)
+foreach(line IN LISTS MM_CMAKE_CACHE_LIST)
+  string(APPEND MM_CMAKE_CACHE "R\"MM_Delim(${line})MM_Delim\"\n")
+endforeach()
 
 # Write to sourcefile
 configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.cpp.in ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.cpp @ONLY)

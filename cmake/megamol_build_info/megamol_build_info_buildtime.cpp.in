@@ -3,14 +3,16 @@
  * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
-#pragma once
+#include "megamol_build_info.h"
 
-const uint64_t megamol::build_info::MEGAMOL_BUILD_TIMESTAMP = @BUILD_TIMESTAMP@;
-const uint32_t megamol::build_info::MEGAMOL_GIT_IS_DIRTY = @GIT_IS_DIRTY@;
-
-char const* megamol::build_info::MEGAMOL_BUILD_TIME = "@BUILD_TIME@";
-char const* megamol::build_info::MEGAMOL_GIT_HASH = "@GIT_HASH@";
-char const* megamol::build_info::MEGAMOL_GIT_BRANCH_NAME = "@GIT_BRANCH_NAME@";
-char const* megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL = "@GIT_BRANCH_NAME_FULL@";
-char const* megamol::build_info::MEGAMOL_GIT_ORIGIN_NAME = "@GIT_ORIGIN_NAME@";
-char const* megamol::build_info::MEGAMOL_GIT_REMOTE_URL = "@GIT_REMOTE_URL@";
+constexpr uint64_t megamol::build_info::MEGAMOL_BUILD_TIMESTAMP = @BUILD_TIMESTAMP@;
+constexpr char const* megamol::build_info::MEGAMOL_BUILD_TIME = "@BUILD_TIME@";
+constexpr char const* megamol::build_info::MEGAMOL_GIT_HASH = "@GIT_HASH@";
+constexpr char const* megamol::build_info::MEGAMOL_GIT_BRANCH_NAME = "@GIT_BRANCH_NAME@";
+constexpr char const* megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL = "@GIT_BRANCH_NAME_FULL@";
+constexpr char const* megamol::build_info::MEGAMOL_GIT_ORIGIN_NAME = "@GIT_ORIGIN_NAME@";
+constexpr char const* megamol::build_info::MEGAMOL_GIT_REMOTE_URL = "@GIT_REMOTE_URL@";
+constexpr char const* megamol::build_info::MEGAMOL_GIT_DIFF = "@GIT_DIFF@";
+constexpr int megamol::build_info::MEGAMOL_GIT_IS_DIRTY = @GIT_IS_DIRTY@;
+constexpr char const* megamol::build_info::MEGAMOL_LICENSE = R"MM_Delim(@MEGAMOL_LICENSE@)MM_Delim";
+constexpr char const* megamol::build_info::MEGAMOL_CMAKE_CACHE = @MM_CMAKE_CACHE@;

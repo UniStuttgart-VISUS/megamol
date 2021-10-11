@@ -10,18 +10,22 @@ set(INFO_BIN_DIR "${CMAKE_BINARY_DIR}/megamol_build_info")
 add_custom_target(megamol_build_info_script
   COMMAND ${CMAKE_COMMAND} -P ${INFO_SRC_DIR}/megamol_build_info_script.cmake)
 
-# Set configure time values
+# Install header
 configure_file(${INFO_SRC_DIR}/megamol_build_info.h ${INFO_BIN_DIR}/megamol_build_info.h COPYONLY)
-configure_file(${INFO_SRC_DIR}/megamol_build_info_configuretime.h.in ${INFO_BIN_DIR}/megamol_build_info_configuretime.h @ONLY)
+
+# Dummy copy of the buildtime sources to not trigger missing file in library definition
+configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.cpp.in ${INFO_BIN_DIR}/megamol_build_info_buildtime.cpp COPYONLY)
+
+# Set configure time values
+configure_file(${INFO_SRC_DIR}/megamol_build_info_configuretime.cpp.in ${INFO_BIN_DIR}/megamol_build_info_configuretime.cpp @ONLY)
 
 # Define the library
-add_library(megamol_build_info INTERFACE)
-target_compile_features(megamol_build_info INTERFACE cxx_std_17)
-target_include_directories(megamol_build_info INTERFACE ${INFO_BIN_DIR})
+add_library(megamol_build_info OBJECT
+  ${INFO_BIN_DIR}/megamol_build_info.h
+  ${INFO_BIN_DIR}/megamol_build_info_buildtime.cpp
+  ${INFO_BIN_DIR}/megamol_build_info_configuretime.cpp)
+target_compile_features(megamol_build_info PUBLIC cxx_std_17)
+set_target_properties(megamol_build_info PROPERTIES CXX_EXTENSIONS OFF)
+target_include_directories(megamol_build_info PUBLIC ${INFO_BIN_DIR})
 
 add_dependencies(megamol_build_info megamol_build_info_script)
-
-# Install large build info files as resource
-
-# Cache
-install(FILES ${CMAKE_BINARY_DIR}/CMakeCache.txt DESTINATION "share/resources/megamol_build_info")
