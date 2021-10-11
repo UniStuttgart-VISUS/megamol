@@ -4,6 +4,25 @@
 #
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
+# Functions
+function(string_split_lines result text)
+  if (text STREQUAL "")
+    # Empty string
+    set("${result}" "\"\"" PARENT_SCOPE)
+  else ()
+    # Escape ";"
+    string(REPLACE ";" "\;" text "${text}")
+    # Replace newline
+    string(REPLACE "\n" ";" text_list "${text}")
+    # Add C++ delimiters to each line
+    set(text_result "")
+    foreach (line IN LISTS text_list)
+      string(APPEND text_result "R\"MM_Delim(${line}\n)MM_Delim\"\n")
+    endforeach ()
+    set("${result}" "${text_result}" PARENT_SCOPE)
+  endif ()
+endfunction()
+
 # Directory of the current script
 get_filename_component(INFO_SRC_DIR ${CMAKE_SCRIPT_MODE_FILE} DIRECTORY)
 
@@ -57,6 +76,7 @@ execute_process(COMMAND
   OUTPUT_VARIABLE GIT_DIFF
   RESULTS_VARIABLE GIT_IS_DIRTY
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+string_split_lines(GIT_DIFF "${GIT_DIFF}")
 
 # Time
 string(TIMESTAMP BUILD_TIMESTAMP "%s" UTC)
@@ -64,14 +84,11 @@ string(TIMESTAMP BUILD_TIME "" UTC)
 
 # License
 file(READ ${PROJECT_DIR}/LICENSE MEGAMOL_LICENSE)
+string_split_lines(MEGAMOL_LICENSE "${MEGAMOL_LICENSE}")
 
 # Cache
-#file(READ ${CMAKE_BINARY_DIR}/CMakeCache.txt MM_CMAKE_CACHE)
-set(MM_CMAKE_CACHE "")
-file(STRINGS ${CMAKE_BINARY_DIR}/CMakeCache.txt MM_CMAKE_CACHE_LIST ENCODING UTF-8)
-foreach(line IN LISTS MM_CMAKE_CACHE_LIST)
-  string(APPEND MM_CMAKE_CACHE "R\"MM_Delim(${line})MM_Delim\"\n")
-endforeach()
+file(READ ${CMAKE_BINARY_DIR}/CMakeCache.txt MM_CMAKE_CACHE)
+string_split_lines(MM_CMAKE_CACHE "${MM_CMAKE_CACHE}")
 
 # Write to sourcefile
 configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.cpp.in ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.cpp @ONLY)
