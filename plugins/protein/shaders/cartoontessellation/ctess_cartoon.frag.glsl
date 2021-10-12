@@ -12,8 +12,6 @@ uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
 uniform mat4 ProjInv;
 
-uniform vec4 viewAttr;
-
 uniform vec4 lightPos;
 uniform vec4 phong = vec4(0.4, 0.8, 0.4, 10.0);
 

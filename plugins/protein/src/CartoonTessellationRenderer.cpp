@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ShaderFactory.h"
@@ -41,13 +42,26 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
         , bufSize(32 * 1024 * 1024)
         , numBuffers(3)
         , scalingParam("scaling", "scaling factor for particle radii")
-        , sphereParam("spheres", "render atoms as spheres")
         , lineParam("lines", "render backbone as GL_LINE")
         , backboneParam("backbone", "render backbone as tubes")
         , backboneWidthParam("backbone width", "the width of the backbone")
         , materialParam("material", "ambient, diffuse, specular components + exponent")
         , lineDebugParam("wireframe", "render in wireframe mode")
-        , colorInterpolationParam("color interpolation", "should the colors be interpolated?")
+        , colorInterpolationParam("color::colorInterpolation", "should the colors be interpolated?")
+        , coilColorParam("color::coilColor", "color of random coils")
+        , turnColorParam("color::turnColor", "color of turns")
+        , helixColorParam("color::helixColor", "color of helices")
+        , sheetColorParam("color::sheetColor", "color of sheets")
+        , lineColorParam("color::lineColor", "color of the optional backbone line")
+        , ambientColorParam("lighting::ambientColor", "...")
+        , diffuseColorParam("lighting::diffuseColor", "...")
+        , specularColorParam("lighting::specularColor", "...")
+        , ambientFactorParam("lighting::ambientFactor", "...")
+        , diffuseFactorParam("lighting::diffuseFactor", "...")
+        , specularFactorParam("lighting::specularFactor", "...")
+        , specularExponentParam("lighting::specularExponent", "...")
+        , useLambertParam(
+              "lighting::lambertShading", "If turned on, the local lighting uses lambert instead of Blinn-Phong.")
         ,
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT)
@@ -56,13 +70,12 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
         , lineShader_(nullptr) {
 
     this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
+    this->getDataSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->getDataSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getLightsSlot);
-
-    this->sphereParam << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->sphereParam);
 
     this->lineParam << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->lineParam);
@@ -79,8 +92,44 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
     this->lineDebugParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->lineDebugParam);
 
+    this->coilColorParam << new core::param::ColorParam("#b3b3b3");
+    this->MakeSlotAvailable(&this->coilColorParam);
+
+    this->turnColorParam << new core::param::ColorParam("#00ff00");
+    this->MakeSlotAvailable(&this->turnColorParam);
+
+    this->helixColorParam << new core::param::ColorParam("#ff0000");
+    this->MakeSlotAvailable(&this->helixColorParam);
+
+    this->sheetColorParam << new core::param::ColorParam("#0000ff");
+    this->MakeSlotAvailable(&this->sheetColorParam);
+
+    this->lineColorParam << new core::param::ColorParam("#ffbf33");
+    this->MakeSlotAvailable(&this->lineColorParam);
+
     this->colorInterpolationParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->colorInterpolationParam);
+
+    this->ambientColorParam.SetParameter(new param::ColorParam("#ffffff"));
+    this->MakeSlotAvailable(&this->ambientColorParam);
+
+    this->diffuseColorParam.SetParameter(new param::ColorParam("#ffffff"));
+    this->MakeSlotAvailable(&this->diffuseColorParam);
+
+    this->specularColorParam.SetParameter(new param::ColorParam("#ffffff"));
+    this->MakeSlotAvailable(&this->specularColorParam);
+
+    this->ambientFactorParam.SetParameter(new param::FloatParam(0.2f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->ambientFactorParam);
+
+    this->diffuseFactorParam.SetParameter(new param::FloatParam(0.798f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->diffuseFactorParam);
+
+    this->specularFactorParam.SetParameter(new param::FloatParam(0.02f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->specularFactorParam);
+
+    this->specularExponentParam.SetParameter(new param::FloatParam(120.0f, 1.0f, 1000.0f));
+    this->MakeSlotAvailable(&this->specularExponentParam);
 
     fences.resize(numBuffers);
 }
@@ -120,14 +169,14 @@ bool CartoonTessellationRenderer::create(void) {
         auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
         cartoonShader_ = core::utility::make_shared_glowl_shader("cartoon", shdr_options,
-            std::filesystem::path("cartoontessellation/ctess_cartoon.vert.glsl"),
+            std::filesystem::path("cartoontessellation/ctess_common.vert.glsl"),
             std::filesystem::path("cartoontessellation/ctess_cartoon.tesc.glsl"),
             std::filesystem::path("cartoontessellation/ctess_cartoon.tese.glsl"),
             std::filesystem::path("cartoontessellation/ctess_cartoon.geom.glsl"),
             std::filesystem::path("cartoontessellation/ctess_cartoon.frag.glsl"));
 
         lineShader_ = core::utility::make_shared_glowl_shader("line", shdr_options,
-            std::filesystem::path("cartoontessellation/ctess_splineline.vert.glsl"),
+            std::filesystem::path("cartoontessellation/ctess_common.vert.glsl"),
             std::filesystem::path("cartoontessellation/ctess_splineline.tesc.glsl"),
             std::filesystem::path("cartoontessellation/ctess_splineline.tese.glsl"),
             std::filesystem::path("cartoontessellation/ctess_splineline.geom.glsl"),
@@ -467,6 +516,8 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
     // std::cout << "cIndex " << cIndex << " oIndex " << oIndex << " molCount " << mol->MoleculeCount() << std::endl;
 
     if (lineParam.Param<param::BoolParam>()->Value()) {
+
+        glm::vec4 lineColor = glm::make_vec4(this->lineColorParam.Param<param::ColorParam>()->Value().data());
         // currBuf = 0;
         for (unsigned int i = 0; i < this->positionsCa.size(); i++) {
             unsigned int colBytes, vertBytes, colStride, vertStride;
@@ -474,17 +525,11 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
 
             lineShader_->use();
 
-            lineShader_->setUniform("viewAttr", viewportStuff);
-            lineShader_->setUniform("clipDat", clipDat);
-            lineShader_->setUniform("clipCol", clipCol);
             lineShader_->setUniform("MVinv", viewInv);
             lineShader_->setUniform("MVP", mvp);
             lineShader_->setUniform("MVPinv", mvpInv);
             lineShader_->setUniform("MVPtransp", mvpTrans);
-            lineShader_->setUniform("scaling", this->scalingParam.Param<param::FloatParam>()->Value());
-            float minC = 0.0f, maxC = 0.0f;
-            unsigned int colTabSize = 0;
-            lineShader_->setUniform("inConsts1", -1.0f, minC, maxC, float(colTabSize));
+            lineShader_->setUniform("lineColor", lineColor);
 
             UINT64 numVerts, vertCounter;
             numVerts = this->bufSize / vertStride;
@@ -499,7 +544,6 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
                 memcpy(mem, whence, (size_t) vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRangeEXT(
                     theSingleBuffer, bufSize * currBuf, (GLsizeiptr) vertsThisTime * vertStride);
-                lineShader_->setUniform("instanceOffset", 0);
 
                 glBindBufferRange(
                     GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
@@ -525,6 +569,12 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     if (backboneParam.Param<param::BoolParam>()->Value()) {
+
+        glm::vec4 coilColor = glm::make_vec4(this->coilColorParam.Param<param::ColorParam>()->Value().data());
+        glm::vec4 helixColor = glm::make_vec4(this->helixColorParam.Param<param::ColorParam>()->Value().data());
+        glm::vec4 sheetColor = glm::make_vec4(this->sheetColorParam.Param<param::ColorParam>()->Value().data());
+        glm::vec4 turnColor = glm::make_vec4(this->turnColorParam.Param<param::ColorParam>()->Value().data());
+
         // currBuf = 0;
         unsigned int colBytes, vertBytes, colStride, vertStride;
         this->getBytesAndStride(*mol, colBytes, vertBytes, colStride, vertStride);
@@ -560,8 +610,6 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         }
 
         cartoonShader_->use();
-        cartoonShader_->setUniform("viewAttr", viewportStuff);
-        cartoonShader_->setUniform("clipDat", clipDat);
         cartoonShader_->setUniform("MV", view);
         cartoonShader_->setUniform("MVinv", viewInv);
         cartoonShader_->setUniform("MVP", mvp);
@@ -569,10 +617,14 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         cartoonShader_->setUniform("MVPtransp", mvpTrans);
         cartoonShader_->setUniform("MVinvtrans", mvpInvTrans);
         cartoonShader_->setUniform("ProjInv", projInv);
-        cartoonShader_->setUniform("scaling", this->scalingParam.Param<param::FloatParam>()->Value());
         cartoonShader_->setUniform("pipeWidth", this->backboneWidthParam.Param<param::FloatParam>()->Value());
         cartoonShader_->setUniform(
             "interpolateColors", this->colorInterpolationParam.Param<param::BoolParam>()->Value());
+
+        cartoonShader_->setUniform("coilColor", coilColor);
+        cartoonShader_->setUniform("helixColor", helixColor);
+        cartoonShader_->setUniform("sheetColor", sheetColor);
+        cartoonShader_->setUniform("turnColor", turnColor);
 
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;

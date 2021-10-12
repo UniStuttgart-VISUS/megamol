@@ -134,13 +134,27 @@ namespace protein {
         GLuint singleBufferCreationBits;
         GLuint singleBufferMappingBits;
         core::param::ParamSlot scalingParam;
-        core::param::ParamSlot sphereParam;
         core::param::ParamSlot lineParam;
         core::param::ParamSlot backboneParam;
         core::param::ParamSlot backboneWidthParam;
         core::param::ParamSlot materialParam;
         core::param::ParamSlot lineDebugParam;
         core::param::ParamSlot colorInterpolationParam;
+
+        core::param::ParamSlot coilColorParam;
+        core::param::ParamSlot turnColorParam;
+        core::param::ParamSlot helixColorParam;
+        core::param::ParamSlot sheetColorParam;
+        core::param::ParamSlot lineColorParam;
+
+        core::param::ParamSlot ambientColorParam;
+        core::param::ParamSlot diffuseColorParam;
+        core::param::ParamSlot specularColorParam;
+        core::param::ParamSlot ambientFactorParam;
+        core::param::ParamSlot diffuseFactorParam;
+        core::param::ParamSlot specularFactorParam;
+        core::param::ParamSlot specularExponentParam;
+        core::param::ParamSlot useLambertParam;
 
         std::vector<std::vector<float>> positionsCa;
         std::vector<std::vector<float>> positionsO;

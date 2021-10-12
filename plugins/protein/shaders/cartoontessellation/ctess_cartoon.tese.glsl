@@ -8,6 +8,11 @@ uniform float maxDistance = 1.0;
 
 uniform bool interpolateColors = false;
 
+uniform vec4 coilColor = vec4(0.7, 0.7, 0.7, 1);
+uniform vec4 helixColor = vec4(1, 0, 0, 1);
+uniform vec4 sheetColor = vec4(0, 0, 1, 1);
+uniform vec4 turnColor = vec4(0, 1, 0, 1);
+
 uniform float pipeWidth = 1.0;
 
 #define M_PI 3.1415926535897932384626433832795
@@ -48,13 +53,13 @@ void main() {
         int mytype = atoms[id[0] + i - 1].type;
         
         if(mytype == 1) { // beta sheet
-            colors[i] = vec4(0, 0, 1, 1);
+            colors[i] = sheetColor;
         } else if(mytype == 2) { // alpha helix
-            colors[i] = vec4(1, 0, 0, 1);
+            colors[i] = helixColor;
         } else if(mytype == 3) { // turn
-            colors[i] = vec4(0, 1, 0, 1);
+            colors[i] = turnColor;
         } else { // unclassified
-            colors[i] = vec4(0.7, 0.7, 0.7, 1);
+            colors[i] = coilColor;
         }
     }
     

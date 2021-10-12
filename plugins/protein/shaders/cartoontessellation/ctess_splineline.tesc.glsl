@@ -3,8 +3,6 @@
 uniform int uOuter0 = 1;
 uniform int uOuter1 = 16;
 
-uniform int instanceOffset;
-
 layout(vertices = 4) out;
 
 layout(packed, binding = 2) buffer shader_data {
