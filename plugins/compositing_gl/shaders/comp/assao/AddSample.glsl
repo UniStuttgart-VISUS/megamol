@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 void AddSample( float ssaoValue, float edgeValue, inout float sum, inout float sumWeight )
 {
     float weight = edgeValue;

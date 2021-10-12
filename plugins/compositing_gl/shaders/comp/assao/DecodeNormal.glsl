@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 // CAUTION: not correct for the normals we use
 // DEPRECATED
 vec3 DecodeNormal( vec3 encodedNormal )

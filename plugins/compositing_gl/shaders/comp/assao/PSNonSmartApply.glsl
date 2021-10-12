@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 layout(local_size_x = 8, local_size_y = 8) in;
 
 // edge-ignorant blur & apply (for the lowest quality level 0)

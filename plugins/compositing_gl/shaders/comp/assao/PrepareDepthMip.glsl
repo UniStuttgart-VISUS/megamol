@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 void PrepareDepthMip( const vec4 inPos/*, const vec2 inUV*/, int mipLevel, out float outD0, out float outD1, out float outD2, out float outD3 )
 {
     ivec2 baseCoords = ivec2(inPos.xy) * 2;

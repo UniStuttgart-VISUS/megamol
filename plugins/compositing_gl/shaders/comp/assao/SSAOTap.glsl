@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 void SSAOTap( const int qualityLevel, inout float obscuranceSum, inout float weightSum, const int tapIndex,
 const mat2 rotScale, const vec3 pixCenterPos, const vec3 negViewspaceDir, vec3 pixelNormal,
 const vec2 normalizedScreenPos, const float mipOffset, const float falloffCalcMulSq,

@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 // CAUTION: this contains an implicit conversion from normalized screenCoordinates to NDCCoordinates
 // hidden in NDCToViewMul and NDCToViewAdd
 vec3 NDCToViewspace( vec2 pos, float viewspaceDepth )

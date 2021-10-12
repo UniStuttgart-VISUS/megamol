@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 float ScreenSpaceToViewSpaceDepth( float screenDepth )
 {
     float depthLinearizeMul = g_ASSAOConsts.DepthUnpackConsts.x;

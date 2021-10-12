@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 // currently not used
 vec3 ClipSpaceToViewSpacePosition( vec2 clipPos, float viewspaceDepth )
 {

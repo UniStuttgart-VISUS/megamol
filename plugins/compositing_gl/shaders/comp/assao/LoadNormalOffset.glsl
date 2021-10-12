@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 vec3 LoadNormal( ivec2 pos, ivec2 offset )
 {
     vec3 encodedNormal = texelFetchOffset(g_NormalmapSource, pos, 0, offset ).xyz;

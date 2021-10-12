@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 vec2 SampleBlurredWide( vec4 inPos, vec2 coord )
 {
     vec2 vC           = textureLodOffset(g_BlurInput, coord, 0.0, ivec2( 0,  0 ) ).xy;

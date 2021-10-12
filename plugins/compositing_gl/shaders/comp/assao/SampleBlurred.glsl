@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 vec2 SampleBlurred( vec4 inPos, vec2 coord )
 {
     float packedEdges = texelFetch(g_BlurInput, ivec2( inPos.xy), 0 ).y;

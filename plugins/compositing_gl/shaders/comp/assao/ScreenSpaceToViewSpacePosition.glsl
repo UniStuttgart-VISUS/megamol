@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 // not used atm
 vec3 ScreenSpaceToViewSpacePosition( vec2 screenPos, float viewspaceDepth )
 {

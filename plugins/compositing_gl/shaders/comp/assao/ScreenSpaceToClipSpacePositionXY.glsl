@@ -13,6 +13,12 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 // from [0, width], [0, height] to [-1, 1], [-1, 1]
 // not used atm
 vec2 ScreenSpaceToClipSpacePositionXY( vec2 screenPos )
