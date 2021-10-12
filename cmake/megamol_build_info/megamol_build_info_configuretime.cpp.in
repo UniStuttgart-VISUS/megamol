@@ -5,7 +5,7 @@
  */
 #include "megamol_build_info.h"
 
-constexpr int megamol::build_info::MEGAMOL_VERSION_MAJOR = @PROJECT_VERSION_MAJOR@;
-constexpr int megamol::build_info::MEGAMOL_VERSION_MINOR = @PROJECT_VERSION_MINOR@;
-constexpr int megamol::build_info::MEGAMOL_VERSION_PATCH = @PROJECT_VERSION_PATCH@;
-constexpr char const* megamol::build_info::MEGAMOL_VERSION = "@PROJECT_VERSION@";
+int const megamol::build_info::MEGAMOL_VERSION_MAJOR = @PROJECT_VERSION_MAJOR@;
+int const megamol::build_info::MEGAMOL_VERSION_MINOR = @PROJECT_VERSION_MINOR@;
+int const megamol::build_info::MEGAMOL_VERSION_PATCH = @PROJECT_VERSION_PATCH@;
+char const* const megamol::build_info::MEGAMOL_VERSION = "@PROJECT_VERSION@";
