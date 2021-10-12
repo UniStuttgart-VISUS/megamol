@@ -42,7 +42,11 @@ mcu_graphics::ScreenShotComments::ScreenShotComments(std::string const& project_
 
     for (auto& s : the_comments) {
         the_vector.emplace_back();
-        the_vector.back().compression = PNG_TEXT_COMPRESSION_NONE;
+        if (s.second.size() > 1024) {
+            the_vector.back().compression = PNG_TEXT_COMPRESSION_zTXt;
+        } else {
+            the_vector.back().compression = PNG_TEXT_COMPRESSION_NONE;
+        }
         // what are the libpng people thinking?
         the_vector.back().key = const_cast<png_charp>(static_cast<png_const_charp>(s.first.data()));
         the_vector.back().text = static_cast<png_charp>(s.second.data());
