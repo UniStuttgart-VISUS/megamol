@@ -111,6 +111,8 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
 
     png_destroy_write_struct(&pngPtr, &pngInfoPtr);
 
+    file.Close();
+
     if (screenshot_show_privacy_note) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("Screenshot: %s", privacy_note.c_str());
         if (service_open_popup != nullptr)
