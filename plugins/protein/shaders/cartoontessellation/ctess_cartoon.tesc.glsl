@@ -12,7 +12,6 @@ uniform int instanceOffset = 0;
 
 layout(vertices = 4) out;
 
-in vec4 camPos[];
 out int id[];
 
 struct CAlpha {
@@ -30,8 +29,6 @@ void main() {
     int atomPos = gl_PrimitiveID + (gl_InvocationID % 2);
     gl_out[gl_InvocationID].gl_Position = atoms[atomPos].pos;
     id[gl_InvocationID] = atomPos;
-    
-    vec4 cp = camPos[0];
     
     if(gl_InvocationID == 0)
     {

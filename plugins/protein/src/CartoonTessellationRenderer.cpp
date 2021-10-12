@@ -407,15 +407,6 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         molSizes[molIdx] += 2;
     }
 
-#ifdef FIRSTFRAME_CHECK
-    if (firstFrame) {
-        for (int i = 0; i < mainchain.size(); i++) {
-            std::cout << mainchain[i].type << std::endl;
-        }
-        firstFrame = false;
-    }
-#endif
-
     firstResIdx = 0;
     lastResIdx = 0;
     firstAtomIdx = 0;
