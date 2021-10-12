@@ -24,8 +24,6 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-//#define FIRSTFRAME_CHECK
-
 namespace megamol {
 namespace protein {
 
@@ -133,13 +131,6 @@ namespace protein {
 
         void queueSignal(GLsync& syncObj);
         void waitSignal(GLsync& syncObj);
-
-#ifdef FIRSTFRAME_CHECK
-        bool firstFrame;
-#endif
-
-        /** The sphere shader */
-        // vislib::graphics::gl::GLSLShader sphereShader;
 
         GLuint vertArray;
         std::vector<GLsync> fences;

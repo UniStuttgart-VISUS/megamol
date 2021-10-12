@@ -92,10 +92,6 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
     this->MakeSlotAvailable(&this->materialParam);*/
 
     fences.resize(numBuffers);
-
-#ifdef FIRSTFRAME_CHECK
-    firstFrame = true;
-#endif
 }
 
 
