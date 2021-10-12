@@ -11,6 +11,12 @@ namespace megamol::core::utility::platform {
 
     class RuntimeInfo {
     public:
+        static std::string GetHardwareInfo() {
+            if (m_hardware_info.empty()) {
+                get_hardware_info();
+            }
+            return m_hardware_info;
+        }
 
         static std::string GetOsInfo() {
             if (m_os_info.empty()) {
@@ -28,11 +34,13 @@ namespace megamol::core::utility::platform {
 
 
     private:
+        static void get_hardware_info();
         static void get_runtime_libraries();
         static void get_os_info();
         static std::string execute(const std::string& cmd);
 
         inline static std::string m_runtime_libraries;
         inline static std::string m_os_info;
+        inline static std::string m_hardware_info;
     };
 }

@@ -115,6 +115,14 @@ std::vector<std::string> dlinfo_linkmap(void* handle) {
 
 }
 
+void megamol::core::utility::platform::RuntimeInfo::get_hardware_info() {
+#ifdef _WIN32
+    m_hardware_info = execute("systeminfo");
+#else
+    m_hardware_info = execute("cat /proc/cpuinfo /proc/meminfo");
+#endif
+}
+
 void megamol::core::utility::platform::RuntimeInfo::get_runtime_libraries() {
 #ifdef _WIN32
     HANDLE h_mod_snap = INVALID_HANDLE_VALUE;
