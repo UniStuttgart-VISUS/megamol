@@ -31,14 +31,7 @@ using namespace megamol::protein;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;
 
-#define RENDER_ATOMS_AS_SPHERES 0
-
-#define MAP_BUFFER_LOCALLY
-#define DEBUG_BLAHBLAH
-
 const GLuint SSBObindingPoint = 2;
-//#define NGS_THE_INSTANCE "gl_InstanceID"
-#define NGS_THE_INSTANCE "gl_VertexID"
 
 /*
  * moldyn::CartoonTessellationRenderer::CartoonTessellationRenderer
@@ -143,53 +136,6 @@ bool CartoonTessellationRenderer::create(void) {
     if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions())
         return false;
 
-    // vislib::graphics::gl::ShaderSource vert, frag;
-    vert = new ShaderSource();
-    tessCont = new ShaderSource();
-    tessEval = new ShaderSource();
-    geom = new ShaderSource();
-    frag = new ShaderSource();
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::vertex", *vert)) {
-        return false;
-    }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::tesscontrol", *tessCont)) {
-        return false;
-    }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::tesseval", *tessEval)) {
-        return false;
-    }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::geometry", *geom)) {
-        return false;
-    }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::fragment", *frag)) {
-        return false;
-    }
-    try {
-        // compile the shader
-        if (!this->splineShader.Compile(vert->Code(), vert->Count(), tessCont->Code(), tessCont->Count(),
-                tessEval->Code(), tessEval->Count(), geom->Code(), geom->Count(), frag->Code(), frag->Count())) {
-            throw vislib::Exception("Could not compile spline shader. ", __FILE__, __LINE__);
-        }
-        // link the shader
-        if (!this->splineShader.Link()) {
-            throw vislib::Exception("Could not link spline shader", __FILE__, __LINE__);
-        }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile tessellation shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tessellation shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile tessellation shader: Unknown exception\n");
-        return false;
-    }
-
     try {
         auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
@@ -199,6 +145,13 @@ bool CartoonTessellationRenderer::create(void) {
             std::filesystem::path("cartoontessellation/ctess_cartoon.tese.glsl"),
             std::filesystem::path("cartoontessellation/ctess_cartoon.geom.glsl"),
             std::filesystem::path("cartoontessellation/ctess_cartoon.frag.glsl"));
+
+        lineShader_ = core::utility::make_shared_glowl_shader("line", shdr_options,
+            std::filesystem::path("cartoontessellation/ctess_splineline.vert.glsl"),
+            std::filesystem::path("cartoontessellation/ctess_splineline.tesc.glsl"),
+            std::filesystem::path("cartoontessellation/ctess_splineline.tese.glsl"),
+            std::filesystem::path("cartoontessellation/ctess_splineline.geom.glsl"),
+            std::filesystem::path("cartoontessellation/ctess_splineline.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
@@ -320,10 +273,6 @@ MolecularDataCall* CartoonTessellationRenderer::getData(unsigned int t, float& o
  * moldyn::SimpleSphereRenderer::Render
  */
 bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
-#ifdef DEBUG_BLAHBLAH
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-#endif
     view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
     if (cr == NULL)
         return false;
@@ -552,28 +501,19 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
             unsigned int colBytes, vertBytes, colStride, vertStride;
             this->getBytesAndStrideLines(*mol, colBytes, vertBytes, colStride, vertStride);
 
-            this->splineShader.Enable();
-            glColor4f(1.0f / this->positionsCa.Count() * (i + 1), 0.75f, 0.25f, 1.0f);
-            glUniform4fv(this->splineShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-            // TODO
-            // glUniform3fv(this->splineShader.ParameterLocation("camIn"), 1,
-            // cr->GetCameraParameters()->Front().PeekComponents());
-            // glUniform3fv(this->splineShader.ParameterLocation("camRight"), 1,
-            // cr->GetCameraParameters()->Right().PeekComponents());
-            // glUniform3fv(this->splineShader.ParameterLocation("camUp"), 1,
-            // cr->GetCameraParameters()->Up().PeekComponents());
-            glUniform4fv(this->splineShader.ParameterLocation("clipDat"), 1, glm::value_ptr(clipDat));
-            glUniform4fv(this->splineShader.ParameterLocation("clipCol"), 1, glm::value_ptr(clipCol));
-            glUniformMatrix4fv(this->splineShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(viewInv));
-            glUniformMatrix4fv(this->splineShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(mvp));
-            glUniformMatrix4fv(this->splineShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(mvpInv));
-            glUniformMatrix4fv(
-                this->splineShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(mvpTrans));
-            glUniform1f(this->splineShader.ParameterLocation("scaling"),
-                this->scalingParam.Param<param::FloatParam>()->Value());
+            lineShader_->use();
+
+            lineShader_->setUniform("viewAttr", viewportStuff);
+            lineShader_->setUniform("clipDat", clipDat);
+            lineShader_->setUniform("clipCol", clipCol);
+            lineShader_->setUniform("MVinv", viewInv);
+            lineShader_->setUniform("MVP", mvp);
+            lineShader_->setUniform("MVPinv", mvpInv);
+            lineShader_->setUniform("MVPtransp", mvpTrans);
+            lineShader_->setUniform("scaling", this->scalingParam.Param<param::FloatParam>()->Value());
             float minC = 0.0f, maxC = 0.0f;
             unsigned int colTabSize = 0;
-            glUniform4f(this->splineShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+            lineShader_->setUniform("inConsts1", -1.0f, minC, maxC, float(colTabSize));
 
             UINT64 numVerts, vertCounter;
             numVerts = this->bufSize / vertStride;
@@ -588,7 +528,7 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
                 memcpy(mem, whence, (size_t) vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRangeEXT(
                     theSingleBuffer, bufSize * currBuf, (GLsizeiptr) vertsThisTime * vertStride);
-                glUniform1i(this->splineShader.ParameterLocation("instanceOffset"), 0);
+                lineShader_->setUniform("instanceOffset", 0);
 
                 glBindBufferRange(
                     GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
@@ -604,7 +544,7 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
 
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
             glDisable(GL_TEXTURE_1D);
-            this->splineShader.Disable();
+            glUseProgram(0);
         }
     }
 
@@ -659,10 +599,9 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         cartoonShader_->setUniform("MVinvtrans", mvpInvTrans);
         cartoonShader_->setUniform("ProjInv", projInv);
         cartoonShader_->setUniform("scaling", this->scalingParam.Param<param::FloatParam>()->Value());
-        cartoonShader_->setUniform("pipeWidth",
-            this->backboneWidthParam.Param<param::FloatParam>()->Value());
-        cartoonShader_->setUniform("interpolateColors",
-            this->colorInterpolationParam.Param<param::BoolParam>()->Value());
+        cartoonShader_->setUniform("pipeWidth", this->backboneWidthParam.Param<param::FloatParam>()->Value());
+        cartoonShader_->setUniform(
+            "interpolateColors", this->colorInterpolationParam.Param<param::BoolParam>()->Value());
 
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
@@ -707,10 +646,6 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
     mol->Unlock();
 
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-#ifdef DEBUG_BLAHBLAH
-    glDisable(GL_DEBUG_OUTPUT);
-    glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-#endif
 
     //	timer.EndFrame();
 

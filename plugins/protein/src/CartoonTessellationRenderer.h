@@ -62,17 +62,9 @@ namespace protein {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-#ifdef _WIN32
-#if defined(DEBUG) || defined(_DEBUG)
-            HDC dc = ::wglGetCurrentDC();
-            HGLRC rc = ::wglGetCurrentContext();
-            ASSERT(dc != NULL);
-            ASSERT(rc != NULL);
-#endif // DEBUG || _DEBUG
-#endif // _WIN32
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable() &&
                    vislib::graphics::gl::GLSLTesselationShader::AreExtensionsAvailable() &&
-                   isExtAvailable("GL_ARB_buffer_storage") && ogl_IsVersionGEQ(4, 4);
+                   isExtAvailable("GL_ARB_buffer_storage") && ogl_IsVersionGEQ(4, 3);
         }
 
         /** Ctor. */
@@ -159,9 +151,6 @@ namespace protein {
         void* theSingleMappedMem;
         GLuint singleBufferCreationBits;
         GLuint singleBufferMappingBits;
-        typedef std::map<std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
-        vislib::SmartPtr<ShaderSource> vert, tessCont, tessEval, geom, frag;
-        vislib::SmartPtr<ShaderSource> tubeVert, tubeTessCont, tubeTessEval, tubeGeom, tubeFrag;
         core::param::ParamSlot scalingParam;
         core::param::ParamSlot sphereParam;
         core::param::ParamSlot lineParam;
@@ -173,9 +162,6 @@ namespace protein {
 
         vislib::Array<vislib::Array<float>> positionsCa;
         vislib::Array<vislib::Array<float>> positionsO;
-
-        /** shader for spline rendering */
-        vislib::graphics::gl::GLSLTesselationShader splineShader;
 
         std::shared_ptr<glowl::GLSLProgram> lineShader_;
         std::shared_ptr<glowl::GLSLProgram> cartoonShader_;
