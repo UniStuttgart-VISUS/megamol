@@ -115,6 +115,8 @@ namespace protein {
         /** The call for light sources */
         core::CallerSlot getLightsSlot;
 
+        core::CallerSlot getFramebufferSlot;
+
         void getBytesAndStride(MolecularDataCall& mol, unsigned int& colBytes, unsigned int& vertBytes,
             unsigned int& colStride, unsigned int& vertStride);
         void getBytesAndStrideLines(MolecularDataCall& mol, unsigned int& colBytes, unsigned int& vertBytes,
@@ -161,6 +163,7 @@ namespace protein {
 
         std::shared_ptr<glowl::GLSLProgram> lineShader_;
         std::shared_ptr<glowl::GLSLProgram> cartoonShader_;
+        std::shared_ptr<glowl::GLSLProgram> lightingShader_;
 
         std::vector<CAlpha> mainchain;
     };

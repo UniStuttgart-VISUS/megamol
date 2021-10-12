@@ -21,6 +21,7 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/light/PointLight.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "compositing/CompositingCalls.h"
 
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -37,6 +38,7 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
         : view::Renderer3DModuleGL()
         , getDataSlot("getdata", "Connects to the data source")
         , getLightsSlot("lights", "Lights are retrieved over this slot.")
+        , getFramebufferSlot("framebuffer", "Optional framebuffer information is retrieved over this slot")
         , fences()
         , currBuf(0)
         , bufSize(32 * 1024 * 1024)
@@ -76,6 +78,9 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
     this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
     this->getDataSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getLightsSlot);
+
+    this->getFramebufferSlot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
+    this->MakeSlotAvailable(&this->getFramebufferSlot);
 
     this->lineParam << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->lineParam);
@@ -181,6 +186,10 @@ bool CartoonTessellationRenderer::create(void) {
             std::filesystem::path("cartoontessellation/ctess_splineline.tese.glsl"),
             std::filesystem::path("cartoontessellation/ctess_splineline.geom.glsl"),
             std::filesystem::path("cartoontessellation/ctess_splineline.frag.glsl"));
+
+        lightingShader_ = core::utility::make_shared_glowl_shader("lighting", shdr_options,
+            std::filesystem::path("simplemolecule/sm_common_lighting.vert.glsl"),
+            std::filesystem::path("simplemolecule/sm_common_lighting.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
