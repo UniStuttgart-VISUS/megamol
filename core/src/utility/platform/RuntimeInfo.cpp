@@ -153,7 +153,7 @@ void megamol::core::utility::platform::RuntimeInfo::get_runtime_libraries() {
         }
         out << std::endl;
     }
-    m_module_info = out.str();
+    m_runtime_libraries = out.str();
 #endif
 }
 
