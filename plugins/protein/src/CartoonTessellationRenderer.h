@@ -13,6 +13,7 @@
 
 #include <map>
 #include <utility>
+#include "glowl/GLSLProgram.hpp"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -168,18 +169,16 @@ namespace protein {
         core::param::ParamSlot backboneWidthParam;
         core::param::ParamSlot materialParam;
         core::param::ParamSlot lineDebugParam;
-        core::param::ParamSlot buttonParam;
         core::param::ParamSlot colorInterpolationParam;
 
         vislib::Array<vislib::Array<float>> positionsCa;
         vislib::Array<vislib::Array<float>> positionsO;
 
-        /** shader for the spheres (raycasting view) */
-        vislib::graphics::gl::GLSLShader sphereShader;
         /** shader for spline rendering */
         vislib::graphics::gl::GLSLTesselationShader splineShader;
-        /** shader for the tubes */
-        vislib::graphics::gl::GLSLTesselationShader tubeShader;
+
+        std::shared_ptr<glowl::GLSLProgram> lineShader_;
+        std::shared_ptr<glowl::GLSLProgram> cartoonShader_;
 
         std::vector<CAlpha> mainchain;
     };

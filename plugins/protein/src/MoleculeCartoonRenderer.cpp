@@ -128,8 +128,8 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     // --- set the render mode ---
     // SetRenderMode(CARTOON);
     // SetRenderMode(CARTOON_SIMPLE);
-    SetRenderMode(CartoonRenderMode::CARTOON_LINE);
-    // SetRenderMode(CARTOON_GPU);
+    //SetRenderMode(CartoonRenderMode::CARTOON_LINE);
+    SetRenderMode(CartoonRenderMode::CARTOON_GPU);
     param::EnumParam* rm = new param::EnumParam(int(this->currentRenderMode));
     rm->SetTypePair(static_cast<int>(CartoonRenderMode::CARTOON), "Cartoon Hybrid");
     rm->SetTypePair(static_cast<int>(CartoonRenderMode::CARTOON_SIMPLE), "Cartoon Hybrid (simple)");
