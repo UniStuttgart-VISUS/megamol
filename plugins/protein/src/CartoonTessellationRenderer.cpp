@@ -574,6 +574,14 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         glm::vec4 helixColor = glm::make_vec4(this->helixColorParam.Param<param::ColorParam>()->Value().data());
         glm::vec4 sheetColor = glm::make_vec4(this->sheetColorParam.Param<param::ColorParam>()->Value().data());
         glm::vec4 turnColor = glm::make_vec4(this->turnColorParam.Param<param::ColorParam>()->Value().data());
+        glm::vec4 lightingVector{};
+        lightingVector.x = this->ambientFactorParam.Param<param::FloatParam>()->Value();
+        lightingVector.y = this->diffuseFactorParam.Param<param::FloatParam>()->Value();
+        lightingVector.z = this->specularFactorParam.Param<param::FloatParam>()->Value();
+        lightingVector.w = this->specularExponentParam.Param<param::FloatParam>()->Value();
+        glm::vec4 ambientColor = glm::make_vec4(this->ambientColorParam.Param<param::ColorParam>()->Value().data());
+        glm::vec4 diffuseColor = glm::make_vec4(this->diffuseColorParam.Param<param::ColorParam>()->Value().data());
+        glm::vec4 specularColor = glm::make_vec4(this->specularColorParam.Param<param::ColorParam>()->Value().data());
 
         // currBuf = 0;
         unsigned int colBytes, vertBytes, colStride, vertStride;

@@ -10,6 +10,7 @@ in vec4 color[];
 in vec3 n[];
 out vec4 mycol;
 out vec3 normal;
+out vec3 rawnormal;
 
 void main() {
     for(int i = 0; i < gl_in.length(); i++) {
@@ -17,6 +18,7 @@ void main() {
         mycol = color[i];
         vec4 normal4 = MVinvtrans * vec4(n[i], 0);
         normal = normalize(normal4.xyz);
+        rawnormal = normalize(n[i]);
         EmitVertex();
     }
     EndPrimitive();
