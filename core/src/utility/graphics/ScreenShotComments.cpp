@@ -26,7 +26,7 @@ mcu_graphics::ScreenShotComments::ScreenShotComments(std::string const& project_
     the_comments["Software Environment"] = platform::RuntimeInfo::GetRuntimeLibraries();
     the_comments["Hardware Environment"] = ""; // TODO
     the_comments["CMakeCache"] = std::string(megamol::build_info::MEGAMOL_CMAKE_CACHE);
-    the_comments["Operating System"] = ""; // TODO
+    the_comments["Operating System"] = platform::RuntimeInfo::GetOsInfo();
 
     //the_comments["Disclaimer"] = "";
     //the_comments["Warning"] = "";

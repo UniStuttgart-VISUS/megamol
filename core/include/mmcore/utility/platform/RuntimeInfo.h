@@ -11,6 +11,14 @@ namespace megamol::core::utility::platform {
 
     class RuntimeInfo {
     public:
+
+        static std::string GetOsInfo() {
+            if (m_os_info.empty()) {
+                get_os_info();
+            }
+            return m_os_info;
+        }
+
         static std::string GetRuntimeLibraries() {
             if (m_runtime_libraries.empty()) {
                 get_runtime_libraries();
@@ -19,10 +27,10 @@ namespace megamol::core::utility::platform {
         }
 
 
-
     private:
-        static std::string get_file_version(const char* path);
         static void get_runtime_libraries();
+        static void get_os_info();
+        static std::string execute(const std::string& cmd);
 
         inline static std::string m_runtime_libraries;
         inline static std::string m_os_info;

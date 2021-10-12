@@ -5,6 +5,7 @@
  */
 #include "mmcore/utility/platform/RuntimeInfo.h"
 
+#include <array>
 #include <filesystem>
 #include <sstream>
 #include <stdexcept>
@@ -14,13 +15,19 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #include <tchar.h>
+#define the_popen _popen
+#define the_pclose _pclose
 #else
 #include <link.h>
+#define the_popen popen
+#define the_pclose pclose
 #endif
+
+namespace {
 
 #ifdef _WIN32
 
-std::string megamol::core::utility::platform::RuntimeInfo::get_file_version(const char* path) {
+std::string get_file_version(const char* path) {
     // https://stackoverflow.com/questions/940707/how-do-i-programmatically-get-the-version-of-a-dll-or-exe-file
     std::string ret;
     DWORD verHandle = 0;
@@ -106,6 +113,8 @@ std::vector<std::string> dlinfo_linkmap(void* handle) {
 
 #endif
 
+}
+
 void megamol::core::utility::platform::RuntimeInfo::get_runtime_libraries() {
 #ifdef _WIN32
     HANDLE h_mod_snap = INVALID_HANDLE_VALUE;
@@ -146,4 +155,35 @@ void megamol::core::utility::platform::RuntimeInfo::get_runtime_libraries() {
     }
     m_module_info = out.str();
 #endif
+}
+
+void megamol::core::utility::platform::RuntimeInfo::get_os_info() {
+#ifdef _WIN32
+    m_os_info = execute("ver");
+#else
+    m_os_info = execute("cat /etc/issue");
+#endif
+}
+
+
+std::string megamol::core::utility::platform::RuntimeInfo::execute(const std::string& cmd) {
+    std::array<char, 1024> buffer;
+    std::string result;
+
+    auto pipe = the_popen(cmd.c_str(), "r");
+
+    if (!pipe) throw std::runtime_error("popen() failed!");
+
+    while (!feof(pipe)) {
+        if (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
+            result += buffer.data();
+    }
+
+    auto rc = the_pclose(pipe);
+
+    if (rc == EXIT_SUCCESS) {
+        return result;
+    } else {
+        return "unable to execute " + cmd;
+    }
 }
