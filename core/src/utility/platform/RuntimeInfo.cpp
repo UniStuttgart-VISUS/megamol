@@ -63,7 +63,7 @@ std::string getFileVersion(const char* path) {
  * @param handle A handle generated with dlopen(nullptr, RTLD_NOW).
  * @return List of library search paths.
  */
-std::vector<std::string> dlinfo_search_path(void* handle) {
+[[maybe_unused]] std::vector<std::string> dlinfo_search_path(void* handle) {
     // `man dlinfo`
     std::vector<std::string> paths;
     Dl_serinfo serinfo;
@@ -80,7 +80,7 @@ std::vector<std::string> dlinfo_search_path(void* handle) {
         throw std::runtime_error(std::string("Error from dlinfo(): ") + dlerror());
     }
     paths.resize(serinfo.dls_cnt);
-    for (int i = 0; i < serinfo.dls_cnt; i++) {
+    for (unsigned int i = 0; i < serinfo.dls_cnt; i++) {
         paths[i] = std::string(sip->dls_serpath[i].dls_name);
     }
     std::free(sip);
