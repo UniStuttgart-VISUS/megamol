@@ -3,7 +3,6 @@
 #include "megamol_build_info.h"
 #include "mmcore/utility/DateTime.h"
 #include "mmcore/utility/platform/RuntimeInfo.h"
-#include "mmcore/utility/sys/EnvironmentInfo.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -24,7 +23,7 @@ mcu_graphics::ScreenShotComments::ScreenShotComments(std::string const& project_
 
     the_comments["RemoteBranch"] = megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL;
     the_comments["RemoteURL"] = megamol::build_info::MEGAMOL_GIT_REMOTE_URL;
-    the_comments["Software Environment"] = sys::EnvironmentInfo::GetModuleInfo();
+    the_comments["Software Environment"] = platform::RuntimeInfo::GetRuntimeLibraries();
     the_comments["Hardware Environment"] = ""; // TODO
     the_comments["CMakeCache"] = std::string(megamol::build_info::MEGAMOL_CMAKE_CACHE);
     the_comments["Operating System"] = ""; // TODO

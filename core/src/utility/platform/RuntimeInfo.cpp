@@ -18,11 +18,9 @@
 #include <link.h>
 #endif
 
-namespace {
-
 #ifdef _WIN32
 
-std::string getFileVersion(const char* path) {
+std::string megamol::core::utility::platform::RuntimeInfo::get_file_version(const char* path) {
     // https://stackoverflow.com/questions/940707/how-do-i-programmatically-get-the-version-of-a-dll-or-exe-file
     std::string ret;
     DWORD verHandle = 0;
@@ -108,9 +106,7 @@ std::vector<std::string> dlinfo_linkmap(void* handle) {
 
 #endif
 
-} // namespace
-
-std::string megamol::core::utility::platform::getRuntimeLibraries() {
+void megamol::core::utility::platform::RuntimeInfo::get_runtime_libraries() {
 #ifdef _WIN32
     HANDLE h_mod_snap = INVALID_HANDLE_VALUE;
     h_mod_snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
@@ -121,13 +117,14 @@ std::string megamol::core::utility::platform::getRuntimeLibraries() {
         if (Module32First(h_mod_snap, &me32)) {
             do {
                 out << me32.szExePath << " (";
-                out << getFileVersion(me32.szExePath) << ");";
+                out << get_file_version(me32.szExePath) << ")" << std::endl;
             } while (Module32Next(h_mod_snap, &me32));
         }
         CloseHandle(h_mod_snap);
-        return out.str();
+        m_runtime_libraries = out.str();
+    } else {
+        m_runtime_libraries = "";
     }
-    return "";
 #else
     void* handle = dlopen(nullptr, RTLD_NOW);
 
@@ -145,8 +142,8 @@ std::string megamol::core::utility::platform::getRuntimeLibraries() {
             p = std::filesystem::canonical(p);
             out << " (=> " << p.string() << ")";
         }
-        out << ";";
+        out << std::endl;
     }
-    return out.str();
+    m_module_info = out.str();
 #endif
 }
