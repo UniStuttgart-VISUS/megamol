@@ -20,10 +20,6 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/light/PointLight.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib/assert.h"
-#include "vislib/math/Matrix.h"
-#include "vislib/math/ShallowMatrix.h"
-#include "vislib/math/mathfunctions.h"
 
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -86,11 +82,6 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
     this->colorInterpolationParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->colorInterpolationParam);
 
-    /*float components[4] = { 0.2f, 0.8f, 0.4f, 10.0f };
-    vislib::math::Vector<float, 4U> myvec(components);
-    this->materialParam << new core::param::Vector4fParam(myvec);
-    this->MakeSlotAvailable(&this->materialParam);*/
-
     fences.resize(numBuffers);
 }
 
@@ -125,13 +116,6 @@ void CartoonTessellationRenderer::waitSignal(GLsync& syncObj) {
  * moldyn::SimpleSphereRenderer::create
  */
 bool CartoonTessellationRenderer::create(void) {
-    using namespace vislib::graphics::gl;
-
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
-    if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions())
-        return false;
-
     try {
         auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
@@ -194,8 +178,8 @@ void CartoonTessellationRenderer::getBytesAndStride(MolecularDataCall& mol, unsi
     unsigned int& vertBytes, unsigned int& colStride, unsigned int& vertStride) {
     vertBytes = 0;
     colBytes = 0;
-    // colBytes = vislib::math::Max(colBytes, 3 * 4U);
-    vertBytes = vislib::math::Max(vertBytes, (unsigned int) sizeof(CAlpha));
+    // colBytes = std::max(colBytes, 3 * 4U);
+    vertBytes = std::max(vertBytes, (unsigned int) sizeof(CAlpha));
 
     colStride = 0;
     colStride = colStride < colBytes ? colBytes : colStride;
@@ -207,8 +191,8 @@ void CartoonTessellationRenderer::getBytesAndStrideLines(MolecularDataCall& mol,
     unsigned int& vertBytes, unsigned int& colStride, unsigned int& vertStride) {
     vertBytes = 0;
     colBytes = 0;
-    // colBytes = vislib::math::Max(colBytes, 3 * 4U);
-    vertBytes = vislib::math::Max(vertBytes, 4 * 4U);
+    // colBytes = std::max(colBytes, 3 * 4U);
+    vertBytes = std::max(vertBytes, 4 * 4U);
 
     colStride = 0;
     colStride = colStride < colBytes ? colBytes : colStride;
@@ -298,7 +282,7 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
     // TODO make this correct
     glm::vec4 viewportStuff;
     ::glGetFloatv(GL_VIEWPORT, glm::value_ptr(viewportStuff));
-    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
+    glPointSize(std::max(viewportStuff[2], viewportStuff[3]));
     if (viewportStuff[2] < 1.0f)
         viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f)
@@ -317,9 +301,9 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
     auto projInv = glm::transpose(proj);
 
     // copy data
-    if (this->positionsCa.Count() != mol->MoleculeCount()) {
-        this->positionsCa.SetCount(mol->MoleculeCount());
-        this->positionsO.SetCount(mol->MoleculeCount());
+    if (this->positionsCa.size() != mol->MoleculeCount()) {
+        this->positionsCa.resize(mol->MoleculeCount());
+        this->positionsO.resize(mol->MoleculeCount());
     }
     unsigned int firstResIdx = 0;
     unsigned int lastResIdx = 0;
@@ -439,10 +423,10 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
     atomTypeIdx = 0;
 
     for (unsigned int molIdx = 0; molIdx < mol->MoleculeCount(); molIdx++) {
-        this->positionsCa[molIdx].Clear();
-        this->positionsCa[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
-        this->positionsO[molIdx].Clear();
-        this->positionsO[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
+        this->positionsCa[molIdx].clear();
+        this->positionsCa[molIdx].reserve(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
+        this->positionsO[molIdx].clear();
+        this->positionsO[molIdx].reserve(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
 
         // bool first;
         firstResIdx = mol->Molecules()[molIdx].FirstResidueIndex();
@@ -453,37 +437,37 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
             for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) {
                 unsigned int atomTypeIdx = mol->AtomTypeIndices()[atomIdx];
                 if (mol->AtomTypes()[atomTypeIdx].Name().Equals("CA")) {
-                    this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                    this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                    this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                    this->positionsCa[molIdx].Add(1.0f);
+                    this->positionsCa[molIdx].push_back(mol->AtomPositions()[3 * atomIdx]);
+                    this->positionsCa[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 1]);
+                    this->positionsCa[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 2]);
+                    this->positionsCa[molIdx].push_back(1.0f);
                     // write first and last Ca position three times
                     if ((resIdx == firstResIdx) || (resIdx == (lastResIdx - 1))) {
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                        this->positionsCa[molIdx].Add(1.0f);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                        this->positionsCa[molIdx].Add(1.0f);
+                        this->positionsCa[molIdx].push_back(mol->AtomPositions()[3 * atomIdx]);
+                        this->positionsCa[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 1]);
+                        this->positionsCa[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 2]);
+                        this->positionsCa[molIdx].push_back(1.0f);
+                        this->positionsCa[molIdx].push_back(mol->AtomPositions()[3 * atomIdx]);
+                        this->positionsCa[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 1]);
+                        this->positionsCa[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 2]);
+                        this->positionsCa[molIdx].push_back(1.0f);
                     }
                 }
                 if (mol->AtomTypes()[atomTypeIdx].Name().Equals("O")) {
-                    this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                    this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                    this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                    this->positionsO[molIdx].Add(1.0f);
+                    this->positionsO[molIdx].push_back(mol->AtomPositions()[3 * atomIdx]);
+                    this->positionsO[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 1]);
+                    this->positionsO[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 2]);
+                    this->positionsO[molIdx].push_back(1.0f);
                     // write first and last Ca position three times
                     if ((resIdx == firstResIdx) || (resIdx == (lastResIdx - 1))) {
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                        this->positionsO[molIdx].Add(1.0f);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                        this->positionsO[molIdx].Add(1.0f);
+                        this->positionsO[molIdx].push_back(mol->AtomPositions()[3 * atomIdx]);
+                        this->positionsO[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 1]);
+                        this->positionsO[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 2]);
+                        this->positionsO[molIdx].push_back(1.0f);
+                        this->positionsO[molIdx].push_back(mol->AtomPositions()[3 * atomIdx]);
+                        this->positionsO[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 1]);
+                        this->positionsO[molIdx].push_back(mol->AtomPositions()[3 * atomIdx + 2]);
+                        this->positionsO[molIdx].push_back(1.0f);
                     }
                 }
             }
@@ -493,7 +477,7 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
 
     if (lineParam.Param<param::BoolParam>()->Value()) {
         // currBuf = 0;
-        for (unsigned int i = 0; i < this->positionsCa.Count(); i++) {
+        for (unsigned int i = 0; i < this->positionsCa.size(); i++) {
             unsigned int colBytes, vertBytes, colStride, vertStride;
             this->getBytesAndStrideLines(*mol, colBytes, vertBytes, colStride, vertStride);
 
@@ -513,13 +497,13 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
 
             UINT64 numVerts, vertCounter;
             numVerts = this->bufSize / vertStride;
-            const char* currVert = (const char*) (this->positionsCa[i].PeekElements());
+            const char* currVert = (const char*) (this->positionsCa[i].data());
             const char* currCol = 0;
             vertCounter = 0;
-            while (vertCounter < this->positionsCa[i].Count() / 4) {
+            while (vertCounter < this->positionsCa[i].size() / 4) {
                 void* mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
                 const char* whence = currVert;
-                UINT64 vertsThisTime = vislib::math::Min(this->positionsCa[i].Count() / 4 - vertCounter, numVerts);
+                UINT64 vertsThisTime = std::min(this->positionsCa[i].size() / 4 - vertCounter, numVerts);
                 this->waitSignal(fences[currBuf]);
                 memcpy(mem, whence, (size_t) vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRangeEXT(
@@ -614,7 +598,7 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
                 const char* currVert = (const char*) (&mainchain[(unsigned int) vertCounter + (unsigned int) stride]);
                 void* mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
                 const char* whence = currVert;
-                UINT64 vertsThisTime = vislib::math::Min(molSizes[i] - vertCounter, numVerts);
+                UINT64 vertsThisTime = std::min(molSizes[i] - vertCounter, numVerts);
                 this->waitSignal(fences[currBuf]);
                 memcpy(mem, whence, (size_t) vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRangeEXT(

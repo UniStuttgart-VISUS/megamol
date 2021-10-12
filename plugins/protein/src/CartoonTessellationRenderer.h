@@ -19,17 +19,12 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLTesselationShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 
 namespace megamol {
 namespace protein {
 
     using namespace megamol::core;
     using namespace megamol::protein_calls;
-    using namespace vislib::graphics::gl;
 
     /**
      * Renderer for simple sphere glyphs
@@ -60,9 +55,7 @@ namespace protein {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable() &&
-                   vislib::graphics::gl::GLSLTesselationShader::AreExtensionsAvailable() &&
-                   isExtAvailable("GL_ARB_buffer_storage") && ogl_IsVersionGEQ(4, 3);
+            return isExtAvailable("GL_ARB_buffer_storage") && ogl_IsVersionGEQ(4, 3);
         }
 
         /** Ctor. */
@@ -122,8 +115,6 @@ namespace protein {
         /** The call for light sources */
         core::CallerSlot getLightsSlot;
 
-        void setPointers(
-            MolecularDataCall& mol, GLuint vertBuf, const void* vertPtr, GLuint colBuf, const void* colPtr);
         void getBytesAndStride(MolecularDataCall& mol, unsigned int& colBytes, unsigned int& vertBytes,
             unsigned int& colStride, unsigned int& vertStride);
         void getBytesAndStrideLines(MolecularDataCall& mol, unsigned int& colBytes, unsigned int& vertBytes,
@@ -151,8 +142,8 @@ namespace protein {
         core::param::ParamSlot lineDebugParam;
         core::param::ParamSlot colorInterpolationParam;
 
-        vislib::Array<vislib::Array<float>> positionsCa;
-        vislib::Array<vislib::Array<float>> positionsO;
+        std::vector<std::vector<float>> positionsCa;
+        std::vector<std::vector<float>> positionsO;
 
         std::shared_ptr<glowl::GLSLProgram> lineShader_;
         std::shared_ptr<glowl::GLSLProgram> cartoonShader_;
