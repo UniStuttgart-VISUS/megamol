@@ -2,6 +2,7 @@
 
 #include "megamol_build_info.h"
 #include "mmcore/utility/DateTime.h"
+#include "mmcore/utility/platform/RuntimeInfo.h"
 #include "mmcore/utility/sys/EnvironmentInfo.h"
 
 #ifdef _WIN32
