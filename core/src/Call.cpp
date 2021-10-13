@@ -11,10 +11,10 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-#    include "mmcore/view/Renderer2DModule.h"
-#    include "mmcore/view/Renderer3DModule.h"
-#    include "mmcore/view/Renderer3DModuleGL.h"
 #    include "vislib/graphics/gl/IncludeAllGL.h"
+#endif
+#ifdef PROFILING
+#    include "mmcore/CoreInstance.h"
 #endif
 #include "mmcore/utility/log/Log.h"
 
@@ -24,7 +24,6 @@ using namespace megamol::core;
  * Call::Call
  */
 Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {
-    // intentionally empty
 }
 
 
@@ -32,6 +31,11 @@ Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap
  * Call::~Call
  */
 Call::~Call(void) {
+#ifdef PROFILING
+    if (caps.OpenGLRequired()) {
+        profiling.ShutdownProfiling();
+    }
+#endif
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
         this->caller = nullptr; // DO NOT DELETE
@@ -55,10 +59,7 @@ bool Call::operator()(unsigned int func) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         auto f = this->callee->GetCallbackFuncName(func);
         auto parent = callee->Parent().get();
-        auto p3 = dynamic_cast<core::view::Renderer3DModule*>(parent);
-        auto p3_2 = dynamic_cast<core::view::Renderer3DModuleGL*>(parent);
-        auto p2 = dynamic_cast<core::view::Renderer2DModule*>(parent);
-        if (p3 || p3_2 || p2) {
+        if (caps.OpenGLRequired()) {
             std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
             output += "::";
             output += f;
@@ -66,12 +67,43 @@ bool Call::operator()(unsigned int func) {
             // megamol::core::utility::log::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
         }
 #endif
+#ifdef PROFILING
+        const auto startTime = std::chrono::high_resolution_clock::now();
+        bool gl_started = false;
+        if (caps.OpenGLRequired()) {
+            gl_started = CallProfiling::qm->Start(this, this->callee->GetCoreInstance()->GetFrameID(), func);
+        }
+#endif
         res = this->callee->InCall(this->funcMap[func], *this);
+#ifdef PROFILING
+        if (gl_started) {
+            CallProfiling::qm->Stop(this->callee->GetCoreInstance()->GetFrameID());
+        }
+        const auto endTime = std::chrono::high_resolution_clock::now();
+        const std::chrono::duration<double, std::milli> diffMillis = endTime - startTime;
+        profiling.cpu_history[func].push_value(diffMillis.count());
+
+#endif
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-        if (p2 || p3 || p3_2) glPopDebugGroup();
+        if (caps.OpenGLRequired()) glPopDebugGroup();
 #endif
     }
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,
     //    res ? "true" : "false", this->callee == nullptr ? "no callee" : "from callee");
     return res;
+}
+
+void Call::SetCallbackNames(std::vector<std::string> names) {
+    callback_names = std::move(names);
+#ifdef PROFILING
+    profiling.SetParent(this);
+#endif
+}
+
+const std::string& Call::GetCallbackName(uint32_t idx) const {
+    if (idx < callback_names.size()) {
+        return callback_names[idx];
+    } else {
+        return err_out_of_bounds;
+    }
 }

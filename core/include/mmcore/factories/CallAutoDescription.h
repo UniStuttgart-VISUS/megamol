@@ -10,6 +10,9 @@
 
 #include "CallDescription.h"
 
+#include <string>
+#include <vector>
+
 namespace megamol::core::factories {
 
     /**
@@ -50,6 +53,11 @@ namespace megamol::core::factories {
         Call* CreateCall() const override {
             T* c = new T();
             c->SetClassName(this->ClassName());
+            std::vector<std::string> callbacks(this->FunctionCount());
+            for (uint32_t x = 0; x < this->FunctionCount(); ++x) {
+                callbacks[x] = this->FunctionName(x);
+            }
+            c->SetCallbackNames(callbacks);
             return this->describeCall(c);
         }
 

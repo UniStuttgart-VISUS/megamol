@@ -21,6 +21,7 @@
 #include "ProjectLoader_Service.hpp"
 #include "ImagePresentation_Service.hpp"
 #include "Remote_Service.hpp"
+#include "Profiling_Service.hpp"
 
 
 static void log(std::string const& text) {
@@ -135,8 +136,12 @@ int main(const int argc, const char** argv) {
             config.local_viewport_tile.value().tile_resolution
         })
         : std::nullopt;
-    imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
+    imagepresentation_service.setPriority(3);
+  
     megamol::frontend::Command_Service command_service;
+#ifdef PROFILING
+    megamol::frontend::Profiling_Service profiling_service;
+#endif
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -165,6 +170,9 @@ int main(const int argc, const char** argv) {
     services.add(projectloader_service, &projectloaderConfig);
     services.add(imagepresentation_service, &imagepresentationConfig);
     services.add(command_service, nullptr);
+#ifdef PROFILING
+    services.add(profiling_service, nullptr);
+#endif
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
 #endif
