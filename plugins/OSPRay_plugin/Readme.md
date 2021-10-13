@@ -13,26 +13,34 @@ The figure below shows a common OSPRay module call graph in MegaMol.
 ## Building
 
 [OSPRay](http://ospray.org) is not included in this package, however it is required for this plugin to be build.
-The currently supported OSPRay versions are **2.4** and **2.5**.
+The currently supported OSPRay versions are **2.4** through **2.7**.
 In order to get all dependencies installed at once, we strongly recommend to build [OSPRay](https://www.ospray.org/downloads.html) following the **CMake Superbuild** instructions.
-The current dependencies are: [rekcommon](https://github.com/ospray/rkcommon), [openvkl](https://www.openvkl.org/), [ISPC](https://ispc.github.io/), [TBB](https://www.threadingbuildingblocks.org/) ([oneTBB](https://github.com/oneapi-src/oneTBB)), and [Embree](https://embree.github.io/).
+The current dependencies are: [rkcommon](https://github.com/ospray/rkcommon), [openvkl](https://www.openvkl.org/), [ISPC](https://ispc.github.io/), [TBB](https://www.threadingbuildingblocks.org/) ([oneTBB](https://github.com/oneapi-src/oneTBB)), and [Embree](https://embree.github.io/). These need not be installed manually though (see below).
 *Installing the precompiled binaries is not sufficient!*
 
-- Step 1: **OSPRay:** 
-    - Download the source code to a new folder `git clone https://github.com/ospray/ospray.git ospray` and configure OSPRay with CMake using the CMake file located in `../scripts/superbuild`. 
-    - In order to speed up the build process, uncheck the option `BUILD_EMBREE_FROM_SOURCE` since the binary version of Embree is sufficient. 
-    - Build OSPRay following further instructions for the CMake Superbuild.
+- Step 1: **MegaMol:**
+  - Build a vanilla MegaMol to provide its internal TBB for Step 2
+- Step 2: **OSPRay:** 
+    - Download the source code to a new folder `git clone https://github.com/ospray/ospray.git ospray` and configure OSPRay with CMake using the CMake file located in `scripts/superbuild`. This automatically fetches the required dependencies.
+    - In order to speed up the build process, uncheck the option `BUILD_EMBREE_FROM_SOURCE` since the binary version of Embree is sufficient.
+    - Since MegaMol also uses TBB, you need to point OSPRay to the TBB inside the MegaMol build to avoid conflicts (in ```<megamol_build_dir>/_deps/tbb-install```)
+    - Build OSPRay following further instructions for the CMake Superbuild
+    - We have found the following to work quickest (on Windows, for Linux adapt the environment setting and slashes to ```export``` etc.):
+```bash
+    set TBB_ROOT=<megamol_build_dir>\_deps\tbb-install
+    cmake -S scripts/superbuild -B build/super -D DOWNLOAD_TBB=false -D BUILD_EMBREE_FROM_SOURCE=false -D CMAKE_INSTALL_PREFIX=build/super/install -G Ninja
+    cmake --build build/super --config Release
+```
 
-- Step 2: **MegaMol:** 
+- Step 3: **MegaMol:** 
     - Make sure you enable the plugin in CMake by checking the option `BUILD_OSPRAY_PLUGIN_PLUGIN`.
     Either use `-DBUILD_OSPRAY_PLUGIN_PLUGIN` as configuration argument or use the graphical user interface `ccmake`.
     - If OSPRay is not automatically found during configuration of MegaMol, set the appropriate `ospray_DIR`.  
-    *Hint:* The CMake configuration files of OSPRay are usually found in a subdirectory of the install directory: `../build/install/ospray/lib/cmake/...`
+    *Hint:* The CMake configuration files of OSPRay are usually found in a subdirectory of the install directory: `<megamol_build_dir>/install/ospray/lib/cmake/...`
     - CMake subsequently asks for the build files of the following dependencies:
-        - rkcommon: `../build/install/rkcommon/lib/cmake/...`
-        - TBB root directory: `../build/install/tbb`
+        - rkcommon: `<megamol_build_dir>/install/rkcommon/lib/cmake/...`
     - Build and install MegaMol. 
-    - In order to test OSPRay, start MegaMol using the example project file `..build/install/examples/testspheres_ospray_megamol.lua`.  
+    - In order to test OSPRay, start MegaMol using the example project file `<megamol_build_dir>/install/examples/testspheres_ospray_megamol.lua`.  
     *Note:* On Linux, you have to run MegaMol using the `megamol.sh` script in order to additionally set the required path to the shared libraries of OSPRay.
 
 ## Modules
