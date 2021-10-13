@@ -11,6 +11,7 @@
 
 
 #include "CommandRegistry.h"
+#include "implot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking_gl.h"
@@ -305,7 +306,10 @@ namespace gui {
         megamol::gui::HotkeyMap_t gui_hotkeys;
 
         /** The ImGui context created and used by this GUIManager */
-        ImGuiContext* context;
+        ImGuiContext* imgui_context;
+
+        /** The ImGui context created and used by this GUIManager */
+        ImPlotContext* implot_context;
 
         /** Draw commands created by ImGui, are rendered to screen */
         ImDrawData* draw_data = nullptr;
