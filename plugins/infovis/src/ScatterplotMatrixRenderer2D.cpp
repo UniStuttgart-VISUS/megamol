@@ -1264,8 +1264,8 @@ void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
 
-    if (!this->screenFBO || this->screenFBO->getHeight() != static_cast<int>(viewport[2]) ||
-        this->screenFBO->getWidth() != static_cast<int>(viewport[3])) {
+    if (!this->screenFBO || this->screenFBO->getWidth() != static_cast<int>(viewport[2]) ||
+        this->screenFBO->getHeight() != static_cast<int>(viewport[3])) {
         this->screenFBO = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3]);
         this->screenFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
     }
