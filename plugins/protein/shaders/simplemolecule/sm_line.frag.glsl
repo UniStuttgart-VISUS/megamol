@@ -2,7 +2,7 @@
 
 #include "simplemolecule/sm_common_defines.glsl"
 #include "simplemolecule/sm_common_input_frag.glsl"
-#include "simplemolecule/sm_common_gbuffer_output.glsl"
+#include "deferred/gbuffer_output.glsl"
 
 in vec3 move_pos;
 

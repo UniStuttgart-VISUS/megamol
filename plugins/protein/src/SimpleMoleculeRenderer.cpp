@@ -266,8 +266,8 @@ bool SimpleMoleculeRenderer::create(void) {
             std::filesystem::path("simplemolecule/sm_line.frag.glsl"));
 
         lightingShader_ = core::utility::make_shared_glowl_shader("lighting", shdr_options,
-            std::filesystem::path("simplemolecule/sm_common_lighting.vert.glsl"),
-            std::filesystem::path("simplemolecule/sm_common_lighting.frag.glsl"));
+            std::filesystem::path("deferred/lighting.vert.glsl"),
+            std::filesystem::path("deferred/lighting.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
