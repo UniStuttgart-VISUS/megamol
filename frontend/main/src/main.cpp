@@ -21,6 +21,7 @@
 #include "ProjectLoader_Service.hpp"
 #include "ImagePresentation_Service.hpp"
 #include "Remote_Service.hpp"
+#include "Profiling_Service.hpp"
 
 #include <glad/glad.h> /// XXX see temporary fix below
 
@@ -129,6 +130,9 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::ImagePresentation_Service imagepresentation_service;
     megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
+#ifdef PROFILING
+    megamol::frontend::Profiling_Service profiling_service;
+#endif
     imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
     megamol::frontend::Command_Service command_service;
 #ifdef MM_CUDA_ENABLED
@@ -159,6 +163,9 @@ int main(const int argc, const char** argv) {
     services.add(projectloader_service, &projectloaderConfig);
     services.add(imagepresentation_service, &imagepresentationConfig);
     services.add(command_service, nullptr);
+#ifdef PROFILING
+    services.add(profiling_service, nullptr);
+#endif
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
 #endif
