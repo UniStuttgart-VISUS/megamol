@@ -70,19 +70,9 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , clipPlaneTimeOffsetParam("clipPlane::timeOffset", "...")
         , clipPlaneDurationParam("clipPlane::Duration", "...")
         , useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own")
-        , ambientColorParam("lighting::ambientColor", "...")
-        , diffuseColorParam("lighting::diffuseColor", "...")
-        , specularColorParam("lighting::specularColor", "...")
-        , ambientFactorParam("lighting::ambientFactor", "...")
-        , diffuseFactorParam("lighting::diffuseFactor", "...")
-        , specularFactorParam("lighting::specularFactor", "...")
-        , exponentFactorParam("lighting::specularExponent", "...")
-        , useLambertParam(
-              "lighting::lambertShading", "If turned on, the local lighting uses lambert instead of Blinn-Phong.")
         , currentZClipPos(-20)
         , fbo_version_(0)
         , vertex_array_(0)
-        , localFramebufferObj_(nullptr)
         , usedFramebufferObj_(nullptr) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->molDataCallerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
@@ -195,29 +185,11 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->clipPlaneDurationParam.SetParameter(new param::FloatParam(40.0f));
     this->MakeSlotAvailable(&this->clipPlaneDurationParam);
 
-    this->useLambertParam.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->useLambertParam);
-
-    this->ambientColorParam.SetParameter(new param::ColorParam("#ffffff"));
-    this->MakeSlotAvailable(&this->ambientColorParam);
-
-    this->diffuseColorParam.SetParameter(new param::ColorParam("#ffffff"));
-    this->MakeSlotAvailable(&this->diffuseColorParam);
-
-    this->specularColorParam.SetParameter(new param::ColorParam("#ffffff"));
-    this->MakeSlotAvailable(&this->specularColorParam);
-
-    this->ambientFactorParam.SetParameter(new param::FloatParam(0.2f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->ambientFactorParam);
-
-    this->diffuseFactorParam.SetParameter(new param::FloatParam(0.798f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->diffuseFactorParam);
-
-    this->specularFactorParam.SetParameter(new param::FloatParam(0.02f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->specularFactorParam);
-
-    this->exponentFactorParam.SetParameter(new param::FloatParam(120.0f, 1.0f, 1000.0f));
-    this->MakeSlotAvailable(&this->exponentFactorParam);
+    // make all the deferred slots from the deferred class available
+    auto defparams = deferredProvider_.getUsedParamSlots();
+    for (const auto& param : defparams) {
+        this->MakeSlotAvailable(param);
+    }
 
     this->lastDataHash = 0;
 }
@@ -226,7 +198,6 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
  * protein::SimpleMoleculeRenderer::~SimpleMoleculeRenderer (DTOR)
  */
 SimpleMoleculeRenderer::~SimpleMoleculeRenderer(void) {
-    localFramebufferObj_.reset();
     usedFramebufferObj_.reset();
     this->Release();
 }
@@ -265,10 +236,6 @@ bool SimpleMoleculeRenderer::create(void) {
             std::filesystem::path("simplemolecule/sm_line.vert.glsl"),
             std::filesystem::path("simplemolecule/sm_line.frag.glsl"));
 
-        lightingShader_ = core::utility::make_shared_glowl_shader("lighting", shdr_options,
-            std::filesystem::path("deferred/lighting.vert.glsl"),
-            std::filesystem::path("deferred/lighting.frag.glsl"));
-
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());
@@ -279,12 +246,6 @@ bool SimpleMoleculeRenderer::create(void) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception.");
     }
-
-    // generate local framebuffer
-    localFramebufferObj_ = std::make_shared<glowl::FramebufferObject>(1, 1);
-    localFramebufferObj_->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // surface albedo
-    localFramebufferObj_->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT);   // normals
-    localFramebufferObj_->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);          // clip space depth
 
     // generate data buffers
     buffers_[static_cast<int>(Buffers::POSITION)] =
@@ -301,10 +262,6 @@ bool SimpleMoleculeRenderer::create(void) {
         std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
     buffers_[static_cast<int>(Buffers::FILTER)] =
         std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    buffers_[static_cast<int>(Buffers::LIGHT_POSITIONAL)] =
-        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    buffers_[static_cast<int>(Buffers::LIGHT_DIRECTIONAL)] =
-        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
     glGenVertexArrays(1, &vertex_array_);
     glBindVertexArray(vertex_array_);
@@ -347,6 +304,9 @@ bool SimpleMoleculeRenderer::create(void) {
     glDisableVertexAttribArray(static_cast<int>(Buffers::CYL_COL2));
     glDisableVertexAttribArray(static_cast<int>(Buffers::FILTER));
 
+    // setup all the deferred stuff
+    deferredProvider_.setup(this->GetCoreInstance());
+
     return true;
 }
 
@@ -386,29 +346,28 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
 
     cam = call.GetCamera();
 
-    if (localFramebufferObj_->getWidth() != call_fbo->getWidth() ||
-        localFramebufferObj_->getHeight() != call_fbo->getHeight()) {
-        localFramebufferObj_->resize(call_fbo->getWidth(), call_fbo->getHeight());
-    }
+    deferredProvider_.setFramebufferExtents(call_fbo->getWidth(), call_fbo->getHeight());
 
-    localFramebufferObj_->bind();
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     call_fbo->bind(); // reset to default behavior
 
+
     // if there is a fbo connected, use the connected one
-    usedFramebufferObj_ = localFramebufferObj_;
+    bool externalfbo = false;
     auto cfbo = getFramebufferSlot.CallAs<compositing::CallFramebufferGL>();
     if (cfbo != nullptr) {
         cfbo->operator()(compositing::CallFramebufferGL::CallGetMetaData);
         cfbo->operator()(compositing::CallFramebufferGL::CallGetData);
         auto fbo = cfbo->getData();
         if (fbo != nullptr) {
+            externalfbo = true;
             usedFramebufferObj_ = fbo;
+            usedFramebufferObj_->bind();
+        } else {
+            deferredProvider_.bindDeferredFramebufferToDraw();
         }
+    } else {
+        deferredProvider_.bindDeferredFramebufferToDraw();
     }
-    usedFramebufferObj_->bind();
 
     // matrices
     view = cam.getViewMatrix();
@@ -571,11 +530,16 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
     delete[] posInter;
 
     // swap back to normal fbo
-    call_fbo->bind();
+    if (externalfbo) {
+        call_fbo->bind();
+    } else {
+        deferredProvider_.resetToPreviousFramebuffer();
+    }
 
     // perform the lighing pass only if no framebuffer is attached
     if (cfbo == nullptr) {
-        this->RenderLighting(this->currentRenderMode == LINES);
+        deferredProvider_.draw(call, this->getLightsSlot.CallAs<core::view::light::CallLight>(),
+            this->currentRenderMode == LINES || this->currentRenderMode == LINES_FILTER);
     }
 
     // unlock the current frame
@@ -610,11 +574,11 @@ void SimpleMoleculeRenderer::RenderLines(
         atomColorTable.PeekElements(), atomColorTable.Count() * sizeof(float));
 
     glBindVertexArray(vertex_array_);
-    lightingShader_->use();
+    lineShader_->use();
 
-    lightingShader_->setUniform("MVP", this->MVP);
-    lightingShader_->setUniform("MVPtransp", this->MVPtransp);
-    lightingShader_->setUniform("applyFiltering", useFiltering);
+    lineShader_->setUniform("MVP", this->MVP);
+    lineShader_->setUniform("MVPtransp", this->MVPtransp);
+    lineShader_->setUniform("applyFiltering", useFiltering);
 
     glDrawArrays(GL_POINTS, 0, mol->AtomCount());
 
@@ -1191,88 +1155,4 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
         this->molIdxList = vislib::StringTokeniser<vislib::CharTraitsA>::Split(tmpStr, ';', true);
         this->molIdxListParam.ResetDirty();
     }
-}
-
-void SimpleMoleculeRenderer::RenderLighting(bool noShading) {
-
-    auto call_light = this->getLightsSlot.CallAs<core::view::light::CallLight>();
-    if (call_light != nullptr) {
-        if (!(*call_light)(0)) {
-            return;
-        }
-    } else {
-        pointLights_.clear();
-        directionalLights_.clear();
-    }
-
-    if (call_light != nullptr && call_light->hasUpdate()) {
-        auto& lights = call_light->getData();
-
-        pointLights_.clear();
-        directionalLights_.clear();
-
-        auto point_lights = lights.get<core::view::light::PointLightType>();
-        auto distant_lights = lights.get<core::view::light::DistantLightType>();
-
-        for (auto& pl : point_lights) {
-            pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
-        }
-
-        for (auto& dl : distant_lights) {
-            if (dl.eye_direction) {
-                auto cam_dir = glm::normalize(cam.getPose().direction);
-                directionalLights_.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
-            } else {
-                directionalLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
-            }
-        }
-    }
-    buffers_[static_cast<int>(Buffers::LIGHT_POSITIONAL)]->rebuffer(pointLights_);
-    buffers_[static_cast<int>(Buffers::LIGHT_DIRECTIONAL)]->rebuffer(directionalLights_);
-
-    if (pointLights_.empty() && directionalLights_.empty()) {
-        core::utility::log::Log::DefaultLog.WriteWarn("[SimpleMoleculeRenderer]: There are no directional or "
-                                                      "positional lights connected. Lighting not available.");
-    }
-
-    lightingShader_->use();
-
-    buffers_[static_cast<int>(Buffers::LIGHT_POSITIONAL)]->bind(1);
-    lightingShader_->setUniform("point_light_cnt", static_cast<GLint>(pointLights_.size()));
-
-    buffers_[static_cast<int>(Buffers::LIGHT_DIRECTIONAL)]->bind(2);
-    lightingShader_->setUniform("distant_light_cnt", static_cast<GLint>(directionalLights_.size()));
-
-    glActiveTexture(GL_TEXTURE0);
-    usedFramebufferObj_->bindColorbuffer(0);
-    lightingShader_->setUniform("albedo_tx2D", 0);
-
-    glActiveTexture(GL_TEXTURE1);
-    usedFramebufferObj_->bindColorbuffer(1);
-    lightingShader_->setUniform("normal_tx2D", 1);
-
-    glActiveTexture(GL_TEXTURE2);
-    usedFramebufferObj_->bindColorbuffer(2);
-    lightingShader_->setUniform("depth_tx2D", 2);
-
-    lightingShader_->setUniform("camPos", cam.getPose().position);
-    lightingShader_->setUniform("inv_view_mx", this->MVinv);
-    lightingShader_->setUniform("inv_proj_mx", this->invProj);
-    lightingShader_->setUniform("use_lambert", this->useLambertParam.Param<param::BoolParam>()->Value());
-    lightingShader_->setUniform("no_lighting", noShading);
-
-    lightingShader_->setUniform(
-        "ambientColor", glm::make_vec4(this->ambientColorParam.Param<param::ColorParam>()->Value().data()));
-    lightingShader_->setUniform(
-        "diffuseColor", glm::make_vec4(this->diffuseColorParam.Param<param::ColorParam>()->Value().data()));
-    lightingShader_->setUniform(
-        "specularColor", glm::make_vec4(this->specularColorParam.Param<param::ColorParam>()->Value().data()));
-    lightingShader_->setUniform("k_amb", this->ambientFactorParam.Param<param::FloatParam>()->Value());
-    lightingShader_->setUniform("k_diff", this->diffuseFactorParam.Param<param::FloatParam>()->Value());
-    lightingShader_->setUniform("k_spec", this->specularFactorParam.Param<param::FloatParam>()->Value());
-    lightingShader_->setUniform("k_exp", this->exponentFactorParam.Param<param::FloatParam>()->Value());
-
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    glUseProgram(0);
 }

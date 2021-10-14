@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Color.h"
+#include "DeferredRenderingProvider.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
@@ -164,13 +165,6 @@ namespace protein {
         void RenderSAS(const megamol::protein_calls::MolecularDataCall* mol, const float* atomPos);
 
         /**
-         * Renders the lighting pass
-         *
-         * @param noShading  If set to true, there will be no shading performed
-         */
-        void RenderLighting(bool noShading = false);
-
-        /**
          * Update all parameter slots.
          *
          * @param mol   Pointer to the data call.
@@ -241,24 +235,15 @@ namespace protein {
         megamol::core::param::ParamSlot clipPlaneDurationParam;
         /** Toggle use of neighborhood colors for own color */
         megamol::core::param::ParamSlot useNeighborColors;
-        megamol::core::param::ParamSlot ambientColorParam;
-        megamol::core::param::ParamSlot diffuseColorParam;
-        megamol::core::param::ParamSlot specularColorParam;
-        megamol::core::param::ParamSlot ambientFactorParam;
-        megamol::core::param::ParamSlot diffuseFactorParam;
-        megamol::core::param::ParamSlot specularFactorParam;
-        megamol::core::param::ParamSlot exponentFactorParam;
-        megamol::core::param::ParamSlot useLambertParam;
+
         float currentZClipPos;
 
         // shader programs
         std::shared_ptr<glowl::GLSLProgram> sphereShader_;
         std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
         std::shared_ptr<glowl::GLSLProgram> lineShader_;
-        std::shared_ptr<glowl::GLSLProgram> lightingShader_;
 
         // the local fbo
-        std::shared_ptr<glowl::FramebufferObject> localFramebufferObj_;
         std::shared_ptr<glowl::FramebufferObject> usedFramebufferObj_;
         uint32_t fbo_version_;
 
@@ -274,9 +259,7 @@ namespace protein {
             CYL_COL1 = 4,
             CYL_COL2 = 5,
             FILTER = 6,
-            LIGHT_POSITIONAL = 7,
-            LIGHT_DIRECTIONAL = 8,
-            BUFF_COUNT = 9
+            BUFF_COUNT = 7
         };
         GLuint vertex_array_;
         std::array<std::unique_ptr<glowl::BufferObject>, static_cast<int>(Buffers::BUFF_COUNT)> buffers_;
@@ -319,6 +302,9 @@ namespace protein {
 
         // the list of molecular indices
         vislib::Array<vislib::StringA> molIdxList;
+
+        /** The module providing the fbo and the deferred shading */
+        DeferredRenderingProvider deferredProvider_;
 
         /** The hash of the lastly rendered molecular data call*/
         SIZE_T lastDataHash;
