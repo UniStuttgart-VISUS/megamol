@@ -42,7 +42,9 @@ namespace view {
     class CallRender2DGL : public BaseCallRender<glowl::FramebufferObject, callrender2dgl_name, callrender2dgl_desc> {
     public:
         /** Ctor. */
-        CallRender2DGL(void) = default;
+        CallRender2DGL(void) : BaseCallRender<glowl::FramebufferObject, callrender2dgl_name, callrender2dgl_desc>() {
+            this->caps.RequireOpenGL();
+        }
 
         /** Dtor. */
         virtual ~CallRender2DGL(void) = default;
