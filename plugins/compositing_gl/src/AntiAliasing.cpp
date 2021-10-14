@@ -455,6 +455,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
             dispatchComputeShader(m_smaa_edge_detection_prgm, inputs, m_edges_tex, uniforms, m_ssbo_constants);
 
+            glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
             // blending weights calculation
             inputs.clear();
@@ -462,6 +463,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
             dispatchComputeShader(m_smaa_blending_weight_calculation_prgm, inputs, m_blend_tex, {}, m_ssbo_constants);
 
+            glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
             // final step: neighborhood blending
             inputs.clear();

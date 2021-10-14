@@ -194,7 +194,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "ASSAO"; }
+    static const char* ClassName() { return "SSAO"; }
 
     /**
      * Answer a human readable description of this module.
@@ -266,8 +266,10 @@ private:
     bool reCreateMIPViewIfNeeded(std::shared_ptr<glowl::Texture2DView> current,
         std::shared_ptr<glowl::Texture2D> original, int mipViewSlice);
 
+
     // callback functions
     bool settingsCallback(core::param::ParamSlot& slot);
+    bool ssaoModeCallback(core::param::ParamSlot& slot);
 
 
     uint32_t m_version;
@@ -287,6 +289,9 @@ private:
     std::unique_ptr<GLSLComputeShader> m_nonSmartBlurPrgm;
     std::unique_ptr<GLSLComputeShader> m_nonSmartApplyPrgm;
     std::unique_ptr<GLSLComputeShader> m_nonSmartHalfApplyPrgm;
+
+    std::unique_ptr<GLSLComputeShader> m_naiveSSAOPrgm;
+    std::unique_ptr<GLSLComputeShader> m_naiveSSAOBlurPrgm;
     /////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////
@@ -301,6 +306,12 @@ private:
     std::shared_ptr<glowl::Texture2D> m_normals;
     std::shared_ptr<glowl::Texture2D> m_finalOutput;
 
+    // for naive ssao
+    std::shared_ptr<glowl::Texture2D> m_intermediateTx2D;
+    /** Texture with random ssao kernel rotation */
+    std::shared_ptr<glowl::Texture2D> m_SSAOKernelRotTx2D;
+
+    // samplers
     std::shared_ptr<glowl::Sampler> m_samplerStatePointClamp;
     std::shared_ptr<glowl::Sampler> m_samplerStatePointMirror;
     std::shared_ptr<glowl::Sampler> m_samplerStateLinearClamp;
@@ -325,13 +336,12 @@ private:
     int m_maxBlurPassCount;
     ASSAO_Constants m_constants;
     std::shared_ptr<glowl::BufferObject> m_ssboConstants;
+    /** GPU buffer object for making active (point)lights available in during shading pass */
+    std::unique_ptr<glowl::BufferObject> m_SSAOSamples;
     /////////////////////////////////////////////////////////////////////////
 
     /** Pointer for assao inputs */
     std::shared_ptr<ASSAO_Inputs> m_inputs;
-
-    /** Hash value to keep track of update to the output texture */
-    size_t m_outputTextureHash;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_outputTexSlot;
@@ -347,6 +357,8 @@ private:
 
 
     /////////////////////////////////////////////////////////////////////////
+    core::param::ParamSlot m_psSSAOMode;
+
     // paramslots for input settings
     ASSAO_Settings m_settings;
 
@@ -391,6 +403,12 @@ private:
 
     /** Paramslot for high-res detail AO using neighboring depth pixels */
     core::param::ParamSlot m_psDetailShadowStrength;
+
+    /** Parameter for selecting the ssao radius */
+    megamol::core::param::ParamSlot m_psSSAORadius;
+
+    /** Parameter for selecting the ssao sample count */
+    megamol::core::param::ParamSlot m_psSSAOSampleCnt;
 
     bool m_settingsHaveChanged;
     bool m_slotIsActive;

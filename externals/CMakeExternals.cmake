@@ -92,7 +92,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "d7aa3d4c5c9568b8bb275c8cfaee1d6c5d7049b5"
+      GIT_TAG "2efb220d36e72c3b9d3d028cc83b921bda9ebcd8"
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD)
 
