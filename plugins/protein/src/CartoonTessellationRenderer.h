@@ -12,6 +12,7 @@
 
 #include <map>
 #include <utility>
+#include "DeferredRenderingProvider.h"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -148,23 +149,15 @@ namespace protein {
         core::param::ParamSlot sheetColorParam;
         core::param::ParamSlot lineColorParam;
 
-        core::param::ParamSlot ambientColorParam;
-        core::param::ParamSlot diffuseColorParam;
-        core::param::ParamSlot specularColorParam;
-        core::param::ParamSlot ambientFactorParam;
-        core::param::ParamSlot diffuseFactorParam;
-        core::param::ParamSlot specularFactorParam;
-        core::param::ParamSlot specularExponentParam;
-        core::param::ParamSlot useLambertParam;
-
         std::vector<std::vector<float>> positionsCa;
         std::vector<std::vector<float>> positionsO;
 
         std::shared_ptr<glowl::GLSLProgram> lineShader_;
         std::shared_ptr<glowl::GLSLProgram> cartoonShader_;
-        std::shared_ptr<glowl::GLSLProgram> lightingShader_;
 
         std::vector<CAlpha> mainchain;
+
+        DeferredRenderingProvider deferredProvider_;
     };
 
 } /* end namespace protein */

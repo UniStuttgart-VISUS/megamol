@@ -8,6 +8,7 @@
 #include "CartoonTessellationRenderer.h"
 #include <inttypes.h>
 #include <stdint.h>
+#include "compositing/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -20,7 +21,6 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/light/PointLight.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "compositing/CompositingCalls.h"
 
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -54,15 +54,6 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
         , helixColorParam("color::helixColor", "color of helices")
         , sheetColorParam("color::sheetColor", "color of sheets")
         , lineColorParam("color::lineColor", "color of the optional backbone line")
-        , ambientColorParam("lighting::ambientColor", "...")
-        , diffuseColorParam("lighting::diffuseColor", "...")
-        , specularColorParam("lighting::specularColor", "...")
-        , ambientFactorParam("lighting::ambientFactor", "...")
-        , diffuseFactorParam("lighting::diffuseFactor", "...")
-        , specularFactorParam("lighting::specularFactor", "...")
-        , specularExponentParam("lighting::specularExponent", "...")
-        , useLambertParam(
-              "lighting::lambertShading", "If turned on, the local lighting uses lambert instead of Blinn-Phong.")
         ,
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT)
@@ -114,26 +105,10 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
     this->colorInterpolationParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->colorInterpolationParam);
 
-    this->ambientColorParam.SetParameter(new param::ColorParam("#ffffff"));
-    this->MakeSlotAvailable(&this->ambientColorParam);
-
-    this->diffuseColorParam.SetParameter(new param::ColorParam("#ffffff"));
-    this->MakeSlotAvailable(&this->diffuseColorParam);
-
-    this->specularColorParam.SetParameter(new param::ColorParam("#ffffff"));
-    this->MakeSlotAvailable(&this->specularColorParam);
-
-    this->ambientFactorParam.SetParameter(new param::FloatParam(0.2f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->ambientFactorParam);
-
-    this->diffuseFactorParam.SetParameter(new param::FloatParam(0.798f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->diffuseFactorParam);
-
-    this->specularFactorParam.SetParameter(new param::FloatParam(0.02f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->specularFactorParam);
-
-    this->specularExponentParam.SetParameter(new param::FloatParam(120.0f, 1.0f, 1000.0f));
-    this->MakeSlotAvailable(&this->specularExponentParam);
+    auto params = deferredProvider_.getUsedParamSlots();
+    for (const auto& p : params) {
+        this->MakeSlotAvailable(p);
+    }
 
     fences.resize(numBuffers);
 }
@@ -186,10 +161,6 @@ bool CartoonTessellationRenderer::create(void) {
             std::filesystem::path("cartoontessellation/ctess_splineline.geom.glsl"),
             std::filesystem::path("cartoontessellation/ctess_splineline.frag.glsl"));
 
-        lightingShader_ = core::utility::make_shared_glowl_shader("lighting", shdr_options,
-            std::filesystem::path("simplemolecule/sm_common_lighting.vert.glsl"),
-            std::filesystem::path("simplemolecule/sm_common_lighting.frag.glsl"));
-
     } catch (glowl::GLSLProgramException const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "[CartoonTessellationRenderer] %s", ex.what());
@@ -210,6 +181,8 @@ bool CartoonTessellationRenderer::create(void) {
         glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindVertexArray(0);
+
+    deferredProvider_.setup(this->GetCoreInstance());
 
     return true;
 }
@@ -319,6 +292,9 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
     if (mol == NULL)
         return false;
 
+    auto call_fbo = call.GetFramebuffer();
+    deferredProvider_.setFramebufferExtents(call_fbo->getWidth(), call_fbo->getHeight());
+
     //	timer.BeginFrame();
 
     glm::vec4 clipDat;
@@ -349,6 +325,23 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
+
+    std::shared_ptr<glowl::FramebufferObject> extfbo = nullptr;
+
+    auto cfbo = getFramebufferSlot.CallAs<compositing::CallFramebufferGL>();
+    if (cfbo != nullptr) {
+        cfbo->operator()(compositing::CallFramebufferGL::CallGetMetaData);
+        cfbo->operator()(compositing::CallFramebufferGL::CallGetData);
+        if (cfbo->getData() != nullptr) {
+            extfbo = cfbo->getData();
+        }
+    }
+
+    if (extfbo != nullptr) {
+        extfbo->bind();
+    } else {
+        deferredProvider_.bindDeferredFramebufferToDraw();
+    }
 
     // matrices
     auto viewInv = glm::inverse(view);
@@ -582,14 +575,6 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         glm::vec4 helixColor = glm::make_vec4(this->helixColorParam.Param<param::ColorParam>()->Value().data());
         glm::vec4 sheetColor = glm::make_vec4(this->sheetColorParam.Param<param::ColorParam>()->Value().data());
         glm::vec4 turnColor = glm::make_vec4(this->turnColorParam.Param<param::ColorParam>()->Value().data());
-        glm::vec4 lightingVector{};
-        lightingVector.x = this->ambientFactorParam.Param<param::FloatParam>()->Value();
-        lightingVector.y = this->diffuseFactorParam.Param<param::FloatParam>()->Value();
-        lightingVector.z = this->specularFactorParam.Param<param::FloatParam>()->Value();
-        lightingVector.w = this->specularExponentParam.Param<param::FloatParam>()->Value();
-        glm::vec4 ambientColor = glm::make_vec4(this->ambientColorParam.Param<param::ColorParam>()->Value().data());
-        glm::vec4 diffuseColor = glm::make_vec4(this->diffuseColorParam.Param<param::ColorParam>()->Value().data());
-        glm::vec4 specularColor = glm::make_vec4(this->specularColorParam.Param<param::ColorParam>()->Value().data());
 
         // currBuf = 0;
         unsigned int colBytes, vertBytes, colStride, vertStride;
@@ -682,9 +667,18 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         glUseProgram(0);
     }
 
+    if (extfbo != nullptr) {
+        call_fbo->bind();
+    } else {
+        deferredProvider_.resetToPreviousFramebuffer();
+        deferredProvider_.draw(call, this->getLightsSlot.CallAs<core::view::light::CallLight>());
+    }
+
     mol->Unlock();
 
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
+
 
     //	timer.EndFrame();
 

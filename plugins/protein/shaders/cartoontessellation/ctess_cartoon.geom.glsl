@@ -9,7 +9,6 @@ layout(triangle_strip, max_vertices = 4) out;
 in vec4 color[];
 in vec3 n[];
 out vec4 mycol;
-out vec3 normal;
 out vec3 rawnormal;
 
 void main() {
@@ -17,7 +16,6 @@ void main() {
         gl_Position = MVP * gl_in[i].gl_Position;
         mycol = color[i];
         vec4 normal4 = MVinvtrans * vec4(n[i], 0);
-        normal = normalize(normal4.xyz);
         rawnormal = normalize(n[i]);
         EmitVertex();
     }
