@@ -342,7 +342,7 @@ function(require_external NAME)
     if(WIN32)
       set(GLAD_LIB "lib/glad.lib")
     else()
-      set(GLAD_LIB "lib/libglad.a")
+      set(GLAD_LIB "${CMAKE_INSTALL_LIBDIR}/libglad.a")
     endif()
 
     add_external_project(glad STATIC
