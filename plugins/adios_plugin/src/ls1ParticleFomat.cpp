@@ -84,10 +84,12 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             cad->inquireVar("ry");
             cad->inquireVar("rz");
             cad->inquireVar("component_id");
-            cad->inquireVar("qw");
-            cad->inquireVar("qx");
-            cad->inquireVar("qy");
-            cad->inquireVar("qz");
+            if (cad->isInVars("qw")) {
+                cad->inquireVar("qw");
+                cad->inquireVar("qx");
+                cad->inquireVar("qy");
+                cad->inquireVar("qz");
+            }
 
             cad->inquireVar("global_box");
 
@@ -96,10 +98,18 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 return false;
             }
 
-            auto qw = cad->getData("qw")->GetAsDouble();
-            auto qx = cad->getData("qx")->GetAsDouble();
-            auto qy = cad->getData("qy")->GetAsDouble();
-            auto qz = cad->getData("qz")->GetAsDouble();
+            std::vector<double> qw;
+            std::vector<double> qx;
+            std::vector<double> qy;
+            std::vector<double> qz;
+
+            if (cad->isInVars("qw")) {
+                qw = cad->getData("qw")->GetAsDouble();
+                qx = cad->getData("qx")->GetAsDouble();
+                qy = cad->getData("qy")->GetAsDouble();
+                qz = cad->getData("qz")->GetAsDouble();
+            }
+
 
             auto comp_id = cad->getData("component_id")->GetAsUInt64();
 
@@ -145,7 +155,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             plist_count.clear();
             mix.clear();
             num_plists = 0;
-            if (this->representationSlot.Param<core::param::EnumParam>()->Value() == 0) {
+            if (this->representationSlot.Param<core::param::EnumParam>()->Value() == 0 || qw.empty()) {
                 num_plists = num_components;
                 mix.clear();
                 mix.resize(num_plists);
