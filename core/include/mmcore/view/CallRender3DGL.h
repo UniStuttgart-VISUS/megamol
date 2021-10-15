@@ -35,7 +35,9 @@ namespace view {
             : public BaseCallRender<glowl::FramebufferObject, callrender3dgl_name, callrender3dgl_desc> {
     public:
         /** Ctor. */
-        CallRender3DGL(void) = default;
+        CallRender3DGL(void) : BaseCallRender<glowl::FramebufferObject, callrender3dgl_name, callrender3dgl_desc>() {
+            this->caps.RequireOpenGL();
+        }
 
         /** Dtor. */
         virtual ~CallRender3DGL(void) = default;

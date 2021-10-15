@@ -515,10 +515,12 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
             std::string from;
             std::string to;
             ImGuiID uid = GUI_INVALID_ID;
+            std::weak_ptr<Call> ptr;
         };
         std::vector<CallInfo> gui_graph_call_info;
         for (auto& call_ptr : graph_ptr->Calls()) {
             CallInfo call_info;
+            call_info.ptr = call_ptr;
             call_info.class_name = call_ptr->ClassName();
             call_info.uid = call_ptr->UID();
             bool valid_callslot = false;
@@ -602,6 +604,7 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
         // REMOVE deleted calls from GUI graph ------------------------------------------
         for (auto& call_info : gui_graph_call_info) {
             if (!megamol_graph.FindCall(call_info.from, call_info.to)) {
+                call_info.ptr.reset();
                 graph_ptr->DeleteCall(call_info.uid);
                 gui_graph_changed = true;
             }
@@ -633,6 +636,37 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(
                 gui_graph_changed = true;
             }
         }
+
+
+#ifdef PROFILING
+
+        // Sync profiling values from core calls to gui calls ...
+        for (auto& ccall : megamol_graph.ListCalls()) {
+            for (auto& gcall : gui_graph_call_info) {
+                if (gcall.class_name == ccall.request.className &&
+                    gui_utils::CaseInsensitiveStringCompare(gcall.from, ccall.request.from) &&
+                    gui_utils::CaseInsensitiveStringCompare(gcall.to, ccall.request.to)) {
+                    const auto& profiling = ccall.callPtr->GetProfiling();
+                    auto func_count = ccall.callPtr->GetCallbackCount();
+                    std::vector<gui::Call::Profiling> prof;
+                    prof.resize(func_count);
+                    for (uint32_t i = 0; i < func_count; i++) {
+                        prof[i].lcput = profiling.GetLastCPUTime(i);
+                        prof[i].acput = profiling.GetAverageCPUTime(i);
+                        prof[i].ncpus = profiling.GetNumCPUSamples(i);
+                        prof[i].hcpu = profiling.GetCPUHistory(i);
+                        prof[i].lgput = profiling.GetLastGPUTime(i);
+                        prof[i].agput = profiling.GetAverageGPUTime(i);
+                        prof[i].ngpus = profiling.GetNumGPUSamples(i);
+                        prof[i].hgpu = profiling.GetGPUHistory(i);
+                        prof[i].name = ccall.callPtr->GetCallbackName(i);
+                    }
+                    gcall.ptr.lock()->SetProfilingValues(prof);
+                }
+            }
+        }
+
+#endif // PROFILING
 
         if (gui_graph_changed) {
             graph_ptr->ClearSyncQueue();

@@ -14,6 +14,7 @@
 
 // to write png files
 #include "png.h"
+#include "zlib.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "vislib/sys/FastFile.h"
 
@@ -93,7 +94,7 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
     
     png_set_write_fn(pngPtr, static_cast<void*>(&file), &pngWriteFileFunc, &pngFlushFileFunc);
     
-    png_set_compression_level(pngPtr, 0);
+    png_set_compression_level(pngPtr, Z_BEST_SPEED);
 
     // todo: camera settings are not stored without magic knowledge about the view
     std::string project = megamolgraph_ptr->Convenience().SerializeGraph();
