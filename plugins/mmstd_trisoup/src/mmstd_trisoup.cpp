@@ -11,6 +11,7 @@
 #include "CallBinaryVolumeData.h"
 #include "CallVolumetricData.h"
 #include "CoordSysMarker.h"
+#include "ModernTrisoupRenderer.h"
 #include "OSCBFix.h"
 #include "TriSoupDataSource.h"
 #include "TriSoupRenderer.h"
@@ -21,35 +22,36 @@
 #include "volumetrics/VoluMetricJob.h"
 
 namespace megamol::trisoup {
-    class TrisoupPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
-        REGISTERPLUGIN(TrisoupPluginInstance)
+class TrisoupPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(TrisoupPluginInstance)
 
-    public:
-        TrisoupPluginInstance()
-                : megamol::core::utility::plugins::AbstractPluginInstance(
-                      "mmstd_trisoup", "Plugin for rendering TriSoup mesh data") {
-            vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL - 1);
-        };
-
-        ~TrisoupPluginInstance() override = default;
-
-        // Registers modules and calls
-        void registerClasses() override {
-
-            // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjWriter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::BlockVolumeMesh>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::VoluMetricJob>();
-            this->module_descriptions.RegisterAutoDescription<megamol::quartz::OSCBFix>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::CoordSysMarker>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::IsoSurface>();
-
-            // register calls
-            this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallBinaryVolumeData>();
-            this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallVolumetricData>();
-        }
+public:
+    TrisoupPluginInstance()
+            : megamol::core::utility::plugins::AbstractPluginInstance(
+                  "mmstd_trisoup", "Plugin for rendering TriSoup mesh data") {
+        vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL - 1);
     };
+
+    ~TrisoupPluginInstance() override = default;
+
+    // Registers modules and calls
+    void registerClasses() override {
+
+        // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup::BlockVolumeMesh>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::VoluMetricJob>();
+        this->module_descriptions.RegisterAutoDescription<megamol::quartz::OSCBFix>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup::CoordSysMarker>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::IsoSurface>();
+        this->module_descriptions.RegisterAutoDescription<megamol::trisoup::ModernTrisoupRenderer>();
+
+        // register calls
+        this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallBinaryVolumeData>();
+        this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallVolumetricData>();
+    }
+};
 } // namespace megamol::trisoup
