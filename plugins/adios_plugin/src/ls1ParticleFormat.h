@@ -79,6 +79,7 @@ private:
     core::CallerSlot transferfunctionSlot;
 
     core::param::ParamSlot representationSlot;
+    core::param::ParamSlot forceFloatSlot;
 
     std::vector<std::vector<unsigned char>> mix;
     std::vector<std::vector<unsigned char>> dirs;
