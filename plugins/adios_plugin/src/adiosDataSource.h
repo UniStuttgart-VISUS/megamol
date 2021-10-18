@@ -135,7 +135,12 @@ void adiosDataSource::inquireRead(
         auto advar = io->InquireVariable<T>(var.name);
         advar.SetStepSelection({frameIDtoLoad, 1});
         container->shape = advar.Shape(frameIDtoLoad);
-        advar.SetSelection({advar.Start(), container->shape});
+        if (container->shape.empty()) {
+            container->shape ={advar.Count()};
+        }
+        if (!singleValue) {
+            advar.SetSelection({advar.Start(), container->shape});
+        }
         std::for_each(container->shape.begin(), container->shape.end(), [&](decltype(num) n) { num *= n; });
         tmp_vec.resize(num);
 
