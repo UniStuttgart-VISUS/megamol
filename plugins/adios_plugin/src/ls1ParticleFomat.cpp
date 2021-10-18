@@ -84,6 +84,9 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             cad->inquireVar("ry");
             cad->inquireVar("rz");
             cad->inquireVar("component_id");
+            cad->inquireVar("vx");
+            cad->inquireVar("vy");
+            cad->inquireVar("vz");
             if (cad->isInVars("qw")) {
                 cad->inquireVar("qw");
                 cad->inquireVar("qx");
@@ -120,13 +123,22 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             stride += 3 * cad->getData("rx")->getTypeSize();
             uint64_t p_count = X.size() / cad->getData("rx")->getTypeSize();
 
+            auto VX = cad->getData("vx")->GetAsUChar();
+            auto VY = cad->getData("vy")->GetAsUChar();
+            auto VZ = cad->getData("vz")->GetAsUChar();
+
             int pos_size = 0;
+            int dir_size = 0;
             if (cad->getData("rx")->getTypeSize() == 4) {
                 vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+                dirType = core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ;
                 pos_size = sizeof(float);
+                dir_size = sizeof(float);
             } else {
                 vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
+                dirType = core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ;
                 pos_size = sizeof(double);
+                dir_size = sizeof(float);
             }
             bbox = cad->getData("global_box")->GetAsFloat();
 
@@ -154,11 +166,14 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
 
             plist_count.clear();
             mix.clear();
+            dirs.clear();
             num_plists = 0;
             if (this->representationSlot.Param<core::param::EnumParam>()->Value() == 0 || qw.empty()) {
                 num_plists = num_components;
                 mix.clear();
                 mix.resize(num_plists);
+                dirs.clear();
+                dirs.resize(num_plists);
                 list_radii.clear();
                 list_radii.resize(num_plists);
                 plist_count.resize(num_plists,0);
@@ -170,6 +185,12 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                         mix[comp_id[i]].end(), Y.begin() + pos_size * i, Y.begin() + pos_size * (i + 1));
                     mix[comp_id[i]].insert(
                         mix[comp_id[i]].end(), Z.begin() + pos_size * i, Z.begin() + pos_size * (i + 1));
+                    dirs[comp_id[i]].insert(
+                        dirs[comp_id[i]].end(), VX.begin() + dir_size * i, VX.begin() + dir_size * (i + 1));
+                    dirs[comp_id[i]].insert(
+                        dirs[comp_id[i]].end(), VY.begin() + dir_size * i, VY.begin() + dir_size * (i + 1));
+                    dirs[comp_id[i]].insert(
+                        dirs[comp_id[i]].end(), VZ.begin() + dir_size * i, VZ.begin() + dir_size * (i + 1));
                     plist_count[comp_id[i]] += 1;
                 }
 
@@ -192,6 +213,8 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 num_plists = num_atoms_total;
                 mix.clear();
                 mix.resize(num_plists);
+                dirs.clear();
+                dirs.resize(num_plists);
                 list_radii.clear();
                 list_radii.reserve(num_plists);
                 plist_count.resize(num_plists, 0);
@@ -231,6 +254,12 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                             auto uchar_pos = reinterpret_cast<std::vector<unsigned char>&>(pos);
                             mix[component_offset[comp_id[i]] + j].insert(mix[component_offset[comp_id[i]] + j].end(), uchar_pos.begin(), uchar_pos.end());
                         }
+                        dirs[component_offset[comp_id[i]] + j].insert(dirs[component_offset[comp_id[i]] + j].end(),
+                            VX.begin() + dir_size * i, VX.begin() + dir_size * (i + 1));
+                        dirs[component_offset[comp_id[i]] + j].insert(dirs[component_offset[comp_id[i]] + j].end(),
+                            VY.begin() + dir_size * i, VY.begin() + dir_size * (i + 1));
+                        dirs[component_offset[comp_id[i]] + j].insert(dirs[component_offset[comp_id[i]] + j].end(),
+                            VZ.begin() + dir_size * i, VZ.begin() + dir_size * (i + 1));
                         plist_count[component_offset[comp_id[i]] + j] += 1;
                     }
                 }
@@ -284,6 +313,11 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
         mpdc->AccessParticles(k).SetCount(plist_count[k]);
 
         mpdc->AccessParticles(k).SetVertexData(vertType, mix[k].data(), stride);
+        if (dirs[k].data() == nullptr) {
+            mpdc->AccessParticles(k).SetDirData(core::moldyn::SimpleSphericalParticles::DIRDATA_NONE, nullptr);
+        } else {
+            mpdc->AccessParticles(k).SetDirData(dirType, dirs[k].data());
+        }
         mpdc->AccessParticles(k).SetGlobalRadius(list_radii[k]);
 
         // add id and velocity?
