@@ -66,7 +66,7 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
-    this->getDataSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
+    this->getLightsSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getLightsSlot);
 
     this->getFramebufferSlot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
@@ -580,36 +580,6 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         unsigned int colBytes, vertBytes, colStride, vertStride;
         this->getBytesAndStride(*mol, colBytes, vertBytes, colStride, vertStride);
 
-        // lighting setup
-        std::array<float, 3> lightPos = {0.0f, 0.0f, 0.0f};
-
-        auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
-        if (call_light != nullptr) {
-            if (!(*call_light)(0)) {
-                return false;
-            }
-
-            auto lights = call_light->getData();
-            auto point_lights = lights.get<core::view::light::PointLightType>();
-
-            if (point_lights.size() > 1) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[CartoonTessellationRenderer] Only one single 'Point Light' source is supported by this renderer");
-            } else if (point_lights.empty()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[CartoonTessellationRenderer] No 'Point Light' found");
-            }
-
-            for (auto const& light : point_lights) {
-                // light.second.lightColor;
-                // light.second.lightIntensity;
-                lightPos[0] = light.position[0];
-                lightPos[1] = light.position[1];
-                lightPos[2] = light.position[2];
-                break;
-            }
-        }
-
         cartoonShader_->use();
         cartoonShader_->setUniform("MV", view);
         cartoonShader_->setUniform("MVinv", viewInv);
@@ -630,7 +600,6 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
         cartoonShader_->setUniform("inConsts1", -1.0f, minC, maxC, float(colTabSize));
-        cartoonShader_->setUniform("lightPos", lightPos[0], lightPos[1], lightPos[2], 1.0f);
 
         UINT64 numVerts;
         numVerts = this->bufSize / vertStride;
