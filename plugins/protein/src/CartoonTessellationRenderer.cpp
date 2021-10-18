@@ -597,10 +597,6 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
         cartoonShader_->setUniform("sheetColor", sheetColor);
         cartoonShader_->setUniform("turnColor", turnColor);
 
-        float minC = 0.0f, maxC = 0.0f;
-        unsigned int colTabSize = 0;
-        cartoonShader_->setUniform("inConsts1", -1.0f, minC, maxC, float(colTabSize));
-
         UINT64 numVerts;
         numVerts = this->bufSize / vertStride;
         UINT64 stride = 0;
@@ -646,10 +642,6 @@ bool CartoonTessellationRenderer::Render(view::CallRender3DGL& call) {
     mol->Unlock();
 
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
-
-
-    //	timer.EndFrame();
 
     return true;
 }

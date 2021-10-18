@@ -67,7 +67,8 @@ void main(void) {
 	if( lambdas.x < 0.0 ) discard;
     vec3 intersection = camPos.xyz + ray * lambdas.x;
     vec3 normal = vec3(0.0, normalize(intersection.yz));
-    normal_out = normal;
+    vec4 nn = inverse(NormalM) * vec4(normal, 0);
+    normal_out = nn.xyz;
 
     // chose color for lighting
     vec3 color = move_color.rgb;
