@@ -21,8 +21,8 @@ mcu_graphics::ScreenShotComments::ScreenShotComments(std::string const& project_
     the_comments["Software"] = "MegaMol " + std::string(megamol::build_info::MEGAMOL_VERSION) + "-" + std::string(megamol::build_info::MEGAMOL_GIT_HASH);
     the_comments["MegaMol project"] = project_configuration;
 
-    the_comments["RemoteBranch"] = megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL;
-    the_comments["RemoteURL"] = megamol::build_info::MEGAMOL_GIT_REMOTE_URL;
+    the_comments["Remote Branch"] = megamol::build_info::MEGAMOL_GIT_BRANCH_NAME_FULL;
+    the_comments["Remote URL"] = megamol::build_info::MEGAMOL_GIT_REMOTE_URL;
     the_comments["Software Environment"] = platform::RuntimeInfo::GetRuntimeLibraries();
     the_comments["Hardware Environment"] = platform::RuntimeInfo::GetHardwareInfo();
     the_comments["CMakeCache"] = std::string(megamol::build_info::MEGAMOL_CMAKE_CACHE);
