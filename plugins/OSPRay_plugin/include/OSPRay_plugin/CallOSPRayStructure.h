@@ -15,6 +15,7 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mesh/MeshCalls.h"
 #include "CallOSPRayTransformation.h"
+#include "ParticleDataAccessCollection.h"
 
 namespace megamol {
 namespace ospray {
@@ -23,7 +24,6 @@ enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME, OSPRAY_API_STRUCTURES 
 
 enum geometryTypeEnum {
     SPHERES,
-    NHSPHERES,
     MESH,
     LINES,
     CURVES,
@@ -50,20 +50,7 @@ static uint32_t voxelDataTypeOSP[] = {2500, 3000, 3500, 6000, 7000};
 //};
 
 struct sphereStructure {
-    std::shared_ptr<std::vector<float>> vertexData;
-    std::shared_ptr<std::vector<float>> colorData;
-    std::shared_ptr<std::vector<unsigned int>> indexData;
-
-    const void* raw;
-    unsigned int vertexCount;
-    unsigned int vertexLength;
-    unsigned int dataStride;
-    unsigned int colorLength;
-    int colorType;
-    long long int partCount;
-    float globalRadius;
-    core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor =
-        core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
+    std::shared_ptr<ParticleDataAccessCollection> spheres;
 };
 
 struct structuredVolumeStructure {
