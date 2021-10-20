@@ -39,9 +39,15 @@
 
     <namespace name="smaa">
         <snippet name="defines" type="file">comp/AntiAliasing/preset_uniforms_c.glsl</snippet>
+        <snippet name="velocity" type="file">comp/AntiAliasing/smaa_temporal_velocity_c.glsl</snippet>
         <snippet name="edgeDetection" type="file">comp/AntiAliasing/smaa_edge_detection_c.glsl</snippet>
         <snippet name="blendingWeights" type="file">comp/AntiAliasing/smaa_blending_weights_calculation_c.glsl</snippet>
         <snippet name="neighborhoodBlending" type="file">comp/AntiAliasing/smaa_neighborhood_blending_c.glsl</snippet>
+
+        <shader name="velocityCS">
+            <snippet type="version">430</snippet>
+            <snippet name="smaa::velocity" />
+        </shader>
 
         <shader name="edgeDetectionCS">
             <snippet type="version">430</snippet>

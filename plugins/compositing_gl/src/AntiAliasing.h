@@ -148,6 +148,7 @@ private:
     std::unique_ptr<GLSLComputeShader> m_fxaa_prgm;
 
     /** Shader programs for smaa */
+    std::unique_ptr<GLSLComputeShader> m_smaa_velocity_prgm;
     std::unique_ptr<GLSLComputeShader> m_smaa_edge_detection_prgm;
     std::unique_ptr<GLSLComputeShader> m_smaa_blending_weight_calculation_prgm;
     std::unique_ptr<GLSLComputeShader> m_smaa_neighborhood_blending_prgm;
@@ -162,6 +163,9 @@ private:
 
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
+
+    /** Texture to store velocity for each pixel used in SMAA S2x */
+    std::shared_ptr<glowl::Texture2D> m_velocity_tex;
 
     /** Texture to store edges from edges detection */
     std::shared_ptr<glowl::Texture2D> m_edges_tex;
@@ -180,6 +184,14 @@ private:
 
     /** Parameter for selecting the antialiasing technique, e.g. smaa, fxaa, no aa */
     megamol::core::param::ParamSlot m_mode;
+
+    /** Parameter for selecting the smaa technique: SMAA 1x, SMAA S2x, SMAA T2x, or SMAA 4x
+    * SMAA 1x:  basic version of SMAA
+    * SMAA S2x: includes all SMAA 1x features plus spatial multismapling
+    * SMAA T2x: includes all SMAA 1x features plus temporal multisampling
+    * SMAA 4x:  includes all SMAA 1x features plus spatial and temporal multi/supersampling
+    */
+    megamol::core::param::ParamSlot m_smaa_mode;
 
     /** Parameter for selecting which texture to show, e.g. final output, edges, or weights */
     megamol::core::param::ParamSlot m_smaa_view;

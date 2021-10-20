@@ -29,6 +29,7 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     , m_output_texture(nullptr)
     , m_output_texture_hash(0)
     , m_mode("Mode", "Sets antialiasing technqiue: SMAA, FXAA, no AA")
+    , m_smaa_mode("SMAA Mode", "Sets the SMAA mode: SMAA 1x or SMAA T2x")
     , m_smaa_quality("QualityLevel", "Sets smaa quality level")
     , m_smaa_threshold("Threshold", "Sets smaa threshold")
     , m_smaa_max_search_steps("MaxSearchSteps", "Sets smaa max search steps")
@@ -53,6 +54,14 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "None");
     this->m_mode.SetUpdateCallback(&megamol::compositing::AntiAliasing::visibilityCallback);
     this->MakeSlotAvailable(&this->m_mode);
+
+    this->m_smaa_mode << new megamol::core::param::EnumParam(0);
+    this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA 1x");
+    this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "SMAA T2x");
+    //this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "SMAA S2x");
+    //this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "SMAA 4x");
+    this->m_smaa_mode.SetUpdateCallback(&megamol::compositing::AntiAliasing::visibilityCallback);
+    this->MakeSlotAvailable(&this->m_smaa_mode);
     
     this->m_smaa_quality << new megamol::core::param::EnumParam(2);
     this->m_smaa_quality.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Low");
@@ -132,11 +141,13 @@ bool megamol::compositing::AntiAliasing::create() {
     try {
         // create shader program
         m_fxaa_prgm = std::make_unique<GLSLComputeShader>();
+        m_smaa_velocity_prgm = std::make_unique<GLSLComputeShader>();
         m_smaa_edge_detection_prgm = std::make_unique<GLSLComputeShader>();
         m_smaa_blending_weight_calculation_prgm = std::make_unique<GLSLComputeShader>();
         m_smaa_neighborhood_blending_prgm = std::make_unique<GLSLComputeShader>();
 
         vislib::graphics::gl::ShaderSource compute_fxaa_src;
+        vislib::graphics::gl::ShaderSource compute_smaa_velocity_src;
         vislib::graphics::gl::ShaderSource compute_smaa_edge_detection_src;
         vislib::graphics::gl::ShaderSource compute_smaa_blending_weights_src;
         vislib::graphics::gl::ShaderSource compute_smaa_neighborhood_blending_src;
@@ -146,6 +157,13 @@ bool megamol::compositing::AntiAliasing::create() {
         if (!m_fxaa_prgm->Compile(compute_fxaa_src.Code(), compute_fxaa_src.Count()))
             return false;
         if (!m_fxaa_prgm->Link())
+            return false;
+
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::velocityCS", compute_smaa_velocity_src))
+            return false;
+        if (!m_smaa_velocity_prgm->Compile(compute_smaa_velocity_src.Code(), compute_smaa_velocity_src.Count()))
+            return false;
+        if (!m_smaa_velocity_prgm->Link())
             return false;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::edgeDetectionCS", compute_smaa_edge_detection_src))
@@ -201,6 +219,7 @@ bool megamol::compositing::AntiAliasing::create() {
 
     glowl::TextureLayout area_layout(GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, 1, GL_RG, GL_UNSIGNED_BYTE, 1, int_params, {});
     glowl::TextureLayout search_layout(GL_R8, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1, GL_RED, GL_UNSIGNED_BYTE, 1, int_params, {});
+    glowl::TextureLayout velocity_layout(GL_RG8, 0, 0, 1, GL_RG, GL_UNSIGNED_BYTE, 1);
 
 
     // need to flip image around horizontal axis
@@ -230,6 +249,7 @@ bool megamol::compositing::AntiAliasing::create() {
     // TODO: flip y coordinate in texture accesses in shadercode and also flip textures here?
     m_area_tex = std::make_shared<glowl::Texture2D>("smaa_area_tex", area_layout, areaTexBytes);
     m_search_tex = std::make_shared<glowl::Texture2D>("smaa_search_tex", search_layout, searchTexBytes);
+    m_velocity_tex = std::make_shared<glowl::Texture2D>("smaa_input_velocity", velocity_layout, nullptr);
 
     m_ssbo_constants = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
@@ -342,14 +362,16 @@ bool megamol::compositing::AntiAliasing::setCustomSettingsCallback(core::param::
 }
 
 bool megamol::compositing::AntiAliasing::visibilityCallback(core::param::ParamSlot& slot) {
-    if (slot.Param<core::param::EnumParam>()->Value() == 0) {
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
         m_smaa_quality.Param<core::param::EnumParam>()->SetGUIVisible(true);
         m_smaa_detection_technique.Param<core::param::EnumParam>()->SetGUIVisible(true);
         m_smaa_view.Param<core::param::EnumParam>()->SetGUIVisible(true);
+        m_smaa_mode.Param<core::param::EnumParam>()->SetGUIVisible(true);
     } else {
         m_smaa_quality.Param<core::param::EnumParam>()->SetGUIVisible(false);
         m_smaa_detection_technique.Param<core::param::EnumParam>()->SetGUIVisible(false);
         m_smaa_view.Param<core::param::EnumParam>()->SetGUIVisible(false);
+        m_smaa_mode.Param<core::param::EnumParam>()->SetGUIVisible(false);
     }
 
     m_settings_have_changed = true;
@@ -425,6 +447,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
         setupOutputTexture(input_tx2D, m_output_texture);
 
         int mode = this->m_mode.Param<core::param::EnumParam>()->Value();
+        bool temporal = this->m_smaa_mode.Param<core::param::EnumParam>()->Value() == 1;
 
         // smaa
         if (mode == 0) {
@@ -449,7 +472,40 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
 
             // TODO: one program for all? one mega shaders with barriers?
+
+            if (temporal) {
+                // calculate velocity tex for temporal smaa (SMAA S2x)
+                glowl::TextureLayout ly = m_velocity_tex->getTextureLayout();
+                ly.width = input_width;
+                ly.height = input_height;
+                m_velocity_tex->reload(ly, nullptr);
+
+                m_smaa_velocity_prgm->Enable();
+
+                glActiveTexture(GL_TEXTURE0);
+                currDepth_tx2D->bindTexture();
+                glUniform1i(m_smaa_velocity_prgm->ParameterLocation("g_currDepthTex"), 0);
+                glActiveTexture(GL_TEXTURE1);
+                prevDepth_tx2D->bindTexture();
+                glUniform1i(m_smaa_velocity_prgm->ParameterLocation("g_prevDepthTex"), 1);
+                //glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("currViewProjMx"), 1, false, currViewProjMx);
+                //glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("prevViewProjMx"), 1, false, prevViewProjMx);
+                //glUniform2fv(m_smaa_velocity_prgm->ParameterLocation("jitter"), 1, jitter);
+
+                m_velocity_tex->bindImage(0, GL_WRITE_ONLY);
+
+                m_smaa_velocity_prgm->Dispatch(static_cast<int>(std::ceil(m_velocity_tex->getWidth() / 8.0f)),
+                    static_cast<int>(std::ceil(m_velocity_tex->getHeight() / 8.0f)), 1);
+
+                m_smaa_velocity_prgm->Disable();
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, 0);
+
+                //dispatchComputeShader(m_smaa_velocity_prgm, { { input_tx2D, "g_depthTex" } }, m_velocity_tex, {});
+            }
             // edge detection
+            // TODO: the original paper uses a stencil buffer here in the first pass to optimize the next pass
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>> inputs = {{input_tx2D, "g_colorTex"}};
             std::vector<std::pair<const char*, int>> uniforms = {{"technique", technique}};
 
@@ -488,6 +544,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
         }
         // no aa
         else if (mode == 2) {
+            // TODO: find a better solution
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>> inputs = {{input_tx2D, "src_tx2D"}};
             std::vector<std::pair<const char*, int>> uniforms = {{"disable_aa", 1}};
 
