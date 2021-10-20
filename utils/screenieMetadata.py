@@ -13,7 +13,7 @@ def get_dumpfile(orig):
 
 def dump_meta(filename, metadata, fields):
     outname = get_dumpfile(filename)
-    if fields:
+    if fields and fields[0] != '*':
         print(f"dumping metadata[{fields}] to {outname}")
         newmeta = {}
         for f in fields:
@@ -28,7 +28,7 @@ def replace_meta(filename, fields):
     metaname = get_dumpfile(filename)
     with open(metaname) as json_file:
         meta = json.load(json_file)
-    if fields:
+    if fields and fields[0] != '*':
         print(f"overwriting metadata[{fields}] in {filename} from {metaname}")
         newmeta = {}
         for f in fields:
@@ -45,9 +45,16 @@ def replace_meta(filename, fields):
     img.save(filename, pnginfo=metadata)
 
 def print_meta(metadata, fields):
-    if fields:
+    if fields and fields[0] != '*':
         for f in fields:
-            print(f"{f} = {im.info[f]}")
+            data = im.info[f]
+            info = (data[:65] + '...') if len(data) > 65 else data
+            print(f"{f} = {info if args.trunc else data}")
+    elif fields[0] == '*':
+        for f in metadata:
+            data = im.info[f]
+            info = (data[:65] + '...') if len(data) > 65 else data
+            print(f"{f} = {info if args.trunc else data}")
     else:
         print("found these metadata fields:")
         for f in metadata:
@@ -57,6 +64,7 @@ parser = argparse.ArgumentParser(usage="%(prog)s <FILE> [[<field>] <field> ...]"
     description="show metadata in a MegaMol screenshot")
 parser.add_argument('file', help='the input file')
 parser.add_argument('field', nargs='*', help='any number of metadata fields')
+parser.add_argument('--trunc', action='store_true', help='shorten values if printing')
 parser.add_argument('--dump', action='store_true', help=f'dump metadata in sidecar {MY_EXT}')
 parser.add_argument('--overwrite', action='store_true',
     help=f'replace metadata with sidecar {MY_EXT} data')
