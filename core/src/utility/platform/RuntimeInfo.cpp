@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #include <tchar.h>
+#include "mmcore/utility/platform/WMIUtil.h"
 #define the_popen _popen
 #define the_pclose _pclose
 #else
@@ -117,7 +118,19 @@ std::vector<std::string> dlinfo_linkmap(void* handle) {
 
 void megamol::core::utility::platform::RuntimeInfo::get_hardware_info() {
 #ifdef _WIN32
-    m_hardware_info = execute("systeminfo");
+    //m_hardware_info = execute("systeminfo");
+    WMIUtil wmi;
+    std::stringstream s;
+    s << "{" << std::endl;
+    s << R"("Processor Name":")" << wmi.get_value("Win32_Processor", "Name") << "\"," << std::endl;
+    s << R"("Processor Version":")" << wmi.get_value("Win32_Processor", "Version") << "\"," << std::endl;
+    s << R"("GPU Name":")" << wmi.get_value("Win32_VideoController", "Name") << "\"," << std::endl;
+    s << R"("OS Name":")" << wmi.get_value("Win32_OperatingSystem", "Name") << "\"," << std::endl;
+    s << R"("OS Version":")" << wmi.get_value("Win32_OperatingSystem", "Version") << "\"," << std::endl;
+    s << R"("OS Architecture":")" << wmi.get_value("Win32_OperatingSystem", "OSArchitecture") << "\"," << std::endl;
+    s << R"("Available Memory":")" << wmi.get_value("Win32_OperatingSystem", "TotalVisibleMemorySize") << "\"" << std::endl;
+    s << "}";
+    m_hardware_info = s.str();
 #else
     m_hardware_info = execute("cat /proc/cpuinfo /proc/meminfo");
 #endif
