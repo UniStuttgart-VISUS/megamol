@@ -7,6 +7,8 @@
 
 #include <string>
 
+#include "WMIUtil.h"
+
 namespace megamol::core::utility::platform {
 
     class RuntimeInfo {
@@ -42,5 +44,9 @@ namespace megamol::core::utility::platform {
         inline static std::string m_runtime_libraries;
         inline static std::string m_os_info;
         inline static std::string m_hardware_info;
+
+#ifdef _WIN32
+        inline static WMIUtil wmi;
+#endif
     };
 }

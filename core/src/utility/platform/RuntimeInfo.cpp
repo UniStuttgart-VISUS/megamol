@@ -119,7 +119,6 @@ std::vector<std::string> dlinfo_linkmap(void* handle) {
 void megamol::core::utility::platform::RuntimeInfo::get_hardware_info() {
 #ifdef _WIN32
     //m_hardware_info = execute("systeminfo");
-    WMIUtil wmi;
     std::stringstream s;
     s << "{" << std::endl;
     s << R"("Processor Name":")" << wmi.get_value("Win32_Processor", "Name") << "\"," << std::endl;
