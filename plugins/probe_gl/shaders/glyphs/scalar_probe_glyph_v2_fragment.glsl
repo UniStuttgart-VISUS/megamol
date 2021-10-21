@@ -130,7 +130,7 @@ void main() {
 
         if( sample_value_normalized >= zero_value_radius && radius < (1.0 - border_circle_width)){
             if( radius < (zero_value_radius) || radius > sample_value_normalized ){
-                if(per_frame_data[0].show_canvas){
+                if(bool(per_frame_data[0].show_canvas)){
                     out_colour = per_frame_data[0].canvas_color.rgb;
                 }
                 else{
@@ -140,7 +140,7 @@ void main() {
         }
         else if(sample_value_normalized < zero_value_radius && radius < (1.0 - border_circle_width)){
             if( radius > (zero_value_radius) || radius < sample_value_normalized ){
-                if(per_frame_data[0].show_canvas){
+                if(bool(per_frame_data[0].show_canvas)){
                     out_colour = per_frame_data[0].canvas_color.rgb;
                 }
                 else{
