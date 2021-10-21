@@ -9,6 +9,7 @@
 #define ANTI_ALIASING_H_INCLUDED
 
 #include "mmcore/Module.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -158,6 +159,16 @@ private:
     SMAAConstants m_smaa_custom_constants;
     std::shared_ptr<glowl::BufferObject> m_ssbo_constants;
 
+    /** Temporal smaa handles */
+    core::view::Camera m_cam;
+    core::view::Camera m_prev_cam;
+    glm::mat4 m_prev_view_proj_mx;
+    glm::vec2 m_jitter[2] = { glm::vec2(0.25, -0.25), glm::vec2(-0.25, 0.25) };
+    glm::vec4 m_subsampleIndices[2] =
+    { glm::vec4(1.0, 1.0, 1.0, 0.0), glm::vec4(2.0, 2.0, 2.0, 0.0) };
+    std::shared_ptr<glowl::Texture2D> m_depth_tx2D;
+    std::shared_ptr<glowl::Texture2D> m_prev_depth_tx2D;
+
     /** SMAA intermediate texture layout */
     glowl::TextureLayout m_smaa_layout;
 
@@ -231,6 +242,12 @@ private:
 
     /** Slot for optionally querying an input texture, i.e. a rhs connection */
     megamol::core::CallerSlot m_input_tex_slot;
+
+    /** Slot for optionally querying the camera, i.e. a rhs connection */
+    megamol::core::CallerSlot m_camera_slot;
+
+    /** Slot for optionally querying a depth texture, i.e. a rhs connection */
+    megamol::core::CallerSlot m_depth_tex_slot;
 
 
     bool m_settings_have_changed;

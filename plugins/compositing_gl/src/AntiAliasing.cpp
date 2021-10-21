@@ -11,7 +11,6 @@
 #include <array>
 #include <random>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -46,6 +45,8 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
                             "only be used when directly connected to the screen for debug purposes")
     , m_output_tex_slot("OutputTexture", "Gives access to the resulting output texture")
     , m_input_tex_slot("InputTexture", "Connects the input texture")
+    , m_camera_slot("Camera", "Connects the camera")
+    , m_depth_tex_slot("DepthTexture", "Connects the depth texture")
     , m_settings_have_changed(false)
 {
     this->m_mode << new megamol::core::param::EnumParam(0);
@@ -58,6 +59,8 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
     this->m_smaa_mode << new megamol::core::param::EnumParam(0);
     this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SMAA 1x");
     this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "SMAA T2x");
+    // S2x and 4x requires multisampling at the connected renderer
+    // and is therefore currently omitted
     //this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "SMAA S2x");
     //this->m_smaa_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "SMAA 4x");
     this->m_smaa_mode.SetUpdateCallback(&megamol::compositing::AntiAliasing::visibilityCallback);
@@ -133,6 +136,12 @@ megamol::compositing::AntiAliasing::AntiAliasing() : core::Module()
 
     this->m_input_tex_slot.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_tex_slot);
+
+    this->m_camera_slot.SetCompatibleCall<CallCameraDescription>();
+    this->MakeSlotAvailable(&this->m_camera_slot);
+
+    this->m_depth_tex_slot.SetCompatibleCall<CallTexture2DDescription>();
+    this->MakeSlotAvailable(&this->m_depth_tex_slot);
 }
 
 megamol::compositing::AntiAliasing::~AntiAliasing() { this->Release(); }
@@ -159,12 +168,12 @@ bool megamol::compositing::AntiAliasing::create() {
         if (!m_fxaa_prgm->Link())
             return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::velocityCS", compute_smaa_velocity_src))
+        /*if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::velocityCS", compute_smaa_velocity_src))
             return false;
         if (!m_smaa_velocity_prgm->Compile(compute_smaa_velocity_src.Code(), compute_smaa_velocity_src.Count()))
             return false;
         if (!m_smaa_velocity_prgm->Link())
-            return false;
+            return false;*/
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::edgeDetectionCS", compute_smaa_edge_detection_src))
             return false;
@@ -219,7 +228,7 @@ bool megamol::compositing::AntiAliasing::create() {
 
     glowl::TextureLayout area_layout(GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, 1, GL_RG, GL_UNSIGNED_BYTE, 1, int_params, {});
     glowl::TextureLayout search_layout(GL_R8, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1, GL_RED, GL_UNSIGNED_BYTE, 1, int_params, {});
-    glowl::TextureLayout velocity_layout(GL_RG8, 0, 0, 1, GL_RG, GL_UNSIGNED_BYTE, 1);
+    glowl::TextureLayout velocity_layout(GL_RG8, 1, 1, 1, GL_RG, GL_UNSIGNED_BYTE, 1);
 
 
     // need to flip image around horizontal axis
@@ -414,16 +423,60 @@ void megamol::compositing::AntiAliasing::dispatchComputeShader(
 
 bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
-    auto call_input = m_input_tex_slot.CallAs<CallTexture2D>();
+    auto rhs_call_input = m_input_tex_slot.CallAs<CallTexture2D>();
+    auto rhs_call_camera = m_camera_slot.CallAs<CallCamera>();
+    auto rhs_call_depth = m_depth_tex_slot.CallAs<CallTexture2D>();
 
     if (lhs_tc == NULL) return false;
     
-    if(call_input != NULL) { if (!(*call_input)(0)) return false; }
+    if(rhs_call_input != NULL) { if (!(*rhs_call_input)(0)) return false; }
+
+    bool temporal = this->m_smaa_mode.Param<core::param::EnumParam>()->Value() == 1;
+    if (temporal) {
+        if (rhs_call_camera != NULL) {
+            if (!(*rhs_call_camera)(0)) {
+                return false;
+            }
+        }
+        else {
+            core::utility::log::Log::DefaultLog.WriteError("Temporal SMAA requires the camera to be plugged in.");
+            return false;
+        }
+
+        if (rhs_call_depth != NULL) {
+            if (!(*rhs_call_depth)(0)) {
+                return false;
+            }
+        }
+        else {
+            core::utility::log::Log::DefaultLog.WriteError("Temporal SMAA requires the depth texture of the"
+                " rendered mesh. Check the depth texture slot.");
+            return false;
+        }
+    }
+
+    GLint technique = m_smaa_detection_technique.Param<core::param::EnumParam>()->Value();
+    // depth based edge detection requires the depth texture
+    if (technique == 2) {
+        if (rhs_call_depth != NULL) {
+            if (!(*rhs_call_depth)(0)) {
+                return false;
+            }
+        }
+        else {
+            core::utility::log::Log::DefaultLog.WriteError("Depth based edge detection for SMAA requires the depth texture of the"
+                " rendered mesh. Check the depth texture slot.");
+            return false;
+        }
+    }
 
     bool something_has_changed =
-        (call_input != NULL ? call_input->hasUpdate() : false)
+        (rhs_call_input != NULL ? rhs_call_input->hasUpdate() : false)
         || m_settings_have_changed
-        || this->m_smaa_detection_technique.IsDirty();
+        || this->m_smaa_detection_technique.IsDirty()
+        || (temporal ? rhs_call_camera->hasUpdate() : false)
+        || (temporal ? rhs_call_depth->hasUpdate()  : false)
+        || (technique == 2 ? rhs_call_depth->hasUpdate() : false);
 
     if (something_has_changed) {
         ++m_version;
@@ -443,14 +496,17 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 }
             };
 
-        auto input_tx2D = call_input->getData();
+        auto input_tx2D = rhs_call_input->getData();
         setupOutputTexture(input_tx2D, m_output_texture);
 
         int mode = this->m_mode.Param<core::param::EnumParam>()->Value();
-        bool temporal = this->m_smaa_mode.Param<core::param::EnumParam>()->Value() == 1;
 
         // smaa
         if (mode == 0) {
+            if (temporal || technique == 2) {
+                m_depth_tx2D = rhs_call_depth->getData();
+            }
+
             int input_width = input_tx2D->getWidth();
             int input_height = input_tx2D->getHeight();
 
@@ -467,13 +523,18 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 1.f / (float) input_width, 1.f / (float) input_height, (float) input_width, (float) input_height);
             m_ssbo_constants->rebuffer(&m_smaa_constants, sizeof(m_smaa_constants));
 
-            GLint technique = m_smaa_detection_technique.Param<core::param::EnumParam>()->Value();
+            
             GLint preset = m_smaa_quality.Param<core::param::EnumParam>()->Value();
 
 
-            // TODO: one program for all? one mega shaders with barriers?
+            // TODO: one program for all? one mega shader with barriers?
 
             if (temporal) {
+                m_cam = rhs_call_camera->getData();
+                glm::mat4 view_mx = m_cam.getViewMatrix();
+                glm::mat4 proj_mx = m_cam.getProjectionMatrix();
+                glm::mat4 curr_view_proj_mx = proj_mx * view_mx;
+
                 // calculate velocity tex for temporal smaa (SMAA S2x)
                 glowl::TextureLayout ly = m_velocity_tex->getTextureLayout();
                 ly.width = input_width;
@@ -483,14 +544,16 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
                 m_smaa_velocity_prgm->Enable();
 
                 glActiveTexture(GL_TEXTURE0);
-                currDepth_tx2D->bindTexture();
+                m_depth_tx2D->bindTexture();
                 glUniform1i(m_smaa_velocity_prgm->ParameterLocation("g_currDepthTex"), 0);
                 glActiveTexture(GL_TEXTURE1);
-                prevDepth_tx2D->bindTexture();
+                m_prev_depth_tx2D->bindTexture();
                 glUniform1i(m_smaa_velocity_prgm->ParameterLocation("g_prevDepthTex"), 1);
-                //glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("currViewProjMx"), 1, false, currViewProjMx);
-                //glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("prevViewProjMx"), 1, false, prevViewProjMx);
-                //glUniform2fv(m_smaa_velocity_prgm->ParameterLocation("jitter"), 1, jitter);
+                glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("currViewProjMx"),
+                    1, false, glm::value_ptr(curr_view_proj_mx));
+                glUniformMatrix4fv(m_smaa_velocity_prgm->ParameterLocation("prevViewProjMx"),
+                    1, false, glm::value_ptr(m_prev_view_proj_mx));
+                glUniform4fv(m_smaa_velocity_prgm->ParameterLocation("jitter"), 1, glm::value_ptr(m_jitter[m_version % 2]));
 
                 m_velocity_tex->bindImage(0, GL_WRITE_ONLY);
 
@@ -499,14 +562,20 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
                 m_smaa_velocity_prgm->Disable();
 
+                glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
+
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, 0);
 
                 //dispatchComputeShader(m_smaa_velocity_prgm, { { input_tx2D, "g_depthTex" } }, m_velocity_tex, {});
+
+                m_prev_cam = m_cam;
+                m_prev_view_proj_mx = curr_view_proj_mx;
             }
+
             // edge detection
-            // TODO: the original paper uses a stencil buffer here in the first pass to optimize the next pass
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>> inputs = {{input_tx2D, "g_colorTex"}};
+            if (technique == 2) inputs.push_back({ m_depth_tx2D, "g_depthTex" });
             std::vector<std::pair<const char*, int>> uniforms = {{"technique", technique}};
 
             dispatchComputeShader(m_smaa_edge_detection_prgm, inputs, m_edges_tex, uniforms, m_ssbo_constants);
@@ -550,6 +619,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
             dispatchComputeShader(m_fxaa_prgm, inputs, m_output_texture, uniforms);
         }
+
     }
 
     if (lhs_tc->version() < m_version || this->m_smaa_view.IsDirty()) {
