@@ -14,6 +14,9 @@
 
 #include "eigen.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 //#include "frechet_distance.h"
 
 
@@ -115,13 +118,14 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
 
             auto vec_dist_func = [](glm::vec4 const& a, glm::vec4 const& b) -> float {
                 auto const angle = std::acos(glm::dot(glm::vec3(a), glm::vec3(b)));
-                auto const angle_dis = angle / 3.14f;
+                auto const angle_dis = angle / M_PI;
                 auto const length_dis = std::fabs(a.w - b.w);
                 return angle_dis; /* + length_dis;*/
             };
 
 
             std::vector<std::vector<glm::vec4>> sample_collection(probe_count);
+            auto X = std::vector<Eigen::MatrixXd>(probe_count, Eigen::MatrixXd(probe_count, sample_count));
 #pragma omp parallel for
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
                 std::vector<glm::vec4> a_samples;
@@ -140,6 +144,28 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                 }
                 sample_collection[a_pidx] = a_samples;
             }
+#pragma omp parallel for
+            for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
+                auto& X_sub = X[a_pidx];
+                for (std::int64_t b_pidx = 0; b_pidx < probe_count; ++b_pidx) {
+
+                    for (std::int64_t as_idx = 0; as_idx < sample_count; ++as_idx) {
+                        auto const val =
+                            vec_dist_func(sample_collection[a_pidx][as_idx], sample_collection[b_pidx][as_idx]);
+                        X_sub(b_pidx, as_idx) = val;
+                    }
+                }
+                /*auto svd = Eigen::JacobiSVD<Eigen::MatrixXd>(X_sub, Eigen::ComputeThinU | Eigen::ComputeThinV);
+                auto sv = svd.singularValues();
+                for (Eigen::Index idx = sv.size() / 2; idx < sv.size(); ++idx) {
+                    sv[idx] = 0.0;
+                }
+                auto U = svd.matrixU();
+                auto V = svd.matrixV();
+                auto D = sv.asDiagonal();
+                X_sub = U * D * V.transpose();*/
+            }
+        
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Prepared probes");
 #pragma omp parallel for
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
@@ -150,8 +176,10 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                     std::vector<float> tmp_mat(sample_count * sample_count);
                     for (std::int64_t as_idx = 0; as_idx < sample_count; ++as_idx) {
                         for (std::int64_t bs_idx = as_idx; bs_idx < sample_count; ++bs_idx) {
-                            auto const val =
-                                vec_dist_func(sample_collection[a_pidx][as_idx], sample_collection[b_pidx][bs_idx]);
+                            /*auto const val =
+                                vec_dist_func(sample_collection[a_pidx][as_idx], sample_collection[b_pidx][bs_idx]);*/
+                            //auto const val = std::abs(X[a_pidx](b_pidx, as_idx) - X[a_pidx](b_pidx, bs_idx));
+                            auto const val = X[a_pidx](b_pidx, as_idx);
                             tmp_mat[as_idx + bs_idx * sample_count] = val;
                             tmp_mat[bs_idx + as_idx * sample_count] = val;
                         }
@@ -225,7 +253,7 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                     X(a_pidx, sample_idx - base_skip) = a_samples_tmp[sample_idx].mean;
                 }
             }
-            auto svd = Eigen::JacobiSVD<Eigen::MatrixXd>(X, Eigen::ComputeThinU | Eigen::ComputeThinV);
+            /*auto svd = Eigen::JacobiSVD<Eigen::MatrixXd>(X, Eigen::ComputeThinU | Eigen::ComputeThinV);
             auto sv = svd.singularValues();
             for (Eigen::Index idx = sv.size() / 2; idx < sv.size(); ++idx) {
                 sv[idx] = 0.0;
@@ -233,7 +261,7 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
             auto U = svd.matrixU();
             auto V = svd.matrixV();
             auto D = sv.asDiagonal();
-            X = U * D * V.transpose();
+            X = U * D * V.transpose();*/
 
             auto min_val = std::numeric_limits<double>::max();
             auto max_val = std::numeric_limits<double>::lowest();
@@ -307,7 +335,7 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                     X(a_pidx, sample_idx - base_skip) = a_samples_tmp[sample_idx];
                 }
             }
-            auto svd = Eigen::JacobiSVD<Eigen::MatrixXd>(X, Eigen::ComputeThinU | Eigen::ComputeThinV);
+            /*auto svd = Eigen::JacobiSVD<Eigen::MatrixXd>(X, Eigen::ComputeThinU | Eigen::ComputeThinV);
             auto sv = svd.singularValues();
             for (Eigen::Index idx = sv.size() / 2; idx < sv.size(); ++idx) {
                 sv[idx] = 0.0;
@@ -315,7 +343,7 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
             auto U = svd.matrixU();
             auto V = svd.matrixV();
             auto D = sv.asDiagonal();
-            X = U * D * V.transpose();
+            X = U * D * V.transpose();*/
 
             auto min_val = std::numeric_limits<double>::max();
             auto max_val = std::numeric_limits<double>::lowest();
@@ -325,18 +353,18 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                 for (std::int64_t b_pidx = a_pidx; b_pidx < probe_count; ++b_pidx) {
 
 
-                    std::vector<float> tmp_mat(sample_count * sample_count);
-                    for (std::int64_t as_idx = 0; as_idx < sample_count; ++as_idx) {
-                        for (std::int64_t bs_idx = as_idx; bs_idx < sample_count; ++bs_idx) {
+                    std::vector<float> tmp_mat(base_sample_count * base_sample_count);
+                    for (std::int64_t as_idx = 0; as_idx < base_sample_count; ++as_idx) {
+                        for (std::int64_t bs_idx = as_idx; bs_idx < base_sample_count; ++bs_idx) {
                             auto const val = std::abs(X(a_pidx, as_idx) - X(b_pidx, as_idx));
-                            tmp_mat[as_idx + bs_idx * sample_count] = val;
-                            tmp_mat[bs_idx + as_idx * sample_count] = val;
+                            tmp_mat[as_idx + bs_idx * base_sample_count] = val;
+                            tmp_mat[bs_idx + as_idx * base_sample_count] = val;
                         }
                     }
 
                     auto const score = stdplugin::datatools::misc::frechet_distance<float>(
-                        sample_count, [&tmp_mat, sample_count](std::size_t lhs, std::size_t rhs) -> float {
-                            return tmp_mat[lhs + rhs * sample_count];
+                        base_sample_count, [&tmp_mat, base_sample_count](std::size_t lhs, std::size_t rhs) -> float {
+                            return tmp_mat[lhs + rhs * base_sample_count];
                         });
 
                     // auto const dis = DTW::dtw_distance_only(a_samples, b_samples, 2);
