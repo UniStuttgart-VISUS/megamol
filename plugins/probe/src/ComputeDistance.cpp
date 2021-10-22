@@ -212,8 +212,8 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                 if (std::isnan(el))
                     el = 1.0;
             });*/
-            if (stretching > 1.0f) {
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
+            if (stretching > 1.0f) {
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
                     if (el > 1.0)
@@ -302,8 +302,8 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
             auto org = min_val;
             auto diff = 1.0 / (max_val - min_val + 1e-8);
             double stretching = _stretching_factor_slot.Param<core::param::FloatParam>()->Value();
-            if (stretching > 1.0f) {
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
+            if (stretching > 1.0f) {
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
                     if (el > 1.0)
@@ -386,15 +386,15 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
             auto org = min_val;
             auto diff = 1.0 / (max_val - min_val + 1e-8);
             double stretching = _stretching_factor_slot.Param<core::param::FloatParam>()->Value();
-            if (stretching > 1.0f) {
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
+            if (stretching > 1.0f) {
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
                 std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
                     if (el > 1.0)
                         el = 1.0;
                 });
             }
-            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished");
+            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished with %f and %f", min_val, max_val);
         }
         for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
             auto const minmax = std::minmax_element(
