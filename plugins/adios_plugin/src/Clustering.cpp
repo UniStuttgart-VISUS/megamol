@@ -92,7 +92,9 @@ bool megamol::adios::Clustering::getDataCallback(core::Call& c) {
 
         int num_clusters = 0;
 
-        auto clusters = stdplugin::datatools::clustering::DBSCAN_scan(kdtree, sigma * sigma, minpts, num_clusters);
+        auto clusters = stdplugin::datatools::clustering::DBSCAN_scan_it(kdtree, sigma, minpts, num_clusters);
+
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Clustering: Found %d clusters", num_clusters);
 
         fillDataVec(clusters, in_data_ptr, num_rows, num_columns);
 

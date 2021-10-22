@@ -212,12 +212,14 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                 if (std::isnan(el))
                     el = 1.0;
             });*/
-            std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
-            std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
-            std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
-                if (el > 1.0)
-                    el = 1.0;
-            });
+            if (stretching > 1.0f) {
+                std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
+                std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
+                std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
+                    if (el > 1.0)
+                        el = 1.0;
+                });
+            }
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished");
         } else if (distrib_probe) {
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Computing distances for distribution probes");
@@ -300,12 +302,14 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
             auto org = min_val;
             auto diff = 1.0 / (max_val - min_val + 1e-8);
             double stretching = _stretching_factor_slot.Param<core::param::FloatParam>()->Value();
-            std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
-            std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
-            std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
-                if (el > 1.0)
-                    el = 1.0;
-            });
+            if (stretching > 1.0f) {
+                std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
+                std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
+                std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
+                    if (el > 1.0)
+                        el = 1.0;
+                });
+            }
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished");
         } else {
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Computing distances for scalar probes");
@@ -382,12 +386,14 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
             auto org = min_val;
             auto diff = 1.0 / (max_val - min_val + 1e-8);
             double stretching = _stretching_factor_slot.Param<core::param::FloatParam>()->Value();
-            std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
-            std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
-            std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
-                if (el > 1.0)
-                    el = 1.0;
-            });
+            if (stretching > 1.0f) {
+                std::for_each(_dis_mat.begin(), _dis_mat.end(), [org, diff](auto& el) { el = (el - org) * diff; });
+                std::for_each(_dis_mat.begin(), _dis_mat.end(), [stretching](auto& el) { el = el * stretching; });
+                std::for_each(_dis_mat.begin(), _dis_mat.end(), [](auto& el) {
+                    if (el > 1.0)
+                        el = 1.0;
+                });
+            }
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Finished");
         }
         for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {

@@ -354,11 +354,11 @@ inline void expand_GROWING_with_similarity(std::shared_ptr<kd_tree_t<T, DIM>> co
                 if (idx == el.first)
                     return false;
                 if (similarity(idx, el.first)) {
-                    for (auto const& cl : current_cluster) {
+                    /*for (auto const& cl : current_cluster) {
                         if (!similarity(idx, cl)) {
                             return false;
                         }
-                    }
+                    }*/
                     return true;
                 }
                 return false;
