@@ -23,7 +23,7 @@ DiagramSeries::DiagramSeries(void)
         , scalingParam("scaling", "Param to set a scaling factor for selected column")
         , colorParam("color", "Selecto color for series")
         , myHash(0)
-        , inputHash((std::numeric_limits<size_t>::max)()) {
+        , inputHash((std::numeric_limits<size_t>::max) ()) {
     this->color = {1.0f, 1.0f, 1.0f};
 
     this->seriesInSlot.SetCompatibleCall<DiagramSeriesCallDescription>();
@@ -40,7 +40,7 @@ DiagramSeries::DiagramSeries(void)
     this->columnSelectorParam << columnSelectorEP;
     this->MakeSlotAvailable(&this->columnSelectorParam);
 
-    this->scalingParam << new core::param::FloatParam(1.0f, (std::numeric_limits<float>::min)());
+    this->scalingParam << new core::param::FloatParam(1.0f, (std::numeric_limits<float>::min) ());
     this->MakeSlotAvailable(&this->scalingParam);
 
     this->colorParam << new core::param::StringParam(
