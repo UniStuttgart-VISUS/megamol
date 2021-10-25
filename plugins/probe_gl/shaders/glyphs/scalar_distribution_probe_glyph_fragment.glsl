@@ -136,7 +136,7 @@ void main() {
 
         if( (radius > sample_upper_value_normalized || radius < sample_lower_value_normalized) && radius < (1.0 - border_circle_width) ){
             if( abs(radius - zero_value_radius) > 0.005 && abs(radius - sample_mean_value_normalized) > 0.02 ){
-                if(per_frame_data[0].show_canvas){
+                if(bool(per_frame_data[0].show_canvas)){
                     out_colour = per_frame_data[0].canvas_color.rgb;
                 }
                 else{
