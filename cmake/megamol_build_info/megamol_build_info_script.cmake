@@ -92,3 +92,10 @@ string_split_lines(MM_CMAKE_CACHE "${MM_CMAKE_CACHE}")
 
 # Write to sourcefile
 configure_file(${INFO_SRC_DIR}/megamol_build_info_buildtime.cpp.in ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.cpp @ONLY)
+
+# Debug
+file(READ ${CMAKE_BINARY_DIR}/megamol_build_info/megamol_build_info_buildtime.cpp FILE_DEBUG)
+message("########################################")
+message(${FILE_DEBUG})
+message("########################################")
+string_split_lines(MM_CMAKE_CACHE "${MM_CMAKE_CACHE}")
