@@ -2,7 +2,6 @@
 #define MEGAMOL_INFOVIS_AMORTIZEDRENDERER_H_INCLUDED
 
 #include <glm/matrix.hpp>
-
 #include <glowl/glowl.h>
 
 #include "mmcore/CalleeSlot.h"
@@ -16,8 +15,14 @@
 
 namespace megamol {
 namespace infovis {
+
     class InfovisAmortizedRenderer : public Renderer2D {
     public:
+        /**
+         * Answer the name of this module.
+         *
+         * @return The name of this module.
+         */
         static inline const char* ClassName() {
             return "InfovisAmortizedRenderer";
         }
@@ -27,31 +32,33 @@ namespace infovis {
          *
          * @return A human readable description of this module.
          */
-        static inline const char* Description(void) {
-            return "Amortized Renderer.\n"
-                   "Amortizes following Renderers to improve response time\n";
-        }
-
-
-        static inline bool IsAvailable(void) {
-            return true;
+        static inline const char* Description() {
+            return "Amortizes chained InfoVis renderers to improve response time\n";
         }
 
         /**
-         * Initialises a new instance.
+         * Answers whether this module is available on the current system.
+         *
+         * @return 'true' if the module is available, 'false' otherwise.
          */
-        InfovisAmortizedRenderer(void);
+        static inline bool IsAvailable() {
+            return true;
+        }
 
-        virtual ~InfovisAmortizedRenderer(void);
+        /** Constructor. */
+        InfovisAmortizedRenderer();
+
+        /** Destructor. */
+        ~InfovisAmortizedRenderer() override;
 
     protected:
-        virtual bool create(void);
+        bool create() override;
 
-        virtual void release(void);
+        void release() override;
 
-        virtual bool Render(core::view::CallRender2DGL& call);
+        bool Render(core::view::CallRender2DGL& call) override;
 
-        virtual bool GetExtents(core::view::CallRender2DGL& call);
+        bool GetExtents(core::view::CallRender2DGL& call) override;
 
         void setupBuffers();
 
@@ -78,10 +85,16 @@ namespace infovis {
             megamol::core::view::Modifiers mods) override;
 
     private:
+        enum AmortizationModes { MS_AR = 0, QUAD_AR, QUAD_AR_C, SS_AR, PARAMETER_AR, DEBUG_PLACEHOLDER, PUSH_AR };
+
+        megamol::core::CallerSlot nextRendererSlot;
+        core::param::ParamSlot halveRes;
+        core::param::ParamSlot approachEnumSlot;
+        core::param::ParamSlot superSamplingLevelSlot;
+        core::param::ParamSlot amortLevel;
+
         // required Shaders for different kinds of reconstruction
         std::unique_ptr<glowl::GLSLProgram> amort_reconstruction_shdr_array[7];
-
-        enum AmortizationModes { MS_AR = 0, QUAD_AR, QUAD_AR_C, SS_AR, PARAMETER_AR, DEBUG_PLACEHOLDER, PUSH_AR };
 
         GLuint amortizedFboA = 0;
         GLuint amortizedMsaaFboA = 0;
@@ -124,12 +137,6 @@ namespace infovis {
         glm::mat4 lastPmvm;
 
         float backgroundColor[4];
-
-        megamol::core::CallerSlot nextRendererSlot;
-        core::param::ParamSlot halveRes;
-        core::param::ParamSlot approachEnumSlot;
-        core::param::ParamSlot superSamplingLevelSlot;
-        core::param::ParamSlot amortLevel;
     };
 } // namespace infovis
 } // namespace megamol

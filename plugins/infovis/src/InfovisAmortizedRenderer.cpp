@@ -1,8 +1,8 @@
-#include "stdafx.h"
 #include "InfovisAmortizedRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -51,7 +51,7 @@ InfovisAmortizedRenderer::~InfovisAmortizedRenderer() {
     this->Release();
 }
 
-bool megamol::infovis::InfovisAmortizedRenderer::create(void) {
+bool megamol::infovis::InfovisAmortizedRenderer::create() {
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("ignore: %i", glGetError());
 
     if (!makeShaders()) {
@@ -104,19 +104,19 @@ bool InfovisAmortizedRenderer::makeShaders() {
 
     try {
         amort_reconstruction_shdr_array[0] = core::utility::make_glowl_shader("amort_reconstruction0", shader_options,
-            "infovis/amort_reconstruction0.vert.glsl", "infovis/amort_reconstruction0.frag.glsl");
+            "infovis/amort_reconstruction.vert.glsl", "infovis/amort_reconstruction0.frag.glsl");
         amort_reconstruction_shdr_array[1] = core::utility::make_glowl_shader("amort_reconstruction1", shader_options,
-            "infovis/amort_reconstruction1.vert.glsl", "infovis/amort_reconstruction1.frag.glsl");
+            "infovis/amort_reconstruction.vert.glsl", "infovis/amort_reconstruction1.frag.glsl");
         amort_reconstruction_shdr_array[2] = core::utility::make_glowl_shader("amort_reconstruction2", shader_options,
-            "infovis/amort_reconstruction2.vert.glsl", "infovis/amort_reconstruction2.frag.glsl");
+            "infovis/amort_reconstruction.vert.glsl", "infovis/amort_reconstruction2.frag.glsl");
         amort_reconstruction_shdr_array[3] = core::utility::make_glowl_shader("amort_reconstruction3", shader_options,
-            "infovis/amort_reconstruction3.vert.glsl", "infovis/amort_reconstruction3.frag.glsl");
+            "infovis/amort_reconstruction.vert.glsl", "infovis/amort_reconstruction3.frag.glsl");
         amort_reconstruction_shdr_array[4] = core::utility::make_glowl_shader("amort_reconstruction4", shader_options,
-            "infovis/amort_reconstruction4.vert.glsl", "infovis/amort_reconstruction4.frag.glsl");
+            "infovis/amort_reconstruction.vert.glsl", "infovis/amort_reconstruction4.frag.glsl");
         amort_reconstruction_shdr_array[5] = core::utility::make_glowl_shader("amort_reconstruction5", shader_options,
-            "infovis/amort_reconstruction5.vert.glsl", "infovis/amort_reconstruction5.frag.glsl");
+            "infovis/amort_reconstruction.vert.glsl", "infovis/amort_reconstruction5.frag.glsl");
         amort_reconstruction_shdr_array[6] = core::utility::make_glowl_shader("amort_reconstruction6", shader_options,
-            "infovis/amort_reconstruction6.vert.glsl", "infovis/amort_reconstruction6.frag.glsl");
+            "infovis/amort_reconstruction.vert.glsl", "infovis/amort_reconstruction6.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             ("InfovisAmortizedRenderer: " + std::string(e.what())).c_str());
@@ -459,8 +459,7 @@ bool InfovisAmortizedRenderer::OnMouseMove(double x, double y) {
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
         cr->SetInputEvent(evt);
-        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnMouseMove))
-            return true;
+        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseMove);
     }
     return false;
 }
@@ -473,24 +472,19 @@ bool InfovisAmortizedRenderer::OnMouseScroll(double dx, double dy) {
         evt.mouseScrollData.dx = dx;
         evt.mouseScrollData.dy = dy;
         cr->SetInputEvent(evt);
-        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll))
-            return true;
+        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll);
     }
     return false;
 }
 
 bool InfovisAmortizedRenderer::OnChar(unsigned int codePoint) {
     auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
-    if (cr == NULL)
-        return false;
     if (cr) {
-
         megamol::core::view::InputEvent evt;
         evt.tag = megamol::core::view::InputEvent::Tag::Char;
         evt.charData.codePoint = codePoint;
         cr->SetInputEvent(evt);
-        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnChar))
-            return true;
+        return (*cr)(megamol::core::view::CallRender2DGL::FnOnChar);
     }
     return false;
 }
@@ -505,8 +499,7 @@ bool InfovisAmortizedRenderer::OnKey(
         evt.keyData.action = action;
         evt.keyData.mods = mods;
         cr->SetInputEvent(evt);
-        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnKey))
-            return true;
+        return (*cr)(megamol::core::view::CallRender2DGL::FnOnKey);
     }
     return false;
 }
@@ -592,10 +585,11 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
 bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
 
-    if (cr2d == NULL) {
+    if (cr2d == nullptr) {
         // Nothing to do really
         return true;
     }
+
     // get camera
     core::view::Camera cam = call.GetCamera();
     mvMatrix = cam.getViewMatrix();
@@ -659,11 +653,13 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
 
 bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRender2DGL& call) {
     core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
-    if (cr2d == nullptr)
+    if (cr2d == nullptr) {
         return false;
+    }
 
-    if (!(*cr2d)(core::view::CallRender2DGL::FnGetExtents))
+    if (!(*cr2d)(core::view::CallRender2DGL::FnGetExtents)) {
         return false;
+    }
 
     cr2d->SetTimeFramesCount(call.TimeFramesCount());
     cr2d->SetIsInSituTime(call.IsInSituTime());
