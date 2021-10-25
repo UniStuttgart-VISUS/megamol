@@ -28,8 +28,7 @@ using namespace megamol;
 ParticlesToTable::ParticlesToTable(void)
     : Module()
     , slotTableOut("floattable", "Provides the data as table.")
-    , slotParticlesIn("particles", "Particle input call")
-    , lastTimeStep(0) {
+    , slotParticlesIn("particles", "Particle input call") {
 
     /* Register parameters. */
 
