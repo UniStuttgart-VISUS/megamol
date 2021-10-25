@@ -116,13 +116,14 @@ protected:
     core::param::ParamSlot _formatSlot;
     core::param::ParamSlot _meshOutputSlot;
     core::param::ParamSlot _useBBoxAsHull;
-    core::param::ParamSlot _showAverageDist;
+    core::param::ParamSlot _showAverageMeshDist;
+    core::param::ParamSlot _showAverageParticleDist;
     
 
 private:
     bool InterfaceIsDirty();
 
-    void sliceData();
+    bool sliceData();
     void generateEllipsoid();
     void generateEllipsoid_2();
     void generateEllipsoid_3();
@@ -132,8 +133,10 @@ private:
     void generateNormals_2(Surface_mesh& mesh, std::vector<std::array<float, 3>>& normals);
     void do_smoothing(Surface_mesh& mesh);
     void generateBox();
+    void compute_surface_from_vertices();
+    float compute_avg_particle_distance();
 
-    void compute();
+    bool compute();
     bool processRawData(adios::CallADIOSData* call, bool& something_changed);
 
     bool getMetaData(core::Call& call);
@@ -157,7 +160,7 @@ private:
     size_t _old_datahash;
     bool _recalc = false;
 
-    std::vector<float> _raw_positions;
+    std::vector<std::array<float, 3>> _particle_positions;
 
     std::vector<std::vector<uint32_t>> _slice_data;
     std::vector<std::vector<uint32_t>> _slice_ellipsoid;

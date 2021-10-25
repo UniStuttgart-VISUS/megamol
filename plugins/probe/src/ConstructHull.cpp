@@ -77,7 +77,8 @@ namespace probe {
             , _meshToDiscCall("deployADIOS","")
             , _meshFromDiscCall("getMeshElements", "")
             , _useBBoxAsHull("useBBoxAsHull", "")
-            , _showAverageDist("currentAvgDist", "")
+            , _showAverageMeshDist("currentAvgMeshDist", "")
+            , _showAverageParticleDist("avgParticleDist", "")
     {
 
         this->_useBBoxAsHull << new core::param::BoolParam(false);
@@ -96,10 +97,13 @@ namespace probe {
         this->_averageDistance.SetUpdateCallback(&ConstructHull::parameterChanged);
         this->MakeSlotAvailable(&this->_averageDistance);
 
-        this->_showAverageDist << new core::param::FloatParam(-1.0f);
-        this->_showAverageDist.SetUpdateCallback(&ConstructHull::parameterChanged);
-        this->MakeSlotAvailable(&this->_showAverageDist);
-        this->_showAverageDist.Parameter()->SetGUIReadOnly(true);
+        this->_showAverageParticleDist << new core::param::FloatParam(-1.0f);
+        this->MakeSlotAvailable(&this->_showAverageParticleDist);
+        this->_showAverageParticleDist.Parameter()->SetGUIReadOnly(true);
+
+        this->_showAverageMeshDist << new core::param::FloatParam(-1.0f);
+        this->MakeSlotAvailable(&this->_showAverageMeshDist);
+        this->_showAverageMeshDist.Parameter()->SetGUIReadOnly(true);
 
 
         core::param::EnumParam* fp = new core::param::EnumParam(0);
@@ -158,7 +162,7 @@ namespace probe {
         return this->_numSlices.IsDirty() || this->_formatSlot.IsDirty() || this->_averageDistance.IsDirty();
     }
 
-    void ConstructHull::sliceData() {
+    bool ConstructHull::sliceData() {
  
         const int num_slices = _numSlices.Param<core::param::IntParam>()->Value();
 
@@ -174,12 +178,13 @@ namespace probe {
         auto slice_width = (_bbox.BoundingBox().GetSize()[_main_axis] + 1e-3) / (num_slices); // otherwise were getting exact num_slices as factor
 
         // slice data
-        for (int i = 0; i < _raw_positions.size() / 3; ++i) {
-            int factor = (_raw_positions[3 * i + _main_axis] - slice_begin) / slice_width;
-
+        for (int i = 0; i < _particle_positions.size(); ++i) {
+            int factor = (_particle_positions[i][_main_axis] - slice_begin) / slice_width;
+            if (factor < 0 || factor >= _slice_data.size())
+                return false;
             _slice_data[factor].emplace_back(i);
-            std::array<float, 3> current_pos = {_raw_positions[3 * i + 0], _raw_positions[3 * i + 1],
-                _raw_positions[3 * i + 2]};
+            std::array<float, 3> current_pos = {_particle_positions[i][0], _particle_positions[i][1],
+                _particle_positions[i][2]};
             _sliced_positions[factor].emplace_back(current_pos);
             _sliced_positions_whalo[factor].emplace_back(current_pos);
             _slice_data_center_of_mass[factor].x += current_pos[0];
@@ -201,6 +206,8 @@ namespace probe {
         for (int j = 0; j < _vertices.size(); ++j) {
             int factor = (_vertices[j][_main_axis] - slice_begin) / slice_width;
             if (factor == num_slices) factor -= 1;
+            if (factor < 0 || factor >= _slice_ellipsoid.size())
+                return false;
             _slice_ellipsoid[factor].emplace_back(j);
             std::array<float,3> current_pos = { _vertices[j][0], _vertices[j][1], _vertices[j][2] };
             _sliced_vertices[factor].emplace_back(current_pos);
@@ -229,6 +236,13 @@ namespace probe {
             }
         }
 
+        size_t tot_vertices = 0;
+        std::for_each(_slice_ellipsoid.begin(), _slice_ellipsoid.end(),
+            [&](std::vector<uint32_t> slice) { tot_vertices += slice.size(); });
+
+        assert(tot_vertices == _vertices.size());
+
+        return true;
     }
 
     void ConstructHull::generateEllipsoid() {
@@ -463,6 +477,39 @@ namespace probe {
         }
     }
 
+    float ConstructHull::compute_avg_particle_distance() {
+        // create adaptor
+        auto data2kd = std::make_shared<const data2KD>(_particle_positions);
+
+        // construct a kd-tree index:
+        auto kd_indices = std::make_shared<my_kd_tree_t>(
+            3 /*dim*/, *data2kd, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+        kd_indices->buildIndex();
+
+        int num_results = 2;
+        float distances = 0.0f;
+        for (int i = 0; i < _particle_positions.size(); ++i) {
+            std::vector<size_t> ret_index(num_results);
+            std::vector<float> sqr_dist(num_results);
+            nanoflann::KNNResultSet<float> resultSet(num_results);
+            resultSet.init(ret_index.data(), sqr_dist.data());
+
+
+            kd_indices->findNeighbors(resultSet, &_particle_positions[i][0], nanoflann::SearchParams(10));
+            size_t neighbor_index = ret_index[1];
+            glm::vec3 current_pos = {
+                _particle_positions[i][0], _particle_positions[i][1],
+                _particle_positions[i][2]};
+            glm::vec3 neighbor_pos = {_particle_positions[neighbor_index][0], _particle_positions[neighbor_index][1],
+                _particle_positions[neighbor_index][2]};
+
+            distances += glm::length(neighbor_pos - current_pos);
+        }
+        distances /= _particle_positions.size();
+
+        return distances;
+    }
+
     void ConstructHull::tighten() {
 
         // generate kd stuff
@@ -554,14 +601,14 @@ namespace probe {
                 float t = (glm::dot(plane_normal, point_on_plane) - glm::dot(plane_normal, vertex)) /
                           (glm::dot(plane_normal,direction));
 
-                glm::vec3 start = vertex + direction * t;
-                float length = glm::length(start - _slice_data_center_of_mass[n]);
+                glm::vec3 fi_start = vertex + direction * t;
+                float length = glm::length(fi_start - _slice_data_center_of_mass[n]);
 
                 const int num_samples_along_path = 10;
-                float sample_step = length / num_samples_along_path;
+                float fi_sample_step = length / num_samples_along_path;
 
                 const size_t num_results = 1;
-                std::vector<float> distances(num_samples_along_path);
+                std::vector<float> fi_distances(num_samples_along_path);
                 for (int k = 0; k < num_samples_along_path; ++k) {
                     size_t ret_index;
                     float sqr_dist;
@@ -569,29 +616,45 @@ namespace probe {
                     resultSet.init(&ret_index, &sqr_dist);
                     
                     std::array<float,3> query_point;
-                    query_point[0] = start.x - direction.x * sample_step * k;
-                    query_point[1] = start.y - direction.y * sample_step * k;
-                    query_point[2] = start.z - direction.z * sample_step * k;
+                    query_point[0] = fi_start.x - direction.x * fi_sample_step * k;
+                    query_point[1] = fi_start.y - direction.y * fi_sample_step * k;
+                    query_point[2] = fi_start.z - direction.z * fi_sample_step * k;
 
                     _kd_indices[n]->findNeighbors(resultSet, &query_point[0], nanoflann::SearchParams(10));
-                    distances[k] = std::sqrt(sqr_dist);
+                    fi_distances[k] = std::sqrt(sqr_dist);
 
                 }
-                float iso_value = _isoValue.Param<core::param::FloatParam>()->Value();
-                auto max_k = std::distance(distances.begin(),std::max_element(distances.begin(), distances.end()));
-                auto zero_element = std::distance(distances.begin(),
-                    std::find_if(distances.begin(), distances.end(), [iso_value](auto x) { return x < iso_value; }));
-                //second query
-                glm::vec3 new_start;
-                new_start.x = start.x - direction.x * sample_step * (zero_element - 2);
-                new_start.y = start.y - direction.y * sample_step * (zero_element - 2);
-                new_start.z = start.z - direction.z * sample_step * (zero_element - 2);
-                glm::vec3 new_end;
-                new_end.x = start.x - direction.x * sample_step * (zero_element+1);
-                new_end.y = start.y - direction.y * sample_step * (zero_element+1);
-                new_end.z = start.z - direction.z * sample_step * (zero_element+1);
+                const float iso_value = _isoValue.Param<core::param::FloatParam>()->Value();
+                auto fi_max_k =
+                    std::distance(fi_distances.begin(), std::max_element(fi_distances.begin(), fi_distances.end()));
+                auto fi_zero_element =
+                    std::distance(fi_distances.begin(), std::find_if(fi_distances.begin(), fi_distances.end(),
+                                                            [iso_value](auto x) { return x < iso_value; }));
+                auto fi_min_element = std::min_element(fi_distances.begin(), fi_distances.end()) - fi_distances.begin();
+                if (fi_zero_element == 10) {
+                    fi_zero_element = fi_min_element;
+                }
 
-                float new_sample_step = glm::length(new_end - new_start) / num_samples_along_path;
+                auto fi_gradient = 0.0f;
+                for (int l = fi_max_k; l < fi_zero_element - 1; ++l) {
+                    fi_gradient += (fi_distances[l + 1] - fi_distances[l]);
+                }
+                auto fi_length_compensation = ((fi_zero_element - 1) - fi_max_k);
+                fi_gradient /= fi_length_compensation;
+                auto fi_predicted_k = -(fi_distances[fi_max_k]) / fi_gradient;
+
+                //second query
+                std::vector<float> si_distances(num_samples_along_path);
+                glm::vec3 si_start;
+                si_start.x = fi_start.x - direction.x * fi_sample_step * (fi_zero_element - 2);
+                si_start.y = fi_start.y - direction.y * fi_sample_step * (fi_zero_element - 2);
+                si_start.z = fi_start.z - direction.z * fi_sample_step * (fi_zero_element - 2);
+                glm::vec3 new_end;
+                new_end.x = fi_start.x - direction.x * fi_sample_step * (fi_zero_element + 1);
+                new_end.y = fi_start.y - direction.y * fi_sample_step * (fi_zero_element + 1);
+                new_end.z = fi_start.z - direction.z * fi_sample_step * (fi_zero_element + 1);
+
+                float si_sample_step = glm::length(new_end - si_start) / num_samples_along_path;
 
                 for (int k = 0; k < num_samples_along_path; ++k) {
                     size_t ret_index;
@@ -600,37 +663,55 @@ namespace probe {
                     resultSet.init(&ret_index, &sqr_dist);
 
                     std::array<float, 3> query_point;
-                    query_point[0] = new_start.x - direction.x * new_sample_step * k;
-                    query_point[1] = new_start.y - direction.y * new_sample_step * k;
-                    query_point[2] = new_start.z - direction.z * new_sample_step * k;
+                    query_point[0] = si_start.x - direction.x * si_sample_step * k;
+                    query_point[1] = si_start.y - direction.y * si_sample_step * k;
+                    query_point[2] = si_start.z - direction.z * si_sample_step * k;
 
                     _kd_indices[n]->findNeighbors(resultSet, &query_point[0], nanoflann::SearchParams(10));
-                    distances[k] = std::sqrt(sqr_dist);
+                    si_distances[k] = std::sqrt(sqr_dist);
                 }
 
-                max_k = std::distance(distances.begin(), std::max_element(distances.begin(), distances.end()));
-                zero_element = std::distance(distances.begin(),
-                    std::find_if(distances.begin(), distances.end(), [iso_value](auto x) { return x < iso_value; }));
-
-                float gradient = 0.0f;
-                for (int l = max_k; l < zero_element - 1; ++l) {
-                    gradient += (distances[l + 1] - distances[l]);
+                auto si_max_k =
+                    std::distance(fi_distances.begin(), std::max_element(fi_distances.begin(), fi_distances.end()));
+                auto si_zero_element = std::distance(fi_distances.begin(), std::find_if(fi_distances.begin(), fi_distances.end(),
+                                                            [iso_value](auto x) { return x < iso_value; }));
+                auto si_min_element = std::min_element(si_distances.begin(), si_distances.end()) - si_distances.begin();
+                if (si_zero_element == 10) {
+                    si_zero_element = si_min_element;
                 }
-                gradient /= ((zero_element -1) - max_k);
-                assert(gradient != 0.0f);
-                auto predicted_k = -(distances[max_k]) / gradient;
-                assert(std::isfinite(predicted_k));
+
+                float si_gradient = 0.0f;
+                for (int l = si_max_k; l < si_zero_element - 1; ++l) {
+                    si_gradient += (si_distances[l + 1] - si_distances[l]);
+                }
+                auto si_length_compensation = ((si_zero_element - 1) - si_max_k);
+                si_gradient /= si_length_compensation;
+                auto predicted_k = -(si_distances[si_max_k]) / si_gradient;
+                auto start = si_start;
+                auto sample_step = si_sample_step;
+                if (!std::isfinite(predicted_k)) {
+                    predicted_k = fi_predicted_k;
+                    start = fi_start;
+                    sample_step = fi_sample_step;
+                }
+                //assert(std::isfinite(predicted_k));
 
 
                 // if (n == 0) {
-                    _vertices[_slice_ellipsoid[n][i]][0] = new_start.x - direction.x * new_sample_step * predicted_k;
-                    _vertices[_slice_ellipsoid[n][i]][1] = new_start.y - direction.y * new_sample_step * predicted_k;
-                    _vertices[_slice_ellipsoid[n][i]][2] = new_start.z - direction.z * new_sample_step * predicted_k;
+                if (std::isfinite(predicted_k)) {
+                    _vertices[_slice_ellipsoid[n][i]][0] = start.x - direction.x * sample_step * predicted_k;
+                    _vertices[_slice_ellipsoid[n][i]][1] = start.y - direction.y * sample_step * predicted_k;
+                    _vertices[_slice_ellipsoid[n][i]][2] = start.z - direction.z * sample_step * predicted_k;
+                } else {
+                    _vertices[_slice_ellipsoid[n][i]][0] = vertex[0];
+                    _vertices[_slice_ellipsoid[n][i]][1] = vertex[1];
+                    _vertices[_slice_ellipsoid[n][i]][2] = vertex[2];
+                }
                 //} else {
                 //// DEBUG center of mass translation
-                //     _vertices[_slice_ellipsoid[n][i]][0] = vertex[0];
-                //     _vertices[_slice_ellipsoid[n][i]][1] = vertex[1];
-                //     _vertices[_slice_ellipsoid[n][i]][2] = vertex[2];
+                     //_vertices[_slice_ellipsoid[n][i]][0] = vertex[0];
+                     //_vertices[_slice_ellipsoid[n][i]][1] = vertex[1];
+                     //_vertices[_slice_ellipsoid[n][i]][2] = vertex[2];
                 //}
             }
         }
@@ -643,22 +724,7 @@ namespace probe {
         //    *it = point;
         //}
 
-        typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-        typedef K::Point_3 Point_3;
-        std::list<Point_3> points_for_triangulation;
 
-        for (int i = 0; i < _vertices.size(); ++i) {
-            points_for_triangulation.push_back(Point(_vertices[i][0], _vertices[i][1], _vertices[i][2]));
-        }
-
-        typedef CGAL::Delaunay_triangulation_3<K> Delaunay;
-        typedef Delaunay::Vertex_handle Vertex_handle;
-        typedef CGAL::Surface_mesh<Point_3> Surface_mesh;
-        //void CGAL::facets_in_complex_2_to_triangle_mesh(c2t3, TriangleMesh & graph) 	
-
-        Delaunay T(points_for_triangulation.begin(), points_for_triangulation.end());
-        _sm.clear();
-        CGAL::convex_hull_3_to_face_graph(T, _sm);
 
         // Compute average spacing using neighborhood of 6 points
         //double spacing = CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(points_for_triangulation, 6,
@@ -684,6 +750,25 @@ namespace probe {
         //CGAL::poisson_surface_reconstruction_delaunay(points_for_triangulation.begin(), points_for_triangulation.end(),
         //    CGAL::First_of_pair_property_map<PointVectorPair>(), CGAL::Second_of_pair_property_map<PointVectorPair>(),
         //    _sm, spacing);
+    }
+
+    void ConstructHull::compute_surface_from_vertices() {
+        typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+        typedef K::Point_3 Point_3;
+        std::list<Point_3> points_for_triangulation;
+
+        for (int i = 0; i < _vertices.size(); ++i) {
+            points_for_triangulation.push_back(Point(_vertices[i][0], _vertices[i][1], _vertices[i][2]));
+        }
+
+        typedef CGAL::Delaunay_triangulation_3<K> Delaunay;
+        typedef Delaunay::Vertex_handle Vertex_handle;
+        typedef CGAL::Surface_mesh<Point_3> Surface_mesh;
+        // void CGAL::facets_in_complex_2_to_triangle_mesh(c2t3, TriangleMesh & graph)
+
+        Delaunay T(points_for_triangulation.begin(), points_for_triangulation.end());
+        _sm.clear();
+        CGAL::convex_hull_3_to_face_graph(T, _sm);
     }
 
     void ConstructHull::do_remeshing(Surface_mesh& mesh, float spacing_) {
@@ -835,7 +920,7 @@ namespace probe {
         // bool does_self_intersect = CGAL::Polygon_mesh_processing::does_self_intersect(_shells[i]);
     }
 
-    void ConstructHull::compute() {
+    bool ConstructHull::compute() {
         // find main axis
         std::map<int, int> axes;
         axes[0] = 0;
@@ -857,8 +942,7 @@ namespace probe {
         if (std::copysign(1.0f, _bbox.BoundingBox().Front()) != std::copysign(1.0f, _bbox.BoundingBox().Back())) {
             center_z = (_bbox.BoundingBox().Front() + _bbox.BoundingBox().Back()) / 2;
         } else {
-            center_z = _bbox.BoundingBox().Front() +
-                       std::copysign(1.0f, _bbox.BoundingBox().Front()) * _bbox.BoundingBox().Depth() / 2;
+            center_z = _bbox.BoundingBox().Front() + (_bbox.BoundingBox().Back() - _bbox.BoundingBox().Front())/2;
         }
         _data_origin = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(), center_z};
 
@@ -866,16 +950,19 @@ namespace probe {
         if (_useBBoxAsHull.Param<core::param::BoolParam>()->Value()) {
             this->generateBox();
             auto spacing = CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(_sm.points(), 8);
-            _showAverageDist.Param<core::param::FloatParam>()->SetValue(spacing);
+            _showAverageMeshDist.Param<core::param::FloatParam>()->SetValue(spacing);
             if (userDist > 0.0f) {
                 this->do_remeshing(_sm, userDist);
             }
         } else {
+            //auto avg_p_dist = compute_avg_particle_distance();
+            //_showAverageParticleDist.Param<core::param::FloatParam>()->SetValue(avg_p_dist);
             this->generateEllipsoid_3();
-            this->sliceData();
+            if (!this->sliceData()) return false;
             this->tighten();
-            auto spacing = CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(_sm.points(), 8);
-            _showAverageDist.Param<core::param::FloatParam>()->SetValue(spacing);
+            this->compute_surface_from_vertices();
+            auto avg_mesh_spacing = CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(_sm.points(), 8);
+            _showAverageMeshDist.Param<core::param::FloatParam>()->SetValue(avg_mesh_spacing);
             if (userDist > 0.0f) {
                 this->do_remeshing(_sm, userDist);
             } else {
@@ -884,6 +971,7 @@ namespace probe {
             this->do_smoothing(_sm);
         }
         this->generateNormals(_sm);
+        return true;
     }
 
     bool ConstructHull::processRawData(adios::CallADIOSData* call, bool& something_changed) {
@@ -920,11 +1008,11 @@ namespace probe {
                              ->GetAsFloat();
                 assert(x.size() == y.size());
                 assert(y.size() == z.size());
-                _raw_positions.resize(x.size() * 3);
+                _particle_positions.resize(x.size());
                 for (int i = 0; i < x.size(); ++i) {
-                    _raw_positions[3 * i + 0] = x[i];
-                    _raw_positions[3 * i + 1] = y[i];
-                    _raw_positions[3 * i + 2] = z[i];
+                    _particle_positions[i][0] = x[i];
+                    _particle_positions[i][1] = y[i];
+                    _particle_positions[i][2] = z[i];
                 }
                 auto xminmax = std::minmax_element(x.begin(), x.end());
                 auto yminmax = std::minmax_element(y.begin(), y.end());
@@ -933,20 +1021,25 @@ namespace probe {
                     *xminmax.first, *yminmax.first, *zminmax.second, *xminmax.second, *yminmax.second, *zminmax.first);
             } else {
                 const std::string varname = std::string(_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString());
-                _raw_positions = call->getData(varname)->GetAsFloat();
+                auto positions = call->getData(varname)->GetAsFloat();
                 float xmin = std::numeric_limits<float>::max();
                 float xmax = -std::numeric_limits<float>::max();
                 float ymin = std::numeric_limits<float>::max();
                 float ymax = -std::numeric_limits<float>::max();
                 float zmin = std::numeric_limits<float>::max();
                 float zmax = -std::numeric_limits<float>::max();
-                for (int i = 0; i < _raw_positions.size() / 3; ++i) {
-                    xmin = std::min(xmin, _raw_positions[3 * i + 0]);
-                    xmax = std::max(xmax, _raw_positions[3 * i + 0]);
-                    ymin = std::min(ymin, _raw_positions[3 * i + 1]);
-                    ymax = std::max(ymax, _raw_positions[3 * i + 1]);
-                    zmin = std::min(zmin, _raw_positions[3 * i + 2]);
-                    zmax = std::max(zmax, _raw_positions[3 * i + 2]);
+                _particle_positions.clear();
+                _particle_positions.resize(positions.size()/3);
+                for (int i = 0; i < positions.size() / 3; ++i) {
+                    _particle_positions[i][0] = positions[3 * i + 0];
+                    _particle_positions[i][1] = positions[3 * i + 1];
+                    _particle_positions[i][2] = positions[3 * i + 2];
+                    xmin = std::min(xmin, _particle_positions[i][0]);
+                    xmax = std::max(xmax, _particle_positions[i][0]);
+                    ymin = std::min(ymin, _particle_positions[i][1]);
+                    ymax = std::max(ymax, _particle_positions[i][1]);
+                    zmin = std::min(zmin, _particle_positions[i][2]);
+                    zmax = std::max(zmax, _particle_positions[i][2]);
                 }
                 _bbox.SetBoundingBox(xmin, ymin, zmax, xmax, ymax, zmin);
             }
@@ -972,15 +1065,19 @@ namespace probe {
             return false;
         }
 
-        if (something_changed && !_raw_positions.empty()) {
+        if (something_changed && !_particle_positions.empty()) {
             ++_version;
             auto mfdc = this->_meshFromDiscCall.CallAs<adios::CallADIOSData>();
             if (!mfdc) {
-                this->compute();
+                if (!this->compute()) {
+                    core::utility::log::Log::DefaultLog.WriteError(
+                        "[ConstructHull] Error during hull computation");
+                    return false;
+                }
             } else {
                 if (!this->readHullFromFile()) {
                     core::utility::log::Log::DefaultLog.WriteError("[ConstructHull] Could not load mesh from File. Starting computation ...");
-                    this->compute();
+                    if (!this->compute()) return false;
                 }
             }
 
@@ -1077,7 +1174,7 @@ namespace probe {
             return false;
         }
 
-        if (something_changed && !_raw_positions.empty()) {
+        if (something_changed && !_particle_positions.empty()) {
             auto mfdc = this->_meshFromDiscCall.CallAs<adios::CallADIOSData>();
             if (!mfdc) {
                 this->compute();

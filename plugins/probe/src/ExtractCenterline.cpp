@@ -175,8 +175,8 @@ namespace probe {
         if (!(*cm)(0))
             return false;
 
-        auto meta_data = cm->getMetaData();
-
+        auto mesh_meta_data = cm->getMetaData();
+        _bbox = mesh_meta_data.m_bboxs;
 
         if (cm->hasUpdate()) {
             ++_version;
