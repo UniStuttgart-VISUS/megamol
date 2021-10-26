@@ -200,14 +200,14 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         mpdc->AccessParticles(0).SetGlobalRadius(0.1);
 
         float xmin = std::numeric_limits<float>::max();
-        float xmax = -std::numeric_limits<float>::max();
+        float xmax = std::numeric_limits<float>::lowest();
         float ymin = std::numeric_limits<float>::max();
-        float ymax = -std::numeric_limits<float>::max();
+        float ymax = std::numeric_limits<float>::lowest();
         float zmin = std::numeric_limits<float>::max();
-        float zmax = -std::numeric_limits<float>::max();
+        float zmax = std::numeric_limits<float>::lowest();
 
         float imin = std::numeric_limits<float>::max();
-        float imax = -std::numeric_limits<float>::max();
+        float imax = std::numeric_limits<float>::lowest();
 
         for (size_t i = 0; i < p_count; i++) {
             if (pos_str != "undef") {
