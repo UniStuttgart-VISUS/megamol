@@ -213,7 +213,7 @@ bool InfovisAmortizedRenderer::createShaders() {
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
     try {
         amort_reconstruction_shdr_array[6] = core::utility::make_glowl_shader("amort_reconstruction6", shader_options,
-            "infovis/amort_reconstruction.vert.glsl", "infovis/amort_reconstruction6.frag.glsl");
+            "infovis/amort/amort_reconstruction.vert.glsl", "infovis/amort/amort_reconstruction6.frag.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("InfovisAmortizedRenderer: " + std::string(e.what())).c_str());
         return false;
