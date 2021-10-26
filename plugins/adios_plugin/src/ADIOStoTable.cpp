@@ -55,24 +55,26 @@ bool ADIOStoTable::getData(core::Call& call) {
 
     if ((cad->getFrameIDtoLoad() != _currentFrame) || dathashChanged) {
 
-        
         for (auto var : availVars) {
             if (!cad->inquireVar(var)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOStoTable] variable \"%s\" does not exist.", var.c_str());
             }
         }
 
-
         if (!(*cad)(0)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOStoTable] Error during GetData");
             return false;
         }
 
+        for (int i = 0; i < availVars.size(); ++i) {
+            _rows = std::max(_rows, cad->getData(availVars[i])->size());
+        }
+        availVars.erase(std::remove_if(availVars.begin(), availVars.end(), [&](const std::string& var){return cad->getData(var)->size() != _rows;}), availVars.end());
+
         _cols = availVars.size();
         _colinfo.resize(_cols);
         std::vector<std::vector<float>> raw_data(_cols);
         for (int i = 0; i < availVars.size(); ++i) {
-            _rows = std::max(_rows, cad->getData(availVars[i])->size());
             raw_data[i] = cad->getData(availVars[i])->GetAsFloat();
             float min = std::numeric_limits<float>::max();
             float max = std::numeric_limits<float>::min();
