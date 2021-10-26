@@ -14,7 +14,8 @@ megamol_plugin(mmstd_datatools
     sim_sort
     mmpld_io
     libzmq
-    libcppzmq)
+    libcppzmq
+    imgui)
 
 if (mmstd_datatools_PLUGIN_ENABLED)
   # Additional sources

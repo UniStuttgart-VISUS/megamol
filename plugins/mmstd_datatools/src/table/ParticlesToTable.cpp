@@ -62,8 +62,8 @@ bool ParticlesToTable::create(void) {
 bool ParticlesToTable::assertMPDC(core::moldyn::MultiParticleDataCall *in, table::TableDataCall *tc) {
     in->SetFrameID(tc->GetFrameID(), true);
     do {
-        (*in)(1);
-        (*in)(0);
+        if (!(*in)(1)) return false;
+        if (!(*in)(0)) return false;
     } while(in->FrameID() != tc->GetFrameID());
 
     if (in->DataHash() != inHash || in->FrameID() != inFrameID) {
@@ -163,15 +163,17 @@ bool ParticlesToTable::getTableHash(core::Call& call) {
     if (ft == nullptr) return false;
 
     if (c != nullptr) {
-        (*c)(1);
+        if (!(*c)(1)) return false;
         ft->SetDataHash(c->DataHash());
         ft->SetFrameCount(c->FrameCount());
+        return true;
     } else if (e != nullptr) {
-        (*e)(1);
+        if (!(*e)(1)) return false;
         ft->SetDataHash(e->DataHash());
         ft->SetFrameCount(e->FrameCount());
+        return true;
     }
-    return true;
+    return false;
 }
 
 

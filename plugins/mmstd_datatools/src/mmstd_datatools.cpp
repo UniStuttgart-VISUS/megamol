@@ -93,6 +93,7 @@
 #include "table/TableToParticles.h"
 #include "table/TableWhere.h"
 #include "table/ParticlesToTable.h"
+#include "table/TableViewer.h"
 
 namespace megamol::stdplugin::datatools {
 class DatatoolsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -199,6 +200,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::AddParticleColors>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ColorToDir>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticlesToTable>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::TableViewer>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
