@@ -5,8 +5,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/utility/ShaderFactory.h"
+#include "mmcore/view/CallRender2DGL.h"
 
 #include "Renderer2D.h"
 
@@ -44,7 +44,7 @@ namespace infovis {
 
         virtual void releaseImpl() = 0;
 
-        virtual bool renderImpl(core::view::CallRender2DGL& call,
+        virtual bool renderImpl(core::view::CallRender2DGL& nextRendererCall,
             std::shared_ptr<core::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) = 0;
 
     private:

@@ -48,46 +48,32 @@ namespace infovis {
 
         void releaseImpl() override;
 
-        bool renderImpl(core::view::CallRender2DGL& targetRenderer,
+        bool renderImpl(core::view::CallRender2DGL& nextRendererCall,
             std::shared_ptr<core::view::CallRender2DGL::FBO_TYPE> fbo, core::view::Camera cam) override;
 
-        void resizeArrays(int w, int h);
+        void updateSize(int a, int w, int h);
 
-        void setupAccel(int ow, int oh, core::view::Camera* cam);
+        void setupCamera(core::view::Camera& cam);
 
-        void doReconstruction(int w, int h);
+        void reconstruct(std::shared_ptr<glowl::FramebufferObject>& fbo, int a);
 
     private:
         core::param::ParamSlot amortLevelParam;
 
-        // required Shaders for different kinds of reconstruction
-        std::unique_ptr<glowl::GLSLProgram> amort_reconstruction_shdr_array[7];
+        std::unique_ptr<glowl::GLSLProgram> shader_;
+        std::shared_ptr<glowl::FramebufferObject> lowResFBO_;
+        glowl::TextureLayout texLayout_;
+        std::unique_ptr<glowl::Texture2D> texA_;
+        std::unique_ptr<glowl::Texture2D> texB_;
 
-        std::shared_ptr<glowl::FramebufferObject> glowlFBO;
-        std::unique_ptr<glowl::Texture2D> texA;
-        std::unique_ptr<glowl::Texture2D> texB;
-        glowl::TextureLayout texstore_layout;
+        int oldWidth_ = -1;
+        int oldHeight_ = -1;
+        int oldLevel_ = -1;
 
-        int frametype = 0;
-        int parity = 0;
-
-        int oldApp = -1;
-        int oldW = -1;
-        int oldH = -1;
-        int oldaLevel = -1;
-        int windowWidth = 1;
-        int windowHeight = 1;
-
-        std::shared_ptr<glowl::FramebufferObject> fbo = nullptr;
-
-        int framesNeeded = 1;
-        glm::mat4 projMatrix;
-        glm::mat4 mvMatrix;
-        std::vector<glm::mat4> invMatrices;
-        std::vector<glm::mat4> moveMatrices;
-        std::vector<glm::vec3> camOffsets;
-        glm::mat4 movePush;
-        glm::mat4 lastPmvm;
+        int frameIdx_ = 0;
+        std::vector<glm::vec3> camOffsets_;
+        glm::mat4 movePush_;
+        glm::mat4 lastProjViewMx_;
     };
 } // namespace infovis
 } // namespace megamol
