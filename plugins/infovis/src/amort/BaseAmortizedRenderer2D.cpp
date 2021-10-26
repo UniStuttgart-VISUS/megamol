@@ -1,4 +1,4 @@
-#include "InfovisAmortizedRenderer.h"
+#include "BaseAmortizedRenderer2D.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -17,7 +17,7 @@ using namespace megamol;
 using namespace megamol::infovis;
 using megamol::core::utility::log::Log;
 
-InfovisAmortizedRenderer::InfovisAmortizedRenderer()
+BaseAmortizedRenderer2D::BaseAmortizedRenderer2D()
         : Renderer2D()
         , nextRendererSlot("nextRenderer", "connects to following Renderers, that will render in reduced resolution.")
         , enabledParam("Enabled", "Turn on switch")
@@ -44,11 +44,11 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
     this->MakeSlotAvailable(&amortLevelParam);
 }
 
-InfovisAmortizedRenderer::~InfovisAmortizedRenderer() {
+BaseAmortizedRenderer2D::~BaseAmortizedRenderer2D() {
     this->Release();
 }
 
-bool megamol::infovis::InfovisAmortizedRenderer::create() {
+bool BaseAmortizedRenderer2D::create() {
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
         Log::DefaultLog.WriteWarn("Ignore glError() from previous modules: %i", error);
@@ -64,9 +64,9 @@ bool megamol::infovis::InfovisAmortizedRenderer::create() {
 }
 
 // TODO
-void InfovisAmortizedRenderer::release() {}
+void BaseAmortizedRenderer2D::release() {}
 
-bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRender2DGL& call) {
+bool BaseAmortizedRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
     core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
     if (cr2d == nullptr) {
         return false;
@@ -84,7 +84,7 @@ bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRend
     return true;
 }
 
-bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
+bool BaseAmortizedRenderer2D::Render(core::view::CallRender2DGL& call) {
     core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
 
     if (cr2d == nullptr) {
@@ -141,7 +141,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     return true;
 }
 
-bool InfovisAmortizedRenderer::OnMouseButton(
+bool BaseAmortizedRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
     auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
     if (cr) {
@@ -156,7 +156,7 @@ bool InfovisAmortizedRenderer::OnMouseButton(
     return false;
 }
 
-bool InfovisAmortizedRenderer::OnMouseMove(double x, double y) {
+bool BaseAmortizedRenderer2D::OnMouseMove(double x, double y) {
     auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
     if (cr) {
         megamol::core::view::InputEvent evt;
@@ -169,7 +169,7 @@ bool InfovisAmortizedRenderer::OnMouseMove(double x, double y) {
     return false;
 }
 
-bool InfovisAmortizedRenderer::OnMouseScroll(double dx, double dy) {
+bool BaseAmortizedRenderer2D::OnMouseScroll(double dx, double dy) {
     auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
     if (cr) {
         megamol::core::view::InputEvent evt;
@@ -182,7 +182,7 @@ bool InfovisAmortizedRenderer::OnMouseScroll(double dx, double dy) {
     return false;
 }
 
-bool InfovisAmortizedRenderer::OnChar(unsigned int codePoint) {
+bool BaseAmortizedRenderer2D::OnChar(unsigned int codePoint) {
     auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
     if (cr) {
         megamol::core::view::InputEvent evt;
@@ -194,7 +194,7 @@ bool InfovisAmortizedRenderer::OnChar(unsigned int codePoint) {
     return false;
 }
 
-bool InfovisAmortizedRenderer::OnKey(
+bool BaseAmortizedRenderer2D::OnKey(
     megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
     auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
     if (cr) {
@@ -209,19 +209,19 @@ bool InfovisAmortizedRenderer::OnKey(
     return false;
 }
 
-bool InfovisAmortizedRenderer::createShaders() {
+bool BaseAmortizedRenderer2D::createShaders() {
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
     try {
         amort_reconstruction_shdr_array[6] = core::utility::make_glowl_shader("amort_reconstruction6", shader_options,
             "infovis/amort/amort_reconstruction.vert.glsl", "infovis/amort/amort_reconstruction6.frag.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("InfovisAmortizedRenderer: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BaseAmortizedRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
     return true;
 }
 
-bool InfovisAmortizedRenderer::createBuffers() {
+bool BaseAmortizedRenderer2D::createBuffers() {
 
     if (glowlFBO == nullptr) {
         glowlFBO = std::make_shared<glowl::FramebufferObject>(1, 1);
@@ -240,13 +240,13 @@ bool InfovisAmortizedRenderer::createBuffers() {
 
     auto err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteError("GL_ERROR in InfovisAmortizedRenderer: %i", err);
+        Log::DefaultLog.WriteError("GL_ERROR in BaseAmortizedRenderer2D: %i", err);
     }
 
     return true;
 }
 
-void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h) {
+void BaseAmortizedRenderer2D::resizeArrays(int approach, int w, int h) {
     if (approach == 6) {
         int a = this->amortLevelParam.Param<core::param::IntParam>()->Value();
         framesNeeded = a * a;
@@ -273,7 +273,7 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h) {
     }
 }
 
-void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, core::view::Camera* cam) {
+void BaseAmortizedRenderer2D::setupAccel(int approach, int ow, int oh, core::view::Camera* cam) {
     int a = this->amortLevelParam.Param<core::param::IntParam>()->Value();
     glm::mat4 pm;
     glm::mat4 mvm;
@@ -297,7 +297,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, core::vi
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h) {
+void BaseAmortizedRenderer2D::doReconstruction(int approach, int w, int h) {
     glViewport(0, 0, w, h);
 
     amort_reconstruction_shdr_array[approach]->use();

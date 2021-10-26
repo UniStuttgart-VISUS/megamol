@@ -16,7 +16,7 @@
 namespace megamol {
 namespace infovis {
 
-    class InfovisAmortizedRenderer : public Renderer2D {
+    class BaseAmortizedRenderer2D : public Renderer2D {
     public:
         /**
          * Answer the name of this module.
@@ -24,7 +24,7 @@ namespace infovis {
          * @return The name of this module.
          */
         static inline const char* ClassName() {
-            return "InfovisAmortizedRenderer";
+            return "BaseAmortizedRenderer2D";
         }
 
         /**
@@ -46,10 +46,10 @@ namespace infovis {
         }
 
         /** Constructor. */
-        InfovisAmortizedRenderer();
+        BaseAmortizedRenderer2D();
 
         /** Destructor. */
-        ~InfovisAmortizedRenderer() override;
+        ~BaseAmortizedRenderer2D() override;
 
     protected:
         bool create() override;
