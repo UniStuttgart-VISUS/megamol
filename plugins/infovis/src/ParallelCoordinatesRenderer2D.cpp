@@ -435,6 +435,9 @@ bool ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2DGL& call)
             filters[x].flags = 0;
             minimums[x] = floats->GetColumnsInfos()[x].MinimumValue();
             maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
+            if (maximums[x] - minimums[x] < 0.001f) {
+                maximums[x] = minimums[x] + 1.f;
+            }
             names[x] = floats->GetColumnsInfos()[x].Name();
             filters[x].lower = minimums[x];
             filters[x].upper = maximums[x];
@@ -892,8 +895,8 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     densityFBO.BindColourTexture();
 
     GLuint groupCounts[3] = {
-        static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[0]) / counterWorkgroupSize[0]))),
-        static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[1]) / counterWorkgroupSize[1]))), 1};
+        static_cast<GLuint>((std::max) (1.0f, std::ceil(float(invocations[0]) / counterWorkgroupSize[0]))),
+        static_cast<GLuint>((std::max) (1.0f, std::ceil(float(invocations[1]) / counterWorkgroupSize[1]))), 1};
 
     this->enableProgramAndBind(minMaxProgram);
 

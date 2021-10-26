@@ -120,7 +120,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
         , axisFont(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL)
         , textFont(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL)
         , textValid(false)
-        , dataTime((std::numeric_limits<unsigned int>::max)())
+        , dataTime((std::numeric_limits<unsigned int>::max) ())
         , flagsBufferVersion(0) {
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
@@ -478,7 +478,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2DGL& call, boo
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if ((this->transferFunction == nullptr) || !(*(this->transferFunction))(0))
+    if ((this->transferFunction == nullptr) || !(*(this->transferFunction)) (0))
         return false;
 
     if (this->floatTable == nullptr || !(*this->floatTable)(1))
@@ -489,7 +489,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2DGL& call, boo
     const auto now = static_cast<unsigned int>(call.Time());
     this->floatTable->SetFrameID(now);
 
-    if (this->floatTable == nullptr || !(*(this->floatTable))(0))
+    if (this->floatTable == nullptr || !(*(this->floatTable)) (0))
         return false;
     if (this->floatTable->GetColumnsCount() == 0)
         return false;
