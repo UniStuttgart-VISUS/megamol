@@ -790,129 +790,94 @@ namespace ospray {
                     }
 
                     break;
+
                 case geometryTypeEnum::SPHERES:
                     {
                     auto& container = std::get<sphereStructure>(element.structure);
-
-                    if (container.vertexData == NULL) {
-                        core::utility::log::Log::DefaultLog.WriteError(
-                            "[OSPRay:generateRepresentations] Representation SPHERES active but no data provided.");
+                    if (container.spheres == NULL) {
+                        core::utility::log::Log::DefaultLog.WriteError("[OSPRay:generateRepresentations] Representation SPHERES active but no data provided.");
                         // returnValue = false;
                         break;
                     }
 
-                    _numCreateGeo = container.partCount * container.vertexLength * sizeof(float) / _ispcLimit + 1;
+                    _numCreateGeo = container.spheres->accessSphereCollections().size();
 
-                    for (unsigned int i = 0; i < _numCreateGeo; i++) {
+                    for (auto& spheres : container.spheres->accessSphereCollections()) {
                         _baseStructures[entry.first].emplace_back(
                             ::ospray::cpp::Geometry("sphere"), structureTypeEnum::GEOMETRY);
 
-                        unsigned long long vertexFloatsToRead =
-                            container.partCount * container.vertexLength / _numCreateGeo;
-                        vertexFloatsToRead -= vertexFloatsToRead % container.vertexLength;
+                        bool radius_found = false;
+                        bool color_found = false;
 
-                        unsigned long long bytes_per_sphere = container.vertexLength * sizeof(float);
-                        auto vertexData =
-                            ::ospray::cpp::SharedData(&container.vertexData->operator[](i* vertexFloatsToRead),
-                                OSP_VEC3F, vertexFloatsToRead / container.vertexLength, bytes_per_sphere);
+                        for (auto& attrib : spheres.second.attributes) {
 
-                        vertexData.commit();
-                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                            .setParam("sphere.position", vertexData);
+                            if (attrib.semantic == ParticleDataAccessCollection::POSITION) {
+                                auto count = attrib.byte_size /
+                                             (ParticleDataAccessCollection::getByteSize(attrib.component_type) *
+                                                 attrib.component_cnt);
 
-                        if (container.vertexLength > 3) {
-                            auto radiusData =
-                                ::ospray::cpp::SharedData(&container.vertexData->operator[](i* vertexFloatsToRead + 3),
-                                    OSP_FLOAT, vertexFloatsToRead / container.vertexLength, bytes_per_sphere);
-                            radiusData.commit();
-                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).setParam("sphere.radius", radiusData);
-                        } else {
-                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                .setParam("radius", container.globalRadius);
+                                auto vertexData =
+                                    ::ospray::cpp::CopiedData(attrib.data, OSP_VEC3F, count, attrib.stride);
+                                vertexData.commit();
+                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                    .setParam("sphere.position", vertexData);
+                            }
+
+                            // check for radius data
+                            if (attrib.semantic == ParticleDataAccessCollection::RADIUS) {
+                                radius_found = true;
+                                auto count = attrib.byte_size /
+                                             (ParticleDataAccessCollection::getByteSize(attrib.component_type) *
+                                                 attrib.component_cnt);
+
+                                auto radiusData = ::ospray::cpp::SharedData(
+                                    &attrib.data[attrib.offset], OSP_FLOAT, count, attrib.stride);
+                                radiusData.commit();
+                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                    .setParam("sphere.radius", radiusData);
+                            }
                         }
 
-                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
-
-                        _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
-                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
-
-                        if (container.colorLength == 4) {
-                            unsigned long long colorFloatsToRead =
-                                container.partCount * container.colorLength / _numCreateGeo;
-                            colorFloatsToRead -= colorFloatsToRead % container.colorLength;
-
-                            auto colorData =
-                                ::ospray::cpp::SharedData(&container.colorData->operator[](i* colorFloatsToRead),
-                                    OSP_VEC4F, colorFloatsToRead / container.colorLength);
-                            colorData.commit();
-                            _geometricModels[entry.first].back().setParam("color", colorData);
-                        }
-                    }
-                    }
-                    break;
-
-                case geometryTypeEnum::NHSPHERES:
-                    {
-                    auto& container = std::get<sphereStructure>(element.structure);
-                    if (container.raw == NULL) {
-                        core::utility::log::Log::DefaultLog.WriteError("[OSPRay:generateRepresentations] Representation NHSPHERES active but no data provided.");
-                        // returnValue = false;
-                        break;
-                    }
-
-                    _numCreateGeo = container.partCount * container.dataStride / _ispcLimit + 1;
-
-                    for (unsigned int i = 0; i < _numCreateGeo; i++) {
-                        _baseStructures[entry.first].emplace_back(
-                            ::ospray::cpp::Geometry("sphere"), structureTypeEnum::GEOMETRY);
-
-                        unsigned long long floatsToRead =
-                            container.partCount * container.dataStride / (_numCreateGeo * sizeof(float));
-                        floatsToRead -= floatsToRead % (container.dataStride / sizeof(float));
-                        unsigned long long bytes_per_sphere = container.dataStride;
-                        unsigned long long floats_per_sphere = container.dataStride / sizeof(float);
-
-                        auto vertexData = ::ospray::cpp::SharedData(&static_cast<const float*>(container.raw)[i * floatsToRead],
-                                OSP_VEC3F, floatsToRead / floats_per_sphere, bytes_per_sphere);
-                        vertexData.commit();
-
-                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).setParam("sphere.position", vertexData);
-
-                        if (container.vertexLength > 3) {
-                            auto radiusData = ::ospray::cpp::SharedData(
-                                &static_cast<const float*>(container.raw)[i * floatsToRead + 3],
-                                    OSP_FLOAT, floatsToRead / floats_per_sphere, bytes_per_sphere);
-                            radiusData.commit();
+                        if (!radius_found) {
                             std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                .setParam("sphere.radius",
-                                radiusData);
-                        } else {
-                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                .setParam("radius", container.globalRadius);
+                                .setParam("radius", static_cast<float>(spheres.second.global_radius));
                         }
-
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
                         _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
                             std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
-                        if (container.mmpldColor ==
-                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
 
-                            auto colorData = ::ospray::cpp::SharedData(
-                                &static_cast<const float*>(container.raw)[i * floatsToRead + container.vertexLength],
-                                OSP_VEC4F, floatsToRead / floats_per_sphere, bytes_per_sphere);
-                            colorData.commit();
-                            _geometricModels[entry.first].back().setParam("color", colorData);
-                        } else if (container.mmpldColor ==
-                            core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRAY_NHSPERES: RGB not supported.");
-                            rkcommon::math::vec4f gcol = {0.8, 0.8, 0.8, 1.0};
-                            _geometricModels[entry.first].back().setParam("color", gcol);
-                        } else if (container.mmpldColor ==
-                                   core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_NONE) {
-                            // TODO: get global color
-                            rkcommon::math::vec4f gcol = {0.8, 0.8, 0.8, 1.0};
-                            _geometricModels[entry.first].back().setParam("color", gcol);
-                        } // end if color type
+                        for (auto& attrib : spheres.second.attributes) {
+
+                            // check colorpointer and convert to rgba
+                            if (attrib.semantic == ParticleDataAccessCollection::COLOR) {
+                                color_found = true;
+                                ::ospray::cpp::SharedData colorData;
+                                if (attrib.component_type == ParticleDataAccessCollection::ValueType::FLOAT) {
+                                    auto count = attrib.byte_size /
+                                                 (ParticleDataAccessCollection::getByteSize(attrib.component_type) *
+                                                     attrib.component_cnt);
+                                    auto osp_type = OSP_VEC3F;
+                                    if (attrib.component_cnt == 4)
+                                        osp_type = OSP_VEC4F;
+                                    colorData = ::ospray::cpp::SharedData(
+                                        &attrib.data[attrib.offset], osp_type, count, attrib.stride);
+                                } else {
+                                    core::utility::log::Log::DefaultLog.WriteError(
+                                        "[OSPRayRenderer][SPHERES] Color type not supported.");
+                                }
+                                colorData.commit();
+                                _geometricModels[entry.first].back().setParam("color", colorData);
+                            }
+                        }
+
+                        if (!color_found) {
+                            auto col =
+                                rkcommon::math::vec4f(spheres.second.global_color[0], spheres.second.global_color[1],
+                                spheres.second.global_color[2], spheres.second.global_color[3]);
+                            _geometricModels[entry.first].back().setParam("color", col);
+                        }
+
+
                     } // end for num geometies
                     }
                     break;
@@ -1186,29 +1151,30 @@ namespace ospray {
                     if (_geometricModels[entry.first].size() > 0) {
                         _geometricModels[entry.first].rbegin()[i].commit();
                     }
-                    _groups[entry.first] = ::ospray::cpp::Group();
-                    _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
-                    if (entry.second.clippingPlane.isValid) {
-                        _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("plane"), GEOMETRY);
-
-                        ::rkcommon::math::vec4f plane;
-                        plane[0] = entry.second.clippingPlane.coeff[0];
-                        plane[1] = entry.second.clippingPlane.coeff[1];
-                        plane[2] = entry.second.clippingPlane.coeff[2];
-                        plane[3] = entry.second.clippingPlane.coeff[3];
-                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                            .setParam("plane.coefficients", ::ospray::cpp::CopiedData(plane));
-                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
-
-                        _clippingModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
-                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
-                        _clippingModels[entry.first].back().commit();
-
-                        _groups[entry.first].setParam(
-                            "clippingGeometry", ::ospray::cpp::CopiedData(_clippingModels[entry.first]));
-                    }
-                    _groups[entry.first].commit();
                 }
+
+                _groups[entry.first] = ::ospray::cpp::Group();
+                _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
+                if (entry.second.clippingPlane.isValid) {
+                    _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("plane"), GEOMETRY);
+
+                    ::rkcommon::math::vec4f plane;
+                    plane[0] = entry.second.clippingPlane.coeff[0];
+                    plane[1] = entry.second.clippingPlane.coeff[1];
+                    plane[2] = entry.second.clippingPlane.coeff[2];
+                    plane[3] = entry.second.clippingPlane.coeff[3];
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                        .setParam("plane.coefficients", ::ospray::cpp::CopiedData(plane));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+
+                    _clippingModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                    _clippingModels[entry.first].back().commit();
+
+                    _groups[entry.first].setParam(
+                        "clippingGeometry", ::ospray::cpp::CopiedData(_clippingModels[entry.first]));
+                }
+                _groups[entry.first].commit();
                 break;
 
             case structureTypeEnum::VOLUME:
