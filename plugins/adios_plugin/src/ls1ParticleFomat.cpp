@@ -149,7 +149,6 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             }
             bbox = cad->getData("global_box")->GetAsFloat();
 
-
             int num_atoms_total = 0;
             auto num_components = cad->getData("num_components")->GetAsInt32()[0];
             std::vector<int> atoms_per_component(num_components);
