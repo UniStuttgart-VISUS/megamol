@@ -18,9 +18,9 @@
 // does not compile when X11 header (used in SDFFont, which is used in renderers) is included before.
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
-#include "TableHistogramRenderer2D.h"
-#include "TextureHistogramRenderer2D.h"
 #include "amort/ResolutionScalingRenderer2D.h"
+#include "histo/TableHistogramRenderer2D.h"
+#include "histo/TextureHistogramRenderer2D.h"
 
 namespace megamol::infovis {
 class InfovisPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
