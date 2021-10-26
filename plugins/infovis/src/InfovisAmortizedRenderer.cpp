@@ -65,6 +65,161 @@ bool megamol::infovis::InfovisAmortizedRenderer::create() {
 // TODO
 void InfovisAmortizedRenderer::release() {}
 
+bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRender2DGL& call) {
+    core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
+    if (cr2d == nullptr) {
+        return false;
+    }
+
+    if (!(*cr2d)(core::view::CallRender2DGL::FnGetExtents)) {
+        return false;
+    }
+
+    cr2d->SetTimeFramesCount(call.TimeFramesCount());
+    cr2d->SetIsInSituTime(call.IsInSituTime());
+
+    call.AccessBoundingBoxes() = cr2d->GetBoundingBoxes();
+
+    return true;
+}
+
+bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
+    core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
+
+    if (cr2d == nullptr) {
+        // Nothing to do really
+        return true;
+    }
+
+    // get camera
+    core::view::Camera cam = call.GetCamera();
+    mvMatrix = cam.getViewMatrix();
+    projMatrix = cam.getProjectionMatrix();
+
+    cr2d->SetTime(call.Time());
+    cr2d->SetInstanceTime(call.InstanceTime());
+    cr2d->SetLastFrameTime(call.LastFrameTime());
+
+    auto bg = call.BackgroundColor();
+
+    backgroundColor[0] = bg[0];
+    backgroundColor[1] = bg[1];
+    backgroundColor[2] = bg[2];
+    backgroundColor[3] = 1.0;
+    fbo = call.GetFramebuffer();
+    cr2d->SetBackgroundColor(call.BackgroundColor());
+    cr2d->AccessBoundingBoxes() = call.GetBoundingBoxes();
+    cr2d->SetViewResolution(call.GetViewResolution());
+
+    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        int a = amortLevel.Param<core::param::IntParam>()->Value();
+        int w = fbo->getWidth();
+        int h = fbo->getHeight();
+        int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
+        int approach = this->approachEnumSlot.Param<core::param::EnumParam>()->Value();
+
+        // check if amortization mode changed
+        if (approach != oldApp || w != oldW || h != oldH || ssLevel != oldssLevel || a != oldaLevel) {
+            resizeArrays(approach, w, h, ssLevel);
+        }
+        setupAccel(approach, w, h, ssLevel, &cam);
+        if (approach == 0) {
+            cr2d->SetFramebuffer(glowlFBOms);
+        } else {
+            cr2d->SetFramebuffer(glowlFBO);
+        }
+        cr2d->SetCamera(cam);
+        cr2d->SetBackgroundColor(call.BackgroundColor());
+
+        // send call to next renderer in line
+        (*cr2d)(core::view::AbstractCallRender::FnRender);
+
+        doReconstruction(approach, w, h, ssLevel);
+
+        // to avoid excessive resizing, retain last render variables and check if changed
+        oldApp = approach;
+        oldssLevel = ssLevel;
+        oldH = h;
+        oldW = w;
+        oldaLevel = a;
+    } else {
+        cr2d->SetFramebuffer(fbo);
+        cr2d->SetCamera(cam);
+
+        // send call to next renderer in line
+        (*cr2d)(core::view::AbstractCallRender::FnRender);
+    }
+    return true;
+}
+
+bool InfovisAmortizedRenderer::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    if (cr) {
+        megamol::core::view::InputEvent evt;
+        evt.tag = megamol::core::view::InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseButton);
+    }
+    return false;
+}
+
+bool InfovisAmortizedRenderer::OnMouseMove(double x, double y) {
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    if (cr) {
+        megamol::core::view::InputEvent evt;
+        evt.tag = megamol::core::view::InputEvent::Tag::MouseMove;
+        evt.mouseMoveData.x = x;
+        evt.mouseMoveData.y = y;
+        cr->SetInputEvent(evt);
+        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseMove);
+    }
+    return false;
+}
+
+bool InfovisAmortizedRenderer::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    if (cr) {
+        megamol::core::view::InputEvent evt;
+        evt.tag = megamol::core::view::InputEvent::Tag::MouseScroll;
+        evt.mouseScrollData.dx = dx;
+        evt.mouseScrollData.dy = dy;
+        cr->SetInputEvent(evt);
+        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll);
+    }
+    return false;
+}
+
+bool InfovisAmortizedRenderer::OnChar(unsigned int codePoint) {
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    if (cr) {
+        megamol::core::view::InputEvent evt;
+        evt.tag = megamol::core::view::InputEvent::Tag::Char;
+        evt.charData.codePoint = codePoint;
+        cr->SetInputEvent(evt);
+        return (*cr)(megamol::core::view::CallRender2DGL::FnOnChar);
+    }
+    return false;
+}
+
+bool InfovisAmortizedRenderer::OnKey(
+    megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    if (cr) {
+        megamol::core::view::InputEvent evt;
+        evt.tag = megamol::core::view::InputEvent::Tag::Key;
+        evt.keyData.key = key;
+        evt.keyData.action = action;
+        evt.keyData.mods = mods;
+        cr->SetInputEvent(evt);
+        return (*cr)(megamol::core::view::CallRender2DGL::FnOnKey);
+    }
+    return false;
+}
+
 bool InfovisAmortizedRenderer::makeShaders() {
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
     try {
@@ -160,33 +315,6 @@ void InfovisAmortizedRenderer::setupBuffers() {
     }
 }
 
-void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam) {
-    int a = this->amortLevel.Param<core::param::IntParam>()->Value();
-    int w = ceil(float(ow) / a);
-    int h = ceil(float(oh) / a);
-    glm::mat4 pm;
-    glm::mat4 mvm;
-    auto pmvm = projMatrix * mvMatrix;
-
-    glDisable(GL_MULTISAMPLE);
-    if (approach == 6) {
-        auto intrinsics = cam->get<core::view::Camera::OrthographicParameters>();
-        glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets[frametype].x,
-            -intrinsics.frustrum_height * camOffsets[frametype].y, 0.0);
-
-        // glm::mat4 jit = glm::translate(glm::mat4(1.0f), adj_offset);
-        movePush = lastPmvm * inverse(pmvm);
-        // movePush = glm::mat4(1.0);
-        lastPmvm = pmvm;
-
-        auto p = cam->get<core::view::Camera::Pose>();
-        p.position = p.position + 0.5f * adj_offset;
-        cam->setPose(p);
-        glowlFBO->bind();
-    }
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
 void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLevel) {
     // glDeleteTextures(1, &imStoreA);
     // glDeleteTextures(1, &imStoreB);
@@ -217,72 +345,31 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
     }
 }
 
-bool InfovisAmortizedRenderer::OnMouseButton(
-    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
-    if (cr) {
-        megamol::core::view::InputEvent evt;
-        evt.tag = megamol::core::view::InputEvent::Tag::MouseButton;
-        evt.mouseButtonData.button = button;
-        evt.mouseButtonData.action = action;
-        evt.mouseButtonData.mods = mods;
-        cr->SetInputEvent(evt);
-        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseButton);
-    }
-    return false;
-}
+void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam) {
+    int a = this->amortLevel.Param<core::param::IntParam>()->Value();
+    int w = ceil(float(ow) / a);
+    int h = ceil(float(oh) / a);
+    glm::mat4 pm;
+    glm::mat4 mvm;
+    auto pmvm = projMatrix * mvMatrix;
 
-bool InfovisAmortizedRenderer::OnMouseMove(double x, double y) {
-    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
-    if (cr) {
-        megamol::core::view::InputEvent evt;
-        evt.tag = megamol::core::view::InputEvent::Tag::MouseMove;
-        evt.mouseMoveData.x = x;
-        evt.mouseMoveData.y = y;
-        cr->SetInputEvent(evt);
-        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseMove);
-    }
-    return false;
-}
+    glDisable(GL_MULTISAMPLE);
+    if (approach == 6) {
+        auto intrinsics = cam->get<core::view::Camera::OrthographicParameters>();
+        glm::vec3 adj_offset = glm::vec3(-intrinsics.aspect * intrinsics.frustrum_height * camOffsets[frametype].x,
+            -intrinsics.frustrum_height * camOffsets[frametype].y, 0.0);
 
-bool InfovisAmortizedRenderer::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
-    if (cr) {
-        megamol::core::view::InputEvent evt;
-        evt.tag = megamol::core::view::InputEvent::Tag::MouseScroll;
-        evt.mouseScrollData.dx = dx;
-        evt.mouseScrollData.dy = dy;
-        cr->SetInputEvent(evt);
-        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll);
-    }
-    return false;
-}
+        // glm::mat4 jit = glm::translate(glm::mat4(1.0f), adj_offset);
+        movePush = lastPmvm * inverse(pmvm);
+        // movePush = glm::mat4(1.0);
+        lastPmvm = pmvm;
 
-bool InfovisAmortizedRenderer::OnChar(unsigned int codePoint) {
-    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
-    if (cr) {
-        megamol::core::view::InputEvent evt;
-        evt.tag = megamol::core::view::InputEvent::Tag::Char;
-        evt.charData.codePoint = codePoint;
-        cr->SetInputEvent(evt);
-        return (*cr)(megamol::core::view::CallRender2DGL::FnOnChar);
+        auto p = cam->get<core::view::Camera::Pose>();
+        p.position = p.position + 0.5f * adj_offset;
+        cam->setPose(p);
+        glowlFBO->bind();
     }
-    return false;
-}
-
-bool InfovisAmortizedRenderer::OnKey(
-    megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
-    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
-    if (cr) {
-        megamol::core::view::InputEvent evt;
-        evt.tag = megamol::core::view::InputEvent::Tag::Key;
-        evt.keyData.key = key;
-        evt.keyData.action = action;
-        evt.keyData.mods = mods;
-        cr->SetInputEvent(evt);
-        return (*cr)(megamol::core::view::CallRender2DGL::FnOnKey);
-    }
-    return false;
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int ssLevel) {
@@ -334,91 +421,4 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         frametype = (frametype + 1) % framesNeeded;
         parity = (parity + 1) % 2;
     }
-}
-
-bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
-    core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
-
-    if (cr2d == nullptr) {
-        // Nothing to do really
-        return true;
-    }
-
-    // get camera
-    core::view::Camera cam = call.GetCamera();
-    mvMatrix = cam.getViewMatrix();
-    projMatrix = cam.getProjectionMatrix();
-
-    cr2d->SetTime(call.Time());
-    cr2d->SetInstanceTime(call.InstanceTime());
-    cr2d->SetLastFrameTime(call.LastFrameTime());
-
-    auto bg = call.BackgroundColor();
-
-    backgroundColor[0] = bg[0];
-    backgroundColor[1] = bg[1];
-    backgroundColor[2] = bg[2];
-    backgroundColor[3] = 1.0;
-    fbo = call.GetFramebuffer();
-    cr2d->SetBackgroundColor(call.BackgroundColor());
-    cr2d->AccessBoundingBoxes() = call.GetBoundingBoxes();
-    cr2d->SetViewResolution(call.GetViewResolution());
-
-    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        int a = amortLevel.Param<core::param::IntParam>()->Value();
-        int w = fbo->getWidth();
-        int h = fbo->getHeight();
-        int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
-        int approach = this->approachEnumSlot.Param<core::param::EnumParam>()->Value();
-
-        // check if amortization mode changed
-        if (approach != oldApp || w != oldW || h != oldH || ssLevel != oldssLevel || a != oldaLevel) {
-            resizeArrays(approach, w, h, ssLevel);
-        }
-        setupAccel(approach, w, h, ssLevel, &cam);
-        if (approach == 0) {
-            cr2d->SetFramebuffer(glowlFBOms);
-        } else {
-            cr2d->SetFramebuffer(glowlFBO);
-        }
-        cr2d->SetCamera(cam);
-        cr2d->SetBackgroundColor(call.BackgroundColor());
-
-        // send call to next renderer in line
-        (*cr2d)(core::view::AbstractCallRender::FnRender);
-
-        doReconstruction(approach, w, h, ssLevel);
-
-        // to avoid excessive resizing, retain last render variables and check if changed
-        oldApp = approach;
-        oldssLevel = ssLevel;
-        oldH = h;
-        oldW = w;
-        oldaLevel = a;
-    } else {
-        cr2d->SetFramebuffer(fbo);
-        cr2d->SetCamera(cam);
-
-        // send call to next renderer in line
-        (*cr2d)(core::view::AbstractCallRender::FnRender);
-    }
-    return true;
-}
-
-bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRender2DGL& call) {
-    core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
-    if (cr2d == nullptr) {
-        return false;
-    }
-
-    if (!(*cr2d)(core::view::CallRender2DGL::FnGetExtents)) {
-        return false;
-    }
-
-    cr2d->SetTimeFramesCount(call.TimeFramesCount());
-    cr2d->SetIsInSituTime(call.IsInSituTime());
-
-    call.AccessBoundingBoxes() = cr2d->GetBoundingBoxes();
-
-    return true;
 }

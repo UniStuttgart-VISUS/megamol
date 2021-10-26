@@ -56,19 +56,9 @@ namespace infovis {
 
         void release() override;
 
-        bool Render(core::view::CallRender2DGL& call) override;
-
         bool GetExtents(core::view::CallRender2DGL& call) override;
 
-        void setupBuffers();
-
-        bool makeShaders();
-
-        void setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam);
-
-        void doReconstruction(int approach, int w, int h, int ssLevel);
-
-        void resizeArrays(int approach, int w, int h, int ssLevel);
+        bool Render(core::view::CallRender2DGL& call) override;
 
         bool OnMouseButton(
             core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
@@ -81,6 +71,16 @@ namespace infovis {
 
         bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action,
             megamol::core::view::Modifiers mods) override;
+
+        bool makeShaders();
+
+        void setupBuffers();
+
+        void resizeArrays(int approach, int w, int h, int ssLevel);
+
+        void setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam);
+
+        void doReconstruction(int approach, int w, int h, int ssLevel);
 
     private:
         enum AmortizationModes { MS_AR = 0, QUAD_AR, QUAD_AR_C, SS_AR, PARAMETER_AR, DEBUG_PLACEHOLDER, PUSH_AR };
