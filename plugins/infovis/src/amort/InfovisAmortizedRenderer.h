@@ -93,9 +93,6 @@ namespace infovis {
         // required Shaders for different kinds of reconstruction
         std::unique_ptr<glowl::GLSLProgram> amort_reconstruction_shdr_array[7];
 
-        GLuint amortizedFboA = 0;
-        GLuint amortizedMsaaFboA = 0;
-
         std::shared_ptr<glowl::FramebufferObject> glowlFBO;
         std::unique_ptr<glowl::Texture2D> texA;
         std::unique_ptr<glowl::Texture2D> texB;

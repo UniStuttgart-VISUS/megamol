@@ -275,8 +275,6 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h) {
 
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, core::view::Camera* cam) {
     int a = this->amortLevelParam.Param<core::param::IntParam>()->Value();
-    int w = ceil(float(ow) / a);
-    int h = ceil(float(oh) / a);
     glm::mat4 pm;
     glm::mat4 mvm;
     auto pmvm = projMatrix * mvMatrix;
