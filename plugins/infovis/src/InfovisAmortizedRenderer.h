@@ -62,8 +62,6 @@ namespace infovis {
 
         void setupBuffers();
 
-        std::vector<glm::fvec3> calculateHammersley(int until, int ow, int oh);
-
         bool makeShaders();
 
         void setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam);
