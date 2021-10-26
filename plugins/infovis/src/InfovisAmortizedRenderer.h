@@ -72,50 +72,41 @@ namespace infovis {
         bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action,
             megamol::core::view::Modifiers mods) override;
 
-        bool makeShaders();
+        bool createShaders();
 
-        void setupBuffers();
+        bool createBuffers();
 
-        void resizeArrays(int approach, int w, int h, int ssLevel);
+        void resizeArrays(int approach, int w, int h);
 
-        void setupAccel(int approach, int ow, int oh, int ssLevel, core::view::Camera* cam);
+        void setupAccel(int approach, int ow, int oh, core::view::Camera* cam);
 
-        void doReconstruction(int approach, int w, int h, int ssLevel);
+        void doReconstruction(int approach, int w, int h);
 
     private:
         enum AmortizationModes { MS_AR = 0, QUAD_AR, QUAD_AR_C, SS_AR, PARAMETER_AR, DEBUG_PLACEHOLDER, PUSH_AR };
 
         megamol::core::CallerSlot nextRendererSlot;
-        core::param::ParamSlot halveRes;
-        core::param::ParamSlot approachEnumSlot;
-        core::param::ParamSlot superSamplingLevelSlot;
-        core::param::ParamSlot amortLevel;
+        core::param::ParamSlot enabledParam;
+        core::param::ParamSlot approachParam;
+        core::param::ParamSlot amortLevelParam;
 
         // required Shaders for different kinds of reconstruction
         std::unique_ptr<glowl::GLSLProgram> amort_reconstruction_shdr_array[7];
 
         GLuint amortizedFboA = 0;
         GLuint amortizedMsaaFboA = 0;
-        GLuint amortizedPushFBO = 0;
+
         std::shared_ptr<glowl::FramebufferObject> glowlFBO;
-        std::shared_ptr<glowl::FramebufferObject> glowlFBOms;
         std::unique_ptr<glowl::Texture2D> texA;
         std::unique_ptr<glowl::Texture2D> texB;
         glowl::TextureLayout texstore_layout;
-        GLuint msImageArray = 0;
-        GLuint pushImage = 0;
-        GLuint imageArrayA = 0;
-        GLuint ssboMatrices = 0;
-        GLuint imStoreArray = 0;
-        GLuint imStoreA = 0;
-        GLuint imStoreB = 0;
+
         int frametype = 0;
         int parity = 0;
 
         int oldApp = -1;
         int oldW = -1;
         int oldH = -1;
-        int oldssLevel = -1;
         int oldaLevel = -1;
         int windowWidth = 1;
         int windowHeight = 1;
@@ -123,18 +114,13 @@ namespace infovis {
         std::shared_ptr<glowl::FramebufferObject> fbo = nullptr;
 
         int framesNeeded = 1;
-        GLfloat modelViewMatrix_column[16];
-        GLfloat projMatrix_column[16];
         glm::mat4 projMatrix;
         glm::mat4 mvMatrix;
         std::vector<glm::mat4> invMatrices;
         std::vector<glm::mat4> moveMatrices;
-        std::vector<glm::fvec2> hammerPositions;
         std::vector<glm::vec3> camOffsets;
         glm::mat4 movePush;
         glm::mat4 lastPmvm;
-
-        float backgroundColor[4];
     };
 } // namespace infovis
 } // namespace megamol
