@@ -77,7 +77,7 @@ bool ADIOStoTable::getData(core::Call& call) {
         for (int i = 0; i < availVars.size(); ++i) {
             raw_data[i] = cad->getData(availVars[i])->GetAsFloat();
             float min = std::numeric_limits<float>::max();
-            float max = std::numeric_limits<float>::min();
+            float max = std::numeric_limits<float>::lowest();
             for (int j = 0; j < raw_data[i].size(); ++j) {
                 min = std::min(min, raw_data[i][j]);
                 max = std::max(max, raw_data[i][j]);
