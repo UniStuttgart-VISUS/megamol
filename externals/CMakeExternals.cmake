@@ -161,7 +161,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
       GIT_TAG "v2021.3.0"
       CMAKE_ARGS -DTBB_TEST=OFF
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_DLL}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TBB_DLL}" "<INSTALL_DIR>/${TBB_LIB}"
     )
 
     add_external_library(tbb
