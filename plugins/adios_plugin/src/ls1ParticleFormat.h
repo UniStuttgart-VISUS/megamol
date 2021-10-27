@@ -79,8 +79,10 @@ private:
     core::CallerSlot transferfunctionSlot;
 
     core::param::ParamSlot representationSlot;
+    core::param::ParamSlot forceFloatSlot;
 
     std::vector<std::vector<unsigned char>> mix;
+    std::vector<std::vector<unsigned char>> dirs;
     std::vector<uint64_t> plist_count;
     std::vector<float> bbox;
     int num_plists;
@@ -93,6 +95,8 @@ private:
 
     core::moldyn::SimpleSphericalParticles::ColourDataType colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
     core::moldyn::SimpleSphericalParticles::VertexDataType vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_NONE;
+    core::moldyn::SimpleSphericalParticles::DirDataType dirType =
+        core::moldyn::SimpleSphericalParticles::DIRDATA_NONE;
     core::moldyn::SimpleSphericalParticles::IDDataType idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
 
     size_t stride = 0;

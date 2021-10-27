@@ -21,7 +21,6 @@
 #include "OSPRayMeshGeometry.h"
 #include "OSPRayMetalMaterial.h"
 #include "OSPRayMetallicPaintMaterial.h"
-#include "OSPRayNHSphereGeometry.h"
 #include "OSPRayOBJMaterial.h"
 #include "OSPRayPKDGeometry.h"
 #include "OSPRayPlasticMaterial.h"
@@ -53,7 +52,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayToGL>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereGeometry>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayNHSphereGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMeshGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayStructuredVolume>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAPIStructure>();
