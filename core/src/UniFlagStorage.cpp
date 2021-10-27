@@ -108,8 +108,10 @@ bool UniFlagStorage::writeDataCallback(core::Call& caller) {
 
         // TODO try to avoid this and only fetch the serialization data from the GPU!!!! (if and when it works)
         // see compress_bitflags.comp.glsl (never tested yet!)
+        // -> replace the whole block below with serializeData()
         // actually with TBB performance is fine already haha
         GL2CPUCopy();
+        cpu_stale = false; // on purpose!
         serializeCPUData();
     }
     return true;
@@ -159,9 +161,12 @@ bool UniFlagStorage::writeMetaDataCallback(core::Call& caller) {
 
 void UniFlagStorage::serializeData() {
     this->theData->flags->bind();
+    megamol::core::utility::log::Log::DefaultLog.WriteError(
+        "UniFlagStorage::serializeData: not implemented! If you see this, you have a problem.");
     // TODO allocate the buffers
     // TODO bind params
     // foreach bit: call compute shader, pray
+    // only build onoff for the first bit!
     // download stuff
 }
 
