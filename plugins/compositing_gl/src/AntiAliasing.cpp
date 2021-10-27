@@ -19,6 +19,7 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 
 #include "compositing/CompositingCalls.h"
+#include "mmcore/profiler/TimeMeasure.h"
 
 #include "SMAAAreaTex.h"
 #include "SMAASearchTex.h"
@@ -154,12 +155,22 @@ bool megamol::compositing::AntiAliasing::create() {
         m_smaa_edge_detection_prgm = std::make_unique<GLSLComputeShader>();
         m_smaa_blending_weight_calculation_prgm = std::make_unique<GLSLComputeShader>();
         m_smaa_neighborhood_blending_prgm = std::make_unique<GLSLComputeShader>();
+        m_pass_through_prgm = std::make_unique<GLSLComputeShader>();
 
         vislib::graphics::gl::ShaderSource compute_fxaa_src;
         vislib::graphics::gl::ShaderSource compute_smaa_velocity_src;
         vislib::graphics::gl::ShaderSource compute_smaa_edge_detection_src;
         vislib::graphics::gl::ShaderSource compute_smaa_blending_weights_src;
         vislib::graphics::gl::ShaderSource compute_smaa_neighborhood_blending_src;
+        vislib::graphics::gl::ShaderSource compute_pass_through_src;
+
+        // TODO: look into and use new shaderfactory (see e.g. simplstsphererenderer)
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::passthrough", compute_pass_through_src))
+            return false;
+        if (!m_pass_through_prgm->Compile(compute_pass_through_src.Code(), compute_pass_through_src.Count()))
+            return false;
+        if (!m_pass_through_prgm->Link())
+            return false;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::fxaa", compute_fxaa_src))
             return false;
@@ -168,12 +179,12 @@ bool megamol::compositing::AntiAliasing::create() {
         if (!m_fxaa_prgm->Link())
             return false;
 
-        /*if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::velocityCS", compute_smaa_velocity_src))
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::velocityCS", compute_smaa_velocity_src))
             return false;
         if (!m_smaa_velocity_prgm->Compile(compute_smaa_velocity_src.Code(), compute_smaa_velocity_src.Count()))
             return false;
         if (!m_smaa_velocity_prgm->Link())
-            return false;*/
+            return false;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::smaa::edgeDetectionCS", compute_smaa_edge_detection_src))
             return false;
@@ -229,6 +240,7 @@ bool megamol::compositing::AntiAliasing::create() {
     glowl::TextureLayout area_layout(GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, 1, GL_RG, GL_UNSIGNED_BYTE, 1, int_params, {});
     glowl::TextureLayout search_layout(GL_R8, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1, GL_RED, GL_UNSIGNED_BYTE, 1, int_params, {});
     glowl::TextureLayout velocity_layout(GL_RG8, 1, 1, 1, GL_RG, GL_UNSIGNED_BYTE, 1);
+    glowl::TextureLayout depth_layout(GL_DEPTH_COMPONENT24_ARB, 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, 1);
 
 
     // need to flip image around horizontal axis
@@ -259,6 +271,7 @@ bool megamol::compositing::AntiAliasing::create() {
     m_area_tex = std::make_shared<glowl::Texture2D>("smaa_area_tex", area_layout, areaTexBytes);
     m_search_tex = std::make_shared<glowl::Texture2D>("smaa_search_tex", search_layout, searchTexBytes);
     m_velocity_tex = std::make_shared<glowl::Texture2D>("smaa_input_velocity", velocity_layout, nullptr);
+    m_prev_depth_tx2D = std::make_shared<glowl::Texture2D>("smaa_prev_depth", depth_layout, nullptr);
 
     m_ssbo_constants = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
@@ -478,7 +491,7 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
         || (temporal ? rhs_call_depth->hasUpdate()  : false)
         || (technique == 2 ? rhs_call_depth->hasUpdate() : false);
 
-    if (something_has_changed) {
+    if (/*something_has_changed*/ false) {
         ++m_version;
         m_settings_have_changed = false;
         this->m_smaa_detection_technique.ResetDirty();
@@ -571,6 +584,8 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
 
                 m_prev_cam = m_cam;
                 m_prev_view_proj_mx = curr_view_proj_mx;
+                // TODO: how to copy only ze täxtscher and not ze pöinter?
+                m_prev_depth_tx2D = m_depth_tx2D;
             }
 
             // edge detection
@@ -613,7 +628,6 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
         }
         // no aa
         else if (mode == 2) {
-            // TODO: find a better solution
             std::vector<std::pair<std::shared_ptr<glowl::Texture2D>, const char*>> inputs = {{input_tx2D, "src_tx2D"}};
             std::vector<std::pair<const char*, int>> uniforms = {{"disable_aa", 1}};
 
@@ -621,6 +635,67 @@ bool megamol::compositing::AntiAliasing::getDataCallback(core::Call& caller) {
         }
 
     }
+
+
+
+    std::function<void(std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt)>
+        setupOutputTexture = [](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
+        // set output texture size to primary input texture
+        std::array<float, 2> texture_res = {
+            static_cast<float>(src->getWidth()), static_cast<float>(src->getHeight()) };
+
+        if (tgt->getWidth() != std::get<0>(texture_res) || tgt->getHeight() != std::get<1>(texture_res)) {
+            glowl::TextureLayout tx_layout(
+                GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
+            tgt->reload(tx_layout, nullptr);
+        }
+    };
+
+    auto input_tx2D = rhs_call_input->getData();
+    setupOutputTexture(input_tx2D, m_output_texture);
+
+    int runs = 25;
+    /*core::profiler::Timer timer;
+    timer.startTimer();
+    for (int i = 0; i < runs; ++i) {
+        m_pass_through_prgm->Enable();
+
+        glActiveTexture(GL_TEXTURE0);
+        input_tx2D->bindTexture();
+        glUniform1i(m_pass_through_prgm->ParameterLocation("src"), 0);
+
+        m_output_texture->bindImage(0, GL_WRITE_ONLY);
+
+        m_pass_through_prgm->Dispatch(
+            (int)std::ceil(input_tx2D->getWidth() / 8.f),
+            (int)std::ceil(input_tx2D->getHeight() / 8.f),
+            1);
+
+        m_pass_through_prgm->Disable();
+
+        //glActiveTexture(GL_TEXTURE0);
+        //glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    timer.endTimer();
+    std::cout << "Pass through shader took: " <<
+        timer.getDuration(core::profiler::Timer::TimeUnit::MILLISECONDS) / 25.f << "ms on average";
+
+    timer.startTimer();
+    for (int i = 0; i < runs; ++i) {
+        m_output_texture->copyTexture(input_tx2D);
+    }
+    timer.endTimer();
+    std::cout << "glCopyTextureSubImage2D took: " <<
+        timer.getDuration(core::profiler::Timer::TimeUnit::MILLISECONDS) / 25.f << "ms on average";*/
+
+    m_output_texture->copyTexture(input_tx2D);
+
+
+    ++m_version;
+
+
+
+
 
     if (lhs_tc->version() < m_version || this->m_smaa_view.IsDirty()) {
         int view = this->m_smaa_view.Param<core::param::EnumParam>()->Value();

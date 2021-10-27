@@ -21,7 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "ASSAO.h"
+#include "SSAO.h"
 
 #include <array>
 #include <random>
@@ -49,7 +49,7 @@
 
 /////////////////////////////////////////////////////////////////////////
 
-megamol::compositing::ASSAO::ASSAO()
+megamol::compositing::SSAO::SSAO()
     : core::Module()
     , m_version(0)
     , m_outputTexSlot("OutputTexture", "Gives access to resulting output texture")
@@ -99,9 +99,9 @@ megamol::compositing::ASSAO::ASSAO()
     , m_slotIsActive(false)
     , m_updateCausedByNormalSlotChange(false)
 {
-    this->m_outputTexSlot.SetCallback(CallTexture2D::ClassName(), "GetData", &ASSAO::getDataCallback);
+    this->m_outputTexSlot.SetCallback(CallTexture2D::ClassName(), "GetData", &SSAO::getDataCallback);
     this->m_outputTexSlot.SetCallback(
-        CallTexture2D::ClassName(), "GetMetaData", &ASSAO::getMetaDataCallback);
+        CallTexture2D::ClassName(), "GetMetaData", &SSAO::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_outputTexSlot);
 
     this->m_normalsTexSlot.SetCompatibleCall<CallTexture2DDescription>();
@@ -116,7 +116,7 @@ megamol::compositing::ASSAO::ASSAO()
     this->m_psSSAOMode << new core::param::EnumParam(0);
     this->m_psSSAOMode.Param<core::param::EnumParam>()->SetTypePair(0, "ASSAO");
     this->m_psSSAOMode.Param<core::param::EnumParam>()->SetTypePair(1, "Naive");
-    this->m_psSSAOMode.SetUpdateCallback(&ASSAO::ssaoModeCallback);
+    this->m_psSSAOMode.SetUpdateCallback(&SSAO::ssaoModeCallback);
     this->MakeSlotAvailable(&this->m_psSSAOMode);
 
     this->m_psSSAORadius << new megamol::core::param::FloatParam(0.5f, 0.0f);
@@ -128,39 +128,39 @@ megamol::compositing::ASSAO::ASSAO()
     // settings
     this->m_psRadius << new core::param::FloatParam(1.2f, 0.f);
     this->m_psRadius.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psRadius.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psRadius.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psRadius);
 
     this->m_psShadowMultiplier << new core::param::FloatParam(1.f, 0.f, 5.f);
     this->m_psShadowMultiplier.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psShadowMultiplier.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psShadowMultiplier.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psShadowMultiplier);
 
     this->m_psShadowPower << new core::param::FloatParam(1.5f, 0.5f, 5.f);
     this->m_psShadowPower.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psShadowPower.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psShadowPower.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psShadowPower);
 
     this->m_psShadowClamp << new core::param::FloatParam(0.98f, 0.f, 1.f);
     this->m_psShadowClamp.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psShadowClamp.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psShadowClamp.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psShadowClamp);
 
     this->m_psHorizonAngleThreshold << new core::param::FloatParam(0.06f, 0.f, 0.2f);
     this->m_psHorizonAngleThreshold.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psHorizonAngleThreshold.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psHorizonAngleThreshold.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psHorizonAngleThreshold);
 
     this->m_psFadeOutFrom << new core::param::FloatParam(50.f, 0.f);
     this->m_psFadeOutFrom.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psFadeOutFrom.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psFadeOutFrom.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psFadeOutFrom);
 
     this->m_psFadeOutTo << new core::param::FloatParam(300.f, 0.f);
     this->m_psFadeOutTo.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psFadeOutTo.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psFadeOutTo.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psFadeOutTo);
 
     // generally there are quality levels from -1 (lowest) to 3 (highest, adaptive), but 3 (adaptive) is not implemented yet
@@ -169,44 +169,44 @@ megamol::compositing::ASSAO::ASSAO()
     this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair( 0, "Low");
     this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair( 1, "Medium");
     this->m_psQualityLevel.Param<core::param::EnumParam>()->SetTypePair( 2, "High");
-    this->m_psQualityLevel.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psQualityLevel.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psQualityLevel);
 
     this->m_psAdaptiveQualityLimit << new core::param::FloatParam(0.45f, 0.f, 1.f);
     this->m_psAdaptiveQualityLimit.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psAdaptiveQualityLimit.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psAdaptiveQualityLimit.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psAdaptiveQualityLimit);
 
     this->m_psBlurPassCount << new core::param::IntParam(2, 0, 6);
-    this->m_psBlurPassCount.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psBlurPassCount.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psBlurPassCount);
 
     this->m_psSharpness << new core::param::FloatParam(0.98f, 0.f, 1.f);
     this->m_psSharpness.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psSharpness.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psSharpness.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psSharpness);
 
     this->m_psTemporalSupersamplingAngleOffset << new core::param::FloatParam(0.f, 0.f, 3.141592653589f);
     this->m_psTemporalSupersamplingAngleOffset.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psTemporalSupersamplingAngleOffset.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psTemporalSupersamplingAngleOffset.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psTemporalSupersamplingAngleOffset);
 
     this->m_psTemporalSupersamplingRadiusOffset << new core::param::FloatParam(1.f, 0.f, 2.f);
     this->m_psTemporalSupersamplingRadiusOffset.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psTemporalSupersamplingRadiusOffset.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psTemporalSupersamplingRadiusOffset.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psTemporalSupersamplingRadiusOffset);
 
     this->m_psDetailShadowStrength << new core::param::FloatParam(0.5f, 0.f, 5.f);
     this->m_psDetailShadowStrength.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Drag);
-    this->m_psDetailShadowStrength.SetUpdateCallback(&ASSAO::settingsCallback);
+    this->m_psDetailShadowStrength.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->m_psDetailShadowStrength);
 }
 
-bool megamol::compositing::ASSAO::ssaoModeCallback(core::param::ParamSlot& slot) {
+bool megamol::compositing::SSAO::ssaoModeCallback(core::param::ParamSlot& slot) {
     int mode = m_psSSAOMode.Param<core::param::EnumParam>()->Value();
 
     // assao
@@ -253,7 +253,7 @@ bool megamol::compositing::ASSAO::ssaoModeCallback(core::param::ParamSlot& slot)
     return true;
 }
 
-bool megamol::compositing::ASSAO::settingsCallback(core::param::ParamSlot& slot) {
+bool megamol::compositing::SSAO::settingsCallback(core::param::ParamSlot& slot) {
     m_settings.Radius = m_psRadius.Param<core::param::FloatParam>()->Value();
     m_settings.ShadowMultiplier = m_psShadowMultiplier.Param<core::param::FloatParam>()->Value();
     m_settings.ShadowPower = m_psShadowPower.Param<core::param::FloatParam>()->Value();
@@ -277,9 +277,9 @@ bool megamol::compositing::ASSAO::settingsCallback(core::param::ParamSlot& slot)
 }
 
 // TODO: DELETE ALL MEMORY!
-megamol::compositing::ASSAO::~ASSAO() { this->Release(); }
+megamol::compositing::SSAO::~SSAO() { this->Release(); }
 
-bool megamol::compositing::ASSAO::create() {
+bool megamol::compositing::SSAO::create() {
     typedef megamol::core::utility::log::Log Log;
 
     try {
@@ -321,27 +321,27 @@ bool megamol::compositing::ASSAO::create() {
 
             vislib::graphics::gl::ShaderSource csNaiveSSAO;
             vislib::graphics::gl::ShaderSource csNaiveSSAOBlur;
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepths");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepths");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepths", csPrepareDepths))
+                    "Compositing::SSAO::CSPrepareDepths", csPrepareDepths))
                 return false;
             if (!m_prepareDepthsPrgm->Compile(csPrepareDepths.Code(), csPrepareDepths.Count()))
                 return false;
             if (!m_prepareDepthsPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsHalf");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepthsHalf");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepthsHalf", csPrepareDepthsHalf))
+                    "Compositing::SSAO::CSPrepareDepthsHalf", csPrepareDepthsHalf))
                 return false;
             if (!m_prepareDepthsHalfPrgm->Compile(csPrepareDepthsHalf.Code(), csPrepareDepthsHalf.Count()))
                 return false;
             if (!m_prepareDepthsHalfPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsAndNormals");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepthsAndNormals");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepthsAndNormals", csPrepareDepthsAndNormals))
+                    "Compositing::SSAO::CSPrepareDepthsAndNormals", csPrepareDepthsAndNormals))
                 return false;
             if (!m_prepareDepthsAndNormalsPrgm->Compile(
                     csPrepareDepthsAndNormals.Code(), csPrepareDepthsAndNormals.Count()))
@@ -349,9 +349,9 @@ bool megamol::compositing::ASSAO::create() {
             if (!m_prepareDepthsAndNormalsPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthsAndNormalsHalf");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepthsAndNormalsHalf");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSPrepareDepthsAndNormalsHalf", csPrepareDepthsAndNormalsHalf))
+                    "Compositing::SSAO::CSPrepareDepthsAndNormalsHalf", csPrepareDepthsAndNormalsHalf))
                 return false;
             if (!m_prepareDepthsAndNormalsHalfPrgm->Compile(
                     csPrepareDepthsAndNormalsHalf.Code(), csPrepareDepthsAndNormalsHalf.Count()))
@@ -360,8 +360,8 @@ bool megamol::compositing::ASSAO::create() {
                 return false;
 
             for (int i = 0; i < SSAODepth_MIP_LEVELS - 1; ++i) {
-                Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSPrepareDepthMip%i", i+1);
-                std::string identifier = "Compositing::assao::CSPrepareDepthMip" + std::to_string(i + 1);
+                Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSPrepareDepthMip%i", i+1);
+                std::string identifier = "Compositing::SSAO::CSPrepareDepthMip" + std::to_string(i + 1);
                 if (!instance()->ShaderSourceFactory().MakeShaderSource(
                         identifier.c_str(), csPrepareDepthMip[i]))
                     return false;
@@ -374,10 +374,10 @@ bool megamol::compositing::ASSAO::create() {
 
             // one less than cs_generate.size() because the adaptive quality level is not implemented (yet)
             for (int i = 0; i < 4; ++i) {
-                Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSGenerateQ%i", i);
-                std::string identifier = "Compositing::assao::CSGenerateQ" + std::to_string(i);
+                Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSGenerateQ%i", i);
+                std::string identifier = "Compositing::SSAO::CSGenerateQ" + std::to_string(i);
                 if (i >= 4)
-                    identifier = "Compositing::assao::CSGenerateQ3Base";
+                    identifier = "Compositing::SSAO::CSGenerateQ3Base";
 
                 if (!instance()->ShaderSourceFactory().MakeShaderSource(identifier.c_str(), csGenerate[i]))
                     return false;
@@ -387,52 +387,52 @@ bool megamol::compositing::ASSAO::create() {
                     return false;
             }
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSSmartBlur");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSSmartBlur", csSmartBlur))
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSSmartBlur");
+            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::SSAO::CSSmartBlur", csSmartBlur))
                 return false;
             if (!m_smartBlurPrgm->Compile(csSmartBlur.Code(), csSmartBlur.Count()))
                 return false;
             if (!m_smartBlurPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSSmartBlurWide");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSSmartBlurWide");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSSmartBlurWide", csSmartBlur_wide))
+                    "Compositing::SSAO::CSSmartBlurWide", csSmartBlur_wide))
                 return false;
             if (!m_smartBlurWidePrgm->Compile(csSmartBlur_wide.Code(), csSmartBlur_wide.Count()))
                 return false;
             if (!m_smartBlurWidePrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartBlur");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSNonSmartBlur");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSNonSmartBlur", csNonSmartBlur))
+                    "Compositing::SSAO::CSNonSmartBlur", csNonSmartBlur))
                 return false;
             if (!m_nonSmartBlurPrgm->Compile(csNonSmartBlur.Code(), csNonSmartBlur.Count()))
                 return false;
             if (!m_nonSmartBlurPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSApply");
-            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::assao::CSApply", csApply))
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSApply");
+            if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::SSAO::CSApply", csApply))
                 return false;
             if (!m_applyPrgm->Compile(csApply.Code(), csApply.Count()))
                 return false;
             if (!m_applyPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartApply");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSNonSmartApply");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSNonSmartApply", csNonSmartApply))
+                    "Compositing::SSAO::CSNonSmartApply", csNonSmartApply))
                 return false;
             if (!m_nonSmartApplyPrgm->Compile(csNonSmartApply.Code(), csNonSmartApply.Count()))
                 return false;
             if (!m_nonSmartApplyPrgm->Link())
                 return false;
 
-            Log::DefaultLog.WriteInfo("Compiling: Compositing::assao::CSNonSmartHalfApply");
+            Log::DefaultLog.WriteInfo("Compiling: Compositing::SSAO::CSNonSmartHalfApply");
             if (!instance()->ShaderSourceFactory().MakeShaderSource(
-                    "Compositing::assao::CSNonSmartHalfApply", csNonSmartHalfApply))
+                    "Compositing::SSAO::CSNonSmartHalfApply", csNonSmartHalfApply))
                 return false;
             if (!m_nonSmartHalfApplyPrgm->Compile(csNonSmartHalfApply.Code(), csNonSmartHalfApply.Count()))
                 return false;
@@ -560,9 +560,9 @@ bool megamol::compositing::ASSAO::create() {
     return true;
 }
 
-void megamol::compositing::ASSAO::release() {}
+void megamol::compositing::SSAO::release() {}
 
-bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
+bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
     auto lhsTc = dynamic_cast<CallTexture2D*>(&caller);
     auto callNormal = m_normalsTexSlot.CallAs<CallTexture2D>();
     auto callDepth = m_depthTexSlot.CallAs<CallTexture2D>();
@@ -761,7 +761,7 @@ bool megamol::compositing::ASSAO::getDataCallback(core::Call& caller) {
     return true;
 }
 
-void megamol::compositing::ASSAO::prepareDepths(
+void megamol::compositing::SSAO::prepareDepths(
     const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, std::shared_ptr<glowl::Texture2D> depthTexture,
     std::shared_ptr<glowl::Texture2D> normalTexture) {
     bool generateNormals = inputs->GenerateNormals;
@@ -825,7 +825,7 @@ void megamol::compositing::ASSAO::prepareDepths(
     }
 }
 
-void megamol::compositing::ASSAO::generateSSAO(const ASSAO_Settings& settings,
+void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
     const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass, std::shared_ptr<glowl::Texture2D> depthTexture,
     std::shared_ptr<glowl::Texture2D> normalTexture) {
 
@@ -959,9 +959,9 @@ void megamol::compositing::ASSAO::generateSSAO(const ASSAO_Settings& settings,
     }
 }
 
-bool megamol::compositing::ASSAO::getMetaDataCallback(core::Call& caller) { return true; }
+bool megamol::compositing::SSAO::getMetaDataCallback(core::Call& caller) { return true; }
 
-void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs) {
+void megamol::compositing::SSAO::updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs) {
     int width = inputs->ViewportWidth;
     int height = inputs->ViewportHeight;
 
@@ -1008,7 +1008,7 @@ void megamol::compositing::ASSAO::updateTextures(const std::shared_ptr<ASSAO_Inp
     }
 }
 
-void megamol::compositing::ASSAO::updateConstants(
+void megamol::compositing::SSAO::updateConstants(
     const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, int pass) {
     bool generateNormals = inputs->GenerateNormals;
 
@@ -1139,7 +1139,7 @@ void megamol::compositing::ASSAO::updateConstants(
 }
 
 // only resets textures if needed
-bool megamol::compositing::ASSAO::reCreateIfNeeded(
+bool megamol::compositing::SSAO::reCreateIfNeeded(
     std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly, bool generateMipMaps) {
     if ((size.x == 0) || (size.y == 0)) {
         // reset object
@@ -1164,7 +1164,7 @@ bool megamol::compositing::ASSAO::reCreateIfNeeded(
     return true;
 }
 
-bool megamol::compositing::ASSAO::reCreateIfNeeded(
+bool megamol::compositing::SSAO::reCreateIfNeeded(
     std::shared_ptr<glowl::Texture2DArray> tex, glm::ivec2 size, const glowl::TextureLayout& ly) {
     if ((size.x == 0) || (size.y == 0)) {
 
@@ -1185,7 +1185,7 @@ bool megamol::compositing::ASSAO::reCreateIfNeeded(
     return true;
 }
 
-bool megamol::compositing::ASSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2DView> tex,
+bool megamol::compositing::SSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2DView> tex,
     std::shared_ptr<glowl::Texture2DArray> original, glm::ivec2 size, const glowl::TextureLayout& ly, int arraySlice) {
     if ((size.x == 0) || (size.y == 0)) {
 
@@ -1203,7 +1203,7 @@ bool megamol::compositing::ASSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::T
     return true;
 }
 
-bool megamol::compositing::ASSAO::reCreateMIPViewIfNeeded(
+bool megamol::compositing::SSAO::reCreateMIPViewIfNeeded(
     std::shared_ptr<glowl::Texture2DView> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice) {
 
     if (current != nullptr && original != nullptr) {
@@ -1218,7 +1218,7 @@ bool megamol::compositing::ASSAO::reCreateMIPViewIfNeeded(
     return true;
 }
 
-bool megamol::compositing::ASSAO::equalLayoutsWithoutSize(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
+bool megamol::compositing::SSAO::equalLayoutsWithoutSize(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
     bool depth            = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
     bool format           = lhs.format == rhs.format;
@@ -1231,7 +1231,7 @@ bool megamol::compositing::ASSAO::equalLayoutsWithoutSize(const glowl::TextureLa
            type;
 }
 
-bool megamol::compositing::ASSAO::equalLayouts(
+bool megamol::compositing::SSAO::equalLayouts(
     const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
     bool depth            = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;

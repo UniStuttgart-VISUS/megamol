@@ -14,7 +14,7 @@
 #include "SimpleRenderTarget.h"
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
-#include "ASSAO.h"
+#include "SSAO.h"
 #include "compositing/CompositingCalls.h"
 #include "AntiAliasing.h"
 #include "PNGDataSource.h"
@@ -43,7 +43,7 @@ namespace megamol::compositing {
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureDepthCompositing>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::AntiAliasing>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::PNGDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::compositing::ASSAO>();
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::SSAO>();
 
             // register calls
             this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallTexture2D>();

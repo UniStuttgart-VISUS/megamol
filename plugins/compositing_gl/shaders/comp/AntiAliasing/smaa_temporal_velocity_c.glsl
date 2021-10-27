@@ -4,6 +4,8 @@
  * All rights reserved.
  */
 
+layout(local_size_x = 8, local_size_y = 8) in;
+
 uniform mat4 prevViewProjMx;
 uniform mat4 currViewProjMx;
 
@@ -21,11 +23,11 @@ void main() {
 
     vec2 texCoords = (2.f * inPos + vec2(1.f)) / (2.f * vec2(viewport));
 
-    float currDepth = texture(g_currDepthtex, texCoords);
-    float prevDepth = texture(g_prevDepthtex, texCoords);
+    float currDepth = texture(g_currDepthtex, texCoords).r;
+    float prevDepth = texture(g_prevDepthtex, texCoords).r;
 
-    vec4 currPos = vec3(inPos, currDepth, 1.0);
-    vec4 prevPos = vec3(inPos, prevDepth, 1.0);
+    vec4 currPos = vec4(inPos, currDepth, 1.0);
+    vec4 prevPos = vec4(inPos, prevDepth, 1.0);
 
     // ndc
     currPos.xy = currPos.xy * 2.0 - vec2(1.0);
@@ -35,8 +37,8 @@ void main() {
     //prevPos = prevPos / prevW; ??
 
     // world space
-    currPos = inv(currViewProjMx) * currPos;
-    prevPos = inv(prevViewProjMx) * prevPos;
+    currPos = inverse(currViewProjMx) * currPos;
+    prevPos = inverse(prevViewProjMx) * prevPos;
 
     // translate according to jitter
     currPos.xy = currPos.xy + vec2(2.0 * jitter.x / viewport.x, 2.0 * jitter.y / viewport.y);
@@ -60,5 +62,5 @@ void main() {
     // calc velocity
     vec2 velocity = (currPos.xy - prevPos.xy);
 
-    imageStore(velocityTx2D, inPos, vec4(velocity, 0.0, 0.0));
+    imageStore(velocityTx2D, ivec2(inPos), vec4(velocity, 0.0, 0.0));
 }

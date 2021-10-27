@@ -24,11 +24,11 @@ namespace profiler {
             SECONDS = 3
         };
 
-    private:
         void startTimer();
         void endTimer();
         double getDuration(TimeUnit unit);
 
+    private:
         std::chrono::steady_clock::time_point start;
         std::chrono::steady_clock::time_point end;
         double duration;

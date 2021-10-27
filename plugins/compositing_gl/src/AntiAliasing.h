@@ -145,6 +145,9 @@ private:
 
     uint32_t m_version;
 
+    // test program
+    std::unique_ptr<GLSLComputeShader> m_pass_through_prgm;
+
     /** Shader program for fxaa */
     std::unique_ptr<GLSLComputeShader> m_fxaa_prgm;
 
@@ -168,15 +171,14 @@ private:
     { glm::vec4(1.0, 1.0, 1.0, 0.0), glm::vec4(2.0, 2.0, 2.0, 0.0) };
     std::shared_ptr<glowl::Texture2D> m_depth_tx2D;
     std::shared_ptr<glowl::Texture2D> m_prev_depth_tx2D;
+    /** Texture to store velocity for each pixel used in SMAA S2x */
+    std::shared_ptr<glowl::Texture2D> m_velocity_tex;
 
     /** SMAA intermediate texture layout */
     glowl::TextureLayout m_smaa_layout;
 
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
-
-    /** Texture to store velocity for each pixel used in SMAA S2x */
-    std::shared_ptr<glowl::Texture2D> m_velocity_tex;
 
     /** Texture to store edges from edges detection */
     std::shared_ptr<glowl::Texture2D> m_edges_tex;

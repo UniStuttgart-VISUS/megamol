@@ -20,8 +20,8 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ASSAO_H_INCLUDED
-#define ASSAO_H_INCLUDED
+#ifndef SSAO_H_INCLUDED
+#define SSAO_H_INCLUDED
 
 #include <variant>
 
@@ -132,7 +132,6 @@ struct ASSAO_Settings {
 };
 
 // ** WARNING ** if changing anything here, update the corresponding shader code! ** WARNING **
-// TODO: watch alignment
 struct ASSAO_Constants {
     glm::vec2 ViewportPixelSize;     // .zw == 1.0 / ViewportSize.xy
     glm::vec2 HalfViewportPixelSize; // .zw == 1.0 / ViewportHalfSize.xy
@@ -187,7 +186,7 @@ struct ASSAO_Constants {
 #endif
 };
 
-class ASSAO : public core::Module {
+class SSAO : public core::Module {
 public:
     /**
      * Answer the name of this module.
@@ -210,8 +209,8 @@ public:
      */
     static bool IsAvailable() { return true; }
 
-    ASSAO();
-    ~ASSAO();
+    SSAO();
+    ~SSAO();
 
 protected:
     /**
@@ -417,7 +416,7 @@ private:
 };
 
 template<typename Tuple, typename Tex>
-void ASSAO::fullscreenPassDraw(
+void SSAO::fullscreenPassDraw(
     const std::unique_ptr<GLSLComputeShader>& prgm,
     const std::vector<Tuple>& inputTextures,
     std::vector<std::pair<std::shared_ptr<Tex>, GLuint>>& outputTextures,
