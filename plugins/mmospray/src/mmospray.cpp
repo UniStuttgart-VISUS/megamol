@@ -35,13 +35,14 @@
 #include "Pkd.h"
 
 namespace megamol::ospray {
-class OsprayPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
-    REGISTERPLUGIN(OsprayPluginInstance)
+class MMOSPRayPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(MMOSPRayPluginInstance)
 
 public:
-    OsprayPluginInstance(void) : megamol::core::utility::plugins::AbstractPluginInstance("ospray", "CPU Raytracing"){};
+    MMOSPRayPluginInstance(void)
+            : megamol::core::utility::plugins::AbstractPluginInstance("mmospray", "CPU Raytracing"){};
 
-    ~OsprayPluginInstance() override = default;
+    ~MMOSPRayPluginInstance() override = default;
 
     // Registers modules and calls
     void registerClasses() override {

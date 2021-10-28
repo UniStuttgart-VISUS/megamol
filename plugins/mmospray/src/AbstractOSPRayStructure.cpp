@@ -8,6 +8,7 @@
 #include "OSPRay_plugin/AbstractOSPRayStructure.h"
 
 #include "mmcore/view/CallClipPlane.h"
+#include "glm/glm.hpp"
 
 
 namespace megamol {

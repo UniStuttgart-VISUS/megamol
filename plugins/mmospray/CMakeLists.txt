@@ -3,7 +3,7 @@
 # All rights reserved.
 #
 
-megamol_plugin(OSPRay_plugin
+megamol_plugin(mmospray
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
     geometry_calls
@@ -11,12 +11,12 @@ megamol_plugin(OSPRay_plugin
     protein_calls
     mesh)
 
-if (OSPRay_plugin_PLUGIN_ENABLED)
+if (mmospray_PLUGIN_ENABLED)
 
   find_package(ospray CONFIG REQUIRED)
   find_package(rkcommon CONFIG REQUIRED)
 
-  target_link_libraries(OSPRay_plugin PUBLIC ospray::ospray ospray::ospray_module_ispc rkcommon::rkcommon)
+  target_link_libraries(mmospray PUBLIC ospray::ospray ospray::ospray_module_ispc rkcommon::rkcommon)
 
   if (WIN32)
     install(DIRECTORY "${OSPRAY_ROOT}/bin/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
