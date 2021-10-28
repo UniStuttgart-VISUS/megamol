@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "GPUMaterialCollection.h"
-#include "mesh/MeshCalls.h"
+#include "mesh/MeshCalls_gl.h"
 #include "mmcore/CalleeSlot.h"
 
 namespace megamol {

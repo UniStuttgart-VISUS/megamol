@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "GPUMeshes.h"
 
-#include "mesh/MeshCalls.h"
+#include "mesh/MeshCalls_gl.h"
 
 megamol::mesh::GPUMeshes::GPUMeshes() : m_version(0), m_mesh_slot("meshes", "Connect mesh data for upload to the GPU") {
     this->m_mesh_slot.SetCompatibleCall<CallMeshDescription>();

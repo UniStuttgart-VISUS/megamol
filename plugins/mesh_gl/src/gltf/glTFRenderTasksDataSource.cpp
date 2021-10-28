@@ -6,7 +6,7 @@
 #include "vislib/math/Matrix.h"
 #include "mmcore/param/FilePathParam.h"
 
-#include "mesh/MeshCalls.h"
+#include "mesh/MeshCalls_gl.h"
 
 megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
         : m_version(0)

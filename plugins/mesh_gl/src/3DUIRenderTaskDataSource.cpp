@@ -6,7 +6,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix.h"
 
-#include "mesh/MeshCalls.h"
+#include "mesh/MeshCalls_gl.h"
 
 
 megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderTaskDataSource()

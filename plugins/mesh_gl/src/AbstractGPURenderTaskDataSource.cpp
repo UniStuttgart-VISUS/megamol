@@ -8,6 +8,7 @@
 #include "stdafx.h"
 
 #include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh/MeshCalls_gl.h"
 
 megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource()
         : core::Module()

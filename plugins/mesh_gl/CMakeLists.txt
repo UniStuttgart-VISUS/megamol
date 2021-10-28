@@ -3,6 +3,9 @@
 # All rights reserved.
 #
 
-megamol_plugin(compositing_gl
+megamol_plugin(mesh_gl
   BUILD_DEFAULT ON
-  DEPENDS_GL)
+  DEPENDS_GL
+  DEPENDS_PLUGINS
+    compositing_gl
+    mesh)
