@@ -81,13 +81,13 @@ private:
     core::param::ParamSlot representationSlot;
     core::param::ParamSlot forceFloatSlot;
 
-    std::vector<std::vector<unsigned char>> mix;
-    std::vector<std::vector<unsigned char>> dirs;
+    std::vector<std::vector<float>> mix;
+    std::vector<std::vector<float>> dirs;
     std::vector<uint64_t> plist_count;
     std::vector<float> bbox;
     int num_plists;
     std::vector<std::array<float,4>> list_colors;
-    std::vector<double> list_radii;
+    std::vector<float> list_radii;
 
     size_t currentFrame = -1;
     size_t version = 0;
