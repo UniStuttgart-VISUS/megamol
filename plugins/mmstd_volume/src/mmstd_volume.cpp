@@ -10,8 +10,6 @@
 #include "BuckyBall.h"
 #include "DatRawWriter.h"
 #include "DifferenceVolume.h"
-#include "RaycastVolumeRenderer.h"
-#include "VolumeSliceRenderer.h"
 #include "VolumetricDataSource.h"
 
 namespace megamol::stdplugin::volume {
@@ -32,8 +30,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::BuckyBall>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::DifferenceVolume>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::RaycastVolumeRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::VolumeSliceRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
 
         // register calls

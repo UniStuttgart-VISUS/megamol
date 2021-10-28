@@ -5,8 +5,6 @@
 
 megamol_plugin(mmstd_volume
   BUILD_DEFAULT ON
-  DEPENDS_EXTERNALS
-    glowl 
   DEPENDS_PLUGINS
     geometry_calls)
 
