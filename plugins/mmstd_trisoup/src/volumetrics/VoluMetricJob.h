@@ -15,7 +15,7 @@
 #include "mmcore/Module.h"
 #include "geometry_calls/LinesDataCall.h"
 #include "geometry_calls/CallTriMeshData.h"
-#include "CallVolumetricData.h"
+#include "mmstd_trisoup/trisoupVolumetricDataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -276,7 +276,7 @@ namespace volumetrics {
 
         vislib::RawStorage bboxIdxData[2];
 
-        vislib::Array<CallVolumetricData::Volume> debugVolumes;
+        vislib::Array<trisoupVolumetricDataCall::Volume> debugVolumes;
     };
 
 } /* end namespace volumetrics */

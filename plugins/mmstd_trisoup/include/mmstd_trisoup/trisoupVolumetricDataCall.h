@@ -7,11 +7,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_CALLVOLUMETRICDATA_H_INCLUDED
-#define MMTRISOUPPLG_CALLVOLUMETRICDATA_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -26,7 +22,7 @@ namespace trisoup {
     /**
      * Call transporting data from volumetrics ...
      */
-    class CallVolumetricData : public core::AbstractGetData3DCall {
+    class trisoupVolumetricDataCall : public core::AbstractGetData3DCall {
     public:
         /**
          * Answer the name of the objects of this description.
@@ -34,7 +30,7 @@ namespace trisoup {
          * @return The name of the objects of this description.
          */
         static const char *ClassName(void) {
-            return "CallVolumetricData";
+            return "trisoupVolumetricDataCall";
         }
 
         /**
@@ -67,10 +63,10 @@ namespace trisoup {
         }
 
         /** Ctor */
-        CallVolumetricData(void) {}
+        trisoupVolumetricDataCall(void) {}
 
         /** Dtor */
-        virtual ~CallVolumetricData(void) {}
+        virtual ~trisoupVolumetricDataCall(void) {}
 
     public:
         typedef char VoxelType;
@@ -103,4 +99,3 @@ namespace trisoup {
 } /* */
 } /* */
 
-#endif // MMTRISOUPPLG_CALLVOLUMETRICDATA_H_INCLUDED

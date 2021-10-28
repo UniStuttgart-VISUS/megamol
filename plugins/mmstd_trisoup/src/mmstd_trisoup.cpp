@@ -9,11 +9,10 @@
 
 #include "BlockVolumeMesh.h"
 #include "CallBinaryVolumeData.h"
-#include "CallVolumetricData.h"
+#include "mmstd_trisoup/trisoupVolumetricDataCall.h"
 #include "CoordSysMarker.h"
 #include "OSCBFix.h"
 #include "TriSoupDataSource.h"
-#include "TriSoupRenderer.h"
 #include "WavefrontObjDataSource.h"
 #include "WavefrontObjWriter.h"
 #include "vislib/Trace.h"
@@ -37,7 +36,6 @@ namespace megamol::trisoup {
         void registerClasses() override {
 
             // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjWriter>();
@@ -49,7 +47,7 @@ namespace megamol::trisoup {
 
             // register calls
             this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallBinaryVolumeData>();
-            this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallVolumetricData>();
+            this->call_descriptions.RegisterAutoDescription<megamol::trisoup::trisoupVolumetricDataCall>();
         }
     };
 } // namespace megamol::trisoup

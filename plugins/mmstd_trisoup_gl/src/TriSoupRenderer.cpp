@@ -9,7 +9,7 @@
 #include "stdafx.h"
 #include "TriSoupRenderer.h"
 #include "geometry_calls/CallTriMeshData.h"
-#include "CallVolumetricData.h"
+#include "mmstd_trisoup/trisoupVolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
@@ -53,7 +53,7 @@ TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModuleGL(),
     this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getVolDataSlot.SetCompatibleCall<core::factories::CallAutoDescription<CallVolumetricData> >();
+    this->getVolDataSlot.SetCompatibleCall<core::factories::CallAutoDescription<trisoupVolumetricDataCall>>();
     this->MakeSlotAvailable(&this->getVolDataSlot);
 
     this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
@@ -472,9 +472,9 @@ bool TriSoupRenderer::Render(view::CallRender3DGL& call) {
     ::glEnable(GL_BLEND);
 
 
-    CallVolumetricData *cvd = this->getVolDataSlot.CallAs<CallVolumetricData>();
+    trisoupVolumetricDataCall* cvd = this->getVolDataSlot.CallAs<trisoupVolumetricDataCall>();
     if (cvd != NULL && (*cvd)(0)) {
-        vislib::Array<CallVolumetricData::Volume>& volumes = cvd->GetVolumes();
+        vislib::Array<trisoupVolumetricDataCall::Volume>& volumes = cvd->GetVolumes();
         //::glEnable(GL_POINT_SIZE);
         ::glEnable(GL_DEPTH_TEST);
         ::glDisable(GL_BLEND);
@@ -483,7 +483,7 @@ bool TriSoupRenderer::Render(view::CallRender3DGL& call) {
         ::glBegin(GL_POINTS);
         double offset = 0.5;
         for(SIZE_T volIdx = 0; volIdx < volumes.Count(); volIdx++) {
-            CallVolumetricData::Volume& v = volumes[volIdx];
+            trisoupVolumetricDataCall::Volume& v = volumes[volIdx];
             if (!v.volumeData)
                 continue;
 //#define COLOR_BY_VOLID
@@ -500,7 +500,7 @@ bool TriSoupRenderer::Render(view::CallRender3DGL& call) {
                         double position[3] = {v.origin[0] + (x+offset)*v.scaling[0],
                                               v.origin[1] + (y+offset)*v.scaling[1],
                                               v.origin[2] + (z+offset)*v.scaling[2]};
-                        CallVolumetricData::VoxelType voxel = v.volumeData[index];
+                        trisoupVolumetricDataCall::VoxelType voxel = v.volumeData[index];
 #ifndef COLOR_BY_VOLID
                         if (voxel != 0) {
                             if (voxel > 0)

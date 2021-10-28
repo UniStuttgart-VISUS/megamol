@@ -435,7 +435,7 @@ bool VoluMetricJob::getTriDataCallback(core::Call &caller) {
 }
 
 bool VoluMetricJob::getVolDataCallback(core::Call &caller) {
-    CallVolumetricData *dataCall = dynamic_cast<CallVolumetricData*>(&caller);
+    trisoupVolumetricDataCall *dataCall = dynamic_cast<trisoupVolumetricDataCall*>(&caller);
     if (dataCall == NULL) return false;
 
     if (this->hash == 0) {

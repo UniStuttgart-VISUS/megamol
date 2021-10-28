@@ -12,7 +12,7 @@
 #include "vislib/Array.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/sys/CriticalSection.h"
-#include "CallVolumetricData.h"
+#include "mmstd_trisoup/trisoupVolumetricDataCall.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 
 namespace megamol {
@@ -370,7 +370,7 @@ namespace volumetrics {
 
 //#ifdef _DEBUG
         /* for debug purposes only - volume density values - dimension are given by sjd->resXYZ*/
-        CallVolumetricData::Volume debugVolume;
+        trisoupVolumetricDataCall::Volume debugVolume;
 //#endif
 
         /** whether this job has completed runnning */

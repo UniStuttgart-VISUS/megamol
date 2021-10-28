@@ -1168,9 +1168,9 @@ DWORD TetraVoxelizer::Run(void *userData) {
     }
 
     if (sjd->storeVolume) {
-        CallVolumetricData::Volume& v = sjd->Result.debugVolume;
-        v.volumeData = new CallVolumetricData::VoxelType[(sjd->resX)*(sjd->resY)*(sjd->resZ)];
-        memset(v.volumeData, 0, sizeof(CallVolumetricData::VoxelType)*(sjd->resX)*(sjd->resY)*(sjd->resZ));
+        trisoupVolumetricDataCall::Volume& v = sjd->Result.debugVolume;
+        v.volumeData = new trisoupVolumetricDataCall::VoxelType[(sjd->resX) * (sjd->resY) * (sjd->resZ)];
+        memset(v.volumeData, 0, sizeof(trisoupVolumetricDataCall::VoxelType) * (sjd->resX) * (sjd->resY) * (sjd->resZ));
 
         v.resX = sjd->resX;
         v.resY = sjd->resY;
@@ -1191,7 +1191,8 @@ DWORD TetraVoxelizer::Run(void *userData) {
                     FatVoxel& fv = volume[index];
                     if (fv.mcCase == 255 || fv.mcCase == 0) {
                         // if (fv.consumedTriangles != 0) asm { int 3 };
-                        v.volumeData[index] = static_cast<megamol::trisoup::CallVolumetricData::VoxelType>(fv.consumedTriangles);
+                        v.volumeData[index] =
+                            static_cast<megamol::trisoup::trisoupVolumetricDataCall::VoxelType>(fv.consumedTriangles);
                     } // else __asm int 3;
                 }
             }
