@@ -2,6 +2,7 @@
 
 #include <array>
 #include <algorithm>
+#include <cinttypes>
 
 namespace megamol {
 namespace core {
