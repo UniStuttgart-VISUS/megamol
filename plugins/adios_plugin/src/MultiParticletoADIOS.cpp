@@ -9,7 +9,7 @@
 #include "MultiParticletoADIOS.h"
 #include <algorithm>
 #include "adios_plugin/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -35,7 +35,7 @@ MultiParticletoADIOS::MultiParticletoADIOS(void)
     this->MakeSlotAvailable(&this->orderSlot);
 
 
-    this->mpSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->mpSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->mpSlot);
 }
 
@@ -49,7 +49,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
     if (cad == nullptr) return false;
 
-    core::moldyn::MultiParticleDataCall* mpdc = this->mpSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall* mpdc = this->mpSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc == nullptr) return false;
 
     if (!(*mpdc)(1)) return false;
@@ -65,7 +65,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
     auto& list0 = mpdc->AccessParticles(0);
     size_t pCount = 0;
 
-    if (list0.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+    if (list0.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
         if (orderSlot.Param<core::param::EnumParam>()->ValueString() == "separated") {
             auto xCont = std::make_shared<FloatContainer>(FloatContainer());
             auto yCont = std::make_shared<FloatContainer>(FloatContainer());
@@ -77,7 +77,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<float>& tmp_lbox = lboxCont->getVec();
             tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
                 tmp_x.reserve(tmp_x.size() + num);
                 tmp_y.reserve(tmp_y.size() + num);
@@ -110,7 +110,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<float>& tmp_lbox = lboxCont->getVec();
             tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
                 tmp_mix.reserve(tmp_mix.size() + 3 * num);
                 pCount += num;
@@ -136,7 +136,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             lboxCont->shape = {mpdc->GetParticleListCount(), 6};
             dataMap["list_box"] = std::move(lboxCont);
         }
-    } else if (list0.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ) {
+    } else if (list0.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ) {
         if (orderSlot.Param<core::param::EnumParam>()->ValueString() == "separated") {
             auto xCont = std::make_shared<DoubleContainer>(DoubleContainer());
             auto yCont = std::make_shared<DoubleContainer>(DoubleContainer());
@@ -148,7 +148,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<double>& tmp_lbox = lboxCont->getVec();
             tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
                 tmp_x.reserve(tmp_x.size() + num);
                 tmp_y.reserve(tmp_y.size() + num);
@@ -181,7 +181,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<double>& tmp_lbox = lboxCont->getVec();
             tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
                 tmp_mix.reserve(tmp_mix.size() + 3 * num);
                 pCount += num;
@@ -207,7 +207,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             lboxCont->shape = {mpdc->GetParticleListCount(), 6};
             dataMap["list_box"] = std::move(lboxCont);
         }
-    } else if (list0.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+    } else if (list0.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
         if (orderSlot.Param<core::param::EnumParam>()->ValueString() == "separated") {
             auto xCont = std::make_shared<FloatContainer>(FloatContainer());
             auto yCont = std::make_shared<FloatContainer>(FloatContainer());
@@ -221,7 +221,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<float>& tmp_lbox = lboxCont->getVec();
             tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
                 tmp_x.reserve(tmp_x.size() + num);
                 tmp_y.reserve(tmp_y.size() + num);
@@ -259,7 +259,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<float>& tmp_lbox = lboxCont->getVec();
             tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
                 tmp_mix.reserve(tmp_mix.size() + 3 * num);
                 tmp_radius.reserve(tmp_radius.size() + num);
@@ -290,7 +290,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
         }
     }
     if (cad->isInVars("r")) {
-        if (list0.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
+        if (list0.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
             auto rCont = std::make_shared<UCharContainer>(UCharContainer());
             auto gCont = std::make_shared<UCharContainer>(UCharContainer());
             auto bCont = std::make_shared<UCharContainer>(UCharContainer());
@@ -301,7 +301,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<unsigned char>& tmp_a = aCont->getVec();
 
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
                 tmp_r.reserve(tmp_r.size() + num);
                 tmp_g.reserve(tmp_g.size() + num);
@@ -319,7 +319,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             dataMap["b"] = std::move(bCont);
             dataMap["a"] = std::move(aCont);
 
-        } else if (list0.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
+        } else if (list0.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
 
             auto rCont = std::make_shared<FloatContainer>(FloatContainer());
             auto gCont = std::make_shared<FloatContainer>(FloatContainer());
@@ -331,7 +331,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<float>& tmp_a = aCont->getVec();
 
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
 
                 tmp_r.reserve(tmp_r.size() + num);
@@ -349,7 +349,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             dataMap["g"] = std::move(gCont);
             dataMap["b"] = std::move(bCont);
             dataMap["a"] = std::move(aCont);
-        } else if (list0.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
+        } else if (list0.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
 
             auto rCont = std::make_shared<FloatContainer>(FloatContainer());
             auto gCont = std::make_shared<FloatContainer>(FloatContainer());
@@ -361,7 +361,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<float>& tmp_a = aCont->getVec();
 
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
 
                 tmp_r.reserve(tmp_r.size() + num);
@@ -418,7 +418,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
         tmp_a.reserve(mpdc->GetParticleListCount());
 
         for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-            core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
             const unsigned char* rgba = parts.GetGlobalColour();
             tmp_r.push_back(static_cast<float>(rgba[0])/255.0f);
@@ -431,13 +431,13 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
         dataMap["list_b"] = std::move(bCont);
         dataMap["list_a"] = std::move(aCont);
     } else if (cad->isInVars("i")) {
-        if (list0.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+        if (list0.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
 
             auto iCont = std::make_shared<FloatContainer>(FloatContainer());
             std::vector<float>& tmp_i = iCont->getVec();
 
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
 
                 tmp_i.reserve(tmp_i.size() + num);
@@ -447,13 +447,13 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                 }
             }
             dataMap["i"] = std::move(iCont);
-        } else if (list0.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_DOUBLE_I) {
+        } else if (list0.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_DOUBLE_I) {
 
             auto iCont = std::make_shared<DoubleContainer>(DoubleContainer());
             std::vector<double>& tmp_i = iCont->getVec();
 
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
 
                 tmp_i.reserve(tmp_i.size() + num);
@@ -466,11 +466,11 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
     }
 
     if (list0.HasID()) {
-        if (list0.GetIDDataType() == core::moldyn::MultiParticleDataCall::Particles::IDDATA_UINT64) {
+        if (list0.GetIDDataType() == geocalls::MultiParticleDataCall::Particles::IDDATA_UINT64) {
             auto idCont = std::make_shared<UInt64Container>(UInt64Container());
             std::vector<uint64_t>& tmp_id = idCont->getVec();
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
 
                 tmp_id.reserve(tmp_id.size() + num);
@@ -479,11 +479,11 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                 }
             }
             dataMap["id"] = std::move(idCont);
-        } else if (list0.GetIDDataType() == core::moldyn::MultiParticleDataCall::Particles::IDDATA_UINT32) {
+        } else if (list0.GetIDDataType() == geocalls::MultiParticleDataCall::Particles::IDDATA_UINT32) {
             auto idCont = std::make_shared<UInt32Container>(UInt32Container());
             std::vector<uint32_t>& tmp_id = idCont->getVec();
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
 
                 tmp_id.reserve(tmp_id.size() + num);
@@ -501,7 +501,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
         size_t old_num = 0;
 
         for (uint64_t i = 0; i < mpdc->GetParticleListCount(); i++) {
-            core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
             const size_t num = parts.GetCount();
 
             tmp_list.push_back(old_num);
@@ -539,7 +539,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
         std::vector<float>& tmp_radius = radiusCont->getVec();
         tmp_radius.resize(mpdc->GetParticleListCount());
         for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-            core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
             tmp_radius[i] = parts.GetGlobalRadius();
         }
@@ -549,7 +549,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
         std::vector<float>& tmp_radius = radiusCont->getVec();
 
         for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-            core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
             const size_t num = parts.GetCount();
 
             tmp_radius.reserve(tmp_radius.size() + num);
@@ -573,13 +573,13 @@ bool MultiParticletoADIOS::getHeaderCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
     if (cad == nullptr) return false;
 
-    core::moldyn::MultiParticleDataCall* mpdc = this->mpSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall* mpdc = this->mpSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc == nullptr) return false;
 
     if (!(*mpdc)(1)) return false;
     if (!(*mpdc)(0)) return false;
 
-    core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(0);
+    geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(0);
 
     // get total frame cound from data source
     cad->setFrameCount(mpdc->FrameCount());
@@ -597,7 +597,7 @@ bool MultiParticletoADIOS::getHeaderCallback(core::Call& call) {
         availVars.push_back("xyz");
     }
 
-    if (parts.GetColourDataType() == core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
+    if (parts.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_NONE) {
         if (mpdc->GetParticleListCount() > 1) {
             availVars.push_back("list_r");
             availVars.push_back("list_g");
@@ -609,8 +609,8 @@ bool MultiParticletoADIOS::getHeaderCallback(core::Call& call) {
             availVars.push_back("global_b");
             availVars.push_back("global_a");
         }
-    } else if ((parts.GetColourDataType() == core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I) ||
-               (parts.GetColourDataType() == core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I)) {
+    } else if ((parts.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I) ||
+               (parts.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I)) {
         availVars.push_back("i");
     } else {
         availVars.push_back("r");
@@ -619,13 +619,13 @@ bool MultiParticletoADIOS::getHeaderCallback(core::Call& call) {
         availVars.push_back("a");
     }
 
-    if (parts.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
+    if (parts.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
         availVars.push_back("radius");
     } else {
         if (mpdc->GetParticleListCount() > 1) {
             std::vector<float> list_radius(mpdc->GetParticleListCount());
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
-                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 list_radius[i] = parts.GetGlobalRadius();
             }
             if (std::equal(list_radius.begin() + 1, list_radius.end(), list_radius.begin())) {

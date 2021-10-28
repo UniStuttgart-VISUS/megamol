@@ -18,7 +18,7 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/utility/SSBOBufferArray.h"
-#include "mmcore/moldyn/EllipsoidalDataCall.h"
+#include "geometry_calls/EllipsoidalDataCall.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -84,7 +84,7 @@ protected:
      */
     void release(void) override;
 
-    bool validateData(core::moldyn::EllipsoidalParticleDataCall *edc);
+    bool validateData(geocalls::EllipsoidalParticleDataCall *edc);
 
     /**
      * The Open GL Render callback.

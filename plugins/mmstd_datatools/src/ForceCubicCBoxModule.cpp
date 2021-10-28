@@ -32,9 +32,8 @@ datatools::ForceCubicCBoxModule::~ForceCubicCBoxModule(void) {
  * datatools::ForceCubicCBoxModule::manipulateData
  */
 bool datatools::ForceCubicCBoxModule::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     outData = inData; // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
@@ -60,9 +59,8 @@ bool datatools::ForceCubicCBoxModule::manipulateData(
  * datatools::ForceCubicCBoxModule::manipulateExtent
  */
 bool datatools::ForceCubicCBoxModule::manipulateExtent(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     outData = inData; // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked

@@ -11,11 +11,6 @@
 
 using namespace megamol::ospray;
 
-
-typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
-typedef unsigned char(*byteFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
-
-
 OSPRayGeometryTest::OSPRayGeometryTest(void) : AbstractOSPRayStructure() {}
 
 

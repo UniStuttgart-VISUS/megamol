@@ -8,7 +8,6 @@
 #include "stdafx.h"
 #include "DataGridder.h"
 #include <climits>
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "rendering/ParticleGridDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
@@ -35,7 +34,7 @@ DataGridder::DataGridder(void) : Module(),
         datahash(0), frameID(UINT_MAX), gridSizeX(0), gridSizeY(0),
         gridSizeZ(0), types(), grid(), vertData(), colData(), outhash(0) {
 
-    this->inDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
     this->outDataSlot.SetCallback(ParticleGridDataCall::ClassName(),
@@ -106,7 +105,7 @@ int DataGridder::doSort(const vislib::Pair<SIZE_T, unsigned int>& lhs,
  */
 bool DataGridder::getData(megamol::core::Call& call) {
     ParticleGridDataCall *pgdc = dynamic_cast<ParticleGridDataCall *>(&call);
-    auto *mpdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto *mpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if ((pgdc == NULL) || (mpdc == NULL)) return false;
     vislib::math::Cuboid<float> bbox(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
 
@@ -154,7 +153,7 @@ bool DataGridder::getData(megamol::core::Call& call) {
             ParticleGridDataCall::ParticleType &t = this->types[i];
             auto &p = mpdc->AccessParticles(i);
 
-            if (p.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
+            if (p.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "[Critical] Unable to grid already quantized data!\n");
                 throw vislib::Exception("Critical Error: Unable to grid already quantized data!\n", __FILE__, __LINE__);
@@ -183,17 +182,17 @@ bool DataGridder::getData(megamol::core::Call& call) {
             SIZE_T c = static_cast<SIZE_T>(p.GetCount());
 
             switch (p.GetVertexDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue; // done with that type already!
 
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     vertStep = vislib::math::Max(vertStep, 12U);
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     vertStep = vislib::math::Max(vertStep, 16U);
                     break;
 
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                 default:
                     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "Internal Error at %s[%d]\n", __FILE__, __LINE__);
@@ -229,7 +228,7 @@ bool DataGridder::getData(megamol::core::Call& call) {
         SIZE_T start = 0, pos = 0, cnt = indexBuffer.Count();
         for (unsigned int j = 0; j < gridSize; j++) {
             for (unsigned int i = 0; i < typeCnt; i++) {
-                core::moldyn::MultiParticleDataCall::Particles &p = mpdc->AccessParticles(i);
+                geocalls::MultiParticleDataCall::Particles &p = mpdc->AccessParticles(i);
                 const unsigned char *colPtr = static_cast<const unsigned char*>(p.GetColourData());
                 const unsigned char *vertPtr = static_cast<const unsigned char*>(p.GetVertexData());
                 unsigned int colSize = 0;
@@ -239,22 +238,22 @@ bool DataGridder::getData(megamol::core::Call& call) {
                 unsigned int ij = j * typeCnt + i;
 
                 switch (p.GetColourDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
                         colSize = 0;
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
                         colSize = 4;
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                         colSize = 12;
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                         colSize = 16;
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                         colSize = 3;
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                         colSize = 4;
                         break;
                     default:
@@ -266,17 +265,17 @@ bool DataGridder::getData(megamol::core::Call& call) {
                 }
 
                 switch (p.GetVertexDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue; // done with that type already!
 
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         vertSize = 12;
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         vertSize = 16;
                         break;
 
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                     default:
                         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                             "Internal Error at %s[%d]\n", __FILE__, __LINE__);
@@ -331,12 +330,12 @@ bool DataGridder::getData(megamol::core::Call& call) {
             for (unsigned int j = 0; j < typeCnt; j++) {
                 unsigned int vertSize;
                 switch (this->types[j].GetVertexDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         vertSize = 3;
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         vertSize = 4;
                         break;
                     default:
@@ -378,10 +377,10 @@ bool DataGridder::getData(megamol::core::Call& call) {
             for (unsigned int j = 0; j < typeCnt; j++) {
                 unsigned int vertSize;
                 switch (this->types[j].GetVertexDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         vertSize = 3;
                         break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         vertSize = 4;
                         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
                             "Unable to quantize radius for type %u; using %f\n",
@@ -419,7 +418,7 @@ bool DataGridder::getData(megamol::core::Call& call) {
                     }
                 }
 
-                this->types[j].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ);
+                this->types[j].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ);
             }
 
         }
@@ -450,7 +449,7 @@ bool DataGridder::getExtent(megamol::core::Call& call) {
     ParticleGridDataCall *pgdc = dynamic_cast<ParticleGridDataCall *>(&call);
     if (pgdc == NULL) return false;
 
-    core::moldyn::MultiParticleDataCall *mpdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *mpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc != NULL) {
         *static_cast<core::AbstractGetData3DCall*>(mpdc) = *pgdc;
         if ((*mpdc)(1)) {

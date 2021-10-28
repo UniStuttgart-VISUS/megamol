@@ -3,8 +3,6 @@
 
 #include "mmcore/param/IntParam.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-
 
 megamol::stdplugin::datatools::MPDCGrid::MPDCGrid()
     : data_out_slot_("dataOut", "")
@@ -13,13 +11,13 @@ megamol::stdplugin::datatools::MPDCGrid::MPDCGrid()
     , data_out_hash_(std::numeric_limits<size_t>::max())
     , data_in_hash_(std::numeric_limits<size_t>::max())
     , out_frame_id_(-1) {
-    data_out_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &MPDCGrid::getDataCallback);
-    data_out_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &MPDCGrid::getExtentCallback);
+    data_out_slot_.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &MPDCGrid::getDataCallback);
+    data_out_slot_.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &MPDCGrid::getExtentCallback);
     MakeSlotAvailable(&data_out_slot_);
 
-    data_in_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    data_in_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
 
     max_size_slot_ << new core::param::IntParam(1000, 1);
@@ -38,10 +36,10 @@ void megamol::stdplugin::datatools::MPDCGrid::release() {}
 
 bool megamol::stdplugin::datatools::MPDCGrid::getDataCallback(core::Call& c) {
 
-    auto outData = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    auto outData = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     if (outData == nullptr) return false;
 
-    auto inData = data_in_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto inData = data_in_slot_.CallAs<geocalls::MultiParticleDataCall>();
     if (inData == nullptr) return false;
 
     if (data_in_hash_ != inData->DataHash() || out_frame_id_ != inData->FrameID()) {
@@ -106,10 +104,10 @@ bool megamol::stdplugin::datatools::MPDCGrid::getDataCallback(core::Call& c) {
 
 
 bool megamol::stdplugin::datatools::MPDCGrid::getExtentCallback(core::Call& c) {
-    auto outData = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    auto outData = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     if (outData == nullptr) return false;
 
-    auto inData = data_in_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto inData = data_in_slot_.CallAs<geocalls::MultiParticleDataCall>();
     if (inData == nullptr) return false;
 
     inData->SetFrameID(outData->FrameID(), outData->IsFrameForced());
@@ -166,10 +164,10 @@ std::vector<megamol::stdplugin::datatools::MPDCGrid::BrickLet> megamol::stdplugi
 }
 
 
-std::vector<megamol::core::moldyn::SimpleSphericalParticles> megamol::stdplugin::datatools::MPDCGrid::separate(
+std::vector<megamol::geocalls::SimpleSphericalParticles> megamol::stdplugin::datatools::MPDCGrid::separate(
     std::vector<megamol::stdplugin::datatools::MPDCGrid::Particle> const& particles,
     std::vector<megamol::stdplugin::datatools::MPDCGrid::BrickLet> const& bricks, float radius) {
-    std::vector<core::moldyn::SimpleSphericalParticles> ret(bricks.size());
+    std::vector<geocalls::SimpleSphericalParticles> ret(bricks.size());
     auto vert_base = reinterpret_cast<char const*>(particles.data());
     auto col_base = vert_base + sizeof(vislib::math::Point<float, 3>);
     auto particle_size = sizeof(Particle);
@@ -177,9 +175,9 @@ std::vector<megamol::core::moldyn::SimpleSphericalParticles> megamol::stdplugin:
     for (auto const& brick : bricks) {
         auto& ssp = ret[i];
         ssp.SetCount(brick.end - brick.begin);
-        ssp.SetVertexData(core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ,
+        ssp.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ,
             vert_base + brick.begin * particle_size, particle_size);
-        ssp.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA,
+        ssp.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGBA,
             col_base + brick.begin * particle_size, particle_size);
         ssp.SetGlobalRadius(radius);
         ++i;

@@ -8,7 +8,7 @@
 #include "RaycastVolumeRenderer.h"
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls//VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -58,7 +58,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     this->m_renderer_callerSlot.SetCompatibleCall<megamol::core::view::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->m_renderer_callerSlot);
 
-    this->m_volumetricData_callerSlot.SetCompatibleCall<megamol::core::misc::VolumetricDataCallDescription>();
+    this->m_volumetricData_callerSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->m_volumetricData_callerSlot);
 
     this->m_lights_callerSlot.SetCompatibleCall<megamol::core::view::light::CallLightDescription>();
@@ -144,7 +144,7 @@ bool RaycastVolumeRenderer::create() {
 void RaycastVolumeRenderer::release() {}
 
 bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3DGL& cr) {
-    auto cd = m_volumetricData_callerSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
+    auto cd = m_volumetricData_callerSlot.CallAs<geocalls::VolumetricDataCall>();
     auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3DGL>();
 
     if (cd == nullptr)
@@ -156,9 +156,9 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3DGL& cr) 
 
     cd->SetFrameID(req_frame);
 
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
         return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA))
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))
         return false;
 
     cr.SetTimeFramesCount(cd->FrameCount());
@@ -574,7 +574,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
 }
 
 bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
-    auto* cd = this->m_volumetricData_callerSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
+    auto* cd = this->m_volumetricData_callerSlot.CallAs<geocalls::VolumetricDataCall>();
 
     if (cd == nullptr)
         return false;
@@ -582,11 +582,11 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
     // Use the force
     cd->SetFrameID(frameID, true);
     do {
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
             return false;
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))
             return false;
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA))
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_DATA))
             return false;
     } while (cd->FrameID() != frameID);
 
@@ -603,7 +603,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
 
     auto const metadata = cd->GetMetadata();
 
-    if (!metadata->GridType == core::misc::CARTESIAN) {
+    if (!metadata->GridType == geocalls::CARTESIAN) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "RaycastVolumeRenderer only works with cartesian grids (for now)");
         return false;
@@ -627,7 +627,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
     GLenum type;
 
     switch (metadata->ScalarType) {
-    case core::misc::FLOATING_POINT:
+    case geocalls::FLOATING_POINT:
         if (metadata->ScalarLength == 4) {
             internal_format = GL_R32F;
             format = GL_RED;
@@ -641,7 +641,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             return false;
         }
         break;
-    case core::misc::UNSIGNED_INTEGER:
+    case geocalls::UNSIGNED_INTEGER:
         if (metadata->ScalarLength == 1) {
             internal_format = GL_R8;
             format = GL_RED;
@@ -656,7 +656,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             return false;
         }
         break;
-    case core::misc::SIGNED_INTEGER:
+    case geocalls::SIGNED_INTEGER:
         if (metadata->ScalarLength == 2) {
             internal_format = GL_R16;
             format = GL_RED;
@@ -666,7 +666,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             return false;
         }
         break;
-    case core::misc::BITS:
+    case geocalls::BITS:
         megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid datatype.");
         return false;
         break;

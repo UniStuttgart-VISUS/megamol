@@ -10,7 +10,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3DGL.h"
@@ -40,7 +40,7 @@ megamol::stdplugin::volume::VolumeSliceRenderer::VolumeSliceRenderer(void)
 	, getTFSlot("gettransferfunction", "The call for Transfer function")
 	, getClipPlaneSlot("getclipplane", "The call for clipping plane") {
 
-    this->getVolSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
+    this->getVolSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->getVolSlot);
 
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -109,12 +109,12 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::create(void) {
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
 bool megamol::stdplugin::volume::VolumeSliceRenderer::GetExtents(core::view::CallRender3DGL& cr) {
-    auto *vdc = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
+    auto *vdc = this->getVolSlot.CallAs<geocalls::VolumetricDataCall>();
 
 	vdc->SetFrameID(static_cast<unsigned int>(cr.Time()));
 
-	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+	if (vdc == nullptr || !(*vdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+	if (vdc == nullptr || !(*vdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) return false;
 
     cr.SetTimeFramesCount(vdc->FrameCount());
     cr.AccessBoundingBoxes() = vdc->AccessBoundingBoxes();
@@ -135,10 +135,10 @@ void megamol::stdplugin::volume::VolumeSliceRenderer::release(void) {
  */
 bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRender3DGL& cr) {
     // get volume data
-    auto *vdc = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
-	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
-    if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+    auto *vdc = this->getVolSlot.CallAs<geocalls::VolumetricDataCall>();
+	if (vdc == nullptr || !(*vdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+	if (vdc == nullptr || !(*vdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (vdc == nullptr || !(*vdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) return false;
 
 	auto const metadata = vdc->GetMetadata();
 
@@ -147,7 +147,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 	GLenum type;
 
 	switch (metadata->ScalarType) {
-	case core::misc::FLOATING_POINT:
+	case geocalls::FLOATING_POINT:
 		if (metadata->ScalarLength == 4) {
 			internal_format = GL_R32F;
 			format = GL_RED;
@@ -158,7 +158,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 			return false;
 		}
 		break;
-	case core::misc::UNSIGNED_INTEGER:
+	case geocalls::UNSIGNED_INTEGER:
 		if (metadata->ScalarLength == 1) {
 			internal_format = GL_R8;
 			format = GL_RED;
@@ -174,7 +174,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 			return false;
 		}
 		break;
-	case core::misc::SIGNED_INTEGER:
+	case geocalls::SIGNED_INTEGER:
 		if (metadata->ScalarLength == 2) {
 			internal_format = GL_R16I;
 			format = GL_RED;
@@ -185,7 +185,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 			return false;
 		}
 		break;
-	case core::misc::BITS:
+	case geocalls::BITS:
 		megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid datatype.");
 		return false;
 		break;

@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "MPDCListsConcatenate.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 
 megamol::stdplugin::datatools::MPDCListsConcatenate::MPDCListsConcatenate()
@@ -19,10 +19,10 @@ megamol::stdplugin::datatools::MPDCListsConcatenate::MPDCListsConcatenate()
     dataOutSlot.SetCallback("MultiParticleDataCall", "GetExtent", &MPDCListsConcatenate::getExtent);
     MakeSlotAvailable(&dataOutSlot);
 
-    dataIn1Slot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    dataIn1Slot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&dataIn1Slot);
 
-    dataIn2Slot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    dataIn2Slot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&dataIn2Slot);
 }
 
@@ -37,7 +37,7 @@ void megamol::stdplugin::datatools::MPDCListsConcatenate::release(void) {}
 
 
 bool megamol::stdplugin::datatools::MPDCListsConcatenate::getExtent(megamol::core::Call& c) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     auto oc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (oc == nullptr) return false;
     auto i1c = dataIn1Slot.CallAs<MultiParticleDataCall>();
@@ -94,7 +94,7 @@ bool megamol::stdplugin::datatools::MPDCListsConcatenate::getExtent(megamol::cor
 
 
 bool megamol::stdplugin::datatools::MPDCListsConcatenate::getData(megamol::core::Call& c) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     auto oc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (oc == nullptr) return false;
     auto i1c = dataIn1Slot.CallAs<MultiParticleDataCall>();

@@ -27,7 +27,7 @@ megamol::stdplugin::datatools::clustering::ParticleIColClustering::~ParticleICol
 
 
 bool megamol::stdplugin::datatools::clustering::ParticleIColClustering::manipulateData(
-    megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     if (_frame_id != inData.FrameID() || _in_data_hash != inData.DataHash() || isDirty()) {
         outData = inData;
 
@@ -48,9 +48,9 @@ bool megamol::stdplugin::datatools::clustering::ParticleIColClustering::manipula
         for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
             auto& parts = outData.AccessParticles(pl_idx);
 
-            if (parts.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE ||
-                (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I &&
-                    parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I)) {
+            if (parts.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_NONE ||
+                (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I &&
+                    parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I)) {
                 continue;
             }
 
@@ -91,7 +91,7 @@ bool megamol::stdplugin::datatools::clustering::ParticleIColClustering::manipula
             std::transform(cluster_res.cbegin(), cluster_res.cend(), _ret_cols[pl_idx].begin(),
                 [](auto const val) { return static_cast<float>(val); });
 
-            parts.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, _ret_cols[pl_idx].data());
+            parts.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, _ret_cols[pl_idx].data());
             auto const minmax = std::minmax_element(_ret_cols[pl_idx].cbegin(), _ret_cols[pl_idx].cend());
             parts.SetColourMapIndexValues(*minmax.first, *minmax.second);
 

@@ -31,11 +31,11 @@ megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpac
         tfQuery(),
         densityAutoComputeCountRangeSlot("density::autoComputeRange", "Automatically compute 'min' and 'max'") {
 
-    this->putDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleDensityOpacityModule::getDataCallback);
-    this->putDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleDensityOpacityModule::getExtentCallback);
+    this->putDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(), "GetData", &ParticleDensityOpacityModule::getDataCallback);
+    this->putDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleDensityOpacityModule::getExtentCallback);
     this->MakeSlotAvailable(&this->putDataSlot);
 
-    this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->MakeSlotAvailable(this->tfQuery.GetSlot());
@@ -107,7 +107,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::release(void) 
 
 
 bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getDataCallback(core::Call& caller) {
-    using ::megamol::core::moldyn::MultiParticleDataCall;
+    using ::megamol::geocalls::MultiParticleDataCall;
     MultiParticleDataCall *inCall = dynamic_cast<MultiParticleDataCall*>(&caller);
     if (inCall == nullptr) return false;
 
@@ -173,23 +173,23 @@ bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getDataCallbac
         size_t cnt = 0;
         unsigned int plc = inCall->GetParticleListCount();
         for (unsigned int pli = 0; pli < plc; pli++) {
-            core::moldyn::SimpleSphericalParticles &p = inCall->AccessParticles(pli);
-            if ((p.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-                || (p.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
+            geocalls::SimpleSphericalParticles &p = inCall->AccessParticles(pli);
+            if ((p.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_NONE)
+                || (p.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
             switch (static_cast<MapMode>(this->mapModeSlot.Param<core::param::EnumParam>()->Value())) {
             case MapMode::AlphaOverwrite: // fall through
             case MapMode::AlphaInvertOverwrite: // fall through
             case MapMode::ColorRainbowAlpha:
-                p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA,
+                p.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA,
                     this->colData.At(cnt * sizeof(float) * 4));
                 break;
             case MapMode::ColorRainbow:
-                p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB,
+                p.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGB,
                     this->colData.At(cnt * sizeof(float) * 4), sizeof(float) * 4);
                 break;
             case MapMode::Luminance:
                 p.SetColourMapIndexValues(0.0f, 1.0f);
-                p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I,
+                p.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I,
                     this->colData.At(cnt * sizeof(float)));
                 break;
             }
@@ -208,10 +208,10 @@ bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getDataCallbac
 
 
 bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getExtentCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *inCall = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall *inCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (inCall == nullptr) return false;
 
-    core::moldyn::MultiParticleDataCall *outCall = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *outCall = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (outCall == nullptr) return false;
 
     *outCall = *inCall;
@@ -226,7 +226,7 @@ bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getExtentCallb
 }
 
 
-void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core::moldyn::MultiParticleDataCall *dat) {
+void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(geocalls::MultiParticleDataCall *dat) {
     bool autoScale = this->densityComputeCountRangeSlot.IsDirty()
         || this->densityAutoComputeCountRangeSlot.Param<core::param::BoolParam>()->Value();
 
@@ -245,16 +245,16 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
         // copy color values
         this->tfQuery.Clear();
         for (unsigned int pli = 0; pli < plc; pli++) {
-            core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
-            if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-                || (pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
+            geocalls::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
+            if ((pl.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_NONE)
+                || (pl.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
             size_t col_stride = 0;
             bool bytes = true;
             bool alpha = false;
             const uint8_t *pld = static_cast<const uint8_t*>(pl.GetColourData());
 
             switch (pl.GetColourDataType()) {
-            case core::moldyn::SimpleSphericalParticles::COLDATA_NONE: { //< use global colour
+            case geocalls::SimpleSphericalParticles::COLDATA_NONE: { //< use global colour
                 float r = static_cast<float>(pl.GetGlobalColour()[0]) / 255.0f;
                 float g = static_cast<float>(pl.GetGlobalColour()[1]) / 255.0f;
                 float b = static_cast<float>(pl.GetGlobalColour()[2]) / 255.0f;
@@ -266,11 +266,11 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
                     f[ci * 4 + 3] = a;
                 }
             } continue;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGB: bytes = true; col_stride = 3; break;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA: bytes = true; alpha = true; col_stride = 4; break;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB: bytes = false; col_stride = 12; break;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA: bytes = false; alpha = true; col_stride = 16; break;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I: { //< single float value to be mapped by a transfer function
+            case geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGB: bytes = true; col_stride = 3; break;
+            case geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGBA: bytes = true; alpha = true; col_stride = 4; break;
+            case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGB: bytes = false; col_stride = 12; break;
+            case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA: bytes = false; alpha = true; col_stride = 16; break;
+            case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I: { //< single float value to be mapped by a transfer function
                 col_stride = (4 < pl.GetColourDataStride()) ? pl.GetColourDataStride() : 4;
                 float cvmin = pl.GetMinColourIndexValue();
                 float cvrng = pl.GetMaxColourIndexValue() - cvmin;
@@ -403,13 +403,13 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
 /* 
  * megamol::stdplugin::datatools::ParticleDensityOpacityModule::count_all_particles
  */
-size_t megamol::stdplugin::datatools::ParticleDensityOpacityModule::count_all_particles(core::moldyn::MultiParticleDataCall *dat) {
+size_t megamol::stdplugin::datatools::ParticleDensityOpacityModule::count_all_particles(geocalls::MultiParticleDataCall *dat) {
     size_t all_cnt = 0;
     unsigned int plc = dat->GetParticleListCount();
     for (unsigned int pli = 0; pli < plc; pli++) {
-        core::moldyn::SimpleSphericalParticles::VertexDataType vdt = dat->AccessParticles(pli).GetVertexDataType();
-        if ((vdt == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-            || (vdt == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
+        geocalls::SimpleSphericalParticles::VertexDataType vdt = dat->AccessParticles(pli).GetVertexDataType();
+        if ((vdt == geocalls::SimpleSphericalParticles::VERTDATA_NONE)
+            || (vdt == geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
         all_cnt += static_cast<size_t>(dat->AccessParticles(pli).GetCount());
     }
     return all_cnt;
@@ -419,7 +419,7 @@ size_t megamol::stdplugin::datatools::ParticleDensityOpacityModule::count_all_pa
 /*
  * megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_grid
  */
-void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_grid(core::moldyn::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off) {
+void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_grid(geocalls::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off) {
     // use simple grid based implementation
     unsigned int plc = dat->GetParticleListCount();
     size_t all_cnt = this->count_all_particles(dat);
@@ -444,16 +444,16 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
 
     // 1. count all particles for each cell
     for (unsigned int pli = 0; pli < plc; pli++) {
-        core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
-        if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-            || (pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
+        geocalls::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
+        if ((pl.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_NONE)
+            || (pl.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
         size_t vert_stride = pl.GetVertexDataStride();
         const uint8_t *vert = static_cast<const uint8_t*>(pl.GetVertexData());
         switch (pl.GetVertexDataType()) {
-        case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
+        case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
             if (vert_stride < 12) vert_stride = 12;
             break;
-        case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
+        case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
             if (vert_stride < 16) vert_stride = 16;
             break;
         default: throw std::exception();
@@ -483,16 +483,16 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
     ::memset(cnt_grid, 0, sizeof(unsigned int) * dim_x * dim_y * dim_z);
     ci = 0;
     for (unsigned int pli = 0; pli < plc; pli++) {
-        core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
-        if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-            || (pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
+        geocalls::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
+        if ((pl.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_NONE)
+            || (pl.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
         size_t vert_stride = pl.GetVertexDataStride();
         const uint8_t *vert = static_cast<const uint8_t*>(pl.GetVertexData());
         switch (pl.GetVertexDataType()) {
-        case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
+        case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
             if (vert_stride < 12) vert_stride = 12;
             break;
-        case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
+        case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
             if (vert_stride < 16) vert_stride = 16;
             break;
         default: throw std::exception();
@@ -512,16 +512,16 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
     ci = 0;
     auto bbox = dat->AccessBoundingBoxes().ObjectSpaceBBox();
     for (unsigned int pli = 0; pli < plc; pli++) {
-        core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
-        if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-            || (pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
+        geocalls::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
+        if ((pl.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_NONE)
+            || (pl.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
         size_t vert_stride = pl.GetVertexDataStride();
         const uint8_t *vert = static_cast<const uint8_t*>(pl.GetVertexData());
         switch (pl.GetVertexDataType()) {
-        case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
+        case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
             if (vert_stride < 12) vert_stride = 12;
             break;
-        case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
+        case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
             if (vert_stride < 16) vert_stride = 16;
             break;
         default: throw std::exception();
@@ -616,7 +616,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
 /*
  * megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_grid_grouped
  */
-void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_grid_grouped(core::moldyn::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off) {
+void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_grid_grouped(geocalls::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off) {
     // density algorithm separated per particle list
     unsigned int plc = dat->GetParticleListCount();
     size_t all_cnt = this->count_all_particles(dat);
@@ -633,16 +633,16 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
 
     size_t pli_off = 0;
     for (unsigned int pli = 0; pli < plc; pli++) {
-        core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
-        if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-            || (pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
+        geocalls::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
+        if ((pl.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_NONE)
+            || (pl.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
         size_t vert_stride = pl.GetVertexDataStride();
         const uint8_t *vert;
         switch (pl.GetVertexDataType()) {
-        case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
+        case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
             if (vert_stride < 12) vert_stride = 12;
             break;
-        case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
+        case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
             if (vert_stride < 16) vert_stride = 16;
             break;
         default: throw std::exception();

@@ -10,8 +10,8 @@
 #include <array>
 #include <vector>
 
-#include "mmcore/misc/VolumetricDataCall.h"
-#include "mmcore/misc/VolumetricMetadataStore.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricMetadataStore.h"
 
 #include "mmcore/param/ParamSlot.h"
 
@@ -76,13 +76,13 @@ namespace volume {
          * Compute the size of a single frame in bytes.
          */
         static std::size_t getFrameSize(
-            const core::misc::VolumetricMetadata_t& md);
+            const geocalls::VolumetricMetadata_t& md);
 
         /**
          * Gets the scalar type to be used for the difference volume.
          */
-        static core::misc::ScalarType_t getDifferenceType(
-            const core::misc::VolumetricMetadata_t& md);
+        static geocalls::ScalarType_t getDifferenceType(
+            const geocalls::VolumetricMetadata_t& md);
 
         /**
          * Increment the cache ring index.
@@ -102,7 +102,7 @@ namespace volume {
          * Check whether the given metadata are compatible with the cache state
          * of the module.
          */
-        bool checkCompatibility(const core::misc::VolumetricMetadata_t& md) const;
+        bool checkCompatibility(const geocalls::VolumetricMetadata_t& md) const;
 
         /**
          * Implementation of 'Create'.
@@ -168,7 +168,7 @@ namespace volume {
         std::size_t frameIdx;
         std::size_t hashData;
         std::size_t hashState;
-        core::misc::VolumetricMetadataStore metadata;
+        geocalls::VolumetricMetadataStore metadata;
         core::param::ParamSlot paramIgnoreInputHash;
         core::CallerSlot slotIn;
         core::CalleeSlot slotOut;

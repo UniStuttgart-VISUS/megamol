@@ -4,10 +4,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/RawStorage.h"
 #include "vislib/math/Cuboid.h"
-#include "vislib/graphics/ColourRGBAu8.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/math/ShallowShallowTriangle.h"
 #include "vislib/forceinline.h"
 #include "vislib/math/mathtypes.h"
@@ -16,6 +13,7 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/sys/CriticalSection.h"
 #include "CallVolumetricData.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 namespace megamol {
 namespace trisoup {
@@ -426,7 +424,7 @@ namespace volumetrics {
         VoxelizerFloat CellSize;
 
         /** datacall that gives access to the particles */        
-        core::moldyn::MultiParticleDataCall *datacall;
+        geocalls::MultiParticleDataCall *datacall;
 
         /** here the Job should store its results */
         SubJobResult Result;

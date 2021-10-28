@@ -60,8 +60,7 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateData(
-            megamol::core::moldyn::MultiParticleDataCall& outData,
-            megamol::core::moldyn::MultiParticleDataCall& inData);
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
     private:
 
@@ -76,13 +75,13 @@ namespace datatools {
                 throw vislib::Exception("forbidden copy ctor", __FILE__, __LINE__);
             }
 
-            megamol::core::moldyn::SimpleSphericalParticles parts;
+            geocalls::SimpleSphericalParticles parts;
             vislib::RawStorage dat;
         };
 
-        bool updateIDdata(megamol::core::moldyn::MultiParticleDataCall& inData);
-        void updateData(megamol::core::moldyn::MultiParticleDataCall& inData);
-        void copyData(particle_data& tar, core::moldyn::SimpleSphericalParticles& src);
+        bool updateIDdata(geocalls::MultiParticleDataCall& inData);
+        void updateData(geocalls::MultiParticleDataCall& inData);
+        void copyData(particle_data& tar, geocalls::SimpleSphericalParticles& src);
 
         double part_sqdist(const float *p1, const float *p2, const vislib::math::Dimension<float, 3>& bboxsize);
 

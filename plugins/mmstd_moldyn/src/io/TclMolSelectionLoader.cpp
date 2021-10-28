@@ -21,8 +21,8 @@ io::TclMolSelectionLoader::TclMolSelectionLoader() : core::Module(),
         filenameSlot("filename", "Path to the Tcl file to load"),
         hash(0), cnt(0), data() {
 
-    getDataSlot.SetCallback(core::moldyn::ParticleRelistCall::ClassName(), "GetData", &TclMolSelectionLoader::getDataCallback);
-    getDataSlot.SetCallback(core::moldyn::ParticleRelistCall::ClassName(), "GetExtent", &TclMolSelectionLoader::getDataCallback);
+    getDataSlot.SetCallback(geocalls::ParticleRelistCall::ClassName(), "GetData", &TclMolSelectionLoader::getDataCallback);
+    getDataSlot.SetCallback(geocalls::ParticleRelistCall::ClassName(), "GetExtent", &TclMolSelectionLoader::getDataCallback);
     MakeSlotAvailable(&getDataSlot);
 
     filenameSlot.SetParameter(new core::param::FilePathParam(""));
@@ -44,7 +44,7 @@ void io::TclMolSelectionLoader::release(void) {
 }
 
 bool io::TclMolSelectionLoader::getDataCallback(core::Call& caller) {
-    core::moldyn::ParticleRelistCall *prc = dynamic_cast<core::moldyn::ParticleRelistCall*>(&caller);
+    geocalls::ParticleRelistCall *prc = dynamic_cast<geocalls::ParticleRelistCall*>(&caller);
     if (prc == nullptr) return false;
     if (filenameSlot.IsDirty()) load();
 
@@ -64,7 +64,7 @@ void io::TclMolSelectionLoader::clear(void) {
 }
 
 void io::TclMolSelectionLoader::load(void) {
-    typedef core::moldyn::ParticleRelistCall::ListIDType ListIDType;
+    typedef geocalls::ParticleRelistCall::ListIDType ListIDType;
     filenameSlot.ResetDirty();
 
     vislib::sys::ASCIIFileBuffer file;

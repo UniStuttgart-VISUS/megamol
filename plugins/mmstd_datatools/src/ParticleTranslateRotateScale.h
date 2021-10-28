@@ -60,10 +60,11 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateData(
-            megamol::core::moldyn::MultiParticleDataCall& outData,
-            megamol::core::moldyn::MultiParticleDataCall& inData);
-        virtual bool manipulateExtent(core::moldyn::MultiParticleDataCall &outData, core::moldyn::MultiParticleDataCall &inData) override;
-        void colorTransferGray(core::moldyn::MultiParticleDataCall::Particles& p, float const* transferTable, unsigned tableSize,
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+        virtual bool manipulateExtent(
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+        void colorTransferGray(geocalls::MultiParticleDataCall::Particles& p, float const* transferTable,
+            unsigned tableSize,
                                std::vector<float> &rgbaArray);
         megamol::core::CallerSlot getTFSlot;
 

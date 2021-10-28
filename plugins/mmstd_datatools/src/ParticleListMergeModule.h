@@ -43,7 +43,7 @@ namespace datatools {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Module to merge all lists from the core::moldyn::MultiParticleDataCall into a single list";
+            return "Module to merge all lists from the MultiParticleDataCall into a single list";
         }
 
         /**
@@ -83,8 +83,7 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateData(
-            megamol::core::moldyn::MultiParticleDataCall& outData,
-            megamol::core::moldyn::MultiParticleDataCall& inData);
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
     private:
 
@@ -93,7 +92,7 @@ namespace datatools {
          *
          * @param inDat The incoming data
          */
-        void setData(core::moldyn::MultiParticleDataCall& inDat);
+        void setData(geocalls::MultiParticleDataCall& inDat);
 
         /** The transfer function query */
         TransferFunctionQuery tfq;
@@ -105,7 +104,7 @@ namespace datatools {
         unsigned int frameId;
 
         /** The single list of particles */
-        core::moldyn::MultiParticleDataCall::Particles parts;
+        geocalls::MultiParticleDataCall::Particles parts;
 
         /** The stored particle data */
         vislib::RawStorage data;

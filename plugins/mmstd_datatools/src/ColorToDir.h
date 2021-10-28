@@ -28,8 +28,7 @@ public:
     virtual ~ColorToDir();
 
 private:
-    bool manipulateData(
-        core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) override;
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
     std::vector<std::vector<float>> data_;
 

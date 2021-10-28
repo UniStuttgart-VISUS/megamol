@@ -26,8 +26,8 @@ ModColIRange::~ModColIRange() {
 }
 
 bool ModColIRange::manipulateData(
-    core::moldyn::MultiParticleDataCall& outData,
-    core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData,
+    geocalls::MultiParticleDataCall& inData) {
 
     if ((inData.DataHash() != inDataHash) || (inData.FrameID() != frameID) || (inData.DataHash() == 0) || rangeSlot.IsDirty()) {
         inDataHash = inData.DataHash();
@@ -61,7 +61,7 @@ bool ModColIRange::manipulateData(
     const float *data = colors.data();
     for (unsigned int list = 0; list < outData.GetParticleListCount(); ++list) {
         auto &plist = outData.AccessParticles(list);
-        plist.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
+        plist.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
         data += plist.GetCount();
         plist.SetColourMapIndexValues(minCol, maxCol);
     }
