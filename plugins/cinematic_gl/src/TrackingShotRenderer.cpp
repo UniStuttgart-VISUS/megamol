@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "TrackingShotRenderer.h"
-#include "CallKeyframeKeeper.h"
+#include "cinematic/CallKeyframeKeeper.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"

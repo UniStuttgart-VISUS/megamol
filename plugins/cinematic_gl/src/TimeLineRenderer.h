@@ -15,9 +15,9 @@
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "Keyframe.h"
-#include "CallKeyframeKeeper.h"
-#include "CinematicUtils.h"
+#include "cinematic/Keyframe.h"
+#include "cinematic/CallKeyframeKeeper.h"
+#include "cinematic/CinematicUtils.h"
 
 
 namespace megamol {

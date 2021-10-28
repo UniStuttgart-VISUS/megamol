@@ -15,8 +15,8 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 
-#include "KeyframeManipulators.h"
-#include "CinematicUtils.h"
+#include "cinematic/KeyframeManipulators.h"
+#include "cinematic/CinematicUtils.h"
 
 
 namespace megamol {

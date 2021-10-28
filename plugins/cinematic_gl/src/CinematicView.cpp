@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "CinematicView.h"
-#include "CallKeyframeKeeper.h"
+#include "cinematic/CallKeyframeKeeper.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/param/BoolParam.h"

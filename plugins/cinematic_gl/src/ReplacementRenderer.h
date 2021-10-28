@@ -15,7 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
 
-#include "CinematicUtils.h"
+#include "cinematic/CinematicUtils.h"
 
 
 namespace megamol {

@@ -15,8 +15,8 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 
-#include "Keyframe.h"
-#include "CinematicUtils.h"
+#include "cinematic/Keyframe.h"
+#include "cinematic/CinematicUtils.h"
 
 #include <png.h>
 #include <glm/gtx/quaternion.hpp>
