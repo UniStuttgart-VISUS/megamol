@@ -18,13 +18,13 @@
 #include "ls1ParticleFormat.h"
 
 namespace megamol::adios {
-    class AdiosPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
-        REGISTERPLUGIN(AdiosPluginInstance)
+class MMADIOSPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(MMADIOSPluginInstance)
 
     public:
-        AdiosPluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("adios", "The adios plugin."){};
+    MMADIOSPluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("mmadios", "The adios plugin."){};
 
-        ~AdiosPluginInstance() override = default;
+        ~MMADIOSPluginInstance() override = default;
 
         // Registers modules and calls
         void registerClasses() override {
