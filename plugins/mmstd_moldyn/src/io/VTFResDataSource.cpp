@@ -10,7 +10,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/sys/error.h"
 #include "mmcore/utility/log/Log.h"
@@ -865,7 +865,7 @@ bool io::VTFResDataSource::parseHeaderAndFrameIndices(const vislib::TString& fil
  * io::VTFResDataSource::getDataCallback
  */
 bool io::VTFResDataSource::getDataCallback(Call& caller) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall *c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
 
     Frame *f = NULL;
@@ -944,7 +944,7 @@ bool io::VTFResDataSource::getDataCallback(Call& caller) {
  * io::VTFResDataSource::getExtentCallback
  */
 bool io::VTFResDataSource::getExtentCallback(Call& caller) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall *c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
     float border = 0.0f;
 

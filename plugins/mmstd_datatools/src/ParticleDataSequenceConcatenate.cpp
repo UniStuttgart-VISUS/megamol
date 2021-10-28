@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ParticleDataSequenceConcatenate.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin::datatools;
@@ -15,10 +15,10 @@ ParticleDataSequenceConcatenate::ParticleDataSequenceConcatenate()
     dataOutSlot.SetCallback("MultiParticleDataCall", "GetExtent", &ParticleDataSequenceConcatenate::getExtend);
     MakeSlotAvailable(&dataOutSlot);
 
-    dataIn1Slot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    dataIn1Slot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&dataIn1Slot);
 
-    dataIn2Slot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    dataIn2Slot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&dataIn2Slot);
 }
 
@@ -36,7 +36,7 @@ void ParticleDataSequenceConcatenate::release(void) {
 }
 
 bool ParticleDataSequenceConcatenate::getExtend(megamol::core::Call& c) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall *oc = dynamic_cast<MultiParticleDataCall *>(&c);
     if (oc == nullptr) return false;
     MultiParticleDataCall *i1c = dataIn1Slot.CallAs<MultiParticleDataCall>();
@@ -101,7 +101,7 @@ bool ParticleDataSequenceConcatenate::getExtend(megamol::core::Call& c) {
 }
 
 bool ParticleDataSequenceConcatenate::getData(megamol::core::Call& c) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall *oc = dynamic_cast<MultiParticleDataCall *>(&c);
     if (oc == nullptr) return false;
     MultiParticleDataCall *i1c = dataIn1Slot.CallAs<MultiParticleDataCall>();

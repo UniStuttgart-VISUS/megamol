@@ -12,7 +12,6 @@
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mesh/MeshCalls.h"
 #include "CallOSPRayTransformation.h"
 #include "ParticleDataAccessCollection.h"

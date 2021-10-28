@@ -6,7 +6,6 @@
  */
 #include "stdafx.h"
 #include "MultiParticleRelister.h"
-#include "mmcore/moldyn/ParticleRelistCall.h"
 #include "mmcore/CoreInstance.h"
 
 using namespace megamol;
@@ -15,13 +14,13 @@ using namespace megamol::stdplugin::datatools;
 MultiParticleRelister::MultiParticleRelister() : AbstractParticleManipulator("outData", "indata"),
         getRelistInfoSlot("getRelistInfo", "Connects to the provider of the relist info"),
         inDataHash(0), inFrameId(0), inRelistHash(0), outRelistHash(0),
-        colDatTyp(core::moldyn::SimpleSphericalParticles::COLDATA_NONE),
+        colDatTyp(geocalls::SimpleSphericalParticles::COLDATA_NONE),
         globCol(192, 192, 192, 255),
-        verDatTyp(core::moldyn::SimpleSphericalParticles::VERTDATA_NONE),
+        verDatTyp(geocalls::SimpleSphericalParticles::VERTDATA_NONE),
         globRad(0.5f),
         partSize(0), colOffset(0),
         data() {
-    getRelistInfoSlot.SetCompatibleCall<core::moldyn::ParticleRelistCallDescription>();
+    getRelistInfoSlot.SetCompatibleCall<geocalls::ParticleRelistCallDescription>();
     MakeSlotAvailable(&getRelistInfoSlot);
 }
 
@@ -29,8 +28,8 @@ MultiParticleRelister::~MultiParticleRelister() {
     Release();
 }
 
-bool MultiParticleRelister::manipulateData(megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData) {
-    core::moldyn::ParticleRelistCall *prc = getRelistInfoSlot.CallAs<core::moldyn::ParticleRelistCall>();
+bool MultiParticleRelister::manipulateData(megamol::geocalls::MultiParticleDataCall& outData, megamol::geocalls::MultiParticleDataCall& inData) {
+    geocalls::ParticleRelistCall *prc = getRelistInfoSlot.CallAs<geocalls::ParticleRelistCall>();
     if (prc == nullptr) {
         outData = inData; // also transfers the unlocker to 'outData'
         inData.SetUnlocker(nullptr, false); // keep original data locked
@@ -58,8 +57,8 @@ bool MultiParticleRelister::manipulateData(megamol::core::moldyn::MultiParticleD
         outRelistHash++;
 
         data.clear();
-        colDatTyp = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
-        verDatTyp = core::moldyn::SimpleSphericalParticles::VERTDATA_NONE;
+        colDatTyp = geocalls::SimpleSphericalParticles::COLDATA_NONE;
+        verDatTyp = geocalls::SimpleSphericalParticles::VERTDATA_NONE;
         partSize = 0;
         colOffset = 0;
 
@@ -98,7 +97,7 @@ bool MultiParticleRelister::manipulateData(megamol::core::moldyn::MultiParticleD
     return true;
 }
 
-void MultiParticleRelister::copyData(const core::moldyn::SimpleSphericalParticles& inData, const core::moldyn::ParticleRelistCall& relist) {
+void MultiParticleRelister::copyData(const geocalls::SimpleSphericalParticles& inData, const geocalls::ParticleRelistCall& relist) {
     colDatTyp = inData.GetColourDataType();
     globCol.Set(inData.GetGlobalColour()[0], inData.GetGlobalColour()[1], inData.GetGlobalColour()[2], inData.GetGlobalColour()[3]);
     verDatTyp = inData.GetVertexDataType();
@@ -106,12 +105,12 @@ void MultiParticleRelister::copyData(const core::moldyn::SimpleSphericalParticle
 
     size_t colSize = 0;
     switch (colDatTyp) {
-    case core::moldyn::SimpleSphericalParticles::COLDATA_NONE: colSize = 0; break;
-    case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGB: colSize = 3; break;
-    case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA: colSize = 4; break;
-    case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB: colSize = 12; break;
-    case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA: colSize = 16; break;
-    case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I: colSize = 4; break;
+    case geocalls::SimpleSphericalParticles::COLDATA_NONE: colSize = 0; break;
+    case geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGB: colSize = 3; break;
+    case geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGBA: colSize = 4; break;
+    case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGB: colSize = 12; break;
+    case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA: colSize = 16; break;
+    case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I: colSize = 4; break;
     default: colSize = 0;
     }
     size_t colStep = std::max<size_t>(colSize, inData.GetColourDataStride());
@@ -119,10 +118,10 @@ void MultiParticleRelister::copyData(const core::moldyn::SimpleSphericalParticle
 
     size_t verSize = 0;
     switch (verDatTyp) {
-    case core::moldyn::SimpleSphericalParticles::VERTDATA_NONE: verSize = 0; break;
-    case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: verSize = 12; break;
-    case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: verSize = 16; break;
-    case core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ: verSize = 6; break;
+    case geocalls::SimpleSphericalParticles::VERTDATA_NONE: verSize = 0; break;
+    case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ: verSize = 12; break;
+    case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR: verSize = 16; break;
+    case geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ: verSize = 6; break;
     default: verSize = 0; break;
     }
     size_t verStep = std::max<size_t>(verSize, inData.GetVertexDataStride());
@@ -131,7 +130,7 @@ void MultiParticleRelister::copyData(const core::moldyn::SimpleSphericalParticle
     partSize = verSize + colSize;
     colOffset = verSize;
 
-    const core::moldyn::ParticleRelistCall::ListIDType *relistData = relist.SourceParticleTargetLists();
+    const geocalls::ParticleRelistCall::ListIDType *relistData = relist.SourceParticleTargetLists();
     data.resize(relist.TargetListCount());
 
     for (size_t pi = 0; pi < inData.GetCount(); ++pi, colDat += colStep, verDat += verStep, relistData++) {

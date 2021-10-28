@@ -90,11 +90,11 @@ datatools::ParticleVelocities::ParticleVelocities(void)
     this->dtSlot.SetParameter(new core::param::FloatParam(0.1f, 0.0000001f, 100.0f));
     this->MakeSlotAvailable(&this->dtSlot);
 
-    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleVelocities::getDataCallback);
-    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleVelocities::getExtentCallback);
+    this->outDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(), "GetData", &ParticleVelocities::getDataCallback);
+    this->outDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleVelocities::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
 
@@ -107,10 +107,10 @@ datatools::ParticleVelocities::~ParticleVelocities(void) {
 }
 
 
-bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCall *in,
-    core::moldyn::MultiParticleDataCall *outMPDC) {
+bool datatools::ParticleVelocities::assertData(
+    geocalls::MultiParticleDataCall* in, geocalls::MultiParticleDataCall* outMPDC) {
 
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     megamol::core::AbstractGetData3DCall *out;
     if (outMPDC != nullptr) out = outMPDC;
@@ -248,7 +248,7 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
             outMPDC->AccessParticles(i).SetColourData(in->AccessParticles(i).GetColourDataType(), in->AccessParticles(i).GetColourData(),
                 in->AccessParticles(i).GetColourDataStride());
             outMPDC->AccessParticles(i).SetDirData(
-                megamol::core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ, cachedDirData[i], 0);
+                geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ, cachedDirData[i], 0);
         }
     }
     this->datahash = in->DataHash();
@@ -259,7 +259,7 @@ bool datatools::ParticleVelocities::assertData(core::moldyn::MultiParticleDataCa
 
 
 bool datatools::ParticleVelocities::getExtentCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (outMpdc == nullptr) return false;
@@ -291,7 +291,7 @@ bool datatools::ParticleVelocities::getExtentCallback(megamol::core::Call& c) {
 }
 
 bool datatools::ParticleVelocities::getDataCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (outMpdc == nullptr) return false;

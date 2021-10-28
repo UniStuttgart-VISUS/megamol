@@ -31,7 +31,7 @@ public:
     virtual ~AddParticleColors(void);
 
 protected:
-    bool manipulateData(core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) override;
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     struct color {

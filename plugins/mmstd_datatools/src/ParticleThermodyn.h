@@ -13,7 +13,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "PointcloudHelpers.h"
 #include <vector>
 #include <nanoflann.hpp>
@@ -99,8 +98,7 @@ namespace datatools {
 
     private:
 
-        bool assertData(core::moldyn::MultiParticleDataCall *in,
-            core::moldyn::MultiParticleDataCall *outMPDC);
+        bool assertData(geocalls::MultiParticleDataCall* in, geocalls::MultiParticleDataCall* outMPDC);
 
         float computeTemperature(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float mass, float freedom);
         float computeFractionalAnisotropy(std::vector<std::pair<size_t, float> > &matches, size_t num_matches);

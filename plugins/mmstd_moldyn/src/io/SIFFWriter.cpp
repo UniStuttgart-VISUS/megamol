@@ -43,7 +43,7 @@ SIFFWriter::SIFFWriter(void) : AbstractDataWriter(),
     this->versionSlot << version;
     this->MakeSlotAvailable(&this->versionSlot);
 
-    this->dataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->dataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->dataSlot);
 }
 
@@ -86,7 +86,7 @@ bool SIFFWriter::run(void) {
         return false;
     }
 
-    core::moldyn::MultiParticleDataCall *mpdc = this->dataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *mpdc = this->dataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
         return false;
@@ -130,7 +130,7 @@ bool SIFFWriter::run(void) {
         }
 
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
-            core::moldyn::MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
+            geocalls::MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
             const char *colPtr = static_cast<const char*>(parts.GetColourData());
             const char *vertPtr = static_cast<const char*>(parts.GetVertexData());
             size_t colStep = 0;
@@ -143,25 +143,25 @@ bool SIFFWriter::run(void) {
 
             // colour
             switch (parts.GetColourDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
                     ::memcpy(col, parts.GetGlobalColour(), 3);
                     colPtr = NULL;
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                     colStep = 3;
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                     colStep = 4;
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                     colStep = 12;
                     colFloats = true;
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                     colStep = 16;
                     colFloats = true;
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
                     colStep = 4;
                     colFloats = true;
                     singleCol = true;
@@ -177,13 +177,13 @@ bool SIFFWriter::run(void) {
 
             // radius and position
             switch (parts.GetVertexDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     vertStep = 12;
                     ASSERT(vertPtr != NULL);
                     break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     vertStep = 16;
                     hasRad = true;
                     ASSERT(vertPtr != NULL);

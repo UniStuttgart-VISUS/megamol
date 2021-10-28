@@ -12,7 +12,7 @@
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "io/MMSPDFrameData.h"
 #include "io/MMSPDHeader.h"
 #include "vislib/sys/CriticalSection.h"
@@ -186,7 +186,7 @@ namespace io {
              * @param call The call to receive the data
              * @param header The data set header
              */
-            void SetData(core::moldyn::MultiParticleDataCall& call, const MMSPDHeader& header);
+            void SetData(geocalls::MultiParticleDataCall& call, const MMSPDHeader& header);
 
             /**
              * Sets the directional data into the call
@@ -194,7 +194,7 @@ namespace io {
              * @param call The call to receive the data
              * @param header The data set header
              */
-            void SetDirData(core::moldyn::MultiParticleDataCall& call, const MMSPDHeader& header);
+            void SetDirData(geocalls::MultiParticleDataCall& call, const MMSPDHeader& header);
 
         private:
 
@@ -252,7 +252,7 @@ namespace io {
          * Helper class to unlock frame data when 'CallSimpleSphereData' is
          * used.
          */
-        class Unlocker : public core::moldyn::MultiParticleDataCall::Unlocker {
+        class Unlocker : public geocalls::MultiParticleDataCall::Unlocker {
         public:
 
             /**
@@ -260,7 +260,7 @@ namespace io {
              *
              * @param frame The frame to unlock
              */
-            Unlocker(Frame& frame) : core::moldyn::MultiParticleDataCall::Unlocker(),
+            Unlocker(Frame& frame) : geocalls::MultiParticleDataCall::Unlocker(),
                     frame(&frame) {
                 // intentionally empty
             }

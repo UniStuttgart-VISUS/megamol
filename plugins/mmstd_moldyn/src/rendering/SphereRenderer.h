@@ -28,7 +28,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/SSBOStreamer.h"
 #include "mmcore/utility/SSBOBufferArray.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 
@@ -97,7 +97,7 @@ namespace moldyn {
 namespace rendering {
 
     using namespace megamol::core;
-    using namespace megamol::core::moldyn;
+    using namespace megamol::geocalls;
     using namespace vislib::graphics::gl;
 
 
@@ -636,7 +636,7 @@ namespace rendering {
          * @param mpdc    ...
          * @param shader  ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3DGL& cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const GLSLShader& shader);
+        void rebuildWorkingData(megamol::core::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc, const GLSLShader& shader);
 
         /**
          * Render deferred pass.

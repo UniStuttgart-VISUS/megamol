@@ -10,7 +10,7 @@ megamol::stdplugin::datatools::ColorToDir::~ColorToDir() {
 
 
 bool megamol::stdplugin::datatools::ColorToDir::manipulateData(
-    core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     /*if (!(inData)(0))
         return false;*/
     outData = inData;
@@ -21,13 +21,13 @@ bool megamol::stdplugin::datatools::ColorToDir::manipulateData(
 
         for (std::remove_cv_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
             auto& parts = outData.AccessParticles(pl_idx);
-            if (parts.GetColourDataType() == core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB ||
-                parts.GetColourDataType() == core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA) {
-                parts.SetDirData(core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, parts.GetColourData(),
+            if (parts.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGB ||
+                parts.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA) {
+                parts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, parts.GetColourData(),
                     parts.GetColourDataStride() == 0
-                        ? core::moldyn::SimpleSphericalParticles::ColorDataSize[parts.GetColourDataType()]
+                        ? geocalls::SimpleSphericalParticles::ColorDataSize[parts.GetColourDataType()]
                         : parts.GetColourDataStride());
-            } else if (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
+            } else if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_NONE) {
                 auto& data = data_[pl_idx];
                 auto const p_count = parts.GetCount();
 
@@ -43,7 +43,7 @@ bool megamol::stdplugin::datatools::ColorToDir::manipulateData(
                     data[p_idx * 3 + 2] = dz_acc->Get_f(p_idx);
                 }
 
-                parts.SetDirData(core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, data.data());
+                parts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, data.data());
             }
         }
 

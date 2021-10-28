@@ -13,7 +13,6 @@
 
 #include "mmcore/Module.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 
 

@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "BezierCPUMeshRenderer.h"
-#include "mmcore/misc/BezierCurvesListDataCall.h"
+#include "geometry_calls/BezierCurvesListDataCall.h"
 #include "mmcore/param/IntParam.h"
 #include <cmath>
 #include "vislib/math/Vector.h"
@@ -34,7 +34,7 @@ BezierCPUMeshRenderer::BezierCPUMeshRenderer(void) : AbstractBezierRenderer(),
         capSectionsSlot("capSections", "Linear sections approximating the cap spheres"),
         geo(0), dataHash(0) {
 
-    this->getDataSlot.SetCompatibleCall<core::misc::BezierCurvesListDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<geocalls::BezierCurvesListDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->lightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
@@ -64,7 +64,7 @@ BezierCPUMeshRenderer::~BezierCPUMeshRenderer(void) {
  * BezierCPUMeshRenderer::render
  */
 bool BezierCPUMeshRenderer::render(megamol::core::view::CallRender3DGL& call) {
-    using core::misc::BezierCurvesListDataCall;
+    using geocalls::BezierCurvesListDataCall;
     BezierCurvesListDataCall *data = this->getDataSlot.CallAs<BezierCurvesListDataCall>();
     if (data == nullptr) return false;
     data->SetFrameID(static_cast<unsigned int>(call.Time()));

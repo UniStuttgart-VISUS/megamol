@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ParticleNeighborhoodGraph.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmstd_datatools/GraphDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -38,7 +37,7 @@ ParticleNeighborhoodGraph::ParticleNeighborhoodGraph() : Module(),
     outGraphDataSlot.SetCallback("GraphDataCall", "GetExtent", &ParticleNeighborhoodGraph::getExtent);
     MakeSlotAvailable(&outGraphDataSlot);
 
-    inParticleDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    inParticleDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&inParticleDataSlot);
 
     autoRadiusSlot.SetParameter(new core::param::BoolParam(true));
@@ -88,7 +87,7 @@ bool ParticleNeighborhoodGraph::getExtent(core::Call& c) {
     GraphDataCall *gdc = dynamic_cast<GraphDataCall*>(&c);
     if (gdc == nullptr) return false;
 
-    core::moldyn::MultiParticleDataCall *mpc = inParticleDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *mpc = inParticleDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpc == nullptr) return false;
 
     mpc->SetFrameID(gdc->FrameID(), true);
@@ -107,7 +106,7 @@ bool ParticleNeighborhoodGraph::getData(core::Call& c) {
     GraphDataCall *gdc = dynamic_cast<GraphDataCall*>(&c);
     if (gdc == nullptr) return false;
 
-    core::moldyn::MultiParticleDataCall *mpc = inParticleDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *mpc = inParticleDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpc == nullptr) return false;
 
     mpc->SetFrameID(gdc->FrameID(), true);
@@ -174,7 +173,7 @@ namespace {
 
 }
 
-void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* data) {
+void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) {
     stdplugin::datatools::MultiParticleDataAdaptor d(*data);
     if (d.get_count() < 1) return;
 

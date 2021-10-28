@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "OSPRaySphereGeometry.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/Call.h"
 
@@ -18,7 +18,7 @@ OSPRaySphereGeometry::OSPRaySphereGeometry(void) :
     getDataSlot("getdata", "Connects to the data source")
 {
 
-    this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
 }
@@ -37,7 +37,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
 
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
-    megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+    megamol::geocalls::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::geocalls::MultiParticleDataCall>();
 
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
@@ -64,7 +64,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
 
     const auto plist_count = cd->GetParticleListCount();
     for (int i = 0; i < plist_count; ++i) {
-        core::moldyn::MultiParticleDataCall::Particles &parts = cd->AccessParticles(i);
+        geocalls::MultiParticleDataCall::Particles &parts = cd->AccessParticles(i);
 
         std::vector<ParticleDataAccessCollection::VertexAttribute> attrib;
 
@@ -75,17 +75,17 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
         size_t vertex_byte_stride = parts.GetVertexDataStride();
         vertex_byte_stride =
             vertex_byte_stride == 0
-                ? core::moldyn::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()]
+                ? geocalls::MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()]
                 : vertex_byte_stride;
 
         size_t color_byte_stride = parts.GetColourDataStride();
         color_byte_stride =
             color_byte_stride == 0
-                ? core::moldyn::MultiParticleDataCall::Particles::ColorDataSize[parts.GetColourDataType()]
+                ? geocalls::MultiParticleDataCall::Particles::ColorDataSize[parts.GetColourDataType()]
                 : color_byte_stride;
 
         // Vertex data type check
-        if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+        if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
             auto va = ParticleDataAccessCollection::VertexAttribute();
             va.data = static_cast<const uint8_t*>(parts.GetVertexData());
             va.byte_size = vertex_byte_stride * partCount;
@@ -95,7 +95,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
             va.offset = 0;
             va.semantic = ParticleDataAccessCollection::AttributeSemanticType::POSITION;
             attrib.emplace_back(va);
-        } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+        } else if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
             attrib.emplace_back(ParticleDataAccessCollection::VertexAttribute{static_cast<const uint8_t*>(parts.GetVertexData()),
                     vertex_byte_stride * partCount,
                 3,
@@ -113,7 +113,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
         }
 
         // Color data type check
-        if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
+        if (parts.GetColourDataType() == geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
             if (parts.GetColourData() == parts.GetVertexData()) {
                 attrib.emplace_back(ParticleDataAccessCollection::VertexAttribute{
                     static_cast<const uint8_t*>(parts.GetColourData()), color_byte_stride * partCount, 4,
@@ -168,7 +168,7 @@ bool OSPRaySphereGeometry::InterfaceIsDirty() {
 
 bool OSPRaySphereGeometry::getExtends(megamol::core::Call &call) {
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
-    megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+    megamol::geocalls::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::geocalls::MultiParticleDataCall>();
     
     if (cd == NULL) return false;
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true

@@ -11,7 +11,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallClipPlane.h"

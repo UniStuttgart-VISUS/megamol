@@ -22,6 +22,9 @@
 #include "io/VTFResDataSource.h"
 #include "io/VisIttDataSource.h"
 #include "io/XYZLoader.h"
+#include "io/MMPLDDataSource.h"
+#include "io/MMPLDWriter.h"
+#include "io/TestSpheresDataSource.h"
 
 #include "misc/ParticleWorker.h"
 
@@ -66,6 +69,9 @@ namespace megamol::stdplugin::moldyn {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::GlyphRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPLDDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPLDWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::TestSpheresDataSource>();
 
             // register calls
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::BrickStatsCall>();

@@ -14,7 +14,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
@@ -589,7 +588,7 @@ bool VisIttDataSource::parseHeader(const vislib::StringA& header) {
  * VisIttDataSource::getDataCallback
  */
 bool VisIttDataSource::getDataCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
 
     Frame *f = NULL;
     if (c2 != NULL) {
@@ -618,7 +617,7 @@ bool VisIttDataSource::getDataCallback(core::Call& caller) {
             c2->AccessParticles(ti).SetGlobalRadius(this->radius.Param<core::param::FloatParam>()->Value());
             c2->AccessParticles(ti).SetGlobalColour(cols[ti].R(), cols[ti].G(), cols[ti].B());
             c2->AccessParticles(ti).SetCount(f->ParticleCount(key));
-            c2->AccessParticles(ti).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, f->ParticleData(key));
+            c2->AccessParticles(ti).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, f->ParticleData(key));
             ++ti;
         }
 
@@ -633,7 +632,7 @@ bool VisIttDataSource::getDataCallback(core::Call& caller) {
  * VisIttDataSource::getExtentCallback
  */
 bool VisIttDataSource::getExtentCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
 
     if (c2 != NULL) {
         float border = this->radius.Param<core::param::FloatParam>()->Value();

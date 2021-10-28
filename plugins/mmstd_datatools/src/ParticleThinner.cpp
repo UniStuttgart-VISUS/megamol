@@ -35,9 +35,8 @@ datatools::ParticleThinner::~ParticleThinner(void) {
  * datatools::ParticleThinner::manipulateData
  */
 bool datatools::ParticleThinner::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
     int tf = this->thinningFactorSlot.Param<core::param::IntParam>()->Value();
 
     outData = inData; // also transfers the unlocker to 'outData'

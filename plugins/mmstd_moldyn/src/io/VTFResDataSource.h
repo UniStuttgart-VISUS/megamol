@@ -10,7 +10,7 @@
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
@@ -383,7 +383,7 @@ namespace io {
 			vislib::Array<int> &particleGridCell(unsigned int N1, unsigned int N2, unsigned int N3);
 
 
-			core::moldyn::SimpleSphericalParticles::ClusterInfos *GetClusterInfos()
+			geocalls::SimpleSphericalParticles::ClusterInfos *GetClusterInfos()
 			{
 				return &clusterInfos;
 			}
@@ -416,7 +416,7 @@ namespace io {
             /** color data per type */
 			vislib::Array<vislib::RawStorage> col;
 
-			core::moldyn::SimpleSphericalParticles::ClusterInfos clusterInfos;
+			geocalls::SimpleSphericalParticles::ClusterInfos clusterInfos;
 
 			/** grid storing the data */
 			vislib::Array<vislib::Array<int>> particleGrid;
@@ -428,7 +428,7 @@ namespace io {
          * Helper class to unlock frame data when 'CallSimpleSphereData' is
          * used.
          */
-        class Unlocker : public core::moldyn::MultiParticleDataCall::Unlocker {
+        class Unlocker : public geocalls::MultiParticleDataCall::Unlocker {
         public:
 
             /**
@@ -436,7 +436,7 @@ namespace io {
              *
              * @param frame The frame to unlock
              */
-            Unlocker(Frame& frame) : core::moldyn::MultiParticleDataCall::Unlocker(),
+            Unlocker(Frame& frame) : geocalls::MultiParticleDataCall::Unlocker(),
                     frame(&frame) {
                 // intentionally empty
             }
