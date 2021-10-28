@@ -15,6 +15,7 @@
 function(megamol_plugin PLUGIN_NAME)
   # Parse arguments
   set(optionArgs DEPENDS_CUDA)
+  set(optionArgs DEPENDS_GL)
   set(oneValueArgs DIR BUILD_DEFAULT)
   set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
   cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -33,6 +34,14 @@ function(megamol_plugin PLUGIN_NAME)
         message(FATAL_ERROR "The ${PLUGIN_NAME} plugin requires CUDA. Please enable it setting the option ENABLE_CUDA.")
       endif ()
       enable_language(CUDA)
+    endif ()
+
+    # Check GL
+    if (MMPLUGIN_ARGS_DEPENDS_GL)
+      if (NOT ENABLE_GL)
+        message(NOTICE "The ${PLUGIN_NAME} plugin requires GL and is disabled for now.")
+        return()
+      endif ()
     endif ()
 
     # Set plugin enabled flag
