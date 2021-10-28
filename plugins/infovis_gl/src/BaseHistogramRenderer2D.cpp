@@ -30,6 +30,7 @@ BaseHistogramRenderer2D::BaseHistogramRenderer2D()
         , font_(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL)
         , mouseX_(0.0f)
         , mouseY_(0.0f)
+        , viewRes_(0, 0)
         , needSelectionUpdate_(false)
         , selectionMode_(SelectionMode::PICK)
         , selectedComponent_(-1)
@@ -98,6 +99,10 @@ bool BaseHistogramRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
 }
 
 bool BaseHistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
+    // store cam and view info for input transformation
+    camera_ = call.GetCamera();
+    viewRes_ = call.GetViewResolution();
+
     if (!handleCall(call)) {
         return false;
     }
@@ -233,6 +238,8 @@ bool BaseHistogramRenderer2D::OnMouseButton(
         return false;
     }
 
+    std::cout << "mouse: " << mouseX_ << " " << mouseY_ << std::endl;
+
     needSelectionUpdate_ = true;
     selectedComponent_ = -1;
     selectedBin_ = -1;
@@ -260,8 +267,15 @@ bool BaseHistogramRenderer2D::OnMouseButton(
 }
 
 bool BaseHistogramRenderer2D::OnMouseMove(double x, double y) {
-    mouseX_ = static_cast<float>(x);
-    mouseY_ = static_cast<float>(y);
+    auto cam_pose = camera_.get<core::view::Camera::Pose>();
+    auto cam_intrinsics = camera_.get<core::view::Camera::OrthographicParameters>();
+    float world_x = ((static_cast<float>(x) * 2.0f / static_cast<float>(viewRes_.x)) - 1.0f);
+    float world_y = 1.0f - (static_cast<float>(y) * 2.0f / static_cast<float>(viewRes_.y));
+    world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
+    world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
+
+    mouseX_ = world_x;
+    mouseY_ = world_y;
     return false;
 }
 
