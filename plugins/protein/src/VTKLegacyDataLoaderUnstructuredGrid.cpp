@@ -14,7 +14,7 @@
 #include <cmath>
 #include <ctype.h>
 #include <sstream>
-#include "VTKLegacyDataCallUnstructuredGrid.h"
+#include "protein/VTKLegacyDataCallUnstructuredGrid.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"

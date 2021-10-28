@@ -6,7 +6,7 @@
 
 
 #include "stdafx.h"
-#include "ReducedSurface.h"
+#include "protein/ReducedSurface.h"
 #include <math.h>
 #include "vislib/assert.h"
 #include "vislib/sys/File.h"

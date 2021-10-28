@@ -10,7 +10,6 @@ megamol_plugin(protein
     protein_calls
     geometry_calls
   DEPENDS_EXTERNALS
-    glad
     nanoflann)
 
 if (protein_PLUGIN_ENABLED)

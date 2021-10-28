@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "protein_calls/BindingSiteCall.h"
-#include "CallColor.h"
+#include "protein/CallColor.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "protein_calls/MolecularDataCall.h"
