@@ -40,10 +40,8 @@ public:
     virtual ~OverrideParticleBBox(void);
 
 protected:
-    virtual bool manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData);
-    virtual bool manipulateExtent(
-        megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData);
+    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    virtual bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
 private:
     core::param::ParamSlot overrideBBoxSlot;

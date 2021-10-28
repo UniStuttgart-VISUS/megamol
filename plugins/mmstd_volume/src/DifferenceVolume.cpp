@@ -26,7 +26,7 @@ megamol::stdplugin::volume::DifferenceVolume::DifferenceVolume(void)
         paramIgnoreInputHash("ignoreInputHash", "Instructs the module not to honour the input hash when checking for updates."),
         slotIn("in", "The input slot providing the volume data."),
         slotOut("out", "The output slot receiving the difference.") {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
 
     this->slotIn.SetCompatibleCall<
         core::factories::CallAutoDescription<VolumetricDataCall>>();
@@ -69,7 +69,7 @@ megamol::stdplugin::volume::DifferenceVolume::~DifferenceVolume(void) {
  * megamol::stdplugin::volume::DifferenceVolume::getFrameSize
  */
 std::size_t megamol::stdplugin::volume::DifferenceVolume::getFrameSize(
-        const core::misc::VolumetricMetadata_t& md) {
+        const geocalls::VolumetricMetadata_t& md) {
     auto retval = md.Resolution[0] * md.Resolution[1] * md.Resolution[2];
     retval *= md.ScalarLength;
     retval *= md.Components;
@@ -80,22 +80,22 @@ std::size_t megamol::stdplugin::volume::DifferenceVolume::getFrameSize(
 /*
  * megamol::stdplugin::volume::DifferenceVolume::getDifferenceType
  */
-megamol::core::misc::ScalarType_t
+megamol::geocalls::ScalarType_t
 megamol::stdplugin::volume::DifferenceVolume::getDifferenceType(
-        const core::misc::VolumetricMetadata_t& md) {
+        const geocalls::VolumetricMetadata_t& md) {
     switch (md.ScalarType) {
-        case core::misc::SIGNED_INTEGER:
-        case core::misc::FLOATING_POINT:
+        case geocalls::SIGNED_INTEGER:
+        case geocalls::FLOATING_POINT:
             // Can be used as it is.
             return md.ScalarType;
 
-        case core::misc::UNSIGNED_INTEGER:
+        case geocalls::UNSIGNED_INTEGER:
             // unsigned must become signed.
-            return core::misc::SIGNED_INTEGER;
+            return geocalls::SIGNED_INTEGER;
 
         default:
             // Anything else is unsupported.
-            return core::misc::UNKNOWN;
+            return geocalls::UNKNOWN;
     }
 }
 
@@ -104,7 +104,7 @@ megamol::stdplugin::volume::DifferenceVolume::getDifferenceType(
  * megamol::stdplugin::volume::DifferenceVolume::checkCompatibility
  */
 bool megamol::stdplugin::volume::DifferenceVolume::checkCompatibility(
-        const core::misc::VolumetricMetadata_t& md) const {
+        const geocalls::VolumetricMetadata_t& md) const {
     using megamol::core::utility::log::Log;
     auto reqType = getDifferenceType(md);
 
@@ -146,7 +146,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::create(void) {
  * megamol::stdplugin::volume::DifferenceVolume::onGetData
  */
 bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using core::param::BoolParam;
     using megamol::core::utility::log::Log;
 
@@ -185,16 +185,16 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
             "changed, resetting reference for difference computation.");
 
         /* Check for compatibility of the incoming data. */
-        if (src->GetMetadata()->GridType != core::misc::CARTESIAN) {
+        if (src->GetMetadata()->GridType != geocalls::CARTESIAN) {
             Log::DefaultLog.WriteError("%hs is only supported for Cartesian "
                 "grids.", DifferenceVolume::ClassName());
             return false;
         }
 
         switch (src->GetMetadata()->ScalarType) {
-            case core::misc::SIGNED_INTEGER:
-            case core::misc::UNSIGNED_INTEGER:
-            case core::misc::FLOATING_POINT:
+            case geocalls::SIGNED_INTEGER:
+            case geocalls::UNSIGNED_INTEGER:
+            case geocalls::FLOATING_POINT:
                 break;
 
             default:
@@ -290,7 +290,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
         /* Do the conversion depending on the type of the data.*/
         switch (this->metadata.ScalarType) {
-            case core::misc::SIGNED_INTEGER:
+            case geocalls::SIGNED_INTEGER:
                 switch (this->metadata.ScalarLength) {
                     case 1: {
                         auto c = reinterpret_cast<std::int8_t *>(cur.data());
@@ -329,7 +329,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
                 }
                 break;
 
-            case core::misc::UNSIGNED_INTEGER:
+            case geocalls::UNSIGNED_INTEGER:
                 // HAZARD: unsigned-to-signed conversion is untested!
                 switch (this->metadata.ScalarLength) {
                     case 1: {
@@ -378,7 +378,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
                 }
                 break;
 
-            case core::misc::FLOATING_POINT:
+            case geocalls::FLOATING_POINT:
                 switch (this->metadata.ScalarLength) {
                     case 4: {
                         auto c = reinterpret_cast<float *>(cur.data());
@@ -424,7 +424,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
  * megamol::stdplugin::volume::DifferenceVolume::onGetExtents
  */
 bool megamol::stdplugin::volume::DifferenceVolume::onGetExtents(core::Call& call) {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     auto dst = dynamic_cast<VolumetricDataCall *>(&call);
@@ -463,7 +463,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetExtents(core::Call& call
  */
 bool megamol::stdplugin::volume::DifferenceVolume::onGetMetadata(
         core::Call& call) {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     auto dst = dynamic_cast<VolumetricDataCall *>(&call);

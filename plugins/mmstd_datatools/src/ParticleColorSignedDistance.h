@@ -58,13 +58,12 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateData(
-            megamol::core::moldyn::MultiParticleDataCall& outData,
-            megamol::core::moldyn::MultiParticleDataCall& inData);
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
     private:
 
-        void compute_colors(megamol::core::moldyn::MultiParticleDataCall& dat);
-        void set_colors(megamol::core::moldyn::MultiParticleDataCall& dat);
+        void compute_colors(geocalls::MultiParticleDataCall& dat);
+        void set_colors(geocalls::MultiParticleDataCall& dat);
 
         core::param::ParamSlot enableSlot;
         core::param::ParamSlot cyclXSlot;

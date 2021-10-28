@@ -6,14 +6,14 @@
  */
 #pragma once
 
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmstd_datatools/AbstractManipulator.h"
 
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
 
-using AbstractDirParticleManipulator = AbstractManipulator<core::moldyn::DirectionalParticleDataCall>;
+using AbstractDirParticleManipulator = AbstractManipulator<geocalls::EllipsoidalParticleDataCall>;
 
 } /* end namespace datatools */
 } /* end namespace stdplugin */

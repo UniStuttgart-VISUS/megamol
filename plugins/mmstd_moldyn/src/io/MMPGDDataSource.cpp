@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "MMPGDDataSource.h"
 #include "mmcore/param/FilePathParam.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "rendering/ParticleGridDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
@@ -89,23 +89,23 @@ void MMPGDDataSource::Frame::SetData(rendering::ParticleGridDataCall& call) {
             UINT8 ct = *this->dat.AsAt<UINT8>(pos); pos++;
 
             switch(vt) {
-                case 0: this->types[i].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE); break;
-                case 1: this->types[i].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ); break;
-                case 2: this->types[i].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR); break;
-                case 3: this->types[i].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ); break;
-                default: this->types[i].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE); break;
+                case 0: this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE); break;
+                case 1: this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ); break;
+                case 2: this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR); break;
+                case 3: this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ); break;
+                default: this->types[i].SetVertexDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE); break;
             }
             if (vt == 0) {
                 ct = 0;
             }
             switch(ct) {
-                case 0: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE); break;
-                case 1: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB); break;
-                case 2: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA); break;
-                case 3: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I); break;
-                case 4: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB); break;
-                case 5: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA); break;
-                default: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE); break;
+                case 0: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE); break;
+                case 1: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB); break;
+                case 2: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA); break;
+                case 3: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I); break;
+                case 4: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB); break;
+                case 5: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA); break;
+                default: this->types[i].SetColourDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE); break;
             }
 
             if ((vt == 1) || (vt == 3)) {
@@ -144,20 +144,20 @@ void MMPGDDataSource::Frame::SetData(rendering::ParticleGridDataCall& call) {
 
                 unsigned int vs = 0, cs = 0;
                 switch(type.GetVertexDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE: vs = 0; break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vs = 12; break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vs = 16; break;
-                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vs = 6; break;
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE: vs = 0; break;
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vs = 12; break;
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vs = 16; break;
+                    case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vs = 6; break;
                     default: vs = 0; break;
                 }
                 if (vs != 0) {
                     switch(type.GetColourDataType()) {
-                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE: cs = 0; break;
-                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: cs = 3; break;
-                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: cs = 4; break;
-                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: cs = 4; break;
-                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: cs = 12; break;
-                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: cs = 16; break;
+                        case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: cs = 0; break;
+                        case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: cs = 3; break;
+                        case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: cs = 4; break;
+                        case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: cs = 4; break;
+                        case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: cs = 12; break;
+                        case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: cs = 16; break;
                         default: cs = 0; break;
                     }
                 } else {

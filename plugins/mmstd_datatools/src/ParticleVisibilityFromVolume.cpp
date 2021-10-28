@@ -13,6 +13,8 @@
 #include <chrono>
 #include <omp.h>
 
+#include "geometry_calls/VolumetricDataCall.h"
+
 using namespace megamol;
 using namespace megamol::stdplugin;
 
@@ -58,7 +60,7 @@ datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume(void)
     this->operatorSlot << ep;
     this->MakeSlotAvailable(&this->operatorSlot);
 
-    this->volumeSlot.SetCompatibleCall<megamol::core::misc::VolumetricDataCallDescription>();
+    this->volumeSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->volumeSlot);
 }
 
@@ -73,9 +75,9 @@ datatools::ParticleVisibilityFromVolume::~ParticleVisibilityFromVolume(void) { t
  * datatools::ParticleThinner::manipulateData
  */
 bool datatools::ParticleVisibilityFromVolume::manipulateData(
-    megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::misc::VolumetricDataCall;
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::VolumetricDataCall;
+    using geocalls::MultiParticleDataCall;
 
     float theVal = this->valueSlot.Param<core::param::FloatParam>()->Value();
     float epsilon = this->epsilonSlot.Param<core::param::FloatParam>()->Value();

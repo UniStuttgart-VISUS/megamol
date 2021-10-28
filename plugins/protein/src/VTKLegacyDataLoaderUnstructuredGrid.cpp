@@ -15,7 +15,7 @@
 #include <ctype.h>
 #include <sstream>
 #include "VTKLegacyDataCallUnstructuredGrid.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -65,10 +65,10 @@ VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid()
         &VTKLegacyDataLoaderUnstructuredGrid::getExtent);
 
     // Multi stream particle data
-    this->dataOutSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &VTKLegacyDataLoaderUnstructuredGrid::getData);
-    this->dataOutSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &VTKLegacyDataLoaderUnstructuredGrid::getExtent);
+    this->dataOutSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &VTKLegacyDataLoaderUnstructuredGrid::getData);
+    this->dataOutSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &VTKLegacyDataLoaderUnstructuredGrid::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
@@ -167,7 +167,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
         // printf("Frame loaded: %u\n", fr->FrameNumber()); // DEBUG
     } else {
         // Try to get pointer to unstructured grid call
-        core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (mpdc != NULL) {
 
             // Request the frame
@@ -223,7 +223,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
 #ifndef CONTEST2016
             // Set attribute array as float 'color' value
             if (!this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().IsEmpty()) {
-                mpdc->AccessParticles(0).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                mpdc->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                     fr->PeekPointDataByName(this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value())
                         ->PeekData(),
                     0);
@@ -252,10 +252,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
                 }*/
             }
             mpdc->AccessParticles(0).SetColourData(
-                core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, dataVec.data(), 0);
+                geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, dataVec.data(), 0);
 #endif
             // Set vertex positions
-            mpdc->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+            mpdc->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 (const void*)(fr->GetData()->PeekPoints()));
 
             mpdc->SetUnlocker(new VTKUnlocker(*fr));
@@ -328,7 +328,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
         dc->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
     } else {
         // Try to get pointer to unstructured grid call
-        core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+        geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (mpdc != NULL) {
             // Set frame count
             mpdc->SetFrameCount((unsigned int)std::min(

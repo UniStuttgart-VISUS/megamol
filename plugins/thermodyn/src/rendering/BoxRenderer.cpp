@@ -2,7 +2,7 @@
 #include "BoxRenderer.h"
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 
@@ -20,7 +20,7 @@ megamol::thermodyn::rendering::BoxRenderer::BoxRenderer()
           "Recalculate the global bounding box each frame. This is resource instensive and "
           "might lead to bad frame rates") {
     dataInSlot_.SetCompatibleCall<BoxDataCallDescription>();
-    dataInSlot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    dataInSlot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
 
     calculateGlobalBoundingBoxParam.SetParameter(new core::param::BoolParam(false));
@@ -76,7 +76,7 @@ bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::Cal
     std::vector<BoxDataCall::box_entry_t> boxes;
 
     BoxDataCall* inBoxCall = nullptr;
-    core::moldyn::MultiParticleDataCall* inParCall = nullptr;
+    geocalls::MultiParticleDataCall* inParCall = nullptr;
     bool dirty = false;
     if ((inBoxCall = dataInSlot_.CallAs<BoxDataCall>()) != nullptr) {
         if (!(*inBoxCall)(0)) return false;
@@ -86,7 +86,7 @@ bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::Cal
             dirty = true;
             this->inDataHash_ = inBoxCall->DataHash();
         }
-    } else if ((inParCall = dataInSlot_.CallAs<core::moldyn::MultiParticleDataCall>()) != nullptr) {
+    } else if ((inParCall = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>()) != nullptr) {
         if (!(*inParCall)(1)) return false;
 
         boxes.emplace_back(BoxDataCall::box_entry_t{
@@ -151,7 +151,7 @@ bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::Cal
 
 bool megamol::thermodyn::rendering::BoxRenderer::GetExtents(core::view::CallRender3DGL& call) {
     BoxDataCall* inBoxCall = nullptr;
-    core::moldyn::MultiParticleDataCall* inParCall = nullptr;
+    geocalls::MultiParticleDataCall* inParCall = nullptr;
     if ((inBoxCall = dataInSlot_.CallAs<BoxDataCall>()) != nullptr) {
         if (!(*inBoxCall)(1)) return false;
         call.AccessBoundingBoxes().SetBoundingBox(inBoxCall->AccessBoundingBoxes().ObjectSpaceBBox());
@@ -175,7 +175,7 @@ bool megamol::thermodyn::rendering::BoxRenderer::GetExtents(core::view::CallRend
                 call.AccessBoundingBoxes().SetClipBox(box);
             }
         }
-    } else if ((inParCall = dataInSlot_.CallAs<core::moldyn::MultiParticleDataCall>()) != nullptr) {
+    } else if ((inParCall = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>()) != nullptr) {
         if (!(*inParCall)(1)) return false;
 
         call.AccessBoundingBoxes().SetBoundingBox(inParCall->AccessBoundingBoxes().ObjectSpaceBBox());

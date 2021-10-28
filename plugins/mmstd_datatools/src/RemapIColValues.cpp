@@ -12,7 +12,7 @@ RemapIColValues::RemapIColValues() : AbstractParticleManipulator("outData", "inD
         inParticleMapSlot("inMapData", "The particle index mapping data"),
         dataHash(0), inIColHash(0), inMapHash(0), outDataHash(0), frameId(0), col(), minCol(0.0f), maxCol(1.0f) {
 
-    inIColValuesSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    inIColValuesSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&inIColValuesSlot);
 
     inParticleMapSlot.SetCompatibleCall<ParticleFilterMapDataCallDescription>();
@@ -24,9 +24,9 @@ RemapIColValues::~RemapIColValues() {
 }
 
 bool RemapIColValues::manipulateData(
-        core::moldyn::MultiParticleDataCall& outData,
-        core::moldyn::MultiParticleDataCall& inData) {
-    core::moldyn::MultiParticleDataCall *inIColData = inIColValuesSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+        geocalls::MultiParticleDataCall& outData,
+        geocalls::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall *inIColData = inIColValuesSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (inIColData == nullptr) return false;
     ParticleFilterMapDataCall *inMapData = inParticleMapSlot.CallAs<ParticleFilterMapDataCall>();
     if (inMapData == nullptr) return false;
@@ -99,7 +99,7 @@ bool RemapIColValues::manipulateData(
         auto& pl = outData.AccessParticles(pli);
         if (pl.GetCount() <= 0) continue;
         assert(col.size() >= off + pl.GetCount());
-        pl.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, col.data() + off, 0);
+        pl.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, col.data() + off, 0);
         pl.SetColourMapIndexValues(minCol, maxCol);
         off += static_cast<size_t>(pl.GetCount());
     }

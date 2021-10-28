@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -103,7 +104,7 @@ namespace quartz {
 
     private:
 
-        void calcOSCB(class ::megamol::core::moldyn::MultiParticleDataCall& data);
+        void calcOSCB(class geocalls::MultiParticleDataCall& data);
 
         /** The data callee slot */
         core::CalleeSlot dataOutSlot;

@@ -13,7 +13,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "PointcloudHelpers.h"
 #include <vector>
 #include <nanoflann.hpp>

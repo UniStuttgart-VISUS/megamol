@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 #include "rkcommon/math//box.h"
 #include "rkcommon/math/vec.h"
@@ -26,7 +26,7 @@ struct ParticleModel {
 
     std::vector<rkcommon::math::vec4f> position; //!< particle position + color encoded in 'w'
 
-    void fill(megamol::core::moldyn::SimpleSphericalParticles parts);
+    void fill(geocalls::SimpleSphericalParticles parts);
 
     //! return world bounding box of all particle *positions* (i.e., particles *ex* radius)
     rkcommon::math::box3f getBounds() const;

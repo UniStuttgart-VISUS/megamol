@@ -93,7 +93,7 @@ datatools::OverrideParticleBBox::~OverrideParticleBBox(void) { this->Release(); 
  * datatools::OverrideParticleBBox::manipulateData
  */
 bool datatools::OverrideParticleBBox::manipulateData(
-    megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     return this->manipulateExtent(outData, inData); // because the actual implementations are identical
 }
 
@@ -102,8 +102,8 @@ bool datatools::OverrideParticleBBox::manipulateData(
  * datatools::OverrideParticleBBox::manipulateExtent
  */
 bool datatools::OverrideParticleBBox::manipulateExtent(
-    megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     if (this->resetSlot.IsDirty()) {
         this->resetSlot.ResetDirty();
@@ -148,9 +148,9 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
         for (size_t l = 0, max = inData.GetParticleListCount(); l < max; l++) {
             if (rad < inData.AccessParticles(l).GetGlobalRadius()) rad = inData.AccessParticles(l).GetGlobalRadius();
             if (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType() ==
-                    megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ ||
+                    geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ ||
                 inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType() ==
-                    megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+                    geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
                 posFromSomethingFunc getPoint;
 
                 float localMinX = std::numeric_limits<float>::max(), localMinY = std::numeric_limits<float>::max(),
@@ -160,10 +160,10 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
                       localMaxZ = std::numeric_limits<float>::lowest();
 
                 switch (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType()) {
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     getPoint = posFromXYZ;
                     break;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     getPoint = posFromXYZR;
                     break;
                 }
@@ -223,12 +223,12 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
                 }
             } else {
                 switch (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType()) {
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                     // getPoint = posFromXYZ_SHORT;
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "OverrideParticleBBox does not support re-computation of short coordinates");
                     break;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("OverrideParticleBBox: skipping empty vertex data");
                     break;
                 }

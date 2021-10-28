@@ -12,13 +12,12 @@
 #include <sstream>
 #include <string>
 #include "geometry_calls/CallTriMeshData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
-using namespace megamol::core::moldyn;
 using namespace megamol::geocalls;
 using namespace megamol::stdplugin::datatools;
 using namespace megamol::core;
@@ -945,7 +944,7 @@ bool io::PLYDataSource::fileUpdate(core::param::ParamSlot& slot) {
  * io::PLYDataSource::getSphereDataCallback
  */
 bool io::PLYDataSource::getSphereDataCallback(core::Call& caller) {
-    auto c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    auto c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
     if (c2 == nullptr) return false;
 
     c2->SetParticleListCount(1);
@@ -986,7 +985,7 @@ bool io::PLYDataSource::getSphereDataCallback(core::Call& caller) {
  * io::PLYDataSource::getSphereExtentCallback
  */
 bool io::PLYDataSource::getSphereExtentCallback(core::Call& caller) {
-    auto c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    auto c2 = dynamic_cast<MultiParticleDataCall*>(&caller);
     if (c2 == nullptr) return false;
 
     if (this->checkParameterDirtyness()) {

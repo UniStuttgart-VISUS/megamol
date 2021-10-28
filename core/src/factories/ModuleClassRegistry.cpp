@@ -13,13 +13,6 @@
 
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/cluster/mpi/MpiProvider.h"
-#include "mmcore/misc/SiffCSplineFitter.h"
-#include "mmcore/misc/TestSpheresDataSource.h"
-#include "mmcore/moldyn/MMPLDDataSource.h"
-#include "mmcore/moldyn/MMPLDWriter.h"
-#include "mmcore/moldyn/DirPartColModulate.h"
-#include "mmcore/moldyn/DirPartFilter.h"
-#include "mmcore/moldyn/ParticleListFilter.h"
 #include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/TransferFunction.h"
@@ -33,8 +26,6 @@
 #include "mmcore/view/HeadView.h"
 #include "mmcore/job/DataWriterJob.h"
 #include "mmcore/job/JobThread.h"
-#include "mmcore/moldyn/AddClusterColours.h"
-#include "mmcore/moldyn/DynDensityGradientEstimator.h"
 #include "mmcore/utility/LuaHostSettingsModule.h"
 #include "mmcore/view/light/AmbientLight.h"
 #include "mmcore/view/light/DistantLight.h"
@@ -66,13 +57,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
 
     instance.RegisterAutoDescription<cluster::ClusterController>();
     instance.RegisterAutoDescription<cluster::mpi::MpiProvider>();
-    instance.RegisterAutoDescription<misc::SiffCSplineFitter>();
-    instance.RegisterAutoDescription<misc::TestSpheresDataSource>();
-    instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
-    instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
-    instance.RegisterAutoDescription<moldyn::DirPartColModulate>();
-    instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
-    instance.RegisterAutoDescription<moldyn::DirPartFilter>();
     instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
     instance.RegisterAutoDescription<view::TransferFunction>();
@@ -86,8 +70,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::HeadView>();
     instance.RegisterAutoDescription<job::DataWriterJob>();
     instance.RegisterAutoDescription<job::JobThread>();
-    instance.RegisterAutoDescription<moldyn::AddClusterColours>();
-    instance.RegisterAutoDescription<moldyn::DynDensityGradientEstimator>();
     instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
     instance.RegisterAutoDescription<core::job::TickSwitch>();
     instance.RegisterAutoDescription<core::FileStreamProvider>();

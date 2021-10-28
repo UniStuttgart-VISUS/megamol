@@ -14,10 +14,6 @@
 #include <mutex>
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/param/ParamSlot.h"
-#include "vislib/RawStorage.h"
-#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {

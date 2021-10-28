@@ -30,8 +30,7 @@ namespace datatools {
     protected:
 
         virtual bool manipulateData(
-            megamol::core::moldyn::MultiParticleDataCall& outData,
-            megamol::core::moldyn::MultiParticleDataCall& inPtData);
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inPtData);
 
     private:
 

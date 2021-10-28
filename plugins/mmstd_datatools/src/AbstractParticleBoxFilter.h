@@ -4,8 +4,6 @@
 #include <type_traits>
 
 #include "mmstd_datatools/AbstractManipulator.h"
-
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/StringTokeniser.h"
@@ -136,23 +134,24 @@ template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData,
         auto const cdt = part.GetColourDataType();
         auto const ddt = part.GetDirDataType();
 
-        if (vdt == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE) {
+        if (vdt == geocalls::SimpleSphericalParticles::VERTDATA_NONE) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "ParticleBoxFilter: Box filter cannot be applied on list entry %d containing no vertex information.\n",
                 plidx);
             continue;
         }
 
-        if (idt == core::moldyn::SimpleSphericalParticles::IDDATA_NONE) id_ptr = vert_ptr;
-        if (cdt == core::moldyn::SimpleSphericalParticles::COLDATA_NONE) col_ptr = vert_ptr;
+        if (idt == geocalls::SimpleSphericalParticles::IDDATA_NONE)
+            id_ptr = vert_ptr;
+        if (cdt == geocalls::SimpleSphericalParticles::COLDATA_NONE) col_ptr = vert_ptr;
 
         auto const base_ptr = std::min(id_ptr, std::min(vert_ptr, col_ptr));
         auto const max_ptr = std::max(id_ptr, std::max(vert_ptr, col_ptr));
 
-        auto const is = core::moldyn::SimpleSphericalParticles::IDDataSize[idt];
-        auto const vs = core::moldyn::SimpleSphericalParticles::VertexDataSize[vdt];
-        auto const cs = core::moldyn::SimpleSphericalParticles::ColorDataSize[cdt];
-        auto const ds = core::moldyn::SimpleSphericalParticles::DirDataSize[ddt];
+        auto const is = geocalls::SimpleSphericalParticles::IDDataSize[idt];
+        auto const vs = geocalls::SimpleSphericalParticles::VertexDataSize[vdt];
+        auto const cs = geocalls::SimpleSphericalParticles::ColorDataSize[cdt];
+        auto const ds = geocalls::SimpleSphericalParticles::DirDataSize[ddt];
 
         auto const& stride = 0 == part.GetVertexDataStride() ? vs : part.GetVertexDataStride();
 
@@ -187,25 +186,25 @@ template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData,
 
         part.SetCount(cur_numPts);
         if (id_ptr < vert_ptr) {
-            if (idt != core::moldyn::SimpleSphericalParticles::IDDATA_NONE) {
+            if (idt != geocalls::SimpleSphericalParticles::IDDATA_NONE) {
                 part.SetIDData(idt, cur_data_ptr, stride);
             }
             part.SetVertexData(vdt, cur_data_ptr + is, stride);
-            if (cdt != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
+            if (cdt != geocalls::SimpleSphericalParticles::COLDATA_NONE) {
                 part.SetColourData(cdt, cur_data_ptr + is + vs, stride);
             }
-            if (ddt != core::moldyn::SimpleSphericalParticles::DIRDATA_NONE) {
+            if (ddt != geocalls::SimpleSphericalParticles::DIRDATA_NONE) {
                 part.SetDirData(ddt, cur_data_ptr + is + vs + cs, stride);
             }
         } else {
             part.SetVertexData(vdt, cur_data_ptr, stride);
-            if (cdt != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
+            if (cdt != geocalls::SimpleSphericalParticles::COLDATA_NONE) {
                 part.SetColourData(cdt, cur_data_ptr + vs, stride);
             }
-            if (ddt != core::moldyn::SimpleSphericalParticles::DIRDATA_NONE) {
+            if (ddt != geocalls::SimpleSphericalParticles::DIRDATA_NONE) {
                 part.SetDirData(ddt, cur_data_ptr + vs + cs, stride);
             }
-            if (idt != core::moldyn::SimpleSphericalParticles::IDDATA_NONE) {
+            if (idt != geocalls::SimpleSphericalParticles::IDDATA_NONE) {
                 part.SetIDData(idt, cur_data_ptr + vs + cs + ds, stride);
             }
         }

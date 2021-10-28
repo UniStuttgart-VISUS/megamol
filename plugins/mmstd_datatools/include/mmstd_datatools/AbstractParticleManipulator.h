@@ -6,14 +6,14 @@
  */
 #pragma once
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmstd_datatools/AbstractManipulator.h"
 
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
 
-using AbstractParticleManipulator = AbstractManipulator<core::moldyn::MultiParticleDataCall>;
+using AbstractParticleManipulator = AbstractManipulator<geocalls::MultiParticleDataCall>;
 
 } /* end namespace datatools */
 } /* end namespace stdplugin */

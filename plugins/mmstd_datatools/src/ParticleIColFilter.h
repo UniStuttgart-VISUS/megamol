@@ -45,14 +45,14 @@ namespace stdplugin {
             virtual ~ParticleIColFilter(void);
 
         protected:
-            virtual bool manipulateData(megamol::core::moldyn::MultiParticleDataCall& outData,
-                megamol::core::moldyn::MultiParticleDataCall& inData);
+            virtual bool manipulateData(
+                geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
         private:
             bool reset(core::param::ParamSlot&);
-            void setData(core::moldyn::MultiParticleDataCall& inDat);
-            void setData(core::moldyn::MultiParticleDataCall::Particles& p, vislib::RawStorage& d,
-                const core::moldyn::SimpleSphericalParticles& s, vislib::math::Cuboid<float> bbox,
+            void setData(geocalls::MultiParticleDataCall& inDat);
+            void setData(geocalls::MultiParticleDataCall::Particles& p, vislib::RawStorage& d,
+                const geocalls::SimpleSphericalParticles& s, vislib::math::Cuboid<float> bbox,
                 ParticleFilterMapDataCall::index_t& mapOffset);
 
             bool getParticleMapData(core::Call& c);
@@ -75,7 +75,7 @@ namespace stdplugin {
             size_t dataHash;
             size_t outDataHash = 0;
             unsigned int frameId;
-            std::vector<core::moldyn::MultiParticleDataCall::Particles> parts;
+            std::vector<geocalls::MultiParticleDataCall::Particles> parts;
             std::vector<vislib::RawStorage> data;
             std::vector<ParticleFilterMapDataCall::index_t> mapIndex;
             core::param::ParamSlot inValRangeSlot;

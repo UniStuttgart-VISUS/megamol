@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "io/IMDAtomDataSource.h"
 #include <climits>
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -907,7 +907,7 @@ void IMDAtomDataSource::release(void) { this->clear(); }
  * IMDAtomDataSource::getDataCallback
  */
 bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (mpdc == NULL) return false;
     this->assertData();
 
@@ -970,14 +970,14 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "IMDAtomDataSource: inconsistent positions and directions, disabling data");
                     mpdc->AccessParticles(idx).SetVertexData(
-                        core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
                     mpdc->AccessParticles(idx).SetColourData(
-                        core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
                     mpdc->AccessParticles(idx).SetDirData(
-                        core::moldyn::MultiParticleDataCall::Particles::DIRDATA_NONE, NULL);
+                        geocalls::MultiParticleDataCall::Particles::DIRDATA_NONE, NULL);
                 } else {
                     mpdc->AccessParticles(idx).SetVertexData(
-                        core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                        geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                         this->allDirData[idx]->As<void>(), fpp * sizeof(float));
                     if (dircolMode == 1) {
                         if (this->dirautoColumnRangeSlot.Param<core::param::BoolParam>()->Value()) {
@@ -988,18 +988,18 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
                                 this->dirmaxColumnValSlot.Param<core::param::FloatParam>()->Value());
                         }
                         mpdc->AccessParticles(idx).SetColourData(
-                            core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                            geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                             this->allDirData[idx]->At(3 * sizeof(float)), fpp * sizeof(float));
                     } else if (dircolMode == 2) {
                         mpdc->AccessParticles(idx).SetColourData(
-                            core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
+                            geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
                             this->allDirData[idx]->At(3 * sizeof(float)), fpp * sizeof(float));
                     } else {
                         mpdc->AccessParticles(idx).SetColourData(
-                            core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                            geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
                     }
                     mpdc->AccessParticles(idx).SetDirData(
-                        core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                        geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                         this->allDirData[idx]->At(
                             ((dircolMode == 1) ? 4 : ((dircolMode == 2) ? 6 : 3)) * sizeof(float)),
                         fpp * sizeof(float));
@@ -1008,7 +1008,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
                 switch (colMode[idx]) {
                 case 0:
                     mpdc->AccessParticles(idx).SetColourData(
-                        core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
                     break;
                 case 1:
                     if (this->autoColumnRangeSlot.Param<core::param::BoolParam>()->Value()) {
@@ -1019,22 +1019,22 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
                             this->maxColumnValSlot.Param<core::param::FloatParam>()->Value());
                     }
                     mpdc->AccessParticles(idx).SetColourData(
-                        core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                         this->colData[idx]->As<void>());
                     break;
                 default:
                     mpdc->AccessParticles(idx).SetColourData( // some internal error
-                        core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                        geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
                     break;
                 }
             }
 
             if (!this->posData[idx]->IsEmpty()) {
                 mpdc->AccessParticles(idx).SetVertexData(
-                    core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->posData[idx]->As<void>());
+                    geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->posData[idx]->As<void>());
             } else {
                 mpdc->AccessParticles(idx).SetVertexData(
-                    core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
+                    geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
             }
         }
         mpdc->SetUnlocker(nullptr);
@@ -1048,7 +1048,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
  * IMDAtomDataSource::getExtentCallback
  */
 bool IMDAtomDataSource::getExtentCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (mpdc == NULL) return false;
     this->assertData();
 

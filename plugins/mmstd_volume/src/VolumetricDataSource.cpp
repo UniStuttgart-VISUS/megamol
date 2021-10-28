@@ -8,8 +8,6 @@
 #include "stdafx.h"
 #include "VolumetricDataSource.h"
 
-#include "mmcore/misc/VolumetricDataCall.h"
-
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -49,7 +47,7 @@ megamol::stdplugin::volume::VolumetricDataSource::VolumetricDataSource(void)
     , paramOutputDataType("OutputDataType", "Enforces the type of a scalar during loading.")
     , paramLoadAsync("LoadAsync", "Start asynchronous loading of frames.")
     , slotGetData("GetData", "Slot for requesting data from the source.") {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     core::param::EnumParam* enumParam = nullptr;
 
     this->loaderStatus.store(LOADER_STATUS_STOPPED);
@@ -138,7 +136,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::create(void) {
  * megamol::stdplugin::volume::VolumetricDataSource::getOutputDataFormat
  */
 DatRawDataFormat megamol::stdplugin::volume::VolumetricDataSource::getOutputDataFormat(void) const {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     auto sizeParam = this->paramOutputDataSize.Param<core::param::EnumParam>();
@@ -213,7 +211,7 @@ DatRawDataFormat megamol::stdplugin::volume::VolumetricDataSource::getOutputData
  * megamol::stdplugin::volume::VolumetricDataSource::onFileNameChanged
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::onFileNameChanged(core::param::ParamSlot& slot) {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     /* Allocate header or prepare it for re-use. */
@@ -421,7 +419,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onFileNameChanged(core::p
  * megamol::stdplugin::volume::VolumetricDataSource::onGetData
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& call) {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using core::param::BoolParam;
     using core::param::IntParam;
     using megamol::core::utility::log::Log;
@@ -728,7 +726,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
  * megamol::stdplugin::volume::VolumetricDataSource::onGetExtents
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::onGetExtents(core::Call& call) {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     try {
@@ -771,7 +769,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetExtents(core::Call& 
  * megamol::stdplugin::volume::VolumetricDataSource::onGetMetadata
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::onGetMetadata(core::Call& call) {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     try {
@@ -806,7 +804,7 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetMetadata(core::Call&
  * megamol::stdplugin::volume::VolumetricDataSource::onTryGetData
  */
 bool megamol::stdplugin::volume::VolumetricDataSource::onTryGetData(core::Call& call) {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
     int expected = 0;
@@ -1130,7 +1128,7 @@ void megamol::stdplugin::volume::VolumetricDataSource::BufferSlotUnlocker::Unloc
  * megamol::stdplugin::volume::VolumetricDataSource::loadAsync
  */
 DWORD megamol::stdplugin::volume::VolumetricDataSource::loadAsync(void* userData) {
-    using core::misc::VolumetricDataCall;
+    using geocalls::VolumetricDataCall;
     using core::param::IntParam;
     using megamol::core::utility::log::Log;
 
@@ -1222,7 +1220,7 @@ DWORD megamol::stdplugin::volume::VolumetricDataSource::loadAsync(void* userData
  * megamol::stdplugin::volume::VolumetricDataSource::setUnlocker
  */
 void megamol::stdplugin::volume::VolumetricDataSource::setUnlocker(
-    core::misc::VolumetricDataCall& call, BufferSlot* buffer) {
+    geocalls::VolumetricDataCall& call, BufferSlot* buffer) {
     ASSERT(buffer != nullptr);
     auto ul = dynamic_cast<BufferSlotUnlocker*>(call.GetUnlocker());
     if (ul != nullptr) {

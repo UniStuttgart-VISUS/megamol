@@ -123,12 +123,12 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     this->MakeSlotAvailable(&this->rhocSlot);
 
     this->outDataSlot.SetCallback(
-        megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
+        geocalls::MultiParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
     this->outDataSlot.SetCallback(
-        megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleThermodyn::getExtentCallback);
+        geocalls::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleThermodyn::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
 
@@ -144,8 +144,8 @@ datatools::ParticleThermodyn::~ParticleThermodyn(void) { this->Release(); }
 bool datatools::ParticleThermodyn::create(void) { return true; }
 
 
-bool isListOK(megamol::core::moldyn::MultiParticleDataCall* in, const unsigned int i) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+bool isListOK(geocalls::MultiParticleDataCall* in, const unsigned int i) {
+    using geocalls::MultiParticleDataCall;
     auto& pl = in->AccessParticles(i);
     // TODO: double
     return ((pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) ||
@@ -153,8 +153,8 @@ bool isListOK(megamol::core::moldyn::MultiParticleDataCall* in, const unsigned i
 }
 
 
-bool hasDir(megamol::core::moldyn::MultiParticleDataCall* in, const unsigned int i) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+bool hasDir(geocalls::MultiParticleDataCall* in, const unsigned int i) {
+    using geocalls::MultiParticleDataCall;
     auto& pl = in->AccessParticles(i);
     return pl.GetDirDataType() == MultiParticleDataCall::Particles::DirDataType::DIRDATA_FLOAT_XYZ;
 }
@@ -167,7 +167,7 @@ bool metricRequiresDir(megamol::stdplugin::datatools::ParticleThermodyn::metrics
 
 
 bool isDirOK(megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum metric,
-    megamol::core::moldyn::MultiParticleDataCall* in, const unsigned int i) {
+    geocalls::MultiParticleDataCall* in, const unsigned int i) {
     if (metricRequiresDir(metric) && !hasDir(in, i))
         return false;
     return true;
@@ -180,10 +180,10 @@ bool isDirOK(megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum metri
 void datatools::ParticleThermodyn::release(void) {}
 
 
-bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCall* in,
-    core::moldyn::MultiParticleDataCall* outMPDC) {
+bool datatools::ParticleThermodyn::assertData(
+    geocalls::MultiParticleDataCall* in, geocalls::MultiParticleDataCall* outMPDC) {
 
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     megamol::core::AbstractGetData3DCall* out;
     if (outMPDC != nullptr) out = outMPDC;
@@ -541,7 +541,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
             outMPDC->AccessParticles(i).SetGlobalRadius(pl.GetGlobalRadius());
             outMPDC->AccessParticles(i).SetVertexData(
                 pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
-            outMPDC->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+            outMPDC->AccessParticles(i).SetColourData(
+                geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
             outMPDC->AccessParticles(i).SetDirData(pl.GetDirDataType(), pl.GetDirData(), pl.GetDirDataStride());
             outMPDC->AccessParticles(i).SetIDData(pl.GetIDDataType(), pl.GetIDData(), pl.GetIDDataStride());
@@ -644,7 +645,7 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeDensity(std::vect
 
 
 bool datatools::ParticleThermodyn::getExtentCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall* outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (outMpdc == nullptr) return false;
@@ -676,7 +677,7 @@ bool datatools::ParticleThermodyn::getExtentCallback(megamol::core::Call& c) {
 }
 
 bool datatools::ParticleThermodyn::getDataCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall* outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (outMpdc == nullptr) return false;
