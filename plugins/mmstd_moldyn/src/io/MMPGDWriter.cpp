@@ -17,7 +17,7 @@
 #include "mmcore/utility/sys/Thread.h"
 
 using namespace megamol::stdplugin::moldyn::io;
-using namespace megamol::stdplugin::moldyn::rendering;
+using namespace megamol::stdplugin::moldyn;
 using namespace megamol::core;
 
 /*

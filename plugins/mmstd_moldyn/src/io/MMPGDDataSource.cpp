@@ -9,7 +9,7 @@
 #include "MMPGDDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "rendering/ParticleGridDataCall.h"
+#include "mmstd_moldyn/ParticleGridDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
@@ -64,7 +64,7 @@ bool MMPGDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx
 /*
  * MMPGDDataSource::Frame::SetData
  */
-void MMPGDDataSource::Frame::SetData(rendering::ParticleGridDataCall& call) {
+void MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
     if (this->dat.IsEmpty()) {
         call.SetFrameID(0);
         call.SetTypeDataRef(0, NULL);
@@ -82,7 +82,7 @@ void MMPGDDataSource::Frame::SetData(rendering::ParticleGridDataCall& call) {
     if ((this->types == NULL) || (this->cells == NULL)) {
         // also do this if 'cells' is NULL to get the right 'pos'
         if (this->types == NULL) {
-            this->types = new rendering::ParticleGridDataCall::ParticleType[typeCnt];
+            this->types = new ParticleGridDataCall::ParticleType[typeCnt];
         }
         for (UINT32 i = 0; i < typeCnt; i++) {
             UINT8 vt = *this->dat.AsAt<UINT8>(pos); pos++;
@@ -131,16 +131,16 @@ void MMPGDDataSource::Frame::SetData(rendering::ParticleGridDataCall& call) {
     call.SetTypeDataRef(typeCnt, this->types);
 
     if (this->cells == NULL) {
-        this->cells = new rendering::ParticleGridDataCall::GridCell[cellX * cellY * cellZ];
+        this->cells = new ParticleGridDataCall::GridCell[cellX * cellY * cellZ];
         for (UINT32 i = 0; i < cellX * cellY * cellZ; i++) {
-            rendering::ParticleGridDataCall::GridCell& cell = this->cells[i];
+            ParticleGridDataCall::GridCell& cell = this->cells[i];
             const float *bbox = this->dat.AsAt<float>(pos);
             pos += 6 * 4;
             cell.AllocateParticleLists(typeCnt);
             cell.SetBoundingBox(vislib::math::Cuboid<float>(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]));
             for (UINT32 t = 0; t < typeCnt; t++) {
-				rendering::ParticleGridDataCall::ParticleType& type = this->types[t];
-				rendering::ParticleGridDataCall::Particles& points = cell.AccessParticleLists()[t];
+				ParticleGridDataCall::ParticleType& type = this->types[t];
+				ParticleGridDataCall::Particles& points = cell.AccessParticleLists()[t];
 
                 unsigned int vs = 0, cs = 0;
                 switch(type.GetVertexDataType()) {
@@ -371,7 +371,7 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
  * MMPGDDataSource::getDataCallback
  */
 bool MMPGDDataSource::getDataCallback(Call& caller) {
-	rendering::ParticleGridDataCall *c2 = dynamic_cast<rendering::ParticleGridDataCall*>(&caller);
+	ParticleGridDataCall *c2 = dynamic_cast<ParticleGridDataCall*>(&caller);
     if (c2 == NULL) return false;
 
     Frame *f = NULL;
@@ -392,7 +392,7 @@ bool MMPGDDataSource::getDataCallback(Call& caller) {
  * MMPGDDataSource::getExtentCallback
  */
 bool MMPGDDataSource::getExtentCallback(Call& caller) {
-	rendering::ParticleGridDataCall *c2 = dynamic_cast<rendering::ParticleGridDataCall*>(&caller);
+	ParticleGridDataCall *c2 = dynamic_cast<ParticleGridDataCall*>(&caller);
 
     if (c2 != NULL) {
         c2->SetFrameCount(this->FrameCount());

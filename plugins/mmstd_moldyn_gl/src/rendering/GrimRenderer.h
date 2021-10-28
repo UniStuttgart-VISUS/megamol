@@ -8,7 +8,7 @@
 #ifndef MEGAMOL_MOLDYN_GRIMRENDERER_H_INCLUDED
 #define MEGAMOL_MOLDYN_GRIMRENDERER_H_INCLUDED
 
-#include "ParticleGridDataCall.h"
+#include "mmstd_moldyn/ParticleGridDataCall.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"

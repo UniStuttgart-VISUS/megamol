@@ -16,7 +16,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "ParticleGridDataCall.h"
+#include "mmstd_moldyn/ParticleGridDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/RawStorage.h"
@@ -26,7 +26,6 @@
 namespace megamol {
 namespace stdplugin {
 namespace moldyn {
-namespace rendering {
 
 
 /**
@@ -161,7 +160,6 @@ private:
 
 };
 
-}
 } /* end namespace moldyn */
 } /* end namespace core */
 } /* end namespace megamol */

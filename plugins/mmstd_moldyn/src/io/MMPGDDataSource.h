@@ -14,7 +14,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AnimDataModule.h"
-#include "rendering/ParticleGridDataCall.h"
+#include "mmstd_moldyn/ParticleGridDataCall.h"
 #include "vislib/RawStorage.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
@@ -128,24 +128,24 @@ private:
          *
          * @param call The call to receive the data
          */
-        void SetData(rendering::ParticleGridDataCall &call);
+        void SetData(ParticleGridDataCall &call);
 
     private:
         /** position data per type */
         vislib::RawStorage dat;
 
         /** The types */
-		rendering::ParticleGridDataCall::ParticleType *types;
+		ParticleGridDataCall::ParticleType *types;
 
         /** The cells */
-		rendering::ParticleGridDataCall::GridCell *cells;
+		ParticleGridDataCall::GridCell *cells;
     };
 
     /**
      * Helper class to unlock frame data when 'CallSimpleSphereData' is
      * used.
      */
-    class Unlocker : public rendering::ParticleGridDataCall::Unlocker {
+    class Unlocker : public ParticleGridDataCall::Unlocker {
     public:
         /**
          * Ctor.
@@ -153,7 +153,7 @@ private:
          * @param frame The frame to unlock
          */
         Unlocker(Frame &frame)
-            : rendering::ParticleGridDataCall::Unlocker()
+            : ParticleGridDataCall::Unlocker()
             , frame(&frame) {
             // intentionally empty
         }

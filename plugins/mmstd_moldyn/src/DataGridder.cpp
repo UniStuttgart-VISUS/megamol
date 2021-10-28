@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "DataGridder.h"
 #include <climits>
-#include "rendering/ParticleGridDataCall.h"
+#include "mmstd_moldyn/ParticleGridDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "vislib/Array.h"
@@ -18,7 +18,7 @@
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
 
-using namespace megamol::stdplugin::moldyn::rendering;
+using namespace megamol::stdplugin::moldyn;
 
 
 /*

@@ -13,7 +13,7 @@
 
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
-#include "rendering/ParticleGridDataCall.h"
+#include "mmstd_moldyn/ParticleGridDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/sys/File.h"
 
@@ -112,7 +112,7 @@ private:
      *
      * @return True on success
      */
-    bool writeFrame(vislib::sys::File &file, rendering::ParticleGridDataCall &data);
+    bool writeFrame(vislib::sys::File &file, ParticleGridDataCall &data);
 
     /** The file name of the file to be written */
     core::param::ParamSlot filenameSlot;
