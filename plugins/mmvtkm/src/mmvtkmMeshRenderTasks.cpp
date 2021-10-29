@@ -10,6 +10,7 @@
 #include "mmvtkm/mmvtkmMeshRenderTasks.h"
 
 #include "mesh/MeshCalls.h"
+#include "mesh/MeshCalls_gl.h"
 
 using namespace megamol;
 using namespace megamol::mmvtkm;

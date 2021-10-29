@@ -6,10 +6,11 @@
 megamol_plugin(mmvtkm
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
-  adios_plugin
-  mesh
+    mesh
+    mesh_gl
+    mmadios
   DEPENDS_EXTERNALS
-  vtkm)
+    vtkm)
 
 if (mmvtkm_PLUGIN_ENABLED)
   external_get_property(vtkm SOURCE_DIR)
