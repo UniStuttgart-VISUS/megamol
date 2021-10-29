@@ -375,7 +375,7 @@ bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamS
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::assertData(ore_gl::view::CallRender2DGL& call) {
+bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& call) {
     auto floats = getDataSlot.CallAs<megamol::datatools::table::TableDataCall>();
     if (floats == nullptr)
         return false;
