@@ -289,7 +289,7 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
 
     slot.ResetDirty();
 
-    auto parameter_name = slot.Param<param::StringParam>()->Value();
+    auto parameter_name = vislib::StringA(slot.Param<param::StringParam>()->Value().c_str());
     if (parameter_name.IsEmpty()) {
         return false;
     }
@@ -532,10 +532,10 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
         auto anchor = static_cast<Anchor>(this->paramAnchor.Param<param::EnumParam>()->Value());
 
         auto param_prefix = this->paramPrefix.Param<param::StringParam>()->Value();
-        std::string prefix = std::string(param_prefix.PeekBuffer());
+        std::string prefix = param_prefix;
 
         auto param_sufix = this->paramSuffix.Param<param::StringParam>()->Value();
-        std::string sufix = std::string(param_sufix.PeekBuffer());
+        std::string sufix = param_sufix;
 
         std::string text("");
         if (this->m_parameter_ptr != nullptr) {
@@ -584,7 +584,7 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
         auto anchor = static_cast<Anchor>(this->paramAnchor.Param<param::EnumParam>()->Value());
 
         auto param_text = this->paramText.Param<param::StringParam>()->Value();
-        std::string text = std::string(param_text.PeekBuffer());
+        std::string text = param_text;
 
         if (this->m_font_ptr == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(

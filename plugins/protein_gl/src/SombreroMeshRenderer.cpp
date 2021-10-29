@@ -456,10 +456,10 @@ bool SombreroMeshRenderer::Render(core::view::CallRender3DGL& call) {
     //::glColor3f(1.0f, 1.0f, 1.0f);
     float r, g, b;
     this->colorSlot.ResetDirty();
-    utility::ColourParser::FromString(this->colorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->colorSlot.Param<param::StringParam>()->Value().c_str(), r, g, b);
     ::glColor3f(r, g, b);
 
-    utility::ColourParser::FromString(this->brushColorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->brushColorSlot.Param<param::StringParam>()->Value().c_str(), r, g, b);
     vislib::math::Vector<float, 3> brushCol(r, g, b);
 
     // construct the lines for the sweatband
@@ -906,16 +906,16 @@ bool SombreroMeshRenderer::Render(core::view::CallRender3DGL& call) {
         ::glPointSize(1.0f);
     }
 
-    utility::ColourParser::FromString(this->innerColorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->innerColorSlot.Param<param::StringParam>()->Value().c_str(), r, g, b);
     vislib::math::Vector<float, 3> innerColor(r, g, b);
 
-    utility::ColourParser::FromString(this->outerColorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->outerColorSlot.Param<param::StringParam>()->Value().c_str(), r, g, b);
     vislib::math::Vector<float, 3> outerColor(r, g, b);
 
-    utility::ColourParser::FromString(this->fontColorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->fontColorSlot.Param<param::StringParam>()->Value().c_str(), r, g, b);
     vislib::math::Vector<float, 3> fontColor(r, g, b);
 
-    utility::ColourParser::FromString(this->borderColorSlot.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->borderColorSlot.Param<param::StringParam>()->Value().c_str(), r, g, b);
     vislib::math::Vector<float, 3> borderColor(r, g, b);
 
     if (this->showSweatBandSlot.Param<param::BoolParam>()->Value() && lines.size() > 0) {

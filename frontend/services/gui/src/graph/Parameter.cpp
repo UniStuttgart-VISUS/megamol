@@ -138,15 +138,15 @@ std::string megamol::gui::Parameter::GetValueString() const {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, bool>) {
             auto parameter = megamol::core::param::BoolParam(arg);
-            value_string = std::string(parameter.ValueString().PeekBuffer());
+            value_string = parameter.ValueString();
         } else if constexpr (std::is_same_v<T, float>) {
             auto parameter = megamol::core::param::FloatParam(arg);
-            value_string = std::string(parameter.ValueString().PeekBuffer());
+            value_string = parameter.ValueString();
         } else if constexpr (std::is_same_v<T, int>) {
             switch (this->type) {
             case (ParamType_t::INT): {
                 auto parameter = megamol::core::param::IntParam(arg);
-                value_string = std::string(parameter.ValueString().PeekBuffer());
+                value_string = parameter.ValueString();
             } break;
             case (ParamType_t::ENUM): {
                 auto parameter = megamol::core::param::EnumParam(arg);
@@ -155,7 +155,7 @@ std::string megamol::gui::Parameter::GetValueString() const {
                 for (auto& pair : map) {
                     parameter.SetTypePair(pair.first, pair.second.c_str());
                 }
-                value_string = std::string(parameter.ValueString().PeekBuffer());
+                value_string = parameter.ValueString();
             } break;
             default:
                 break;
@@ -165,27 +165,27 @@ std::string megamol::gui::Parameter::GetValueString() const {
         } else if constexpr (std::is_same_v<T, std::filesystem::path>) {
             auto file_storage = this->GetStorage<FilePathStorage_t>();
             auto parameter = megamol::core::param::FilePathParam(arg, file_storage.first, file_storage.second);
-            value_string = std::string(parameter.ValueString().PeekBuffer());
+            value_string = parameter.ValueString();
         } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
             auto parameter = megamol::core::param::TernaryParam(arg);
-            value_string = std::string(parameter.ValueString().PeekBuffer());
+            value_string = parameter.ValueString();
         } else if constexpr (std::is_same_v<T, glm::vec2>) {
             auto parameter = megamol::core::param::Vector2fParam(vislib::math::Vector<float, 2>(arg.x, arg.y));
-            value_string = std::string(parameter.ValueString().PeekBuffer());
+            value_string = parameter.ValueString();
         } else if constexpr (std::is_same_v<T, glm::vec3>) {
             auto parameter = megamol::core::param::Vector3fParam(vislib::math::Vector<float, 3>(arg.x, arg.y, arg.z));
-            value_string = std::string(parameter.ValueString().PeekBuffer());
+            value_string = parameter.ValueString();
         } else if constexpr (std::is_same_v<T, glm::vec4>) {
             switch (this->type) {
             case (ParamType_t::COLOR): {
                 auto parameter = megamol::core::param::ColorParam(arg[0], arg[1], arg[2], arg[3]);
-                value_string = std::string(parameter.ValueString().PeekBuffer());
+                value_string = parameter.ValueString();
             } break;
 
             case (ParamType_t::VECTOR4F): {
                 auto parameter =
                     megamol::core::param::Vector4fParam(vislib::math::Vector<float, 4>(arg.x, arg.y, arg.z, arg.w));
-                value_string = std::string(parameter.ValueString().PeekBuffer());
+                value_string = parameter.ValueString();
             } break;
             default:
                 break;
@@ -194,7 +194,7 @@ std::string megamol::gui::Parameter::GetValueString() const {
             switch (this->type) {
             case (ParamType_t::BUTTON): {
                 auto parameter = megamol::core::param::ButtonParam();
-                value_string = std::string(parameter.ValueString().PeekBuffer());
+                value_string = parameter.ValueString();
                 break;
             }
             default:
@@ -210,20 +210,19 @@ std::string megamol::gui::Parameter::GetValueString() const {
 bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool set_default_val, bool set_dirty) {
 
     bool retval = false;
-    vislib::TString val_tstr(val_str.c_str());
 
     switch (this->type) {
     case (ParamType_t::BOOL): {
         megamol::core::param::BoolParam parameter(false);
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::BUTTON): {
         retval = true;
     } break;
     case (ParamType_t::COLOR): {
-        megamol::core::param::ColorParam parameter(val_tstr);
-        retval = parameter.ParseValue(val_tstr);
+        megamol::core::param::ColorParam parameter(val_str.c_str());
+        retval = parameter.ParseValue(val_str);
         auto val = parameter.Value();
         this->SetValue(glm::vec4(val[0], val[1], val[2], val[3]), set_default_val, set_dirty);
     } break;
@@ -234,61 +233,61 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
         for (auto& pair : map) {
             parameter.SetTypePair(pair.first, pair.second.c_str());
         }
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::FILEPATH): {
         auto file_storage = this->GetStorage<FilePathStorage_t>();
         megamol::core::param::FilePathParam parameter(
             std::filesystem::u8path(val_str), file_storage.first, file_storage.second);
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::FLEXENUM): {
         megamol::core::param::FlexEnumParam parameter(val_str);
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::FLOAT): {
         megamol::core::param::FloatParam parameter(0.0f);
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::INT): {
         megamol::core::param::IntParam parameter(0);
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::STRING): {
-        megamol::core::param::StringParam parameter(val_tstr.PeekBuffer());
-        retval = parameter.ParseValue(val_tstr);
-        this->SetValue(std::string(parameter.Value().PeekBuffer()), set_default_val, set_dirty);
+        megamol::core::param::StringParam parameter(val_str.c_str());
+        retval = parameter.ParseValue(val_str);
+        this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::TERNARY): {
         megamol::core::param::TernaryParam parameter(vislib::math::Ternary::TRI_UNKNOWN);
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::TRANSFERFUNCTION): {
         megamol::core::param::TransferFunctionParam parameter;
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         this->SetValue(parameter.Value(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::VECTOR2F): {
         megamol::core::param::Vector2fParam parameter(vislib::math::Vector<float, 2>(0.0f, 0.0f));
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         auto val = parameter.Value();
         this->SetValue(glm::vec2(val.X(), val.Y()), set_default_val, set_dirty);
     } break;
     case (ParamType_t::VECTOR3F): {
         megamol::core::param::Vector3fParam parameter(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         auto val = parameter.Value();
         this->SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val, set_dirty);
     } break;
     case (ParamType_t::VECTOR4F): {
         megamol::core::param::Vector4fParam parameter(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f));
-        retval = parameter.ParseValue(val_tstr);
+        retval = parameter.ParseValue(val_str);
         auto val = parameter.Value();
         this->SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val, set_dirty);
     } break;
@@ -319,13 +318,13 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
         out_param.storage = p_ptr->GetKeyCode();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::BoolParam>()) {
         out_param.type = ParamType_t::BOOL;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::ColorParam>()) {
         out_param.type = ParamType_t::COLOR;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::EnumParam>()) {
         out_param.type = ParamType_t::ENUM;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
         EnumStorage_t map;
         auto psd_map = p_ptr->getMap();
         auto iter = psd_map.GetConstIterator();
@@ -336,48 +335,48 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
         out_param.storage = map;
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param.type = ParamType_t::FILEPATH;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
         out_param.storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FlexEnumParam>()) {
         out_param.type = ParamType_t::FLEXENUM;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
         out_param.storage = p_ptr->getStorage();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FloatParam>()) {
         out_param.type = ParamType_t::FLOAT;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
         out_param.minval = p_ptr->MinValue();
         out_param.maxval = p_ptr->MaxValue();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::IntParam>()) {
         out_param.type = ParamType_t::INT;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
         out_param.minval = p_ptr->MinValue();
         out_param.maxval = p_ptr->MaxValue();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
         out_param.type = ParamType_t::STRING;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::TernaryParam>()) {
         out_param.type = ParamType_t::TERNARY;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::TransferFunctionParam>()) {
         out_param.type = ParamType_t::TRANSFERFUNCTION;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector2fParam>()) {
         out_param.type = ParamType_t::VECTOR2F;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
         auto minv = p_ptr->MinValue();
         out_param.minval = glm::vec2(minv.X(), minv.Y());
         auto maxv = p_ptr->MaxValue();
         out_param.maxval = glm::vec2(maxv.X(), maxv.Y());
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector3fParam>()) {
         out_param.type = ParamType_t::VECTOR3F;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
         auto minv = p_ptr->MinValue();
         out_param.minval = glm::vec3(minv.X(), minv.Y(), minv.Z());
         auto maxv = p_ptr->MaxValue();
         out_param.maxval = glm::vec3(maxv.X(), maxv.Y(), maxv.Z());
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector4fParam>()) {
         out_param.type = ParamType_t::VECTOR4F;
-        out_param.default_value = std::string(p_ptr->ValueString().PeekBuffer());
+        out_param.default_value = p_ptr->ValueString();
         auto minv = p_ptr->MinValue();
         out_param.minval = glm::vec4(minv.X(), minv.Y(), minv.Z(), minv.W());
         auto maxv = p_ptr->MaxValue();
@@ -478,7 +477,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
     } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::STRING, std::monostate(),
             std::monostate(), std::monostate(), param_name, description);
-        out_param->SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
+        out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FILEPATH,
             FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()}), std::monostate(), std::monostate(),
@@ -585,7 +584,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         }
     } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::StringParam>()) {
         if (out_param.type == ParamType_t::STRING) {
-            out_param.SetValue(std::string(p_ptr->Value().PeekBuffer()), set_default_val, set_dirty);
+            out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
         } else {
             type_error = true;
         }
@@ -739,7 +738,7 @@ bool megamol::gui::Parameter::WriteCoreParameterValue(
         }
     } else if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::StringParam>()) {
         if (in_param.type == ParamType_t::STRING) {
-            p_ptr->SetValue(vislib::StringA(std::get<std::string>(in_param.GetValue()).c_str()));
+            p_ptr->SetValue(std::get<std::string>(in_param.GetValue()));
         } else {
             type_error = true;
         }

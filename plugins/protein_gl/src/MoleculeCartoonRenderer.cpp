@@ -92,9 +92,9 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     this->geomShaderSupported = true;
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    protein::Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    std::string filename("colors.txt");
+    protein::Color::ReadColorTableFromFile(filename.c_str(), this->colorLookupTable);
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring modes
@@ -894,9 +894,9 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
         1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
         this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-        this->minGradColorParam.Param<param::StringParam>()->Value(),
-        this->midGradColorParam.Param<param::StringParam>()->Value(),
-        this->maxGradColorParam.Param<param::StringParam>()->Value(), false, bs);
+        this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+        this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+        this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), false, bs);
 
     // parameter refresh
     // Note this also recomputes the atom color table using the color call if necessary
@@ -972,9 +972,9 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         protein::Color::MakeColorTable(mol,
             static_cast<protein::Color::ColoringMode>(int(this->stickColoringModeParam.Param<param::EnumParam>()->Value())),
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+            this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
         // render rest as stick
         this->RenderStick(mol, posInter, bs);
         // reset coloring mode
@@ -986,9 +986,9 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
             cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+            this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
     }
 
     glDisable(GL_DEPTH_TEST);
@@ -1016,7 +1016,7 @@ void MoleculeCartoonRenderer::UpdateParameters(
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
         protein::Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
+            this->colorTableFileParam.Param<param::StringParam>()->Value().c_str(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
     }
     // parameter refresh
@@ -1054,9 +1054,9 @@ void MoleculeCartoonRenderer::UpdateParameters(
                 cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
                 1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
                 this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-                this->minGradColorParam.Param<param::StringParam>()->Value(),
-                this->midGradColorParam.Param<param::StringParam>()->Value(),
-                this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+                this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_INFO, "Recomputing atom color table WITHOUT color module!");
         } else if (col != nullptr) {

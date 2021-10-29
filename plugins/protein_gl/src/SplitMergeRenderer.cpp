@@ -273,7 +273,7 @@ bool SplitMergeRenderer::Render(view::CallRender2DGL &call) {
 
     if (this->foregroundColorParam.IsDirty()) {
         utility::ColourParser::FromString(
-            this->foregroundColorParam.Param<param::StringParam>()->Value(),
+            this->foregroundColorParam.Param<param::StringParam>()->Value().c_str(),
             fgColor.PeekComponents()[0],
             fgColor.PeekComponents()[1],
             fgColor.PeekComponents()[2],

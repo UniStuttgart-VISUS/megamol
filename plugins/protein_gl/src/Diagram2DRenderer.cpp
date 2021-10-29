@@ -281,7 +281,7 @@ void Diagram2DRenderer::parameterRefresh() {
     float r, g, b;
     // get plot color
     utility::ColourParser::FromString( 
-        this->plotColorParam.Param<param::StringParam>()->Value(),
+        this->plotColorParam.Param<param::StringParam>()->Value().c_str(),
         r, g, b);
     this->plotColor.Set( r, g, b);
 

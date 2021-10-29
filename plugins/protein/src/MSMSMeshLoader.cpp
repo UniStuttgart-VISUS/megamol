@@ -69,9 +69,9 @@ MSMSMeshLoader::MSMSMeshLoader(void)
     this->MakeSlotAvailable(&this->filenameSlot);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    std::string filename("colors.txt");
+    Color::ReadColorTableFromFile(filename.c_str(), this->colorLookupTable);
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // MSMS detail parameter
@@ -201,14 +201,14 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                 vislib::Array<float> atomColorTable2;
 
                 Color::MakeColorTable(mol, currentColoringMode0, atomColorTable, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
+                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs, false, pa);
 
                 Color::MakeColorTable(mol, currentColoringMode1, atomColorTable2, this->colorLookupTable,
-                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
+                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs, false, pa);
 
                 // loop over atoms and compute color
                 float* vertex = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];

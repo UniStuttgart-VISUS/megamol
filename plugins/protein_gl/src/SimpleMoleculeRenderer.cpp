@@ -72,9 +72,9 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    protein::Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    std::string filename("colors.txt");
+    protein::Color::ReadColorTableFromFile(filename.c_str(), this->colorLookupTable);
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring modes
@@ -619,16 +619,16 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
             cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs,
+            this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs,
             this->useNeighborColors.Param<param::BoolParam>()->Value());
     }
 
     // ---------- special color handling ... -----------
     unsigned int midx, ridx, rcnt, aidx, acnt;
     float r, g, b;
-    utility::ColourParser::FromString(this->specialColorParam.Param<param::StringParam>()->Value(), r, g, b);
+    utility::ColourParser::FromString(this->specialColorParam.Param<param::StringParam>()->Value().c_str(), r, g, b);
     for (unsigned int mi = 0; mi < this->molIdxList.Count(); ++mi) {
         midx = atoi(this->molIdxList[mi]);
         ridx = mol->Molecules()[midx].FirstResidueIndex();
@@ -2419,7 +2419,7 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
         protein::Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
+            this->colorTableFileParam.Param<param::StringParam>()->Value().c_str(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
     }
     // Recompute color table
@@ -2439,9 +2439,9 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
             cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs,
+            this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs,
             this->useNeighborColors.Param<param::BoolParam>()->Value());
 
         // Use one coloring mode
@@ -2466,7 +2466,7 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
     }
     // get molecule lust
     if (this->molIdxListParam.IsDirty()) {
-        vislib::StringA tmpStr(this->molIdxListParam.Param<param::StringParam>()->Value());
+        vislib::StringA tmpStr(this->molIdxListParam.Param<param::StringParam>()->Value().c_str());
         this->molIdxList = vislib::StringTokeniser<vislib::CharTraitsA>::Split(tmpStr, ';', true);
         this->molIdxListParam.ResetDirty();
     }

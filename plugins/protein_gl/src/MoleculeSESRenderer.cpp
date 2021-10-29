@@ -192,9 +192,9 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->MakeSlotAvailable(&this->molIdxListParam);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename("colors.txt");
-    protein::Color::ReadColorTableFromFile(filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
+    std::string filename("colors.txt");
+    protein::Color::ReadColorTableFromFile(filename.c_str(), this->colorLookupTable);
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // fill rainbow color table
@@ -863,9 +863,9 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
             this->cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+            this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
         // compute the data needed for the current render mode
         if (this->currentRendermode == GPU_RAYCASTING)
             this->ComputeRaycastingArrays();
@@ -1000,9 +1000,9 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
             this->cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs);
+            this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(), true, bs);
 
         this->preComputationDone = false;
         this->coloringModeParam0.ResetDirty();
@@ -1043,14 +1043,14 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
         this->offscreenRenderingParam.ResetDirty();
     }
     if (this->molIdxListParam.IsDirty()) {
-        vislib::StringA tmpStr(this->molIdxListParam.Param<param::StringParam>()->Value());
+        vislib::StringA tmpStr(this->molIdxListParam.Param<param::StringParam>()->Value().c_str());
         this->molIdxList = vislib::StringTokeniser<vislib::CharTraitsA>::Split(tmpStr, ';', true);
         this->molIdxListParam.ResetDirty();
     }
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
         protein::Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
+            this->colorTableFileParam.Param<param::StringParam>()->Value().c_str(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
         recomputeColors = true;
     }

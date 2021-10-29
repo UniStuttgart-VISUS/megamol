@@ -156,7 +156,7 @@ namespace protein {
 	 * @param useNeighbors        Add colors of the neighbors to the current color
          * @param pa                  The per-atom float data call.
          */
-		static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
+	static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
             ColoringMode cm0,
             ColoringMode cm1,
             float weight0,
@@ -195,7 +195,7 @@ namespace protein {
          * @param pa                  The per-atom float data call.
          * @param enzymeMode          Enyzme coloring mode, coloring only relevant parts of the active site
          */
-		static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
+	static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
             ColoringMode currentColoringMode,
             vislib::Array<float> &atomColorTable,
             vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
@@ -229,16 +229,16 @@ namespace protein {
          * @param forceRecompute      Force recomputation of the color table.
          * @param bs                  The binding site data call.
          */
-		static void MakeComparisonColorTable(const megamol::protein_calls::MolecularDataCall *mol1,
-			const megamol::protein_calls::MolecularDataCall *mol2,
-			ColoringMode currentColoringMode,
-			vislib::Array<float> &atomColorTable,
-			vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
-			vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
-			vislib::TString minGradColor,
-			vislib::TString midGradColor,
-			vislib::TString maxGradColor,
-			bool forceRecompute = false,
+	static void MakeComparisonColorTable(const megamol::protein_calls::MolecularDataCall *mol1,
+	    const megamol::protein_calls::MolecularDataCall *mol2,
+	    ColoringMode currentColoringMode,
+	    vislib::Array<float> &atomColorTable,
+	    vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
+	    vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
+	    vislib::TString minGradColor,
+	    vislib::TString midGradColor,
+	    vislib::TString maxGradColor,
+	    bool forceRecompute = false,
             const protein_calls::BindingSiteCall *bs = 0,
             const protein_calls::PerAtomFloatCall *pa = 0);
 
@@ -260,13 +260,13 @@ namespace protein {
         static void ReadColorTableFromFile( vislib::StringA filename,
             vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable);
 
-		/**
-		 * Lookup table for the hydrophobicity of an amnio acid by residue name.
-		 *
-		 * @param resName The name of the residue as 3-letter code
-		 * @return The hydrophobicity.
-		 */
-		static float GetHydrophibicityByResName(vislib::StringA resName);
+	/**
+	 * Lookup table for the hydrophobicity of an amnio acid by residue name.
+	 *
+	 * @param resName The name of the residue as 3-letter code
+	 * @return The hydrophobicity.
+	 */
+	static float GetHydrophibicityByResName(vislib::StringA resName);
     };
 
 } /* end namespace protein */

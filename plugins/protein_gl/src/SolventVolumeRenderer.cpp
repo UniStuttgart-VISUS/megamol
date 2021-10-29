@@ -181,9 +181,9 @@ protein_gl::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DMo
     this->MakeSlotAvailable( &this->interpolParam);
 
     // fill color table with default values and set the filename param
-    vislib::StringA filename( "colors.txt");
-    protein::Color::ReadColorTableFromFile( filename, this->colorLookupTable);
-    this->colorTableFileParam.SetParameter(new param::StringParam( A2T( filename)));
+    std::string filename( "colors.txt");
+    protein::Color::ReadColorTableFromFile( filename.c_str(), this->colorLookupTable);
+    this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable( &this->colorTableFileParam);
 
     // the color for the minimum value (gradient coloring
@@ -584,9 +584,9 @@ void protein_gl::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall *mol)
                 protein::Color::MakeColorTable( mol,
                     currentColoringMode0,
                     this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-                    this->minGradColorParam.Param<param::StringParam>()->Value(),
-                    this->midGradColorParam.Param<param::StringParam>()->Value(),
-                    this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                    this->minGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value().c_str(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value().c_str(),
                     true);
             }
         }
@@ -1727,7 +1727,7 @@ void protein_gl::SolventVolumeRenderer::ParameterRefresh( view::CallRender3DGL *
 
     // update color table
     if( this->colorTableFileParam.IsDirty() ) {
-        protein::Color::ReadColorTableFromFile( this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
+        protein::Color::ReadColorTableFromFile( this->colorTableFileParam.Param<param::StringParam>()->Value().c_str(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
         this->forceUpdateColoringMode = true;

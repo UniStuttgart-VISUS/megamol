@@ -63,7 +63,7 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::create(void) {
  * megamol::stdplugin::datatools::DataFileSequenceStepper::findFilenameSlot
  */
 megamol::core::param::ParamSlot * megamol::stdplugin::datatools::DataFileSequenceStepper::findFilenameSlot(void) {
-    vislib::StringA name(this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value());
+    vislib::StringA name(this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
     if (name.IsEmpty()) return NULL;
 
     this->ModuleGraphLock().LockExclusive();
@@ -91,14 +91,14 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::GetFilename(megamol
     if ((sp == NULL) && (fpp == NULL)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Parameter \"%s\" is not of a compatible type.",
-            vislib::StringA(this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
+            this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return false;
     }
-    outName = (sp == NULL) ? vislib::TString(fpp->Value().generic_u8string().c_str()) : sp->Value();
+    outName = vislib::TString((sp == NULL) ? fpp->Value().generic_u8string().c_str() : sp->Value().c_str());
     if (outName.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
             "Value of parameter \"%s\" is empty.",
-            vislib::StringA(this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
+            this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return false;
     }
     return true;
@@ -142,7 +142,7 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::onNextFile(core::pa
     if (fnps == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Cannot find parameter slot \"%s\"",
-            vislib::StringA(this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
+            this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return true;
     }
     vislib::TString fnf;
@@ -201,7 +201,7 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::onPrevFile(core::pa
     if (fnps == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Cannot find parameter slot \"%s\"",
-            vislib::StringA(this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
+            this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return true;
     }
     vislib::TString fnf;
@@ -269,13 +269,13 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::SetFilename(core::p
     if ((sp == NULL) && (fpp == NULL)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Parameter \"%s\" is not of a compatible type.",
-            vislib::StringA(this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value()).PeekBuffer());
+            this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return false;
     }
     if (sp == NULL) {
         fpp->SetValue(name.PeekBuffer());
     } else {
-        sp->SetValue(name);
+        sp->SetValue(name.PeekBuffer());
     }
     return true;
 }

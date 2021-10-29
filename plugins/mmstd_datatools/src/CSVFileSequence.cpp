@@ -41,7 +41,7 @@ stdplugin::datatools::CSVFileSequence::CSVFileSequence(void) : core::Module(),
         fileNameTemplate(_T("")), fileNumMin(0), fileNumMax(0), fileNumStep(1),
         needDataUpdate(true), frameCnt(1), lastIdxRequested(0) {
 
-    this->fileNameTemplateSlot << new core::param::StringParam(this->fileNameTemplate);
+    this->fileNameTemplateSlot << new core::param::StringParam(this->fileNameTemplate.PeekBuffer());
     this->fileNameTemplateSlot.SetUpdateCallback(&CSVFileSequence::onFileNameTemplateChanged);
     this->MakeSlotAvailable(&this->fileNameTemplateSlot);
 
@@ -143,7 +143,7 @@ bool stdplugin::datatools::CSVFileSequence::getDataCallback(core::Call& caller) 
         unsigned int frameID = pgdc->GetFrameID();
         unsigned int idx = this->fileNumMin + this->fileNumStep * frameID;
         filename.Format(this->fileNameTemplate, idx);
-        fnSlot->Parameter()->ParseValue(filename);
+        fnSlot->Parameter()->ParseValue(filename.PeekBuffer());
 
         if (this->lastIdxRequested != pgdc->GetFrameID()) {
             this->lastIdxRequested = pgdc->GetFrameID();
@@ -199,7 +199,7 @@ bool stdplugin::datatools::CSVFileSequence::getExtentCallback(core::Call& caller
 
         unsigned int idx = this->fileNumMin + this->fileNumStep * pgdc->GetFrameID();
         filename.Format(this->fileNameTemplate, idx);
-        fnSlot->Parameter()->ParseValue(filename);
+        fnSlot->Parameter()->ParseValue(filename.PeekBuffer());
 
         if (this->lastIdxRequested != pgdc->GetFrameID()) {
             this->lastIdxRequested = pgdc->GetFrameID();
@@ -263,7 +263,7 @@ bool stdplugin::datatools::CSVFileSequence::onFileNameTemplateChanged(core::para
     //  Syntax: *[[DIG][{MIN..MAX[+STEP]}]*]
     // Currently MIN, MAX, and STEP work globally!!!
     // Currently only ONE '*'-Sequence is allowed!!!
-    const vislib::TString &val = this->fileNameTemplateSlot.Param<core::param::StringParam>()->Value();
+    const vislib::TString &val = this->fileNameTemplateSlot.Param<core::param::StringParam>()->Value().c_str();
     vislib::TString fnt;
     unsigned int len = val.Length();
     unsigned int state = 0;
@@ -428,7 +428,7 @@ bool stdplugin::datatools::CSVFileSequence::onFileNameSlotNameChanged(core::para
     if ((P != NULL) && (this->findFileNameSlot() == NULL)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to connect to file name parameter slot \"%s\". Parameter resetted.",
-            vislib::StringA(P->Value()).PeekBuffer());
+            P->Value().c_str());
         P->SetValue("", false);
     }
     this->ModuleGraphLock().UnlockExclusive();
@@ -446,7 +446,7 @@ core::param::ParamSlot *stdplugin::datatools::CSVFileSequence::findFileNameSlot(
         AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->shared_from_this());
         while (anoc) {
             core::param::ParamSlot *slot = dynamic_cast<core::param::ParamSlot*>(anoc->FindNamedObject(
-                vislib::StringA(P->Value()).PeekBuffer()).get());
+                P->Value().c_str()).get());
             if (slot != NULL) {
                 if ((slot->Param<core::param::FilePathParam>() != NULL)
                         || (slot->Param<core::param::StringParam>() != NULL)) {
@@ -502,7 +502,7 @@ void stdplugin::datatools::CSVFileSequence::assertData(void) {
 
     // collect heuristic approach for clipping box
     filename.Format(this->fileNameTemplate, this->fileNumMin);
-    fnSlot->Parameter()->ParseValue(filename);
+    fnSlot->Parameter()->ParseValue(filename.PeekBuffer());
     gdc->SetFrameID(0);
     if (!(*gdc)(1)) {
         this->frameCnt = 0;

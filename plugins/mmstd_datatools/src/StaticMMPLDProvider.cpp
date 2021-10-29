@@ -31,7 +31,7 @@ void megamol::stdplugin::datatools::StaticMMPLDProvider::release() {}
 bool megamol::stdplugin::datatools::StaticMMPLDProvider::assertData(geocalls::MultiParticleDataCall& outCall) {
     if (filenamesSlot.IsDirty()) {
 
-        auto const filenames = filenamesSlot.Param<core::param::StringParam>()->Value();
+        auto const filenames = vislib::TString(filenamesSlot.Param<core::param::StringParam>()->Value().c_str());
 
         vislib::Array<vislib::TString> filenamesArray = vislib::TStringTokeniser::Split(filenames, _T(";"), true);
 

@@ -21,6 +21,7 @@ namespace megamol::infovis_gl {
 
 class BaseHistogramRenderer2D : public Renderer2D {
 public:
+
     BaseHistogramRenderer2D();
 
     ~BaseHistogramRenderer2D() override = default;

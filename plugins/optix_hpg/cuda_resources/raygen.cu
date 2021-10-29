@@ -80,6 +80,7 @@ namespace optix_hpg {
             }
             col += prd.emitted;
             return glm::vec4(col.x, col.y, col.z, 1.0f);
+            //return glm::vec4(1, 1, 1, 1.0f);
             // return glm::vec4(prd.radiance, 1.0f);
         }
 
@@ -173,6 +174,8 @@ namespace optix_hpg {
 
             surf2Dwrite(make_float4(col.r, col.g, col.b, col.a), self.col_surf, pixelID.x * sizeof(float4), pixelID.y,
                 cudaBoundaryModeZero);
+            /*surf2Dwrite(make_float4(1, 1, 1, 1), self.col_surf, pixelID.x * sizeof(float4), pixelID.y,
+                cudaBoundaryModeZero);*/
 
             if (depth < FLT_MAX) {
                 depth = (fs->depth_params.z / depth) - (fs->depth_params.x);
@@ -181,6 +184,7 @@ namespace optix_hpg {
                 depth = 1.f;
             }
             surf2Dwrite(depth, self.depth_surf, pixelID.x * sizeof(float), pixelID.y, cudaBoundaryModeZero);
+            //surf2Dwrite(1, self.depth_surf, pixelID.x * sizeof(float), pixelID.y, cudaBoundaryModeZero);
         }
     } // namespace device
 } // namespace optix_hpg
