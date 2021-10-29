@@ -19,12 +19,12 @@ namespace optix_hpg {
         }
 
 
-        MM_OPTIX_CLOSESTHIT_KERNEL(sphere_closesthit)() {
-            kernel_sphere_closest_hit();
+         MM_OPTIX_CLOSESTHIT_KERNEL(sphere_closesthit_occlusion)() {
+            optixSetPayload_0(1);
         }
 
 
-        MM_OPTIX_BOUNDS_KERNEL(sphere_bounds)(const void* geomData, box3f& primBounds, const unsigned int primID) {
+        MM_OPTIX_BOUNDS_KERNEL(sphere_bounds_occlusion)(const void* geomData, box3f& primBounds, const unsigned int primID) {
             kernel_bounds(geomData, primBounds, primID);
         }
     } // namespace device
