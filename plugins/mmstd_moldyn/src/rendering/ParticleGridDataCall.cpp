@@ -18,9 +18,9 @@ using namespace megamol::stdplugin::moldyn::rendering;
  * ParticleGridDataCall::ParticleType::ParticleType
  */
 ParticleGridDataCall::ParticleType::ParticleType(void)
-        : colDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE),
+        : colDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE),
         maxColI(1.0f), minColI(0.0), radius(0.5f),
-        vertDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+        vertDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
     this->col[0] = this->col[1] = this->col[2] = 128;
 }
 

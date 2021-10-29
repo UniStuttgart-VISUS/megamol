@@ -10,6 +10,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include <vector>
 #include <cstdint>
 
@@ -50,7 +51,7 @@ namespace datatools {
 
     private:
 
-        void calcData(core::moldyn::MultiParticleDataCall* data);
+        void calcData(geocalls::MultiParticleDataCall* data);
 
         core::CalleeSlot outGraphDataSlot;
         core::CallerSlot inParticleDataSlot;

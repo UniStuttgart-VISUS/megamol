@@ -80,8 +80,8 @@ void datatools::ParticleTranslateRotateScale::InterfaceResetDirty() {
  * datatools::ParticleTranslateRotateScale::manipulateData
  */
 bool datatools::ParticleTranslateRotateScale::manipulateData(
-    megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
 
     const float transX = translateSlot.Param<core::param::Vector3fParam>()->Value().GetX();
@@ -217,7 +217,7 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
 }
 
 bool datatools::ParticleTranslateRotateScale::manipulateExtent(
-    core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
     outData = inData;
 
@@ -231,7 +231,7 @@ bool datatools::ParticleTranslateRotateScale::manipulateExtent(
 
 
 
-void datatools::ParticleTranslateRotateScale::colorTransferGray(core::moldyn::MultiParticleDataCall::Particles& p,
+void datatools::ParticleTranslateRotateScale::colorTransferGray(geocalls::MultiParticleDataCall::Particles& p,
     float const* transferTable, unsigned int tableSize, std::vector<float>& rgbaArray) {
 
     auto const& parStore = p.GetParticleStore();

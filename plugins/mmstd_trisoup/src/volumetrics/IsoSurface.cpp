@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "volumetrics/IsoSurface.h"
-#include "mmcore/CallVolumeData.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -44,7 +44,7 @@ IsoSurface::IsoSurface(void) :
         isoValueSlot("isoval", "The iso value"),
         dataHash(0), frameIdx(0), index(), vertex(), normal(), mesh() {
 
-    this->inDataSlot.SetCompatibleCall<core::CallVolumeDataDescription>();
+    this->inDataSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
     this->outDataSlot.SetCallback("CallTriMeshData", "GetData", &IsoSurface::outDataCallback);
@@ -94,7 +94,7 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
     megamol::geocalls::CallTriMeshData *tmd = dynamic_cast<megamol::geocalls::CallTriMeshData*>(&caller);
     if (tmd == NULL) return false;
 
-    core::CallVolumeData *cvd = this->inDataSlot.CallAs<core::CallVolumeData>();
+    geocalls::VolumetricDataCall* cvd = this->inDataSlot.CallAs<geocalls::VolumetricDataCall>();
     if (cvd != NULL) {
 
         bool recalc = false;
@@ -120,18 +120,7 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
 
         unsigned int attrIdx = UINT_MAX;
         if (recalc) {
-            vislib::StringA attrName(this->attributeSlot.Param<core::param::StringParam>()->Value().c_str());
-            attrIdx = cvd->FindAttribute(attrName);
-            if (attrIdx == UINT_MAX) {
-                try {
-                    attrIdx = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(attrName));
-                } catch(...) {
-                    attrIdx = UINT_MAX;
-                }
-            }
-            if (attrIdx >= cvd->AttributeCount()) {
-                recalc = false;
-            } else if (cvd->Attribute(attrIdx).Type() != core::CallVolumeData::TYPE_FLOAT) {
+            if (cvd->GetScalarType() != geocalls::VolumetricDataCall::ScalarType::FLOATING_POINT) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("Only float volumes are supported ATM");
                 recalc = false;
             }
@@ -165,7 +154,7 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
 #ifdef WITH_COLOUR_DATA
                 c,
 #endif /* WITH_COLOUR_DATA */
-                n, isoVal, cvd->Attribute(attrIdx).Floats(), cvd->XSize(), cvd->YSize(), cvd->ZSize());
+                n, isoVal, static_cast<float*>(cvd->GetData()), cvd->GetResolution(0), cvd->GetResolution(1), cvd->GetResolution(2));
 
             this->index.EnforceSize(i.End(), true);
             this->vertex.EnforceSize(v.End(), true);
@@ -208,9 +197,9 @@ bool IsoSurface::outExtentCallback(megamol::core::Call& caller) {
     if (tmd == NULL) return false;
 
     tmd->AccessBoundingBoxes().Clear();
-    core::CallVolumeData *cvd = this->inDataSlot.CallAs<core::CallVolumeData>();
+    geocalls::VolumetricDataCall* cvd = this->inDataSlot.CallAs<geocalls::VolumetricDataCall>();
     cvd->SetFrameID(tmd->FrameID(), tmd->IsFrameForced());
-    if ((cvd == NULL) || (!(*cvd)(1))) {
+    if ((cvd == NULL) || (!(*cvd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))) {
         // no input data
         tmd->SetDataHash(0);
         tmd->SetFrameCount(1);

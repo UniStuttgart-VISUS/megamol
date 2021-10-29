@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "OSPRayPKDGeometry.h"
 #include "mmcore/Call.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -29,7 +29,7 @@ OSPRayPKDGeometry::OSPRayPKDGeometry(void)
     , deployStructureSlot("deployStructureSlot", "Connects to an OSPRayAPIStructure")
     , colorTypeSlot("colorType", "Set the type of encoded color") {
 
-    this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     auto ep = new megamol::core::param::EnumParam(0);
@@ -56,8 +56,8 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
 
     // read Data, calculate  shape parameters, fill data vectors
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
-    megamol::core::moldyn::MultiParticleDataCall* cd =
-        this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+    megamol::geocalls::MultiParticleDataCall* cd =
+        this->getDataSlot.CallAs<megamol::geocalls::MultiParticleDataCall>();
 
     
 
@@ -90,7 +90,7 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
     std::vector<::ospray::cpp::Geometry> geo;
     for (size_t i = 0; i < listCount; i++) {
 
-        core::moldyn::MultiParticleDataCall::Particles& parts = cd->AccessParticles(i);
+        geocalls::MultiParticleDataCall::Particles& parts = cd->AccessParticles(i);
 
         auto colorType = this->colorTypeSlot.Param<megamol::core::param::EnumParam>()->Value();
 
@@ -168,7 +168,7 @@ bool OSPRayPKDGeometry::InterfaceIsDirtyNoReset() const { return this->colorType
 
 bool OSPRayPKDGeometry::getExtendsCallback(core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
-    core::moldyn::MultiParticleDataCall* cd = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall* cd = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
 
     if (cd == NULL) return false;
     cd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
@@ -185,7 +185,7 @@ bool OSPRayPKDGeometry::getExtendsCallback(core::Call& call) {
 
 bool OSPRayPKDGeometry::getDirtyCallback(core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
-    auto cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+    auto cd = this->getDataSlot.CallAs<megamol::geocalls::MultiParticleDataCall>();
 
     if (cd == nullptr) return false;
     if (this->InterfaceIsDirtyNoReset()) {

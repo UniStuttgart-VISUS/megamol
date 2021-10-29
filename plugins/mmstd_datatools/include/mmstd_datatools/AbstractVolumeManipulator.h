@@ -14,7 +14,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 
 
 namespace megamol {
@@ -61,7 +61,7 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateData(
-            megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData);
+            geocalls::VolumetricDataCall& outData, geocalls::VolumetricDataCall& inData);
 
         /**
          * Manipulates the particle data extend information
@@ -74,10 +74,10 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateExtent(
-            megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData);
+            geocalls::VolumetricDataCall& outData, geocalls::VolumetricDataCall& inData);
 
         virtual bool manipulateMetaData(
-            megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData);
+            geocalls::VolumetricDataCall& outData, geocalls::VolumetricDataCall& inData);
 
     private:
 

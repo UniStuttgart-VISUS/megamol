@@ -45,8 +45,7 @@ datatools::ParticleColorChannelSelect::~ParticleColorChannelSelect(void) {
  * datatools::ParticleColorChannelSelect::manipulateData
  */
 bool datatools::ParticleColorChannelSelect::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     outData = inData; // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
@@ -64,17 +63,18 @@ bool datatools::ParticleColorChannelSelect::manipulateData(
         auto& p = outData.AccessParticles(i);
         if (p.GetCount() <= 0) continue;
 
-        if (((p.GetColourDataType() == megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB) && (chan != 3)) 
-                || (p.GetColourDataType() == megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA)) {
+        if (((p.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGB) && (chan != 3)) 
+                ||
+            (p.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA)) {
             unsigned int stride;
-            if (p.GetColourDataType() == megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB) {
+            if (p.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGB) {
                 stride = 3 * 4;
             } else {
-                assert(p.GetColourDataType() == megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA);
+                assert(p.GetColourDataType() == geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA);
                 stride = 4 * 4;
             }
             if (p.GetColourDataStride() > stride) stride = p.GetColourDataStride();
-            p.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I,
+            p.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I,
                 static_cast<const float*>(p.GetColourData()) + chan, stride);
 
             std::map<const void*, std::pair<float, float> >::iterator clRng = colRange.find(p.GetColourData());

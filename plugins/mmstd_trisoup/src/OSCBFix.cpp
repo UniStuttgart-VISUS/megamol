@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "OSCBFix.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include <climits>
 
 
@@ -22,13 +22,13 @@ OSCBFix::OSCBFix(void) : core::Module(),
         dataInSlot("dataIn", "The slot fetching the original data"),
         datahash(0), frameNum(UINT_MAX), oscb() {
 
-    this->dataInSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->dataInSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->dataOutSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &OSCBFix::getData);
-    this->dataOutSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &OSCBFix::getExtent);
+    this->dataOutSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &OSCBFix::getData);
+    this->dataOutSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &OSCBFix::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 }
 
@@ -54,7 +54,7 @@ bool OSCBFix::create(void) {
  * OSCBFix::getData
  */
 bool OSCBFix::getData(core::Call& c) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall *outCall = dynamic_cast<MultiParticleDataCall*>(&c);
     if (outCall == NULL) return false;
 
@@ -86,7 +86,7 @@ bool OSCBFix::getData(core::Call& c) {
  * OSCBFix::getExtent
  */
 bool OSCBFix::getExtent(core::Call& c) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall *outCall = dynamic_cast<MultiParticleDataCall*>(&c);
     if (outCall == NULL) return false;
 
@@ -128,8 +128,8 @@ void OSCBFix::release(void) {
 /*
  * OSCBFix::calcOSCB
  */
-void OSCBFix::calcOSCB(core::moldyn::MultiParticleDataCall& data) {
-    using core::moldyn::MultiParticleDataCall;
+void OSCBFix::calcOSCB(geocalls::MultiParticleDataCall& data) {
+    using geocalls::MultiParticleDataCall;
     this->oscb.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     vislib::math::Cuboid<float> box;
     bool first = true;

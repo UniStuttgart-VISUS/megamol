@@ -43,8 +43,8 @@ IColRangeOverride::~IColRangeOverride() {
 }
 
 bool IColRangeOverride::manipulateData(
-        core::moldyn::MultiParticleDataCall& outData,
-        core::moldyn::MultiParticleDataCall& inData) {
+        geocalls::MultiParticleDataCall& outData,
+        geocalls::MultiParticleDataCall& inData) {
 
     if ( (hash != inData.DataHash()) || (inData.DataHash() == 0)
             || (frameID != inData.FrameID()) ) {

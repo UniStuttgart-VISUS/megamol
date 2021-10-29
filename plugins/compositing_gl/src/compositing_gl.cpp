@@ -14,6 +14,7 @@
 #include "SimpleRenderTarget.h"
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
+#include "ASSAO.h"
 #include "compositing/CompositingCalls.h"
 
 namespace megamol::compositing {
@@ -38,6 +39,7 @@ namespace megamol::compositing {
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::SimpleRenderTarget>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureCombine>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureDepthCompositing>();
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::ASSAO>();
 
             // register calls
             this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallTexture2D>();

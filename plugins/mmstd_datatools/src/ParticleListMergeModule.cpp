@@ -35,8 +35,7 @@ datatools::ParticleListMergeModule::~ParticleListMergeModule(void) {
  * datatools::ParticleListMergeModule::manipulateData
  */
 bool datatools::ParticleListMergeModule::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
     if ((this->frameId != inData.FrameID()) || (this->dataHash != inData.DataHash()) || (inData.DataHash() == 0)) {
         this->frameId = inData.FrameID();
@@ -58,8 +57,8 @@ bool datatools::ParticleListMergeModule::manipulateData(
 /*
  * datatools::ParticleListMergeModule::setData
  */
-void datatools::ParticleListMergeModule::setData(core::moldyn::MultiParticleDataCall& inDat) {
-    using core::moldyn::SimpleSphericalParticles;
+void datatools::ParticleListMergeModule::setData(geocalls::MultiParticleDataCall& inDat) {
+    using geocalls::SimpleSphericalParticles;
 
     // analyze lists
     bool first = true;
@@ -73,7 +72,7 @@ void datatools::ParticleListMergeModule::setData(core::moldyn::MultiParticleData
 
     uint64_t partCnt = 0;
     for (unsigned int li = 0; li < inDat.GetParticleListCount(); li++) {
-        core::moldyn::MultiParticleDataCall::Particles& p = inDat.AccessParticles(li);
+        geocalls::MultiParticleDataCall::Particles& p = inDat.AccessParticles(li);
         if (p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_NONE) continue;
         if (p.GetCount() == 0) continue;
 
@@ -222,7 +221,7 @@ void datatools::ParticleListMergeModule::setData(core::moldyn::MultiParticleData
 
     partCnt = 0;
     for (unsigned int li = 0; li < inDat.GetParticleListCount(); li++) {
-        core::moldyn::MultiParticleDataCall::Particles& p = inDat.AccessParticles(li);
+        geocalls::MultiParticleDataCall::Particles& p = inDat.AccessParticles(li);
         if (p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_NONE) continue;
         if (p.GetCount() == 0) continue;
 

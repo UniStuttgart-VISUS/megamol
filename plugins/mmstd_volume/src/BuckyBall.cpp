@@ -9,7 +9,6 @@
 #include "BuckyBall.h"
 
 #include "mmcore/Call.h"
-#include "mmcore/misc/VolumetricDataCall.h"
 
 #include <limits>
 
@@ -23,18 +22,18 @@ megamol::stdplugin::volume::BuckyBall::BuckyBall(void)
 	, minValue(0.0f)
 	, maxValue(1.0f) {
 
-    this->getDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-		core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_DATA), &BuckyBall::getDataCallback);
-    this->getDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-		core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_EXTENTS), &BuckyBall::getExtentCallback);
-	this->getDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-		core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_METADATA), &BuckyBall::getDataCallback);
-	this->getDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-		core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_START_ASYNC), &BuckyBall::getDummyCallback);
-	this->getDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-		core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_STOP_ASYNC), &BuckyBall::getDummyCallback);
-	this->getDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-		core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_TRY_GET_DATA), &BuckyBall::getDummyCallback);
+    this->getDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+		geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_DATA), &BuckyBall::getDataCallback);
+    this->getDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+		geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_EXTENTS), &BuckyBall::getExtentCallback);
+	this->getDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+		geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_METADATA), &BuckyBall::getDataCallback);
+	this->getDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+		geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_START_ASYNC), &BuckyBall::getDummyCallback);
+	this->getDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+		geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_STOP_ASYNC), &BuckyBall::getDummyCallback);
+	this->getDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+		geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_TRY_GET_DATA), &BuckyBall::getDummyCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 
 	this->volume.resize(this->resolution[0] * this->resolution[1] * this->resolution[2]);
@@ -160,14 +159,14 @@ void megamol::stdplugin::volume::BuckyBall::release(void) {
  * megamol::stdplugin::volume::BuckyBall::getDataCallback
  */
 bool megamol::stdplugin::volume::BuckyBall::getDataCallback(core::Call& caller) {
-    auto *cvd = dynamic_cast<core::misc::VolumetricDataCall*>(&caller);
+    auto *cvd = dynamic_cast<geocalls::VolumetricDataCall*>(&caller);
     if (cvd == nullptr) return false;
 
-	this->metaData.GridType = core::misc::GridType_t::CARTESIAN;
+	this->metaData.GridType = geocalls::GridType_t::CARTESIAN;
 	this->metaData.Resolution[0] = this->resolution[0];
 	this->metaData.Resolution[1] = this->resolution[1];
 	this->metaData.Resolution[2] = this->resolution[2];
-	this->metaData.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
+	this->metaData.ScalarType = geocalls::ScalarType_t::FLOATING_POINT;
 	this->metaData.ScalarLength = sizeof(float);
 	this->metaData.Components = 1;
 	this->metaData.SliceDists[0] = const_cast<float*>(&this->sliceDists[0]);
@@ -185,7 +184,7 @@ bool megamol::stdplugin::volume::BuckyBall::getDataCallback(core::Call& caller) 
 	this->metaData.Extents[2] = 4.0f;
 	this->metaData.MinValues = const_cast<double*>(&this->minValue);
 	this->metaData.MaxValues = const_cast<double*>(&this->maxValue);
-	this->metaData.MemLoc = core::misc::MemoryLocation::RAM;
+	this->metaData.MemLoc = geocalls::MemoryLocation::RAM;
 
 	cvd->SetMetadata(&this->metaData);
 	cvd->SetData(this->volume.data());
@@ -198,7 +197,7 @@ bool megamol::stdplugin::volume::BuckyBall::getDataCallback(core::Call& caller) 
  * megamol::core::BuckyBall::getExtentCallback
  */
 bool megamol::stdplugin::volume::BuckyBall::getExtentCallback(core::Call& caller) {
-	auto *cvd = dynamic_cast<core::misc::VolumetricDataCall*>(&caller);
+	auto *cvd = dynamic_cast<geocalls::VolumetricDataCall*>(&caller);
     if (cvd == nullptr) return false;
 
     cvd->AccessBoundingBoxes().Clear();

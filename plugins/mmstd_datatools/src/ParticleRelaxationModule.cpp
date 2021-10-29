@@ -33,8 +33,7 @@ datatools::ParticleRelaxationModule::~ParticleRelaxationModule(void) {
  * datatools::ParticleRelaxationModule::manipulateExtent
  */
 bool datatools::ParticleRelaxationModule::manipulateExtent(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
     if ((this->frameId != inData.FrameID()) || (this->dataHash != inData.DataHash()) || (inData.DataHash() == 0)) {
         // will be updates next frame
@@ -59,9 +58,8 @@ bool datatools::ParticleRelaxationModule::manipulateExtent(
  * datatools::ParticleRelaxationModule::manipulateData
  */
 bool datatools::ParticleRelaxationModule::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     if ((this->frameId != inData.FrameID()) || (this->dataHash != inData.DataHash()) || (inData.DataHash() == 0)) {
         this->frameId = inData.FrameID();

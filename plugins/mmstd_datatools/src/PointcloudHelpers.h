@@ -9,7 +9,7 @@
 #define MMSTD_DATATOOLS_POINTCLOUDHELPERS_H_INCLUDED
 #pragma once
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include <vector>
 
 namespace megamol {
@@ -24,7 +24,7 @@ namespace datatools {
 class simplePointcloud {
 private:
 
-    megamol::core::moldyn::MultiParticleDataCall *dat;
+    geocalls::MultiParticleDataCall *dat;
     std::vector<size_t> &indices;
     bool cycleX, cycleY, cycleZ;
 
@@ -32,7 +32,7 @@ public:
 
     typedef float coord_t;
 
-    simplePointcloud(megamol::core::moldyn::MultiParticleDataCall *dat, std::vector<size_t> &indices)
+    simplePointcloud(geocalls::MultiParticleDataCall *dat, std::vector<size_t> &indices)
         : dat(dat), indices(indices) {
         // intentionally empty
     }
@@ -83,7 +83,7 @@ public:
     }
 
     inline const coord_t* get_position(size_t index) const {
-        using megamol::core::moldyn::SimpleSphericalParticles;
+        using geocalls::SimpleSphericalParticles;
 
         unsigned int plc = dat->GetParticleListCount();
         for (unsigned int pli = 0; pli < plc; pli++) {
@@ -114,7 +114,7 @@ public:
     /// alternatively, it wrongly associates velocities to particles that have none
     /// AND you cannot skip lists without velocity in get_position because that makes no sense either
     inline const coord_t* get_velocity(size_t index) const {
-        using megamol::core::moldyn::SimpleSphericalParticles;
+        using geocalls::SimpleSphericalParticles;
 
         unsigned int plc = dat->GetParticleListCount();
         for (unsigned int pli = 0; pli < plc; pli++) {

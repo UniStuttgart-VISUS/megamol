@@ -9,7 +9,7 @@
 #include "mmcore/utility/log/Log.h"
 #include <thread>
 #include <cstdint>
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin::datatools;
@@ -17,7 +17,7 @@ using namespace megamol::stdplugin::datatools;
 NullParticleWriter::NullParticleWriter(void) : core::AbstractDataWriter(),
         dataSlot("data", "The slot requesting the data to be written") {
 
-    this->dataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->dataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->dataSlot);
 }
 
@@ -34,7 +34,7 @@ void NullParticleWriter::release(void) {
 
 bool NullParticleWriter::run(void) {
     using megamol::core::utility::log::Log;
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
     MultiParticleDataCall *mpdc = this->dataSlot.CallAs<MultiParticleDataCall>();
     if (mpdc == nullptr) {

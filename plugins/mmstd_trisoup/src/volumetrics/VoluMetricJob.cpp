@@ -24,6 +24,7 @@
 #include "mmcore/utility/sys/SystemInformation.h"
 #include <climits>
 #include <cfloat>
+#include "geometry_calls/MultiParticleDataCall.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -51,7 +52,7 @@ VoluMetricJob::VoluMetricJob(void) : core::job::AbstractThreadedJob(), core::Mod
         subVolumeResolutionSlot("subVolumeResolutionSlot", "maximum edge length of a subvolume processed as a separate job"),
         MaxRad(0), backBufferIndex(0), meshBackBufferIndex(0), hash(0) {
 
-    this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->metricsFilenameSlot << new core::param::FilePathParam("");
@@ -132,7 +133,7 @@ void VoluMetricJob::release(void) {
 DWORD VoluMetricJob::Run(void *userData) {
     using megamol::core::utility::log::Log;
 
-    core::moldyn::MultiParticleDataCall *datacall = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *datacall = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (datacall == NULL) {
         Log::DefaultLog.WriteError("No data source connected to VoluMetricJob");
         return -1;
@@ -199,7 +200,7 @@ DWORD VoluMetricJob::Run(void *userData) {
                 MinRad = r;
             }
             if (datacall->AccessParticles(partListI).GetVertexDataType() ==
-                core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+                geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
                 UINT64 numParticles = datacall->AccessParticles(partListI).GetCount();
                 unsigned int stride = datacall->AccessParticles(partListI).GetVertexDataStride();
                 unsigned char *vertexData = (unsigned char*)datacall->AccessParticles(partListI).GetVertexData();
@@ -456,7 +457,7 @@ bool VoluMetricJob::getLineExtentCallback(core::Call &caller) {
     core::AbstractGetData3DCall *ldc = dynamic_cast<core::AbstractGetData3DCall*>(&caller);
     if (ldc == NULL) return false;
 
-    core::moldyn::MultiParticleDataCall *datacall = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *datacall = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if ((datacall == NULL) || (!(*datacall)(1))) {
         ldc->AccessBoundingBoxes().Clear();
         ldc->SetFrameCount(1);

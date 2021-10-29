@@ -24,13 +24,23 @@ namespace view {
 
     /**
      * Call for rendering visual elements (from separate sources) into a single target, i.e.,
-	 * FBO-based compositing and cluster display.
+     * FBO-based compositing and cluster display.
      */
-    using CallRenderViewGL = AbstractCallRenderView<glowl::FramebufferObject, callrenderviewgl_name, callrenderviewgl_desc>;
+    class CallRenderViewGL
+            : public AbstractCallRenderView<glowl::FramebufferObject, callrenderviewgl_name, callrenderviewgl_desc> {
+    public:
+        /** Ctor. */
+        CallRenderViewGL(void)
+                : AbstractCallRenderView<glowl::FramebufferObject, callrenderviewgl_name, callrenderviewgl_desc>() {
+            this->caps.RequireOpenGL();
+        }
+
+        /** Dtor. */
+        virtual ~CallRenderViewGL(void) = default;
+    };
 
     /** Description class typedef */
-    typedef factories::CallAutoDescription<CallRenderViewGL>
-        CallRenderViewGLDescription;
+    typedef factories::CallAutoDescription<CallRenderViewGL> CallRenderViewGLDescription;
 
 
 } /* end namespace view */

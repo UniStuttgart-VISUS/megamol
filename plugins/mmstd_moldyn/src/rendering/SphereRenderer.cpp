@@ -13,7 +13,7 @@
 
 
 using namespace megamol::core;
-using namespace megamol::core::moldyn;
+using namespace megamol::geocalls;
 using namespace megamol::stdplugin::moldyn::rendering;
 using namespace vislib::graphics::gl;
 

@@ -9,6 +9,13 @@
 
 #include "geometry_calls/CallTriMeshData.h"
 #include "geometry_calls/LinesDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "geometry_calls/EllipsoidalDataCall.h"
+#include "geometry_calls/ParticleRelistCall.h"
+#include "geometry_calls/BezierCurvesListDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "geometry_calls/QRCodeDataCall.h"
+#include "geometry_calls/CalloutImageCall.h"
 
 namespace megamol::geocalls {
     class GeometryCallsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -29,6 +36,13 @@ namespace megamol::geocalls {
             // register calls
             this->call_descriptions.RegisterAutoDescription<megamol::geocalls::CallTriMeshData>();
             this->call_descriptions.RegisterAutoDescription<megamol::geocalls::LinesDataCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::MultiParticleDataCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::EllipsoidalParticleDataCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::ParticleRelistCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::VolumetricDataCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::BezierCurvesListDataCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::QRCodeDataCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::geocalls::CalloutImageCall>();
         }
     };
 } // namespace megamol::geocalls

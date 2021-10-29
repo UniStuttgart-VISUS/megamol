@@ -32,8 +32,8 @@ IColSelectClassify::~IColSelectClassify() {
 }
 
 bool IColSelectClassify::manipulateData(
-        core::moldyn::MultiParticleDataCall& outData,
-        core::moldyn::MultiParticleDataCall& inData) {
+        geocalls::MultiParticleDataCall& outData,
+        geocalls::MultiParticleDataCall& inData) {
 
     if ( (inHash != inData.DataHash()) || (inData.DataHash() == 0)
             || (frameID != inData.FrameID())
@@ -68,7 +68,7 @@ bool IColSelectClassify::manipulateData(
     const float *data = colors.data();
     for (unsigned int list = 0; list < outData.GetParticleListCount(); ++list) {
         auto &plist = outData.AccessParticles(list);
-        plist.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
+        plist.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
         plist.SetColourMapIndexValues(0.0f, 1.0f);
         data += plist.GetCount();
     }

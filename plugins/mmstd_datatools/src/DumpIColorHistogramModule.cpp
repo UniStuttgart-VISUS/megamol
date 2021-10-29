@@ -3,6 +3,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include <vector>
 #include <fstream>
 #include <algorithm>
@@ -15,7 +16,7 @@ stdplugin::datatools::DumpIColorHistogramModule::DumpIColorHistogramModule(void)
         dumpBtnSlot("dump", "Dumps the data"),
         timeSlot("time", "The time to dump") {
 
-    this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
     this->dumpBtnSlot.SetParameter(new core::param::ButtonParam());
@@ -90,7 +91,7 @@ void writeSVG(const std::vector<int>& buckets, float rangeMin, float rangeMax) {
 }
 
 bool stdplugin::datatools::DumpIColorHistogramModule::dump(::megamol::core::param::ParamSlot& param) {
-    core::moldyn::MultiParticleDataCall *dat = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *dat = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (dat == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("No data connected");
         return true;
@@ -106,8 +107,8 @@ bool stdplugin::datatools::DumpIColorHistogramModule::dump(::megamol::core::para
     ::std::vector<int> buckets(bucket_cnt, 0);
 
     for (unsigned int pli = 0; pli < dat->GetParticleListCount(); pli++) {
-        const core::moldyn::MultiParticleDataCall::Particles& pl = dat->AccessParticles(pli);
-        if (pl.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) continue;
+        const geocalls::MultiParticleDataCall::Particles& pl = dat->AccessParticles(pli);
+        if (pl.GetColourDataType() != geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) continue;
         const unsigned char* cp = static_cast<const unsigned char*>(pl.GetColourData());
         unsigned int stride = ::std::max<unsigned int>(4, pl.GetColourDataStride());
         float colRng = pl.GetMaxColourIndexValue() - pl.GetMinColourIndexValue();

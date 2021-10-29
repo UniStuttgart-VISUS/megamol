@@ -13,7 +13,6 @@
 #include <GL/glu.h>
 
 #include "AOSphereRenderer.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
@@ -57,7 +56,7 @@ AOSphereRenderer::AOSphereRenderer(void) : megamol::core::view::Renderer3DModule
         , particleVBO( 0), particleCountVBO( 0)
 {
 
-    this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->getDataSlot.SetCompatibleCall<protein_calls::MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
@@ -248,7 +247,7 @@ bool AOSphereRenderer::create(void) {
  * AOSphereRenderer::GetExtents
  */
 bool AOSphereRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) {
-    megamol::core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     protein_calls::MolecularDataCall *mol = this->getDataSlot.CallAs<protein_calls::MolecularDataCall>();
     if ((c2 != NULL) && ((*c2)(1))) {
         call.SetTimeFramesCount(c2->FrameCount());
@@ -289,7 +288,7 @@ void AOSphereRenderer::release(void) {
  */
 bool AOSphereRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
-    megamol::core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     protein_calls::MolecularDataCall *mol = this->getDataSlot.CallAs<protein_calls::MolecularDataCall>();
 
     if (c2 != NULL) {
@@ -496,7 +495,7 @@ void AOSphereRenderer::uploadCameraUniforms(megamol::core::view::CallRender3DGL&
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call, megamol::core::moldyn::MultiParticleDataCall *c2) {
+void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call, geocalls::MultiParticleDataCall *c2) {
 
     vislib::graphics::gl::GLSLShader *sphereShader = NULL;
 
@@ -557,36 +556,36 @@ void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call
         unsigned int cial = glGetAttribLocationARB(*sphereShader, "colIdx");
 
         for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
-            megamol::core::moldyn::MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
+            geocalls::MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
             float minC = 0.0f, maxC = 0.0f;
             unsigned int colTabSize = 0;
 
             // colour
             switch (parts.GetColourDataType()) {
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE:
                     glColor3ubv(parts.GetGlobalColour());
                     break;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                     glEnableClientState(GL_COLOR_ARRAY);
                     glColorPointer(3, GL_UNSIGNED_BYTE,
                         parts.GetColourDataStride(), parts.GetColourData());
                     break;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                     glEnableClientState(GL_COLOR_ARRAY);
                     glColorPointer(4, GL_UNSIGNED_BYTE,
                         parts.GetColourDataStride(), parts.GetColourData());
                     break;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                     glEnableClientState(GL_COLOR_ARRAY);
                     glColorPointer(3, GL_FLOAT,
                         parts.GetColourDataStride(), parts.GetColourData());
                     break;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                     glEnableClientState(GL_COLOR_ARRAY);
                     glColorPointer(4, GL_FLOAT,
                         parts.GetColourDataStride(), parts.GetColourData());
                     break;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                     glEnableVertexAttribArrayARB(cial);
                     glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE,
                         parts.GetColourDataStride(), parts.GetColourData());
@@ -615,16 +614,16 @@ void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call
 
             // radius and position
             switch (parts.GetVertexDataType()) {
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     glUniform4fARB(sphereShader->ParameterLocation("inConsts1"),
                         parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
                     glVertexPointer(3, GL_FLOAT,
                         parts.GetVertexDataStride(), parts.GetVertexData());
                     break;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     glUniform4fARB(sphereShader->ParameterLocation("inConsts1"),
                         -1.0f, minC, maxC, float(colTabSize));
@@ -767,7 +766,7 @@ void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3DGL& call, megamol::core::moldyn::MultiParticleDataCall *c2) {
+void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3DGL& call, geocalls::MultiParticleDataCall *c2) {
 
     vislib::graphics::gl::GLSLShader *sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -980,7 +979,7 @@ void AOSphereRenderer::createFullVolume() {
 /*
  * AOSphereRenderer::createVolumeCPU
  */
-void AOSphereRenderer::createVolumeCPU(class megamol::core::moldyn::MultiParticleDataCall& c2) {
+void AOSphereRenderer::createVolumeCPU(class geocalls::MultiParticleDataCall& c2) {
     int sx = this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value() - 2;
     int sy = this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value() - 2;
     int sz = this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value() - 2;
@@ -1005,12 +1004,12 @@ void AOSphereRenderer::createVolumeCPU(class megamol::core::moldyn::MultiParticl
         * (rangeOSz / static_cast<float>(sz));
 
     for (unsigned int i = 0; i < c2.GetParticleListCount(); i++) {
-        megamol::core::moldyn::MultiParticleDataCall::Particles &parts = c2.AccessParticles(i);
+        geocalls::MultiParticleDataCall::Particles &parts = c2.AccessParticles(i);
         const float *pos = static_cast<const float*>(parts.GetVertexData());
         unsigned int posStride = parts.GetVertexDataStride();
         float globRad = parts.GetGlobalRadius();
-        bool useGlobRad = (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
-        if (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+        bool useGlobRad = (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+        if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
             continue;
         }
         if (useGlobRad) {
@@ -1079,7 +1078,7 @@ void AOSphereRenderer::createVolumeCPU(class megamol::core::moldyn::MultiParticl
 /*
  * AOSphereRenderer::createVolumeGLSL
  */
-void AOSphereRenderer::createVolumeGLSL(class megamol::core::moldyn::MultiParticleDataCall& c2) {
+void AOSphereRenderer::createVolumeGLSL(class geocalls::MultiParticleDataCall& c2) {
     // get volume size (number of voxels)
     int sx = this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value() - 2;
     int sy = this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value() - 2;
@@ -1182,12 +1181,12 @@ void AOSphereRenderer::createVolumeGLSL(class megamol::core::moldyn::MultiPartic
 
     // write particle list (VA, pos + rad)
     for (unsigned int i = 0; i < c2.GetParticleListCount(); i++) {
-        megamol::core::moldyn::MultiParticleDataCall::Particles &parts = c2.AccessParticles(i);
+        geocalls::MultiParticleDataCall::Particles &parts = c2.AccessParticles(i);
         const float *pos = static_cast<const float*>(parts.GetVertexData());
         unsigned int posStride = parts.GetVertexDataStride();
         float globRad = parts.GetGlobalRadius();
-        bool useGlobRad = (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
-        if (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+        bool useGlobRad = (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
+        if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
             continue;
         }
         if (useGlobRad) {
@@ -1229,20 +1228,20 @@ void AOSphereRenderer::createVolumeGLSL(class megamol::core::moldyn::MultiPartic
         glFramebufferTexture3DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volTex, 0, z + 1);
         glUniform1f( this->updateVolumeShader.ParameterLocation( "sliceDepth"), float( z + 1));
         for (unsigned int i = 0; i < c2.GetParticleListCount(); i++) {
-            megamol::core::moldyn::MultiParticleDataCall::Particles &parts = c2.AccessParticles(i);
+            geocalls::MultiParticleDataCall::Particles &parts = c2.AccessParticles(i);
 
             // radius and position
             switch (parts.GetVertexDataType()) {
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     glUniform1f( this->updateVolumeShader.ParameterLocation("radius"),
                         parts.GetGlobalRadius());
                     glVertexPointer(3, GL_FLOAT,
                         parts.GetVertexDataStride(), parts.GetVertexData());
                     break;
-                case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     glUniform1f( this->updateVolumeShader.ParameterLocation("radius"),
                         -1.0f);
@@ -1423,7 +1422,7 @@ void AOSphereRenderer::createVolumeGLSL(protein_calls::MolecularDataCall & mol) 
 /*
  * Write particle positions and radii to a VBO for rendering and processing in CUDA
  */
-void AOSphereRenderer::writeParticlePositionsVBO(class megamol::core::moldyn::MultiParticleDataCall& c2) {
+void AOSphereRenderer::writeParticlePositionsVBO(class geocalls::MultiParticleDataCall& c2) {
     // count total number of particles
     this->particleCountVBO = 0;
     for( unsigned int i = 0; i < c2.GetParticleListCount(); i++ ) {
@@ -1444,18 +1443,18 @@ void AOSphereRenderer::writeParticlePositionsVBO(class megamol::core::moldyn::Mu
 
     unsigned int particleCnt = 0;
     for (unsigned int i = 0; i < c2.GetParticleListCount(); i++) {
-        megamol::core::moldyn::MultiParticleDataCall::Particles &parts = c2.AccessParticles(i);
+        geocalls::MultiParticleDataCall::Particles &parts = c2.AccessParticles(i);
         // radius and position
         switch( parts.GetVertexDataType() ) {
-            case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                 continue;
-            case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                 //glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                 ASSERT( parts.GetVertexDataStride() == 3*sizeof(float) || parts.GetVertexDataStride() == 0 );
                 memcpy( particleVBOPtr + particleCnt*3, parts.GetVertexData(), parts.GetCount()*3*sizeof(float));
                 particleCnt += parts.GetCount();
                 break;
-            case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                 continue;
             default:
                 continue;

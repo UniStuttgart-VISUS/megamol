@@ -18,7 +18,7 @@
 
 #include "mmcore/utility/log/Log.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 
 using namespace megamol;
@@ -30,9 +30,9 @@ CPERAWDataSource::CPERAWDataSource(void) : core::Module(),
       radiusSlot("radius", "the radius of the particles"),
       getData("getdata", "Slot to request data from this data source.") {
 
-    this->getData.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(), core::moldyn::MultiParticleDataCall::FunctionName(0), &CPERAWDataSource::getDataCallback);
+    this->getData.SetCallback(geocalls::MultiParticleDataCall::ClassName(), geocalls::MultiParticleDataCall::FunctionName(0), &CPERAWDataSource::getDataCallback);
     this->getData.SetCallback(
-        core::moldyn::MultiParticleDataCall::ClassName(), core::moldyn::MultiParticleDataCall::FunctionName(1), &CPERAWDataSource::getExtentCallback);
+        geocalls::MultiParticleDataCall::ClassName(), geocalls::MultiParticleDataCall::FunctionName(1), &CPERAWDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
     this->filenameSlot << new core::param::FilePathParam("");
@@ -153,7 +153,7 @@ bool CPERAWDataSource::getDataCallback(core::Call &c) {
             this->filenameSlot.ResetDirty();
         }
 
-        auto *mdc = dynamic_cast<core::moldyn::MultiParticleDataCall *>(&c);
+        auto *mdc = dynamic_cast<geocalls::MultiParticleDataCall *>(&c);
 
         if (this->numPoints > 0) {
             if (newFile) {
@@ -165,8 +165,8 @@ bool CPERAWDataSource::getDataCallback(core::Call &c) {
                 pl.SetGlobalRadius(this->radiusSlot.Param<core::param::FloatParam>()->Value());
                 pl.SetBBox(vislib::math::Cuboid<float>(localBBox[0], localBBox[1], localBBox[2], localBBox[3], localBBox[4], localBBox[5]));
                 pl.SetCount(numPoints);
-                pl.SetVertexData(core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ, this->data.data() + 0, this->pointStride);
-                pl.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGB, this->data.data() + 24, this->pointStride);
+                pl.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ, this->data.data() + 0, this->pointStride);
+                pl.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGB, this->data.data() + 24, this->pointStride);
                 newFile = false;
             } else {
                 // just update radius, if necessary
@@ -193,7 +193,7 @@ bool CPERAWDataSource::getExtentCallback(core::Call &c) {
             this->assertData();
             this->filenameSlot.ResetDirty();
         }
-        auto *mdc = dynamic_cast<core::moldyn::MultiParticleDataCall *>(&c);
+        auto *mdc = dynamic_cast<geocalls::MultiParticleDataCall *>(&c);
         if (mdc != nullptr) {
 
             float const radius = this->radiusSlot.Param<core::param::FloatParam>()->Value();

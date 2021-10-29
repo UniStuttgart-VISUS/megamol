@@ -34,7 +34,7 @@ DatRawWriter::DatRawWriter(void)
     this->frameIDSlot.SetParameter(new param::IntParam(0, 0));
     this->MakeSlotAvailable(&this->frameIDSlot);
 
-    this->dataSlot.SetCompatibleCall<misc::VolumetricDataCallDescription>();
+    this->dataSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->dataSlot);
 }
 
@@ -68,7 +68,7 @@ bool DatRawWriter::run(void) {
         return false;
     }
 
-    misc::VolumetricDataCall* vdc = this->dataSlot.CallAs<misc::VolumetricDataCall>();
+    geocalls::VolumetricDataCall* vdc = this->dataSlot.CallAs<geocalls::VolumetricDataCall>();
     if (vdc == nullptr) {
         Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
@@ -77,7 +77,7 @@ bool DatRawWriter::run(void) {
     unsigned int frame = static_cast<unsigned int>(this->frameIDSlot.Param<param::IntParam>()->Value());
     vdc->SetFrameID(frame, true);
 
-    if (!(*vdc)(misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
+    if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) {
         Log::DefaultLog.WriteError("Bounding box retrieval failed. Abort");
         return false;
     }
@@ -85,11 +85,11 @@ bool DatRawWriter::run(void) {
         Log::DefaultLog.WriteError("Selected frame %u not available (total %u frames)", frame, vdc->FrameCount());
         return false;
     }
-    if (!(*vdc)(misc::VolumetricDataCall::IDX_GET_METADATA)) {
+    if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) {
         Log::DefaultLog.WriteError("Metadata retrieval failed. Abort.");
         return false;
     }
-    if (!(*vdc)(misc::VolumetricDataCall::IDX_GET_DATA)) {
+    if (!(*vdc)(geocalls::VolumetricDataCall::IDX_GET_DATA)) {
         Log::DefaultLog.WriteError("Data retrieval failed. Abort.");
         return false;
     }
@@ -112,7 +112,7 @@ bool DatRawWriter::getCapabilities(DataWriterCtrlCall& call) {
 /*
  * DatRawWriter::writeFrame
  */
-bool DatRawWriter::writeFrame(std::string datpath, std::string rawpath, core::misc::VolumetricDataCall& data) {
+bool DatRawWriter::writeFrame(std::string datpath, std::string rawpath, geocalls::VolumetricDataCall& data) {
     using megamol::core::utility::log::Log;
     auto lastPos = rawpath.find_last_of("/\\");
     std::string writestring = rawpath.substr(lastPos + 1);
@@ -124,16 +124,16 @@ bool DatRawWriter::writeFrame(std::string datpath, std::string rawpath, core::mi
         datfile << "ObjectFileName: " << writestring << std::endl;
         datfile << "Format:         ";
         switch (meta->ScalarType) {
-        case ::core::misc::VolumetricDataCall::ScalarType::BITS:
+        case geocalls::VolumetricDataCall::ScalarType::BITS:
             datfile << "UCHAR" << std::endl;
             break;
-        case ::core::misc::VolumetricDataCall::ScalarType::FLOATING_POINT:
+        case geocalls::VolumetricDataCall::ScalarType::FLOATING_POINT:
             datfile << "FLOAT" << std::endl;
             break;
-        case ::core::misc::VolumetricDataCall::ScalarType::SIGNED_INTEGER:
+        case geocalls::VolumetricDataCall::ScalarType::SIGNED_INTEGER:
             datfile << "INT" << std::endl;
             break;
-        case ::core::misc::VolumetricDataCall::ScalarType::UNSIGNED_INTEGER:
+        case geocalls::VolumetricDataCall::ScalarType::UNSIGNED_INTEGER:
             datfile << "UINT" << std::endl;
             break;
         default:
@@ -142,13 +142,13 @@ bool DatRawWriter::writeFrame(std::string datpath, std::string rawpath, core::mi
         }
         datfile << "GridType:       ";
         switch (meta->GridType) {
-        case core::misc::VolumetricDataCall::GridType::CARTESIAN:
+        case geocalls::VolumetricDataCall::GridType::CARTESIAN:
             datfile << "EQUIDISTANT" << std::endl;
             break;
-        case core::misc::VolumetricDataCall::GridType::RECTILINEAR:
+        case geocalls::VolumetricDataCall::GridType::RECTILINEAR:
             datfile << "RECTILINEAR" << std::endl;
             break;
-        case core::misc::VolumetricDataCall::GridType::TETRAHEDRAL:
+        case geocalls::VolumetricDataCall::GridType::TETRAHEDRAL:
             datfile << "TETRAHEDRA" << std::endl;
             break;
         default:

@@ -123,6 +123,8 @@ private:
 
     float mouseX_;
     float mouseY_;
+    glm::ivec2 viewRes_;
+    core::view::Camera camera_;
 
     bool needSelectionUpdate_;
     SelectionMode selectionMode_;

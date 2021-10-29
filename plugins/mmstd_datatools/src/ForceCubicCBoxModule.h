@@ -59,8 +59,7 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateData(
-            megamol::core::moldyn::MultiParticleDataCall& outData,
-            megamol::core::moldyn::MultiParticleDataCall& inData);
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
         /**
          * Manipulates the particle data extend information
@@ -73,8 +72,7 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateExtent(
-            megamol::core::moldyn::MultiParticleDataCall& outData,
-            megamol::core::moldyn::MultiParticleDataCall& inData);
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
     private:
 

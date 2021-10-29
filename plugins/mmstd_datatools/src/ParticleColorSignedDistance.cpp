@@ -54,9 +54,8 @@ datatools::ParticleColorSignedDistance::~ParticleColorSignedDistance(void) {
  * datatools::ParticleColorSignedDistance::manipulateData
  */
 bool datatools::ParticleColorSignedDistance::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     outData = inData; // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
@@ -94,14 +93,14 @@ namespace {
     class pointcloud {
     private:
 
-        megamol::core::moldyn::MultiParticleDataCall& dat;
+        geocalls::MultiParticleDataCall& dat;
         std::vector<size_t> &indices;
 
     public:
 
         typedef float coord_t;
 
-        pointcloud(megamol::core::moldyn::MultiParticleDataCall& dat, std::vector<size_t> &indices) : dat(dat), indices(indices) {
+        pointcloud(geocalls::MultiParticleDataCall& dat, std::vector<size_t>& indices) : dat(dat), indices(indices) {
             // intentionally empty
         }
         ~pointcloud() {
@@ -149,7 +148,7 @@ namespace {
     private:
 
         inline const coord_t* get_position(size_t index) const {
-            using megamol::core::moldyn::SimpleSphericalParticles;
+            using geocalls::SimpleSphericalParticles;
 
             unsigned int plc = dat.GetParticleListCount();
             for (unsigned int pli = 0; pli < plc; pli++) {
@@ -182,8 +181,8 @@ namespace {
 }
 
 
-void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldyn::MultiParticleDataCall& dat) {
-    using megamol::core::moldyn::SimpleSphericalParticles;
+void datatools::ParticleColorSignedDistance::compute_colors(geocalls::MultiParticleDataCall& dat) {
+    using geocalls::SimpleSphericalParticles;
     size_t allpartcnt = 0;
     size_t negpartcnt = 0;
     size_t nulpartcnt = 0;
@@ -340,15 +339,16 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
 }
 
 
-void datatools::ParticleColorSignedDistance::set_colors(megamol::core::moldyn::MultiParticleDataCall& dat) {
+void datatools::ParticleColorSignedDistance::set_colors(geocalls::MultiParticleDataCall& dat) {
     size_t allpartcnt = 0;
 
     unsigned int plc = dat.GetParticleListCount();
     for (unsigned int pli = 0; pli < plc; pli++) {
         auto& pl = dat.AccessParticles(pli);
-        if (pl.GetColourDataType() != megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
+        if (pl.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I)
+            continue;
 
-        pl.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, this->newColors.data() + allpartcnt);
+        pl.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, this->newColors.data() + allpartcnt);
         pl.SetColourMapIndexValues(this->minCol, this->maxCol);
 
         allpartcnt += static_cast<size_t>(pl.GetCount());

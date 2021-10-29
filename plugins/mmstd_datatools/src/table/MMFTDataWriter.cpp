@@ -1,26 +1,25 @@
-/*
- * MMFTDataWriter.cpp
- *
- * Copyright (C) 2016 by CGV (TU Dresden)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2016, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "MMFTDataWriter.h"
 
-#include "mmcore/param/FilePathParam.h"
+#include <filesystem>
+#include <fstream>
 
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/String.h"
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
 
-MMFTDataWriter::MMFTDataWriter(void) : core::AbstractDataWriter(),
-        filenameSlot("filename", "The path to the MMFT file to be written"),
-        dataSlot("data", "The slot requesting the data to be written") {
+MMFTDataWriter::MMFTDataWriter()
+        : core::AbstractDataWriter()
+        , filenameSlot("filename", "The path to the MMFT file to be written")
+        , dataSlot("data", "The slot requesting the data to be written") {
 
     this->filenameSlot << new core::param::FilePathParam(
         "", megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"mmft"});
@@ -30,22 +29,17 @@ MMFTDataWriter::MMFTDataWriter(void) : core::AbstractDataWriter(),
     this->MakeSlotAvailable(&this->dataSlot);
 }
 
-
-MMFTDataWriter::~MMFTDataWriter(void) {
+MMFTDataWriter::~MMFTDataWriter() {
     this->Release();
 }
 
-
-bool MMFTDataWriter::create(void) {
+bool MMFTDataWriter::create() {
     return true;
 }
 
+void MMFTDataWriter::release() {}
 
-void MMFTDataWriter::release(void) {
-}
-
-
-bool MMFTDataWriter::run(void) {
+bool MMFTDataWriter::run() {
     using megamol::core::utility::log::Log;
     auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
     if (filename.empty()) {
@@ -53,14 +47,10 @@ bool MMFTDataWriter::run(void) {
         return false;
     }
 
-    TableDataCall *cftd = this->dataSlot.CallAs<TableDataCall>();
-    if (cftd == NULL) {
+    TableDataCall* cftd = this->dataSlot.CallAs<TableDataCall>();
+    if (cftd == nullptr) {
         Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
-    }
-
-    if (vislib::sys::File::Exists(filename.native().c_str())) {
-        Log::DefaultLog.WriteWarn("File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
     }
 
     if (!(*cftd)(0)) {
@@ -68,50 +58,60 @@ bool MMFTDataWriter::run(void) {
         return false;
     }
 
-    vislib::sys::FastFile file;
-    if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
-            vislib::sys::File::CREATE_OVERWRITE)) {
+    if (std::filesystem::exists(filename)) {
+        Log::DefaultLog.WriteWarn(
+            "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
+    }
+
+    std::ofstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
         Log::DefaultLog.WriteError("Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
         cftd->Unlock();
         return false;
     }
 
-#define ASSERT_WRITEOUT(A, S) if (file.Write((A), (S)) != (S)) { \
-        Log::DefaultLog.WriteError("Write error %d", __LINE__); \
-        file.Close(); \
-        cftd->Unlock(); \
-        return false; \
+    try {
+        file.exceptions(std::ios::failbit);
+
+        std::string magicID("MMFTD");
+        file.write(magicID.data(), 6);
+
+        uint16_t version = 0;
+        file.write(reinterpret_cast<const char*>(&version), sizeof(uint16_t));
+
+        uint32_t colCnt = static_cast<uint32_t>(cftd->GetColumnsCount());
+        file.write(reinterpret_cast<const char*>(&colCnt), sizeof(uint32_t));
+
+        for (uint32_t c = 0; c < colCnt; ++c) {
+            const TableDataCall::ColumnInfo& ci = cftd->GetColumnsInfos()[c];
+            uint16_t nameLen = static_cast<uint16_t>(ci.Name().size());
+            file.write(reinterpret_cast<const char*>(&nameLen), sizeof(uint16_t));
+            file.write(ci.Name().data(), nameLen);
+
+            uint8_t type = (ci.Type() == TableDataCall::ColumnType::CATEGORICAL) ? 1 : 0;
+            file.write(reinterpret_cast<const char*>(&type), sizeof(uint8_t));
+
+            float f = ci.MinimumValue();
+            file.write(reinterpret_cast<const char*>(&f), sizeof(float));
+            f = ci.MaximumValue();
+            file.write(reinterpret_cast<const char*>(&f), sizeof(float));
+        }
+
+        uint64_t rowCnt = static_cast<uint64_t>(cftd->GetRowsCount());
+        file.write(reinterpret_cast<const char*>(&rowCnt), sizeof(uint64_t));
+
+        file.write(reinterpret_cast<const char*>(cftd->GetData()), rowCnt * colCnt * sizeof(float));
+
+    } catch (...) {
+        Log::DefaultLog.WriteError("Write error \"%s\".", filename.generic_u8string().c_str());
+        cftd->Unlock();
+        return false;
     }
 
-    vislib::StringA magicID("MMFTD");
-    ASSERT_WRITEOUT(magicID.PeekBuffer(), 6);
-    uint16_t version = 0;
-    ASSERT_WRITEOUT(&version, 2);
-
-    uint32_t colCnt = static_cast<uint32_t>(cftd->GetColumnsCount());
-    ASSERT_WRITEOUT(&colCnt, 4);
-
-    for (uint32_t c = 0; c < colCnt; ++c) {
-        const TableDataCall::ColumnInfo& ci = cftd->GetColumnsInfos()[c];
-        uint16_t nameLen = static_cast<uint16_t>(ci.Name().size());
-        ASSERT_WRITEOUT(&nameLen, 2);
-        ASSERT_WRITEOUT(ci.Name().data(), nameLen);
-        uint8_t type = (ci.Type() == TableDataCall::ColumnType::CATEGORICAL) ? 1 : 0;
-        ASSERT_WRITEOUT(&type, 1);
-        float f = ci.MinimumValue();
-        ASSERT_WRITEOUT(&f, 4);
-        f = ci.MaximumValue();
-        ASSERT_WRITEOUT(&f, 4);
-    }
-
-    uint64_t rowCnt = static_cast<uint64_t>(cftd->GetRowsCount());
-    ASSERT_WRITEOUT(&rowCnt, 8);
-
-    ASSERT_WRITEOUT(cftd->GetData(), rowCnt * colCnt * 4);
+    cftd->Unlock();
 
     return true;
 }
-
 
 bool MMFTDataWriter::getCapabilities(core::DataWriterCtrlCall& call) {
     call.SetAbortable(false);

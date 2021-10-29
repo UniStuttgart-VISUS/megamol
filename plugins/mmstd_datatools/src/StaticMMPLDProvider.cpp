@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "StaticMMPLDProvider.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
@@ -9,10 +8,10 @@
 
 megamol::stdplugin::datatools::StaticMMPLDProvider::StaticMMPLDProvider()
     : outDataSlot("outData", "Output"), filenamesSlot("filenames", "Set of filenames separated with ';'") {
-    outDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &StaticMMPLDProvider::getDataCallback);
-    outDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &StaticMMPLDProvider::getExtentCallback);
+    outDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &StaticMMPLDProvider::getDataCallback);
+    outDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &StaticMMPLDProvider::getExtentCallback);
     MakeSlotAvailable(&outDataSlot);
 
     filenamesSlot << new core::param::StringParam("");
@@ -29,7 +28,7 @@ bool megamol::stdplugin::datatools::StaticMMPLDProvider::create() { return true;
 void megamol::stdplugin::datatools::StaticMMPLDProvider::release() {}
 
 
-bool megamol::stdplugin::datatools::StaticMMPLDProvider::assertData(core::moldyn::MultiParticleDataCall& outCall) {
+bool megamol::stdplugin::datatools::StaticMMPLDProvider::assertData(geocalls::MultiParticleDataCall& outCall) {
     if (filenamesSlot.IsDirty()) {
 
         auto const filenames = vislib::TString(filenamesSlot.Param<core::param::StringParam>()->Value().c_str());
@@ -71,7 +70,7 @@ bool megamol::stdplugin::datatools::StaticMMPLDProvider::assertData(core::moldyn
                     entry.list_header.lbox[5]);
                 particles.SetBBox(bbox);
                 particles.SetVertexData(
-                    static_cast<core::moldyn::SimpleSphericalParticles::VertexDataType>(entry.list_header.vert_type),
+                    static_cast<geocalls::SimpleSphericalParticles::VertexDataType>(entry.list_header.vert_type),
                     entry.data.data() + entry.vertex_offset, entry.vertex_stride + entry.color_stride);
                 particles.SetColourData(
                     ColorTypeTranslator(entry.list_header.col_type),
@@ -102,7 +101,7 @@ bool megamol::stdplugin::datatools::StaticMMPLDProvider::assertData(core::moldyn
 
 
 bool megamol::stdplugin::datatools::StaticMMPLDProvider::getDataCallback(core::Call& c) {
-    auto outCall = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    auto outCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     if (outCall == nullptr) return false;
 
     return assertData(*outCall);
@@ -110,7 +109,7 @@ bool megamol::stdplugin::datatools::StaticMMPLDProvider::getDataCallback(core::C
 
 
 bool megamol::stdplugin::datatools::StaticMMPLDProvider::getExtentCallback(core::Call& c) {
-    auto outCall = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    auto outCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     if (outCall == nullptr) return false;
 
     return assertData(*outCall);

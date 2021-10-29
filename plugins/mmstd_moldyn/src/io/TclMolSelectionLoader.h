@@ -11,7 +11,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/moldyn/ParticleRelistCall.h"
+#include "geometry_calls/ParticleRelistCall.h"
 #include <vector>
 
 namespace megamol {
@@ -53,8 +53,8 @@ namespace io {
         core::param::ParamSlot filenameSlot;
 
         size_t hash;
-        core::moldyn::ParticleRelistCall::ListIDType cnt;
-        std::vector<core::moldyn::ParticleRelistCall::ListIDType> data;
+        geocalls::ParticleRelistCall::ListIDType cnt;
+        std::vector<geocalls::ParticleRelistCall::ListIDType> data;
 
     };
 

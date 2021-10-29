@@ -6,4 +6,5 @@
 megamol_plugin(pwdemos
   BUILD_DEFAULT ON
   DEPENDS_PLUGINS
+    geometry_calls
     protein_calls)

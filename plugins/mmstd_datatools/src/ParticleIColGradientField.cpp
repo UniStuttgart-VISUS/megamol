@@ -46,9 +46,9 @@ datatools::ParticleIColGradientField::~ParticleIColGradientField(void) {
  * datatools::ParticleIColGradientField::manipulateData
  */
 bool datatools::ParticleIColGradientField::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+        geocalls::MultiParticleDataCall& outData,
+        geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     outData = inData; // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
@@ -78,7 +78,7 @@ namespace {
      */
     class DataAdapter : public stdplugin::datatools::MultiParticleDataAdaptor {
     public:
-        DataAdapter(megamol::core::moldyn::MultiParticleDataCall& dat) : stdplugin::datatools::MultiParticleDataAdaptor(dat) {
+        DataAdapter(geocalls::MultiParticleDataCall& dat) : stdplugin::datatools::MultiParticleDataAdaptor(dat) {
             // intentionally empty
         }
         ~DataAdapter() {
@@ -127,7 +127,7 @@ namespace {
     };
 }
 
-void datatools::ParticleIColGradientField::compute_colors(megamol::core::moldyn::MultiParticleDataCall& dat) {
+void datatools::ParticleIColGradientField::compute_colors(geocalls::MultiParticleDataCall& dat) {
     DataAdapter data(dat);
 
     this->newColors.resize(data.kdtree_get_point_count()/* * 3*/);
@@ -186,19 +186,19 @@ void datatools::ParticleIColGradientField::compute_colors(megamol::core::moldyn:
 }
 
 
-void datatools::ParticleIColGradientField::set_colors(megamol::core::moldyn::MultiParticleDataCall& dat) {
+void datatools::ParticleIColGradientField::set_colors(geocalls::MultiParticleDataCall& dat) {
     size_t allpartcnt = 0;
 
     unsigned int plc = dat.GetParticleListCount();
     for (unsigned int pli = 0; pli < plc; pli++) {
         auto& pl = dat.AccessParticles(pli);
-        if ((pl.GetColourDataType() != megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I)
-            || ((pl.GetVertexDataType() != megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ)
-                && (pl.GetVertexDataType() != megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR))) continue;
+        if ((pl.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I)
+            || ((pl.GetVertexDataType() != geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ)
+                && (pl.GetVertexDataType() != geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR))) continue;
 
-        //pl.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB, this->newColors.data() + allpartcnt * 3);
+        //pl.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGB, this->newColors.data() + allpartcnt * 3);
         //pl.SetColourMapIndexValues(-1.0f, 1.0f);
-        pl.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, this->newColors.data() + allpartcnt);
+        pl.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, this->newColors.data() + allpartcnt);
         pl.SetColourMapIndexValues(0.0f, maxColor);
 
         allpartcnt += static_cast<size_t>(pl.GetCount());

@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "OSPRayStructuredVolume.h"
 #include "mmcore/Call.h"
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -46,7 +46,7 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void)
     this->IsoValue << new core::param::FloatParam(0.1f);
     this->MakeSlotAvailable(&this->IsoValue);
 
-    this->getDataSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -60,7 +60,7 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void)
 }
 
 
-bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
+bool OSPRayStructuredVolume::readData(core::Call& call) {
 
     // fill material container
     this->processMaterial();
@@ -73,13 +73,13 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
 
     // read Data, calculate  shape parameters, fill data vectors
     auto os = dynamic_cast<CallOSPRayStructure*>(&call);
-    auto cd = this->getDataSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
+    auto cd = this->getDataSlot.CallAs<geocalls::VolumetricDataCall>();
     auto const cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
 
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
     if (cgtf == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] No transferfunction connected.");
+        core::utility::log::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] No transferfunction connected.");
         return false;
     }
 
@@ -89,9 +89,9 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     }
     do {
         cd->SetFrameID(requested_frame, true);
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
-        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) return false;
+        if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_DATA)) return false;
     } while (cd->FrameID() != requested_frame);
 
     // do the callback to set the dirty flag
@@ -108,8 +108,8 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
 
     auto const metadata = cd->GetMetadata();
 
-    if (metadata->GridType != core::misc::CARTESIAN) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRayStructuredVolume only works with cartesian grids (for now)");
+    if (metadata->GridType != geocalls::CARTESIAN) {
+        core::utility::log::Log::DefaultLog.WriteError("OSPRayStructuredVolume only works with cartesian grids (for now)");
         return false;
     }
 
@@ -126,33 +126,33 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     voxelDataType voxelType = {};
 
     switch (metadata->ScalarType) {
-    case core::misc::FLOATING_POINT:
+    case geocalls::FLOATING_POINT:
         if (metadata->ScalarLength == 4) {
             voxelType = voxelDataType::FLOAT;
         } else {
             voxelType = voxelDataType::DOUBLE;
         }
         break;
-    case core::misc::UNSIGNED_INTEGER:
+    case geocalls::UNSIGNED_INTEGER:
         if (metadata->ScalarLength == 1) {
             voxelType = voxelDataType::UCHAR;
         } else if (metadata->ScalarLength == 2) {
             voxelType = voxelDataType::USHORT;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
+            core::utility::log::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
             return false;
         }
         break;
-    case core::misc::SIGNED_INTEGER:
+    case geocalls::SIGNED_INTEGER:
         if (metadata->ScalarLength == 2) {
             voxelType = voxelDataType::SHORT;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
+            core::utility::log::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
             return false;
         }
         break;
-    case core::misc::BITS:
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid datatype.");
+    case geocalls::BITS:
+        core::utility::log::Log::DefaultLog.WriteError("Invalid datatype.");
         return false;
         break;
     }
@@ -163,7 +163,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
 
     if ((*cgtf)(0)) {
         if (cgtf->OpenGLTextureFormat() ==
-            megamol::core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
+            core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
             auto const numColors = cgtf->TextureSize();
             rgb.resize(3 * numColors);
             a.resize(numColors);
@@ -187,11 +187,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
                 rgb[i * 3 + 2] = texture[i * 4 + 2];
                 a[i] = i / (numColors - 1.0f);
             }
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("OSPRayStructuredVolume: No alpha channel in transfer function "
+            core::utility::log::Log::DefaultLog.WriteWarn("OSPRayStructuredVolume: No alpha channel in transfer function "
                                                    "connected to module. Adding alpha ramp to RGB colors.\n");
         }
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");
+        core::utility::log::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");
         return false;
     }
     cgtf->ResetDirty();
@@ -258,9 +258,9 @@ bool OSPRayStructuredVolume::InterfaceIsDirty() {
 }
 
 
-bool OSPRayStructuredVolume::getExtends(megamol::core::Call& call) {
+bool OSPRayStructuredVolume::getExtends(core::Call& call) {
     auto os = dynamic_cast<CallOSPRayStructure*>(&call);
-    auto cd = this->getDataSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
+    auto cd = this->getDataSlot.CallAs<geocalls::VolumetricDataCall>();
 
     if (cd == nullptr) return false;
     if (os->getTime() > cd->FrameCount()) {
@@ -269,10 +269,10 @@ bool OSPRayStructuredVolume::getExtends(megamol::core::Call& call) {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     }
 
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) return false;
 
-    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>();
+    this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>();
     this->extendContainer.boundingBox->SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
     std::string bbox_string =
                               "LEFT: " + std::to_string(extendContainer.boundingBox->BoundingBox().Left()) +

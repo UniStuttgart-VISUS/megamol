@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "MMPGDWriter.h"
 #include "mmcore/BoundingBoxes.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
@@ -227,20 +227,20 @@ bool MMPGDWriter::writeFrame(vislib::sys::File& file, ParticleGridDataCall& data
         const ParticleGridDataCall::ParticleType &type = data.Types()[i];
         UINT8 vt = 0, ct = 0;
         switch(type.GetVertexDataType()) {
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE: vt = 0; break;
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vt = 1; break;
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vt = 2; break;
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vt = 3; break;
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE: vt = 0; break;
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vt = 1; break;
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vt = 2; break;
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vt = 3; break;
             default: vt = 0; break;
         }
         if (vt != 0) {
             switch(type.GetColourDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE: ct = 0; break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: ct = 1; break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: ct = 2; break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: ct = 3; break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: ct = 4; break;
-                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: ct = 5; break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: ct = 0; break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: ct = 1; break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: ct = 2; break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: ct = 3; break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: ct = 4; break;
+                case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: ct = 5; break;
                 default: ct = 0; break;
             }
         } else {
@@ -274,20 +274,20 @@ bool MMPGDWriter::writeFrame(vislib::sys::File& file, ParticleGridDataCall& data
             UINT8 vt = 0, ct = 0;
             unsigned int vs = 0, vo = 0, cs = 0, co = 0;
             switch(type.GetVertexDataType()) {
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE: vt = 0; vs = 0; break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vt = 1; vs = 12; break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vt = 2; vs = 16; break;
-                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vt = 3; vs = 6; break;
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE: vt = 0; vs = 0; break;
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vt = 1; vs = 12; break;
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vt = 2; vs = 16; break;
+                case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vt = 3; vs = 6; break;
                 default: vt = 0; vs = 0; break;
             }
             if (vt != 0) {
                 switch(type.GetColourDataType()) {
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE: ct = 0; cs = 0; break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: ct = 1; cs = 3; break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: ct = 2; cs = 4; break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: ct = 3; cs = 4; break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: ct = 4; cs = 12; break;
-                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: ct = 5; cs = 16; break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: ct = 0; cs = 0; break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: ct = 1; cs = 3; break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: ct = 2; cs = 4; break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: ct = 3; cs = 4; break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: ct = 4; cs = 12; break;
+                    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: ct = 5; cs = 16; break;
                     default: ct = 0; cs = 0; break;
                 }
             } else {

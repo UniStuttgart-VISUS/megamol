@@ -9,7 +9,7 @@
 #include "ADIOSFlexConvert.h"
 #include <numeric>
 #include "adios_plugin/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -27,10 +27,10 @@ ADIOSFlexConvert::ADIOSFlexConvert()
     , flexYSlot("y","")
     , flexZSlot("z","") {
 
-    this->mpSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &ADIOSFlexConvert::getDataCallback);
-    this->mpSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &ADIOSFlexConvert::getExtentCallback);
+    this->mpSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &ADIOSFlexConvert::getDataCallback);
+    this->mpSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &ADIOSFlexConvert::getExtentCallback);
     this->MakeSlotAvailable(&this->mpSlot);
 
     this->adiosSlot.SetCompatibleCall<CallADIOSDataDescription>();
@@ -68,7 +68,7 @@ bool ADIOSFlexConvert::create() { return true; }
 void ADIOSFlexConvert::release() {}
 
 bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
-    core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
     if (mpdc == nullptr) return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();
@@ -187,15 +187,15 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         mix.clear();
         if (col_str != "undef") {
             mix.resize(p_count * 4);
-            colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I;
+            colType = geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I;
         } else {
             mix.resize(p_count * 3);
-            colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
+            colType = geocalls::SimpleSphericalParticles::COLDATA_NONE;
         }
 
         // Set types
-        vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
-        idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
+        vertType = geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+        idType = geocalls::SimpleSphericalParticles::IDDATA_NONE;
 
         mpdc->AccessParticles(0).SetGlobalRadius(0.1);
 
@@ -241,13 +241,13 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
         mpdc->AccessParticles(0).SetVertexData(vertType, mix.data(), stride);
         //mpdc->AccessParticles(0).SetColourData(
-        //    colType, mix.data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType], stride);
+        //    colType, mix.data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType], stride);
         mpdc->AccessParticles(0).SetColourData(
             colType, &mix[3], stride);
 
         mpdc->AccessParticles(0).SetIDData(idType,
-            mix.data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType] +
-                core::moldyn::SimpleSphericalParticles::ColorDataSize[colType],
+            mix.data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType] +
+                geocalls::SimpleSphericalParticles::ColorDataSize[colType],
             stride);
         mpdc->AccessParticles(0).SetBBox(cubo);
     }
@@ -261,7 +261,7 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
 bool ADIOSFlexConvert::getExtentCallback(core::Call& call) {
 
-    core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
+    geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
     if (mpdc == nullptr) return false;
 
     CallADIOSData* cad = this->adiosSlot.CallAs<CallADIOSData>();

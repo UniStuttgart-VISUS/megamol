@@ -41,8 +41,7 @@ namespace datatools {
 
         /** Create updated particle data */
         virtual bool manipulateData(
-            megamol::core::moldyn::MultiParticleDataCall& outData,
-            megamol::core::moldyn::MultiParticleDataCall& inData);
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
     private:
 

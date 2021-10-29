@@ -7,7 +7,7 @@
 
 #include <map>
 #include "mmcore/CallerSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmstd_datatools/AbstractParticleManipulator.h"
 #include "rkcommon/math/box.h"
 #include "rkcommon/math/vec.h"
@@ -38,8 +38,7 @@ public:
 
 
 protected:
-    virtual bool manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData);
+    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
 
 private:
     size_t inDataHash;

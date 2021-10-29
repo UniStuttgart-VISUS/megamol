@@ -12,6 +12,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "inttypes.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/EnumParam.h"
@@ -46,7 +47,7 @@ GlyphRenderer::GlyphRenderer(void)
     , colorModeParam("colorMode","switch between global glyph and per axis color")
 {
 
-    this->getDataSlot.SetCompatibleCall<core::moldyn::EllipsoidalParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<geocalls::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
@@ -152,7 +153,7 @@ bool GlyphRenderer::makeShader(
 
 bool GlyphRenderer::GetExtents(core::view::CallRender3DGL& call) {
 
-    auto* epdc = this->getDataSlot.CallAs<core::moldyn::EllipsoidalParticleDataCall>();
+    auto* epdc = this->getDataSlot.CallAs<geocalls::EllipsoidalParticleDataCall>();
     if ((epdc != NULL) && ((*epdc)(1))) {
         call.SetTimeFramesCount(epdc->FrameCount());
         call.AccessBoundingBoxes() = epdc->AccessBoundingBoxes();
@@ -170,7 +171,7 @@ void GlyphRenderer::release(void) {
 }
 
 bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
-    core::moldyn::EllipsoidalParticleDataCall* edc) {
+    geocalls::EllipsoidalParticleDataCall* edc) {
 
     if (this->lastHash != edc->DataHash() || this->lastFrameID != edc->FrameID()) {
         this->position_buffers.reserve(edc->GetParticleListCount());
@@ -190,14 +191,14 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
             const auto num_items_per_chunk = this->direction_buffers[x].GetMaxNumItemsPerChunk();
 
             switch (l.GetVertexDataType()) {
-            case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
-            case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
+            case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
+            case geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
                 // radius is skipped automatically by memcpy width
                 this->position_buffers[x].SetDataWithItems(l.GetVertexData(), l.GetVertexDataStride(),
                     3 * sizeof(float), l.GetCount(), num_items_per_chunk,
                     [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 3); });
                 break;
-            case core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ:
+            case geocalls::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ:
                 // narrow double to float
                 this->position_buffers[x].SetDataWithItems(l.GetVertexData(), l.GetVertexDataStride(),
                     3 * sizeof(float), l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
@@ -208,8 +209,8 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
                         }
                     });
                 break;
-            case core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ:
-            case core::moldyn::SimpleSphericalParticles::VERTDATA_NONE:
+            case geocalls::SimpleSphericalParticles::VERTDATA_SHORT_XYZ:
+            case geocalls::SimpleSphericalParticles::VERTDATA_NONE:
             default:
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "GlyphRenderer: no support for vertex data types SHORT_XYZ or NONE");
@@ -217,14 +218,14 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
             }
 
             switch (l.GetColourDataType()) {
-            case core::moldyn::SimpleSphericalParticles::COLDATA_NONE:
+            case geocalls::SimpleSphericalParticles::COLDATA_NONE:
                 break;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGB:
+            case geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGB:
                 // we could just pad this, but such datasets need to disappear...
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "GlyphRenderer: COLDATA_UINT8_RGB is deprecated and unsupported");
                 return false;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA:
+            case geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGBA:
                 // extend to floats
                 this->color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
@@ -235,7 +236,7 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
                         }
                     });
                 break;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB:
+            case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGB:
                 this->color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
                         memcpy(dst, src, sizeof(float) * 3);
@@ -243,13 +244,13 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
                         *(d + 3) = 1.0f;
                     });
                 break;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA:
+            case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA:
                 // this is paranoid and could be avoided for cases where data is NOT interleaved
                 this->color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk,
                     [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 4); });
                 break;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I:
+            case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I:
                 this->color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
                         auto* d = static_cast<float*>(dst);
@@ -258,10 +259,10 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
                         // rest is garbage
                     });
                 break;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
+            case geocalls::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
                 megamol::core::utility::log::Log::DefaultLog.WriteError("GlyphRenderer: COLDATA_USHORT_RGBA is unsupported");
                 return false;
-            case core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I:
+            case geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I:
                 this->color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
                         auto* d = static_cast<float*>(dst);
@@ -284,7 +285,7 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
 }
 
 bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
-    auto* epdc = this->getDataSlot.CallAs<core::moldyn::EllipsoidalParticleDataCall>();
+    auto* epdc = this->getDataSlot.CallAs<geocalls::EllipsoidalParticleDataCall>();
     if (epdc == nullptr) return false;
 
     epdc->SetFrameID(static_cast<int>(call.Time()));
@@ -434,7 +435,7 @@ bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
 
         bool bindColor = true;
         switch (elParts.GetColourDataType()) {
-        case core::moldyn::EllipsoidalParticleDataCall::Particles::COLDATA_NONE: {
+        case geocalls::EllipsoidalParticleDataCall::Particles::COLDATA_NONE: {
             options = glyph_options::USE_GLOBAL;
             const auto gc = elParts.GetGlobalColour();
             const std::array<float, 4> gcf = {static_cast<float>(gc[0]) / 255.0f, static_cast<float>(gc[1]) / 255.0f,
@@ -442,18 +443,18 @@ bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
             glUniform4fv(shader->ParameterLocation("global_color"), 1, gcf.data());
             bindColor = false;
         } break;
-        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+        case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
             curr_glyph_offset += elParts.GetCount();
             continue;
             break;
-        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+        case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+        case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+        case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
             // these should have been converted to vec4 colors
             options = 0;
             break;
-        case core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I:
-        case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I:
+        case geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I:
+        case geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I:
             // these should have been converted to vec4 colors with only a red channel for I
             options = glyph_options::USE_TRANSFER_FUNCTION;
             glActiveTexture(GL_TEXTURE0);
@@ -472,7 +473,7 @@ bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
             }
             glUniform1i(shader->ParameterLocation("tf_texture"), 0);
             break;
-        case core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
+        case geocalls::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
             // we should never get this far
             curr_glyph_offset += elParts.GetCount();
             continue;
@@ -488,14 +489,14 @@ bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
         glUniform1ui(shader->ParameterLocation("options"), options);
 
         switch (elParts.GetVertexDataType()) {
-        case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+        case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
             curr_glyph_offset += elParts.GetCount();
             continue;
-        case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-        case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+        case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+        case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
             // anything to do...?
             break;
-        case core::moldyn::EllipsoidalParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+        case geocalls::EllipsoidalParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
             curr_glyph_offset += elParts.GetCount();
             continue;
             break;

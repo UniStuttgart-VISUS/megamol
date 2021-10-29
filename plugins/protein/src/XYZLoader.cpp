@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "XYZLoader.h"
 #include "ParticleDataCall.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
@@ -75,7 +75,7 @@ bool XYZLoader::create(void) {
  */
 bool XYZLoader::getData( core::Call& call) {
     using megamol::core::utility::log::Log;
-    using namespace megamol::core::moldyn;
+    using namespace geocalls;
 
     ParticleDataCall *dc = dynamic_cast<ParticleDataCall*>( &call);
     MultiParticleDataCall *mpdc = dynamic_cast<MultiParticleDataCall*>(&call);
@@ -116,7 +116,7 @@ bool XYZLoader::getData( core::Call& call) {
  */
 bool XYZLoader::getExtent( core::Call& call) {
     // get data call
-    using namespace megamol::core::moldyn;
+    using namespace geocalls;
     ParticleDataCall *dc = dynamic_cast<ParticleDataCall*>( &call);
     MultiParticleDataCall *mpdc = dynamic_cast<MultiParticleDataCall*>(&call);
     if ( dc == NULL && mpdc == NULL) return false;
