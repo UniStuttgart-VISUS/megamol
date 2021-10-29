@@ -7,13 +7,13 @@
 
 #pragma once
 
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "AbstractTexQuartzRenderer.h"
 #include "mmcore/CallerSlot.h"
 #include "QuartzCrystalDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "QuartzParticleGridDataCall.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
@@ -24,7 +24,7 @@ namespace demos {
     /**
      * Module rendering gridded quarts particle data
      */
-    class QuartzTexRenderer : public core::view::Renderer3DModuleGL, public AbstractTexQuartzRenderer {
+    class QuartzTexRenderer : public core_gl::view::Renderer3DModuleGL, public AbstractTexQuartzRenderer {
     public:
 
         /**
@@ -72,7 +72,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
         /**
          * The render callback.
@@ -81,7 +81,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3DGL& call);
+        virtual bool Render(core_gl::view::CallRender3DGL& call);
 
         /**
          * Implementation of 'Create'.

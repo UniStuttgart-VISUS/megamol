@@ -1,7 +1,7 @@
 #ifndef MEGAMOL_INFOVIS_RENDERER2D_H_INCLUDED
 #define MEGAMOL_INFOVIS_RENDERER2D_H_INCLUDED
 
-#include "mmcore/view/Renderer2DModuleGL.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 #include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
@@ -13,9 +13,9 @@ namespace infovis_gl {
 
 #define DEBUG_NAME(name) name, (#name "\0")
 
-    class Renderer2D : public core::view::Renderer2DModuleGL {
+    class Renderer2D : public core_gl::view::Renderer2DModuleGL {
     public:
-        Renderer2D() : core::view::Renderer2DModuleGL() {}
+        Renderer2D() : core_gl::view::Renderer2DModuleGL() {}
 
         virtual ~Renderer2D(){};
 

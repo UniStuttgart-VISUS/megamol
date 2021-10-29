@@ -18,9 +18,9 @@
 #include "protein/ReducedSurface.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/Camera.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
@@ -38,7 +38,7 @@ namespace protein_gl {
      * Molecular Surface Renderer class.
      * Computes and renders the solvent excluded (Connolly) surface.
      */
-    class MoleculeSESRenderer : public megamol::core::view::Renderer3DModuleGL {
+    class MoleculeSESRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
         /** postprocessing modi */
         enum PostprocessingMode { NONE = 0, AMBIENT_OCCLUSION = 1, SILHOUETTE = 2, TRANSPARENCY = 3 };
@@ -249,7 +249,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
+        virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
         /**
          * Open GL Render call.
@@ -257,7 +257,7 @@ namespace protein_gl {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3DGL& call);
+        virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
         /**
          * Deinitialises this renderer. This is only called if there was a

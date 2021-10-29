@@ -13,14 +13,14 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/SDFFont.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/utility/SDFFont.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/memutils.h"
 
 #include <set>
 
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 
 namespace megamol {
 namespace protein_gl {
@@ -28,7 +28,7 @@ namespace protein_gl {
 /**
  * Renderer for tri-mesh data
  */
-class SombreroMeshRenderer : public core::view::Renderer3DModuleGL {
+class SombreroMeshRenderer : public core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -74,7 +74,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3DGL& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -88,7 +88,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3DGL& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * Callback for mouse events (move, press, and release)

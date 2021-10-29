@@ -12,9 +12,9 @@
 #include "mmcore/CoreInstance.h"
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
@@ -35,7 +35,7 @@
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
 megamol::stdplugin::volume_gl::VolumeSliceRenderer::VolumeSliceRenderer(void)
-	: Renderer3DModuleGL()
+	: core_gl::view::Renderer3DModuleGL()
 	, getVolSlot("getVol", "The call for data")
 	, getTFSlot("gettransferfunction", "The call for Transfer function")
 	, getClipPlaneSlot("getclipplane", "The call for clipping plane") {
@@ -43,7 +43,7 @@ megamol::stdplugin::volume_gl::VolumeSliceRenderer::VolumeSliceRenderer(void)
     this->getVolSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->getVolSlot);
 
-    this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->getClipPlaneSlot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
@@ -108,7 +108,7 @@ bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::create(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::GetExtents(core::view::CallRender3DGL& cr) {
+bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::GetExtents(core_gl::view::CallRender3DGL& cr) {
     auto *vdc = this->getVolSlot.CallAs<geocalls::VolumetricDataCall>();
 
 	vdc->SetFrameID(static_cast<unsigned int>(cr.Time()));
@@ -133,7 +133,7 @@ void megamol::stdplugin::volume_gl::VolumeSliceRenderer::release(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::Render(core::view::CallRender3DGL& cr) {
+bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::Render(core_gl::view::CallRender3DGL& cr) {
     // get volume data
     auto *vdc = this->getVolSlot.CallAs<geocalls::VolumetricDataCall>();
 	if (vdc == nullptr || !(*vdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
@@ -206,7 +206,7 @@ bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::Render(core::view::Call
 	const auto slice = ccp->GetPlane();
 
 	// get transfer function
-	core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+	core_gl::view::CallGetTransferFunctionGL *cgtf = this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
 	if (cgtf == nullptr || !(*cgtf)()) return false;
 
 	// get camera

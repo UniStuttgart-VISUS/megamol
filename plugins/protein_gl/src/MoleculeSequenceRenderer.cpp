@@ -33,7 +33,7 @@ void MoleculeSequenceRenderer::release(void)
 {
 }
 
-bool MoleculeSequenceRenderer::GetExtents(CallRender2DGL& call)
+bool MoleculeSequenceRenderer::GetExtents(core_gl::view::CallRender2DGL& call)
 {
 	MolecularDataCall* data = dataCall->CallAs<MolecularDataCall>();
 	if(!data) return false;
@@ -46,7 +46,7 @@ bool MoleculeSequenceRenderer::GetExtents(CallRender2DGL& call)
 	return true;
 }
 
-bool MoleculeSequenceRenderer::Render(CallRender2DGL& call)
+bool MoleculeSequenceRenderer::Render(core_gl::view::CallRender2DGL& call)
 {
 	widgetLibrary.clear();
 

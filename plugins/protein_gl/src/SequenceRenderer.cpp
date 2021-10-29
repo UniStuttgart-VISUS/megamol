@@ -29,7 +29,7 @@ using megamol::core::utility::log::Log;
 /*
  * SequenceRenderer::SequenceRenderer (CTOR)
  */
-SequenceRenderer::SequenceRenderer( void ) : Renderer2DModuleGL (),
+SequenceRenderer::SequenceRenderer( void ) : core_gl::view::Renderer2DModuleGL (),
         dataCallerSlot( "getData", "Connects the sequence diagram rendering with data storage." ),
         bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage." ),
         resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage." ),
@@ -103,7 +103,7 @@ bool SequenceRenderer::create() {
 void SequenceRenderer::release() {
 }
 
-bool SequenceRenderer::GetExtents(view::CallRender2DGL& call) {
+bool SequenceRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
     // check molecular data
     MolecularDataCall *mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL ) return false;
@@ -158,7 +158,7 @@ bool SequenceRenderer::GetExtents(view::CallRender2DGL& call) {
 /*
  * SequenceRenderer::Render
  */
-bool SequenceRenderer::Render(view::CallRender2DGL &call) {
+bool SequenceRenderer::Render(core_gl::view::CallRender2DGL &call) {
     // get pointer to MolecularDataCall
     MolecularDataCall *mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL ) return false;

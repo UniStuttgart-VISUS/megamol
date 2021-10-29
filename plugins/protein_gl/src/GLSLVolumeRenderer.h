@@ -17,9 +17,9 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/utility/RenderUtils.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/utility/RenderUtils.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
@@ -35,7 +35,7 @@ namespace protein_gl {
     /**
      * Protein Renderer class
      */
-    class GLSLVolumeRenderer : public megamol::core::view::Renderer3DModuleGL
+    class GLSLVolumeRenderer : public megamol::core_gl::view::Renderer3DModuleGL
     {
     public:
         /**
@@ -114,7 +114,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( megamol::core::view::CallRender3DGL& call);
+        virtual bool GetExtents( megamol::core_gl::view::CallRender3DGL& call);
 
         /**
         * The Open GL Render callback.
@@ -122,17 +122,17 @@ namespace protein_gl {
         * @param call The calling call.
         * @return The return value of the function.
         */
-        virtual bool Render( megamol::core::view::CallRender3DGL& call);
+        virtual bool Render( megamol::core_gl::view::CallRender3DGL& call);
         
         /**
          * Volume rendering using molecular data.
         */
-        bool RenderMolecularData(megamol::core::view::CallRender3DGL *call, megamol::protein_calls::MolecularDataCall *mol);
+        bool RenderMolecularData(megamol::core_gl::view::CallRender3DGL *call, megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Refresh all parameters.
         */
-        void ParameterRefresh( megamol::core::view::CallRender3DGL *call);
+        void ParameterRefresh( megamol::core_gl::view::CallRender3DGL *call);
     
         /** 
          * Create a volume containing all molecule atoms.

@@ -10,7 +10,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/CoreInstance.h"
 #include "protein/SolPathDataCall.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
@@ -23,7 +23,7 @@ using namespace megamol::protein_gl;
 /*
  * SolPathRenderer::SolPathRenderer
  */
-SolPathRenderer::SolPathRenderer(void) : core::view::Renderer3DModuleGL(),
+SolPathRenderer::SolPathRenderer(void) : core_gl::view::Renderer3DModuleGL(),
         getdataslot("getdata", "Fetches data"), pathlineShader() {
 
     this->getdataslot.SetCompatibleCall<core::factories::CallAutoDescription<protein::SolPathDataCall> >();
@@ -113,7 +113,7 @@ bool SolPathRenderer::create(void) {
 /*
  * SolPathRenderer::GetExtents
  */
-bool SolPathRenderer::GetExtents(core::view::CallRender3DGL& call) {
+bool SolPathRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) return false;
 
@@ -140,7 +140,7 @@ void SolPathRenderer::release(void) {
 /*
  * SolPathRenderer::Render
  */
-bool SolPathRenderer::Render(core::view::CallRender3DGL& call) {
+bool SolPathRenderer::Render(core_gl::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) return false;
 

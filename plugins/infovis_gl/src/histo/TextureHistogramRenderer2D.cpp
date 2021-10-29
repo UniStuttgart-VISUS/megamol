@@ -9,7 +9,8 @@
 #include "compositing/CompositingCalls.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/utility/ShaderFactory.h"
+#include "mmcore_gl/UniFlagCallsGL.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol::infovis_gl;
 
@@ -24,10 +25,10 @@ TextureHistogramRenderer2D::TextureHistogramRenderer2D()
     textureDataCallerSlot_.SetCompatibleCall<compositing::CallTexture2DDescription>();
     MakeSlotAvailable(&textureDataCallerSlot_);
 
-    flagStorageReadCallerSlot_.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    flagStorageReadCallerSlot_.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
     MakeSlotAvailable(&flagStorageReadCallerSlot_);
 
-    flagStorageWriteCallerSlot_.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
+    flagStorageWriteCallerSlot_.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
     MakeSlotAvailable(&flagStorageWriteCallerSlot_);
 }
 
@@ -67,24 +68,24 @@ void TextureHistogramRenderer2D::releaseImpl() {
     glDeleteBuffers(1, &maxValueBuffer);
 }
 
-bool TextureHistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
+bool TextureHistogramRenderer2D::handleCall(core_gl::view::CallRender2DGL& call) {
     auto textureCall = textureDataCallerSlot_.CallAs<compositing::CallTexture2D>();
     if (textureCall == nullptr) {
         return false;
     }
 
-    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core::FlagCallRead_GL>();
+    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core_gl::FlagCallRead_GL>();
     if (readFlagsCall == nullptr) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TextureHistogramRenderer2D requires a read flag storage!");
         return false;
     }
-    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core::FlagCallWrite_GL>();
+    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core_gl::FlagCallWrite_GL>();
     if (writeFlagsCall == nullptr) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TextureHistogramRenderer2D requires a write flag storage!");
         return false;
     }
 
-    (*readFlagsCall)(core::FlagCallRead_GL::CallGetData);
+    (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
 
     // stupid cheat, but is that really worth it?
     // static uint32_t lastFrame = -1;
@@ -221,8 +222,8 @@ void TextureHistogramRenderer2D::updateSelection(SelectionMode selectionMode, in
 }
 
 void TextureHistogramRenderer2D::applySelections() {
-    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core::FlagCallRead_GL>();
-    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core::FlagCallWrite_GL>();
+    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core_gl::FlagCallRead_GL>();
+    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core_gl::FlagCallWrite_GL>();
     if (readFlagsCall != nullptr && writeFlagsCall != nullptr) {
         selectionProgram_->use();
 
@@ -258,6 +259,6 @@ void TextureHistogramRenderer2D::applySelections() {
         glUseProgram(0);
 
         writeFlagsCall->setData(readFlagsCall->getData(), readFlagsCall->version() + 1);
-        (*writeFlagsCall)(core::FlagCallWrite_GL::CallGetData);
+        (*writeFlagsCall)(core_gl::FlagCallWrite_GL::CallGetData);
     }
 }

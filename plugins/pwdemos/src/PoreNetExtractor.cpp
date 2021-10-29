@@ -9,7 +9,7 @@
 #include "PoreNetExtractor.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -37,7 +37,7 @@ namespace demos {
 /*
  * PoreNetExtractor::PoreNetExtractor
  */
-PoreNetExtractor::PoreNetExtractor(void) : core::view::Renderer3DModuleGL(), AbstractQuartzModule(),
+PoreNetExtractor::PoreNetExtractor(void) : core_gl::view::Renderer3DModuleGL(), AbstractQuartzModule(),
 typeTexture(0), bbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0), cbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0),
 filenameSlot("filename", "The file name of the pore network data file"),
 streamSaveSlot("streamSave", "Saves the data to the pore network data file while extracting"),
@@ -114,7 +114,7 @@ PoreNetExtractor::~PoreNetExtractor(void) {
 /*
  * PoreNetExtractor::GetExtents
  */
-bool PoreNetExtractor::GetExtents(core::view::CallRender3DGL& call) {
+bool PoreNetExtractor::GetExtents(core_gl::view::CallRender3DGL& call) {
     call.AccessBoundingBoxes().SetBoundingBox(this->bbox);
     call.AccessBoundingBoxes().SetClipBox(this->cbox);
     call.SetTimeFramesCount(1);
@@ -126,7 +126,7 @@ bool PoreNetExtractor::GetExtents(core::view::CallRender3DGL& call) {
 /*
  * PoreNetExtractor::Render
  */
-bool PoreNetExtractor::Render(core::view::CallRender3DGL& call) {
+bool PoreNetExtractor::Render(core_gl::view::CallRender3DGL& call) {
     if (this->isExtractionRunning()) {
         this->performExtraction();
     }

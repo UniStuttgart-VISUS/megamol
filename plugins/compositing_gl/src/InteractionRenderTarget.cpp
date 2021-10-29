@@ -22,7 +22,7 @@ bool megamol::compositing::InteractionRenderTarget::create() {
     return true; 
 }
 
-bool megamol::compositing::InteractionRenderTarget::Render(core::view::CallRender3DGL& call) {
+bool megamol::compositing::InteractionRenderTarget::Render(core_gl::view::CallRender3DGL& call) {
 
     SimpleRenderTarget::Render(call);
 

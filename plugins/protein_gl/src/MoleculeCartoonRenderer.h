@@ -17,8 +17,8 @@
 #include "protein/Color.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
@@ -39,7 +39,7 @@ namespace protein_gl {
      * - add RenderMode CARTOON_GPU
      */
 
-    class MoleculeCartoonRenderer : public megamol::core::view::Renderer3DModuleGL {
+    class MoleculeCartoonRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
     public:
         /**
          * Answer the name of this module.
@@ -185,7 +185,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
         /**
          * The Open GL Render callback.
@@ -193,7 +193,7 @@ namespace protein_gl {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3DGL& call);
+        virtual bool Render(core_gl::view::CallRender3DGL& call);
 
         /**
          * Render protein in hybrid CARTOON mode using the Geometry Shader.

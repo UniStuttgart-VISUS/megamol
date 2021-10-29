@@ -38,7 +38,7 @@ MDAOVolumeGenerator::~MDAOVolumeGenerator()
 }
 
 
-void MDAOVolumeGenerator::SetShaderSourceFactory(megamol::core::utility::ShaderSourceFactory* factory)
+void MDAOVolumeGenerator::SetShaderSourceFactory(megamol::core_gl::utility::ShaderSourceFactory* factory)
 {
     this->factory = factory;
 }

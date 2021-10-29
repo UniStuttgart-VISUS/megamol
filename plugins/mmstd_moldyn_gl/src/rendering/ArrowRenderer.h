@@ -15,10 +15,10 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore/FlagCall.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "vislib/assert.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
@@ -36,7 +36,7 @@ namespace rendering {
     /**
      * Renderer for simple sphere glyphs
      */
-    class ArrowRenderer : public view::Renderer3DModuleGL {
+    class ArrowRenderer : public core_gl::view::Renderer3DModuleGL {
     public:
 
         /**
@@ -90,7 +90,7 @@ namespace rendering {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(view::CallRender3DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
         /**
          * Implementation of 'Release'.
@@ -104,7 +104,7 @@ namespace rendering {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(view::CallRender3DGL& call);
+        virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     private:
 

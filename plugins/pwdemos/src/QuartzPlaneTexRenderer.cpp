@@ -22,7 +22,7 @@ namespace demos {
 /*
  * QuartzPlaneTexRenderer::QuartzPlaneTexRenderer
  */
-QuartzPlaneTexRenderer::QuartzPlaneTexRenderer(void) : core::view::Renderer2DModuleGL(),
+QuartzPlaneTexRenderer::QuartzPlaneTexRenderer(void) : core_gl::view::Renderer2DModuleGL(),
 AbstractTexQuartzRenderer(),
 useClipColSlot("useClipCol", "Use clipping plane or grain colour for grains"),
 cryShader() {
@@ -95,7 +95,7 @@ bool QuartzPlaneTexRenderer::create(void) {
 /*
  * QuartzPlaneTexRenderer::GetExtents
  */
-bool QuartzPlaneTexRenderer::GetExtents(core::view::CallRender2DGL& call) {
+bool QuartzPlaneTexRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
     ParticleGridDataCall *pgdc = this->getParticleData();
     core::view::CallClipPlane *ccp = this->getClipPlaneData();
     if ((pgdc != NULL) && (ccp != NULL)) {
@@ -196,7 +196,7 @@ void QuartzPlaneTexRenderer::release(void) {
 /*
  * QuartzPlaneTexRenderer::Render
  */
-bool QuartzPlaneTexRenderer::Render(core::view::CallRender2DGL& call) {
+bool QuartzPlaneTexRenderer::Render(core_gl::view::CallRender2DGL& call) {
     ParticleGridDataCall *pgdc = this->getParticleData();
     CrystalDataCall *tdc = this->getCrystaliteData();
     core::view::CallClipPlane *ccp = this->getClipPlaneData();

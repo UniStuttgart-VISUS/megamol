@@ -13,7 +13,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -39,7 +39,7 @@ using namespace megamol::core;
 /*
  * TriSoupRenderer::TriSoupRenderer
  */
-TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModuleGL(),
+TriSoupRenderer::TriSoupRenderer(void) : core_gl::view::Renderer3DModuleGL(),
         getDataSlot("getData", "The slot to fetch the tri-mesh data"),
         getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)"),
         getLightsSlot("lights", "Lights are retrieved over this slot."),
@@ -113,7 +113,7 @@ bool TriSoupRenderer::create(void) {
 /*
  * TriSoupRenderer::GetExtents
  */
-bool TriSoupRenderer::GetExtents(view::CallRender3DGL& call) {
+bool TriSoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
@@ -139,7 +139,7 @@ void TriSoupRenderer::release(void) {
 /*
  * TriSoupRenderer::Render
  */
-bool TriSoupRenderer::Render(view::CallRender3DGL& call) {
+bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
     megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
 

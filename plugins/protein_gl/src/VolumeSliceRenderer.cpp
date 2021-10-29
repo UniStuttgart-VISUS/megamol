@@ -14,6 +14,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -24,7 +25,7 @@ using namespace megamol::core::utility::log;
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer (CTOR)
  */
-VolumeSliceRenderer::VolumeSliceRenderer( void ) : Renderer2DModuleGL (),
+VolumeSliceRenderer::VolumeSliceRenderer( void ) : core_gl::view::Renderer2DModuleGL (),
         volDataCallerSlot( "getData", "Connects the volume slice rendering with data storage" ) {
     // volume data caller slot
     this->volDataCallerSlot.SetCompatibleCall<protein::VolumeSliceCallDescription>();
@@ -77,7 +78,7 @@ bool VolumeSliceRenderer::create() {
 void VolumeSliceRenderer::release() {
 }
 
-bool VolumeSliceRenderer::GetExtents( view::CallRender2DGL& call) {
+bool VolumeSliceRenderer::GetExtents( core_gl::view::CallRender2DGL& call) {
     // get pointer to VolumeSliceCall
     protein::VolumeSliceCall *volume = this->volDataCallerSlot.CallAs<protein::VolumeSliceCall>();
     if( volume == NULL ) return false;
@@ -156,7 +157,7 @@ bool VolumeSliceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
 /*
  * VolumeSliceRenderer::Render
  */
-bool VolumeSliceRenderer::Render( view::CallRender2DGL &call) {
+bool VolumeSliceRenderer::Render( core_gl::view::CallRender2DGL &call) {
     
     // get pointer to VolumeSliceCall
     protein::VolumeSliceCall *volume = this->volDataCallerSlot.CallAs<protein::VolumeSliceCall>();

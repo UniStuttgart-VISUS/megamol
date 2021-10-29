@@ -17,7 +17,7 @@
 #include "JobManager.h"
 #include "utility/HotFixFileName.h"
 #include "utility/HotFixes.h"
-#include "mmcore/utility/KHR.h"
+#include "mmcore_gl/utility/KHR.h"
 
 #include "ButtonParamUILayer.h"
 #include "ViewUILayer.h"

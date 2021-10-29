@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ParticleDensityOpacityModule.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"

@@ -17,7 +17,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer2DModuleGL.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "mmcore/view/Input.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/BindingSiteCall.h"
@@ -34,7 +34,7 @@
 namespace megamol {
 namespace protein_gl {
 
-    class SequenceRenderer : public megamol::core::view::Renderer2DModuleGL {
+    class SequenceRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
     public:
 
         /**
@@ -129,7 +129,7 @@ namespace protein_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender2DGL& call);
+        virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
 
         /**
         * The Open GL Render callback.
@@ -137,7 +137,7 @@ namespace protein_gl {
         * @param call The calling call.
         * @return The return value of the function.
         */
-        virtual bool Render(megamol::core::view::CallRender2DGL& call);
+        virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
 
         /**********************************************************************
          * variables

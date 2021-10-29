@@ -86,10 +86,17 @@ function(megamol_plugin PLUGIN_NAME)
     endforeach ()
 
     # Link
-    target_link_libraries(${PLUGIN_NAME}
-      PRIVATE core
-      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
-      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+    if (ENABLE_GL)
+      target_link_libraries(${PLUGIN_NAME}
+        PRIVATE core_gl
+        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
+        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+    else()
+      target_link_libraries(${PLUGIN_NAME}
+        PRIVATE core
+        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
+        PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+    endif()
 
     # Install shaders
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/shaders")

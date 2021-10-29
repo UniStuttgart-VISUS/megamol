@@ -7,11 +7,8 @@
 
 #pragma once
 
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-
 #include "FlagCollections.h"
 #include "FlagStorage.h"
-#include "glowl/BufferObject.hpp"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -54,7 +51,7 @@ namespace core {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return ogl_IsVersionGEQ(4, 3);
+            return true;
         }
 
         /** Ctor. */
@@ -62,56 +59,6 @@ namespace core {
 
         /** Dtor. */
         virtual ~UniFlagStorage(void);
-
-    protected:
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
-
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
-
-    private:
-        /**
-         * Access the flags provided by the UniFlagStorage
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool readDataCallback(core::Call& caller);
-
-        /**
-         * Write/update the flags provided by the UniFlagStorage
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool writeDataCallback(core::Call& caller);
-
-        /**
-         * Access the flags provided by the UniFlagStorage
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool readCPUDataCallback(core::Call& caller);
-
-        /**
-         * Write/update the flags provided by the UniFlagStorage
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool writeCPUDataCallback(core::Call& caller);
 
         /**
          * Access the metadata provided by the UniFlagStorage
@@ -131,29 +78,36 @@ namespace core {
          */
         bool writeMetaDataCallback(core::Call& caller);
 
+    protected:
         /**
-         * Helper to copy CPU flags to GL flags
+         * Implementation of 'Create'.
+         *
+         * @return 'true' on success, 'false' otherwise.
          */
-        void CPU2GLCopy() {
-            theData->validateFlagCount(theCPUData->flags->size());
-            theData->flags->bufferSubData(*(theCPUData->flags));
-        }
+        virtual bool create(void);
 
         /**
-         * Helper to copy GL flags to CPU flags
+         * Implementation of 'Release'.
          */
-        void GL2CPUCopy() {
-            auto const num = theData->flags->getByteSize() / sizeof(uint32_t);
-            theCPUData->validateFlagCount(num);
-            glGetNamedBufferSubData(
-                theData->flags->getName(), 0, theData->flags->getByteSize(), theCPUData->flags->data());
-        }
+        virtual void release(void);
 
-        /** The slot for reading the data */
-        core::CalleeSlot readFlagsSlot;
+        /**
+         * Access the flags provided by the UniFlagStorage
+         *
+         * @param caller The calling call.
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        bool readCPUDataCallback(core::Call& caller);
 
-        /** The slot for writing the data */
-        core::CalleeSlot writeFlagsSlot;
+        /**
+         * Write/update the flags provided by the UniFlagStorage
+         *
+         * @param caller The calling call.
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        bool writeCPUDataCallback(core::Call& caller);
 
         /** The slot for reading the data */
         core::CalleeSlot readCPUFlagsSlot;
@@ -161,7 +115,6 @@ namespace core {
         /** The slot for writing the data */
         core::CalleeSlot writeCPUFlagsSlot;
 
-        std::shared_ptr<FlagCollection_GL> theData;
         std::shared_ptr<FlagCollection_CPU> theCPUData;
         uint32_t version = 0;
     };

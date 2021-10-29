@@ -16,9 +16,9 @@
 #include "protein/GridNeighbourFinder.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
-#include "mmcore/utility/RenderUtils.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/utility/RenderUtils.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "slicing.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
@@ -40,7 +40,7 @@ namespace protein_gl {
 /**
  * Protein Renderer class
  */
-class SolventVolumeRenderer : public megamol::core::view::Renderer3DModuleGL {
+class SolventVolumeRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -133,7 +133,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3DGL& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -141,7 +141,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3DGL& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
     void UpdateColorTable(megamol::protein_calls::MolecularDataCall* mol);
     void ColorAtom(float* atomColor, megamol::protein_calls::MolecularDataCall* mol, int polymerColorMode,
         int atomIdx, int residueIdx);
@@ -150,7 +150,7 @@ private:
      * Volume rendering using molecular data.
      */
     bool RenderMolecularData(
-        megamol::core::view::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
+        megamol::core_gl::view::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * Render the current mouse position on the clipping plane as a small sphere.
@@ -158,12 +158,12 @@ private:
      * @param call The render call
      * @param rad The sphere radius
      */
-    void RenderMousePosition(megamol::core::view::CallRender3DGL* call, float rad);
+    void RenderMousePosition(megamol::core_gl::view::CallRender3DGL* call, float rad);
 
     /**
      * Refresh all parameters.
      */
-    void ParameterRefresh(megamol::core::view::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
+    void ParameterRefresh(megamol::core_gl::view::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * Create a volume containing all molecule atoms.

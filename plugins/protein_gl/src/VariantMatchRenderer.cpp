@@ -33,7 +33,7 @@ using namespace megamol::protein_gl;
 /*
  * VariantMatchRenderer::VariantMatchRenderer
  */
-VariantMatchRenderer::VariantMatchRenderer(void) : Renderer2DModuleGL () ,
+VariantMatchRenderer::VariantMatchRenderer(void) : core_gl::view::Renderer2DModuleGL () ,
         dataCallerSlot("getData", "Connects the rendering with data storage" ),
         minColSlot("minCol", "..." ),
         maxColSlot("maxCol", "..." ),
@@ -136,7 +136,7 @@ bool VariantMatchRenderer::create(void) {
 /*
  * VariantMatchRenderer::GetExtents
  */
-bool VariantMatchRenderer::GetExtents(megamol::core::view::CallRender2DGL& call) {
+bool VariantMatchRenderer::GetExtents(megamol::core_gl::view::CallRender2DGL& call) {
     call.AccessBoundingBoxes().SetBoundingBox(-1.0f, -1.0f, 0, 1.0f, 1.0f, 0);
     return true;
 }
@@ -158,7 +158,7 @@ void VariantMatchRenderer::release(void) {
 /*
  * VariantMatchRenderer::Render
  */
-bool VariantMatchRenderer::Render(megamol::core::view::CallRender2DGL& call) {
+bool VariantMatchRenderer::Render(megamol::core_gl::view::CallRender2DGL& call) {
 
     //float gridHalfStep;
 

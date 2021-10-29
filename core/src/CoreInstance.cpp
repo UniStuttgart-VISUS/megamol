@@ -9,7 +9,6 @@
 #if (_MSC_VER > 1000)
 #    pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #if (_MSC_VER > 1000)
 #    pragma warning(default : 4996)
 #endif /* (_MSC_VER > 1000) */
@@ -126,7 +125,9 @@ megamol::core::CoreInstance::CoreInstance(void)
     , factories::AbstractObjectFactoryInstance()
     , preInit(new PreInit)
     , config()
+#ifdef WITH_GL
     , shaderSourceFactory(config)
+#endif
     , lua(nullptr)
     , builtinViewDescs()
     , projViewDescs()

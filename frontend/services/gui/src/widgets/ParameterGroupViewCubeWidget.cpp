@@ -23,7 +23,7 @@ megamol::gui::PickableCube::PickableCube() : image_up_arrow(), shader(nullptr) {
 
 bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_selected_face_id,
     int& inout_selected_orientation_id, int& out_hovered_face_id, int& out_hovered_orientation_id,
-    const glm::vec4& cube_orientation, ManipVector_t& pending_manipulations) {
+    const glm::vec4& cube_orientation, core_gl::utility::ManipVector_t& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -369,11 +369,11 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
             int picked_face_id = static_cast<int>((manip.obj_id >> BIT_OFFSET_FACE) & 0b11111);
             int picked_orientation_id = static_cast<int>((manip.obj_id >> BIT_OFFSET_ORIENTATION) & 0b11);
 
-            if (manip.type == InteractionType::SELECT) {
+            if (manip.type == core_gl::utility::InteractionType::SELECT) {
                 inout_selected_face_id = picked_face_id;
                 inout_selected_orientation_id = picked_orientation_id;
                 selected = true;
-            } else if (manip.type == InteractionType::HIGHLIGHT) {
+            } else if (manip.type == core_gl::utility::InteractionType::HIGHLIGHT) {
                 out_hovered_face_id = picked_face_id;
                 out_hovered_orientation_id = picked_orientation_id;
             }
@@ -439,11 +439,11 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
 }
 
 
-InteractVector_t megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
+core_gl::utility::InteractVector_t megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
 
-    InteractVector_t interactions;
-    interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    core_gl::utility::InteractVector_t interactions;
+    interactions.emplace_back(core_gl::utility::Interaction({core_gl::utility::InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(core_gl::utility::Interaction({core_gl::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
 
@@ -454,7 +454,7 @@ megamol::gui::PickableTexture::PickableTexture() : image_rotation_arrow(), shade
 
 
 bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_face_id, int& out_orientation_change,
-    int& out_hovered_arrow_id, ManipVector_t& pending_manipulations) {
+    int& out_hovered_arrow_id, core_gl::utility::ManipVector_t& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     bool selected = false;
@@ -538,10 +538,10 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
             orientation_change = 1;
         }
         if (orientation_change != 0) {
-            if (manip.type == InteractionType::SELECT) {
+            if (manip.type == core_gl::utility::InteractionType::SELECT) {
                 out_orientation_change = orientation_change;
                 selected = true;
-            } else if (manip.type == InteractionType::HIGHLIGHT) {
+            } else if (manip.type == core_gl::utility::InteractionType::HIGHLIGHT) {
                 out_hovered_arrow_id = orientation_change;
             }
         }
@@ -597,11 +597,11 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
 }
 
 
-InteractVector_t megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
+core_gl::utility::InteractVector_t megamol::gui::PickableTexture::GetInteractions(unsigned int id) const {
 
-    InteractVector_t interactions;
-    interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    core_gl::utility::InteractVector_t interactions;
+    interactions.emplace_back(core_gl::utility::Interaction({core_gl::utility::InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(core_gl::utility::Interaction({core_gl::utility::InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
 
@@ -647,7 +647,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
 
 
 bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer,
+    megamol::gui::Parameter::WidgetScope in_scope, core_gl::utility::PickingBuffer* inout_picking_buffer,
     ImGuiID in_override_header_state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {

@@ -15,9 +15,9 @@
 #include "mmcore/FlagStorage.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/SDFFont.h"
-#include "mmcore/view/CallRender2DGL.h"
-#include "mmcore/view/Renderer2DModuleGL.h"
+#include "mmcore_gl/utility/SDFFont.h"
+#include "mmcore_gl/view/CallRender2DGL.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 
@@ -85,9 +85,9 @@ namespace infovis_gl {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender2DGL& call);
+        virtual bool Render(core_gl::view::CallRender2DGL& call);
 
-        virtual bool GetExtents(core::view::CallRender2DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
 
         // virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
@@ -133,7 +133,7 @@ namespace infovis_gl {
 
         void pickIndicator(float x, float y, int& axis, int& index);
 
-        bool assertData(core::view::CallRender2DGL& call);
+        bool assertData(core_gl::view::CallRender2DGL& call);
 
         void computeScaling(void);
 

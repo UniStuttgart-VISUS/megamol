@@ -7,9 +7,10 @@
 
 #include "compositing/CompositingCalls.h"
 #include "mmcore/UniFlagCalls.h"
+#include "mmcore_gl/UniFlagCallsGL.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen()
-        : Renderer3DModuleGL()
+        : core_gl::view::Renderer3DModuleGL()
         , m_drawToScreen_prgm(nullptr)
         , m_input_texture_call("InputTexture", "Access texture that is drawn to output screen")
         , m_input_depth_texture_call("DepthTexture", "Access optional depth texture to write depth values to screen")
@@ -20,7 +21,7 @@ megamol::compositing::DrawToScreen::DrawToScreen()
     this->m_input_depth_texture_call.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_depth_texture_call);
 
-    m_input_flags_call.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    m_input_flags_call.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
     MakeSlotAvailable(&m_input_flags_call);
 }
 
@@ -74,13 +75,13 @@ void megamol::compositing::DrawToScreen::release() {
     m_drawToScreen_prgm.reset();
 }
 
-bool megamol::compositing::DrawToScreen::GetExtents(core::view::CallRender3DGL& call) {
+bool megamol::compositing::DrawToScreen::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call) {
+bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& call) {
     // get lhs render call
-    megamol::core::view::CallRender3DGL* cr = &call;
+    megamol::core_gl::view::CallRender3DGL* cr = &call;
     if (cr == NULL)
         return false;
 
@@ -106,9 +107,9 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
     if (input_texture == nullptr)
         return false;
 
-    auto readFlagsCall = m_input_flags_call.CallAs<core::FlagCallRead_GL>();
+    auto readFlagsCall = m_input_flags_call.CallAs<core_gl::FlagCallRead_GL>();
     if (readFlagsCall != nullptr) {
-        (*readFlagsCall)(core::FlagCallRead_GL::CallGetData);
+        (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
 
         if (m_last_tex_size != glm::ivec2(input_texture->getWidth(), input_texture->getHeight()) || readFlagsCall->hasUpdate()) {
             readFlagsCall->getData()->validateFlagCount(input_texture->getWidth() * input_texture->getHeight());
@@ -146,5 +147,5 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
     return true;
 }
 
-void megamol::compositing::DrawToScreen::PreRender(core::view::CallRender3DGL& call) {
+void megamol::compositing::DrawToScreen::PreRender(core_gl::view::CallRender3DGL& call) {
 }

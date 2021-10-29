@@ -1,8 +1,8 @@
 #ifndef MOLECULESEQUENCERENDERER_H
 #define MOLECULESEQUENCERENDERER_H
 
-#include "mmcore/view/Renderer2DModuleGL.h"
-#include "mmcore/view/CallRender2DGL.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
 
 #include "GlWidgetLibrary.h"
@@ -14,7 +14,7 @@ namespace core {
 }
 
 namespace protein_gl {
-class MoleculeSequenceRenderer : public megamol::core::view::Renderer2DModuleGL {
+class MoleculeSequenceRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
 public:
     static const char *ClassName(void)
     {
@@ -38,8 +38,8 @@ protected:
     virtual bool create(void);
     virtual void release(void);
 
-    virtual bool GetExtents(megamol::core::view::CallRender2DGL& call);
-	virtual bool Render(megamol::core::view::CallRender2DGL& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
+	virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
     virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 	
 private: /* methods */

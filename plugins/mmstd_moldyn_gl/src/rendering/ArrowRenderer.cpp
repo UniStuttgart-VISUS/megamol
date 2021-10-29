@@ -12,12 +12,14 @@
 
 #include <glm/ext.hpp>
 
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+
 using namespace megamol::core;
 using namespace megamol::geocalls;
 using namespace megamol::stdplugin::moldyn_gl::rendering;
 
 
-ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModuleGL()
+ArrowRenderer::ArrowRenderer(void) : core_gl::view::Renderer3DModuleGL()
     , getDataSlot("getdata", "Connects to the data source")
     , getTFSlot("gettransferfunction", "Connects to the transfer function module")
     , getFlagsSlot("getflags", "connects to a FlagStorage")
@@ -30,7 +32,7 @@ ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModuleGL()
     this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
+    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->getFlagsSlot.SetCompatibleCall<FlagCallDescription>();
@@ -111,7 +113,7 @@ bool ArrowRenderer::create(void) {
 }
 
 
-bool ArrowRenderer::GetExtents(view::CallRender3DGL& call) {
+bool ArrowRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if ((c2 != nullptr) && ((*c2)(1))) {
@@ -134,7 +136,7 @@ void ArrowRenderer::release(void) {
 }
 
 
-bool ArrowRenderer::Render(view::CallRender3DGL& call) {
+bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if (c2 != nullptr) {
@@ -317,7 +319,7 @@ bool ArrowRenderer::Render(view::CallRender3DGL& call) {
                     }
 
                     glEnable(GL_TEXTURE_1D);
-                    view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+                    core_gl::view::CallGetTransferFunctionGL *cgtf = this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
                     if ((cgtf != nullptr) && ((*cgtf)())) {
                         glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                         colTabSize = cgtf->TextureSize();

@@ -10,8 +10,8 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"

@@ -9,8 +9,8 @@
 
 #include "AbstractTexQuartzRenderer.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer2DModuleGL.h"
-#include "mmcore/view/CallRender2DGL.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmcore_gl/view/CallRender2DGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
@@ -21,7 +21,7 @@ namespace demos {
     /**
      * QuartzPlaneTexRenderer
      */
-    class QuartzPlaneTexRenderer : public core::view::Renderer2DModuleGL, public AbstractTexQuartzRenderer {
+    class QuartzPlaneTexRenderer : public core_gl::view::Renderer2DModuleGL, public AbstractTexQuartzRenderer {
     public:
 
         /**
@@ -80,7 +80,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender2DGL& call);
+        virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
 
         /**
          * Implementation of 'Release'.
@@ -94,7 +94,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender2DGL& call);
+        virtual bool Render(core_gl::view::CallRender2DGL& call);
 
     private:
 

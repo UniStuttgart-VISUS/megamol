@@ -17,8 +17,8 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Cuboid.h"
@@ -53,7 +53,7 @@ namespace rendering {
     /**
         * Renderer for gridded imposters
         */
-    class GrimRenderer : public core::view::Renderer3DModuleGL {
+    class GrimRenderer : public core_gl::view::Renderer3DModuleGL {
     public:
 
         /**
@@ -111,7 +111,7 @@ namespace rendering {
             *
             * @return The return value of the function.
             */
-        virtual bool GetExtents(core::view::CallRender3DGL &call);
+        virtual bool GetExtents(core_gl::view::CallRender3DGL &call);
 
         /**
             * Implementation of 'Release'.
@@ -125,7 +125,7 @@ namespace rendering {
             *
             * @return The return value of the function.
             */
-        virtual bool Render(core::view::CallRender3DGL& call);
+        virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     private:
 

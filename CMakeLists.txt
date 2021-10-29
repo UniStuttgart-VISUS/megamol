@@ -66,9 +66,9 @@ endif()
 
 # Core
 add_subdirectory(${MEGAMOL_CORE_DIR})
-# if (ENABLE_GL)
-#   add_subdirectory(${MEGAMOL_CORE_GL_DIR})
-# endif()
+if (ENABLE_GL)
+  add_subdirectory(${MEGAMOL_CORE_GL_DIR})
+endif()
 
 # Console
 set(CONSOLE_NAME mmconsole)

@@ -17,16 +17,16 @@
 #include "protein/SphereDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_gl {
 
 
-class UnstructuredGridRenderer : public megamol::core::view::Renderer3DModuleGL {
+class UnstructuredGridRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
 
     /**
@@ -87,7 +87,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3DGL& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -95,7 +95,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3DGL& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /// The data caller slot
     megamol::core::CallerSlot dataCallerSlot;

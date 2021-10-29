@@ -10,6 +10,7 @@
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/UniFlagCallsGL.h"
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol::stdplugin::datatools::table;
@@ -30,7 +31,7 @@ TableFlagFilter::TableFlagFilter()
     this->tableInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableInSlot);
 
-    this->flagStorageInSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    this->flagStorageInSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->flagStorageInSlot);
 
     this->tableOutSlot.SetCallback(TableDataCall::ClassName(),
@@ -87,7 +88,7 @@ bool TableFlagFilter::getHash(core::Call &call) {
 bool TableFlagFilter::handleCall(core::Call &call) {
     auto *tableOutCall = dynamic_cast<TableDataCall *>(&call);
     auto *tableInCall = this->tableInSlot.CallAs<TableDataCall>();
-    auto *flagsInCall = this->flagStorageInSlot.CallAs<core::FlagCallRead_GL>();
+    auto *flagsInCall = this->flagStorageInSlot.CallAs<core_gl::FlagCallRead_GL>();
 
     if (tableOutCall == nullptr) {
         return false;
@@ -108,7 +109,7 @@ bool TableFlagFilter::handleCall(core::Call &call) {
     tableInCall->SetFrameID(tableOutCall->GetFrameID());
     (*tableInCall)(1);
     (*tableInCall)(0);
-    (*flagsInCall)(core::FlagCallRead_GL::CallGetData);
+    (*flagsInCall)(core_gl::FlagCallRead_GL::CallGetData);
 
     if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() || flagsInCall->hasUpdate()) {
         // megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "TableFlagFilter: Filter table.");

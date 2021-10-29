@@ -32,7 +32,7 @@ using namespace megamol::core::utility::log;
 /*
  * SecPlaneRenderer::SecPlaneRenderer
  */
-SecPlaneRenderer::SecPlaneRenderer(void) : view::Renderer3DModuleGL(),
+SecPlaneRenderer::SecPlaneRenderer(void) : core_gl::view::Renderer3DModuleGL(),
     textureSlot("getData", "Connects the slice rendering with data storage" ),
     shadingSlot("shading", "Determines the shading mode"),
     shadingMinTexSlot("min", "The minimum texture value (used for shading)"),
@@ -193,7 +193,7 @@ bool SecPlaneRenderer::create(void) {
 /*
  * SecPlaneRenderer::GetExtents
  */
-bool SecPlaneRenderer::GetExtents(core::view::CallRender3DGL& call) {
+bool SecPlaneRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) {
         return false;
@@ -278,7 +278,7 @@ void SecPlaneRenderer::release(void) {
 /*
  * SecPlaneRenderer::Render
  */
-bool SecPlaneRenderer::Render(core::view::CallRender3DGL& call) {
+bool SecPlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // Get render call
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) {

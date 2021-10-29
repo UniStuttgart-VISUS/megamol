@@ -42,7 +42,7 @@ using namespace megamol::core::utility::log;
  * MoleculeSESRenderer::MoleculeSESRenderer
  */
 MoleculeSESRenderer::MoleculeSESRenderer(void)
-        : Renderer3DModuleGL()
+        : core_gl::view::Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the protein SES rendering with protein data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , postprocessingParam("postProcessingMode", "Enable Postprocessing Mode: ")
@@ -753,7 +753,7 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
 /*
  * MoleculeSESRenderer::GetExtents
  */
-bool MoleculeSESRenderer::GetExtents(view::CallRender3DGL& call) {
+bool MoleculeSESRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
@@ -771,7 +771,7 @@ bool MoleculeSESRenderer::GetExtents(view::CallRender3DGL& call) {
 /*
  * MoleculeSESRenderer::Render
  */
-bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
+bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // temporary variables
     unsigned int cntRS = 0;
 

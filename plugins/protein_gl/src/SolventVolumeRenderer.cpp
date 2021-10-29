@@ -20,7 +20,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "vislib/assert.h"
@@ -53,7 +53,7 @@ using namespace megamol::core::utility::log;
 /*
  * protein::SolventVolumeRenderer::SolventVolumeRenderer (CTOR)
  */
-protein_gl::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModuleGL(),
+protein_gl::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : core_gl::view::Renderer3DModuleGL(),
         protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
         protRendererCallerSlot ( "renderMolecule", "Connects the volume rendering with a molecule renderer" ),
         dataOutSlot ( "volumeout", "Connects the volume rendering with a volume slice renderer" ),
@@ -103,7 +103,7 @@ protein_gl::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DMo
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
     
     // set renderer caller slot
-    this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DGLDescription>();
+    this->protRendererCallerSlot.SetCompatibleCall<core_gl::view::CallRender3DGLDescription>();
     this->MakeSlotAvailable( &this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
@@ -397,8 +397,8 @@ bool protein_gl::SolventVolumeRenderer::create ( void ) {
 /*
  * protein::ProteinRenderer::GetExtents
  */
-bool protein_gl::SolventVolumeRenderer::GetExtents(core::view::CallRender3DGL& call) {
-    view::CallRender3DGL *cr3d = dynamic_cast<view::CallRender3DGL *>(&call);
+bool protein_gl::SolventVolumeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+    core_gl::view::CallRender3DGL *cr3d = dynamic_cast<core_gl::view::CallRender3DGL *>(&call);
     if (cr3d == NULL) return false;
 
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
@@ -433,7 +433,7 @@ bool protein_gl::SolventVolumeRenderer::GetExtents(core::view::CallRender3DGL& c
     bbox.SetBoundingBox(boundingBox);
 
     // get the pointer to CallRender3DGL (protein renderer)
-/*    view::CallRender3DGL *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3DGL>();
+/*    core_gl::view::CallRender3DGL *protrencr3d = this->protRendererCallerSlot.CallAs<core_gl::view::CallRender3DGL>();
     vislib::math::Point<float, 3> protrenbbc;
     if( protrencr3d ) {
         (*protrencr3d)(core::view::AbstractCallRender::FnGetExtents); // GetExtents
@@ -597,9 +597,9 @@ void protein_gl::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall *mol)
 /*
  * protein::SolventVolumeRenderer::Render
  */
-bool protein_gl::SolventVolumeRenderer::Render(core::view::CallRender3DGL& call) {
+bool protein_gl::SolventVolumeRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // cast the call to Render3D
-    view::CallRender3DGL *cr3d = dynamic_cast<view::CallRender3DGL*>( &call );
+    core_gl::view::CallRender3DGL *cr3d = dynamic_cast<core_gl::view::CallRender3DGL*>( &call );
     if( !cr3d ) return false;
 
     // get pointer to MolecularDataCall
@@ -802,7 +802,7 @@ bool protein_gl::SolventVolumeRenderer::Render(core::view::CallRender3DGL& call)
         
 #if 1 // HACKHACKHACK
         // get the pointer to CallRender3DGL (protein renderer)
-        view::CallRender3DGL *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3DGL>();
+        core_gl::view::CallRender3DGL *protrencr3d = this->protRendererCallerSlot.CallAs<core_gl::view::CallRender3DGL>();
         if( protrencr3d ) {
             // setup and call protein renderer
             glPushMatrix();
@@ -1501,7 +1501,7 @@ void protein_gl::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataC
 /*
  * Volume rendering using molecular data.
  */
-bool protein_gl::SolventVolumeRenderer::RenderMolecularData( view::CallRender3DGL *call, MolecularDataCall *mol) {
+bool protein_gl::SolventVolumeRenderer::RenderMolecularData( core_gl::view::CallRender3DGL *call, MolecularDataCall *mol) {
 
     // decide to use already loaded frame request from CallFrame or 'normal' rendering
     if( !(*mol)() )
@@ -1594,7 +1594,7 @@ bool protein_gl::SolventVolumeRenderer::RenderMolecularData( view::CallRender3DG
 /*
  * refresh parameters
  */
-void protein_gl::SolventVolumeRenderer::ParameterRefresh( view::CallRender3DGL *call, MolecularDataCall *mol) {
+void protein_gl::SolventVolumeRenderer::ParameterRefresh( core_gl::view::CallRender3DGL *call, MolecularDataCall *mol) {
     
     // parameter refresh
     if( this->coloringModeSolventParam.IsDirty() || this->coloringModePolymerParam.IsDirty() || this->coloringModeVolSurfParam.IsDirty() ) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mmcore/view/ContextToGL.h"
+#include "mmcore_gl/view/ContextToGL.h"
 
 namespace megamol::ospray {
 
@@ -47,10 +47,10 @@ inline constexpr auto ospray_to_gl_ren_func =
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, fbo->depthBuffer.data());
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    core::view::renderToFBO(shader, lhs_fbo, fbo->data.col_tex, fbo->data.depth_tex, width, height);
+    core_gl::view::renderToFBO(shader, lhs_fbo, fbo->data.col_tex, fbo->data.depth_tex, width, height);
 };
 
-using OSPRayToGL = core::view::ContextToGL<core::view::CallRender3D, ospray_to_gl_init_func, ospray_to_gl_ren_func,
+using OSPRayToGL = core_gl::view::ContextToGL<core::view::CallRender3D, ospray_to_gl_init_func, ospray_to_gl_ren_func,
     ospraytogl_name, ospraytogl_desc>;
 
 } // namespace megamol::ospray

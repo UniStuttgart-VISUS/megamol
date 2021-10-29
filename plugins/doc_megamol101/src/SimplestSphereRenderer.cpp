@@ -11,8 +11,8 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/utility/ShaderFactory.h"
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"
 
@@ -23,7 +23,7 @@ using namespace megamol::megamol101;
  * SimplestSphereRenderer::SimplestSphereRenderer
  */
 SimplestSphereRenderer::SimplestSphereRenderer()
-        : core::view::Renderer3DModuleGL()
+        : core_gl::view::Renderer3DModuleGL()
         , sphereDataSlot("inData", "The input data slot for sphere data.")
         , sphereModeSlot("sphere rendering", "Switch for the pretty sphere rendering mode")
         , sizeScalingSlot("scaling factor", "Scaling factor for the size of the rendered GL_POINTS") {
@@ -85,8 +85,8 @@ bool SimplestSphereRenderer::create() {
 /*
  * SimplestSphereRenderer::GetExtents
  */
-bool SimplestSphereRenderer::GetExtents(core::view::CallRender3DGL& call) {
-    core::view::CallRender3DGL* cr3d = dynamic_cast<core::view::CallRender3DGL*>(&call);
+bool SimplestSphereRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+    core_gl::view::CallRender3DGL* cr3d = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
     if (cr3d == nullptr)
         return false;
 
@@ -117,8 +117,8 @@ void SimplestSphereRenderer::release() {
 /*
  * SimplestSphereRenderer::Render
  */
-bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
-    core::view::CallRender3DGL* cr3d = dynamic_cast<core::view::CallRender3DGL*>(&call);
+bool SimplestSphereRenderer::Render(core_gl::view::CallRender3DGL& call) {
+    core_gl::view::CallRender3DGL* cr3d = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
     if (cr3d == nullptr)
         return false;
 

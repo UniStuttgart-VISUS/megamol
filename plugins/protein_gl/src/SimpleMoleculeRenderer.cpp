@@ -21,7 +21,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
@@ -43,7 +43,7 @@ using namespace megamol::core::utility::log;
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
 SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
-        : view::Renderer3DModuleGL()
+        : core_gl::view::Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , colorTableFileParam("protein::Color::colorTableFilename", "The filename of the color table.")
@@ -487,7 +487,7 @@ bool SimpleMoleculeRenderer::create(void) {
 /*
  * protein::SimpleMoleculeRenderer::GetExtents
  */
-bool SimpleMoleculeRenderer::GetExtents(core::view::CallRender3DGL& call) {
+bool SimpleMoleculeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
         return false;
@@ -509,7 +509,7 @@ bool SimpleMoleculeRenderer::GetExtents(core::view::CallRender3DGL& call) {
 /*
  * protein::SimpleMoleculeRenderer::Render
  */
-bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
+bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 

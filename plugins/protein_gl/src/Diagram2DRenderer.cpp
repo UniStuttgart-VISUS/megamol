@@ -28,7 +28,7 @@ using namespace megamol::protein_gl;
 /*
  * Diagram2DRenderer::Diagram2DRenderer (CTOR)
  */
-Diagram2DRenderer::Diagram2DRenderer( void ) : Renderer2DModuleGL (),
+Diagram2DRenderer::Diagram2DRenderer( void ) : core_gl::view::Renderer2DModuleGL (),
         dataCallerSlot( "getData", "Connects the diagram rendering with data storage." ), 
         resolutionParam( "resolution", "The plotting resolution of the diagram."),
         plotColorParam( "plotcolor", "The color used for plotting the diagram."),
@@ -78,7 +78,7 @@ void Diagram2DRenderer::release() {
     this->fbo[1].Release();
 }
 
-bool Diagram2DRenderer::GetExtents( view::CallRender2DGL& call) {
+bool Diagram2DRenderer::GetExtents( core_gl::view::CallRender2DGL& call) {
     // set the bounding box to 0..1
     call.AccessBoundingBoxes().SetBoundingBox( 0.0f, 0.0f, 0, 1.0f, 1.0f, 0);
 
@@ -98,7 +98,7 @@ bool Diagram2DRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
 /*
  * Diagram2DRenderer::Render
  */
-bool Diagram2DRenderer::Render( view::CallRender2DGL &call) {
+bool Diagram2DRenderer::Render( core_gl::view::CallRender2DGL &call) {
     // get pointer to Diagram2DCall
     protein::Diagram2DCall *diagram = this->dataCallerSlot.CallAs<protein::Diagram2DCall>();
     if( diagram == NULL ) return false;

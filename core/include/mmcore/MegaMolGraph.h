@@ -11,7 +11,6 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmcore/deferrable_construction.h"
 #include "mmcore/serializable.h"
 
 #include "mmcore/MegaMolGraphTypes.h"
