@@ -14,7 +14,7 @@
 #include "RenderMDIMesh.h"
 #include "SimpleGPUMtlDataSource.h"
 #include "gltf/glTFRenderTasksDataSource.h"
-#include "mesh/MeshCalls_gl.h"
+#include "mesh_gl/MeshCalls_gl.h"
 
 namespace megamol::mesh {
 class MeshGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {

@@ -11,7 +11,7 @@
 #include "vislib/RawStorageWriter.h"
 #include "vislib/math/Point.h"
 #include <vector>
-#include "Color.h"
+#include "protein/Color.h"
 #include "vislib/graphics/NamedColours.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"

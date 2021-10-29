@@ -13,7 +13,7 @@
 
 #include "mmcore/CallerSlot.h"
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 #include "mesh/MeshCalls.h"
 
 namespace megamol {

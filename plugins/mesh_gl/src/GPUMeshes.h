@@ -8,7 +8,7 @@
 #ifndef GPU_MESHES_H_INCLUDED
 #define GPU_MESHES_H_INCLUDED
 
-#include "mesh/AbstractGPUMeshDataSource.h"
+#include "mesh_gl/AbstractGPUMeshDataSource.h"
 
 
 namespace megamol {

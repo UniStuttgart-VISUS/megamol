@@ -13,7 +13,7 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "mesh/MeshCalls_gl.h"
+#include "mesh_gl/MeshCalls_gl.h"
 
 using namespace megamol;
 using namespace megamol::mesh;

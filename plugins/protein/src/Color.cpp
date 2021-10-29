@@ -11,7 +11,7 @@
 #include <iostream>
 #include <omp.h>
 #include <string>
-#include "Color.h"
+#include "protein/Color.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/math/ShallowVector.h"

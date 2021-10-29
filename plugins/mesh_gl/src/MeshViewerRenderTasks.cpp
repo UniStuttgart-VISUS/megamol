@@ -9,7 +9,7 @@
 
 #include "MeshViewerRenderTasks.h"
 
-#include "mesh/MeshCalls_gl.h"
+#include "mesh_gl/MeshCalls_gl.h"
 
 megamol::mesh::MeshViewerRenderTasks::MeshViewerRenderTasks()
         : m_version(0), m_material_slot("gpuMaterials", "Connects to a material data source") {

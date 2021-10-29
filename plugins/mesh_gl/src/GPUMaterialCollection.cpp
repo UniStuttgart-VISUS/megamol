@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "mesh/GPUMaterialCollection.h"
+#include "mesh_gl/GPUMaterialCollection.h"
 
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"

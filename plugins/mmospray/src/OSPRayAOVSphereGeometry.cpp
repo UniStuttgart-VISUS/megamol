@@ -6,7 +6,6 @@
 
 #include "stdafx.h"
 #include "OSPRayAOVSphereGeometry.h"
-#include "../../protein/src/Color.h"
 #include "OSPRay_plugin/CallOSPRayAPIObject.h"
 #include "mmcore/Call.h"
 #include "geometry_calls/VolumetricDataCall.h"

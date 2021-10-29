@@ -1,6 +1,6 @@
 #include "SimpleGPUMtlDataSource.h"
 
-#include "mesh/MeshCalls_gl.h"
+#include "mesh_gl/MeshCalls_gl.h"
 
 #include "mmcore/param/FilePathParam.h"
 

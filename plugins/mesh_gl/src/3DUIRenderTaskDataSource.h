@@ -15,9 +15,9 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 #include "mesh/MeshCalls.h"
-#include "mesh/GPUMeshCollection.h"
+#include "mesh_gl/GPUMeshCollection.h"
 #include "vislib/math/Matrix.h"
 
 #include "mesh/3DInteractionCollection.h"

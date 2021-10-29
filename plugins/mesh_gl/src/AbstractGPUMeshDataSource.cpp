@@ -6,8 +6,8 @@
  */
 #include "stdafx.h"
 
-#include "mesh/AbstractGPUMeshDataSource.h"
-#include "mesh/MeshCalls_gl.h"
+#include "mesh_gl/AbstractGPUMeshDataSource.h"
+#include "mesh_gl/MeshCalls_gl.h"
 
 
 megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()

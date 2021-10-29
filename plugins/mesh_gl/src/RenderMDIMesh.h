@@ -20,7 +20,7 @@
 
 #include "compositing/CompositingCalls.h"
 
-#include "mesh/GPUMaterialCollection.h"
+#include "mesh_gl/GPUMaterialCollection.h"
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/FramebufferObject.hpp"

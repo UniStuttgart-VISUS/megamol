@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "MSMSGenus0Generator.h"
 #include <fstream>
-#include "Color.h"
+#include "protein/Color.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"

@@ -13,7 +13,7 @@
 #include "vislib/math/Point.h"
 #include "mmcore/utility/log/Log.h"
 
-#include "GridNeighbourFinder.h"
+#include "protein/GridNeighbourFinder.h"
 
 #include <iostream>
 #include <chrono>

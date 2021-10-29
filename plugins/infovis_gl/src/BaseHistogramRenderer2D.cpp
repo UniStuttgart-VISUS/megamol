@@ -57,11 +57,11 @@ bool BaseHistogramRenderer2D::create() {
 
     try {
         drawHistogramProgram_ = core::utility::make_glowl_shader(
-            "histo_base_draw", shaderOptions, "infovis/histo/base_draw.vert.glsl", "infovis/histo/base_draw.frag.glsl");
+            "histo_base_draw", shaderOptions, "infovis_gl/histo/base_draw.vert.glsl", "infovis_gl/histo/base_draw.frag.glsl");
         drawAxesProgram_ = core::utility::make_glowl_shader(
-            "histo_base_axes", shaderOptions, "infovis/histo/base_axes.vert.glsl", "infovis/histo/base_axes.frag.glsl");
+            "histo_base_axes", shaderOptions, "infovis_gl/histo/base_axes.vert.glsl", "infovis_gl/histo/base_axes.frag.glsl");
         calcMaxBinProgram_ =
-            core::utility::make_glowl_shader("histo_base_axes", shaderOptions, "infovis/histo/base_max_bin.comp.glsl");
+            core::utility::make_glowl_shader("histo_base_axes", shaderOptions, "infovis_gl/histo/base_max_bin.comp.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BaseHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;

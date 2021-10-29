@@ -8,7 +8,7 @@
 #ifndef MESH_VIEWER_RENDER_TASK_H_INCLUDED
 #define MESH_VIEWER_RENDER_TASK_H_INCLUDED
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol {
 namespace mesh {

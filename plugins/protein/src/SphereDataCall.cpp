@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "SphereDataCall.h"
+#include "protein/SphereDataCall.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/math/mathfunctions.h"

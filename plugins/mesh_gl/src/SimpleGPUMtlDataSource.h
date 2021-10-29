@@ -13,7 +13,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 
-#include "mesh/AbstractGPUMaterialDataSource.h"
+#include "mesh_gl/AbstractGPUMaterialDataSource.h"
 
 namespace megamol {
 namespace mesh {

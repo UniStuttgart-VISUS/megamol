@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 
-#include "mesh/AbstractGPUMaterialDataSource.h"
+#include "mesh_gl/AbstractGPUMaterialDataSource.h"
 
 megamol::mesh::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()
         : core::Module()

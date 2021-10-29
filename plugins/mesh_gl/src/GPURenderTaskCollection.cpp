@@ -1,4 +1,4 @@
-#include "mesh/GPURenderTaskCollection.h"
+#include "mesh_gl/GPURenderTaskCollection.h"
 
 namespace megamol {
 namespace mesh {
