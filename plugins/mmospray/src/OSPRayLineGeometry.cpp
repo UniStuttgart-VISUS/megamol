@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "OSPRayLineGeometry.h"
-#include "OSPRay_plugin/CallOSPRayStructure.h"
+#include "mmospray/CallOSPRayStructure.h"
 #include "geometry_calls/LinesDataCall.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/Call.h"

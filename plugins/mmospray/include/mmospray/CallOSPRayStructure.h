@@ -8,7 +8,7 @@
 #pragma once
 #include <map>
 #include <vector>
-#include "OSPRay_plugin/CallOSPRayMaterial.h"
+#include "mmospray/CallOSPRayMaterial.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"

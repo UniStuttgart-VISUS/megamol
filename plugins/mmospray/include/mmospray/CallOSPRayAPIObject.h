@@ -8,7 +8,7 @@
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
-#include "OSPRay_plugin/CallOSPRayStructure.h"
+#include "mmospray/CallOSPRayStructure.h"
 
 namespace megamol {
 namespace ospray {

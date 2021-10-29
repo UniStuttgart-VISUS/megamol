@@ -16,7 +16,7 @@
 #include "mmcore/utility/log/Log.h"
 
 #include "ospray/ospray_cpp.h"
-#include "OSPRay_plugin/CallOSPRayAPIObject.h"
+#include "mmospray/CallOSPRayAPIObject.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 

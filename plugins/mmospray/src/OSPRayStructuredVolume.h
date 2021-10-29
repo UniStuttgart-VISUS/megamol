@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "OSPRay_plugin/AbstractOSPRayStructure.h"
+#include "mmospray/AbstractOSPRayStructure.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
