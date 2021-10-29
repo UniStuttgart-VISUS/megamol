@@ -85,6 +85,7 @@
 #include "table/TableObserverPlane.h"
 #include "table/TableSampler.h"
 #include "table/TableSelectionTx.h"
+#include "table/TableSequenceCache.h"
 #include "table/TableSort.h"
 #include "table/TableSplit.h"
 #include "table/TableToLines.h"
@@ -151,6 +152,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableJoin>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableColumnFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSampler>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSequenceCache>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSort>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableWhere>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableFlagFilter>();
