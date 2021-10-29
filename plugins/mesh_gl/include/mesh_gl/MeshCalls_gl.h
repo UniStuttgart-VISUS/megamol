@@ -14,7 +14,7 @@
 #include "GPURenderTaskCollection.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
 class CallGPUMaterialData
         : public core::GenericVersionedCall<std::vector<std::shared_ptr<GPUMaterialCollection>>, core::EmptyMetaData> {

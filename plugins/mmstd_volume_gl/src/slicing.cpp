@@ -31,7 +31,7 @@
 
 namespace megamol {
 namespace stdplugin {
-namespace volume {
+namespace volume_gl {
 
 
 const char ViewSlicing::cubeEdges[12] = 

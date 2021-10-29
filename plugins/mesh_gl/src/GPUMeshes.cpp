@@ -3,16 +3,16 @@
 
 #include "mesh_gl/MeshCalls_gl.h"
 
-megamol::mesh::GPUMeshes::GPUMeshes() : m_version(0), m_mesh_slot("meshes", "Connect mesh data for upload to the GPU") {
-    this->m_mesh_slot.SetCompatibleCall<CallMeshDescription>();
+megamol::mesh_gl::GPUMeshes::GPUMeshes() : m_version(0), m_mesh_slot("meshes", "Connect mesh data for upload to the GPU") {
+    this->m_mesh_slot.SetCompatibleCall<mesh::CallMeshDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
 }
 
-megamol::mesh::GPUMeshes::~GPUMeshes() {
+megamol::mesh_gl::GPUMeshes::~GPUMeshes() {
     this->Release();
 }
 
-bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
+bool megamol::mesh_gl::GPUMeshes::getDataCallback(core::Call& caller) {
     CallGPUMeshData* lhs_mesh_call = dynamic_cast<CallGPUMeshData*>(&caller);
     CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
 
@@ -33,7 +33,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     }
     gpu_mesh_collection.push_back(m_mesh_collection.first);
 
-    CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
+    mesh::CallMesh* mc = this->m_mesh_slot.CallAs<mesh::CallMesh>();
     if (mc != nullptr) {
 
         if (!(*mc)(0))
@@ -99,7 +99,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                     for (auto const& attrib_idx : vb_attribs) {
                         auto const& attrib = mesh.second.attributes[attrib_idx];
                         vb_layouts.back().attributes.push_back(glowl::VertexLayout::Attribute(attrib.component_cnt,
-                            MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
+                            mesh::MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
                             attrib.offset));
                     }
                 }
@@ -110,7 +110,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                         store_separate = true;
 
                     m_mesh_collection.first->addMesh(mesh.first, vb_layouts, vb_iterators, ib_iterators,
-                        MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW,
+                        mesh::MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW,
                         primitive_type, true);
                     m_mesh_collection.second.push_back(mesh.first);
                 } catch (glowl::MeshException const& exc) {
@@ -161,10 +161,10 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     return true;
 }
 
-bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller) {
+bool megamol::mesh_gl::GPUMeshes::getMetaDataCallback(core::Call& caller) {
     CallGPUMeshData* lhs_mesh_call = dynamic_cast<CallGPUMeshData*>(&caller);
     CallGPUMeshData* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
-    CallMesh* src_mesh_call = m_mesh_slot.CallAs<CallMesh>();
+    mesh::CallMesh* src_mesh_call = m_mesh_slot.CallAs<mesh::CallMesh>();
 
     if (lhs_mesh_call == NULL)
         return false;

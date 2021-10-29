@@ -27,7 +27,7 @@
 #include "vislib/graphics/gl/SimpleFont.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
     /*
      * Protein Renderer class
@@ -115,25 +115,25 @@ namespace protein {
         /** Set current render mode */
         void SetRenderMode(CartoonRenderMode rm) {
             currentRenderMode = rm;
-            CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
+            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
         };
 
         /** Set current coloring mode */
-        void SetColoringMode0(Color::ColoringMode cm) {
+        void SetColoringMode0(protein::Color::ColoringMode cm) {
             currentColoringMode0 = cm;
-            CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
+            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
         };
 
         /** Set current coloring mode */
-        void SetColoringMode1(Color::ColoringMode cm) {
+        void SetColoringMode1(protein::Color::ColoringMode cm) {
             currentColoringMode1 = cm;
-            CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
+            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
@@ -142,7 +142,7 @@ namespace protein {
         /** Set radius for cartoon rendering mode */
         inline void SetRadiusCartoon(float rad) {
             radiusCartoon = rad;
-            CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
+            protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
             if (col != NULL) {
                 col->SetDirty(true);
             }
@@ -330,8 +330,8 @@ namespace protein {
         // current render mode
         CartoonRenderMode currentRenderMode;
         /** The current coloring mode */
-        Color::ColoringMode currentColoringMode0;
-        Color::ColoringMode currentColoringMode1;
+        protein::Color::ColoringMode currentColoringMode0;
+        protein::Color::ColoringMode currentColoringMode1;
         // smooth coloring of cartoon mode
         bool smoothCartoonColoringMode;
 

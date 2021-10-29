@@ -35,7 +35,7 @@
     } while (0)
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 /**
  * Protein Renderer class
@@ -401,7 +401,7 @@ private:
 
     bool forceUpdateVolumeTexture, forceUpdateColoringMode;
 
-    megamol::protein::GridNeighbourFinder<float> gnf;
+    protein::GridNeighbourFinder<float> gnf;
 
     // array for rendering the solvent molecules' atoms
     vislib::Array<float> solventAtomPos;

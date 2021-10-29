@@ -22,7 +22,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
 using namespace megamol::core::utility;
-using namespace megamol::cinematic;
+using namespace megamol::cinematic_gl;
 
 using namespace vislib;
 
@@ -60,7 +60,7 @@ CinematicView::CinematicView(void)
         , cinematicFbo(nullptr) {
 
     // init callback
-    this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
+    this->keyframeKeeperSlot.SetCompatibleCall<cinematic::CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
@@ -124,7 +124,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
     // Get update data from keyframe keeper -----------------------------------
     auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
-    auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+    auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
 
     // init camera
     if ((this->_camera.get<view::Camera::ProjectionType>() != view::Camera::PERSPECTIVE) &&
@@ -140,8 +140,8 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
     if ((cr3d != nullptr) && (ccc != nullptr)) {
 
-        bool ccc_success = (*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData);
-        ccc_success &= (*ccc)(CallKeyframeKeeper::CallForSetSimulationData);
+        bool ccc_success = (*ccc)(cinematic::CallKeyframeKeeper::CallForGetUpdatedKeyframeData);
+        ccc_success &= (*ccc)(cinematic::CallKeyframeKeeper::CallForSetSimulationData);
 
         // Initialise render utils once
         bool utils_success = this->utils.Initialized();
@@ -249,12 +249,12 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 }
             }
 
-            if ((*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) {
-                Keyframe skf = ccc->GetSelectedKeyframe();
+            if ((*ccc)(cinematic::CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) {
+                cinematic::Keyframe skf = ccc->GetSelectedKeyframe();
 
                 // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
                 ccc->SetCameraState(std::make_shared<Camera>(this->_camera));
-                if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) {
+                if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForSetCameraForKeyframe)) {
                     throw vislib::Exception(
                         "[CINEMATIC VIEW] Could not propagate current camera to keyframe keeper.", __FILE__, __LINE__);
                 }
@@ -487,7 +487,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
                 // Set letter box background 
                 auto bgcol = this->BkgndColour();
                 this->utils.SetBackgroundColor(bgcol);
-                bgcol = this->utils.Color(CinematicUtils::Colors::LETTER_BOX);
+                bgcol = this->utils.Color(cinematic::CinematicUtils::Colors::LETTER_BOX);
                 this->utils.SetBackgroundColor(bgcol);
                 glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
                 glClearDepth(1.0f);
@@ -531,7 +531,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
 bool CinematicView::render_to_file_setup() {
 
-    auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+    auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
     if (ccc == nullptr) {
         return false;
     }
@@ -629,7 +629,7 @@ bool CinematicView::render_to_file_setup() {
 bool CinematicView::render_to_file_write() {
 
     if (this->png_data.write_lock == 0) {
-        auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+        auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
         if (ccc == nullptr)
             return false;
 

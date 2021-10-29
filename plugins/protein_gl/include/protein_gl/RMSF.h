@@ -9,7 +9,7 @@
 #include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 	/**
 	 * Computes the RMSF for all atoms stored in mol.

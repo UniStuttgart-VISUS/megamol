@@ -22,7 +22,7 @@
 #include "protein_calls/IntSelectionCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
     class DiagramRenderer : public megamol::core::view::Renderer2DModuleGL {
     public:

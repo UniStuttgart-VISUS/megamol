@@ -35,7 +35,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 
 
@@ -49,15 +49,15 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
         , molRendererORCallerSlot("renderMoleculeOR", "Connects the cartoon rendering with another molecule renderer")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , renderingModeParam("renderingMode", "Rendering Mode")
-        , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
-        , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
-        , cmWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
-        , stickColoringModeParam("color::stickColoringMode", "Stick Coloring Mode")
-        , smoothCartoonColoringParam("color::smoothCartoonColoring", "Use smooth coloring with Cartoon representation")
-        , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
-        , minGradColorParam("color::minGradColor", "The color for the minimum value for gradient coloring")
-        , midGradColorParam("color::midGradColor", "The color for the middle value for gradient coloring")
-        , maxGradColorParam("color::maxGradColor", "The color for the maximum value for gradient coloring")
+        , coloringModeParam0("protein::Color::coloringMode0", "The first coloring mode.")
+        , coloringModeParam1("protein::Color::coloringMode1", "The second coloring mode.")
+        , cmWeightParam("protein::Color::colorWeighting", "The weighting of the two coloring modes.")
+        , stickColoringModeParam("protein::Color::stickColoringMode", "Stick Coloring Mode")
+        , smoothCartoonColoringParam("protein::Color::smoothCartoonColoring", "Use smooth coloring with Cartoon representation")
+        , colorTableFileParam("protein::Color::colorTableFilename", "The filename of the color table.")
+        , minGradColorParam("protein::Color::minGradColor", "The color for the minimum value for gradient coloring")
+        , midGradColorParam("protein::Color::midGradColor", "The color for the middle value for gradient coloring")
+        , maxGradColorParam("protein::Color::maxGradColor", "The color for the maximum value for gradient coloring")
         , stickRadiusParam("stickRadius", "The radius for stick rendering")
         , offscreenRenderingParam("offscreenRendering", "Toggle offscreen rendering")
         , interpolParam("posInterpolation", "Enable positional interpolation between frames")
@@ -80,7 +80,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
 
-    this->molColorCallerSlot.SetCompatibleCall<CallColorDescription>();
+    this->molColorCallerSlot.SetCompatibleCall<protein::CallColorDescription>();
     // this->MakeSlotAvailable(&this->molColorCallerSlot);
 
     // check if geom-shader is supported
@@ -93,25 +93,25 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
 
     // fill color table with default values and set the filename param
     vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    protein::Color::ReadColorTableFromFile(filename, this->colorLookupTable);
     this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring modes
-    this->currentColoringMode0 = Color::CHAIN;
-    this->currentColoringMode1 = Color::STRUCTURE;
+    this->currentColoringMode0 = protein::Color::CHAIN;
+    this->currentColoringMode1 = protein::Color::STRUCTURE;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode0));
     param::EnumParam* cm1 = new param::EnumParam(int(this->currentColoringMode1));
-    param::EnumParam* scm = new param::EnumParam(int(Color::ELEMENT));
+    param::EnumParam* scm = new param::EnumParam(int(protein::Color::ELEMENT));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        cm0->SetTypePair(cMode, Color::GetName(cMode).c_str());
-        cm1->SetTypePair(cMode, Color::GetName(cMode).c_str());
-        scm->SetTypePair(cMode, Color::GetName(cMode).c_str());
+    protein::Color::ColoringMode cMode;
+    for (cCnt = 0; cCnt < protein::Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
+        cMode = protein::Color::GetModeByIndex(mol, bs, cCnt);
+        cm0->SetTypePair(cMode, protein::Color::GetName(cMode).c_str());
+        cm1->SetTypePair(cMode, protein::Color::GetName(cMode).c_str());
+        scm->SetTypePair(cMode, protein::Color::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -201,7 +201,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     this->numberOfTubeSeg = 6;
 
     // fill rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    protein::Color::MakeRainbowColorTable(100, this->rainbowColors);
 
     // en-/disable positional interpolation
     this->interpolParam.SetParameter(new param::BoolParam(true));
@@ -848,7 +848,7 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
     }
     // ... interpolate between frames
 
-    CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
+    protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
 
     // check if the frame has changed
     if (this->currentFrameId != mol->FrameID()) {
@@ -890,7 +890,7 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
 
     // recompute colors
     // TODO Why is this done in every frame?
-    Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+    protein::Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
         cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
         1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
         this->atomColorTable, this->colorLookupTable, this->rainbowColors,
@@ -969,8 +969,8 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
 
     if (!this->proteinOnlyParam.Param<param::BoolParam>()->Value()) {
         // coloring mode for other molecules
-        Color::MakeColorTable(mol,
-            static_cast<Color::ColoringMode>(int(this->stickColoringModeParam.Param<param::EnumParam>()->Value())),
+        protein::Color::MakeColorTable(mol,
+            static_cast<protein::Color::ColoringMode>(int(this->stickColoringModeParam.Param<param::EnumParam>()->Value())),
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
             this->minGradColorParam.Param<param::StringParam>()->Value(),
             this->midGradColorParam.Param<param::StringParam>()->Value(),
@@ -979,10 +979,10 @@ bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
         this->RenderStick(mol, posInter, bs);
         // reset coloring mode
         this->currentColoringMode0 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+            static_cast<protein::Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
         this->currentColoringMode1 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+            static_cast<protein::Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+        protein::Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
             cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
@@ -1015,7 +1015,7 @@ void MoleculeCartoonRenderer::UpdateParameters(
     MolecularDataCall* mol, unsigned int frameID, const BindingSiteCall* bs) {
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
+        protein::Color::ReadColorTableFromFile(
             this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
     }
@@ -1031,7 +1031,7 @@ void MoleculeCartoonRenderer::UpdateParameters(
         this->tubeRadiusParam.ResetDirty();
     }
     // ask the color module if a param is dirty
-    CallColor* col = this->molColorCallerSlot.CallAs<CallColor>();
+    protein::CallColor* col = this->molColorCallerSlot.CallAs<protein::CallColor>();
     bool colDirty = false;
     if (col != NULL) {
         (*col)(1); // GetExtents
@@ -1043,14 +1043,14 @@ void MoleculeCartoonRenderer::UpdateParameters(
         this->compareParam.IsDirty() || colDirty) {
 
         this->currentColoringMode0 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+            static_cast<protein::Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
         this->currentColoringMode1 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+            static_cast<protein::Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
         this->compare = this->compareParam.Param<param::BoolParam>()->Value();
         RecomputeAll();
 
         if (!this->compare) {
-            Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+            protein::Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
                 cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
                 1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
                 this->atomColorTable, this->colorLookupTable, this->rainbowColors,
@@ -1103,7 +1103,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
     if (this->prepareCartoonHybrid) {
         unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
         // B-Spline
-        BSpline bSpline;
+        protein::BSpline bSpline;
         // control points for the first (center) b-spline
         std::vector<vislib::math::Vector<float, 3>> controlPoints;
         // control points for the second (direction) b-spline
@@ -1546,7 +1546,7 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(const MolecularDataCall* mol, flo
     if (this->prepareCartoonCPU) {
         unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
         // B-Spline
-        BSpline bSpline;
+        protein::BSpline bSpline;
         // control points for the first (center) b-spline
         std::vector<vislib::math::Vector<float, 3>> controlPoints;
         // control points for the second (direction) b-spline
@@ -2280,7 +2280,7 @@ void MoleculeCartoonRenderer::RenderCartoonLineCPU(const MolecularDataCall* mol,
     if (this->prepareCartoonLine) {
         unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
         // B-Spline
-        BSpline bSpline;
+        protein::BSpline bSpline;
         // control points for the first (center) b-spline
         std::vector<vislib::math::Vector<float, 3>> controlPoints;
         // temporary vectors
@@ -2573,7 +2573,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly(const MolecularDataCall* 
     if (this->prepareCartoonHybrid) {
         unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
         // B-Spline
-        BSpline bSpline;
+        protein::BSpline bSpline;
         // control points for the first (center) b-spline
         std::vector<vislib::math::Vector<float, 3>> controlPoints;
         // control points for the second (direction) b-spline

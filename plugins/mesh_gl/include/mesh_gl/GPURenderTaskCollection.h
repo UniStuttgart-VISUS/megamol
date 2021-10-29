@@ -18,7 +18,7 @@
 #include "GPUMaterialCollection.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
     class GPURenderTaskCollection {
     public:

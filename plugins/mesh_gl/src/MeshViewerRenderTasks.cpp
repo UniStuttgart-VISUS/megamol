@@ -11,15 +11,15 @@
 
 #include "mesh_gl/MeshCalls_gl.h"
 
-megamol::mesh::MeshViewerRenderTasks::MeshViewerRenderTasks()
+megamol::mesh_gl::MeshViewerRenderTasks::MeshViewerRenderTasks()
         : m_version(0), m_material_slot("gpuMaterials", "Connects to a material data source") {
     this->m_material_slot.SetCompatibleCall<CallGPUMaterialDataDescription>();
     this->MakeSlotAvailable(&this->m_material_slot);
 }
 
-megamol::mesh::MeshViewerRenderTasks::~MeshViewerRenderTasks() {}
+megamol::mesh_gl::MeshViewerRenderTasks::~MeshViewerRenderTasks() {}
 
-bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
+bool megamol::mesh_gl::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
 
     CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == nullptr) {

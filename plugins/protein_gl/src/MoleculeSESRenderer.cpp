@@ -34,7 +34,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;
 
@@ -48,21 +48,21 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
         , postprocessingParam("postProcessingMode", "Enable Postprocessing Mode: ")
         , rendermodeParam("renderingMode", "Choose Render Mode: ")
         , puxelsParam("puxels", "Enable Puxel Rendering: ")
-        , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
-        , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
-        , cmWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
+        , coloringModeParam0("protein::Color::coloringMode0", "The first coloring mode.")
+        , coloringModeParam1("protein::Color::coloringMode1", "The second coloring mode.")
+        , cmWeightParam("protein::Color::colorWeighting", "The weighting of the two coloring modes.")
         , silhouettecolorParam("silhouetteColor", "Silhouette Color: ")
         , sigmaParam("SSAOsigma", "Sigma value for SSAO: ")
         , lambdaParam("SSAOlambda", "Lambda value for SSAO: ")
-        , minGradColorParam("color::minGradColor", "The color for the minimum value for gradient coloring")
-        , midGradColorParam("color::midGradColor", "The color for the middle value for gradient coloring")
-        , maxGradColorParam("color::maxGradColor", "The color for the maximum value for gradient coloring")
+        , minGradColorParam("protein::Color::minGradColor", "The color for the minimum value for gradient coloring")
+        , midGradColorParam("protein::Color::midGradColor", "The color for the middle value for gradient coloring")
+        , maxGradColorParam("protein::Color::maxGradColor", "The color for the maximum value for gradient coloring")
         , debugParam("drawRS", "Draw the Reduced Surface: ")
         , drawSESParam("drawSES", "Draw the SES: ")
         , drawSASParam("drawSAS", "Draw the SAS: ")
         , fogstartParam("fogStart", "Fog Start: ")
         , molIdxListParam("molIdxList", "The list of molecule indices for RS computation:")
-        , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
+        , colorTableFileParam("protein::Color::colorTableFilename", "The filename of the color table.")
         , offscreenRenderingParam("offscreenRendering", "Toggle offscreen rendering.")
         , probeRadiusSlot("probeRadius", "The probe radius for the surface computation")
         , puxelSizeBuffer(512 << 20)
@@ -130,18 +130,18 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->fogstartParam << fs;
 
     // coloring modes
-    this->currentColoringMode0 = Color::CHAIN;
-    this->currentColoringMode1 = Color::ELEMENT;
+    this->currentColoringMode0 = protein::Color::CHAIN;
+    this->currentColoringMode1 = protein::Color::ELEMENT;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode0));
     param::EnumParam* cm1 = new param::EnumParam(int(this->currentColoringMode1));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        cm0->SetTypePair(cMode, Color::GetName(cMode).c_str());
-        cm1->SetTypePair(cMode, Color::GetName(cMode).c_str());
+    protein::Color::ColoringMode cMode;
+    for (cCnt = 0; cCnt < protein::Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
+        cMode = protein::Color::GetModeByIndex(mol, bs, cCnt);
+        cm0->SetTypePair(cMode, protein::Color::GetName(cMode).c_str());
+        cm1->SetTypePair(cMode, protein::Color::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -193,12 +193,12 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
 
     // fill color table with default values and set the filename param
     vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    protein::Color::ReadColorTableFromFile(filename, this->colorLookupTable);
     this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // fill rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    protein::Color::MakeRainbowColorTable(100, this->rainbowColors);
 
     // set the FBOs and textures for post processing
     this->colorFBO = 0;
@@ -828,20 +828,20 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
             // create the reduced surface
             unsigned int chainIds;
             if (!this->computeSesPerMolecule) {
-                this->reducedSurface.push_back(new ReducedSurface(mol, this->probeRadius));
+                this->reducedSurface.push_back(new protein::ReducedSurface(mol, this->probeRadius));
                 this->reducedSurface.back()->ComputeReducedSurface();
             } else {
                 // if no molecule indices are given, compute the SES for all molecules
                 if (this->molIdxList.IsEmpty()) {
                     for (chainIds = 0; chainIds < mol->MoleculeCount(); ++chainIds) {
-                        this->reducedSurface.push_back(new ReducedSurface(chainIds, mol, this->probeRadius));
+                        this->reducedSurface.push_back(new protein::ReducedSurface(chainIds, mol, this->probeRadius));
                         this->reducedSurface.back()->ComputeReducedSurface();
                     }
                 } else {
                     // else compute the SES for all selected molecules
                     for (chainIds = 0; chainIds < this->molIdxList.Count(); ++chainIds) {
                         this->reducedSurface.push_back(
-                            new ReducedSurface(atoi(this->molIdxList[chainIds]), mol, this->probeRadius));
+                            new protein::ReducedSurface(atoi(this->molIdxList[chainIds]), mol, this->probeRadius));
                         this->reducedSurface.back()->ComputeReducedSurface();
                     }
                 }
@@ -859,7 +859,7 @@ bool MoleculeSESRenderer::Render(view::CallRender3DGL& call) {
 
     if (!this->preComputationDone) {
         // compute the color table
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+        protein::Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
             this->cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
@@ -992,11 +992,11 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
     }
     if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
         this->currentColoringMode0 =
-            static_cast<Color::ColoringMode>(this->coloringModeParam0.Param<param::EnumParam>()->Value());
+            static_cast<protein::Color::ColoringMode>(this->coloringModeParam0.Param<param::EnumParam>()->Value());
         this->currentColoringMode1 =
-            static_cast<Color::ColoringMode>(this->coloringModeParam1.Param<param::EnumParam>()->Value());
+            static_cast<protein::Color::ColoringMode>(this->coloringModeParam1.Param<param::EnumParam>()->Value());
 
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+        protein::Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
             this->cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
@@ -1049,7 +1049,7 @@ void MoleculeSESRenderer::UpdateParameters(const MolecularDataCall* mol, const B
     }
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
+        protein::Color::ReadColorTableFromFile(
             this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
         recomputeColors = true;

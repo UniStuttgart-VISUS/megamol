@@ -23,7 +23,7 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 
 class UnstructuredGridRenderer : public megamol::core::view::Renderer3DModuleGL {

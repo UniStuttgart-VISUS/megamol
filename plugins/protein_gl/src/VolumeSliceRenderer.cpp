@@ -17,7 +17,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 using namespace megamol::core::utility::log;
 
 
@@ -27,7 +27,7 @@ using namespace megamol::core::utility::log;
 VolumeSliceRenderer::VolumeSliceRenderer( void ) : Renderer2DModuleGL (),
         volDataCallerSlot( "getData", "Connects the volume slice rendering with data storage" ) {
     // volume data caller slot
-    this->volDataCallerSlot.SetCompatibleCall<VolumeSliceCallDescription>();
+    this->volDataCallerSlot.SetCompatibleCall<protein::VolumeSliceCallDescription>();
 	this->MakeSlotAvailable( &this->volDataCallerSlot);
 }
 
@@ -78,11 +78,11 @@ void VolumeSliceRenderer::release() {
 }
 
 bool VolumeSliceRenderer::GetExtents( view::CallRender2DGL& call) {
-	// get pointer to VolumeSliceCall
-    VolumeSliceCall *volume = this->volDataCallerSlot.CallAs<VolumeSliceCall>();
+    // get pointer to VolumeSliceCall
+    protein::VolumeSliceCall *volume = this->volDataCallerSlot.CallAs<protein::VolumeSliceCall>();
     if( volume == NULL ) return false;
     // execute the call
-    if( !(*volume)(VolumeSliceCall::CallForGetData) ) return false;
+    if( !(*volume)(protein::VolumeSliceCall::CallForGetData) ) return false;
     // check clip plane normal vector against axes
     float lenX = ( volume->getClipPlaneNormal().Cross( vislib::math::Vector<float, 3>( -1, 0, 0))).Length();
     float lenY = ( volume->getClipPlaneNormal().Cross( vislib::math::Vector<float, 3>( 0, -1, 0))).Length();
@@ -110,11 +110,11 @@ bool VolumeSliceRenderer::GetExtents( view::CallRender2DGL& call) {
  * Callback for mouse events (move, press, and release)
  */
 bool VolumeSliceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
-	// get pointer to VolumeSliceCall
-    VolumeSliceCall *volume = this->volDataCallerSlot.CallAs<VolumeSliceCall>();
+    // get pointer to VolumeSliceCall
+    protein::VolumeSliceCall *volume = this->volDataCallerSlot.CallAs<protein::VolumeSliceCall>();
     if( volume == NULL ) return false;
     // execute the call
-    if( !(*volume)(VolumeSliceCall::CallForGetData) ) return false;
+    if( !(*volume)(protein::VolumeSliceCall::CallForGetData) ) return false;
     // check clip plane normal vector against axes
     float lenX = ( volume->getClipPlaneNormal().Cross( vislib::math::Vector<float, 3>( -1, 0, 0))).Length();
     float lenY = ( volume->getClipPlaneNormal().Cross( vislib::math::Vector<float, 3>( 0, -1, 0))).Length();
@@ -158,11 +158,11 @@ bool VolumeSliceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
  */
 bool VolumeSliceRenderer::Render( view::CallRender2DGL &call) {
     
-	// get pointer to VolumeSliceCall
-    VolumeSliceCall *volume = this->volDataCallerSlot.CallAs<VolumeSliceCall>();
+    // get pointer to VolumeSliceCall
+    protein::VolumeSliceCall *volume = this->volDataCallerSlot.CallAs<protein::VolumeSliceCall>();
     if( volume == NULL ) return false;
     // execute the call
-    if( !(*volume)(VolumeSliceCall::CallForGetData) ) return false;
+    if( !(*volume)(protein::VolumeSliceCall::CallForGetData) ) return false;
 
     glEnable( GL_TEXTURE_3D);
     

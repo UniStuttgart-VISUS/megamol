@@ -16,7 +16,7 @@
 #include "mesh_gl/AbstractGPUMaterialDataSource.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
     class SimpleGPUMtlDataSource : public AbstractGPUMaterialDataSource {
     public:

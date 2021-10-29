@@ -9,7 +9,7 @@
 
 #include "mesh_gl/AbstractGPUMaterialDataSource.h"
 
-megamol::mesh::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()
+megamol::mesh_gl::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()
         : core::Module()
         , m_material_collection({nullptr, {}})
         , m_getData_slot("gpuMaterials", "The slot publishing the loaded data")
@@ -24,22 +24,22 @@ megamol::mesh::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()
     this->MakeSlotAvailable(&this->m_mtl_callerSlot);
 }
 
-megamol::mesh::AbstractGPUMaterialDataSource::~AbstractGPUMaterialDataSource() {
+megamol::mesh_gl::AbstractGPUMaterialDataSource::~AbstractGPUMaterialDataSource() {
     this->Release();
 }
 
-bool megamol::mesh::AbstractGPUMaterialDataSource::create(void) {
+bool megamol::mesh_gl::AbstractGPUMaterialDataSource::create(void) {
     // default empty collection
     m_material_collection.first = std::make_shared<GPUMaterialCollection>();
     return true;
 }
 
-void megamol::mesh::AbstractGPUMaterialDataSource::release() {
+void megamol::mesh_gl::AbstractGPUMaterialDataSource::release() {
     // intentionally empty ?
 }
 
 
-void megamol::mesh::AbstractGPUMaterialDataSource::clearMaterialCollection() {
+void megamol::mesh_gl::AbstractGPUMaterialDataSource::clearMaterialCollection() {
     m_material_collection.first->clear();
     m_material_collection.second.clear();
 }

@@ -10,7 +10,7 @@
 #include "TriSoupRenderer.h"
 #include "vislib/Trace.h"
 
-namespace megamol::trisoup {
+namespace megamol::trisoup_gl {
     class TrisoupGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(TrisoupGLPluginInstance)
 
@@ -27,7 +27,7 @@ namespace megamol::trisoup {
         void registerClasses() override {
 
             // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::trisoup_gl::TriSoupRenderer>();
 
         }
     };

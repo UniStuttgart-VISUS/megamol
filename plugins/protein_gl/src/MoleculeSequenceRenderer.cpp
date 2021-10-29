@@ -8,7 +8,7 @@
 
 using namespace megamol::core::view;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 
 MoleculeSequenceRenderer::MoleculeSequenceRenderer(void) : 

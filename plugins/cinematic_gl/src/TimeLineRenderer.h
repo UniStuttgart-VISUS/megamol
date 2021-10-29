@@ -21,7 +21,7 @@
 
 
 namespace megamol {
-namespace cinematic {
+namespace cinematic_gl {
 
 	/**
 	* Timeline rendering.
@@ -144,10 +144,10 @@ namespace cinematic {
         };
 
         std::array<AxisData, Axis::COUNT> axes;
-        CinematicUtils                    utils;
+        cinematic::CinematicUtils         utils;
         GLuint                            texture_id;
         ActiveParam                       yAxisParam;
-        Keyframe                          dragDropKeyframe;
+        cinematic::Keyframe               dragDropKeyframe;
         bool                              dragDropActive;
         unsigned int                      axisDragDropMode;
         unsigned int                      axisScaleMode;

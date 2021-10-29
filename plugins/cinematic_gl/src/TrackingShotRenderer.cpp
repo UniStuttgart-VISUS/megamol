@@ -22,7 +22,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
 using namespace megamol::core::utility;
-using namespace megamol::cinematic;
+using namespace megamol::cinematic_gl;
 
 using namespace vislib;
 
@@ -41,7 +41,7 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModuleGL()
     , showHelpText(false)
     , lineWidth(1.0f) {
 
-    this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
+    this->keyframeKeeperSlot.SetCompatibleCall<cinematic::CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
@@ -88,9 +88,9 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3DGL& call)
     auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
 
     if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
-        CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+        cinematic::CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
         if (ccc == nullptr) return false;
-        if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
+        if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
         vislib::math::Cuboid<float> bbox = cr3d_out->AccessBoundingBoxes().BoundingBox();
         vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().ClipBox();
@@ -106,7 +106,7 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3DGL& call)
 
         // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
         ccc->SetBboxCenter(vislib_point_to_glm(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
-        if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return false;
+        if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForSetSimulationData)) return false;
 
         // Propagate changes made in GetExtents() from outgoing CallRender3DGL (cr3d_out) to incoming  CallRender3DGL (cr3d_in) => Bboxes and times.
         unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
@@ -128,17 +128,17 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     if (cr3d_out == nullptr) return false;
 
     // Get update data from keyframe keeper -----------------------------------
-    auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+    auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
-    if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
+    if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
     // Set total simulation time 
     float totalSimTime = static_cast<float>(cr3d_out->TimeFramesCount());
     ccc->SetTotalSimTime(totalSimTime);
-    if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return false;
+    if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForSetSimulationData)) return false;
 
     // Get selected keyframe
-    Keyframe skf = ccc->GetSelectedKeyframe();
+    cinematic::Keyframe skf = ccc->GetSelectedKeyframe();
 
     // Set current simulation time based on selected keyframe ('disables'/ignores animation via view3d)
     float simTime = skf.GetSimTime();
@@ -155,7 +155,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     if (this->stepsParam.IsDirty()) {
         this->interpolSteps = this->stepsParam.Param<param::IntParam>()->Value();
         ccc->SetInterpolationSteps(this->interpolSteps);
-        if (!(*ccc)(CallKeyframeKeeper::CallForGetInterpolCamPositions)) return false;
+        if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetInterpolCamPositions)) return false;
         this->stepsParam.ResetDirty();
     }
 
@@ -199,7 +199,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
         return false;
     }
-    auto color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
+    auto color = this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME_SPLINE);
     auto keyframeCount = interpolKeyframes->size();
     if (keyframeCount > 1) {
         for (int i = 0; i < (keyframeCount - 1); i++) {
@@ -246,7 +246,7 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
         if ((*cr)(view::CallRender3DGL::FnOnMouseButton)) return true;
     }
 
-    auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+    auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
     auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
@@ -270,7 +270,7 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
                 int index = this->manipulators.GetSelectedKeyframePositionIndex(this->mouseX, this->mouseY);
                 if (index >= 0) {
                     ccc->SetSelectedKeyframeTime((*keyframes)[index].GetAnimTime());
-                    if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
+                    if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
                     consumed = true;
                     //megamol::core::utility::log::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] KEYFRAME SELECT.");
                 }
@@ -281,10 +281,10 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
             if (this->manipulatorGrabbed) {
 
                 ccc->SetSelectedKeyframe(this->manipulators.GetManipulatedSelectedKeyframe());
-                if (!(*ccc)(CallKeyframeKeeper::CallForSetSelectedKeyframe)) return false;
+                if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForSetSelectedKeyframe)) return false;
 
                 ccc->SetControlPointPosition(this->manipulators.GetFirstControlPointPosition(), this->manipulators.GetLastControlPointPosition());
-                if (!(*ccc)(CallKeyframeKeeper::CallForSetCtrlPoints)) return false;
+                if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForSetCtrlPoints)) return false;
 
                 consumed = true;
                 this->manipulators.ResetHitManipulator();

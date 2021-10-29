@@ -22,7 +22,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 
 
 /*
@@ -35,7 +35,7 @@ Diagram2DRenderer::Diagram2DRenderer( void ) : Renderer2DModuleGL (),
         clearDiagramParam( "clearDiagram", "Clears the diagram"),
         currentFbo( 0), oldDataPoint( 0.0f, 0.0f) {
     // segmentation data caller slot
-    this->dataCallerSlot.SetCompatibleCall<Diagram2DCallDescription>();
+    this->dataCallerSlot.SetCompatibleCall<protein::Diagram2DCallDescription>();
     this->MakeSlotAvailable( &this->dataCallerSlot);
 
     // set up the resolution param for the texture
@@ -100,10 +100,10 @@ bool Diagram2DRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
  */
 bool Diagram2DRenderer::Render( view::CallRender2DGL &call) {
     // get pointer to Diagram2DCall
-    Diagram2DCall *diagram = this->dataCallerSlot.CallAs<Diagram2DCall>();
+    protein::Diagram2DCall *diagram = this->dataCallerSlot.CallAs<protein::Diagram2DCall>();
     if( diagram == NULL ) return false;
     // execute the call
-    if( !(*diagram)(Diagram2DCall::CallForGetData) ) return false;
+    if( !(*diagram)(protein::Diagram2DCall::CallForGetData) ) return false;
 
     // get the new data point
     vislib::math::Vector<float, 2> dataPoint( diagram->GetValuePair());

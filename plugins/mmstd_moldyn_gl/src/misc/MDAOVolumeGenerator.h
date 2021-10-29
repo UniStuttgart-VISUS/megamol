@@ -14,7 +14,7 @@
 
 namespace megamol {
 namespace stdplugin {
-namespace moldyn {
+namespace moldyn_gl {
 namespace misc {
 
     class MDAOVolumeGenerator {

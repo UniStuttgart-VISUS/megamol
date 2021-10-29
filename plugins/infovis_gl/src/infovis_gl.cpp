@@ -15,7 +15,7 @@
 #include "TableHistogramRenderer2D.h"
 #include "TextureHistogramRenderer2D.h"
 
-namespace megamol::infovis {
+namespace megamol::infovis_gl {
 class InfovisGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(InfovisGLPluginInstance)
 
@@ -29,11 +29,11 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
-        this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
-        this->module_descriptions.RegisterAutoDescription<megamol::infovis::TableHistogramRenderer2D>();
-        this->module_descriptions.RegisterAutoDescription<megamol::infovis::TextureHistogramRenderer2D>();
-        this->module_descriptions.RegisterAutoDescription<megamol::infovis::InfovisAmortizedRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis_gl::ParallelCoordinatesRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis_gl::ScatterplotMatrixRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis_gl::TableHistogramRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis_gl::TextureHistogramRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis_gl::InfovisAmortizedRenderer>();
 
         // register calls
 

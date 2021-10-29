@@ -30,7 +30,7 @@
 #define NUM 10000
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
     /**
      * Protein Renderer class
@@ -83,7 +83,7 @@ namespace protein {
         **********************************************************************/
 
         /** Set current coloring mode */
-        inline void SetColoringMode( Color::ColoringMode cm) { currentColoringMode = cm; };
+        inline void SetColoringMode(protein::Color::ColoringMode cm) { currentColoringMode = cm; };
 
     protected:
         
@@ -238,7 +238,7 @@ namespace protein {
         vislib::graphics::gl::GLSLShader colorWriterShader;
         
         // current coloring mode
-        Color::ColoringMode currentColoringMode;
+        protein::Color::ColoringMode currentColoringMode;
         
         // attribute locations for GLSL-Shader
         GLint attribLocInParams;

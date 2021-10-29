@@ -13,7 +13,7 @@ namespace core {
 	class CallerSlot;
 }
 
-namespace protein {
+namespace protein_gl {
 class MoleculeSequenceRenderer : public megamol::core::view::Renderer2DModuleGL {
 public:
     static const char *ClassName(void)

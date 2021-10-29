@@ -13,7 +13,7 @@
 #include "TimeLineRenderer.h"
 #include "TrackingShotRenderer.h"
 
-namespace megamol::cinematic {
+namespace megamol::cinematic_gl {
     class CinematicGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(CinematicGLPluginInstance)
 
@@ -30,11 +30,11 @@ namespace megamol::cinematic {
         void registerClasses() override {
 
             // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::TrackingShotRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::TimeLineRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::CinematicView>();
-            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::ReplacementRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::OverlayRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic_gl::TrackingShotRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic_gl::TimeLineRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic_gl::CinematicView>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic_gl::ReplacementRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic_gl::OverlayRenderer>();
 
             // register calls
 

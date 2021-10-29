@@ -29,7 +29,7 @@
 
 #include "vislib/Trace.h"
 
-namespace megamol::protein {
+namespace megamol::protein_gl {
 class ProteinGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(ProteinGLPluginInstance)
 
@@ -50,22 +50,22 @@ public:
 #ifdef WITH_OPENBABEL
         this->module_descriptions.RegisterAutoDescription<megamol::protein::OpenBabelLoader>();
 #endif // WITH_OPENBABEL
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::SequenceRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::SolPathRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::SimpleMoleculeRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeCartoonRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::VolumeSliceRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::Diagram2DRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventVolumeRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::GLSLVolumeRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::DiagramRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::SplitMergeRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::VariantMatchRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::SecPlaneRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::UnstructuredGridRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer2000GT>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::SombreroMeshRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeSESRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SequenceRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SolPathRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SimpleMoleculeRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MoleculeCartoonRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::VolumeSliceRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::Diagram2DRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SolventVolumeRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::GLSLVolumeRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::DiagramRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SplitMergeRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::VariantMatchRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SecPlaneRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::UnstructuredGridRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::CartoonTessellationRenderer2000GT>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SombreroMeshRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MoleculeSESRenderer>();
 
         // register calls
 

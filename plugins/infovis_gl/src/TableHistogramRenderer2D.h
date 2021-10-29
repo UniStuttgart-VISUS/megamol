@@ -9,7 +9,7 @@
 
 #include "BaseHistogramRenderer2D.h"
 
-namespace megamol::infovis {
+namespace megamol::infovis_gl {
 
 class TableHistogramRenderer2D : public BaseHistogramRenderer2D {
 public:

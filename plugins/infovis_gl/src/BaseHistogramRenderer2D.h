@@ -17,7 +17,7 @@
 
 #include "Renderer2D.h"
 
-namespace megamol::infovis {
+namespace megamol::infovis_gl {
 
 class BaseHistogramRenderer2D : public Renderer2D {
 public:

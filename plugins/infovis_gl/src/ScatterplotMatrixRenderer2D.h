@@ -20,7 +20,7 @@
 #include "mmcore/FlagStorage.h"
 #include "vislib/math/Matrix.h"
 
-namespace megamol::infovis {
+namespace megamol::infovis_gl {
 
 class ScatterplotMatrixRenderer2D : public Renderer2D {
 public:

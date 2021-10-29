@@ -14,7 +14,7 @@
 #include "mmcore/view/MouseFlags.h"
 
 using namespace megamol;
-using namespace megamol::infovis;
+using namespace megamol::infovis_gl;
 
 InfovisAmortizedRenderer::InfovisAmortizedRenderer()
         : Renderer2D()
@@ -51,7 +51,7 @@ InfovisAmortizedRenderer::~InfovisAmortizedRenderer() {
     this->Release();
 }
 
-bool megamol::infovis::InfovisAmortizedRenderer::create(void) {
+bool megamol::infovis_gl::InfovisAmortizedRenderer::create(void) {
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("ignore: %i", glGetError());
 
     if (!makeShaders()) {
@@ -657,7 +657,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     return true;
 }
 
-bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRender2DGL& call) {
+bool megamol::infovis_gl::InfovisAmortizedRenderer::GetExtents(core::view::CallRender2DGL& call) {
     core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
     if (cr2d == nullptr)
         return false;

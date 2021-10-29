@@ -11,7 +11,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/ShaderFactory.h"
 
-using namespace megamol::infovis;
+using namespace megamol::infovis_gl;
 
 using megamol::core::utility::log::Log;
 

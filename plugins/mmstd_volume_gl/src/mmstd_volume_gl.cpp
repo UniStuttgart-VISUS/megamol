@@ -10,7 +10,7 @@
 #include "RaycastVolumeRenderer.h"
 #include "VolumeSliceRenderer.h"
 
-namespace megamol::stdplugin::volume {
+namespace megamol::stdplugin::volume_gl {
 class VolumeGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(VolumeGLPluginInstance)
 
@@ -25,8 +25,8 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::RaycastVolumeRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::VolumeSliceRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume_gl::RaycastVolumeRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume_gl::VolumeSliceRenderer>();
 
         // register calls
     }

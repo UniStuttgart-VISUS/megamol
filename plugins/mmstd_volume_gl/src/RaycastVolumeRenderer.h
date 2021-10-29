@@ -27,7 +27,7 @@
 
 namespace megamol {
 namespace stdplugin {
-    namespace volume {
+    namespace volume_gl {
 
         class RaycastVolumeRenderer : public megamol::core::view::Renderer3DModuleGL {
         public:

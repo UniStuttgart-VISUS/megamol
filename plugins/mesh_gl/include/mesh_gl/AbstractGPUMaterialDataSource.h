@@ -16,7 +16,7 @@
 #include "mmcore/CalleeSlot.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
 class AbstractGPUMaterialDataSource : public core::Module {
     public:

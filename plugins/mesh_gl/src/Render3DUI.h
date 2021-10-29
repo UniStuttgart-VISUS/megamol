@@ -13,7 +13,7 @@
 #include "RenderMDIMesh.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
 class Render3DUI : public RenderMDIMesh {
 public:

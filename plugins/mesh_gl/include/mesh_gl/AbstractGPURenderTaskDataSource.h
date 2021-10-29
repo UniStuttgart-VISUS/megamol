@@ -18,7 +18,7 @@
 #include "mmcore/view/light/CallLight.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
 class AbstractGPURenderTaskDataSource : public core::Module {
 public:

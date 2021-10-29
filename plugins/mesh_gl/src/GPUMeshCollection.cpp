@@ -1,7 +1,7 @@
 #include "mesh_gl/GPUMeshCollection.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
     //void GPUMeshCollection::defrag() {
     //
     //    //TODO create new GPU mesh object for each existing mesh

@@ -11,7 +11,7 @@
 #include "mmcore/utility/ShaderFactory.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
-using namespace megamol::infovis;
+using namespace megamol::infovis_gl;
 using namespace megamol::stdplugin::datatools;
 
 using megamol::core::utility::log::Log;

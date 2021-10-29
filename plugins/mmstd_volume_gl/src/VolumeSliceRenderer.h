@@ -20,7 +20,7 @@
 
 namespace megamol {
 namespace stdplugin {
-namespace volume {
+namespace volume_gl {
 
     /**
      * Renders one slice of a volume (slow)

@@ -25,7 +25,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::cinematic;
+using namespace megamol::cinematic_gl;
 
 
 OverlayRenderer::OverlayRenderer()

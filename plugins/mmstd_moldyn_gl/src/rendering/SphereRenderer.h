@@ -93,7 +93,7 @@
 
 namespace megamol {
 namespace stdplugin {
-namespace moldyn {
+namespace moldyn_gl {
 namespace rendering {
 
     using namespace megamol::core;

@@ -8,21 +8,21 @@
 
 #include "mesh_gl/MeshCalls_gl.h"
 
-megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
+megamol::mesh_gl::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
         : m_version(0)
         , m_glTF_callerSlot("gltfModels", "Connects a collection of loaded glTF files")
         , m_material_collection(nullptr)
         , m_btf_filename_slot("BTF filename", "Overload default gltf shader") {
-    this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
+    this->m_glTF_callerSlot.SetCompatibleCall<mesh::CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
 
     this->m_btf_filename_slot << new core::param::FilePathParam("dfr_gltfExample");
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 }
 
-megamol::mesh::GlTFRenderTasksDataSource::~GlTFRenderTasksDataSource() {}
+megamol::mesh_gl::GlTFRenderTasksDataSource::~GlTFRenderTasksDataSource() {}
 
-bool megamol::mesh::GlTFRenderTasksDataSource::create(void) {
+bool megamol::mesh_gl::GlTFRenderTasksDataSource::create(void) {
     AbstractGPURenderTaskDataSource::create();
 
     m_material_collection = std::make_shared<GPUMaterialCollection>();
@@ -31,7 +31,7 @@ bool megamol::mesh::GlTFRenderTasksDataSource::create(void) {
     return true;
 }
 
-bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& caller) {
+bool megamol::mesh_gl::GlTFRenderTasksDataSource::getDataCallback(core::Call& caller) {
     CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == nullptr) {
         return false;
@@ -52,7 +52,7 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
     gpu_render_tasks.push_back(m_rendertask_collection.first);
 
     CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
-    CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<CallGlTFData>();
+    mesh::CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<mesh::CallGlTFData>();
 
     if (mc != nullptr && gltf_call != nullptr) {
         if (!(*mc)(0)) {
@@ -141,11 +141,11 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
     return true;
 }
 
-bool megamol::mesh::GlTFRenderTasksDataSource::getMetaDataCallback(core::Call& caller) {
+bool megamol::mesh_gl::GlTFRenderTasksDataSource::getMetaDataCallback(core::Call& caller) {
 
     AbstractGPURenderTaskDataSource::getMetaDataCallback(caller);
 
-    auto gltf_call = m_glTF_callerSlot.CallAs<CallGlTFData>();
+    auto gltf_call = m_glTF_callerSlot.CallAs<mesh::CallGlTFData>();
 
     if (gltf_call == nullptr) {
         return false;

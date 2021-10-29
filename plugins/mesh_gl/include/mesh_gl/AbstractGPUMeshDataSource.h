@@ -21,7 +21,7 @@
 #include "GPUMeshCollection.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 class AbstractGPUMeshDataSource : public core::Module {
     public:
         AbstractGPUMeshDataSource();

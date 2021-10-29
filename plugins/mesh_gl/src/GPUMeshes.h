@@ -12,7 +12,7 @@
 
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
 
 class GPUMeshes : public AbstractGPUMeshDataSource

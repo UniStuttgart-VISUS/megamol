@@ -25,7 +25,7 @@
 #include "glowl/TextureCubemapArray.hpp"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
     typedef glowl::GLSLProgram Shader;
 

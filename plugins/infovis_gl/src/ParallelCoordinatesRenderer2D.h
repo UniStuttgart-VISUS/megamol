@@ -22,7 +22,7 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 
 namespace megamol {
-namespace infovis {
+namespace infovis_gl {
 
     class ParallelCoordinatesRenderer2D : public Renderer2D {
     public:

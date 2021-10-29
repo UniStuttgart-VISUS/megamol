@@ -2,7 +2,7 @@
 #include "Render3DUI.h"
 #include "mesh/MeshCalls.h"
 
-bool megamol::mesh::Render3DUI::OnMouseButton(
+bool megamol::mesh_gl::Render3DUI::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
     if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS)
@@ -24,7 +24,7 @@ bool megamol::mesh::Render3DUI::OnMouseButton(
     return false;
 }
 
-bool megamol::mesh::Render3DUI::OnMouseMove(double x, double y) {
+bool megamol::mesh_gl::Render3DUI::OnMouseMove(double x, double y) {
 
     double dx = x - this->m_cursor_x;
     double dy = y - this->m_cursor_y;
@@ -42,7 +42,7 @@ bool megamol::mesh::Render3DUI::OnMouseMove(double x, double y) {
     if (m_active_interaction_obj.first)
     {
         // TODO check interaction type of active object
-        Call3DInteraction* ci = this->m_3DInteraction_callerSlot.CallAs<Call3DInteraction>();
+        mesh::Call3DInteraction* ci = this->m_3DInteraction_callerSlot.CallAs<mesh::Call3DInteraction>();
         if (ci == NULL) return false;
         auto interaction_collection = ci->getData();
 
@@ -51,7 +51,7 @@ bool megamol::mesh::Render3DUI::OnMouseMove(double x, double y) {
 
         for (auto& interaction : available_interactions)
         {
-            if (interaction.type == InteractionType::MOVE_ALONG_AXIS)
+            if (interaction.type == mesh::InteractionType::MOVE_ALONG_AXIS)
             {
 
                 glm::vec4 tgt_pos(interaction.origin_x,interaction.origin_y,interaction.origin_z,1.0f);
@@ -89,8 +89,8 @@ bool megamol::mesh::Render3DUI::OnMouseMove(double x, double y) {
                 std::cout << "Adding move manipulation: " << interaction.axis_x << " " << interaction.axis_y << " "
                           << interaction.axis_z << " " << scale << std::endl;
 
-                interaction_collection->accessPendingManipulations().push(ThreeDimensionalManipulation{
-                    InteractionType::MOVE_ALONG_AXIS, static_cast<uint32_t>(m_active_interaction_obj.second),
+                interaction_collection->accessPendingManipulations().push(mesh::ThreeDimensionalManipulation{
+                    mesh::InteractionType::MOVE_ALONG_AXIS, static_cast<uint32_t>(m_active_interaction_obj.second),
                     interaction.axis_x, interaction.axis_y, interaction.axis_z, scale});
                 // TODO add manipulation task with scale * axis
 
@@ -103,7 +103,7 @@ bool megamol::mesh::Render3DUI::OnMouseMove(double x, double y) {
     return false; 
 }
 
-megamol::mesh::Render3DUI::Render3DUI()
+megamol::mesh_gl::Render3DUI::Render3DUI()
     : RenderMDIMesh()
     , m_cursor_x(0.0)
     , m_cursor_y(0.0)
@@ -111,23 +111,23 @@ megamol::mesh::Render3DUI::Render3DUI()
     , m_fbo(nullptr)
     , m_3DInteraction_callerSlot(
           "getInteraction", "Connects to the interaction slot of a suitable RenderTaskDataSource") {
-    this->m_3DInteraction_callerSlot.SetCompatibleCall<Call3DInteractionDescription>();
+    this->m_3DInteraction_callerSlot.SetCompatibleCall<mesh::Call3DInteractionDescription>();
     this->MakeSlotAvailable(&this->m_3DInteraction_callerSlot);
 }
 
-megamol::mesh::Render3DUI::~Render3DUI() { this->Release(); }
+megamol::mesh_gl::Render3DUI::~Render3DUI() { this->Release(); }
 
-bool megamol::mesh::Render3DUI::create() { return true; }
+bool megamol::mesh_gl::Render3DUI::create() { return true; }
 
-void megamol::mesh::Render3DUI::release() { m_fbo.reset(); }
+void megamol::mesh_gl::Render3DUI::release() { m_fbo.reset(); }
 
-bool megamol::mesh::Render3DUI::GetExtents(core::view::CallRender3DGL& call) {
+bool megamol::mesh_gl::Render3DUI::GetExtents(core::view::CallRender3DGL& call) {
     RenderMDIMesh::GetExtents(call);
 
     return true;
 }
 
-bool megamol::mesh::Render3DUI::Render(core::view::CallRender3DGL& call) {
+bool megamol::mesh_gl::Render3DUI::Render(core::view::CallRender3DGL& call) {
 
     core::view::CallRender3DGL* cr = dynamic_cast<core::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
@@ -140,7 +140,7 @@ bool megamol::mesh::Render3DUI::Render(core::view::CallRender3DGL& call) {
     m_proj_mx_cpy = proj;
 
     // check for interacton call get access to interaction collection
-    Call3DInteraction* ci = this->m_3DInteraction_callerSlot.CallAs<Call3DInteraction>();
+    mesh::Call3DInteraction* ci = this->m_3DInteraction_callerSlot.CallAs<mesh::Call3DInteraction>();
     if (ci == NULL) return false;
     if ((!(*ci)(0))) return false;
     auto interaction_collection = ci->getData();
@@ -198,8 +198,8 @@ bool megamol::mesh::Render3DUI::Render(core::view::CallRender3DGL& call) {
 
     if (interaction_collection != nullptr) {
         if (m_active_interaction_obj.first) {
-            interaction_collection->accessPendingManipulations().push(ThreeDimensionalManipulation{
-                InteractionType::HIGHLIGHT, static_cast<uint32_t>(m_active_interaction_obj.second), 0.0f, 0.0f, 0.0f, 0.0f});
+            interaction_collection->accessPendingManipulations().push(mesh::ThreeDimensionalManipulation{
+                mesh::InteractionType::HIGHLIGHT, static_cast<uint32_t>(m_active_interaction_obj.second), 0.0f, 0.0f, 0.0f, 0.0f});
         }
     }
 

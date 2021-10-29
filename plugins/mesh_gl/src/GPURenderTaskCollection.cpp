@@ -1,7 +1,7 @@
 #include "mesh_gl/GPURenderTaskCollection.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
     void GPURenderTaskCollection::copyGPURenderTask(
         std::string const& identifier, RenderTaskMetaData render_task_meta_data) {

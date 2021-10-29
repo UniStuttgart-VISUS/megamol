@@ -43,7 +43,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;
 
@@ -51,7 +51,7 @@ using namespace megamol::core::utility::log;
 /*
  * protein::GLSLVolumeRenderer::GLSLVolumeRenderer (CTOR)
  */
-protein::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
+protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
         : Renderer3DModuleGL()
         , protDataCallerSlot("getData", "Connects the volume rendering with data storage")
         , protRendererCallerSlot("renderProtein", "Connects the volume rendering with a protein renderer")
@@ -100,14 +100,14 @@ protein::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
     this->MakeSlotAvailable( &this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
-    this->SetColoringMode ( Color::ELEMENT );
+    this->SetColoringMode ( protein::Color::ELEMENT );
     param::EnumParam *cm = new param::EnumParam ( int ( this->currentColoringMode ) );
     MolecularDataCall *mol = new MolecularDataCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for( cCnt = 0; cCnt < Color::GetNumOfColoringModes( mol); ++cCnt) {
-        cMode = Color::GetModeByIndex( mol, cCnt);
-        cm->SetTypePair( cMode, Color::GetName( cMode).c_str());
+    protein::Color::ColoringMode cMode;
+    for( cCnt = 0; cCnt < protein::Color::GetNumOfColoringModes( mol); ++cCnt) {
+        cMode = protein::Color::GetModeByIndex( mol, cCnt);
+        cm->SetTypePair( cMode, protein::Color::GetName( cMode).c_str());
     }
     delete mol;
     this->coloringModeParam << cm;
@@ -150,7 +150,7 @@ protein::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
 
     // fill color table with default values and set the filename param
     vislib::StringA filename( "colors.txt");
-    Color::ReadColorTableFromFile( filename, this->colorLookupTable);
+    protein::Color::ReadColorTableFromFile( filename, this->colorLookupTable);
     this->colorTableFileParam.SetParameter(new param::StringParam( A2T( filename)));
     this->MakeSlotAvailable( &this->colorTableFileParam);
 
@@ -175,7 +175,7 @@ protein::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
     this->MakeSlotAvailable( &this->renderProteinParam );
     
     // fill rainbow color table
-    Color::MakeRainbowColorTable( 100, this->rainbowColors);
+    protein::Color::MakeRainbowColorTable( 100, this->rainbowColors);
 
     // initialize vertex and color array for tests
     c = new float[3*NUM];
@@ -196,7 +196,7 @@ protein::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
 /*
  * protein::GLSLVolumeRenderer::~GLSLVolumeRenderer (DTOR)
  */
-protein::GLSLVolumeRenderer::~GLSLVolumeRenderer ( void ) {
+protein_gl::GLSLVolumeRenderer::~GLSLVolumeRenderer ( void ) {
     this->Release ();
 }
 
@@ -204,7 +204,7 @@ protein::GLSLVolumeRenderer::~GLSLVolumeRenderer ( void ) {
 /*
  * protein::GLSLVolumeRenderer::release
  */
-void protein::GLSLVolumeRenderer::release ( void ) {
+void protein_gl::GLSLVolumeRenderer::release ( void ) {
 
 }
 
@@ -212,7 +212,7 @@ void protein::GLSLVolumeRenderer::release ( void ) {
 /*
  * protein::GLSLVolumeRenderer::create
  */
-bool protein::GLSLVolumeRenderer::create ( void ) {
+bool protein_gl::GLSLVolumeRenderer::create ( void ) {
     if (!ogl_IsVersionGEQ(2,0))
         return false;
     if( !areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform") )
@@ -416,7 +416,7 @@ bool protein::GLSLVolumeRenderer::create ( void ) {
 /*
  * protein::ProteinRenderer::GetExtents
  */
-bool protein::GLSLVolumeRenderer::GetExtents(view::CallRender3DGL& call) {
+bool protein_gl::GLSLVolumeRenderer::GetExtents(view::CallRender3DGL& call) {
     view::CallRender3DGL *cr3d = dynamic_cast<view::CallRender3DGL *>(&call);
     if (cr3d == NULL) return false;
 
@@ -473,7 +473,7 @@ bool protein::GLSLVolumeRenderer::GetExtents(view::CallRender3DGL& call) {
 /*
  * protein::GLSLVolumeRenderer::Render
  */
-bool protein::GLSLVolumeRenderer::Render( view::CallRender3DGL& call ) {
+bool protein_gl::GLSLVolumeRenderer::Render( view::CallRender3DGL& call ) {
 #if 0
     // generate volume, if necessary
     if( !glIsTexture( this->volumeTex) ) {
@@ -639,7 +639,7 @@ bool protein::GLSLVolumeRenderer::Render( view::CallRender3DGL& call ) {
         // check if atom count is zero
         if( mol->AtomCount() == 0 ) return true;
 
-        Color::MakeColorTable( mol, 
+        protein::Color::MakeColorTable( mol, 
             this->currentColoringMode,
             this->atomColorTable,
             this->colorLookupTable,
@@ -675,7 +675,7 @@ bool protein::GLSLVolumeRenderer::Render( view::CallRender3DGL& call ) {
 /*
  * Volume rendering using molecular data.
  */
-bool protein::GLSLVolumeRenderer::RenderMolecularData( view::CallRender3DGL *call, MolecularDataCall *mol) {
+bool protein_gl::GLSLVolumeRenderer::RenderMolecularData( view::CallRender3DGL *call, MolecularDataCall *mol) {
 
     // check last atom count with current atom count
     if( this->atomCount != mol->AtomCount() ) {
@@ -759,11 +759,11 @@ bool protein::GLSLVolumeRenderer::RenderMolecularData( view::CallRender3DGL *cal
 /*
  * refresh parameters
  */
-void protein::GLSLVolumeRenderer::ParameterRefresh( view::CallRender3DGL *call) {
+void protein_gl::GLSLVolumeRenderer::ParameterRefresh( view::CallRender3DGL *call) {
     
     // parameter refresh
     if( this->coloringModeParam.IsDirty() ) {
-        this->SetColoringMode ( static_cast<Color::ColoringMode> ( int ( this->coloringModeParam.Param<param::EnumParam>()->Value() ) ) );
+        this->SetColoringMode ( static_cast<protein::Color::ColoringMode> ( int ( this->coloringModeParam.Param<param::EnumParam>()->Value() ) ) );
         this->coloringModeParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
     }
@@ -870,7 +870,7 @@ void protein::GLSLVolumeRenderer::ParameterRefresh( view::CallRender3DGL *call) 
 
     // update color table
     if( this->colorTableFileParam.IsDirty() ) {
-        Color::ReadColorTableFromFile( this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
+        protein::Color::ReadColorTableFromFile( this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
     }
@@ -881,7 +881,7 @@ void protein::GLSLVolumeRenderer::ParameterRefresh( view::CallRender3DGL *call) 
 /*
  * Create a volume containing all molecule atoms
  */
-void protein::GLSLVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
+void protein_gl::GLSLVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
     // generate volume, if necessary
     if( !glIsTexture( this->volumeTex) ) {
         // from CellVis: cellVis.cpp, initGL
@@ -1039,7 +1039,7 @@ void protein::GLSLVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
 /*
  * draw the volume
  */
-void protein::GLSLVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
+void protein_gl::GLSLVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
     const float stepWidth = 1.0f/ ( 2.0f * float( this->volumeSize));
     glDisable( GL_BLEND);
 
@@ -1119,7 +1119,7 @@ void protein::GLSLVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boun
 /*
  * write the parameters of the ray to the textures
  */
-void protein::GLSLVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
+void protein_gl::GLSLVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
 
     GLint param = GL_NEAREST;
     GLint mode = GL_CLAMP_TO_EDGE;
@@ -1361,7 +1361,7 @@ void protein::GLSLVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> 
 /*
  * Draw the bounding box.
  */
-void protein::GLSLVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
+void protein_gl::GLSLVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
 
     //vislib::math::Vector<float, 3> position( protein->BoundingBox().GetSize().PeekDimension() );
     vislib::math::Vector<float, 3> position( boundingbox.GetSize().PeekDimension() );

@@ -17,7 +17,7 @@
 #include "mesh/MeshCalls.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 class GlTFRenderTasksDataSource : public AbstractGPURenderTaskDataSource {
 public:
     /**

@@ -32,7 +32,7 @@
 #include "vislib/math/Quaternion.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
     /**
      * Molecular Surface Renderer class.
@@ -322,9 +322,9 @@ namespace protein {
         bool offscreenRendering;
 
         /** the reduced surface(s) */
-        std::vector<std::vector<ReducedSurface*>> reducedSurfaceAllFrames;
+        std::vector<std::vector<protein::ReducedSurface*>> reducedSurfaceAllFrames;
         /** the reduced surface(s) */
-        std::vector<ReducedSurface*> reducedSurface;
+        std::vector<protein::ReducedSurface*> reducedSurface;
 
         // shader for the cylinders (raycasting view)
         vislib::graphics::gl::GLSLShader cylinderShader;
@@ -418,8 +418,8 @@ namespace protein {
         /** current render mode */
         RenderMode currentRendermode;
         /** The current coloring mode */
-        Color::ColoringMode currentColoringMode0;
-        Color::ColoringMode currentColoringMode1;
+        protein::Color::ColoringMode currentColoringMode0;
+        protein::Color::ColoringMode currentColoringMode1;
         /** postprocessing mode */
         PostprocessingMode postprocessing;
 

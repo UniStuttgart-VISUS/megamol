@@ -43,7 +43,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;
 
@@ -53,7 +53,7 @@ using namespace megamol::core::utility::log;
 /*
  * protein::SolventVolumeRenderer::SolventVolumeRenderer (CTOR)
  */
-protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModuleGL(),
+protein_gl::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModuleGL(),
         protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
         protRendererCallerSlot ( "renderMolecule", "Connects the volume rendering with a molecule renderer" ),
         dataOutSlot ( "volumeout", "Connects the volume rendering with a volume slice renderer" ),
@@ -107,13 +107,13 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
     this->MakeSlotAvailable( &this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
-    param::EnumParam *polymerCMEnum = new param::EnumParam ( int ( Color::ELEMENT ) );
+    param::EnumParam *polymerCMEnum = new param::EnumParam ( int ( protein::Color::ELEMENT ) );
     MolecularDataCall *mol = new MolecularDataCall();
-    Color::ColoringMode cMode;
-    unsigned int numClrModes = Color::GetNumOfColoringModes( mol);
+    protein::Color::ColoringMode cMode;
+    unsigned int numClrModes = protein::Color::GetNumOfColoringModes( mol);
     for(unsigned int cCnt = 0; cCnt < numClrModes; ++cCnt) {
-        cMode = Color::GetModeByIndex( mol, cCnt);
-        polymerCMEnum->SetTypePair( cMode, Color::GetName( cMode).c_str());
+        cMode = protein::Color::GetModeByIndex( mol, cCnt);
+        polymerCMEnum->SetTypePair( cMode, protein::Color::GetName( cMode).c_str());
     }
     delete mol;
 
@@ -123,13 +123,13 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
     this->coloringModeSolventParam << solventCMEnum;
 
     /*
-    cm->SetTypePair( Color::ELEMENT, "Element" );
-    cm->SetTypePair( Color::AMINOACID, "AminoAcid" );
-    cm->SetTypePair( Color::STRUCTURE, "SecondaryStructure" );
-    cm->SetTypePair( Color::VALUE, "Value");
-    cm->SetTypePair( Color::CHAIN_ID, "ChainID" );
-    cm->SetTypePair( Color::RAINBOW, "Rainbow");
-    cm->SetTypePair( Color::CHARGE, "Charge" );
+    cm->SetTypePair( protein::Color::ELEMENT, "Element" );
+    cm->SetTypePair( protein::Color::AMINOACID, "AminoAcid" );
+    cm->SetTypePair( protein::Color::STRUCTURE, "SecondaryStructure" );
+    cm->SetTypePair( protein::Color::VALUE, "Value");
+    cm->SetTypePair( protein::Color::CHAIN_ID, "ChainID" );
+    cm->SetTypePair( protein::Color::RAINBOW, "Rainbow");
+    cm->SetTypePair( protein::Color::CHARGE, "Charge" );
     */
 
 
@@ -182,7 +182,7 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 
     // fill color table with default values and set the filename param
     vislib::StringA filename( "colors.txt");
-    Color::ReadColorTableFromFile( filename, this->colorLookupTable);
+    protein::Color::ReadColorTableFromFile( filename, this->colorLookupTable);
     this->colorTableFileParam.SetParameter(new param::StringParam( A2T( filename)));
     this->MakeSlotAvailable( &this->colorTableFileParam);
 
@@ -241,9 +241,9 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
     this->MakeSlotAvailable( &this->volClipPlaneOpacityParam );
 
     // fill amino acid color table
-    Color::FillAminoAcidColorTable( this->aminoAcidColorTable);
+    protein::Color::FillAminoAcidColorTable( this->aminoAcidColorTable);
     // fill rainbow color table
-    Color::MakeRainbowColorTable( 100, this->rainbowColors);
+    protein::Color::MakeRainbowColorTable( 100, this->rainbowColors);
 
 }
 
@@ -251,7 +251,7 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 /*
  * protein::SolventVolumeRenderer::~SolventVolumeRenderer (DTOR)
  */
-protein::SolventVolumeRenderer::~SolventVolumeRenderer ( void ) {
+protein_gl::SolventVolumeRenderer::~SolventVolumeRenderer ( void ) {
     this->Release ();
 }
 
@@ -259,12 +259,12 @@ protein::SolventVolumeRenderer::~SolventVolumeRenderer ( void ) {
 /*
  * protein::SolventVolumeRenderer::release
  */
-void protein::SolventVolumeRenderer::release ( void ) {
+void protein_gl::SolventVolumeRenderer::release ( void ) {
 
 }
 
 
-bool protein::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag) {
+bool protein_gl::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag) {
     using namespace vislib::graphics::gl;
     ShaderSource vertSrc;
     ShaderSource fragSrc;
@@ -292,7 +292,7 @@ bool protein::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader
 /*
  * protein::SolventVolumeRenderer::create
  */
-bool protein::SolventVolumeRenderer::create ( void ) {
+bool protein_gl::SolventVolumeRenderer::create ( void ) {
     if( !areExtsAvailable( "GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform") )
         return false;
     if (!isExtAvailable( "GL_ARB_vertex_program")  || !ogl_IsVersionGEQ(2,0))
@@ -397,7 +397,7 @@ bool protein::SolventVolumeRenderer::create ( void ) {
 /*
  * protein::ProteinRenderer::GetExtents
  */
-bool protein::SolventVolumeRenderer::GetExtents(core::view::CallRender3DGL& call) {
+bool protein_gl::SolventVolumeRenderer::GetExtents(core::view::CallRender3DGL& call) {
     view::CallRender3DGL *cr3d = dynamic_cast<view::CallRender3DGL *>(&call);
     if (cr3d == NULL) return false;
 
@@ -461,7 +461,7 @@ bool protein::SolventVolumeRenderer::GetExtents(core::view::CallRender3DGL& call
  * SolventVolumeRenderer::getVolumeData
  */
 bool SolventVolumeRenderer::getVolumeData( core::Call& call) {
-    VolumeSliceCall *c = dynamic_cast<VolumeSliceCall*>( &call);
+    protein::VolumeSliceCall *c = dynamic_cast<protein::VolumeSliceCall*>( &call);
     if( c == NULL ) return false;
 
     // get the data call
@@ -487,10 +487,10 @@ bool SolventVolumeRenderer::getVolumeData( core::Call& call) {
 }
 
 
-void protein::SolventVolumeRenderer::ColorAtom(float *atomColor, MolecularDataCall *mol, int colorMode, int atomIdx, int residueIdx ) {
+void protein_gl::SolventVolumeRenderer::ColorAtom(float *atomColor, MolecularDataCall *mol, int colorMode, int atomIdx, int residueIdx ) {
     switch(colorMode) {
     default:
-    case Color::ELEMENT: {
+    case protein::Color::ELEMENT: {
 #if 1
         const unsigned char *c = mol->AtomTypes()[mol->AtomTypeIndices()[atomIdx]].Colour();
         atomColor[0] = c[0] / 255.0f;
@@ -503,25 +503,25 @@ void protein::SolventVolumeRenderer::ColorAtom(float *atomColor, MolecularDataCa
         atomColor[2] = c.Z();
 #endif
     } break;
-    case Color::RESIDUE: {
+    case protein::Color::RESIDUE: {
         int resTypeIdx = mol->Residues()[residueIdx]->Type();
         vislib::math::Vector<float, 3>& c = this->colorLookupTable[resTypeIdx%this->colorLookupTable.Count()];
         atomColor[0] = c.X();
         atomColor[1] = c.Y();
         atomColor[2] = c.Z();
     } break;
-    case Color::STRUCTURE: {
+    case protein::Color::STRUCTURE: {
         ; // MolecularDataCall::SecStructure::TYPE_HELIX, TYPE_COIL etc
     } break;
-    case Color::BFACTOR: {
+    case protein::Color::BFACTOR: {
         ;
     } break;
-    case Color::CHARGE: {
+    case protein::Color::CHARGE: {
         ;
     } break;
-    case Color::OCCUPANCY:
+    case protein::Color::OCCUPANCY:
         break;
-    case Color::CHAIN: {
+    case protein::Color::CHAIN: {
         const MolecularDataCall::Residue *residue = mol->Residues()[residueIdx];
         int moleculeIdx = residue->MoleculeIndex();
         int chainIdx = mol->Molecules()[moleculeIdx].ChainIndex();
@@ -530,7 +530,7 @@ void protein::SolventVolumeRenderer::ColorAtom(float *atomColor, MolecularDataCa
         atomColor[1] = c.Y();
         atomColor[2] = c.Z();
     } break;
-    case Color::MOLECULE: {
+    case protein::Color::MOLECULE: {
         const MolecularDataCall::Residue *residue = mol->Residues()[residueIdx];
         int moleculeIdx = residue->MoleculeIndex();
         vislib::math::Vector<float, 3>& c = this->colorLookupTable[moleculeIdx%this->colorLookupTable.Count()];
@@ -538,18 +538,18 @@ void protein::SolventVolumeRenderer::ColorAtom(float *atomColor, MolecularDataCa
         atomColor[1] = c.Y();
         atomColor[2] = c.Z();
     } break;
-    case Color::RAINBOW:
+    case protein::Color::RAINBOW:
         break;
     }
 }
 
-void protein::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall *mol) {
+void protein_gl::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall *mol) {
     if (!forceUpdateColoringMode && this->atomColorTable.Count() == mol->AtomCount()*3)
         return;
 
     forceUpdateColoringMode = false;
 
-/*    Color::MakeColorTable( mol,
+/*    protein::Color::MakeColorTable( mol,
         this->currentColoringMode,
         this->atomColorTable,
         this->colorLookupTable,
@@ -579,9 +579,9 @@ void protein::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall *mol) {
             if (isSolvent)
                 ColorAtom(atomColor, mol, solventColorMode, atomIdx, residueIdx );
             else {
-                Color::ColoringMode currentColoringMode0 = static_cast<Color::ColoringMode>(int(this->coloringModePolymerParam.Param<param::EnumParam>()->Value()));
+                protein::Color::ColoringMode currentColoringMode0 = static_cast<protein::Color::ColoringMode>(int(this->coloringModePolymerParam.Param<param::EnumParam>()->Value()));
                 //ColorAtom(atomColor, mol, polymerColorMode, atomIdx, residueIdx );
-                Color::MakeColorTable( mol,
+                protein::Color::MakeColorTable( mol,
                     currentColoringMode0,
                     this->atomColorTable, this->colorLookupTable, this->rainbowColors,
                     this->minGradColorParam.Param<param::StringParam>()->Value(),
@@ -597,7 +597,7 @@ void protein::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall *mol) {
 /*
  * protein::SolventVolumeRenderer::Render
  */
-bool protein::SolventVolumeRenderer::Render(core::view::CallRender3DGL& call) {
+bool protein_gl::SolventVolumeRenderer::Render(core::view::CallRender3DGL& call) {
     // cast the call to Render3D
     view::CallRender3DGL *cr3d = dynamic_cast<view::CallRender3DGL*>( &call );
     if( !cr3d ) return false;
@@ -938,7 +938,7 @@ bool protein::SolventVolumeRenderer::Render(core::view::CallRender3DGL& call) {
 /*
  * count visible solvent molecules
  */
-void protein::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataCall *mol) {
+void protein_gl::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataCall *mol) {
     // TODO: write list of solvent atoms and residue indices only once, update atom positions for each frame
 
     // atom counter
@@ -1172,7 +1172,7 @@ void protein::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataC
 /*
  * boese dreckig hingerotzt ...
  */
-void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol, const float *atomPos) {
+void protein_gl::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol, const float *atomPos) {
     const int *hydrogenConnections = this->hBondInterPtr;
 
     if (!hydrogenConnections)
@@ -1315,7 +1315,7 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 /*
  * Render the molecular data in stick mode. Special case when using solvent rendering: only render solvent molecules near the isosurface between the solvent and the molecule.
  */
-void protein::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall *mol, const float *atomPos) {
+void protein_gl::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall *mol, const float *atomPos) {
     // ----- prepare stick raycasting -----
     if (this->vertSpheres.Count() <= mol->AtomCount() * 4) {
         this->vertSpheres.SetCount( mol->AtomCount() * 4 );
@@ -1501,7 +1501,7 @@ void protein::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall
 /*
  * Volume rendering using molecular data.
  */
-bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3DGL *call, MolecularDataCall *mol) {
+bool protein_gl::SolventVolumeRenderer::RenderMolecularData( view::CallRender3DGL *call, MolecularDataCall *mol) {
 
     // decide to use already loaded frame request from CallFrame or 'normal' rendering
     if( !(*mol)() )
@@ -1594,7 +1594,7 @@ bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3DGL *
 /*
  * refresh parameters
  */
-void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3DGL *call, MolecularDataCall *mol) {
+void protein_gl::SolventVolumeRenderer::ParameterRefresh( view::CallRender3DGL *call, MolecularDataCall *mol) {
     
     // parameter refresh
     if( this->coloringModeSolventParam.IsDirty() || this->coloringModePolymerParam.IsDirty() || this->coloringModeVolSurfParam.IsDirty() ) {
@@ -1603,7 +1603,7 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3DGL *cal
         this->coloringModeVolSurfParam.ResetDirty();
         /* hydrogen statistics map surface by residue color -> only residue coloring makes sense for solvent here */
         if (this->coloringModeVolSurfParam.Param<param::EnumParam>()->Value() == VOlCM_HydrogenBondStats)
-            this->coloringModeSolventParam.Param<param::EnumParam>()->SetValue(Color::RESIDUE);
+            this->coloringModeSolventParam.Param<param::EnumParam>()->SetValue(protein::Color::RESIDUE);
         this->forceUpdateVolumeTexture = true;
         this->forceUpdateColoringMode = true;
     }
@@ -1727,7 +1727,7 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3DGL *cal
 
     // update color table
     if( this->colorTableFileParam.IsDirty() ) {
-        Color::ReadColorTableFromFile( this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
+        protein::Color::ReadColorTableFromFile( this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
         this->forceUpdateColoringMode = true;
@@ -1951,7 +1951,7 @@ void protein::SolventVolumeRenderer::CreateSpatialProbabilitiesTexture( Molecula
 /*
  * Create a volume containing all molecule atoms
  */
-void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
+void protein_gl::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
     bool firstVolumeUpdate = false;
 
     // generate volume, if necessary
@@ -2302,7 +2302,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 /*
  * draw the volume
  */
-void protein::SolventVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
+void protein_gl::SolventVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
     const float stepWidth = 1.0f/ ( 2.0f * float( this->volumeSize));
     glDisable( GL_BLEND);
 
@@ -2383,7 +2383,7 @@ void protein::SolventVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> b
 /*
  * write the parameters of the ray to the textures
  */
-void protein::SolventVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
+void protein_gl::SolventVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
 
     GLint param = GL_NEAREST;
     GLint mode = GL_CLAMP_TO_EDGE;
@@ -2625,7 +2625,7 @@ void protein::SolventVolumeRenderer::RayParamTextures( vislib::math::Cuboid<floa
 /*
  * Draw the bounding box.
  */
-void protein::SolventVolumeRenderer::DrawBoundingBoxTranslated( vislib::math::Cuboid<float> boundingbox) {
+void protein_gl::SolventVolumeRenderer::DrawBoundingBoxTranslated( vislib::math::Cuboid<float> boundingbox) {
 
     vislib::math::Vector<float, 3> position;
     glBegin(GL_QUADS);
@@ -2804,7 +2804,7 @@ void protein::SolventVolumeRenderer::DrawBoundingBoxTranslated( vislib::math::Cu
 /*
  * Draw the bounding box.
  */
-void protein::SolventVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
+void protein_gl::SolventVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
 
     vislib::math::Vector<float, 3> position( boundingbox.GetSize().PeekDimension() );
     position *= this->scale;

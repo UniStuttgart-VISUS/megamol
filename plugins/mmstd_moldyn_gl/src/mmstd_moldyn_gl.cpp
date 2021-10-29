@@ -12,7 +12,7 @@
 #include "rendering/GrimRenderer.h"
 #include "rendering/SphereRenderer.h"
 
-namespace megamol::stdplugin::moldyn {
+namespace megamol::stdplugin::moldyn_gl {
     class MoldynGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(MoldynGLPluginInstance)
 
@@ -27,10 +27,10 @@ namespace megamol::stdplugin::moldyn {
         void registerClasses() override {
 
             // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::GrimRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::ArrowRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::SphereRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::rendering::GlyphRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn_gl::rendering::GrimRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn_gl::rendering::ArrowRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn_gl::rendering::SphereRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn_gl::rendering::GlyphRenderer>();
         }
     };
 } // namespace megamol::stdplugin::moldyn

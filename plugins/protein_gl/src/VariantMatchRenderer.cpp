@@ -23,7 +23,7 @@
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 
 #pragma push_macro("min")
 #undef min

@@ -9,7 +9,7 @@
 
 
 namespace megamol {
-namespace thermodyn {
+namespace thermodyn_gl {
 namespace rendering {
 
 class BoxRenderer : public core::view::Renderer3DModuleGL {
@@ -77,7 +77,7 @@ protected:
 
 private:
     std::pair<std::vector<float>, std::vector<float>> drawData;
-    static void prepareData(std::vector<BoxDataCall::box_entry_t> const& indata,
+    static void prepareData(std::vector<thermodyn::BoxDataCall::box_entry_t> const& indata,
         std::pair<std::vector<float>, std::vector<float>>& outdata) {
 
         auto& pos = outdata.first;

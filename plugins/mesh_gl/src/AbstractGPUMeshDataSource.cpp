@@ -10,7 +10,7 @@
 #include "mesh_gl/MeshCalls_gl.h"
 
 
-megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
+megamol::mesh_gl::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
         : core::Module()
         , m_mesh_collection({nullptr, {}})
         , m_mesh_lhs_slot("gpuMeshes", "The slot publishing the loaded data")
@@ -25,19 +25,19 @@ megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
     this->MakeSlotAvailable(&this->m_mesh_rhs_slot);
 }
 
-megamol::mesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource() {
+megamol::mesh_gl::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource() {
     this->Release();
 }
 
-bool megamol::mesh::AbstractGPUMeshDataSource::create(void) {
+bool megamol::mesh_gl::AbstractGPUMeshDataSource::create(void) {
     // default empty collection
     m_mesh_collection.first = std::make_shared<GPUMeshCollection>();
     return true;
 }
 
-void megamol::mesh::AbstractGPUMeshDataSource::release() {}
+void megamol::mesh_gl::AbstractGPUMeshDataSource::release() {}
 
-void megamol::mesh::AbstractGPUMeshDataSource::clearMeshCollection() {
+void megamol::mesh_gl::AbstractGPUMeshDataSource::clearMeshCollection() {
     for (auto& identifier : m_mesh_collection.second) {
         m_mesh_collection.first->deleteSubMesh(identifier);
     }

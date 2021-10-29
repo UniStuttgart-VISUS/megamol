@@ -23,7 +23,7 @@
 #include "mesh/3DInteractionCollection.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
     class ThreeDimensionalUIRenderTaskDataSource : public AbstractGPURenderTaskDataSource
     {
@@ -87,7 +87,7 @@ namespace mesh {
 
         std::list < std::pair <std::string, std::array<PerObjectShaderParams,1> >> m_scene;
 
-        std::shared_ptr<ThreeDimensionalInteractionCollection> m_interaction_collection;
+        std::shared_ptr<mesh::ThreeDimensionalInteractionCollection> m_interaction_collection;
 
         std::shared_ptr<GPUMaterialCollection> m_material_collection;
 

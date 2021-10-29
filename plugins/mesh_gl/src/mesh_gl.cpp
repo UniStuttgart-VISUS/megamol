@@ -16,7 +16,7 @@
 #include "gltf/glTFRenderTasksDataSource.h"
 #include "mesh_gl/MeshCalls_gl.h"
 
-namespace megamol::mesh {
+namespace megamol::mesh_gl {
 class MeshGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(MeshGLPluginInstance)
 
@@ -30,18 +30,18 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::RenderMDIMesh>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFRenderTasksDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::GPUMeshes>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::SimpleGPUMtlDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshViewerRenderTasks>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::Render3DUI>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::ThreeDimensionalUIRenderTaskDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::RenderMDIMesh>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::GlTFRenderTasksDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::GPUMeshes>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::SimpleGPUMtlDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::MeshViewerRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::Render3DUI>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource>();
 
         // register calls
-        this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPUMeshData>();
-        this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPUMaterialData>();
-        this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPURenderTaskData>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh_gl::CallGPUMeshData>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh_gl::CallGPUMaterialData>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh_gl::CallGPURenderTaskData>();
     }
 };
 } // namespace megamol::mesh

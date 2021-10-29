@@ -23,7 +23,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 
 class VariantMatchRenderer : public megamol::core::view::Renderer2DModuleGL {

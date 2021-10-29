@@ -4,15 +4,15 @@
 
 #include "mmcore/param/FilePathParam.h"
 
-megamol::mesh::SimpleGPUMtlDataSource::SimpleGPUMtlDataSource()
+megamol::mesh_gl::SimpleGPUMtlDataSource::SimpleGPUMtlDataSource()
         : m_version(0), m_btf_filename_slot("BTF filename", "The name of the btf file to load") {
     this->m_btf_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 }
 
-megamol::mesh::SimpleGPUMtlDataSource::~SimpleGPUMtlDataSource() {}
+megamol::mesh_gl::SimpleGPUMtlDataSource::~SimpleGPUMtlDataSource() {}
 
-bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) {
+bool megamol::mesh_gl::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) {
     CallGPUMaterialData* lhs_mtl_call = dynamic_cast<CallGPUMaterialData*>(&caller);
     CallGPUMaterialData* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<CallGPUMaterialData>();
 
@@ -52,6 +52,6 @@ bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) 
     return true;
 }
 
-bool megamol::mesh::SimpleGPUMtlDataSource::getMetaDataCallback(core::Call& caller) {
+bool megamol::mesh_gl::SimpleGPUMtlDataSource::getMetaDataCallback(core::Call& caller) {
     return true;
 }

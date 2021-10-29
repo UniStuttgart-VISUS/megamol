@@ -21,7 +21,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 using namespace vislib::graphics::gl;
 using namespace megamol::protein_calls;
 using megamol::core::utility::log::Log;
@@ -63,7 +63,7 @@ SequenceRenderer::SequenceRenderer( void ) : Renderer2DModuleGL (),
     // fill color table with default values and set the filename param
     this->colorTableFileParam.SetParameter(new param::FilePathParam("colors.txt", param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable( &this->colorTableFileParam);
-    Color::ReadColorTableFromFile(this->colorTableFileParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str(), this->colorTable);
+    protein::Color::ReadColorTableFromFile(this->colorTableFileParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str(), this->colorTable);
     
     // param slot for key toggling
     this->toggleKeyParam.SetParameter( new param::BoolParam(true));
@@ -195,7 +195,7 @@ bool SequenceRenderer::Render(view::CallRender2DGL &call) {
 
     // read and update the color table, if necessary
     if( this->colorTableFileParam.IsDirty() ) {
-        Color::ReadColorTableFromFile(this->colorTableFileParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str(), this->colorTable);
+        protein::Color::ReadColorTableFromFile(this->colorTableFileParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str(), this->colorTable);
         this->colorTableFileParam.ResetDirty();
     }
     

@@ -7,7 +7,7 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 
 using namespace megamol;
-using namespace megamol::infovis;
+using namespace megamol::infovis_gl;
 
 
 void Renderer2D::computeDispatchSizes(

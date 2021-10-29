@@ -7,5 +7,5 @@ megamol_plugin(mesh_gl
   BUILD_DEFAULT ON
   DEPENDS_GL
   DEPENDS_PLUGINS
-    compositing_gl
-    mesh)
+    mesh
+    compositing_gl)

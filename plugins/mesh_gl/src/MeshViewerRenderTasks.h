@@ -11,7 +11,7 @@
 #include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
 class MeshViewerRenderTasks : public AbstractGPURenderTaskDataSource {
 public:

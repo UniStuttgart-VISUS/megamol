@@ -34,7 +34,7 @@
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-megamol::stdplugin::volume::VolumeSliceRenderer::VolumeSliceRenderer(void)
+megamol::stdplugin::volume_gl::VolumeSliceRenderer::VolumeSliceRenderer(void)
 	: Renderer3DModuleGL()
 	, getVolSlot("getVol", "The call for data")
 	, getTFSlot("gettransferfunction", "The call for Transfer function")
@@ -54,7 +54,7 @@ megamol::stdplugin::volume::VolumeSliceRenderer::VolumeSliceRenderer(void)
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-megamol::stdplugin::volume::VolumeSliceRenderer::~VolumeSliceRenderer(void) {
+megamol::stdplugin::volume_gl::VolumeSliceRenderer::~VolumeSliceRenderer(void) {
     this->Release();
 }
 
@@ -62,7 +62,7 @@ megamol::stdplugin::volume::VolumeSliceRenderer::~VolumeSliceRenderer(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume::VolumeSliceRenderer::create(void) {
+bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::create(void) {
 	try {
 		// create shader program
 		vislib::graphics::gl::ShaderSource compute_shader_src;
@@ -108,7 +108,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::create(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume::VolumeSliceRenderer::GetExtents(core::view::CallRender3DGL& cr) {
+bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::GetExtents(core::view::CallRender3DGL& cr) {
     auto *vdc = this->getVolSlot.CallAs<geocalls::VolumetricDataCall>();
 
 	vdc->SetFrameID(static_cast<unsigned int>(cr.Time()));
@@ -126,14 +126,14 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::GetExtents(core::view::Cal
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-void megamol::stdplugin::volume::VolumeSliceRenderer::release(void) {
+void megamol::stdplugin::volume_gl::VolumeSliceRenderer::release(void) {
 }
 
 
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRender3DGL& cr) {
+bool megamol::stdplugin::volume_gl::VolumeSliceRenderer::Render(core::view::CallRender3DGL& cr) {
     // get volume data
     auto *vdc = this->getVolSlot.CallAs<geocalls::VolumetricDataCall>();
 	if (vdc == nullptr || !(*vdc)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) return false;

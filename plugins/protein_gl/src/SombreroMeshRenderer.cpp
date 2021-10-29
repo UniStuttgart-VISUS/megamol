@@ -33,7 +33,7 @@
 #include <tuple>
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 
 using namespace megamol::core;
 

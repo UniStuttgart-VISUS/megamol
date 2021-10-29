@@ -20,7 +20,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
     /**
      * Renderer for solvent path raw data

@@ -32,7 +32,7 @@
 #include "protein_calls/ResidueSelectionCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
     class SequenceRenderer : public megamol::core::view::Renderer2DModuleGL {
     public:

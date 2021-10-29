@@ -10,7 +10,7 @@
 #include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 #include "mesh_gl/MeshCalls_gl.h"
 
-megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource()
+megamol::mesh_gl::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource()
         : core::Module()
         , m_rendertask_collection({nullptr, {}})
         , m_renderTask_lhs_slot("renderTasks", "The slot publishing the loaded data")
@@ -30,17 +30,17 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
 
 }
 
-megamol::mesh::AbstractGPURenderTaskDataSource::~AbstractGPURenderTaskDataSource() {
+megamol::mesh_gl::AbstractGPURenderTaskDataSource::~AbstractGPURenderTaskDataSource() {
     this->Release();
 }
 
-bool megamol::mesh::AbstractGPURenderTaskDataSource::create(void) {
+bool megamol::mesh_gl::AbstractGPURenderTaskDataSource::create(void) {
     // default empty collection
     m_rendertask_collection.first = std::make_shared<GPURenderTaskCollection>();
     return true;
 }
 
-bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::Call& caller) {
+bool megamol::mesh_gl::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::Call& caller) {
 
     CallGPURenderTaskData* lhs_rt_call = dynamic_cast<CallGPURenderTaskData*>(&caller);
     CallGPURenderTaskData* rhs_rt_call = m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
@@ -100,11 +100,11 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
     return true;
 }
 
-void megamol::mesh::AbstractGPURenderTaskDataSource::clearRenderTaskCollection() {
+void megamol::mesh_gl::AbstractGPURenderTaskDataSource::clearRenderTaskCollection() {
     m_rendertask_collection.first->clear();
     m_rendertask_collection.second.clear();
 }
 
-void megamol::mesh::AbstractGPURenderTaskDataSource::release() {
+void megamol::mesh_gl::AbstractGPURenderTaskDataSource::release() {
     // intentionally empty ?
 }

@@ -30,18 +30,18 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 using namespace megamol::core::utility::log;
 
 
 /*
  * protein::UnstructuredGridRenderer::UnstructuredGridRenderer (CTOR)
  */
-protein::UnstructuredGridRenderer::UnstructuredGridRenderer(void) : Renderer3DModuleGL(),
+protein_gl::UnstructuredGridRenderer::UnstructuredGridRenderer(void) : Renderer3DModuleGL(),
     dataCallerSlot( "getData", "Connects the rendering with the data storage"),
     sphereRadSlot("sphereRad", "The sphere radius scale factor") {
 
-    this->dataCallerSlot.SetCompatibleCall<VTKLegacyDataCallUnstructuredGridDescription>();
+    this->dataCallerSlot.SetCompatibleCall<protein::VTKLegacyDataCallUnstructuredGridDescription>();
     this->MakeSlotAvailable(&this->dataCallerSlot);
 
     this->sphereRadSlot.SetParameter(new core::param::FloatParam(1.0f, 0.0f));
@@ -52,7 +52,7 @@ protein::UnstructuredGridRenderer::UnstructuredGridRenderer(void) : Renderer3DMo
 /*
  * protein::UnstructuredGridRenderer::~UnstructuredGridRenderer (DTOR)
  */
-protein::UnstructuredGridRenderer::~UnstructuredGridRenderer(void)  {
+protein_gl::UnstructuredGridRenderer::~UnstructuredGridRenderer(void)  {
     this->Release ();
 }
 
@@ -60,7 +60,7 @@ protein::UnstructuredGridRenderer::~UnstructuredGridRenderer(void)  {
 /*
  * protein::UnstructuredGridRenderer::release
  */
-void protein::UnstructuredGridRenderer::release(void) {
+void protein_gl::UnstructuredGridRenderer::release(void) {
 
 }
 
@@ -68,7 +68,7 @@ void protein::UnstructuredGridRenderer::release(void) {
 /*
  * protein::UnstructuredGridRenderer::create
  */
-bool protein::UnstructuredGridRenderer::create(void)
+bool protein_gl::UnstructuredGridRenderer::create(void)
 {
     if (isExtAvailable("GL_ARB_vertex_program") == 0) {
         return false;
@@ -131,19 +131,19 @@ bool protein::UnstructuredGridRenderer::create(void)
 /*
  * protein::UnstructuredGridRenderer::GetExtents
  */
-bool protein::UnstructuredGridRenderer::GetExtents(core::view::CallRender3DGL& call) {
+bool protein_gl::UnstructuredGridRenderer::GetExtents(core::view::CallRender3DGL& call) {
 
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) {
         return false;
     }
 
-    VTKLegacyDataCallUnstructuredGrid *dc =
-            this->dataCallerSlot.CallAs<VTKLegacyDataCallUnstructuredGrid>();
+    protein::VTKLegacyDataCallUnstructuredGrid *dc =
+            this->dataCallerSlot.CallAs<protein::VTKLegacyDataCallUnstructuredGrid>();
     if (dc == NULL ) {
         return false;
     }
-    if (!(*dc)(VTKLegacyDataCallUnstructuredGrid::CallForGetExtent)) {
+    if (!(*dc)(protein::VTKLegacyDataCallUnstructuredGrid::CallForGetExtent)) {
         return false;
     }
 
@@ -156,7 +156,7 @@ bool protein::UnstructuredGridRenderer::GetExtents(core::view::CallRender3DGL& c
 /*
  * protein::UnstructuredGridRenderer::Render
  */
-bool protein::UnstructuredGridRenderer::Render(core::view::CallRender3DGL& call) {
+bool protein_gl::UnstructuredGridRenderer::Render(core::view::CallRender3DGL& call) {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;
@@ -168,8 +168,8 @@ bool protein::UnstructuredGridRenderer::Render(core::view::CallRender3DGL& call)
     float callTime = cr3d->Time();
 
     // get pointer to MolecularDataCall
-    VTKLegacyDataCallUnstructuredGrid *dc =
-            this->dataCallerSlot.CallAs<VTKLegacyDataCallUnstructuredGrid>();
+    protein::VTKLegacyDataCallUnstructuredGrid *dc =
+            this->dataCallerSlot.CallAs<protein::VTKLegacyDataCallUnstructuredGrid>();
     if (dc == NULL) {
         return false;
     }
@@ -177,7 +177,7 @@ bool protein::UnstructuredGridRenderer::Render(core::view::CallRender3DGL& call)
     unsigned int cnt;
 
     dc->SetFrameID(static_cast<int>(callTime));
-    if (!(*dc)(SphereDataCall::CallForGetData)) {
+    if (!(*dc)(protein::SphereDataCall::CallForGetData)) {
         return false;
     }
 
@@ -189,7 +189,7 @@ bool protein::UnstructuredGridRenderer::Render(core::view::CallRender3DGL& call)
     } else {
         dc->SetFrameID(0);
     }
-    if (!(*dc)(VTKLegacyDataCallUnstructuredGrid::CallForGetData)) {
+    if (!(*dc)(protein::VTKLegacyDataCallUnstructuredGrid::CallForGetData)) {
         delete[] pos0;
         return false;
     }

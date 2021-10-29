@@ -26,7 +26,7 @@
 //#define FIRSTFRAME_CHECK
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 	using namespace megamol::core;
 	using namespace megamol::protein_calls;

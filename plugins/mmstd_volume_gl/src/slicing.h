@@ -30,7 +30,7 @@
 
 namespace megamol {
 namespace stdplugin {
-namespace volume {
+namespace volume_gl {
 
 #define VS_EPS      1.0e-8
 

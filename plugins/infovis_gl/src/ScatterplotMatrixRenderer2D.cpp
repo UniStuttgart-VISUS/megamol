@@ -18,7 +18,7 @@
 #include "delaunator.hpp"
 
 using namespace megamol;
-using namespace megamol::infovis;
+using namespace megamol::infovis_gl;
 using namespace megamol::stdplugin::datatools;
 
 using megamol::core::utility::log::Log;

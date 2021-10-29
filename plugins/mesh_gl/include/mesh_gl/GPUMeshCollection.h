@@ -20,7 +20,7 @@
 #include "glowl/Mesh.hpp"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
     class GPUMeshCollection {
     public:

@@ -20,7 +20,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
 using namespace megamol::core::utility;
-using namespace megamol::cinematic;
+using namespace megamol::cinematic_gl;
 
 using namespace vislib;
 
@@ -53,7 +53,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModuleGL()
     , mouseAction(MouseButtonAction::RELEASE)
     , lineHeight(1.0f) {
 
-    this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
+    this->keyframeKeeperSlot.SetCompatibleCall<cinematic::CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
@@ -186,9 +186,9 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     }
 
     // Get update data from keyframe keeper
-    auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+    auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
     if (!ccc) return false;
-    if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
+    if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
      auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] Pointer to keyframe array is nullptr.");
@@ -228,7 +228,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         }
         t = (t > this->axes[Axis::X].maxValue) ? (this->axes[Axis::X].maxValue) : (t);
         ccc->SetSelectedKeyframeTime(t);
-        if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
+        if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
     }
     if (this->moveLeftFrameParam.IsDirty()) {
         this->moveLeftFrameParam.ResetDirty();
@@ -242,7 +242,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         }
         t = (t < 0.0f) ? (0.0f) : (t);
         ccc->SetSelectedKeyframeTime(t);
-        if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
+        if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
     }
 
     if (this->resetPanScaleParam.IsDirty()) {
@@ -267,7 +267,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     // Push rulers ------------------------------------------------------------
     glm::vec3 origin = {this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, CCTLR_Z_BACK};
 
-    color = this->utils.Color(CinematicUtils::Colors::FOREGROUND);
+    color = this->utils.Color(cinematic::CinematicUtils::Colors::FOREGROUND);
     // Draw x axis ruler lines
     start = glm::vec3(this->axes[Axis::X].startPos.x - this->rulerMarkHeight, this->axes[Axis::X].startPos.y, CCTLR_Z_BACK);
     end = glm::vec3(this->axes[Axis::X].endPos.x + this->rulerMarkHeight, this->axes[Axis::X].endPos.y, CCTLR_Z_BACK);
@@ -297,7 +297,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     origin = {this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, CCTLR_Z_MIDDLE};
 
     if (keyframes->size() > 0) {
-        color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
+        color = this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME_SPLINE);
         // First vertex
         start_x = this->axes[Axis::X].scaleOffset;
         float yAxisValue = 0.0f;
@@ -340,7 +340,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         if (f >= 0.0f) {
             start = origin + glm::vec3(f, 0.0f, CCTLR_Z_MIDDLE);
             end = origin + glm::vec3(f, this->rulerMarkHeight, CCTLR_Z_MIDDLE);
-            this->utils.PushLinePrimitive(start, end, 1.0f, cam_view, cam_pos, this->utils.Color(CinematicUtils::Colors::FRAME_MARKER));
+            this->utils.PushLinePrimitive(start, end, 1.0f, cam_view, cam_pos, this->utils.Color(cinematic::CinematicUtils::Colors::FRAME_MARKER));
         }
     }
 
@@ -354,9 +354,9 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         }
         y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
         if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
-            color = this->utils.Color(CinematicUtils::Colors::KEYFRAME);
+            color = this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME);
             if ((*keyframes)[i] == skf) {
-                color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SELECTED);
+                color = this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME_SELECTED);
             }
             this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkSize, color);
         }
@@ -371,7 +371,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     }
     y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
     if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
-        color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SELECTED);
+        color = this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME_SELECTED);
         this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, (this->keyframeMarkSize*0.75f), color);
         start = origin + glm::vec3(x, 0.0f, CCTLR_Z_MIDDLE);
         end = origin + glm::vec3(x, y, CCTLR_Z_MIDDLE);
@@ -391,7 +391,7 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
         }
         y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
         if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
-            this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkSize, this->utils.Color(CinematicUtils::Colors::KEYFRAME_DRAGGED));
+            this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkSize, this->utils.Color(cinematic::CinematicUtils::Colors::KEYFRAME_DRAGGED));
         }
     }
 
@@ -560,9 +560,9 @@ bool TimeLineRenderer::recalcAxesData(void) {
 
 bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
-    auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+    auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
-    if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
+    if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
     auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] Pointer to keyframe array is nullptr.");
@@ -614,7 +614,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
         }
         if (hit) {
             // Set hit keyframe as selected
-            if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
+            if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
         }
         else {
             // Get interpolated keyframe selection
@@ -622,7 +622,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                 // Set an interpolated keyframe as selected
                 float xt = (((-1.0f)*this->axes[Axis::X].scaleOffset + (this->mouseX - this->axes[Axis::X].startPos.x)) / this->axes[Axis::X].scaleFactor) / this->axes[Axis::X].length * this->axes[Axis::X].maxValue;
                 ccc->SetSelectedKeyframeTime(xt);
-                if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
+                if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
             }
         }
     } // RIGHT-CLICK --- Drag & Drop of keyframe OR pan axes ...
@@ -671,7 +671,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                 // Store hit keyframe locally
                 this->dragDropActive = true;
                 this->axisDragDropMode = 0;
-                if (!(*ccc)(CallKeyframeKeeper::CallForSetDragKeyframe)) return false;
+                if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForSetDragKeyframe)) return false;
             }
             this->lastMouseX = this->mouseX;
             this->lastMouseY = this->mouseY;
@@ -707,7 +707,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                     xt = this->dragDropKeyframe.GetAnimTime();
                 }
                 ccc->SetDropTimes(xt, yt);
-                if (!(*ccc)(CallKeyframeKeeper::CallForSetDropKeyframe)) return false;
+                if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForSetDropKeyframe)) return false;
 
                 this->dragDropActive = false;
                 this->axisDragDropMode = 0;
@@ -735,9 +735,9 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
 
 bool TimeLineRenderer::OnMouseMove(double x, double y) {
 
-    auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+    auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
-    if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
+    if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
     bool down = (this->mouseAction == MouseButtonAction::PRESS);
     float yAxisValue;
@@ -754,7 +754,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
                 // Set an interpolated keyframe as selected
                 float xt = (((-1.0f)*this->axes[Axis::X].scaleOffset + (this->mouseX - this->axes[Axis::X].startPos.x)) / this->axes[Axis::X].scaleFactor) / this->axes[Axis::X].length * this->axes[Axis::X].maxValue;
                 ccc->SetSelectedKeyframeTime(xt);
-                if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
+                if (!(*ccc)(cinematic::CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
             }
         }
     } // RIGHT-CLICK --- Drag & Drop of keyframe OR pan axes ...

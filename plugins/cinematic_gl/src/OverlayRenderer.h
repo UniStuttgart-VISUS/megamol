@@ -21,7 +21,7 @@
 
 
 namespace megamol {
-namespace cinematic {
+namespace cinematic_gl {
 
 
     /** ************************************************************************

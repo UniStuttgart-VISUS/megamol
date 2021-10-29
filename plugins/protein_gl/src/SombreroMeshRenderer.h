@@ -23,7 +23,7 @@
 #include "mmcore/view/CallRender3DGL.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 /**
  * Renderer for tri-mesh data

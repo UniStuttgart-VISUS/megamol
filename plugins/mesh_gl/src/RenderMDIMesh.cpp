@@ -16,7 +16,7 @@
 #include "mesh_gl/MeshCalls_gl.h"
 
 using namespace megamol;
-using namespace megamol::mesh;
+using namespace megamol::mesh_gl;
 
 RenderMDIMesh::RenderMDIMesh()
 	: Renderer3DModuleGL()

@@ -13,7 +13,7 @@
 #include "mmcore/param/IntParam.h"
 
 using namespace megamol;
-using namespace megamol::infovis;
+using namespace megamol::infovis_gl;
 
 using megamol::core::utility::log::Log;
 

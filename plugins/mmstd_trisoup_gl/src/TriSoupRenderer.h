@@ -21,7 +21,7 @@
 
 
 namespace megamol {
-namespace trisoup {
+namespace trisoup_gl {
 
 
     /**

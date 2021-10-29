@@ -23,7 +23,7 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 /*
  * Class that renders sectional planes of 3D textures.

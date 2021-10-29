@@ -19,7 +19,7 @@
 
 
 namespace megamol {
-namespace cinematic {
+namespace cinematic_gl {
 
     /*
      * Replacement rendering.
@@ -119,7 +119,7 @@ namespace cinematic {
         };
 
         bool draw_replacement;
-        CinematicUtils utils;
+        cinematic::CinematicUtils utils;
         vislib::math::Cuboid<float> bbox;
 
         /**********************************************************************

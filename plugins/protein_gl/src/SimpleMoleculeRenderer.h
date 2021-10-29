@@ -24,7 +24,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
     /*
      * Simple Molecular Renderer class
@@ -302,8 +302,8 @@ namespace protein {
         GLint attribLocConFilter;
 
         /** The current coloring mode */
-        Color::ColoringMode currentColoringMode0;
-        Color::ColoringMode currentColoringMode1;
+        protein::Color::ColoringMode currentColoringMode0;
+        protein::Color::ColoringMode currentColoringMode1;
 
         /** The color lookup table (for chains, amino acids,...) */
         vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;

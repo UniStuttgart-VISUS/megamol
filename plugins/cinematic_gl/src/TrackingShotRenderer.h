@@ -20,7 +20,7 @@
 
 
 namespace megamol {
-namespace cinematic {
+namespace cinematic_gl {
 		
 	/**
 	* Tracking shot rendering.
@@ -120,15 +120,15 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-        KeyframeManipulators    manipulators;
-        CinematicUtils          utils;
-        float                   mouseX;
-        float                   mouseY;
-        GLuint                  texture;
-        bool                    manipulatorGrabbed;
-        unsigned int            interpolSteps;
-        bool                    showHelpText;
-        float                   lineWidth;
+        cinematic::KeyframeManipulators    manipulators;
+        cinematic::CinematicUtils          utils;
+        float                              mouseX;
+        float                              mouseY;
+        GLuint                             texture;
+        bool                               manipulatorGrabbed;
+        unsigned int                       interpolSteps;
+        bool                               showHelpText;
+        float                              lineWidth;
 
         /**********************************************************************
         * callbacks

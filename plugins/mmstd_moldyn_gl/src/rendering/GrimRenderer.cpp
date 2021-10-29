@@ -15,7 +15,7 @@
 
 
 using namespace megamol::core;
-using namespace megamol::stdplugin::moldyn::rendering;
+using namespace megamol::stdplugin::moldyn_gl::rendering;
 
 
 // #define SPEAK_CELL_USAGE 1
@@ -66,7 +66,7 @@ GrimRenderer::GrimRenderer(void) : view::Renderer3DModuleGL(),
         deferredSphereShader(), deferredVanillaSphereShader(), deferredPointShader(), deferredShader(),
         inhash(0) {
 
-    this->getDataSlot.SetCompatibleCall<ParticleGridDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<moldyn::ParticleGridDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
@@ -274,7 +274,7 @@ bool GrimRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) {
     auto cr = &call;
     if (cr == NULL) return false;
 
-    ParticleGridDataCall *pgdc = this->getDataSlot.CallAs<ParticleGridDataCall>();
+    moldyn::ParticleGridDataCall *pgdc = this->getDataSlot.CallAs<moldyn::ParticleGridDataCall>();
     if (pgdc == NULL) return false;
     if (!(*pgdc)(1)) return false;
 
@@ -324,7 +324,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     auto cr = &call;
     if (cr == NULL) return false;
 
-    ParticleGridDataCall *pgdc = this->getDataSlot.CallAs<ParticleGridDataCall>();
+    moldyn::ParticleGridDataCall *pgdc = this->getDataSlot.CallAs<moldyn::ParticleGridDataCall>();
     if (pgdc == NULL) return false;
 
     static unsigned int tod = 0;
@@ -526,7 +526,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     for (unsigned int i = 0; i < cellcnt; i++) {
         unsigned int idx = dists[i].First();
-        const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[idx];
+        const moldyn::ParticleGridDataCall::GridCell& cell = pgdc->Cells()[idx];
         CellInfo& info = infos[idx];
         const vislib::math::Cuboid<float> &bbox = cell.GetBoundingBox();
 
@@ -582,7 +582,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     glPointSize(1.0f);
     for (int i = cellcnt - 1; i >= 0; i--) { // front to back
         unsigned int idx = dists[i].First();
-        const ParticleGridDataCall::GridCell *cell = &pgdc->Cells()[idx];
+        const moldyn::ParticleGridDataCall::GridCell *cell = &pgdc->Cells()[idx];
         CellInfo &info = infos[idx];
         if (!info.wasvisible) continue;
         // only draw cells which were visible last frame
@@ -592,8 +592,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         printf("-%d", i);
 #endif
         for (unsigned int j = 0; j < typecnt; j++) {
-            const ParticleGridDataCall::Particles &parts = cell->AccessParticleLists()[j];
-            const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
+            const moldyn::ParticleGridDataCall::Particles &parts = cell->AccessParticleLists()[j];
+            const moldyn::ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
             CellInfo::CacheItem &ci = info.cache[j];
             unsigned int vbpp = 1, cbpp = 1;
             switch (ptype.GetVertexDataType()) {
@@ -745,7 +745,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 #endif
     for (int i = cellcnt - 1; i >= 0; i--) { // front to back
         unsigned int idx = dists[i].First();
-        const ParticleGridDataCall::GridCell *cell = &pgdc->Cells()[idx];
+        const moldyn::ParticleGridDataCall::GridCell *cell = &pgdc->Cells()[idx];
         CellInfo &info = infos[idx];
         if (!info.wasvisible) continue;
         // only draw cells which were visible last frame
@@ -763,8 +763,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         printf("-%d", i);
 #endif
         for (unsigned int j = 0; j < typecnt; j++) {
-            const ParticleGridDataCall::Particles &parts = cell->AccessParticleLists()[j];
-            const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
+            const moldyn::ParticleGridDataCall::Particles &parts = cell->AccessParticleLists()[j];
+            const moldyn::ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
             CellInfo::CacheItem &ci = info.cache[j];
             unsigned int vbpp = 1, cbpp = 1;
             switch (ptype.GetVertexDataType()) {
@@ -923,7 +923,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
         // also disable texturing and any fancy shading features
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
-            const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
+            const moldyn::ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
             CellInfo& info = infos[i];
             const vislib::math::Cuboid<float>& bbox = cell.GetBoundingBox();
             if (!info.isvisible) continue; // frustum culling
@@ -1201,7 +1201,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         printf("[vertCnt");
 #endif
         for (int i = 0; i < static_cast<int>(cellcnt); i++) { // front to back
-            const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
+            const moldyn::ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
             CellInfo& info = infos[i];
             unsigned int pixelCount;
             if (!info.isvisible) continue; // frustum culling
@@ -1220,8 +1220,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
             printf("-%d", i);
 #endif
             for (unsigned int j = 0; j < typecnt; j++) {
-                const ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
-                const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
+                const moldyn::ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
+                const moldyn::ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
                 CellInfo::CacheItem &ci = info.cache[j];
                 float minC = 0.0f, maxC = 0.0f;
                 unsigned int colTabSize = 0;
@@ -1287,9 +1287,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         if (speak && speakVertCount) {
             unsigned int totalSpheres = 0;
             for (int i = 0; i < static_cast<int>(cellcnt); i++) {
-                const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
+                const moldyn::ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
                 for (unsigned int j = 0; j < typecnt; j++) {
-                    const ParticleGridDataCall::Particles& parts = cell.AccessParticleLists()[j];
+                    const moldyn::ParticleGridDataCall::Particles& parts = cell.AccessParticleLists()[j];
                     totalSpheres += parts.GetCount();
                 }
             }
@@ -1337,7 +1337,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         set_cam_uniforms(*daPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
             mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
-            const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
+            const moldyn::ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
             CellInfo& info = infos[i];
             unsigned int pixelCount;
             if (!info.isvisible) continue; // frustum culling
@@ -1357,8 +1357,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
             printf("-%d", i);
 #endif
             for (unsigned int j = 0; j < typecnt; j++) {
-                const ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
-                const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
+                const moldyn::ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
+                const moldyn::ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
                 CellInfo::CacheItem &ci = info.cache[j];
                 float minC = 0.0f, maxC = 0.0f;
                 unsigned int colTabSize = 0;
@@ -1525,7 +1525,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
             unsigned int idx = dists[i].First();
-            const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[idx];
+            const moldyn::ParticleGridDataCall::GridCell& cell = pgdc->Cells()[idx];
             CellInfo& info = infos[idx];
 
             unsigned int pixelCount;
@@ -1546,8 +1546,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
             printf("-%d", i);
 #endif
             for (unsigned int j = 0; j < typecnt; j++) {
-                const ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
-                const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
+                const moldyn::ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
+                const moldyn::ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
                 CellInfo::CacheItem &ci = info.cache[j];
                 float minC = 0.0f, maxC = 0.0f;
                 unsigned int colTabSize = 0;
@@ -1701,14 +1701,14 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     if ((this->cacheSizeUsed * 5 / 4) > this->cacheSize) {
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
             unsigned int idx = dists[i].First();
-            const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[idx];
+            const moldyn::ParticleGridDataCall::GridCell& cell = pgdc->Cells()[idx];
             CellInfo& info = infos[idx];
 
             if (info.wasvisible) continue; // this one is still required
 
             for (unsigned int j = 0; j < typecnt; j++) {
-                const ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
-                const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
+                const moldyn::ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
+                const moldyn::ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
                 CellInfo::CacheItem &ci = info.cache[j];
 
                 if ((ci.data[0] == 0) || (parts.GetCount() == 0)) continue; // not cached or no data

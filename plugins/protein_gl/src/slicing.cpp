@@ -31,7 +31,7 @@
 #include "slicing.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 const char ViewSlicing::cubeEdges[12] = 
 { VS_FACE_FRONT + VS_FACE_BOTTOM, VS_FACE_FRONT + VS_FACE_TOP, 

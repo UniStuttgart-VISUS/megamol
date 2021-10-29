@@ -21,7 +21,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 using namespace vislib::graphics::gl;
 using megamol::core::utility::log::Log;
 

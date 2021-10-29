@@ -35,7 +35,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;
 
@@ -46,25 +46,25 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         : view::Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
-        , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
-        , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
-        , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
-        , cmWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
+        , colorTableFileParam("protein::Color::colorTableFilename", "The filename of the color table.")
+        , coloringModeParam0("protein::Color::coloringMode0", "The first coloring mode.")
+        , coloringModeParam1("protein::Color::coloringMode1", "The second coloring mode.")
+        , cmWeightParam("protein::Color::colorWeighting", "The weighting of the two coloring modes.")
         , renderModeParam("renderMode", "The rendering mode.")
         , stickRadiusParam("stickRadius", "The radius for stick rendering")
         , probeRadiusParam("probeRadius", "The probe radius for SAS rendering")
-        , minGradColorParam("color::minGradColor", "The color for the minimum value for gradient coloring")
-        , midGradColorParam("color::midGradColor", "The color for the middle value for gradient coloring")
-        , maxGradColorParam("color::maxGradColor", "The color for the maximum value for gradient coloring")
+        , minGradColorParam("protein::Color::minGradColor", "The color for the minimum value for gradient coloring")
+        , midGradColorParam("protein::Color::midGradColor", "The color for the middle value for gradient coloring")
+        , maxGradColorParam("protein::Color::maxGradColor", "The color for the maximum value for gradient coloring")
         , molIdxListParam("molIdxList", "The list of molecule indices for RS computation:")
-        , specialColorParam("color::specialColor", "The color for the specified molecules")
+        , specialColorParam("protein::Color::specialColor", "The color for the specified molecules")
         , interpolParam("posInterpolation", "Enable positional interpolation between frames")
         , offscreenRenderingParam("offscreenRendering", "Toggle offscreenRendering")
         , toggleGeomShaderParam("geomShader", "Toggle the use of geometry shaders for glyph ray casting")
         , toggleZClippingParam("toggleZClip", "...")
         , clipPlaneTimeOffsetParam("clipPlane::timeOffset", "...")
         , clipPlaneDurationParam("clipPlane::Duration", "...")
-        , useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own")
+        , useNeighborColors("protein::Color::neighborhood", "Add the color of the neighborhood to the own")
         , currentZClipPos(-20) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -73,23 +73,23 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
 
     // fill color table with default values and set the filename param
     vislib::StringA filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    protein::Color::ReadColorTableFromFile(filename, this->colorLookupTable);
     this->colorTableFileParam.SetParameter(new param::StringParam(A2T(filename)));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring modes
-    this->currentColoringMode0 = Color::CHAIN;
-    this->currentColoringMode1 = Color::ELEMENT;
+    this->currentColoringMode0 = protein::Color::CHAIN;
+    this->currentColoringMode1 = protein::Color::ELEMENT;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode0));
     param::EnumParam* cm1 = new param::EnumParam(int(this->currentColoringMode1));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        cm0->SetTypePair(cMode, Color::GetName(cMode).c_str());
-        cm1->SetTypePair(cMode, Color::GetName(cMode).c_str());
+    protein::Color::ColoringMode cMode;
+    for (cCnt = 0; cCnt < protein::Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
+        cMode = protein::Color::GetModeByIndex(mol, bs, cCnt);
+        cm0->SetTypePair(cMode, protein::Color::GetName(cMode).c_str());
+        cm1->SetTypePair(cMode, protein::Color::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -157,7 +157,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->interpolParam);
 
     // make the rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    protein::Color::MakeRainbowColorTable(100, this->rainbowColors);
 
     // Toggle offscreen rendering
     this->offscreenRenderingParam.SetParameter(new param::BoolParam(false));
@@ -615,7 +615,7 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
     if (this->atomColorTable.Count() / 3 < mol->AtomCount()) {
 
         // Mix two coloring modes
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+        protein::Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
             cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
@@ -2418,7 +2418,7 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
 void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, const protein_calls::BindingSiteCall* bs) {
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
+        protein::Color::ReadColorTableFromFile(
             this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
     }
@@ -2429,13 +2429,13 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
         lastDataHash = mol->DataHash();
 
         this->currentColoringMode0 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+            static_cast<protein::Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
 
         this->currentColoringMode1 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+            static_cast<protein::Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
 
         // Mix two coloring modes
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+        protein::Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
             cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
             1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable, this->rainbowColors,
@@ -2445,7 +2445,7 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
             this->useNeighborColors.Param<param::BoolParam>()->Value());
 
         // Use one coloring mode
-        /*Color::MakeColorTable( mol,
+        /*protein::Color::MakeColorTable( mol,
          this->currentColoringMode0,
          this->atomColorTable, this->colorLookupTable, this->rainbowColors,
          this->minGradColorParam.Param<param::StringParam>()->Value(),

@@ -9,7 +9,7 @@
 #include "vislib/graphics/gl/GLSLTesselationShader.h"
 
 namespace megamol {
-namespace infovis {
+namespace infovis_gl {
 
 #define DEBUG_NAME(name) name, (#name "\0")
 

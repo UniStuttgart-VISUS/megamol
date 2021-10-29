@@ -17,7 +17,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_gl;
 
 
 /*
@@ -26,7 +26,7 @@ using namespace megamol::protein;
 SolPathRenderer::SolPathRenderer(void) : core::view::Renderer3DModuleGL(),
         getdataslot("getdata", "Fetches data"), pathlineShader() {
 
-    this->getdataslot.SetCompatibleCall<core::factories::CallAutoDescription<SolPathDataCall> >();
+    this->getdataslot.SetCompatibleCall<core::factories::CallAutoDescription<protein::SolPathDataCall> >();
     this->MakeSlotAvailable(&this->getdataslot);
 }
 
@@ -117,7 +117,7 @@ bool SolPathRenderer::GetExtents(core::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) return false;
 
-    SolPathDataCall *spdc = this->getdataslot.CallAs<SolPathDataCall>();
+    protein::SolPathDataCall *spdc = this->getdataslot.CallAs<protein::SolPathDataCall>();
     if (spdc == NULL) return false;
 
     (*spdc)(1); // get extents
@@ -144,7 +144,7 @@ bool SolPathRenderer::Render(core::view::CallRender3DGL& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) return false;
 
-    SolPathDataCall *spdc = this->getdataslot.CallAs<SolPathDataCall>();
+    protein::SolPathDataCall *spdc = this->getdataslot.CallAs<protein::SolPathDataCall>();
     if (spdc == NULL) return false;
 
     (*spdc)(0); // get data
@@ -166,10 +166,10 @@ bool SolPathRenderer::Render(core::view::CallRender3DGL& call) {
         spdc->MinSpeed(),
         1.0f / vislib::math::Max(1.0f, spdc->MaxSpeed() - spdc->MinSpeed()));
 
-    const SolPathDataCall::Pathline *path = spdc->Pathlines();
+    const protein::SolPathDataCall::Pathline *path = spdc->Pathlines();
     for (unsigned int p = 0; p < spdc->Count(); p++, path++) {
-        ::glVertexPointer(4, GL_FLOAT, sizeof(SolPathDataCall::Vertex), path->data);
-        ::glVertexAttribPointerARB(attrloc, 2, GL_FLOAT, GL_FALSE, sizeof(SolPathDataCall::Vertex), &path->data->time);
+        ::glVertexPointer(4, GL_FLOAT, sizeof(protein::SolPathDataCall::Vertex), path->data);
+        ::glVertexAttribPointerARB(attrloc, 2, GL_FLOAT, GL_FALSE, sizeof(protein::SolPathDataCall::Vertex), &path->data->time);
         ::glDrawArrays(GL_LINE_STRIP, 0, path->length);
     }
     this->pathlineShader.Disable();

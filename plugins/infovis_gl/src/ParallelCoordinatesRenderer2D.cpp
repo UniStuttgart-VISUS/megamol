@@ -31,7 +31,7 @@
 //#define REMOVE_TEXT
 
 using namespace megamol;
-using namespace megamol::infovis;
+using namespace megamol::infovis_gl;
 using namespace megamol::stdplugin::datatools;
 
 ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)

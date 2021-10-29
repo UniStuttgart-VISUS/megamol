@@ -29,8 +29,8 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::stdplugin;
-using namespace megamol::stdplugin::moldyn;
-using namespace megamol::stdplugin::moldyn::rendering;
+using namespace megamol::stdplugin::moldyn_gl;
+using namespace megamol::stdplugin::moldyn_gl::rendering;
 
 //const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
 
@@ -170,7 +170,7 @@ void GlyphRenderer::release(void) {
     glDeleteTextures(1, &this->greyTF);
 }
 
-bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
+bool megamol::stdplugin::moldyn_gl::rendering::GlyphRenderer::validateData(
     geocalls::EllipsoidalParticleDataCall* edc) {
 
     if (this->lastHash != edc->DataHash() || this->lastFrameID != edc->FrameID()) {

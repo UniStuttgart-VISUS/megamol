@@ -15,7 +15,7 @@
 #include "Renderer2D.h"
 
 namespace megamol {
-namespace infovis {
+namespace infovis_gl {
     class InfovisAmortizedRenderer : public Renderer2D {
     public:
         static inline const char* ClassName() {

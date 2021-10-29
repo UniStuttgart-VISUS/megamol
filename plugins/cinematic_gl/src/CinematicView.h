@@ -25,7 +25,7 @@
 
 
 namespace megamol {
-namespace cinematic {
+namespace cinematic_gl {
 
     /**
     * Cinemtic View.
@@ -111,9 +111,9 @@ namespace cinematic {
         };
 
         PngData                   png_data;
-        CinematicUtils            utils;
+        cinematic::CinematicUtils utils;
         clock_t                   deltaAnimTime;
-        Keyframe                  shownKeyframe;
+        cinematic::Keyframe       shownKeyframe;
         bool                      playAnim;
         int                       cineWidth;
         int                       cineHeight;

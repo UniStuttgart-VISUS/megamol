@@ -9,7 +9,7 @@
 
 #include "rendering/BoxRenderer.h"
 
-namespace megamol::thermodyn {
+namespace megamol::thermodyn_gl {
 class ThermodynGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(ThermodynGLPluginInstance)
 
@@ -23,7 +23,7 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::BoxRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn_gl::rendering::BoxRenderer>();
 
         // register calls
 

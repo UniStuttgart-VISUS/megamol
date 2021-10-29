@@ -31,7 +31,7 @@
 //#include "mmath.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_gl {
 
 #define VS_EPS      1.0e-8
 

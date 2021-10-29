@@ -9,30 +9,30 @@
 #include "mesh_gl/MeshCalls_gl.h"
 
 
-megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderTaskDataSource()
+megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderTaskDataSource()
         : m_version(0)
-        , m_interaction_collection(new ThreeDimensionalInteractionCollection)
+        , m_interaction_collection(new mesh::ThreeDimensionalInteractionCollection)
         , m_material_collection(nullptr)
         , m_3DInteraction_calleeSlot(
               "getInteraction", "The slot publishing available interactions and receiving pending manipulations")
         , m_3DInteraction_callerSlot("", "")
         , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file") {
     this->m_3DInteraction_calleeSlot.SetCallback(
-        Call3DInteraction::ClassName(), "GetData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
+        mesh::Call3DInteraction::ClassName(), "GetData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
     this->m_3DInteraction_calleeSlot.SetCallback(
-        Call3DInteraction::ClassName(), "GetMetaData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
+        mesh::Call3DInteraction::ClassName(), "GetMetaData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
     this->MakeSlotAvailable(&this->m_3DInteraction_calleeSlot);
 
-    this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
+    this->m_glTF_callerSlot.SetCompatibleCall<mesh::CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
 
-    this->m_3DInteraction_callerSlot.SetCompatibleCall<Call3DInteractionDescription>();
+    this->m_3DInteraction_callerSlot.SetCompatibleCall<mesh::Call3DInteractionDescription>();
     this->MakeSlotAvailable(&this->m_3DInteraction_callerSlot);
 }
 
-megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::~ThreeDimensionalUIRenderTaskDataSource() {}
+megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::~ThreeDimensionalUIRenderTaskDataSource() {}
 
-bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::create(void) {
+bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::create(void) {
     AbstractGPURenderTaskDataSource::create();
 
     m_material_collection = std::make_shared<GPUMaterialCollection>();
@@ -41,7 +41,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::create(void) {
     return true;
 }
 
-bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core::Call& caller) {
+bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core::Call& caller) {
     CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == nullptr) {
         return false;
@@ -67,7 +67,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
     if (!(*mc)(0))
         return false;
 
-    CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<CallGlTFData>();
+    mesh::CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<mesh::CallGlTFData>();
     if (gltf_call == NULL)
         return false;
     if (!(*gltf_call)(0))
@@ -159,7 +159,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().first = m_rendertask_collection.second.back();
 
             m_interaction_collection->addInteractionObject(1,
-                {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 1, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
+                {mesh::ThreeDimensionalInteraction{mesh::InteractionType::MOVE_ALONG_AXIS, 1, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
         {
             m_scene.push_back({0, {PerObjectShaderParams()}});
@@ -177,7 +177,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().first = m_rendertask_collection.second.back();
 
             m_interaction_collection->addInteractionObject(2,
-                {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 2, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}});
+                {mesh::ThreeDimensionalInteraction{mesh::InteractionType::MOVE_ALONG_AXIS, 2, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}});
         }
         {
             m_scene.push_back({0, {PerObjectShaderParams()}});
@@ -195,7 +195,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().first = m_rendertask_collection.second.back();
 
             m_interaction_collection->addInteractionObject(3,
-                {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 3, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
+                {mesh::ThreeDimensionalInteraction{mesh::InteractionType::MOVE_ALONG_AXIS, 3, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
         {
             m_scene.push_back({0, {PerObjectShaderParams()}});
@@ -213,7 +213,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().first = m_rendertask_collection.second.back();
 
             m_interaction_collection->addInteractionObject(4,
-                {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 4, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
+                {mesh::ThreeDimensionalInteraction{mesh::InteractionType::MOVE_ALONG_AXIS, 4, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
 
 
@@ -242,9 +242,9 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
     return true;
 }
 
-bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback(core::Call& caller) {
+bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback(core::Call& caller) {
 
-    Call3DInteraction* ci = dynamic_cast<Call3DInteraction*>(&caller);
+    mesh::Call3DInteraction* ci = dynamic_cast<mesh::Call3DInteraction*>(&caller);
     if (ci == NULL)
         return false;
 
@@ -259,7 +259,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
 
     // TODO consume pending manipulations
     while (!ci->getData()->accessPendingManipulations().empty()) {
-        ThreeDimensionalManipulation manipulation = ci->getData()->accessPendingManipulations().front();
+        mesh::ThreeDimensionalManipulation manipulation = ci->getData()->accessPendingManipulations().front();
 
         std::list<std::pair<std::string, std::array<PerObjectShaderParams, 1>>>::iterator it = m_scene.begin();
         std::advance(it, manipulation.obj_id - 1);
@@ -269,7 +269,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
         vislib::math::Vector<float, 4> translate_col;
 
         switch (manipulation.type) {
-        case MOVE_ALONG_AXIS:
+        case mesh::MOVE_ALONG_AXIS:
             translate_col = per_obj_data[0].object_transform.GetColumn(3);
             translate_col += vislib::math::Vector<float, 4>(manipulation.axis_x * manipulation.value,
                 manipulation.axis_y * manipulation.value, manipulation.axis_Z * manipulation.value, 0.0f);
@@ -277,15 +277,15 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
             per_obj_data[0].object_transform.SetAt(1, 3, translate_col.Y());
             per_obj_data[0].object_transform.SetAt(2, 3, translate_col.Z());
             break;
-        case MOVE_IN_PLANE:
+        case mesh::MOVE_IN_PLANE:
             break;
-        case ROTATE_AROUND_AXIS:
+        case mesh::ROTATE_AROUND_AXIS:
             break;
-        case SELECT:
+        case mesh::SELECT:
             break;
-        case DESELET:
+        case mesh::DESELET:
             break;
-        case HIGHLIGHT:
+        case mesh::HIGHLIGHT:
             std::cout << "Hightlight: " << manipulation.obj_id << std::endl;
             per_obj_data[0].highlighted = 1;
             // per_obj_data[0].color = {1.0f, 1.0f, 0.0f, 1.0f};a
