@@ -15,7 +15,7 @@
 
 
 using namespace megamol::core;
-using namespace megamol::stdplugin::moldyn_gl::rendering;
+using namespace megamol::moldyn_gl::rendering;
 
 
 // #define SPEAK_CELL_USAGE 1

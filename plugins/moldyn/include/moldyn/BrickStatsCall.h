@@ -14,7 +14,6 @@
 #include "vislib/math/Cuboid.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn {
 
     /**
@@ -127,5 +126,4 @@ namespace moldyn {
     typedef megamol::core::factories::CallAutoDescription<BrickStatsCall> BrickStatsCallDescription;
 
 } /* end namespace moldyn */
-} /* end namespace stdplugin*/
 } /* end namespace megamol */

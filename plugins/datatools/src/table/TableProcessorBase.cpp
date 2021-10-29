@@ -14,9 +14,9 @@
 #include "mmcore/utility/log/Log.h"
 
 /*
- * megamol::stdplugin::datatools::table::TableProcessorBase::TableProcessorBase
+ * megamol::datatools::table::TableProcessorBase::TableProcessorBase
  */
-megamol::stdplugin::datatools::table::TableProcessorBase::TableProcessorBase(void)
+megamol::datatools::table::TableProcessorBase::TableProcessorBase(void)
         : frameID((std::numeric_limits<unsigned int>::max)()),
         inputHash(0),
         localHash(0),
@@ -37,9 +37,9 @@ megamol::stdplugin::datatools::table::TableProcessorBase::TableProcessorBase(voi
 
 
 /*
- * megamol::stdplugin::datatools::table::TableProcessorBase::getData
+ * megamol::datatools::table::TableProcessorBase::getData
  */
-bool megamol::stdplugin::datatools::table::TableProcessorBase::getData(
+bool megamol::datatools::table::TableProcessorBase::getData(
         core::Call& call) {
     using namespace core::param;
     using megamol::core::utility::log::Log;
@@ -77,9 +77,9 @@ bool megamol::stdplugin::datatools::table::TableProcessorBase::getData(
 
 
 /*
- * megamol::stdplugin::datatools::table::TableProcessorBase::getHash
+ * megamol::datatools::table::TableProcessorBase::getHash
  */
-bool megamol::stdplugin::datatools::table::TableProcessorBase::getHash(
+bool megamol::datatools::table::TableProcessorBase::getHash(
         core::Call& call) {
     using megamol::core::utility::log::Log;
     auto src = this->slotInput.CallAs<TableDataCall>();

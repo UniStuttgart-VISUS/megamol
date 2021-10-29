@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "io/MMSPDFrameData.h"
 
-using namespace megamol::stdplugin::moldyn::io;
+using namespace megamol::moldyn::io;
 
 
 /****************************************************************************/

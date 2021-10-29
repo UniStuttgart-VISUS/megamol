@@ -12,7 +12,7 @@
 #include "mmcore/param/EnumParam.h"
 
 
-megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpacityModule(void) : Module(),
+megamol::datatools::ParticleDensityOpacityModule::ParticleDensityOpacityModule(void) : Module(),
         putDataSlot("putdata", "Connects from the data consumer"),
         getDataSlot("getdata", "Connects to the data source"),
         rebuildButtonSlot("rebuild", "Forces rebuild of colour data"),
@@ -90,23 +90,23 @@ megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpac
 }
 
 
-megamol::stdplugin::datatools::ParticleDensityOpacityModule::~ParticleDensityOpacityModule(void) {
+megamol::datatools::ParticleDensityOpacityModule::~ParticleDensityOpacityModule(void) {
     this->Release();
 }
 
 
-bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::create(void) {
+bool megamol::datatools::ParticleDensityOpacityModule::create(void) {
     // intentionally empty
     return true;
 }
 
 
-void megamol::stdplugin::datatools::ParticleDensityOpacityModule::release(void) {
+void megamol::datatools::ParticleDensityOpacityModule::release(void) {
     // intentionally empty
 }
 
 
-bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getDataCallback(core::Call& caller) {
+bool megamol::datatools::ParticleDensityOpacityModule::getDataCallback(core::Call& caller) {
     using ::megamol::geocalls::MultiParticleDataCall;
     MultiParticleDataCall *inCall = dynamic_cast<MultiParticleDataCall*>(&caller);
     if (inCall == nullptr) return false;
@@ -207,7 +207,7 @@ bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getDataCallbac
 }
 
 
-bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getExtentCallback(core::Call& caller) {
+bool megamol::datatools::ParticleDensityOpacityModule::getExtentCallback(core::Call& caller) {
     geocalls::MultiParticleDataCall *inCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (inCall == nullptr) return false;
 
@@ -226,7 +226,7 @@ bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getExtentCallb
 }
 
 
-void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(geocalls::MultiParticleDataCall *dat) {
+void megamol::datatools::ParticleDensityOpacityModule::makeData(geocalls::MultiParticleDataCall *dat) {
     bool autoScale = this->densityComputeCountRangeSlot.IsDirty()
         || this->densityAutoComputeCountRangeSlot.Param<core::param::BoolParam>()->Value();
 
@@ -401,9 +401,9 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(geoca
 
 
 /* 
- * megamol::stdplugin::datatools::ParticleDensityOpacityModule::count_all_particles
+ * megamol::datatools::ParticleDensityOpacityModule::count_all_particles
  */
-size_t megamol::stdplugin::datatools::ParticleDensityOpacityModule::count_all_particles(geocalls::MultiParticleDataCall *dat) {
+size_t megamol::datatools::ParticleDensityOpacityModule::count_all_particles(geocalls::MultiParticleDataCall *dat) {
     size_t all_cnt = 0;
     unsigned int plc = dat->GetParticleListCount();
     for (unsigned int pli = 0; pli < plc; pli++) {
@@ -417,9 +417,9 @@ size_t megamol::stdplugin::datatools::ParticleDensityOpacityModule::count_all_pa
 
 
 /*
- * megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_grid
+ * megamol::datatools::ParticleDensityOpacityModule::compute_density_grid
  */
-void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_grid(geocalls::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off) {
+void megamol::datatools::ParticleDensityOpacityModule::compute_density_grid(geocalls::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off) {
     // use simple grid based implementation
     unsigned int plc = dat->GetParticleListCount();
     size_t all_cnt = this->count_all_particles(dat);
@@ -614,9 +614,9 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
 
 
 /*
- * megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_grid_grouped
+ * megamol::datatools::ParticleDensityOpacityModule::compute_density_grid_grouped
  */
-void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_grid_grouped(geocalls::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off) {
+void megamol::datatools::ParticleDensityOpacityModule::compute_density_grid_grouped(geocalls::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off) {
     // density algorithm separated per particle list
     unsigned int plc = dat->GetParticleListCount();
     size_t all_cnt = this->count_all_particles(dat);

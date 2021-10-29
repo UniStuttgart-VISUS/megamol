@@ -12,10 +12,10 @@
 #include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
-IColAdd::IColAdd() : stdplugin::datatools::AbstractParticleManipulator("outData", "inDataA"),
+IColAdd::IColAdd() : datatools::AbstractParticleManipulator("outData", "inDataA"),
         inDataBSlot("inDataB", "Fetches the second ICol value stream"),
         //aOffsetSlot("aOffset", "Offset to values of stream A"),
         aScaleSlot("aScale", "Scale for values of stream A"),
@@ -77,8 +77,8 @@ bool IColAdd::manipulateData(
 //        float bOff = bOffsetSlot.Param<core::param::FloatParam>()->Value();
         float bScl = bScaleSlot.Param<core::param::FloatParam>()->Value();
 
-        stdplugin::datatools::MultiParticleDataAdaptor a(inDataA);
-        stdplugin::datatools::MultiParticleDataAdaptor b(inDataB);
+        datatools::MultiParticleDataAdaptor a(inDataA);
+        datatools::MultiParticleDataAdaptor b(inDataB);
 
         if (a.get_count() != b.get_count()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("Data streams of A and B are not of same size");

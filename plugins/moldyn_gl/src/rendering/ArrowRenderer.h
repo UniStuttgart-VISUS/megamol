@@ -26,7 +26,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn_gl {
 namespace rendering {
 
@@ -139,7 +138,6 @@ namespace rendering {
 
 } /* end namespace rendering */
 } /* end namespace moldyn */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_ARROWRENDERER_H_INCLUDED */

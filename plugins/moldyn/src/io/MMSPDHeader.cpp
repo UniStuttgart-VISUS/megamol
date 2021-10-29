@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "io/MMSPDHeader.h"
 
-using namespace megamol::stdplugin::moldyn::io;
+using namespace megamol::moldyn::io;
 
 
 /****************************************************************************/

@@ -18,7 +18,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn {
 
     using namespace megamol::core;
@@ -130,5 +129,4 @@ namespace moldyn {
     };
 
 } /* end namespace moldyn */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

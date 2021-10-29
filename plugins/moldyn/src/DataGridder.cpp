@@ -18,7 +18,7 @@
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
 
-using namespace megamol::stdplugin::moldyn;
+using namespace megamol::moldyn;
 
 
 /*

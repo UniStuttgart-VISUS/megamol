@@ -6,7 +6,7 @@
 
 #include "glm/glm.hpp"
 
-namespace megamol::stdplugin::datatools {
+namespace megamol::datatools {
 class AddParticleColors : public AbstractParticleManipulator {
 public:
     /** Return module class name */
@@ -52,4 +52,4 @@ private:
 
     std::vector<std::vector<color>> _colors;
 };
-} // namespace megamol::stdplugin::datatools
+} // namespace megamol::datatools

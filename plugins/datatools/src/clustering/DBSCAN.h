@@ -7,7 +7,7 @@
 
 #include <nanoflann.hpp>
 
-namespace megamol::stdplugin::datatools::clustering {
+namespace megamol::datatools::clustering {
 
 using index_t = std::size_t;
 
@@ -82,4 +82,4 @@ inline cluster_result_t DBSCAN(std::shared_ptr<kd_tree_t<T, DIM>> const& D, T ep
     return clusters;
 }
 
-} // namespace megamol::stdplugin::datatools::clustering
+} // namespace megamol::datatools::clustering

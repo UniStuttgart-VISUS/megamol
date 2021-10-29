@@ -12,7 +12,6 @@
 #include "vislib/math/ShallowPoint.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*

@@ -30,7 +30,7 @@
 #include "vislib/sys/FastFile.h"
 
 using namespace megamol::core;
-using namespace megamol::stdplugin::moldyn;
+using namespace megamol::moldyn;
 
 
 /* defines for the frame cache size */

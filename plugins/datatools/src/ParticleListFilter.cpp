@@ -15,7 +15,7 @@
 #include "vislib/StringTokeniser.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 
-namespace megamol::stdplugin::datatools {
+namespace megamol::datatools {
 
 /*
  * ParticleListFilter::ParticleListFilter

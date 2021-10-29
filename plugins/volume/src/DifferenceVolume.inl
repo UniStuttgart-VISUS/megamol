@@ -7,10 +7,10 @@
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::calcDifference
+ * megamol::volume::DifferenceVolume::calcDifference
  */
 template<class D, class S>
-void megamol::stdplugin::volume::DifferenceVolume::calcDifference(D *dst,
+void megamol::volume::DifferenceVolume::calcDifference(D *dst,
         const S *cur, const S *prev, const std::size_t cnt) {
 //#pragma omp parallel for
 //    for (std::size_t i = 0; i < cnt; ++i) {

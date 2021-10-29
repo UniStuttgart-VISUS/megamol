@@ -20,7 +20,7 @@
 #include "vislib/StringTokeniser.h"
 
 using namespace megamol::core;
-using namespace megamol::stdplugin::moldyn;
+using namespace megamol::moldyn;
 
 /*
  * moldyn::BrickStatsDataSource::BrickStatsDataSource

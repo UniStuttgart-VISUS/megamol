@@ -15,7 +15,7 @@
 #include <set>
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 ParticleNeighborhoodGraph::ParticleNeighborhoodGraph() : Module(),
         outGraphDataSlot("outGraphData", "Publishes graph edge data"),
@@ -83,7 +83,7 @@ void ParticleNeighborhoodGraph::release(void) {
 }
 
 bool ParticleNeighborhoodGraph::getExtent(core::Call& c) {
-    using stdplugin::datatools::GraphDataCall;
+    using datatools::GraphDataCall;
     GraphDataCall *gdc = dynamic_cast<GraphDataCall*>(&c);
     if (gdc == nullptr) return false;
 
@@ -102,7 +102,7 @@ bool ParticleNeighborhoodGraph::getExtent(core::Call& c) {
 }
 
 bool ParticleNeighborhoodGraph::getData(core::Call& c) {
-    using stdplugin::datatools::GraphDataCall;
+    using datatools::GraphDataCall;
     GraphDataCall *gdc = dynamic_cast<GraphDataCall*>(&c);
     if (gdc == nullptr) return false;
 
@@ -174,7 +174,7 @@ namespace {
 }
 
 void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) {
-    stdplugin::datatools::MultiParticleDataAdaptor d(*data);
+    datatools::MultiParticleDataAdaptor d(*data);
     if (d.get_count() < 1) return;
 
     using std::chrono::high_resolution_clock;

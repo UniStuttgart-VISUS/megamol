@@ -12,10 +12,9 @@
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
-    class IColSelectClassify : public stdplugin::datatools::AbstractParticleManipulator {
+    class IColSelectClassify : public datatools::AbstractParticleManipulator {
     public:
         static const char *ClassName(void) { return "IColSelectClassify"; }
         static const char *Description(void) { return "Computes new ICol values: 1 for particles with original ICols close to the selected value; 0 else"; }
@@ -41,6 +40,5 @@ namespace datatools {
 
     };
 
-}
 }
 }

@@ -5,7 +5,7 @@
 #include "mmcore/param/IntParam.h"
 
 
-megamol::stdplugin::datatools::clustering::ParticleIColClustering::ParticleIColClustering()
+megamol::datatools::clustering::ParticleIColClustering::ParticleIColClustering()
         : AbstractParticleManipulator("outData", "inData")
         , _eps_slot("eps", "")
         , _minpts_slot("minpts", "")
@@ -21,12 +21,12 @@ megamol::stdplugin::datatools::clustering::ParticleIColClustering::ParticleIColC
 }
 
 
-megamol::stdplugin::datatools::clustering::ParticleIColClustering::~ParticleIColClustering() {
+megamol::datatools::clustering::ParticleIColClustering::~ParticleIColClustering() {
     this->Release();
 }
 
 
-bool megamol::stdplugin::datatools::clustering::ParticleIColClustering::manipulateData(
+bool megamol::datatools::clustering::ParticleIColClustering::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     if (_frame_id != inData.FrameID() || _in_data_hash != inData.DataHash() || isDirty()) {
         outData = inData;

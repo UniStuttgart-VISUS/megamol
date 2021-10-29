@@ -31,7 +31,7 @@ TableToADIOS::TableToADIOS(void)
         CallADIOSData::ClassName(), CallADIOSData::FunctionName(1), &TableToADIOS::getHeaderCallback);
     this->MakeSlotAvailable(&this->adiosSlot);
 
-    this->ftSlot.SetCompatibleCall<stdplugin::datatools::table::TableDataCallDescription>();
+    this->ftSlot.SetCompatibleCall<datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->ftSlot);
 }
 
@@ -45,7 +45,7 @@ bool TableToADIOS::getDataCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
     if (cad == nullptr) return false;
 
-    stdplugin::datatools::table::TableDataCall* cftd = this->ftSlot.CallAs<stdplugin::datatools::table::TableDataCall>();
+    datatools::table::TableDataCall* cftd = this->ftSlot.CallAs<datatools::table::TableDataCall>();
     if (cftd == nullptr) return false;
 
     if (!(*cftd)(1)) return false;
@@ -87,7 +87,7 @@ bool TableToADIOS::getHeaderCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
     if (cad == nullptr) return false;
 
-    stdplugin::datatools::table::TableDataCall* cftd = this->ftSlot.CallAs<stdplugin::datatools::table::TableDataCall>();
+    datatools::table::TableDataCall* cftd = this->ftSlot.CallAs<datatools::table::TableDataCall>();
     if (cftd == nullptr) return false;
 
     if (!(*cftd)(1)) return false;

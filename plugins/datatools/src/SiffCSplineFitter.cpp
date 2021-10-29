@@ -18,7 +18,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 
-namespace megamol::stdplugin::datatools {
+namespace megamol::datatools {
 
 /*
  * SiffCSplineFitter::SiffCSplineFitter

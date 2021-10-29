@@ -26,7 +26,6 @@
 #include "mmcore/utility/sys/Thread.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace volume {
 /**
  * Reads volumetric data from a dat/raw data source.
@@ -418,5 +417,4 @@ private:
 };
 
 } /* end namespace volume */
-} // namespace stdplugin
 } // namespace megamol

@@ -11,10 +11,10 @@
 #include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
-IColSelectClassify::IColSelectClassify() : stdplugin::datatools::AbstractParticleManipulator("outData", "inData"),
+IColSelectClassify::IColSelectClassify() : datatools::AbstractParticleManipulator("outData", "inData"),
         valueSlot("value", "The selected value of the input ICol data"),
         epsilonSlot("epsilon", "The (input) ICol value comparison epsilon"),
         inHash(0), outHash(0), frameID(0), colors() {
@@ -51,7 +51,7 @@ bool IColSelectClassify::manipulateData(
         float v2 = v1 + e;
         v1 -= e;
 
-        stdplugin::datatools::MultiParticleDataAdaptor d(inData);
+        datatools::MultiParticleDataAdaptor d(inData);
 
         colors.resize(d.get_count());
         for (size_t i = 0; i < d.get_count(); ++i) {

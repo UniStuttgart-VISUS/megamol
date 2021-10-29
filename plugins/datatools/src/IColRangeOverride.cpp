@@ -14,10 +14,10 @@
 #include "mmcore/param/BoolParam.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
-IColRangeOverride::IColRangeOverride() : stdplugin::datatools::AbstractParticleManipulator("outData", "inDataA"),
+IColRangeOverride::IColRangeOverride() : datatools::AbstractParticleManipulator("outData", "inDataA"),
         overrideSlot("override", "Enables the value override"),
         inValsSlot("inVals", "Reports the incoming value range. Inputs will be ignored and overwritten."),
         minValSlot("minVal", "The minimum value for the ICol range output"),
@@ -52,7 +52,7 @@ bool IColRangeOverride::manipulateData(
         hash = inData.DataHash();
         frameID = inData.FrameID();
 
-        stdplugin::datatools::MultiParticleDataAdaptor d(inData);
+        datatools::MultiParticleDataAdaptor d(inData);
 
         if (d.get_count() > 0) {
             minCol = maxCol = *d.get_color(0);

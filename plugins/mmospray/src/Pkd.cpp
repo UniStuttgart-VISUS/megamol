@@ -16,7 +16,7 @@ using namespace megamol;
 
 
 ospray::PkdBuilder::PkdBuilder()
-    : megamol::stdplugin::datatools::AbstractParticleManipulator("outData", "inData")
+    : megamol::datatools::AbstractParticleManipulator("outData", "inData")
     , inDataHash(std::numeric_limits<size_t>::max())
     , outDataHash(0)
     /*, numParticles(0)

@@ -19,7 +19,6 @@
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace volume {
 
 /*
@@ -113,7 +112,6 @@ private:
 };
 
 } // namespace volume
-} // namespace stdplugin
 } // namespace megamol
 
 #endif /* MEGAMOLCORE_DATRAWWRITER_H_INCLUDED */

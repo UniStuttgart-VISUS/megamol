@@ -10,7 +10,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 
-using namespace megamol::stdplugin::datatools::table;
+using namespace megamol::datatools::table;
 using namespace megamol;
 
 namespace {

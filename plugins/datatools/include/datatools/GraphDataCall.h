@@ -12,7 +12,6 @@
 #include <cstdint>
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     /**
@@ -122,14 +121,13 @@ namespace datatools {
 
 }
 }
-}
 
 namespace std {
     /** Utility functions allowing ranged-based for iterating over edges */
-    inline const megamol::stdplugin::datatools::GraphDataCall::edge* begin(megamol::stdplugin::datatools::GraphDataCall& gdc) {
+    inline const megamol::datatools::GraphDataCall::edge* begin(megamol::datatools::GraphDataCall& gdc) {
         return gdc.GetEdgeData();
     }
-    inline const megamol::stdplugin::datatools::GraphDataCall::edge* end(megamol::stdplugin::datatools::GraphDataCall& gdc) {
+    inline const megamol::datatools::GraphDataCall::edge* end(megamol::datatools::GraphDataCall& gdc) {
         return gdc.GetEdgeData() + gdc.GetEdgeCount();
     }
 }

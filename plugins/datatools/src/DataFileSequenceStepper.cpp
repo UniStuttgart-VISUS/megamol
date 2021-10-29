@@ -16,9 +16,9 @@
 
 
 /*
- * megamol::stdplugin::datatools::DataFileSequenceStepper::DataFileSequenceStepper
+ * megamol::datatools::DataFileSequenceStepper::DataFileSequenceStepper
  */
-megamol::stdplugin::datatools::DataFileSequenceStepper::DataFileSequenceStepper(void) : core::Module(),
+megamol::datatools::DataFileSequenceStepper::DataFileSequenceStepper(void) : core::Module(),
         conSlot("connection", "Connects to a view to make this module part of the same module network."),
         filenameSlotNameSlot("filenameSlot", "String parameter identifying the filename slot to manipulate"),
         nextFileSlot("nextFile", "Button parameter to switch to the next file"),
@@ -42,27 +42,27 @@ megamol::stdplugin::datatools::DataFileSequenceStepper::DataFileSequenceStepper(
 
 
 /*
- * megamol::stdplugin::datatools::DataFileSequenceStepper::~DataFileSequenceStepper
+ * megamol::datatools::DataFileSequenceStepper::~DataFileSequenceStepper
  */
-megamol::stdplugin::datatools::DataFileSequenceStepper::~DataFileSequenceStepper(void) {
+megamol::datatools::DataFileSequenceStepper::~DataFileSequenceStepper(void) {
     this->Release();
     // Intentionally empty
 }
 
 
 /*
- * megamol::stdplugin::datatools::DataFileSequenceStepper::create
+ * megamol::datatools::DataFileSequenceStepper::create
  */
-bool megamol::stdplugin::datatools::DataFileSequenceStepper::create(void) {
+bool megamol::datatools::DataFileSequenceStepper::create(void) {
     // Intentionally empty
     return true;
 }
 
 
 /*
- * megamol::stdplugin::datatools::DataFileSequenceStepper::findFilenameSlot
+ * megamol::datatools::DataFileSequenceStepper::findFilenameSlot
  */
-megamol::core::param::ParamSlot * megamol::stdplugin::datatools::DataFileSequenceStepper::findFilenameSlot(void) {
+megamol::core::param::ParamSlot * megamol::datatools::DataFileSequenceStepper::findFilenameSlot(void) {
     vislib::StringA name(this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
     if (name.IsEmpty()) return NULL;
 
@@ -82,9 +82,9 @@ megamol::core::param::ParamSlot * megamol::stdplugin::datatools::DataFileSequenc
 
 
 /*
- * megamol::stdplugin::datatools::DataFileSequenceStepper::GetFilename
+ * megamol::datatools::DataFileSequenceStepper::GetFilename
  */
-bool megamol::stdplugin::datatools::DataFileSequenceStepper::GetFilename(megamol::core::param::ParamSlot& slot, vislib::TString& outName) const {
+bool megamol::datatools::DataFileSequenceStepper::GetFilename(megamol::core::param::ParamSlot& slot, vislib::TString& outName) const {
     using megamol::core::utility::log::Log;
     core::param::StringParam *sp = slot.Param<core::param::StringParam>();
     core::param::FilePathParam *fpp = slot.Param<core::param::FilePathParam>();
@@ -106,9 +106,9 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::GetFilename(megamol
 
 
 /*
- * megamol::stdplugin::datatools::DataFileSequenceStepper::GetFormat
+ * megamol::datatools::DataFileSequenceStepper::GetFormat
  */
-bool megamol::stdplugin::datatools::DataFileSequenceStepper::GetFormat(vislib::TString& inoutName, int& outValue) const {
+bool megamol::datatools::DataFileSequenceStepper::GetFormat(vislib::TString& inoutName, int& outValue) const {
     int len = static_cast<int>(inoutName.Length());
     int p1 = -1;
 
@@ -134,9 +134,9 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::GetFormat(vislib::T
 
 
 /*
- * megamol::stdplugin::datatools::DataFileSequenceStepper::onNextFile
+ * megamol::datatools::DataFileSequenceStepper::onNextFile
  */
-bool megamol::stdplugin::datatools::DataFileSequenceStepper::onNextFile(core::param::ParamSlot& param) {
+bool megamol::datatools::DataFileSequenceStepper::onNextFile(core::param::ParamSlot& param) {
     using megamol::core::utility::log::Log;
     core::param::ParamSlot *fnps = this->findFilenameSlot();
     if (fnps == NULL) {
@@ -192,9 +192,9 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::onNextFile(core::pa
 
 
 /*
- * megamol::stdplugin::datatools::DataFileSequenceStepper::onPrevFile
+ * megamol::datatools::DataFileSequenceStepper::onPrevFile
  */
-bool megamol::stdplugin::datatools::DataFileSequenceStepper::onPrevFile(core::param::ParamSlot& param) {
+bool megamol::datatools::DataFileSequenceStepper::onPrevFile(core::param::ParamSlot& param) {
     using megamol::core::utility::log::Log;
     const int MAX_FILE_NUM = 10000000;
     core::param::ParamSlot *fnps = this->findFilenameSlot();
@@ -252,17 +252,17 @@ bool megamol::stdplugin::datatools::DataFileSequenceStepper::onPrevFile(core::pa
 
 
 /*
- * megamol::stdplugin::datatools::DataFileSequenceStepper::release
+ * megamol::datatools::DataFileSequenceStepper::release
  */
-void megamol::stdplugin::datatools::DataFileSequenceStepper::release(void) {
+void megamol::datatools::DataFileSequenceStepper::release(void) {
     // Intentionally empty
 }
 
 
 /*
- * megamol::stdplugin::datatools::DataFileSequenceStepper::SetFilename
+ * megamol::datatools::DataFileSequenceStepper::SetFilename
  */
-bool megamol::stdplugin::datatools::DataFileSequenceStepper::SetFilename(core::param::ParamSlot& slot, const vislib::TString& name) const {
+bool megamol::datatools::DataFileSequenceStepper::SetFilename(core::param::ParamSlot& slot, const vislib::TString& name) const {
     using megamol::core::utility::log::Log;
     core::param::StringParam *sp = slot.Param<core::param::StringParam>();
     core::param::FilePathParam *fpp = slot.Param<core::param::FilePathParam>();

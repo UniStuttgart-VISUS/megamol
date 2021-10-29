@@ -17,7 +17,7 @@
 
 #include <nanoflann.hpp>
 
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 using namespace megamol;
 
 

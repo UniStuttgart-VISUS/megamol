@@ -2,7 +2,7 @@
 #include "datatools/GraphDataCall.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 GraphDataCall::GraphDataCall() : core::AbstractGetDataCall(),
         edge_count(0), edge_data(nullptr), is_directed(false), frameCnt(1), frameID(0) {

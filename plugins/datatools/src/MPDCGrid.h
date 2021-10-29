@@ -13,7 +13,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 class MPDCGrid : public core::Module {
@@ -119,5 +118,4 @@ inline int arg_max(vislib::math::Vector<float, 3> const& vec) {
 }
 
 } // namespace datatools
-} // namespace stdplugin
 } // namespace megamol

@@ -18,7 +18,6 @@
 #include "vislib/math/ShallowPoint.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*
@@ -76,9 +75,9 @@ namespace {
     /**
      * Utility class forming a data adapter for nanoflann
      */
-    class DataAdapter : public stdplugin::datatools::MultiParticleDataAdaptor {
+    class DataAdapter : public datatools::MultiParticleDataAdaptor {
     public:
-        DataAdapter(geocalls::MultiParticleDataCall& dat) : stdplugin::datatools::MultiParticleDataAdaptor(dat) {
+        DataAdapter(geocalls::MultiParticleDataCall& dat) : datatools::MultiParticleDataAdaptor(dat) {
             // intentionally empty
         }
         ~DataAdapter() {

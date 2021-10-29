@@ -32,7 +32,7 @@
 
 #include "mmcore/view/light/DistantLight.h"
 
-using namespace megamol::stdplugin::volume_gl;
+using namespace megamol::volume_gl;
 
 RaycastVolumeRenderer::RaycastVolumeRenderer()
         : Renderer3DModuleGL()

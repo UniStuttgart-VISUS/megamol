@@ -16,8 +16,8 @@
 #include "vislib/String.h"
 #include "mmcore/utility/sys/Thread.h"
 
-using namespace megamol::stdplugin::moldyn::io;
-using namespace megamol::stdplugin::moldyn;
+using namespace megamol::moldyn::io;
+using namespace megamol::moldyn;
 using namespace megamol::core;
 
 /*

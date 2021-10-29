@@ -11,10 +11,10 @@
 #include <algorithm>
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
-IColInverse::IColInverse() : stdplugin::datatools::AbstractParticleManipulator("outData", "inData"),
+IColInverse::IColInverse() : datatools::AbstractParticleManipulator("outData", "inData"),
         dataHash(0), frameID(0), colors(), minCol(0.0f), maxCol(1.0f) {
     // intentionally empty
 }
@@ -49,7 +49,7 @@ bool IColInverse::manipulateData(
             }
         }
 
-        stdplugin::datatools::MultiParticleDataAdaptor parts(inData);
+        datatools::MultiParticleDataAdaptor parts(inData);
         colors.resize(parts.get_count());
         for (size_t i = 0; i < parts.get_count(); ++i) {
             colors[i] = minCol + maxCol - parts.get_color(i)[0];

@@ -17,7 +17,6 @@
 #include "vislib/macro_utils.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 namespace table {
 
@@ -174,7 +173,6 @@ namespace table {
 
 } /* end namespace table */
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif

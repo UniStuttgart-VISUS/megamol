@@ -17,7 +17,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
     namespace datatools {
 
 
@@ -82,7 +81,6 @@ namespace stdplugin {
         };
 
     } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_PARTICLEICOLFILTER_H_INCLUDED */

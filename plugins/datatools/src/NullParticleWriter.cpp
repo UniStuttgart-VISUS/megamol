@@ -12,7 +12,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 NullParticleWriter::NullParticleWriter(void) : core::AbstractDataWriter(),
         dataSlot("data", "The slot requesting the data to be written") {

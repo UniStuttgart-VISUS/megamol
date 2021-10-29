@@ -10,7 +10,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 
@@ -45,5 +44,4 @@ bool SyncedMMPLDProvider::checkDirtyCallback(core::Call& c) {
 }
 
 } // namespace datatools
-} // namespace stdplugin
 } // namespace megamol

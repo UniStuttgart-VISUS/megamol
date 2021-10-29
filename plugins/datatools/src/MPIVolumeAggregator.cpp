@@ -13,7 +13,6 @@
 #include <chrono>
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*

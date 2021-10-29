@@ -14,7 +14,7 @@
 
 using namespace megamol::core;
 using namespace megamol::geocalls;
-using namespace megamol::stdplugin::moldyn_gl::rendering;
+using namespace megamol::moldyn_gl::rendering;
 
 
 ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModuleGL()

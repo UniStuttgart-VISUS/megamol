@@ -4,9 +4,6 @@
  * Copyright (C) 2016 by MegaMol Team (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-
-#ifndef MEGAMOL_DATATOOLS_PARTICLEFILTERMAPDATACALL_H_INCLUDED
-#define MEGAMOL_DATATOOLS_PARTICLEFILTERMAPDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/AbstractGetDataCall.h"
@@ -14,7 +11,6 @@
 #include <cstdint>
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     class ParticleFilterMapDataCall : public core::AbstractGetDataCall {
@@ -70,7 +66,4 @@ namespace datatools {
     typedef core::factories::CallAutoDescription<ParticleFilterMapDataCall> ParticleFilterMapDataCallDescription;
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_PARTICLEFILTERMAPDATACALL_H_INCLUDED */

@@ -3,7 +3,6 @@
 #include "datatools/AbstractParticleManipulator.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     class ParticleIdentitySort : public AbstractParticleManipulator {
@@ -51,5 +50,4 @@ namespace datatools {
     };
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

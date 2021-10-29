@@ -42,8 +42,6 @@
 
 namespace megamol
 {
-	namespace stdplugin
-	{
 		namespace datatools
 		{
 			namespace io
@@ -586,7 +584,6 @@ namespace megamol
 				};
 			}
 		}
-	}
 }
 
 #endif // !MEGAMOL_DATATOOLS_IO_ABSTRACTSTLWRITER_H_INCLUDED

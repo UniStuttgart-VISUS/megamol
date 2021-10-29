@@ -8,7 +8,7 @@
 #include "vislib/StringConverter.h"
 
 using namespace megamol::infovis;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
 /*

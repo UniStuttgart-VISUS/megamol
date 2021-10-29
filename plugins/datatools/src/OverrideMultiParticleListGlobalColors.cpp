@@ -10,7 +10,6 @@
 #include "vislib/graphics/ColourHSVf.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 datatools::OverrideMultiParticleListGlobalColors::OverrideMultiParticleListGlobalColors(void)

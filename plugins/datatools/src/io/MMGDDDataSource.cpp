@@ -15,7 +15,7 @@
 #include <cassert>
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
 io::MMGDDDataSource::MMGDDDataSource(void) : core::view::AnimDataModule(),

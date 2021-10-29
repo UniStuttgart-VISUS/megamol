@@ -31,7 +31,7 @@
 #include "DataGridder.h"
 #include "moldyn/ParticleGridDataCall.h"
 
-namespace megamol::stdplugin::moldyn {
+namespace megamol::moldyn {
     class MoldynPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
         REGISTERPLUGIN(MoldynPluginInstance)
 
@@ -46,29 +46,29 @@ namespace megamol::stdplugin::moldyn {
         void registerClasses() override {
 
             // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::IMDAtomDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMSPDDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::SIFFDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::SIFFWriter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::VIMDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::VisIttDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::VTFDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::VTFResDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::misc::ParticleWorker>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::XYZLoader>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::TclMolSelectionLoader>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::BrickStatsDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::DataGridder>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPGDWriter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPLDDataSource>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::MMPLDWriter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::io::TestSpheresDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::IMDAtomDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::MMSPDDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::SIFFDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::SIFFWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::VIMDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::VisIttDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::VTFDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::VTFResDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::misc::ParticleWorker>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::XYZLoader>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::TclMolSelectionLoader>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::BrickStatsDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::DataGridder>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::MMPGDDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::MMPGDWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::MMPLDDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::MMPLDWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::moldyn::io::TestSpheresDataSource>();
 
             // register calls
-            this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::moldyn::BrickStatsCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::moldyn::BrickStatsCall>();
             this->call_descriptions
-                .RegisterAutoDescription<megamol::stdplugin::moldyn::ParticleGridDataCall>();
+                .RegisterAutoDescription<megamol::moldyn::ParticleGridDataCall>();
         }
     };
-} // namespace megamol::stdplugin::moldyn
+} // namespace megamol::moldyn

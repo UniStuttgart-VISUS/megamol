@@ -13,10 +13,9 @@
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
-    class ModColIRange : public stdplugin::datatools::AbstractParticleManipulator {
+    class ModColIRange : public datatools::AbstractParticleManipulator {
     public:
         static const char *ClassName(void) { return "ModIColRange"; }
         static const char *Description(void) { return "Mapps IColRange values periodically into the specified range."; }
@@ -42,6 +41,5 @@ namespace datatools {
 
     };
 
-}
 }
 }

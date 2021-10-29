@@ -29,7 +29,6 @@
 #endif
 
 namespace megamol {
-namespace stdplugin {
 namespace volume_gl {
 
 #define VS_EPS      1.0e-8
@@ -87,7 +86,6 @@ private:
 };
 
 } /* end namespace volume */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif // _SLICING_H_

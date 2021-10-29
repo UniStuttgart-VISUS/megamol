@@ -10,7 +10,6 @@
 #include "mmcore/utility/sys/SystemInformation.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*

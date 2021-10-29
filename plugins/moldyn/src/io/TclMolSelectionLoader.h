@@ -15,7 +15,6 @@
 #include <vector>
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn {
 namespace io {
 
@@ -60,7 +59,6 @@ namespace io {
 
 } /* end namespace io */
 } /* end namespace moldyn */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_STDMOLDYN_TCLMOLSELECTIONLOADER_H_INCLUDED */

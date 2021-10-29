@@ -10,7 +10,7 @@
 #include "datatools/table/TableDataCall.h"
 
 
-megamol::stdplugin::datatools::CSVWriter::CSVWriter() : _data_in_slot("inData", ""), _filename_slot("filename", "") {
+megamol::datatools::CSVWriter::CSVWriter() : _data_in_slot("inData", ""), _filename_slot("filename", "") {
     _data_in_slot.SetCompatibleCall<table::TableDataCallDescription>();
     MakeSlotAvailable(&_data_in_slot);
 
@@ -20,16 +20,16 @@ megamol::stdplugin::datatools::CSVWriter::CSVWriter() : _data_in_slot("inData", 
 }
 
 
-megamol::stdplugin::datatools::CSVWriter::~CSVWriter() { this->Release(); }
+megamol::datatools::CSVWriter::~CSVWriter() { this->Release(); }
 
 
-bool megamol::stdplugin::datatools::CSVWriter::create() { return true; }
+bool megamol::datatools::CSVWriter::create() { return true; }
 
 
-void megamol::stdplugin::datatools::CSVWriter::release() {}
+void megamol::datatools::CSVWriter::release() {}
 
 
-bool megamol::stdplugin::datatools::CSVWriter::run() {
+bool megamol::datatools::CSVWriter::run() {
     auto filename = _filename_slot.Param<core::param::FilePathParam>()->Value();
     if (filename.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[CSVWriter]: No file name specified. Abort.");
@@ -85,7 +85,7 @@ bool megamol::stdplugin::datatools::CSVWriter::run() {
 }
 
 
-bool megamol::stdplugin::datatools::CSVWriter::getCapabilities(core::DataWriterCtrlCall& call) {
+bool megamol::datatools::CSVWriter::getCapabilities(core::DataWriterCtrlCall& call) {
     call.SetAbortable(false);
     return true;
 }

@@ -22,7 +22,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn {
 namespace io {
 
@@ -225,6 +224,5 @@ private:
 
 } // namespace io
 } // namespace moldyn
-} // namespace stdplugin
 } // namespace megamol
 #endif /* MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED */

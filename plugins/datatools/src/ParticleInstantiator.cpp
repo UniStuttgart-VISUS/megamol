@@ -11,7 +11,6 @@
 #include "glm/glm.hpp"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 datatools::ParticleInstantiator::ParticleInstantiator(void)

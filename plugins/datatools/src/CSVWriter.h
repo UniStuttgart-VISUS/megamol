@@ -4,7 +4,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol::stdplugin::datatools {
+namespace megamol::datatools {
 
 class CSVWriter : public core::AbstractDataWriter {
 public:
@@ -68,4 +68,4 @@ private:
     core::param::ParamSlot _filename_slot;
 };
 
-} // end namespace megamol::stdplugin::datatools
+} // end namespace megamol::datatools

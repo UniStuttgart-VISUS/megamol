@@ -11,7 +11,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 
 
-megamol::stdplugin::datatools::MPDCListsConcatenate::MPDCListsConcatenate()
+megamol::datatools::MPDCListsConcatenate::MPDCListsConcatenate()
     : dataOutSlot("out", "Publishes the concatenated data")
     , dataIn1Slot("in1", "First data source")
     , dataIn2Slot("in2", "Second data source") {
@@ -27,16 +27,16 @@ megamol::stdplugin::datatools::MPDCListsConcatenate::MPDCListsConcatenate()
 }
 
 
-megamol::stdplugin::datatools::MPDCListsConcatenate::~MPDCListsConcatenate() { this->Release(); }
+megamol::datatools::MPDCListsConcatenate::~MPDCListsConcatenate() { this->Release(); }
 
 
-bool megamol::stdplugin::datatools::MPDCListsConcatenate::create(void) { return true; }
+bool megamol::datatools::MPDCListsConcatenate::create(void) { return true; }
 
 
-void megamol::stdplugin::datatools::MPDCListsConcatenate::release(void) {}
+void megamol::datatools::MPDCListsConcatenate::release(void) {}
 
 
-bool megamol::stdplugin::datatools::MPDCListsConcatenate::getExtent(megamol::core::Call& c) {
+bool megamol::datatools::MPDCListsConcatenate::getExtent(megamol::core::Call& c) {
     using geocalls::MultiParticleDataCall;
     auto oc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (oc == nullptr) return false;
@@ -93,7 +93,7 @@ bool megamol::stdplugin::datatools::MPDCListsConcatenate::getExtent(megamol::cor
 }
 
 
-bool megamol::stdplugin::datatools::MPDCListsConcatenate::getData(megamol::core::Call& c) {
+bool megamol::datatools::MPDCListsConcatenate::getData(megamol::core::Call& c) {
     using geocalls::MultiParticleDataCall;
     auto oc = dynamic_cast<MultiParticleDataCall*>(&c);
     if (oc == nullptr) return false;

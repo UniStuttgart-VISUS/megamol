@@ -16,7 +16,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 /**
@@ -57,7 +56,6 @@ private:
 };
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_OVERRIDEPARTICLEBBOX_H_INCLUDED */

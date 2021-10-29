@@ -20,7 +20,7 @@
 
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 namespace {
     enum MyColorType : int {

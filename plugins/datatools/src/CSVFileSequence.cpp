@@ -24,7 +24,7 @@ using namespace megamol;
 /*
  * CSVFileSequence::CSVFileSequence
  */
-stdplugin::datatools::CSVFileSequence::CSVFileSequence(void) : core::Module(),
+datatools::CSVFileSequence::CSVFileSequence(void) : core::Module(),
         fileNameTemplateSlot("fileNameTemplate", "The file name template"
         " example: D:\\data\\Kohler\\nial\\nialout50_*5{0..599+2}*.crist "
         " Syntax: *[[DIG][{MIN..MAX[+STEP]}]*] "
@@ -85,7 +85,7 @@ stdplugin::datatools::CSVFileSequence::CSVFileSequence(void) : core::Module(),
 /*
  * CSVFileSequence::~CSVFileSequence
  */
-stdplugin::datatools::CSVFileSequence::~CSVFileSequence(void) {
+datatools::CSVFileSequence::~CSVFileSequence(void) {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -93,7 +93,7 @@ stdplugin::datatools::CSVFileSequence::~CSVFileSequence(void) {
 /*
  * CSVFileSequence::create
  */
-bool stdplugin::datatools::CSVFileSequence::create(void) {
+bool datatools::CSVFileSequence::create(void) {
 
     return true;
 }
@@ -102,14 +102,14 @@ bool stdplugin::datatools::CSVFileSequence::create(void) {
 /*
  * CSVFileSequence::release
  */
-void stdplugin::datatools::CSVFileSequence::release(void) {
+void datatools::CSVFileSequence::release(void) {
 }
 
 
 /*
- * stdplugin::datatools::CSVFileSequence::IsCallDescriptionCompatible
+ * datatools::CSVFileSequence::IsCallDescriptionCompatible
  */
-bool stdplugin::datatools::CSVFileSequence::IsCallDescriptionCompatible(core::factories::CallDescription::ptr desc) {
+bool datatools::CSVFileSequence::IsCallDescriptionCompatible(core::factories::CallDescription::ptr desc) {
     return (desc->FunctionCount() == 2)
         && vislib::StringA("GetData").Equals(desc->FunctionName(0), false)
         && vislib::StringA("GetExtent").Equals(desc->FunctionName(1), false);
@@ -119,7 +119,7 @@ bool stdplugin::datatools::CSVFileSequence::IsCallDescriptionCompatible(core::fa
 /*
  * CSVFileSequence::getDataCallback
  */
-bool stdplugin::datatools::CSVFileSequence::getDataCallback(core::Call& caller) {
+bool datatools::CSVFileSequence::getDataCallback(core::Call& caller) {
 
     this->checkParameters();
     this->assertData();
@@ -175,7 +175,7 @@ bool stdplugin::datatools::CSVFileSequence::getDataCallback(core::Call& caller) 
 /*
  * CSVFileSequence::getExtentCallback
  */
-bool stdplugin::datatools::CSVFileSequence::getExtentCallback(core::Call& caller) {
+bool datatools::CSVFileSequence::getExtentCallback(core::Call& caller) {
 
     this->checkParameters();
     this->assertData();
@@ -223,7 +223,7 @@ bool stdplugin::datatools::CSVFileSequence::getExtentCallback(core::Call& caller
 /*
  * CSVFileSequence::checkParameters
  */
-void stdplugin::datatools::CSVFileSequence::checkParameters(void) {
+void datatools::CSVFileSequence::checkParameters(void) {
     if (this->fileNumberMinSlot.IsDirty()) {
         this->fileNumberMinSlot.ResetDirty();
         this->fileNumMin = static_cast<unsigned int>(vislib::math::Max(0,
@@ -256,7 +256,7 @@ void stdplugin::datatools::CSVFileSequence::checkParameters(void) {
 /*
  * CSVFileSequence::onFileNameTemplateChanged
  */
-bool stdplugin::datatools::CSVFileSequence::onFileNameTemplateChanged(core::param::ParamSlot& slot) {
+bool datatools::CSVFileSequence::onFileNameTemplateChanged(core::param::ParamSlot& slot) {
     using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->fileNameTemplateSlot);
     // D:\data\Kohler\nial\nialout50_*5{0..599+2}*.crist
@@ -421,7 +421,7 @@ bool stdplugin::datatools::CSVFileSequence::onFileNameTemplateChanged(core::para
 /*
  * CSVFileSequence::onFileNameSlotNameChanged
  */
-bool stdplugin::datatools::CSVFileSequence::onFileNameSlotNameChanged(core::param::ParamSlot& slot) {
+bool datatools::CSVFileSequence::onFileNameSlotNameChanged(core::param::ParamSlot& slot) {
     ASSERT(&slot == &this->fileNameSlotNameSlot);
     this->ModuleGraphLock().LockExclusive();
     core::param::StringParam *P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
@@ -440,7 +440,7 @@ bool stdplugin::datatools::CSVFileSequence::onFileNameSlotNameChanged(core::para
 /*
  * CSVFileSequence::findFileNameSlot
  */
-core::param::ParamSlot *stdplugin::datatools::CSVFileSequence::findFileNameSlot(void) {
+core::param::ParamSlot *datatools::CSVFileSequence::findFileNameSlot(void) {
     core::param::StringParam *P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if (P != NULL) {
         AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->shared_from_this());
@@ -464,7 +464,7 @@ core::param::ParamSlot *stdplugin::datatools::CSVFileSequence::findFileNameSlot(
 /*
  * CSVFileSequence::assertData
  */
-void stdplugin::datatools::CSVFileSequence::assertData(void) {
+void datatools::CSVFileSequence::assertData(void) {
     using megamol::core::utility::log::Log;
     if (!this->needDataUpdate) return;
     vislib::TString filename;

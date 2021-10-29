@@ -6,7 +6,7 @@
 
 #include "DBSCAN.h"
 
-namespace megamol::stdplugin::datatools::clustering {
+namespace megamol::datatools::clustering {
 class ParticleIColClustering : public AbstractParticleManipulator {
 public:
     static const char* ClassName(void) {
@@ -58,4 +58,4 @@ private:
 
     std::size_t _out_data_hash = 0;
 };
-} // namespace megamol::stdplugin::datatools::clustering
+} // namespace megamol::datatools::clustering

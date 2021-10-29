@@ -9,7 +9,7 @@
 #include "mmcore/CoreInstance.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 MultiParticleRelister::MultiParticleRelister() : AbstractParticleManipulator("outData", "indata"),
         getRelistInfoSlot("getRelistInfo", "Connects to the provider of the relist info"),

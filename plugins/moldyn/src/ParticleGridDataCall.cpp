@@ -9,7 +9,7 @@
 #include "moldyn/ParticleGridDataCall.h"
 //#include "vislib/memutils.h"
 
-using namespace megamol::stdplugin::moldyn;
+using namespace megamol::moldyn;
 
 /****************************************************************************/
 

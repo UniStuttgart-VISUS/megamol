@@ -15,7 +15,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::stdplugin::volume;
+using namespace megamol::volume;
 
 /*
  * DatRawWriter::DatRawWriter

@@ -26,8 +26,8 @@
 #include <limits>
 #include <omp.h>
 
-using namespace megamol::stdplugin::datatools;
-using namespace megamol::stdplugin::datatools::table;
+using namespace megamol::datatools;
+using namespace megamol::datatools::table;
 using namespace megamol;
 
 enum class DecimalSeparator : int {

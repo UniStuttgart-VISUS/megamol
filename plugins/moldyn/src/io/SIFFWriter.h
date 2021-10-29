@@ -19,7 +19,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn {
 namespace io {
 
@@ -119,7 +118,6 @@ namespace io {
 
 } /* end namespace io */
 } /* end namespace moldyn */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_SIFFWRITER_H_INCLUDED */

@@ -8,7 +8,7 @@
 
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol::stdplugin::datatools::table {
+namespace megamol::datatools::table {
 
 class TableSplit : public core::Module {
 public:
@@ -67,4 +67,4 @@ private:
 
 }; // end class TableSplit
 
-} // end namespace megamol::stdplugin::datatools::table
+} // end namespace megamol::datatools::table

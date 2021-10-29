@@ -14,7 +14,6 @@
 #include <map>
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 namespace table {
 
@@ -153,7 +152,6 @@ namespace table {
 
 } /* end namespace table */
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_DATATOOLS_FLOATTABLEOBSERVERPLANE_H_INCLUDED */

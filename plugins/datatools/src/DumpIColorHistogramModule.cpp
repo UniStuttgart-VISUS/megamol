@@ -11,7 +11,7 @@
 using namespace megamol;
 
 
-stdplugin::datatools::DumpIColorHistogramModule::DumpIColorHistogramModule(void) : core::Module(),
+datatools::DumpIColorHistogramModule::DumpIColorHistogramModule(void) : core::Module(),
         inDataSlot("indata", "accessing the original data"),
         dumpBtnSlot("dump", "Dumps the data"),
         timeSlot("time", "The time to dump") {
@@ -28,17 +28,17 @@ stdplugin::datatools::DumpIColorHistogramModule::DumpIColorHistogramModule(void)
 }
 
 
-stdplugin::datatools::DumpIColorHistogramModule::~DumpIColorHistogramModule(void) {
+datatools::DumpIColorHistogramModule::~DumpIColorHistogramModule(void) {
     this->Release();
 }
 
 
-bool stdplugin::datatools::DumpIColorHistogramModule::create(void) {
+bool datatools::DumpIColorHistogramModule::create(void) {
     return true;
 }
 
 
-void stdplugin::datatools::DumpIColorHistogramModule::release(void) {
+void datatools::DumpIColorHistogramModule::release(void) {
 }
 
 void writeSVG(const std::vector<int>& buckets, float rangeMin, float rangeMax) {
@@ -90,7 +90,7 @@ void writeSVG(const std::vector<int>& buckets, float rangeMin, float rangeMax) {
     svg<<"</svg>"<<std::endl;
 }
 
-bool stdplugin::datatools::DumpIColorHistogramModule::dump(::megamol::core::param::ParamSlot& param) {
+bool datatools::DumpIColorHistogramModule::dump(::megamol::core::param::ParamSlot& param) {
     geocalls::MultiParticleDataCall *dat = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (dat == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("No data connected");

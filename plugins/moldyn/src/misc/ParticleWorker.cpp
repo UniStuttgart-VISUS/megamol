@@ -19,7 +19,7 @@
 #include "mmcore/CoreInstance.h"
 
 using namespace megamol::core;
-using namespace megamol::stdplugin::moldyn::misc;
+using namespace megamol::moldyn::misc;
 
 
 /*

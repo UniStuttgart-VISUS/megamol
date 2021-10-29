@@ -12,7 +12,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 using namespace megamol::geocalls;
 
 /*

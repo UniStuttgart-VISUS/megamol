@@ -18,7 +18,6 @@
 #include <cassert>
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 inline vislib::math::Vector<float, 3> getDifference(const float p1[3], const float p2[3],
     bool cyclicX, bool cyclicY, bool cyclicZ, 

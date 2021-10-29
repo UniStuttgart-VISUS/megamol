@@ -16,7 +16,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     /**
@@ -90,7 +89,6 @@ namespace datatools {
     };
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_OVERRIDEPARTICLEGLOBALS_H_INCLUDED */

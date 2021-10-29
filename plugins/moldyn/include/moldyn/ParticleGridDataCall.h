@@ -21,7 +21,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn {
 
 
@@ -706,7 +705,6 @@ typedef core::factories::CallAutoDescription<ParticleGridDataCall>
 ParticleGridDataCallDescription;
 
 } /* end namespace moldyn */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_PARTICLEGRIDDATACALL_H_INCLUDED */

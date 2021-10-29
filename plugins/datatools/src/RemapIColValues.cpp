@@ -4,8 +4,7 @@
 #include "datatools/MultiParticleDataAdaptor.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 RemapIColValues::RemapIColValues() : AbstractParticleManipulator("outData", "inData"),
         inIColValuesSlot("inIColData", "The particles holding the ICol data to be used"),

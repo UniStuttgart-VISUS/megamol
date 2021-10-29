@@ -4,7 +4,7 @@
 
 #include "datatools/AbstractParticleManipulator.h"
 
-namespace megamol::stdplugin::datatools {
+namespace megamol::datatools {
 
 class ColorToDir : public AbstractParticleManipulator {
 public:
@@ -39,4 +39,4 @@ private:
     std::size_t out_data_hash_ = 0;
 };
 
-} // namespace megamol::stdplugin::datatools
+} // namespace megamol::datatools

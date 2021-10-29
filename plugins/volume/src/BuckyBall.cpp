@@ -13,9 +13,9 @@
 #include <limits>
 
 /*
- * megamol::stdplugin::volume::BuckyBall::BuckyBall
+ * megamol::volume::BuckyBall::BuckyBall
  */
-megamol::stdplugin::volume::BuckyBall::BuckyBall(void)
+megamol::volume::BuckyBall::BuckyBall(void)
 	: getDataSlot("getData", "Gets the data")
 	, resolution({ 64, 64, 64 })
 	, sliceDists({ 4.0f / (resolution[0] - 1), 4.0f / (resolution[1] - 1), 4.0f / (resolution[2] - 1) })
@@ -41,17 +41,17 @@ megamol::stdplugin::volume::BuckyBall::BuckyBall(void)
 
 
 /*
- * megamol::stdplugin::volume::BuckyBall::~BuckyBall
+ * megamol::volume::BuckyBall::~BuckyBall
  */
-megamol::stdplugin::volume::BuckyBall::~BuckyBall(void) {
+megamol::volume::BuckyBall::~BuckyBall(void) {
     this->Release();
 }
 
 
 /*
- * megamol::stdplugin::volume::BuckyBall::create
+ * megamol::volume::BuckyBall::create
  */
-bool megamol::stdplugin::volume::BuckyBall::create(void) {
+bool megamol::volume::BuckyBall::create(void) {
 
     // Generate distance field for truncated icosahedron
     // The sixty vertices of the truncated icosahedron inside a sphere with radius 1
@@ -149,16 +149,16 @@ bool megamol::stdplugin::volume::BuckyBall::create(void) {
 
 
 /*
- * megamol::stdplugin::volume::BuckyBall::release
+ * megamol::volume::BuckyBall::release
  */
-void megamol::stdplugin::volume::BuckyBall::release(void) {
+void megamol::volume::BuckyBall::release(void) {
 }
 
 
 /*
- * megamol::stdplugin::volume::BuckyBall::getDataCallback
+ * megamol::volume::BuckyBall::getDataCallback
  */
-bool megamol::stdplugin::volume::BuckyBall::getDataCallback(core::Call& caller) {
+bool megamol::volume::BuckyBall::getDataCallback(core::Call& caller) {
     auto *cvd = dynamic_cast<geocalls::VolumetricDataCall*>(&caller);
     if (cvd == nullptr) return false;
 
@@ -196,7 +196,7 @@ bool megamol::stdplugin::volume::BuckyBall::getDataCallback(core::Call& caller) 
 /*
  * megamol::core::BuckyBall::getExtentCallback
  */
-bool megamol::stdplugin::volume::BuckyBall::getExtentCallback(core::Call& caller) {
+bool megamol::volume::BuckyBall::getExtentCallback(core::Call& caller) {
 	auto *cvd = dynamic_cast<geocalls::VolumetricDataCall*>(&caller);
     if (cvd == nullptr) return false;
 
@@ -214,6 +214,6 @@ bool megamol::stdplugin::volume::BuckyBall::getExtentCallback(core::Call& caller
 /*
 * megamol::core::BuckyBall::getDummyCallback
 */
-bool megamol::stdplugin::volume::BuckyBall::getDummyCallback(core::Call& caller) {
+bool megamol::volume::BuckyBall::getDummyCallback(core::Call& caller) {
 	return false;
 }

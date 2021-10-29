@@ -24,7 +24,6 @@
 #include "MinSphereWrapper.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 /*
  * datatools::ParticleThermodyn::ParticleThermodyn
@@ -160,13 +159,13 @@ bool hasDir(geocalls::MultiParticleDataCall* in, const unsigned int i) {
 }
 
 
-bool metricRequiresDir(megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum metric) {
-    return metric == megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum::TEMPERATURE ||
-           metric == megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum::FRACTIONAL_ANISOTROPY;
+bool metricRequiresDir(megamol::datatools::ParticleThermodyn::metricsEnum metric) {
+    return metric == megamol::datatools::ParticleThermodyn::metricsEnum::TEMPERATURE ||
+           metric == megamol::datatools::ParticleThermodyn::metricsEnum::FRACTIONAL_ANISOTROPY;
 }
 
 
-bool isDirOK(megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum metric,
+bool isDirOK(megamol::datatools::ParticleThermodyn::metricsEnum metric,
     geocalls::MultiParticleDataCall* in, const unsigned int i) {
     if (metricRequiresDir(metric) && !hasDir(in, i))
         return false;
@@ -558,7 +557,7 @@ bool datatools::ParticleThermodyn::assertData(
     return true;
 }
 
-float megamol::stdplugin::datatools::ParticleThermodyn::computeTemperature(
+float megamol::datatools::ParticleThermodyn::computeTemperature(
     std::vector<std::pair<size_t, float>>& matches, const size_t num_matches, const float mass, const float freedom) {
     std::array<float, 3> sum = {0, 0, 0};
     std::array<float, 3> sq_sum = {0, 0, 0};
@@ -585,7 +584,7 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeTemperature(
     return magnitude;
 }
 
-float megamol::stdplugin::datatools::ParticleThermodyn::computeFractionalAnisotropy(
+float megamol::datatools::ParticleThermodyn::computeFractionalAnisotropy(
     std::vector<std::pair<size_t, float>>& matches, const size_t num_matches) {
 
     Eigen::Matrix3f mat;
@@ -610,7 +609,7 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeFractionalAnisotr
     return FA * scale;
 }
 
-float megamol::stdplugin::datatools::ParticleThermodyn::computeDensity(std::vector<std::pair<size_t, float>>& matches,
+float megamol::datatools::ParticleThermodyn::computeDensity(std::vector<std::pair<size_t, float>>& matches,
     size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox) {
     bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();

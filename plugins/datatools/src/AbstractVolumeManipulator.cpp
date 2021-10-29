@@ -9,7 +9,6 @@
 #include "datatools/AbstractVolumeManipulator.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*

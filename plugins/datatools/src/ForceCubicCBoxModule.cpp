@@ -8,7 +8,6 @@
 #include "ForceCubicCBoxModule.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*

@@ -36,7 +36,6 @@
 #include <vector>
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 /*
  * datatools::ParticlesToDensity::create
@@ -120,10 +119,10 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
         geocalls::MultiParticleDataCall::FunctionName(1), &ParticlesToDensity::getExtentCallback);
     this->MakeSlotAvailable(&this->outParticlesSlot);
 
-    this->outInfoSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
-        stdplugin::datatools::table::TableDataCall::FunctionName(0), &ParticlesToDensity::getDataCallback);
-    this->outInfoSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
-        stdplugin::datatools::table::TableDataCall::FunctionName(1), &ParticlesToDensity::getExtentCallback);
+    this->outInfoSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
+        datatools::table::TableDataCall::FunctionName(0), &ParticlesToDensity::getDataCallback);
+    this->outInfoSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
+        datatools::table::TableDataCall::FunctionName(1), &ParticlesToDensity::getExtentCallback);
     this->MakeSlotAvailable(&this->outInfoSlot);
 
     this->xResSlot << new core::param::IntParam(16);
@@ -166,7 +165,7 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
 
     auto* out = dynamic_cast<geocalls::VolumetricDataCall*>(&c);
     auto* outGrid = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
-    auto* outInfo = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
+    auto* outInfo = dynamic_cast<datatools::table::TableDataCall*>(&c);
 
     auto* inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
     if (inMpdc == nullptr) return false;
@@ -214,7 +213,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
     auto* outVol = dynamic_cast<geocalls::VolumetricDataCall*>(&c);
     auto* outGrid = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
-    auto* outInfo = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
+    auto* outInfo = dynamic_cast<datatools::table::TableDataCall*>(&c);
 
     if (outVol != nullptr || outGrid != nullptr) {
         auto frameID = outVol != nullptr ? outVol->FrameID() : (outGrid != nullptr ? outGrid->FrameID() : 0);
@@ -319,25 +318,25 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     if (outInfo != nullptr && is_vector) {
 
         this->info[0].SetName("PositionX");
-        this->info[0].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+        this->info[0].SetType(datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
 
         this->info[1].SetName("PositionY");
-        this->info[1].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+        this->info[1].SetType(datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
 
         this->info[2].SetName("PositionZ");
-        this->info[2].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+        this->info[2].SetType(datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
 
         this->info[3].SetName("VelocityX");
-        this->info[3].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+        this->info[3].SetType(datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
 
         this->info[4].SetName("VelocityY");
-        this->info[4].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+        this->info[4].SetType(datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
 
         this->info[5].SetName("VelocityZ");
-        this->info[5].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+        this->info[5].SetType(datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
 
         this->info[6].SetName("VelocityMag");
-        this->info[6].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+        this->info[6].SetType(datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
 
         if (!this->has_data) {
             this->infoData.reserve(1);

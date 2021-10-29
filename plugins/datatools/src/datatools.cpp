@@ -96,7 +96,7 @@
 #include "AddClusterColours.h"
 #include "SiffCSplineFitter.h"
 
-namespace megamol::stdplugin::datatools {
+namespace megamol::datatools {
 class DatatoolsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(DatatoolsPluginInstance)
 
@@ -111,103 +111,103 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataSetTimeRewriteModule>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataFileSequenceStepper>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SphereDataUnifier>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThinner>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::OverrideParticleGlobals>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleRelaxationModule>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleListSelector>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::DataSetTimeRewriteModule>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListMergeModule>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::DataFileSequenceStepper>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::SphereDataUnifier>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleThinner>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::OverrideParticleGlobals>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleRelaxationModule>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListSelector>();
         this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::ParticleDensityOpacityModule>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ForceCubicCBoxModule>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DumpIColorHistogramModule>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataFileSequence>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::OverrideParticleBBox>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorSignThreshold>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorSignedDistance>();
+            .RegisterAutoDescription<megamol::datatools::ParticleDensityOpacityModule>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ForceCubicCBoxModule>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::DumpIColorHistogramModule>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::DataFileSequence>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::OverrideParticleBBox>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleColorSignThreshold>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleColorSignedDistance>();
         this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::EnforceSymmetricParticleColorRanges>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleSortFixHack>();
+            .RegisterAutoDescription<megamol::datatools::EnforceSymmetricParticleColorRanges>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleSortFixHack>();
         this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::ParticleDataSequenceConcatenate>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIColFilter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiParticleRelister>();
+            .RegisterAutoDescription<megamol::datatools::ParticleDataSequenceConcatenate>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleIColFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::MultiParticleRelister>();
         this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::OverrideMultiParticleListGlobalColors>();
+            .RegisterAutoDescription<megamol::datatools::OverrideMultiParticleListGlobalColors>();
         this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxGeneratorDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::CSVDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::TableToParticles>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::TableToLines>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::MMFTDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::MMFTDataWriter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorChannelSelect>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIColGradientField>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::RemapIColValues>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhoodGraph>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColInverse>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColAdd>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ModColIRange>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::NullParticleWriter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColRangeFix>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColRangeOverride>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IndexListIndexColor>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColSelectClassify>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ErosionField>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDWriter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnScaler>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableObserverPlane>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableJoin>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnFilter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSampler>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableFlagFilter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSelectionTx>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSort>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableWhere>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermodyn>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PlyWriter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIParticleCollector>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIVolumeAggregator>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticlesToDensity>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCListsConcatenate>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::STLDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::TriMeshSTLWriter>();
+            .RegisterAutoDescription<megamol::datatools::ParticleBoxGeneratorDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::CSVDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::TableToParticles>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::TableToLines>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::MMFTDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::MMFTDataWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleColorChannelSelect>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleIColGradientField>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::RemapIColValues>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleNeighborhoodGraph>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::IColInverse>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::IColAdd>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ModColIRange>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::NullParticleWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::IColRangeFix>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::IColRangeOverride>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::IndexListIndexColor>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::IColSelectClassify>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ErosionField>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::MMGDDWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::MMGDDDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableColumnScaler>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableObserverPlane>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableJoin>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableColumnFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSampler>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableFlagFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSelectionTx>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSort>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableWhere>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleVelocities>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleNeighborhood>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleThermodyn>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::PlyWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPIParticleCollector>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPIVolumeAggregator>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticlesToDensity>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPDCListsConcatenate>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::STLDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::TriMeshSTLWriter>();
         this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::ParticleTranslateRotateScale>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PLYDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MeshTranslateRotateScale>();
+            .RegisterAutoDescription<megamol::datatools::ParticleTranslateRotateScale>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::PLYDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::MeshTranslateRotateScale>();
         this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVisibilityFromVolume>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVFileSequence>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColToIdentity>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIdentitySort>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxFilter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::StaticMMPLDProvider>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SyncedMMPLDProvider>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableManipulator>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleInstantiator>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCGrid>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSplit>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVWriter>();
+            .RegisterAutoDescription<megamol::datatools::ParticleVisibilityFromVolume>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::CSVFileSequence>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::IColToIdentity>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleIdentitySort>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleBoxFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::StaticMMPLDProvider>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::SyncedMMPLDProvider>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableManipulator>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::io::CPERAWDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::LocalBoundingBoxExtractor>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleInstantiator>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPDCGrid>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSplit>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::CSVWriter>();
         this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::clustering::ParticleIColClustering>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::AddParticleColors>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ColorToDir>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::AddClusterColours>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleListFilter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SiffCSplineFitter>();
+            .RegisterAutoDescription<megamol::datatools::clustering::ParticleIColClustering>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::AddParticleColors>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ColorToDir>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::AddClusterColours>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::SiffCSplineFitter>();
         // register calls
-        this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleFilterMapDataCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::GraphDataCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiIndexListDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::datatools::table::TableDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::datatools::ParticleFilterMapDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::datatools::GraphDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::datatools::MultiIndexListDataCall>();
     }
 };
-} // namespace megamol::stdplugin::datatools
+} // namespace megamol::datatools

@@ -22,7 +22,6 @@ namespace moldyn {
 }
 }
 
-namespace stdplugin {
 namespace datatools {
 
 
@@ -105,7 +104,6 @@ namespace datatools {
         core::param::ParamSlot densityAutoComputeCountRangeSlot;
     };
 
-}
 }
 }
 

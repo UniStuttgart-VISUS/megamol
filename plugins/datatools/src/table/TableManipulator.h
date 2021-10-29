@@ -19,7 +19,6 @@
 #include "datatools/table/TableDataCall.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 namespace table {
 
@@ -130,6 +129,5 @@ private:
 } /* end namespace table */
 } // namespace table
 } // namespace datatools
-} // namespace stdplugin
 
 #endif /* end ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEMANIPULATOR_H_INCLUDED */

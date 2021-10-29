@@ -10,11 +10,9 @@
 #include "datatools/AbstractManipulator.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 using AbstractDirParticleManipulator = AbstractManipulator<geocalls::EllipsoidalParticleDataCall>;
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

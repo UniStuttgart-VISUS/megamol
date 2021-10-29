@@ -6,7 +6,7 @@
 #include "vislib/StringTokeniser.h"
 
 
-megamol::stdplugin::datatools::StaticMMPLDProvider::StaticMMPLDProvider()
+megamol::datatools::StaticMMPLDProvider::StaticMMPLDProvider()
     : outDataSlot("outData", "Output"), filenamesSlot("filenames", "Set of filenames separated with ';'") {
     outDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
         geocalls::MultiParticleDataCall::FunctionName(0), &StaticMMPLDProvider::getDataCallback);
@@ -19,16 +19,16 @@ megamol::stdplugin::datatools::StaticMMPLDProvider::StaticMMPLDProvider()
 }
 
 
-megamol::stdplugin::datatools::StaticMMPLDProvider::~StaticMMPLDProvider() { this->Release(); }
+megamol::datatools::StaticMMPLDProvider::~StaticMMPLDProvider() { this->Release(); }
 
 
-bool megamol::stdplugin::datatools::StaticMMPLDProvider::create() { return true; }
+bool megamol::datatools::StaticMMPLDProvider::create() { return true; }
 
 
-void megamol::stdplugin::datatools::StaticMMPLDProvider::release() {}
+void megamol::datatools::StaticMMPLDProvider::release() {}
 
 
-bool megamol::stdplugin::datatools::StaticMMPLDProvider::assertData(geocalls::MultiParticleDataCall& outCall) {
+bool megamol::datatools::StaticMMPLDProvider::assertData(geocalls::MultiParticleDataCall& outCall) {
     if (filenamesSlot.IsDirty()) {
 
         auto const filenames = vislib::TString(filenamesSlot.Param<core::param::StringParam>()->Value().c_str());
@@ -100,7 +100,7 @@ bool megamol::stdplugin::datatools::StaticMMPLDProvider::assertData(geocalls::Mu
 }
 
 
-bool megamol::stdplugin::datatools::StaticMMPLDProvider::getDataCallback(core::Call& c) {
+bool megamol::datatools::StaticMMPLDProvider::getDataCallback(core::Call& c) {
     auto outCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     if (outCall == nullptr) return false;
 
@@ -108,7 +108,7 @@ bool megamol::stdplugin::datatools::StaticMMPLDProvider::getDataCallback(core::C
 }
 
 
-bool megamol::stdplugin::datatools::StaticMMPLDProvider::getExtentCallback(core::Call& c) {
+bool megamol::datatools::StaticMMPLDProvider::getExtentCallback(core::Call& c) {
     auto outCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     if (outCall == nullptr) return false;
 

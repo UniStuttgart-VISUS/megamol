@@ -19,7 +19,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/Thread.h"
 
-namespace megamol::stdplugin::moldyn::io {
+namespace megamol::moldyn::io {
 
 /*
  * :MMPLDWriter::MMPLDWriter

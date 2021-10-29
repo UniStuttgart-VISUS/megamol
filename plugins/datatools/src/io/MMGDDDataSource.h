@@ -19,7 +19,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 namespace io {
 
@@ -118,7 +117,6 @@ namespace io {
 
 } /* end namespace io */
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_DATATOOLS_IO_MMGDDDATASOURCE_H_INCLUDED */

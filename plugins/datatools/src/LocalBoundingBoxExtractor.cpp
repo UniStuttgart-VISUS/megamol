@@ -4,7 +4,6 @@
 #include "mmcore/param/ColorParam.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 
@@ -244,5 +243,4 @@ void LocalBoundingBoxExtractor::calcLocalBox(
 }
 
 } // namespace datatools
-} // namespace stdplugin
 } // namespace megamol

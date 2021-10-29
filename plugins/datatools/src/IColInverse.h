@@ -10,10 +10,9 @@
 #include <vector>
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
-    class IColInverse : public stdplugin::datatools::AbstractParticleManipulator {
+    class IColInverse : public datatools::AbstractParticleManipulator {
     public:
         static const char *ClassName(void) { return "IColInverse"; }
         static const char *Description(void) { return "Inverts the ICol value range."; }
@@ -35,6 +34,5 @@ namespace datatools {
 
     };
 
-}
 }
 }

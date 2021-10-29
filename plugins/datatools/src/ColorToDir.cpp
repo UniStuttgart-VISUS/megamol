@@ -1,15 +1,15 @@
 #include "ColorToDir.h"
 
 
-megamol::stdplugin::datatools::ColorToDir::ColorToDir() : AbstractParticleManipulator("outData", "inData") {}
+megamol::datatools::ColorToDir::ColorToDir() : AbstractParticleManipulator("outData", "inData") {}
 
 
-megamol::stdplugin::datatools::ColorToDir::~ColorToDir() {
+megamol::datatools::ColorToDir::~ColorToDir() {
     this->Release();
 }
 
 
-bool megamol::stdplugin::datatools::ColorToDir::manipulateData(
+bool megamol::datatools::ColorToDir::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     /*if (!(inData)(0))
         return false;*/

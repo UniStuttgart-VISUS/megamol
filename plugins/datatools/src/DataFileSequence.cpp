@@ -24,7 +24,7 @@ using namespace megamol;
 /*
  * moldyn::DataFileSequence::DataFileSequence
  */
-stdplugin::datatools::DataFileSequence::DataFileSequence(void) : core::Module(),
+datatools::DataFileSequence::DataFileSequence(void) : core::Module(),
         fileNameTemplateSlot("fileNameTemplate", "The file name template"
         " example: D:\\data\\Kohler\\nial\\nialout50_*5{0..599+2}*.crist "
         " Syntax: *[[DIG][{MIN..MAX[+STEP]}]*] "
@@ -76,7 +76,7 @@ stdplugin::datatools::DataFileSequence::DataFileSequence(void) : core::Module(),
 /*
  * moldyn::DataFileSequence::~DataFileSequence
  */
-stdplugin::datatools::DataFileSequence::~DataFileSequence(void) {
+datatools::DataFileSequence::~DataFileSequence(void) {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -84,7 +84,7 @@ stdplugin::datatools::DataFileSequence::~DataFileSequence(void) {
 /*
  * moldyn::DataFileSequence::create
  */
-bool stdplugin::datatools::DataFileSequence::create(void) {
+bool datatools::DataFileSequence::create(void) {
     for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
         if (IsCallDescriptionCompatible(cd)) {
             this->outDataSlot.SetCallback(cd->ClassName(), "GetData", &DataFileSequence::getDataCallback);
@@ -101,14 +101,14 @@ bool stdplugin::datatools::DataFileSequence::create(void) {
 /*
  * moldyn::DataFileSequence::release
  */
-void stdplugin::datatools::DataFileSequence::release(void) {
+void datatools::DataFileSequence::release(void) {
 }
 
 
 /*
- * stdplugin::datatools::DataFileSequence::IsCallDescriptionCompatible
+ * datatools::DataFileSequence::IsCallDescriptionCompatible
  */
-bool stdplugin::datatools::DataFileSequence::IsCallDescriptionCompatible(core::factories::CallDescription::ptr desc) {
+bool datatools::DataFileSequence::IsCallDescriptionCompatible(core::factories::CallDescription::ptr desc) {
     return (desc->FunctionCount() == 2)
         && vislib::StringA("GetData").Equals(desc->FunctionName(0), false)
         && vislib::StringA("GetExtent").Equals(desc->FunctionName(1), false);
@@ -118,7 +118,7 @@ bool stdplugin::datatools::DataFileSequence::IsCallDescriptionCompatible(core::f
 /*
  * moldyn::DataFileSequence::getDataCallback
  */
-bool stdplugin::datatools::DataFileSequence::getDataCallback(core::Call& caller) {
+bool datatools::DataFileSequence::getDataCallback(core::Call& caller) {
     if (!this->checkConnections(&caller)) return false;
     this->checkParameters();
     this->assertData();
@@ -173,7 +173,7 @@ bool stdplugin::datatools::DataFileSequence::getDataCallback(core::Call& caller)
 /*
  * moldyn::DataFileSequence::getExtentCallback
  */
-bool stdplugin::datatools::DataFileSequence::getExtentCallback(core::Call& caller) {
+bool datatools::DataFileSequence::getExtentCallback(core::Call& caller) {
 
     if (!this->checkConnections(&caller)) return false;
 
@@ -232,7 +232,7 @@ bool stdplugin::datatools::DataFileSequence::getExtentCallback(core::Call& calle
 /*
  * moldyn::DataFileSequence::checkConnections
  */
-bool stdplugin::datatools::DataFileSequence::checkConnections(core::Call *outCall) {
+bool datatools::DataFileSequence::checkConnections(core::Call *outCall) {
     if (this->inDataSlot.GetStatus() != core::AbstractSlot::STATUS_CONNECTED) return false;
     if (this->outDataSlot.GetStatus() != core::AbstractSlot::STATUS_CONNECTED) return false;
     core::Call *inCall = this->inDataSlot.CallAs<core::Call>();
@@ -249,7 +249,7 @@ bool stdplugin::datatools::DataFileSequence::checkConnections(core::Call *outCal
 /*
  * moldyn::DataFileSequence::checkParameters
  */
-void stdplugin::datatools::DataFileSequence::checkParameters(void) {
+void datatools::DataFileSequence::checkParameters(void) {
     if (this->fileNumberMinSlot.IsDirty()) {
         this->fileNumberMinSlot.ResetDirty();
         this->fileNumMin = static_cast<unsigned int>(vislib::math::Max(0,
@@ -282,7 +282,7 @@ void stdplugin::datatools::DataFileSequence::checkParameters(void) {
 /*
  * moldyn::DataFileSequence::onFileNameTemplateChanged
  */
-bool stdplugin::datatools::DataFileSequence::onFileNameTemplateChanged(core::param::ParamSlot& slot) {
+bool datatools::DataFileSequence::onFileNameTemplateChanged(core::param::ParamSlot& slot) {
     using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->fileNameTemplateSlot);
     // D:\data\Kohler\nial\nialout50_*5{0..599+2}*.crist
@@ -447,7 +447,7 @@ bool stdplugin::datatools::DataFileSequence::onFileNameTemplateChanged(core::par
 /*
  * moldyn::DataFileSequence::onFileNameSlotNameChanged
  */
-bool stdplugin::datatools::DataFileSequence::onFileNameSlotNameChanged(core::param::ParamSlot& slot) {
+bool datatools::DataFileSequence::onFileNameSlotNameChanged(core::param::ParamSlot& slot) {
     ASSERT(&slot == &this->fileNameSlotNameSlot);
     this->ModuleGraphLock().LockExclusive();
     core::param::StringParam *P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
@@ -466,7 +466,7 @@ bool stdplugin::datatools::DataFileSequence::onFileNameSlotNameChanged(core::par
 /*
  * moldyn::DataFileSequence::findFileNameSlot
  */
-core::param::ParamSlot *stdplugin::datatools::DataFileSequence::findFileNameSlot(void) {
+core::param::ParamSlot *datatools::DataFileSequence::findFileNameSlot(void) {
     core::param::StringParam *P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if (P != NULL) {
         AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->shared_from_this());
@@ -490,7 +490,7 @@ core::param::ParamSlot *stdplugin::datatools::DataFileSequence::findFileNameSlot
 /*
  * moldyn::DataFileSequence::assertData
  */
-void stdplugin::datatools::DataFileSequence::assertData(void) {
+void datatools::DataFileSequence::assertData(void) {
     using megamol::core::utility::log::Log;
     if (!this->needDataUpdate) return;
     vislib::TString filename;

@@ -11,7 +11,6 @@
 #include "vislib/RawStorage.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*

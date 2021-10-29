@@ -4,7 +4,7 @@
 #include "mmcore/param/StringParam.h"
 
 
-megamol::stdplugin::datatools::table::TableSplit::TableSplit()
+megamol::datatools::table::TableSplit::TableSplit()
     : _selected_data_slot("selectedData", "")
     , _rest_data_slot("restData", "")
     , _in_data_slot("inData", "")
@@ -26,16 +26,16 @@ megamol::stdplugin::datatools::table::TableSplit::TableSplit()
 }
 
 
-megamol::stdplugin::datatools::table::TableSplit::~TableSplit() { this->Release(); }
+megamol::datatools::table::TableSplit::~TableSplit() { this->Release(); }
 
 
-bool megamol::stdplugin::datatools::table::TableSplit::create() { return true; }
+bool megamol::datatools::table::TableSplit::create() { return true; }
 
 
-void megamol::stdplugin::datatools::table::TableSplit::release() {}
+void megamol::datatools::table::TableSplit::release() {}
 
 
-bool megamol::stdplugin::datatools::table::TableSplit::getSelectedDataCB(core::Call& c) {
+bool megamol::datatools::table::TableSplit::getSelectedDataCB(core::Call& c) {
     auto outCall = dynamic_cast<TableDataCall*>(&c);
     if (outCall == nullptr) return false;
 
@@ -65,7 +65,7 @@ bool megamol::stdplugin::datatools::table::TableSplit::getSelectedDataCB(core::C
 }
 
 
-bool megamol::stdplugin::datatools::table::TableSplit::getRestDataCB(core::Call& c) {
+bool megamol::datatools::table::TableSplit::getRestDataCB(core::Call& c) {
     auto outCall = dynamic_cast<TableDataCall*>(&c);
     if (outCall == nullptr) return false;
 
@@ -94,7 +94,7 @@ bool megamol::stdplugin::datatools::table::TableSplit::getRestDataCB(core::Call&
 }
 
 
-bool megamol::stdplugin::datatools::table::TableSplit::getHashCB(core::Call& c) {
+bool megamol::datatools::table::TableSplit::getHashCB(core::Call& c) {
     auto outCall = dynamic_cast<TableDataCall*>(&c);
     if (outCall == nullptr) return false;
 
@@ -111,7 +111,7 @@ bool megamol::stdplugin::datatools::table::TableSplit::getHashCB(core::Call& c) 
 }
 
 
-bool megamol::stdplugin::datatools::table::TableSplit::processData(TableDataCall const& inCall) {
+bool megamol::datatools::table::TableSplit::processData(TableDataCall const& inCall) {
     auto const column_selector = std::string(_column_selector_slot.Param<core::param::StringParam>()->Value());
 
     auto const infos = inCall.GetColumnsInfos();

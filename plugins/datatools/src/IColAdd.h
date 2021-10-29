@@ -12,10 +12,9 @@
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
-    class IColAdd : public stdplugin::datatools::AbstractParticleManipulator {
+    class IColAdd : public datatools::AbstractParticleManipulator {
     public:
         static const char *ClassName(void) { return "IColAdd"; }
         static const char *Description(void) { return "Adds two ICol value streams:  c[] = a_s * a[] + b_s * b[]"; }
@@ -46,6 +45,5 @@ namespace datatools {
 
     };
 
-}
 }
 }

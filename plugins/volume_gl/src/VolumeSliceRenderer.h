@@ -15,7 +15,6 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace volume_gl {
 
     /**
@@ -102,5 +101,4 @@ namespace volume_gl {
     };
 
 } /* end namespace volume */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

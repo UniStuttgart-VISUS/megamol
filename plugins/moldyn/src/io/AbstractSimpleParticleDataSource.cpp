@@ -9,7 +9,7 @@
 #include "AbstractSimpleParticleDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 
-namespace megamol::stdplugin::datatools::io {
+namespace megamol::datatools::io {
 
 
 /*

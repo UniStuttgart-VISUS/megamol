@@ -266,7 +266,7 @@ private:
     size_t dataHash;
     unsigned int dataTime;
 
-    stdplugin::datatools::table::TableDataCall* floatTable;
+    datatools::table::TableDataCall* floatTable;
 
     core::view::CallGetTransferFunction* transferFunction;
 

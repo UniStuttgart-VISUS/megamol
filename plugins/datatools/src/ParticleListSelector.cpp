@@ -9,7 +9,6 @@
 #include "mmcore/param/IntParam.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*

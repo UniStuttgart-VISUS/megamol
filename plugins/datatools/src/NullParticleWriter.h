@@ -10,7 +10,6 @@
 #include "mmcore/CallerSlot.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 
@@ -44,5 +43,4 @@ namespace datatools {
     };
 
 }
-} /* end namespace contest2016 */
 } /* end namespace megamol */

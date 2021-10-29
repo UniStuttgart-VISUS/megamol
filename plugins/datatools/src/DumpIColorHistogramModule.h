@@ -4,12 +4,7 @@
  * Copyright (C) 2014 by S. Grottel
  * Alle Rechte vorbehalten.
  */
-
-#ifndef MEGAMOLCORE_DUMPICOLORHISTOGRAMMODULE_H_INCLUDED
-#define MEGAMOLCORE_DUMPICOLORHISTOGRAMMODULE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Module.h"
 #include "mmcore/CallerSlot.h"
@@ -17,7 +12,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     class DumpIColorHistogramModule : public megamol::core::Module {
@@ -44,7 +38,4 @@ namespace datatools {
 
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_DUMPICOLORHISTOGRAMMODULE_H_INCLUDED */

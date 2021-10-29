@@ -12,7 +12,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol::stdplugin::datatools::table {
+namespace megamol::datatools::table {
 
     /**
      * MMFTDataWriter (MegaMol Particle List Dump) file writer
@@ -98,6 +98,6 @@ namespace megamol::stdplugin::datatools::table {
         core::CallerSlot dataSlot;
     };
 
-} // namespace megamol::stdplugin::datatools::table
+} // namespace megamol::datatools::table
 
 #endif // MEGAMOL_DATATOOLS_MMFTDATAWRITER_H_INCLUDED

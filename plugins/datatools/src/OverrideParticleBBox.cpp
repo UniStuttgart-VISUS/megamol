@@ -16,7 +16,6 @@
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 VISLIB_FORCEINLINE vislib::math::ShallowPoint<float, 3> posFromXYZ(void* const ptr, size_t stride, size_t idx) {

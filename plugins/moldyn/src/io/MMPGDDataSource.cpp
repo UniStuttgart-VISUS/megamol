@@ -16,8 +16,8 @@
 #include "vislib/String.h"
 #include "mmcore/utility/sys/SystemInformation.h"
 
-using namespace megamol::stdplugin::moldyn::io;
-using namespace megamol::stdplugin::moldyn;
+using namespace megamol::moldyn::io;
+using namespace megamol::moldyn;
 
 
 /* defines for the frame cache size */

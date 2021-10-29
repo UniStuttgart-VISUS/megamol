@@ -11,10 +11,9 @@
 #include "mmcore/CallerSlot.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
-    class ErosionField : public stdplugin::datatools::AbstractParticleManipulator {
+    class ErosionField : public datatools::AbstractParticleManipulator {
     public:
         static const char *ClassName(void) { return "ErosionField"; }
         static const char *Description(void) { return "Computes an erosion "
@@ -45,6 +44,5 @@ namespace datatools {
 
     };
 
-}
 }
 }

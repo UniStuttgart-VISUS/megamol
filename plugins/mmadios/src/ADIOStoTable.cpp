@@ -17,10 +17,10 @@ ADIOStoTable::ADIOStoTable() : Module()
     , _getDataSlot("getData", "")
     , _deployTableSlot("deployTable", "") {
 
-    this->_deployTableSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
-        stdplugin::datatools::table::TableDataCall::FunctionName(0), &ADIOStoTable::getData);
-    this->_deployTableSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
-        stdplugin::datatools::table::TableDataCall::FunctionName(1), &ADIOStoTable::getMetaData);
+    this->_deployTableSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
+        datatools::table::TableDataCall::FunctionName(0), &ADIOStoTable::getData);
+    this->_deployTableSlot.SetCallback(datatools::table::TableDataCall::ClassName(),
+        datatools::table::TableDataCall::FunctionName(1), &ADIOStoTable::getMetaData);
     this->MakeSlotAvailable(&this->_deployTableSlot);
 
     this->_getDataSlot.SetCompatibleCall<adios::CallADIOSDataDescription>();
@@ -38,7 +38,7 @@ bool ADIOStoTable::InterfaceIsDirty() { return false; }
 
 bool ADIOStoTable::getData(core::Call& call) {
 
-    stdplugin::datatools::table::TableDataCall* ctd = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&call);
+    datatools::table::TableDataCall* ctd = dynamic_cast<datatools::table::TableDataCall*>(&call);
     if (ctd == nullptr) return false;
 
     adios::CallADIOSData* cad = this->_getDataSlot.CallAs<adios::CallADIOSData>();
@@ -83,7 +83,7 @@ bool ADIOStoTable::getData(core::Call& call) {
             _colinfo[i].SetName(availVars[i]);
             _colinfo[i].SetMaximumValue(max);
             _colinfo[i].SetMinimumValue(min);
-            _colinfo[i].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+            _colinfo[i].SetType(datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
         }
 
         _floatBlob.resize(_rows*_cols);
@@ -109,7 +109,7 @@ bool ADIOStoTable::getData(core::Call& call) {
 
 bool ADIOStoTable::getMetaData(core::Call& call) {
 
-    stdplugin::datatools::table::TableDataCall* ctd = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&call);
+    datatools::table::TableDataCall* ctd = dynamic_cast<datatools::table::TableDataCall*>(&call);
     if (ctd == nullptr) return false;
 
     adios::CallADIOSData* cad = this->_getDataSlot.CallAs<adios::CallADIOSData>();

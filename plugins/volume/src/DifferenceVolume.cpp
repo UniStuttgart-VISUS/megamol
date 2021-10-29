@@ -16,9 +16,9 @@
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::DifferenceVolume
+ * megamol::volume::DifferenceVolume::DifferenceVolume
  */
-megamol::stdplugin::volume::DifferenceVolume::DifferenceVolume(void)
+megamol::volume::DifferenceVolume::DifferenceVolume(void)
         : frameID((std::numeric_limits<unsigned int>::max)()),
         frameIdx(0),
         hashData((std::numeric_limits<std::size_t>::max)()),
@@ -58,17 +58,17 @@ megamol::stdplugin::volume::DifferenceVolume::DifferenceVolume(void)
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::~DifferenceVolume
+ * megamol::volume::DifferenceVolume::~DifferenceVolume
  */
-megamol::stdplugin::volume::DifferenceVolume::~DifferenceVolume(void) {
+megamol::volume::DifferenceVolume::~DifferenceVolume(void) {
     this->Release();
 }
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::getFrameSize
+ * megamol::volume::DifferenceVolume::getFrameSize
  */
-std::size_t megamol::stdplugin::volume::DifferenceVolume::getFrameSize(
+std::size_t megamol::volume::DifferenceVolume::getFrameSize(
         const geocalls::VolumetricMetadata_t& md) {
     auto retval = md.Resolution[0] * md.Resolution[1] * md.Resolution[2];
     retval *= md.ScalarLength;
@@ -78,10 +78,10 @@ std::size_t megamol::stdplugin::volume::DifferenceVolume::getFrameSize(
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::getDifferenceType
+ * megamol::volume::DifferenceVolume::getDifferenceType
  */
 megamol::geocalls::ScalarType_t
-megamol::stdplugin::volume::DifferenceVolume::getDifferenceType(
+megamol::volume::DifferenceVolume::getDifferenceType(
         const geocalls::VolumetricMetadata_t& md) {
     switch (md.ScalarType) {
         case geocalls::SIGNED_INTEGER:
@@ -101,9 +101,9 @@ megamol::stdplugin::volume::DifferenceVolume::getDifferenceType(
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::checkCompatibility
+ * megamol::volume::DifferenceVolume::checkCompatibility
  */
-bool megamol::stdplugin::volume::DifferenceVolume::checkCompatibility(
+bool megamol::volume::DifferenceVolume::checkCompatibility(
         const geocalls::VolumetricMetadata_t& md) const {
     using megamol::core::utility::log::Log;
     auto reqType = getDifferenceType(md);
@@ -135,17 +135,17 @@ bool megamol::stdplugin::volume::DifferenceVolume::checkCompatibility(
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::create
+ * megamol::volume::DifferenceVolume::create
  */
-bool megamol::stdplugin::volume::DifferenceVolume::create(void) {
+bool megamol::volume::DifferenceVolume::create(void) {
     return true;
 }
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::onGetData
+ * megamol::volume::DifferenceVolume::onGetData
  */
-bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
+bool megamol::volume::DifferenceVolume::onGetData(core::Call& call) {
     using geocalls::VolumetricDataCall;
     using core::param::BoolParam;
     using megamol::core::utility::log::Log;
@@ -421,9 +421,9 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::onGetExtents
+ * megamol::volume::DifferenceVolume::onGetExtents
  */
-bool megamol::stdplugin::volume::DifferenceVolume::onGetExtents(core::Call& call) {
+bool megamol::volume::DifferenceVolume::onGetExtents(core::Call& call) {
     using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
@@ -459,9 +459,9 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetExtents(core::Call& call
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::onGetMetadata
+ * megamol::volume::DifferenceVolume::onGetMetadata
  */
-bool megamol::stdplugin::volume::DifferenceVolume::onGetMetadata(
+bool megamol::volume::DifferenceVolume::onGetMetadata(
         core::Call& call) {
     using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
@@ -495,18 +495,18 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetMetadata(
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::onUnsupported
+ * megamol::volume::DifferenceVolume::onUnsupported
  */
-bool megamol::stdplugin::volume::DifferenceVolume::onUnsupported(
+bool megamol::volume::DifferenceVolume::onUnsupported(
         core::Call& call) {
     return false;
 }
 
 
 /*
- * megamol::stdplugin::volume::DifferenceVolume::release
+ * megamol::volume::DifferenceVolume::release
  */
-void megamol::stdplugin::volume::DifferenceVolume::release(void) {
+void megamol::volume::DifferenceVolume::release(void) {
     for (auto& c : this->cache) {
         c.clear();
     }

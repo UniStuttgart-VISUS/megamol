@@ -22,7 +22,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn {
 namespace misc {
 
@@ -149,6 +148,5 @@ namespace misc {
 
 } /* end namespace misc */
 } /* end namespace moldyn */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 

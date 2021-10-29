@@ -9,11 +9,11 @@
 
 using namespace megamol;
 
-stdplugin::datatools::MultiIndexListDataCall::MultiIndexListDataCall() : AbstractGetDataCall(),
+datatools::MultiIndexListDataCall::MultiIndexListDataCall() : AbstractGetDataCall(),
         lsts(nullptr), lsts_len(0), frameCnt(0), frameID(0) {
     // intentionally empty
 }
 
-stdplugin::datatools::MultiIndexListDataCall::~MultiIndexListDataCall() {
+datatools::MultiIndexListDataCall::~MultiIndexListDataCall() {
     lsts = nullptr; // not our memory, we do not delete
 }

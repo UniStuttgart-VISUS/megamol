@@ -3,7 +3,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 ParticleDataSequenceConcatenate::ParticleDataSequenceConcatenate()
         : Module(),

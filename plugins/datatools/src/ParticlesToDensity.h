@@ -23,7 +23,6 @@
 #include <vector>
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 /**
@@ -118,7 +117,7 @@ private:
     std::vector<float> directions, colors, densities;
     std::vector<float> grid;
 
-    std::array<stdplugin::datatools::table::TableDataCall::ColumnInfo, 7> info;
+    std::array<datatools::table::TableDataCall::ColumnInfo, 7> info;
     std::vector<float> infoData;
 
     size_t in_datahash = std::numeric_limits<size_t>::max();
@@ -141,5 +140,4 @@ private:
 };
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

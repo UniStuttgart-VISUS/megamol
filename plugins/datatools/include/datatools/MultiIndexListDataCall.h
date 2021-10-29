@@ -4,8 +4,6 @@
  * Copyright (C) 2016 by MegaMol Team (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_DATATOOLS_MULTIINDEXLISTDATACALL_H_INCLUDED
-#define MEGAMOL_DATATOOLS_MULTIINDEXLISTDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/AbstractGetDataCall.h"
@@ -13,7 +11,6 @@
 #include <cstdint>
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     /**
@@ -103,6 +100,3 @@ namespace datatools {
 
 }
 }
-}
-
-#endif /* MEGAMOL_DATATOOLS_MULTIINDEXLISTDATACALL_H_INCLUDED */

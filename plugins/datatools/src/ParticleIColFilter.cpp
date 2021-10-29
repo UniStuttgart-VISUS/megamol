@@ -11,7 +11,6 @@
 #include "mmcore/param/Vector2fParam.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 datatools::ParticleIColFilter::ParticleIColFilter()
         : AbstractParticleManipulator("outData", "inData")

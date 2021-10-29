@@ -11,7 +11,6 @@
 #include <map>
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 class LocalBoundingBoxExtractor: public core::Module {
@@ -79,12 +78,7 @@ private:
     std::vector<float> allCols;
     std::vector<unsigned int> allIdx;
 
-
-
     };
 
-
-
 } // namespace datatools
-} // namespace stdplugin
 } // namespace megamol

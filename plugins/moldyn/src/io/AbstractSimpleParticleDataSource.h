@@ -14,7 +14,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 
 
-namespace megamol::stdplugin::datatools::io {
+namespace megamol::datatools::io {
 
 
     /**

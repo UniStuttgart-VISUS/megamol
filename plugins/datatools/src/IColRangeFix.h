@@ -9,10 +9,9 @@
 #include "datatools/AbstractParticleManipulator.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
-    class IColRangeFix : public stdplugin::datatools::AbstractParticleManipulator {
+    class IColRangeFix : public datatools::AbstractParticleManipulator {
     public:
         static const char *ClassName(void) { return "IColRangeFix"; }
         static const char *Description(void) { return "Fixes the ICol min and max values by iterating over all particles"; }
@@ -32,6 +31,5 @@ namespace datatools {
         float minCol, maxCol;
     };
 
-}
 }
 }

@@ -2,8 +2,7 @@
 #include "datatools/ParticleFilterMapDataCall.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 ParticleFilterMapDataCall::ParticleFilterMapDataCall()
         : idx(nullptr), idx_len(0), frameCnt(1), frameID(0) {

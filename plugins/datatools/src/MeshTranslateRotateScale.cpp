@@ -13,7 +13,6 @@
 #include "vislib/math/Matrix4.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*

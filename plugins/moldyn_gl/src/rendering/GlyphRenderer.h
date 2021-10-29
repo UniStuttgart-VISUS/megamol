@@ -21,7 +21,6 @@
 #include "geometry_calls/EllipsoidalDataCall.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn_gl {
 namespace rendering {
 
@@ -132,7 +131,6 @@ private:
 
 } // namespace rendering
 } // namespace moldyn
-} // namespace stdplugin
 } // namespace megamol
 
 #endif /* MOLDYN_GLYPHRENDERER_H_INCLUDED */

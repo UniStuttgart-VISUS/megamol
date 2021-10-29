@@ -4,14 +4,11 @@
  * Copyright (C) 2016 by S. Grottel
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_DATATOOLS_MULTIPARTICLEDATAADAPTOR_H_INCLUDED
-#define MEGAMOL_DATATOOLS_MULTIPARTICLEDATAADAPTOR_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/MultiParticleDataCall.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     /**
@@ -78,7 +75,4 @@ namespace datatools {
     };
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_MULTIPARTICLEDATAADAPTOR_H_INCLUDED */

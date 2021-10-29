@@ -18,8 +18,6 @@
 
 namespace megamol
 {
-	namespace stdplugin
-	{
 		namespace datatools
 		{
 			namespace io
@@ -188,5 +186,4 @@ namespace megamol
 				{ }
 			}
 		}
-	}
 }

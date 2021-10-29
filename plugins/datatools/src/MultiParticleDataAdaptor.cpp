@@ -2,8 +2,7 @@
 #include "datatools/MultiParticleDataAdaptor.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 MultiParticleDataAdaptor::MultiParticleDataAdaptor(geocalls::MultiParticleDataCall& data)
         : data(data), list(nullptr), count(0) {

@@ -30,7 +30,6 @@
 #include "slicing.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace volume_gl {
 
 
@@ -479,5 +478,4 @@ inline bool ViewSlicing::pointCmp( float *p1, float *p2, float eps) {
 }
 
 } /* end namespace volume */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

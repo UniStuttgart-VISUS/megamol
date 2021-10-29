@@ -14,7 +14,7 @@
 #include "vislib/memutils.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol::stdplugin::moldyn::io {
+namespace megamol::moldyn::io {
 
     /**
      * Test data source module providing generated spheres data

@@ -14,7 +14,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 
-namespace megamol::stdplugin::datatools {
+namespace megamol::datatools {
 
 /****************************************************************************/
 

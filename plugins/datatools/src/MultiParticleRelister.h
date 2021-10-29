@@ -18,7 +18,6 @@
 #include "geometry_calls/ParticleRelistCall.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     class MultiParticleRelister : public AbstractParticleManipulator {
@@ -59,7 +58,6 @@ namespace datatools {
     };
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_STD_DATATOOLS_MULTIPARTICLERELISTER_H_INCLUDED */

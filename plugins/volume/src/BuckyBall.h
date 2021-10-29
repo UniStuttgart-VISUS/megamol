@@ -15,7 +15,6 @@
 #include <vector>
 
 namespace megamol {
-namespace stdplugin {
 namespace volume {
 
     /**
@@ -97,5 +96,4 @@ namespace volume {
     };
 
 } /* end namespace volume */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

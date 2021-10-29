@@ -22,7 +22,7 @@
 
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools::io;
+using namespace megamol::datatools::io;
 
 
 CPERAWDataSource::CPERAWDataSource(void) : core::Module(),

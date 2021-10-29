@@ -13,7 +13,7 @@
 #include "vislib/String.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
 io::MMGDDWriter::MMGDDWriter(void) : AbstractDataWriter(),

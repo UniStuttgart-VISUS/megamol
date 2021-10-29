@@ -31,7 +31,7 @@
 #include "vislib/VersionNumber.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::moldyn::io;
+using namespace megamol::moldyn::io;
 
 
 /* defines for the frame cache size */

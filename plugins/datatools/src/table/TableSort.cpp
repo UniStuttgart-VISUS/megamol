@@ -19,9 +19,9 @@
 
 
 /*
- * megamol::stdplugin::datatools::table::TableSort::TableSort
+ * megamol::datatools::table::TableSort::TableSort
  */
-megamol::stdplugin::datatools::table::TableSort::TableSort(void) 
+megamol::datatools::table::TableSort::TableSort(void)
         : paramColumn("column", "The column to be filtered."),
         paramIsDescending("descending", "Sort in descending instead of ascending order."),
         paramIsStable("stableSort", "Use a stable sorting algorithm.") {
@@ -38,26 +38,26 @@ megamol::stdplugin::datatools::table::TableSort::TableSort(void)
 
 
 /*
- * megamol::stdplugin::datatools::table::TableSort::~TableSort
+ * megamol::datatools::table::TableSort::~TableSort
  */
-megamol::stdplugin::datatools::table::TableSort::~TableSort(void) {
+megamol::datatools::table::TableSort::~TableSort(void) {
     // TODO: this is toxic
     this->Release();
 }
 
 
 /*
- * megamol::stdplugin::datatools::table::TableSort::create
+ * megamol::datatools::table::TableSort::create
  */
-bool megamol::stdplugin::datatools::table::TableSort::create(void) {
+bool megamol::datatools::table::TableSort::create(void) {
     return true;
 }
 
 
 /*
- * megamol::stdplugin::datatools::table::TableSort::prepareData
+ * megamol::datatools::table::TableSort::prepareData
  */
-bool megamol::stdplugin::datatools::table::TableSort::prepareData(
+bool megamol::datatools::table::TableSort::prepareData(
         TableDataCall& src, const unsigned int frameID) {
     using namespace core::param;
     using megamol::core::utility::log::Log;
@@ -159,6 +159,6 @@ bool megamol::stdplugin::datatools::table::TableSort::prepareData(
 
 
 /*
- * megamol::stdplugin::datatools::table::TableSort::release
+ * megamol::datatools::table::TableSort::release
  */
-void megamol::stdplugin::datatools::table::TableSort::release(void) { }
+void megamol::datatools::table::TableSort::release(void) { }

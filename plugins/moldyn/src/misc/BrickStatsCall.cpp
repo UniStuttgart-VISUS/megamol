@@ -2,7 +2,7 @@
 #include "moldyn/BrickStatsCall.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::moldyn;
+using namespace megamol::moldyn;
 
 /*
  *	IntSelectionCall:IntSelectionCall

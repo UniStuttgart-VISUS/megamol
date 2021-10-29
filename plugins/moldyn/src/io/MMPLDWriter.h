@@ -14,7 +14,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace megamol::stdplugin::moldyn::io {
+namespace megamol::moldyn::io {
 
 
     /**

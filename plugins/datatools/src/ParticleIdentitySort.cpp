@@ -3,14 +3,14 @@
 #include <numeric>
 
 
-megamol::stdplugin::datatools::ParticleIdentitySort::ParticleIdentitySort(void)
+megamol::datatools::ParticleIdentitySort::ParticleIdentitySort(void)
     : AbstractParticleManipulator("outData", "indata") {}
 
 
-megamol::stdplugin::datatools::ParticleIdentitySort::~ParticleIdentitySort(void) { this->Release(); };
+megamol::datatools::ParticleIdentitySort::~ParticleIdentitySort(void) { this->Release(); };
 
 
-bool megamol::stdplugin::datatools::ParticleIdentitySort::manipulateData(
+bool megamol::datatools::ParticleIdentitySort::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     using geocalls::MultiParticleDataCall;
 

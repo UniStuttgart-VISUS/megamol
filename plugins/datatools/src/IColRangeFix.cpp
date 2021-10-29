@@ -12,10 +12,10 @@
 #include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
-IColRangeFix::IColRangeFix() : stdplugin::datatools::AbstractParticleManipulator("outData", "inDataA"),
+IColRangeFix::IColRangeFix() : datatools::AbstractParticleManipulator("outData", "inDataA"),
         hash(0), frameID(0), minCol(0.0f), maxCol(1.0f) {
     // intentionally empty
 }
@@ -34,7 +34,7 @@ bool IColRangeFix::manipulateData(
         hash = inData.DataHash();
         frameID = inData.FrameID();
 
-        stdplugin::datatools::MultiParticleDataAdaptor d(inData);
+        datatools::MultiParticleDataAdaptor d(inData);
 
         if (d.get_count() > 0) {
             minCol = maxCol = *d.get_color(0);

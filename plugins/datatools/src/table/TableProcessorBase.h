@@ -17,7 +17,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 namespace table {
 
@@ -35,7 +34,7 @@ namespace table {
 
     protected:
 
-        typedef megamol::stdplugin::datatools::table::TableDataCall::ColumnInfo
+        typedef megamol::datatools::table::TableDataCall::ColumnInfo
             ColumnInfo;
 
         /**
@@ -98,5 +97,4 @@ namespace table {
 
 } /* end namespace table */
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

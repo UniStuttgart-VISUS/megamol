@@ -13,7 +13,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn_gl {
 namespace misc {
 
@@ -63,5 +62,4 @@ namespace misc {
 
 } /* end namespace misc */
 } /* end namespace moldyn */
-} /* end namespace core */
 } /* end namespace megamol */

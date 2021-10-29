@@ -15,7 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol::stdplugin::datatools::table {
+namespace megamol::datatools::table {
 
 class MMFTDataSource : public core::Module {
 public:
@@ -55,6 +55,6 @@ private:
     std::vector<float> values_;
 };
 
-} // namespace megamol::stdplugin::datatools::table
+} // namespace megamol::datatools::table
 
 #endif // MEGAMOL_DATATOOLS_MMFTDATASOURCE_H_INCLUDED

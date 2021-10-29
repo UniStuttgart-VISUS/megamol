@@ -11,10 +11,10 @@
 #include <algorithm>
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
-IndexListIndexColor::IndexListIndexColor() : stdplugin::datatools::AbstractParticleManipulator("outData", "inData"),
+IndexListIndexColor::IndexListIndexColor() : datatools::AbstractParticleManipulator("outData", "inData"),
         inIndexListDataSlot("inIndexListData", "Fetches the second ICol value stream"),
         inPartsHash(0), inIndexHash(0), outHash(0),
         frameID(0), colors(), minCol(0.0f), maxCol(1.0f) {
@@ -51,7 +51,7 @@ bool IndexListIndexColor::manipulateData(
         inListsPtr->SetFrameID(inData.FrameID());
         if (!(*inListsPtr)(MultiIndexListDataCall::GET_DATA)) return false;
 
-        stdplugin::datatools::MultiParticleDataAdaptor p(inData);
+        datatools::MultiParticleDataAdaptor p(inData);
         size_t pCnt = p.get_count();
         colors.resize(pCnt);
 

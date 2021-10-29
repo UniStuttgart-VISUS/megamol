@@ -41,9 +41,9 @@ enum Operator : int {
 
 
 /*
- * megamol::stdplugin::datatools::table::TableWhere::TableWhere
+ * megamol::datatools::table::TableWhere::TableWhere
  */
-megamol::stdplugin::datatools::table::TableWhere::TableWhere(void) 
+megamol::datatools::table::TableWhere::TableWhere(void)
         : paramColumn("column", "The column to be filtered."),
         paramEpsilon("epsilon", "The epsilon value for testing (in-) equality."),
         paramOperator("operator", "The comparison operator."),
@@ -83,32 +83,32 @@ megamol::stdplugin::datatools::table::TableWhere::TableWhere(void)
 
 
 /*
- * megamol::stdplugin::datatools::table::TableWhere::~TableWhere
+ * megamol::datatools::table::TableWhere::~TableWhere
  */
-megamol::stdplugin::datatools::table::TableWhere::~TableWhere(void) {
+megamol::datatools::table::TableWhere::~TableWhere(void) {
     // TODO: this is toxic
     this->Release();
 }
 
 
 /*
- * megamol::stdplugin::datatools::table::TableWhere::create
+ * megamol::datatools::table::TableWhere::create
  */
-bool megamol::stdplugin::datatools::table::TableWhere::create(void) {
+bool megamol::datatools::table::TableWhere::create(void) {
     return true;
 }
 
 
 /*
- * megamol::stdplugin::datatools::table::TableWhere::release
+ * megamol::datatools::table::TableWhere::release
  */
-void megamol::stdplugin::datatools::table::TableWhere::release(void) { }
+void megamol::datatools::table::TableWhere::release(void) { }
 
 
 /*
- * megamol::stdplugin::datatools::table::TableWhere::prepareData
+ * megamol::datatools::table::TableWhere::prepareData
  */
-bool megamol::stdplugin::datatools::table::TableWhere::prepareData(
+bool megamol::datatools::table::TableWhere::prepareData(
         TableDataCall& src, const unsigned int frameID) {
     using namespace core::param;
     using megamol::core::utility::log::Log;

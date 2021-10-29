@@ -9,7 +9,6 @@
 #include <map>
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
         /**
          * This module converts from a generic table to the LineDataCall.
@@ -157,5 +156,4 @@ namespace datatools {
 
         };
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

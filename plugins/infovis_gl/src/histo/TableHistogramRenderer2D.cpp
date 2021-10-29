@@ -12,7 +12,7 @@
 #include "datatools/table/TableDataCall.h"
 
 using namespace megamol::infovis_gl;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 using megamol::core::utility::log::Log;
 

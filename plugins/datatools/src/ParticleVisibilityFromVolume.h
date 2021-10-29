@@ -17,7 +17,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 // TODO: merge this with DirPartFilter!
@@ -95,7 +94,6 @@ private:
 };
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } // namespace datatools
 
 #endif /* MEGAMOLCORE_PARTICLEVISIBILITYFROMVOLUME_H_INCLUDED */

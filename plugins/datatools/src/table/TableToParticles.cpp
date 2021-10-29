@@ -21,7 +21,7 @@
 #include "vislib/sys/PerformanceCounter.h"
 #include "vislib/StringConverter.h"
 
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 using namespace megamol;
 
 /*

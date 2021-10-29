@@ -14,8 +14,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 
-using namespace megamol::stdplugin::datatools;
-using namespace megamol::stdplugin::datatools::table;
+using namespace megamol::datatools;
+using namespace megamol::datatools::table;
 using namespace megamol;
 
 TableSelectionTx::TableSelectionTx()

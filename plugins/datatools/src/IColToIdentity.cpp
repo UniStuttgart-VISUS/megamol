@@ -2,14 +2,14 @@
 #include "IColToIdentity.h"
 
 
-megamol::stdplugin::datatools::IColToIdentity::IColToIdentity(void)
+megamol::datatools::IColToIdentity::IColToIdentity(void)
     : AbstractParticleManipulator("outData", "indata") {}
 
 
-megamol::stdplugin::datatools::IColToIdentity::~IColToIdentity(void) { this->Release(); };
+megamol::datatools::IColToIdentity::~IColToIdentity(void) { this->Release(); };
 
 
-bool megamol::stdplugin::datatools::IColToIdentity::manipulateData(
+bool megamol::datatools::IColToIdentity::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     using geocalls::MultiParticleDataCall;
 

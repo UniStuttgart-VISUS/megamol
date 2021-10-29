@@ -21,7 +21,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 namespace io {
 
@@ -144,5 +143,4 @@ private:
 
 } // namespace io
 } // namespace datatools
-} // namespace stdplugin
 } // namespace megamol

@@ -14,7 +14,7 @@
 #include "vislib/graphics/ColourRGBAu8.h"
 
 
-namespace megamol::stdplugin::datatools::io {
+namespace megamol::datatools::io {
 
 
     /**

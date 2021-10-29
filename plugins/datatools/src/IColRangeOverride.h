@@ -10,10 +10,9 @@
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
-    class IColRangeOverride : public stdplugin::datatools::AbstractParticleManipulator {
+    class IColRangeOverride : public datatools::AbstractParticleManipulator {
     public:
         static const char *ClassName(void) { return "IColRangeOverride"; }
         static const char *Description(void) { return "Sets the ICol min and max values"; }
@@ -38,6 +37,5 @@ namespace datatools {
         float minCol, maxCol;
     };
 
-}
 }
 }

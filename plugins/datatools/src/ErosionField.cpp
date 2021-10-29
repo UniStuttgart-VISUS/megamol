@@ -14,15 +14,15 @@
 #include <vector>
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
-ErosionField::ErosionField() : stdplugin::datatools::AbstractParticleManipulator("outData", "inPtData"),
+ErosionField::ErosionField() : datatools::AbstractParticleManipulator("outData", "inPtData"),
         inNDataSlot("inNeighborData", "Fetches the neighborhood graph"),
         inPtHash(0), inNHash(0), outHash(0),
         frameID(0), colors(), maxCol(1.0f) {
 
-    inNDataSlot.SetCompatibleCall<stdplugin::datatools::GraphDataCallDescription>();
+    inNDataSlot.SetCompatibleCall<datatools::GraphDataCallDescription>();
     MakeSlotAvailable(&inNDataSlot);
 }
 
@@ -33,7 +33,7 @@ ErosionField::~ErosionField() {
 bool ErosionField::manipulateData(
     geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inPtData) {
 
-    GraphDataCall *inNDataPtr = inNDataSlot.CallAs<stdplugin::datatools::GraphDataCall>();
+    GraphDataCall *inNDataPtr = inNDataSlot.CallAs<datatools::GraphDataCall>();
     if (inNDataPtr == nullptr) return false;
     GraphDataCall& inNData = *inNDataPtr;
 
@@ -49,7 +49,7 @@ bool ErosionField::manipulateData(
         outHash++;
         frameID = inPtData.FrameID();
 
-        stdplugin::datatools::MultiParticleDataAdaptor Pts(inPtData);
+        datatools::MultiParticleDataAdaptor Pts(inPtData);
 
         colors.resize(Pts.get_count());
         for (size_t i = 1; i < Pts.get_count(); ++i) {

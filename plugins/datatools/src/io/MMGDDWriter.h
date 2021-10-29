@@ -17,7 +17,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 namespace io {
 
@@ -54,7 +53,6 @@ namespace io {
 
 } /* end namespace io */
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_MMPLDWRITER_H_INCLUDED */

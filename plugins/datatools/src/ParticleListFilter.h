@@ -14,7 +14,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol::stdplugin::datatools {
+namespace megamol::datatools {
 
 
     /**

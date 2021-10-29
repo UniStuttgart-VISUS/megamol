@@ -17,7 +17,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/IntParam.h"
 
-namespace megamol::stdplugin::moldyn::io {
+namespace megamol::moldyn::io {
 
 /*
  * TestSpheresDataSource::TestSpheresDataSource

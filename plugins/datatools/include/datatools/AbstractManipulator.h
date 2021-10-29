@@ -13,7 +13,6 @@
 #include "mmcore/factories/CallAutoDescription.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 /**
@@ -171,5 +170,4 @@ template <class C> bool AbstractManipulator<C>::getExtentCallback(megamol::core:
 
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */

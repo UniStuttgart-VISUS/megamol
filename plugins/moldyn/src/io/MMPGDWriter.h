@@ -19,7 +19,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn {
 namespace io {
 
@@ -124,7 +123,6 @@ private:
 
 }
 } /* end namespace moldyn */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_MMPGDWRITER_H_INCLUDED */

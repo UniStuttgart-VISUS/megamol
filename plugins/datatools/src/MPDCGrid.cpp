@@ -4,7 +4,7 @@
 #include "mmcore/param/IntParam.h"
 
 
-megamol::stdplugin::datatools::MPDCGrid::MPDCGrid()
+megamol::datatools::MPDCGrid::MPDCGrid()
     : data_out_slot_("dataOut", "")
     , data_in_slot_("dataIn", "")
     , max_size_slot_("maxSize", "Maximum size of each cell")
@@ -25,16 +25,16 @@ megamol::stdplugin::datatools::MPDCGrid::MPDCGrid()
 }
 
 
-megamol::stdplugin::datatools::MPDCGrid::~MPDCGrid() { this->Release(); }
+megamol::datatools::MPDCGrid::~MPDCGrid() { this->Release(); }
 
 
-bool megamol::stdplugin::datatools::MPDCGrid::create() { return true; }
+bool megamol::datatools::MPDCGrid::create() { return true; }
 
 
-void megamol::stdplugin::datatools::MPDCGrid::release() {}
+void megamol::datatools::MPDCGrid::release() {}
 
 
-bool megamol::stdplugin::datatools::MPDCGrid::getDataCallback(core::Call& c) {
+bool megamol::datatools::MPDCGrid::getDataCallback(core::Call& c) {
 
     auto outData = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     if (outData == nullptr) return false;
@@ -103,7 +103,7 @@ bool megamol::stdplugin::datatools::MPDCGrid::getDataCallback(core::Call& c) {
 }
 
 
-bool megamol::stdplugin::datatools::MPDCGrid::getExtentCallback(core::Call& c) {
+bool megamol::datatools::MPDCGrid::getExtentCallback(core::Call& c) {
     auto outData = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     if (outData == nullptr) return false;
 
@@ -125,8 +125,8 @@ bool megamol::stdplugin::datatools::MPDCGrid::getExtentCallback(core::Call& c) {
 }
 
 
-std::vector<megamol::stdplugin::datatools::MPDCGrid::BrickLet> megamol::stdplugin::datatools::MPDCGrid::gridify(
-    std::vector<megamol::stdplugin::datatools::MPDCGrid::Particle>& particles, Box const& bbox, size_t maxSize,
+std::vector<megamol::datatools::MPDCGrid::BrickLet> megamol::datatools::MPDCGrid::gridify(
+    std::vector<megamol::datatools::MPDCGrid::Particle>& particles, Box const& bbox, size_t maxSize,
     size_t begin, size_t end) {
     auto const pcount = end - begin;
 
@@ -164,9 +164,9 @@ std::vector<megamol::stdplugin::datatools::MPDCGrid::BrickLet> megamol::stdplugi
 }
 
 
-std::vector<megamol::geocalls::SimpleSphericalParticles> megamol::stdplugin::datatools::MPDCGrid::separate(
-    std::vector<megamol::stdplugin::datatools::MPDCGrid::Particle> const& particles,
-    std::vector<megamol::stdplugin::datatools::MPDCGrid::BrickLet> const& bricks, float radius) {
+std::vector<megamol::geocalls::SimpleSphericalParticles> megamol::datatools::MPDCGrid::separate(
+    std::vector<megamol::datatools::MPDCGrid::Particle> const& particles,
+    std::vector<megamol::datatools::MPDCGrid::BrickLet> const& bricks, float radius) {
     std::vector<geocalls::SimpleSphericalParticles> ret(bricks.size());
     auto vert_base = reinterpret_cast<char const*>(particles.data());
     auto col_base = vert_base + sizeof(vislib::math::Point<float, 3>);

@@ -4,12 +4,7 @@
  * Copyright (C) 2014 by CGV TU Dresden
  * Alle Rechte vorbehalten.
  */
-
-#ifndef MEGAMOLCORE_DATASETTIMEREWRITEMODULE_H_INCLUDED
-#define MEGAMOLCORE_DATASETTIMEREWRITEMODULE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Module.h"
 #include "mmcore/factories/CallDescription.h"
@@ -20,7 +15,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 
@@ -143,7 +137,4 @@ namespace datatools {
     };
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_DATASETTIMEREWRITEMODULE_H_INCLUDED */

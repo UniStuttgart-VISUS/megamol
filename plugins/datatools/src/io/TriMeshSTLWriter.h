@@ -16,8 +16,6 @@
 
 namespace megamol
 {
-	namespace stdplugin
-	{
 		namespace datatools
 		{
 			namespace io
@@ -110,7 +108,6 @@ namespace megamol
 				};
 			}
 		}
-	}
 }
 
 #endif // !MEGAMOL_DATATOOLS_IO_TRIMESHSTLWRITER_H_INCLUDED

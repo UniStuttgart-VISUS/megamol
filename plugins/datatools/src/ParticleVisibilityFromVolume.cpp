@@ -16,7 +16,6 @@
 #include "geometry_calls/VolumetricDataCall.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*

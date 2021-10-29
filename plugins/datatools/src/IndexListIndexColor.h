@@ -12,7 +12,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     /**
@@ -60,6 +59,5 @@ namespace datatools {
 
     };
 
-}
 }
 }

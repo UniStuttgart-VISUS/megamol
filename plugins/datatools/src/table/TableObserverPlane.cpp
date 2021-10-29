@@ -16,8 +16,8 @@
 #include "vislib/math/Matrix4.h"
 #include <cmath>
 
-using namespace megamol::stdplugin::datatools;
-using namespace megamol::stdplugin::datatools::table;
+using namespace megamol::datatools;
+using namespace megamol::datatools::table;
 using namespace megamol;
 
 /*
@@ -82,11 +82,11 @@ TableObserverPlane::TableObserverPlane(void) : Module(),
 
     /* Register calls. */
     this->slotCallObservedTable.SetCallback(
-        stdplugin::datatools::table::TableDataCall::ClassName(),
+        datatools::table::TableDataCall::ClassName(),
         "GetData",
         &TableObserverPlane::getObservedData);
     this->slotCallObservedTable.SetCallback(
-        stdplugin::datatools::table::TableDataCall::ClassName(),
+        datatools::table::TableDataCall::ClassName(),
         "GetHash",
         &TableObserverPlane::getHash);
     this->MakeSlotAvailable(&this->slotCallObservedTable);

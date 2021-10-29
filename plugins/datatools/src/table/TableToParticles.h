@@ -14,7 +14,6 @@
 #include <array>
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
     /**
@@ -181,7 +180,6 @@ namespace datatools {
     };
 
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_DATATOOLS_FLOATTABLETOPARTICLES_H_INCLUDED */

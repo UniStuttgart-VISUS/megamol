@@ -12,7 +12,7 @@
 #include "DifferenceVolume.h"
 #include "VolumetricDataSource.h"
 
-namespace megamol::stdplugin::volume {
+namespace megamol::volume {
 class VolumePluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(VolumePluginInstance)
 
@@ -27,12 +27,12 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::BuckyBall>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::DifferenceVolume>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::volume::BuckyBall>();
+        this->module_descriptions.RegisterAutoDescription<megamol::volume::DatRawWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::volume::DifferenceVolume>();
+        this->module_descriptions.RegisterAutoDescription<megamol::volume::VolumetricDataSource>();
 
         // register calls
     }
 };
-} // namespace megamol::stdplugin::volume
+} // namespace megamol::volume

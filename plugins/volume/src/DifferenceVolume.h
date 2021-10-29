@@ -22,7 +22,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace volume {
 
     /**
@@ -176,7 +175,6 @@ namespace volume {
     };
 
 } /* end namespace volume */
-} /* namespace stdplugin */
 } /* namespace megamol */
 
 #include "DifferenceVolume.inl"

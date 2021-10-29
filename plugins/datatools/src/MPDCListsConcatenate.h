@@ -12,7 +12,6 @@
 #include "mmcore/Module.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 class MPDCListsConcatenate : public core::Module {
@@ -36,5 +35,4 @@ private:
 }; // end class MPDCListsConcatenate
 
 } // end namespace datatools
-} // end namespace stdplugin
 } // end namespace megamol

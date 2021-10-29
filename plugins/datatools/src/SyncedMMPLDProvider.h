@@ -13,7 +13,6 @@
 #include "mmcore/cluster/SyncDataSourcesCall.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 class SyncedMMPLDProvider : public StaticMMPLDProvider {
@@ -63,5 +62,4 @@ private:
 }; // end class SyncedMMPLDProvider
 
 } // namespace datatools
-} // namespace stdplugin
 } // namespace megamol

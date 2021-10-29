@@ -21,7 +21,6 @@ namespace moldyn {
 }
 }
 
-namespace stdplugin {
 namespace datatools {
 
     class ParticleNeighborhoodGraph : public core::Module {
@@ -73,6 +72,5 @@ namespace datatools {
 
     };
 
-}
 }
 }

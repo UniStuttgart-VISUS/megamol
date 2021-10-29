@@ -10,10 +10,10 @@
 #include "datatools/MultiParticleDataAdaptor.h"
 
 using namespace megamol;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 
-ModColIRange::ModColIRange() : stdplugin::datatools::AbstractParticleManipulator("outData", "inData"),
+ModColIRange::ModColIRange() : datatools::AbstractParticleManipulator("outData", "inData"),
         rangeSlot("maxVal", "Specifies the color range from [0..r["),
         inDataHash(0), outDataHash(0), frameID(0), colors(), minCol(0), maxCol(1) {
 
@@ -35,7 +35,7 @@ bool ModColIRange::manipulateData(
         frameID = inData.FrameID();
         rangeSlot.ResetDirty();
 
-        stdplugin::datatools::MultiParticleDataAdaptor parts(inData);
+        datatools::MultiParticleDataAdaptor parts(inData);
         if (parts.get_count() > 0) {
 
             colors.resize(parts.get_count());

@@ -15,7 +15,7 @@
 #include <GL/glu.h>
 
 
-using namespace megamol::stdplugin::moldyn_gl::misc;
+using namespace megamol::moldyn_gl::misc;
 
 
 #define checkGLError { GLenum errCode = glGetError(); if (errCode != GL_NO_ERROR) std::cout<<"Error in line "<<__LINE__<<": "<<gluErrorString(errCode)<<std::endl;}

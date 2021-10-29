@@ -23,7 +23,6 @@
 #include "mmcore/utility/log/Log.h"
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 namespace io {
 
@@ -308,7 +307,6 @@ protected:
 
 } /* end namespace io */
 } /* end namespace datatools */
-} /* end namespace stdplugin */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_DATATOOLS_IO_PLYDATASOURCE_H_INCLUDED */

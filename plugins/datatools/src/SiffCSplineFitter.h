@@ -17,7 +17,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol::stdplugin::datatools {
+namespace megamol::datatools {
 
 
     /**

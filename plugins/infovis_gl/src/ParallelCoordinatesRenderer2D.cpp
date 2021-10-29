@@ -32,7 +32,7 @@
 
 using namespace megamol;
 using namespace megamol::infovis_gl;
-using namespace megamol::stdplugin::datatools;
+using namespace megamol::datatools;
 
 ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         : Renderer2D()
@@ -375,7 +375,7 @@ bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamS
 }
 
 bool ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2DGL& call) {
-    auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+    auto floats = getDataSlot.CallAs<megamol::datatools::table::TableDataCall>();
     if (floats == nullptr)
         return false;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
@@ -478,7 +478,7 @@ bool ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2DGL& call)
 }
 
 void ParallelCoordinatesRenderer2D::computeScaling(void) {
-    auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+    auto fc = getDataSlot.CallAs<megamol::datatools::table::TableDataCall>();
     if (fc == nullptr)
         return;
 

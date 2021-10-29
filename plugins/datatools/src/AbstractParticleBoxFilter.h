@@ -10,7 +10,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace datatools {
 
 template <class T> class AbstractParticleBoxFilter : public AbstractManipulator<T> {
@@ -214,5 +213,4 @@ template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData,
 }
 
 } // end namespace datatools
-} // end namespace stdplugin
 } // end namespace megamol

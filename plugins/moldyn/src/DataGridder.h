@@ -24,7 +24,6 @@
 
 
 namespace megamol {
-namespace stdplugin {
 namespace moldyn {
 
 
@@ -161,7 +160,6 @@ private:
 };
 
 } /* end namespace moldyn */
-} /* end namespace core */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_DATAGRIDDER_H_INCLUDED */

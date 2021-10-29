@@ -10,7 +10,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
 
-namespace megamol::stdplugin::datatools::io {
+namespace megamol::datatools::io {
 
 
 /*

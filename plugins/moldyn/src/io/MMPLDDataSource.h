@@ -17,7 +17,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol::stdplugin::moldyn::io {
+namespace megamol::moldyn::io {
 
 
     /**

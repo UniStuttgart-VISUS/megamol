@@ -18,7 +18,7 @@
 #include <deque>
 
 using namespace megamol;
-using namespace megamol::stdplugin::moldyn;
+using namespace megamol::moldyn;
 
 
 float io::XYZLoader::FileFormatAutoDetect(const unsigned char* data, SIZE_T dataSize) {

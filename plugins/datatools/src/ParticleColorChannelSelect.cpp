@@ -12,7 +12,6 @@
 #include <cassert>
 
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 
 /*

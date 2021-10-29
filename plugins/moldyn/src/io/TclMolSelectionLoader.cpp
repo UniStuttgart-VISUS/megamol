@@ -13,7 +13,7 @@
 #include <deque>
 
 using namespace megamol;
-using namespace megamol::stdplugin::moldyn;
+using namespace megamol::moldyn;
 
 
 io::TclMolSelectionLoader::TclMolSelectionLoader() : core::Module(),
