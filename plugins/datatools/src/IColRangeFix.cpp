@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "IColRangeFix.h"
-#include "mmstd_datatools/MultiParticleDataAdaptor.h"
+#include "datatools/MultiParticleDataAdaptor.h"
 #include "vislib/math/ShallowVector.h"
 #include <algorithm>
 #include "mmcore/param/FloatParam.h"

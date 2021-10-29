@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "mmstd_moldyn/BrickStatsCall.h"
+#include "moldyn/BrickStatsCall.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin::moldyn;

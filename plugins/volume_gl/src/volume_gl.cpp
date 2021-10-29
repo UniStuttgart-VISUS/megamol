@@ -17,7 +17,7 @@ class VolumeGLPluginInstance : public megamol::core::utility::plugins::AbstractP
 public:
     VolumeGLPluginInstance()
             : megamol::core::utility::plugins::AbstractPluginInstance(
-                  "mmstd_volume_gl", "Provides modules for volume rendering"){};
+                  "volume_gl", "Provides modules for volume rendering"){};
 
     ~VolumeGLPluginInstance() override = default;
 

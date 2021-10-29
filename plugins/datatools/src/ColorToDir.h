@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "mmstd_datatools/AbstractParticleManipulator.h"
+#include "datatools/AbstractParticleManipulator.h"
 
 namespace megamol::stdplugin::datatools {
 

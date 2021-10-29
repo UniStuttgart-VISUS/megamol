@@ -12,7 +12,7 @@
 #include "vislib/Array.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/sys/CriticalSection.h"
-#include "mmstd_trisoup/trisoupVolumetricDataCall.h"
+#include "trisoup/trisoupVolumetricDataCall.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 
 namespace megamol {

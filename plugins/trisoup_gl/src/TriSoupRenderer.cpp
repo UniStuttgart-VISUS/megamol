@@ -9,7 +9,7 @@
 #include "stdafx.h"
 #include "TriSoupRenderer.h"
 #include "geometry_calls/CallTriMeshData.h"
-#include "mmstd_trisoup/trisoupVolumetricDataCall.h"
+#include "trisoup/trisoupVolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"

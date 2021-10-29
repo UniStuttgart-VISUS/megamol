@@ -3,7 +3,7 @@
 #include <array>
 #include <type_traits>
 
-#include "mmstd_datatools/AbstractManipulator.h"
+#include "datatools/AbstractManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/StringTokeniser.h"

@@ -7,7 +7,7 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "mmstd_moldyn/BrickStatsCall.h"
+#include "moldyn/BrickStatsCall.h"
 
 #include "io/BrickStatsDataSource.h"
 #include "io/IMDAtomDataSource.h"
@@ -29,7 +29,7 @@
 #include "misc/ParticleWorker.h"
 
 #include "DataGridder.h"
-#include "mmstd_moldyn/ParticleGridDataCall.h"
+#include "moldyn/ParticleGridDataCall.h"
 
 namespace megamol::stdplugin::moldyn {
     class MoldynPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -38,7 +38,7 @@ namespace megamol::stdplugin::moldyn {
     public:
         MoldynPluginInstance()
                 : megamol::core::utility::plugins::AbstractPluginInstance(
-                      "mmstd_moldyn", "MegaMol Plugins for Molecular Dynamics Data Visualization"){};
+                      "moldyn", "MegaMol Plugins for Molecular Dynamics Data Visualization"){};
 
         ~MoldynPluginInstance() override = default;
 

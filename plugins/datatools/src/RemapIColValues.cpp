@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "RemapIColValues.h"
-#include "mmstd_datatools/ParticleFilterMapDataCall.h"
-#include "mmstd_datatools/MultiParticleDataAdaptor.h"
+#include "datatools/ParticleFilterMapDataCall.h"
+#include "datatools/MultiParticleDataAdaptor.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;

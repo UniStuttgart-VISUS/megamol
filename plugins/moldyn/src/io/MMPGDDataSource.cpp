@@ -9,7 +9,7 @@
 #include "MMPGDDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmstd_moldyn/ParticleGridDataCall.h"
+#include "moldyn/ParticleGridDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"

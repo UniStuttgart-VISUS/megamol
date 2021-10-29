@@ -12,7 +12,7 @@
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmstd_datatools/GraphDataCall.h"
+#include "datatools/GraphDataCall.h"
 #include "vislib/sys/File.h"
 #include <cstdint>
 #include <vector>

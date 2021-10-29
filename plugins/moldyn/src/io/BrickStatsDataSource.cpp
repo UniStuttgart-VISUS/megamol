@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "BrickStatsDataSource.h"
-#include "mmstd_moldyn/BrickStatsCall.h"
+#include "moldyn/BrickStatsCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"

@@ -9,7 +9,7 @@
 #define MEGAMOLCORE_OVERRIDEMULTIPARTICLELISTGLOBALCOLORS_H_INCLUDED
 #pragma once
 
-#include "mmstd_datatools/AbstractParticleManipulator.h"
+#include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 
 

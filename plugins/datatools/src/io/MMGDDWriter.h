@@ -11,7 +11,7 @@
 
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
-#include "mmstd_datatools/GraphDataCall.h"
+#include "datatools/GraphDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/sys/File.h"
 

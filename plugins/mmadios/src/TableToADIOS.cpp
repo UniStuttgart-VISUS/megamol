@@ -10,7 +10,7 @@
 
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 #include "mmcore/utility/log/Log.h"
 

@@ -1,11 +1,11 @@
 #ifndef MEGAMOL_TSNE_MODULE_H_INCLUDED
 #define MEGAMOL_TSNE_MODULE_H_INCLUDED
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/table/TableDataCall.h"
 
 
 namespace megamol {

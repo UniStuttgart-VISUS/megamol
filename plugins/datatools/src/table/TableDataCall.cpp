@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol::stdplugin::datatools::table;

@@ -1,6 +1,6 @@
 #include "CreateFEMModel.h"
 
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/param/IntParam.h"
 
 #include "FEMModel.h"

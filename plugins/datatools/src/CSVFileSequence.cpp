@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "CSVFileSequence.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"

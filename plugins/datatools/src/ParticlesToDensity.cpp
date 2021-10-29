@@ -15,7 +15,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 #include "mmcore/utility/log/Log.h"
 

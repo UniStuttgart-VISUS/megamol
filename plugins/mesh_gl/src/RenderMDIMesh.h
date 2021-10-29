@@ -18,7 +18,7 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 #include "mesh_gl/GPUMaterialCollection.h"
 

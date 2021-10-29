@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmstd_datatools/AbstractParticleManipulator.h"
-#include "mmstd_datatools/AbstractVolumeManipulator.h"
+#include "datatools/AbstractParticleManipulator.h"
+#include "datatools/AbstractVolumeManipulator.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;

@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include "mmstd_datatools/AbstractParticleManipulator.h"
+#include "datatools/AbstractParticleManipulator.h"
 #include <vector>
 #include "mmcore/CallerSlot.h"
 

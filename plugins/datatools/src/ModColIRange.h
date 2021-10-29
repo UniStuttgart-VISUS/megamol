@@ -6,9 +6,9 @@
  */
 #pragma once
 
-#include "mmstd_datatools/AbstractParticleManipulator.h"
+#include "datatools/AbstractParticleManipulator.h"
 #include <vector>
-#include "mmstd_datatools/GraphDataCall.h"
+#include "datatools/GraphDataCall.h"
 #include "vislib/math/Vector.h"
 #include "mmcore/param/ParamSlot.h"
 

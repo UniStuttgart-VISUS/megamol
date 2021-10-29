@@ -11,8 +11,8 @@
 #include <vector>
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/AbstractParticleManipulator.h"
-#include "mmstd_datatools/ParticleFilterMapDataCall.h"
+#include "datatools/AbstractParticleManipulator.h"
+#include "datatools/ParticleFilterMapDataCall.h"
 #include "vislib/math/Cuboid.h"
 
 

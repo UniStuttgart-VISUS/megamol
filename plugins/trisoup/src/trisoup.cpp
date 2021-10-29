@@ -9,7 +9,7 @@
 
 #include "BlockVolumeMesh.h"
 #include "CallBinaryVolumeData.h"
-#include "mmstd_trisoup/trisoupVolumetricDataCall.h"
+#include "trisoup/trisoupVolumetricDataCall.h"
 #include "CoordSysMarker.h"
 #include "OSCBFix.h"
 #include "TriSoupDataSource.h"
@@ -26,7 +26,7 @@ namespace megamol::trisoup {
     public:
         TrisoupPluginInstance()
                 : megamol::core::utility::plugins::AbstractPluginInstance(
-                      "mmstd_trisoup", "Plugin for rendering TriSoup mesh data") {
+                      "trisoup", "Plugin for rendering TriSoup mesh data") {
             vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL - 1);
         };
 

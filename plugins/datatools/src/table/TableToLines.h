@@ -5,7 +5,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "geometry_calls/LinesDataCall.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 #include <map>
 
 namespace megamol {

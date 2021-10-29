@@ -72,10 +72,10 @@
 #include "io/PlyWriter.h"
 #include "io/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
-#include "mmstd_datatools/GraphDataCall.h"
-#include "mmstd_datatools/MultiIndexListDataCall.h"
-#include "mmstd_datatools/ParticleFilterMapDataCall.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/GraphDataCall.h"
+#include "datatools/MultiIndexListDataCall.h"
+#include "datatools/ParticleFilterMapDataCall.h"
+#include "datatools/table/TableDataCall.h"
 #include "table/CSVDataSource.h"
 #include "table/MMFTDataSource.h"
 #include "table/MMFTDataWriter.h"
@@ -103,7 +103,7 @@ class DatatoolsPluginInstance : public megamol::core::utility::plugins::Abstract
 public:
     DatatoolsPluginInstance()
             : megamol::core::utility::plugins::AbstractPluginInstance(
-                  "mmstd_datatools", "MegaMol Standard-Plugin containing data manipulation and conversion modules"){};
+                  "datatools", "MegaMol Standard-Plugin containing data manipulation and conversion modules"){};
 
     ~DatatoolsPluginInstance() override = default;
 

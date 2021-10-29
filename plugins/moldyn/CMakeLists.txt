@@ -3,6 +3,7 @@
 # All rights reserved.
 #
 
-megamol_plugin(mmstd_moldyn
+megamol_plugin(moldyn
   BUILD_DEFAULT ON 
-  DEPENDS_PLUGINS geometry_calls)
+  DEPENDS_PLUGINS
+    geometry_calls)

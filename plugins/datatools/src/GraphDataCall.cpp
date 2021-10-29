@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "mmstd_datatools/GraphDataCall.h"
+#include "datatools/GraphDataCall.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin::datatools;

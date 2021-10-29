@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "ParticleNeighborhoodGraph.h"
-#include "mmstd_datatools/GraphDataCall.h"
+#include "datatools/GraphDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmstd_datatools/MultiParticleDataAdaptor.h"
+#include "datatools/MultiParticleDataAdaptor.h"
 #include <random>
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowVector.h"

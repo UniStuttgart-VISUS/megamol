@@ -13,7 +13,7 @@
 
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
-#include "mmstd_moldyn/ParticleGridDataCall.h"
+#include "moldyn/ParticleGridDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/sys/File.h"
 

@@ -2,7 +2,7 @@
 
 #include "mmcore/CallerSlot.h"
 
-#include "mmstd_datatools/AbstractParticleManipulator.h"
+#include "datatools/AbstractParticleManipulator.h"
 
 #include "glm/glm.hpp"
 

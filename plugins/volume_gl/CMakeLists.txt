@@ -3,11 +3,11 @@
 # All rights reserved.
 #
 
-megamol_plugin(mmstd_volume_gl
+megamol_plugin(volume_gl
   BUILD_DEFAULT ON
   DEPENDS_GL
-  DEPENDS_EXTERNALS
-    glowl 
   DEPENDS_PLUGINS
-    mmstd_volume
-    geometry_calls)
+    volume
+    geometry_calls
+  DEPENDS_EXTERNALS
+    glowl)

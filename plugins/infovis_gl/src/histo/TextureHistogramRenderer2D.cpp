@@ -6,7 +6,7 @@
 
 #include "TextureHistogramRenderer2D.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 #include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/ShaderFactory.h"

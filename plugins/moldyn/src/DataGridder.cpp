@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "DataGridder.h"
 #include <climits>
-#include "mmstd_moldyn/ParticleGridDataCall.h"
+#include "moldyn/ParticleGridDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "vislib/Array.h"

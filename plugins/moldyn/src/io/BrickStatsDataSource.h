@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmstd_moldyn/BrickStatsCall.h"
+#include "moldyn/BrickStatsCall.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"

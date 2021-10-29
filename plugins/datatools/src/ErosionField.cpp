@@ -6,8 +6,8 @@
  */
 #include "stdafx.h"
 #include "ErosionField.h"
-#include "mmstd_datatools/MultiParticleDataAdaptor.h"
-#include "mmstd_datatools/GraphDataCall.h"
+#include "datatools/MultiParticleDataAdaptor.h"
+#include "datatools/GraphDataCall.h"
 #include "vislib/math/ShallowVector.h"
 #include <algorithm>
 #include "mmcore/param/FloatParam.h"

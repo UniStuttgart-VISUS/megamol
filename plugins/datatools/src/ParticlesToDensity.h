@@ -16,7 +16,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 #include "vislib/math/Vector.h"
 

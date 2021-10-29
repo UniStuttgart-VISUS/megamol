@@ -7,7 +7,7 @@
 #pragma once
 
 #include "geometry_calls/EllipsoidalDataCall.h"
-#include "mmstd_datatools/AbstractManipulator.h"
+#include "datatools/AbstractManipulator.h"
 
 namespace megamol {
 namespace stdplugin {

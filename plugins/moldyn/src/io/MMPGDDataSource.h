@@ -14,7 +14,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AnimDataModule.h"
-#include "mmstd_moldyn/ParticleGridDataCall.h"
+#include "moldyn/ParticleGridDataCall.h"
 #include "vislib/RawStorage.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"

@@ -15,7 +15,7 @@
 #include "mmcore/Module.h"
 #include "geometry_calls/LinesDataCall.h"
 #include "geometry_calls/CallTriMeshData.h"
-#include "mmstd_trisoup/trisoupVolumetricDataCall.h"
+#include "trisoup/trisoupVolumetricDataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"

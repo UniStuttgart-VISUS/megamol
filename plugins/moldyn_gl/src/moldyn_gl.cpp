@@ -19,7 +19,7 @@ namespace megamol::stdplugin::moldyn_gl {
     public:
     MoldynGLPluginInstance()
                 : megamol::core::utility::plugins::AbstractPluginInstance(
-                      "mmstd_moldyn_gl", "MegaMol Plugins for Molecular Dynamics Data Visualization"){};
+                      "moldyn_gl", "MegaMol Plugins for Molecular Dynamics Data Visualization"){};
 
         ~MoldynGLPluginInstance() override = default;
 

@@ -17,7 +17,7 @@ namespace megamol::trisoup_gl {
     public:
     TrisoupGLPluginInstance()
                 : megamol::core::utility::plugins::AbstractPluginInstance(
-                      "mmstd_trisoup_gl", "Plugin for rendering TriSoup mesh data") {
+                      "trisoup_gl", "Plugin for rendering TriSoup mesh data") {
             vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL - 1);
         };
 

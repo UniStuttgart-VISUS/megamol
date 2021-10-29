@@ -6,7 +6,8 @@
 megamol_plugin(mmadios
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
-    mmstd_datatools geometry_calls)
+    datatools
+    geometry_calls)
 
 if (mmadios_PLUGIN_ENABLED)
   option(USE_EXTERNAL_ADIOS "Option to use external ADIOS2" OFF)

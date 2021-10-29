@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "ParticleIColGradientField.h"
-#include "mmstd_datatools/MultiParticleDataAdaptor.h"
+#include "datatools/MultiParticleDataAdaptor.h"
 
 #include <nanoflann.hpp>
 #include "mmcore/param/FloatParam.h"

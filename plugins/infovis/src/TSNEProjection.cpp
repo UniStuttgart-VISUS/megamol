@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "TSNEProjection.h"
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmstd_datatools/table/TableDataCall.h"
 
 #include <sstream>
 #include <tsne.h>

@@ -15,7 +15,7 @@
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
 #include "ASSAO.h"
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
 
 namespace megamol::compositing {
     class CompositingPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {

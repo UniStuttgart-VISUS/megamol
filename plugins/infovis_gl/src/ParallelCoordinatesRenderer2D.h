@@ -18,7 +18,7 @@
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/Renderer2DModuleGL.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
 namespace megamol {

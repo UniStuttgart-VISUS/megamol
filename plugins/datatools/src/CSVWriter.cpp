@@ -7,7 +7,7 @@
 
 #include "mmcore/param/FilePathParam.h"
 
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "datatools/table/TableDataCall.h"
 
 
 megamol::stdplugin::datatools::CSVWriter::CSVWriter() : _data_in_slot("inData", ""), _filename_slot("filename", "") {

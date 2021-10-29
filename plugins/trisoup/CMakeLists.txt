@@ -3,7 +3,7 @@
 # All rights reserved.
 #
 
-megamol_plugin(mmstd_trisoup
+megamol_plugin(trisoup
   BUILD_DEFAULT ON
   DEPENDS_PLUGINS
     geometry_calls)
