@@ -1,17 +1,14 @@
 #version 430
 
-//#version 440
 uniform sampler2D src_tex2D;
 
 layout (binding=6, rgba32f) uniform image2D Store;
 layout (binding=7, rgba32f) uniform image2D target;
 
-//layout (binding = 4, rgba32f) uniform image2DArray StoreArray;
-
-uniform int frametype;
-uniform int h;
-uniform int w;
 uniform int amortLevel;
+uniform int w;
+uniform int h;
+uniform int frametype;
 uniform mat4 moveM;
 
 in vec2 uv_coord;
