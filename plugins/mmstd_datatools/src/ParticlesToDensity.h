@@ -12,8 +12,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/misc/VolumetricDataCall.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "mmstd_datatools/table/TableDataCall.h"
@@ -69,9 +69,9 @@ private:
 
     bool dummyCallback(megamol::core::Call& c);
 
-    bool createVolumeCPU(megamol::core::moldyn::MultiParticleDataCall* c2);
+    bool createVolumeCPU(geocalls::MultiParticleDataCall* c2);
 
-    void modifyBBox(megamol::core::moldyn::MultiParticleDataCall* c2);
+    void modifyBBox(geocalls::MultiParticleDataCall* c2);
 
     /**
      * Called when the extend information is requested by this module
@@ -139,7 +139,7 @@ private:
     /** The slot accessing the original data */
     megamol::core::CallerSlot inDataSlot;
 
-    core::misc::VolumetricDataCall::Metadata metadata;
+    geocalls::VolumetricDataCall::Metadata metadata;
 };
 
 } /* end namespace datatools */

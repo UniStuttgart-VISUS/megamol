@@ -29,8 +29,8 @@ IndexListIndexColor::~IndexListIndexColor() {
 }
 
 bool IndexListIndexColor::manipulateData(
-        core::moldyn::MultiParticleDataCall& outData,
-        core::moldyn::MultiParticleDataCall& inData) {
+        geocalls::MultiParticleDataCall& outData,
+        geocalls::MultiParticleDataCall& inData) {
 
     MultiIndexListDataCall *inListsPtr = inIndexListDataSlot.CallAs<MultiIndexListDataCall>();
     if (inListsPtr == nullptr) return false;
@@ -103,7 +103,7 @@ bool IndexListIndexColor::manipulateData(
     const float *data = colors.data();
     for (unsigned int list = 0; list < outData.GetParticleListCount(); ++list) {
         auto &plist = outData.AccessParticles(list);
-        plist.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
+        plist.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
         plist.SetColourMapIndexValues(minCol, maxCol);
         data += plist.GetCount();
     }

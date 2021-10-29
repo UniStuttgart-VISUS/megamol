@@ -8,12 +8,12 @@
 #include "stdafx.h"
 #include "MoleculeBallifier.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 
 using namespace megamol;
 using namespace megamol::protein;
-using namespace megamol::core::moldyn;
+using namespace megamol::geocalls;
 using namespace megamol::protein_calls;
 
 /*
@@ -27,10 +27,10 @@ MoleculeBallifier::MoleculeBallifier(void) : core::Module(),
     this->inDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
-    this->outDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &MoleculeBallifier::getData);
-    this->outDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &MoleculeBallifier::getExt);
+    this->outDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &MoleculeBallifier::getData);
+    this->outDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &MoleculeBallifier::getExt);
     this->MakeSlotAvailable(&this->outDataSlot);
 
 }
@@ -65,7 +65,7 @@ void MoleculeBallifier::release(void) {
  * 
  */
 bool MoleculeBallifier::getData(core::Call& c) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall *ic = dynamic_cast<MultiParticleDataCall*>(&c);
     if (ic == NULL) return false;
 
@@ -126,7 +126,7 @@ ueber den Atom-Type kannst Du auf das Type-Array zugreifen, das den Radius drin 
  * 
  */
 bool MoleculeBallifier::getExt(core::Call& c) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall *ic = dynamic_cast<MultiParticleDataCall*>(&c);
     if (ic == NULL) return false;
 

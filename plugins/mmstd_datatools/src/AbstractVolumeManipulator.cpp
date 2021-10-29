@@ -20,27 +20,27 @@ datatools::AbstractVolumeManipulator::AbstractVolumeManipulator(const char* outS
     , outDataSlot(outSlotName, "providing access to the manipulated data")
     , inDataSlot(inSlotName, "accessing the original data") {
 
-    this->outDataSlot.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_DATA),
+    this->outDataSlot.SetCallback(megamol::geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_DATA),
         &AbstractVolumeManipulator::getDataCallback);
-    this->outDataSlot.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_EXTENTS),
+    this->outDataSlot.SetCallback(megamol::geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_EXTENTS),
         &AbstractVolumeManipulator::getExtentCallback);
-    this->outDataSlot.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_METADATA),
+    this->outDataSlot.SetCallback(megamol::geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_METADATA),
         &AbstractVolumeManipulator::getMetaDataCallback);
-    this->outDataSlot.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_START_ASYNC),
+    this->outDataSlot.SetCallback(megamol::geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_START_ASYNC),
         &AbstractVolumeManipulator::startAsyncCallback);
-    this->outDataSlot.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_STOP_ASYNC),
+    this->outDataSlot.SetCallback(megamol::geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_STOP_ASYNC),
         &AbstractVolumeManipulator::stopAsyncCallback);
-    this->outDataSlot.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_TRY_GET_DATA),
+    this->outDataSlot.SetCallback(megamol::geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_TRY_GET_DATA),
         &AbstractVolumeManipulator::tryGetDataCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->inDataSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
 
@@ -67,7 +67,7 @@ void datatools::AbstractVolumeManipulator::release(void) {}
  * datatools::AbstractVolumeManipulator::manipulateData
  */
 bool datatools::AbstractVolumeManipulator::manipulateData(
-    megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) {
+    megamol::geocalls::VolumetricDataCall& outData, megamol::geocalls::VolumetricDataCall& inData) {
     outData = inData;
     inData.SetUnlocker(nullptr, false);
     return true;
@@ -78,7 +78,7 @@ bool datatools::AbstractVolumeManipulator::manipulateData(
  * datatools::AbstractVolumeManipulator::manipulateExtent
  */
 bool datatools::AbstractVolumeManipulator::manipulateExtent(
-    megamol::core::misc::VolumetricDataCall& outData, megamol::core::misc::VolumetricDataCall& inData) {
+    megamol::geocalls::VolumetricDataCall& outData, megamol::geocalls::VolumetricDataCall& inData) {
     outData = inData;
     inData.SetUnlocker(nullptr, false);
     return true;
@@ -89,7 +89,7 @@ bool datatools::AbstractVolumeManipulator::manipulateExtent(
  * datatools::AbstractVolumeManipulator::manipulateMetaData
  */
 bool datatools::AbstractVolumeManipulator::manipulateMetaData(
-    class core::misc::VolumetricDataCall& outData, class core::misc::VolumetricDataCall& inData) {
+    class geocalls::VolumetricDataCall& outData, class geocalls::VolumetricDataCall& inData) {
     outData = inData;
     inData.SetUnlocker(nullptr, false);
     return true;
@@ -100,7 +100,7 @@ bool datatools::AbstractVolumeManipulator::manipulateMetaData(
  * datatools::AbstractVolumeManipulator::getDataCallback
  */
 bool datatools::AbstractVolumeManipulator::getDataCallback(megamol::core::Call& c) {
-    using megamol::core::misc::VolumetricDataCall;
+    using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
     if (outVdc == nullptr) return false;
@@ -128,7 +128,7 @@ bool datatools::AbstractVolumeManipulator::getDataCallback(megamol::core::Call& 
  * datatools::AbstractVolumeManipulator::getExtentCallback
  */
 bool datatools::AbstractVolumeManipulator::getExtentCallback(megamol::core::Call& c) {
-    using megamol::core::misc::VolumetricDataCall;
+    using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
     if (outVdc == nullptr) return false;
@@ -150,7 +150,7 @@ bool datatools::AbstractVolumeManipulator::getExtentCallback(megamol::core::Call
 }
 
 bool datatools::AbstractVolumeManipulator::getMetaDataCallback(megamol::core::Call& c) {
-    using megamol::core::misc::VolumetricDataCall;
+    using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
     if (outVdc == nullptr) return false;
@@ -172,7 +172,7 @@ bool datatools::AbstractVolumeManipulator::getMetaDataCallback(megamol::core::Ca
 }
 
 bool datatools::AbstractVolumeManipulator::startAsyncCallback(megamol::core::Call& c) {
-    using megamol::core::misc::VolumetricDataCall;
+    using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
     if (outVdc == nullptr) return false;
@@ -189,7 +189,7 @@ bool datatools::AbstractVolumeManipulator::startAsyncCallback(megamol::core::Cal
 }
 
 bool datatools::AbstractVolumeManipulator::stopAsyncCallback(megamol::core::Call& c) {
-    using megamol::core::misc::VolumetricDataCall;
+    using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
     if (outVdc == nullptr) return false;
@@ -206,7 +206,7 @@ bool datatools::AbstractVolumeManipulator::stopAsyncCallback(megamol::core::Call
 }
 
 bool datatools::AbstractVolumeManipulator::tryGetDataCallback(megamol::core::Call& c) {
-    using megamol::core::misc::VolumetricDataCall;
+    using megamol::geocalls::VolumetricDataCall;
 
     auto* outVdc = dynamic_cast<VolumetricDataCall*>(&c);
     if (outVdc == nullptr) return false;

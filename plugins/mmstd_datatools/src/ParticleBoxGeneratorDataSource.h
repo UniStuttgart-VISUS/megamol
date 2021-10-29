@@ -14,7 +14,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include <cstdint>
 #include "vislib/RawStorage.h"
 
@@ -78,7 +78,7 @@ namespace datatools {
         virtual void release(void);
 
     private:
-		typedef core::moldyn::SimpleSphericalParticles Particles;
+		typedef geocalls::SimpleSphericalParticles Particles;
 
 		bool reseed(core::param::ParamSlot& p);
 

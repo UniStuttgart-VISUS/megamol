@@ -10,7 +10,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/moldyn/SimpleSphericalParticles.h"
+#include "geometry_calls/SimpleSphericalParticles.h"
 #include "mmcore/param/ParamSlot.h"
 #include <variant>
 
@@ -93,11 +93,11 @@ private:
     size_t version = 0;
     size_t datahash;
 
-    core::moldyn::SimpleSphericalParticles::ColourDataType colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
-    core::moldyn::SimpleSphericalParticles::VertexDataType vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_NONE;
-    core::moldyn::SimpleSphericalParticles::DirDataType dirType =
-        core::moldyn::SimpleSphericalParticles::DIRDATA_NONE;
-    core::moldyn::SimpleSphericalParticles::IDDataType idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
+    geocalls::SimpleSphericalParticles::ColourDataType colType = geocalls::SimpleSphericalParticles::COLDATA_NONE;
+    geocalls::SimpleSphericalParticles::VertexDataType vertType = geocalls::SimpleSphericalParticles::VERTDATA_NONE;
+    geocalls::SimpleSphericalParticles::DirDataType dirType =
+        geocalls::SimpleSphericalParticles::DIRDATA_NONE;
+    geocalls::SimpleSphericalParticles::IDDataType idType = geocalls::SimpleSphericalParticles::IDDATA_NONE;
 
     size_t stride = 0;
 

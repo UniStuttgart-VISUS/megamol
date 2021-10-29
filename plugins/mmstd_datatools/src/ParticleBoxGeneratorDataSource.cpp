@@ -133,7 +133,7 @@ bool ParticleBoxGeneratorDataSource::reseed(core::param::ParamSlot& p) {
  * ParticleBoxGeneratorDataSource::getDataCallback
  */
 bool ParticleBoxGeneratorDataSource::getDataCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall *mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (mpdc == nullptr) return false;
     if (particleCountSlot.IsDirty() || radiusPerParticleSlot.IsDirty() || colorDataSlot.IsDirty()
             || interleavePosAndColorSlot.IsDirty() || radiusScaleSlot.IsDirty() || positionNoiseSlot.IsDirty()
@@ -144,7 +144,7 @@ bool ParticleBoxGeneratorDataSource::getDataCallback(core::Call& caller) {
     mpdc->SetParticleListCount(1);
     mpdc->SetDataHash(dataHash);
     mpdc->SetExtent(1, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-    core::moldyn::MultiParticleDataCall::Particles& parties = mpdc->AccessParticles(0);
+    geocalls::MultiParticleDataCall::Particles& parties = mpdc->AccessParticles(0);
 
     parties.SetCount(cnt);
     parties.SetGlobalRadius(rad);
@@ -163,7 +163,7 @@ bool ParticleBoxGeneratorDataSource::getDataCallback(core::Call& caller) {
  * ParticleBoxGeneratorDataSource::getExtentCallback
  */
 bool ParticleBoxGeneratorDataSource::getExtentCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall *mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (mpdc == nullptr) return false;
     if (particleCountSlot.IsDirty() || radiusPerParticleSlot.IsDirty() || colorDataSlot.IsDirty()
             || interleavePosAndColorSlot.IsDirty() || radiusScaleSlot.IsDirty() || positionNoiseSlot.IsDirty()

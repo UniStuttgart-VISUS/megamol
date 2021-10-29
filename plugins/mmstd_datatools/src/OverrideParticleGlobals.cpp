@@ -74,9 +74,8 @@ datatools::OverrideParticleGlobals::~OverrideParticleGlobals(void) {
  * datatools::OverrideParticleGlobals::manipulateData
  */
 bool datatools::OverrideParticleGlobals::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     // TODO BUG no proper dirty checking and no own hash. In practice this will blow up on several occasions!
     bool overrideAll = this->overrideAllListSlot.Param<core::param::BoolParam>()->Value();
@@ -90,7 +89,7 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     uint8_t color[4];
     try {
         vislib::graphics::ColourParser::FromString(
-            this->colorSlot.Param<core::param::StringParam>()->Value(),
+            this->colorSlot.Param<core::param::StringParam>()->Value().c_str(),
             color[0], color[1], color[2], color[3]);
     } catch(...) {
         ::memset(color, 0, 4);

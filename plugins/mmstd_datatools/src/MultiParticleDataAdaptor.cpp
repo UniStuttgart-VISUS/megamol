@@ -5,9 +5,9 @@ using namespace megamol;
 using namespace megamol::stdplugin;
 using namespace megamol::stdplugin::datatools;
 
-MultiParticleDataAdaptor::MultiParticleDataAdaptor(core::moldyn::MultiParticleDataCall& data)
+MultiParticleDataAdaptor::MultiParticleDataAdaptor(geocalls::MultiParticleDataCall& data)
         : data(data), list(nullptr), count(0) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     unsigned int plc = data.GetParticleListCount();
 
     list = new list_data[plc];

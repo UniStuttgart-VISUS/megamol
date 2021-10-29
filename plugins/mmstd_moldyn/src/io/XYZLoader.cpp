@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "XYZLoader.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -45,8 +45,8 @@ io::XYZLoader::XYZLoader() : core::Module(),
         radiusSlot("radius", "The radius to be assumed for all atoms"),
         hash(0), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), poss() {
 
-    getDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &XYZLoader::getDataCallback);
-    getDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &XYZLoader::getExtentCallback);
+    getDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(), "GetData", &XYZLoader::getDataCallback);
+    getDataSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(), "GetExtent", &XYZLoader::getExtentCallback);
     MakeSlotAvailable(&getDataSlot);
 
     filenameSlot.SetParameter(new core::param::FilePathParam(""));
@@ -83,7 +83,7 @@ void io::XYZLoader::release(void) {
 }
 
 bool io::XYZLoader::getDataCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall *mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (mpdc == nullptr) return false;
     assertData();
 
@@ -102,11 +102,11 @@ bool io::XYZLoader::getDataCallback(core::Call& caller) {
         p.SetCount(poss[i].size() / 3);
         p.SetGlobalColour(192, 192, 192);
         p.SetGlobalRadius(radiusSlot.Param<core::param::FloatParam>()->Value());
-        p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_NONE, nullptr);
+        p.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_NONE, nullptr);
         if (poss[i].size() > 0) {
-            p.SetVertexData(core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, poss[i].data());
+            p.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, poss[i].data());
         } else {
-            p.SetVertexData(core::moldyn::SimpleSphericalParticles::VERTDATA_NONE, nullptr);
+            p.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_NONE, nullptr);
         }
     }
     mpdc->SetUnlocker(nullptr);
@@ -115,7 +115,7 @@ bool io::XYZLoader::getDataCallback(core::Call& caller) {
 }
 
 bool io::XYZLoader::getExtentCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall *mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (mpdc == nullptr) return false;
     assertData();
 

@@ -10,7 +10,6 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/SingleLinkedList.h"
@@ -319,7 +318,7 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
  * SIFFDataSource::getDataCallback
  */
 bool SIFFDataSource::getDataCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (c2 == NULL) return false;
 
     c2->SetUnlocker(NULL);
@@ -336,19 +335,19 @@ bool SIFFDataSource::getDataCallback(core::Call& caller) {
         if (this->verNum == 100) {
             c2->AccessParticles(0).SetColourData(
                 this->hasAlpha
-                ? core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA
-                : core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB,
+                ? geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA
+                : geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB,
                 this->data.At(16), bpp);
             c2->AccessParticles(0).SetVertexData(
-                core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
+                geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                 this->data, bpp);
         } else if (this->verNum == 101) {
             c2->AccessParticles(0).SetGlobalColour(192, 192, 192);
             c2->AccessParticles(0).SetColourData(
-                core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+                geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
             c2->AccessParticles(0).SetGlobalRadius(this->radSlot.Param<core::param::FloatParam>()->Value());
             c2->AccessParticles(0).SetVertexData(
-                core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->data);
+                geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->data);
         } else {
             c2->AccessParticles(0).SetCount(0);
         }
@@ -363,7 +362,7 @@ bool SIFFDataSource::getDataCallback(core::Call& caller) {
  * SIFFDataSource::getExtentCallback
  */
 bool SIFFDataSource::getExtentCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    geocalls::MultiParticleDataCall *c2 = dynamic_cast<geocalls::MultiParticleDataCall*>(&caller);
     if (c2 == NULL) return false;
 
     c2->SetExtent(1,

@@ -14,7 +14,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/misc/BezierCurvesListDataCall.h"
+#include "geometry_calls/BezierCurvesListDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
@@ -129,7 +129,7 @@ namespace protein {
         unsigned int timeCode;
 
         /** The data */
-        core::misc::BezierCurvesListDataCall::Curves data;
+        geocalls::BezierCurvesListDataCall::Curves data;
 
         vislib::Array<vislib::math::Vector<float, 3> > colorLookupTable;
         vislib::Array<float> atomColorTable;

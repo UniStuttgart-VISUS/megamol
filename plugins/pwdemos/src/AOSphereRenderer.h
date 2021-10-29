@@ -14,7 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/Array.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 
 
@@ -101,9 +101,9 @@ namespace demos {
          */
         void resizeVolume();
         void uploadCameraUniforms(megamol::core::view::CallRender3DGL& call, vislib::graphics::gl::GLSLShader* sphereShader);
-        void renderParticles(megamol::core::view::CallRender3DGL& call, megamol::core::moldyn::MultiParticleDataCall *c2);
+        void renderParticles(megamol::core::view::CallRender3DGL& call, geocalls::MultiParticleDataCall *c2);
         void renderParticles(megamol::core::view::CallRender3DGL& call, protein_calls::MolecularDataCall *mol);
-        void renderParticlesVBO(megamol::core::view::CallRender3DGL& call, megamol::core::moldyn::MultiParticleDataCall *c2);
+        void renderParticlesVBO(megamol::core::view::CallRender3DGL& call, geocalls::MultiParticleDataCall *c2);
         void renderParticlesVBO(megamol::core::view::CallRender3DGL& call, protein_calls::MolecularDataCall *mol);
 
 
@@ -120,19 +120,19 @@ namespace demos {
         /**
          * TODO: Document
          */
-        void createVolumeCPU(class megamol::core::moldyn::MultiParticleDataCall& c2);
+        void createVolumeCPU(class geocalls::MultiParticleDataCall& c2);
 
         /**
          * TODO: Document
          */
-        void createVolumeGLSL(class megamol::core::moldyn::MultiParticleDataCall& c2);
+        void createVolumeGLSL(class geocalls::MultiParticleDataCall& c2);
         void createVolumeGLSL(protein_calls::MolecularDataCall &mol);
 
 
         /**
          * Write particle positions and radii to a VBO for rendering and processing in CUDA.
          */
-        void writeParticlePositionsVBO(class megamol::core::moldyn::MultiParticleDataCall& c2);
+        void writeParticlePositionsVBO(class geocalls::MultiParticleDataCall& c2);
         void writeParticlePositionsVBO(protein_calls::MolecularDataCall &mol);
         void createVolumeCPU(protein_calls::MolecularDataCall &mol);
 

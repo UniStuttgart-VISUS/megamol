@@ -188,7 +188,7 @@ public:
      * @param outDef A memory block to receive a machine-readable
      *               definition of the parameter.
      */
-    void Definition(vislib::RawStorage& outDef) const override;
+    std::string Definition() const override;
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -199,7 +199,7 @@ public:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool ParseValue(const vislib::TString& v) override;
+    bool ParseValue(std::string const& v) override;
 
     /**
     * Sets the value of the parameter and optionally sets the dirty flag
@@ -216,7 +216,7 @@ public:
     *
     * @return The value of the parameter as string.
     */
-    vislib::TString ValueString(void) const override;
+    std::string ValueString(void) const override;
 
     /**
     * Gets the value of the parameter

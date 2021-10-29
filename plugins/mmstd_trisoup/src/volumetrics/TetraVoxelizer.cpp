@@ -8,6 +8,7 @@
 #include "VoluMetricJob.h"
 #include <climits>
 #include <cfloat>
+#include "geometry_calls/MultiParticleDataCall.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -973,22 +974,22 @@ DWORD TetraVoxelizer::Run(void *userData) {
 
     unsigned int partListCnt = sjd->datacall->GetParticleListCount();
     for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
-        core::moldyn::MultiParticleDataCall::Particles ps = sjd->datacall->AccessParticles(partListI);
+        geocalls::MultiParticleDataCall::Particles ps = sjd->datacall->AccessParticles(partListI);
         UINT64 numParticles = ps.GetCount();
         unsigned int stride = ps.GetVertexDataStride();
-        core::moldyn::MultiParticleDataCall::Particles::VertexDataType dataType =
+        geocalls::MultiParticleDataCall::Particles::VertexDataType dataType =
             ps.GetVertexDataType();
         unsigned char *vertexData = (unsigned char*)ps.GetVertexData();
         switch (dataType) {
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                 continue;
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                 vertFloatSize = 3 * sizeof(float);
                 break;
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                 vertFloatSize = 4 * sizeof(float);
                 break;
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                 Log::DefaultLog.WriteError("This module does not yet like quantized data");
                 return -2;
         }
@@ -1006,29 +1007,29 @@ DWORD TetraVoxelizer::Run(void *userData) {
     //}
 
     for (unsigned int partListI = 0; partListI < partListCnt; partListI++) {
-        core::moldyn::MultiParticleDataCall::Particles ps = sjd->datacall->AccessParticles(partListI);
+        geocalls::MultiParticleDataCall::Particles ps = sjd->datacall->AccessParticles(partListI);
         currRad = ps.GetGlobalRadius() * sjd->RadMult;
         UINT64 numParticles = ps.GetCount();
         unsigned int stride = ps.GetVertexDataStride();
-        core::moldyn::MultiParticleDataCall::Particles::VertexDataType dataType =
+        geocalls::MultiParticleDataCall::Particles::VertexDataType dataType =
             ps.GetVertexDataType();
         unsigned char *vertexData = (unsigned char*)ps.GetVertexData();
         switch (dataType) {
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
                 continue;
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                 vertFloatSize = 3 * sizeof(float);
                 break;
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                 vertFloatSize = 4 * sizeof(float);
                 break;
-            case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+            case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                 Log::DefaultLog.WriteError("This module does not yet like quantized data");
                 return -2;
         }
         for (UINT64 l = 0; l < numParticles; l++) {
             vislib::math::ShallowPoint<float, 3> sp((float*)&vertexData[(vertFloatSize + stride) * l]);
-            if (dataType == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+            if (dataType == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
                 currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
                 currRad *= sjd->RadMult;
             }

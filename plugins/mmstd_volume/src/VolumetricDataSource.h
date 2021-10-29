@@ -17,7 +17,7 @@
 
 #include "datRaw.h"
 
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 
 #include "mmcore/param/ParamSlot.h"
 
@@ -297,7 +297,7 @@ private:
     /**
      * Add an unlocker to 'call' that will eventually unlock 'buffer'.
      */
-    static void setUnlocker(core::misc::VolumetricDataCall& call, BufferSlot* buffer);
+    static void setUnlocker(geocalls::VolumetricDataCall& call, BufferSlot* buffer);
 
     /**
      * Tries to set 'dst' to 'value' using an interlocked CAS operation
@@ -354,7 +354,7 @@ private:
      * The metadata of the current dat file. These must be updated every
      * time the 'fileInfo' changes, ie if a new file is loaded.
      */
-    core::misc::VolumetricDataCall::Metadata metadata;
+    geocalls::VolumetricDataCall::Metadata metadata;
 
     /**
      * Determines how long the loader thread sleeps after it loaded a
@@ -400,7 +400,7 @@ private:
 
     template <class T>
     void calcMinMax(void const* vol_ptr, std::vector<double>& mins, std::vector<double>& maxes,
-        DatRawFileInfo const& fileinfo, core::misc::VolumetricDataCall::Metadata const& metadata) {
+        DatRawFileInfo const& fileinfo, geocalls::VolumetricDataCall::Metadata const& metadata) {
         mins.resize(metadata.Components);
         maxes.resize(metadata.Components);
         for (auto c = 0; c < metadata.Components; ++c) {

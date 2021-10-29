@@ -62,7 +62,6 @@
 #include "SphereDataCall.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
 #include "VolumeSliceCall.h"
-#include "mmcore/CallVolumeData.h"
 #include "protein/RMSF.h"
 
 #include "MoleculeBallifier.h"

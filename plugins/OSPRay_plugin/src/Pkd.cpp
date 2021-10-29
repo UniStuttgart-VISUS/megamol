@@ -27,7 +27,7 @@ ospray::PkdBuilder::PkdBuilder()
 ospray::PkdBuilder::~PkdBuilder() { Release(); }
 
 bool ospray::PkdBuilder::manipulateData(
-    core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) {
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
 
     if ((inData.DataHash() != inDataHash) || (inData.FrameID() != frameID)) {
         inDataHash = inData.DataHash();
@@ -57,9 +57,9 @@ bool ospray::PkdBuilder::manipulateData(
 
             out.SetCount(parts.GetCount());
             out.SetVertexData(
-                megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, &models[i].position[0].x, 16);
+                megamol::geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, &models[i].position[0].x, 16);
             out.SetColourData(
-                megamol::core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA, &models[i].position[0].w, 16);
+                megamol::geocalls::SimpleSphericalParticles::COLDATA_UINT8_RGBA, &models[i].position[0].w, 16);
             out.SetGlobalRadius(parts.GetGlobalRadius());
         }
 

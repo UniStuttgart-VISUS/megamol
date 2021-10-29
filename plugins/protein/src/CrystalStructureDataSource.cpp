@@ -16,7 +16,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/math/Vector.h"
 
@@ -53,7 +53,7 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimData
     this->MakeSlotAvailable(&this->fileAtomsSlot);
 
     // Data caller slot for chkpt source
-    this->dataChkptCallerSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->dataChkptCallerSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->dataChkptCallerSlot);
 
     // Data out slot
@@ -81,8 +81,8 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimData
             new core::param::IntParam(static_cast<int>(this->displOffs), 0, 499));
     this->MakeSlotAvailable(&this->displOffsParam);
 
-    core::moldyn::MultiParticleDataCall *dirc =
-            this->dataChkptCallerSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *dirc =
+            this->dataChkptCallerSlot.CallAs<geocalls::MultiParticleDataCall>();
 
     // Param for dipole calculation
     this->dSource = DIPOLE_DISPL;
@@ -255,8 +255,8 @@ bool protein::CrystalStructureDataSource::getExtent(core::Call& call) {
 
 
     if(this->dSource == CHKPT_SOURCE) { // Use *.chkpt source
-        core::moldyn::MultiParticleDataCall *dirc =
-                this->dataChkptCallerSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+        geocalls::MultiParticleDataCall *dirc =
+                this->dataChkptCallerSlot.CallAs<geocalls::MultiParticleDataCall>();
         if(!(*dirc)(1)) { // Try call for extent
             return false;
         }
@@ -529,8 +529,8 @@ void protein::CrystalStructureDataSource::updateParams () {
         this->dSourceParam.ResetDirty();
         this->dSource = static_cast<DipoleSrc>(this->dSourceParam.Param<core::param::EnumParam>()->Value());
 
-        core::moldyn::MultiParticleDataCall *dirc =
-                this->dataChkptCallerSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+        geocalls::MultiParticleDataCall *dirc =
+                this->dataChkptCallerSlot.CallAs<geocalls::MultiParticleDataCall>();
 
 
 
@@ -831,8 +831,8 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
 
 
 
-        core::moldyn::MultiParticleDataCall *dirc =
-                this->dataChkptCallerSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+        geocalls::MultiParticleDataCall *dirc =
+                this->dataChkptCallerSlot.CallAs<geocalls::MultiParticleDataCall>();
 
         dirc->SetFrameID(0);
         if(!(*dirc)(0)) { // Try call for data
@@ -843,7 +843,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
         this->dipoleCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
 
         // Note: we only have one particle list in this case
-        core::moldyn::MultiParticleDataCall::Particles &parts = dirc->AccessParticles(0);
+        geocalls::MultiParticleDataCall::Particles &parts = dirc->AccessParticles(0);
         const float *pos = static_cast<const float *> (dirc->AccessParticles(0).GetVertexData());
         const float *dir = static_cast<const float *> (dirc->AccessParticles(0).GetDirData());
 
@@ -851,7 +851,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
 
         // Get dipoles
         if(parts.GetDirDataType() ==
-                core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ) {
+                geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ) {
 #pragma omp parallel for
             for (int c = 0; c < static_cast<int>(this->dipoleCnt); c++) {
                 fr->dipole[3*c+0] = dir[7*c+0];
@@ -870,7 +870,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
 
         // Get dipole positions
         if(parts.GetVertexDataType() ==
-                core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+                geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
 #pragma omp parallel for
             for (int c = 0; c < static_cast<int>(this->dipoleCnt); c++) {
                 fr->dipolePos[3*c+0] = pos[7*c+0];

@@ -48,9 +48,8 @@ datatools::ParticleColorSignThreshold::~ParticleColorSignThreshold(void) {
  * datatools::ParticleColorSignThreshold::manipulateData
  */
 bool datatools::ParticleColorSignThreshold::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     outData = inData; // also transfers the unlocker to 'outData'
     inData.SetUnlocker(nullptr, false); // keep original data locked
@@ -80,13 +79,14 @@ bool datatools::ParticleColorSignThreshold::manipulateData(
 }
 
 
-void datatools::ParticleColorSignThreshold::compute_colors(megamol::core::moldyn::MultiParticleDataCall& dat) {
+void datatools::ParticleColorSignThreshold::compute_colors(geocalls::MultiParticleDataCall& dat) {
     size_t allpartcnt = 0;
 
     unsigned int plc = dat.GetParticleListCount();
     for (unsigned int pli = 0; pli < plc; pli++) {
         auto& pl = dat.AccessParticles(pli);
-        if (pl.GetColourDataType() != megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
+        if (pl.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I)
+            continue;
         allpartcnt += static_cast<size_t>(pl.GetCount());
     }
 
@@ -98,7 +98,8 @@ void datatools::ParticleColorSignThreshold::compute_colors(megamol::core::moldyn
     allpartcnt = 0;
     for (unsigned int pli = 0; pli < plc; pli++) {
         auto& pl = dat.AccessParticles(pli);
-        if (pl.GetColourDataType() != megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
+        if (pl.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I)
+            continue;
 
         int part_cnt = static_cast<int>(pl.GetCount());
         const unsigned char *col = static_cast<const unsigned char*>(pl.GetColourData());
@@ -117,15 +118,16 @@ void datatools::ParticleColorSignThreshold::compute_colors(megamol::core::moldyn
 }
 
 
-void datatools::ParticleColorSignThreshold::set_colors(megamol::core::moldyn::MultiParticleDataCall& dat) {
+void datatools::ParticleColorSignThreshold::set_colors(geocalls::MultiParticleDataCall& dat) {
     size_t allpartcnt = 0;
 
     unsigned int plc = dat.GetParticleListCount();
     for (unsigned int pli = 0; pli < plc; pli++) {
         auto& pl = dat.AccessParticles(pli);
-        if (pl.GetColourDataType() != megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
+        if (pl.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I)
+            continue;
 
-        pl.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, this->newColors.data() + allpartcnt);
+        pl.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, this->newColors.data() + allpartcnt);
         pl.SetColourMapIndexValues(-1.0f, 1.0f);
 
         allpartcnt += static_cast<size_t>(pl.GetCount());

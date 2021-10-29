@@ -24,7 +24,7 @@ IColAdd::IColAdd() : stdplugin::datatools::AbstractParticleManipulator("outData"
         inAHash(0), inBHash(0), outHash(0),
         frameID(0), colors(), minCol(0.0f), maxCol(1.0f) {
 
-    inDataBSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    inDataBSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&inDataBSlot);
 
     //aOffsetSlot.SetParameter(new core::param::FloatParam(0.0f));
@@ -45,12 +45,12 @@ IColAdd::~IColAdd() {
 }
 
 bool IColAdd::manipulateData(
-        core::moldyn::MultiParticleDataCall& outData,
-        core::moldyn::MultiParticleDataCall& inDataA) {
+        geocalls::MultiParticleDataCall& outData,
+        geocalls::MultiParticleDataCall& inDataA) {
 
-    core::moldyn::MultiParticleDataCall *inDataBptr = inDataBSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    geocalls::MultiParticleDataCall *inDataBptr = inDataBSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (inDataBptr == nullptr) return false;
-    core::moldyn::MultiParticleDataCall& inDataB = *inDataBptr;
+    geocalls::MultiParticleDataCall& inDataB = *inDataBptr;
 
     inDataB.SetFrameID(inDataA.FrameID(), true);
     if (!inDataB(0)) return false;
@@ -115,7 +115,7 @@ bool IColAdd::manipulateData(
     const float *data = colors.data();
     for (unsigned int list = 0; list < outData.GetParticleListCount(); ++list) {
         auto &plist = outData.AccessParticles(list);
-        plist.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
+        plist.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, data, 0);
         plist.SetColourMapIndexValues(minCol, maxCol);
         data += plist.GetCount();
     }

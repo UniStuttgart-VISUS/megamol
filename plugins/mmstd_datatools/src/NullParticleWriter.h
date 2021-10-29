@@ -8,8 +8,6 @@
 
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace stdplugin {

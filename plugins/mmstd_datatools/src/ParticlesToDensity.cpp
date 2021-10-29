@@ -9,7 +9,7 @@
 
 #define _USE_MATH_DEFINES
 
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
@@ -86,38 +86,38 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     this->MakeSlotAvailable(&this->aggregatorSlot);
 
 
-    /*this->outDataSlot.SetCallback(core::moldyn::VolumeDataCall::ClassName(),
-        core::moldyn::VolumeDataCall::FunctionName(core::moldyn::VolumeDataCall::CallForGetData),
+    /*this->outDataSlot.SetCallback(geocalls::VolumeDataCall::ClassName(),
+        geocalls::VolumeDataCall::FunctionName(geocalls::VolumeDataCall::CallForGetData),
         &ParticlesToDensity::getDataCallback);
-    this->outDataSlot.SetCallback(core::moldyn::VolumeDataCall::ClassName(),
-        core::moldyn::VolumeDataCall::FunctionName(core::moldyn::VolumeDataCall::CallForGetExtent),
+    this->outDataSlot.SetCallback(geocalls::VolumeDataCall::ClassName(),
+        geocalls::VolumeDataCall::FunctionName(geocalls::VolumeDataCall::CallForGetExtent),
         &ParticlesToDensity::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);*/
 
-    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_DATA),
+    this->outDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_DATA),
         &ParticlesToDensity::getDataCallback);
-    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_EXTENTS),
+    this->outDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_EXTENTS),
         &ParticlesToDensity::getExtentCallback);
-    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_METADATA),
+    this->outDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_GET_METADATA),
         &ParticlesToDensity::getExtentCallback);
-    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_START_ASYNC),
+    this->outDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_START_ASYNC),
         &ParticlesToDensity::dummyCallback);
-    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_STOP_ASYNC),
+    this->outDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_STOP_ASYNC),
         &ParticlesToDensity::dummyCallback);
-    this->outDataSlot.SetCallback(core::misc::VolumetricDataCall::ClassName(),
-        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_TRY_GET_DATA),
+    this->outDataSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
+        geocalls::VolumetricDataCall::FunctionName(geocalls::VolumetricDataCall::IDX_TRY_GET_DATA),
         &ParticlesToDensity::dummyCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->outParticlesSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &ParticlesToDensity::getDataCallback);
-    this->outParticlesSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &ParticlesToDensity::getExtentCallback);
+    this->outParticlesSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &ParticlesToDensity::getDataCallback);
+    this->outParticlesSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &ParticlesToDensity::getExtentCallback);
     this->MakeSlotAvailable(&this->outParticlesSlot);
 
     this->outInfoSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
@@ -150,7 +150,7 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     this->surfaceSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->surfaceSlot);
 
-    this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
 
@@ -162,10 +162,10 @@ datatools::ParticlesToDensity::~ParticlesToDensity(void) { this->Release(); }
 
 
 bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
 
-    auto* out = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
-    auto* outGrid = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    auto* out = dynamic_cast<geocalls::VolumetricDataCall*>(&c);
+    auto* outGrid = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     auto* outInfo = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
 
     auto* inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
@@ -209,11 +209,11 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
 
 bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
-    auto* inMpdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto* inMpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (inMpdc == nullptr) return false;
 
-    auto* outVol = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
-    auto* outGrid = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    auto* outVol = dynamic_cast<geocalls::VolumetricDataCall*>(&c);
+    auto* outGrid = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
     auto* outInfo = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
 
     if (outVol != nullptr || outGrid != nullptr) {
@@ -247,11 +247,11 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         outVol->SetFrameID(this->time);
         outVol->SetData(this->vol[0].data());
         metadata.Components = is_vector ? 3 : 1;
-        metadata.GridType = core::misc::GridType_t::CARTESIAN;
+        metadata.GridType = geocalls::GridType_t::CARTESIAN;
         metadata.Resolution[0] = static_cast<size_t>(this->xResSlot.Param<core::param::IntParam>()->Value());
         metadata.Resolution[1] = static_cast<size_t>(this->yResSlot.Param<core::param::IntParam>()->Value());
         metadata.Resolution[2] = static_cast<size_t>(this->zResSlot.Param<core::param::IntParam>()->Value());
-        metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
+        metadata.ScalarType = geocalls::ScalarType_t::FLOATING_POINT;
         metadata.ScalarLength = sizeof(float);
         metadata.MinValues = new double[is_vector ? 3 : 1];
         metadata.MinValues[0] = this->minDens;
@@ -301,15 +301,15 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         outGrid->SetDataHash(this->datahash);
         outGrid->SetParticleListCount(1);
 
-        core::moldyn::MultiParticleDataCall::Particles& p = outGrid->AccessParticles(0);
+        geocalls::MultiParticleDataCall::Particles& p = outGrid->AccessParticles(0);
 
         p.SetCount(this->colors.size());
 
         if (p.GetCount() > 0) {
-            p.SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->grid.data());
+            p.SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->grid.data());
             p.SetDirData(
-                core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
-            p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, this->colors.data());
+                geocalls::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
+            p.SetColourData(geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I, this->colors.data());
 
             p.SetGlobalRadius(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Width() /
                               static_cast<float>(this->xResSlot.Param<core::param::IntParam>()->Value()) / 5.0f);
@@ -380,7 +380,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 /*
  *  moldyn::DynDensityGradientEstimator::createVolumeCPU
  */
-bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn::MultiParticleDataCall* c2) {
+bool datatools::ParticlesToDensity::createVolumeCPU(class geocalls::MultiParticleDataCall* c2) {
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticlesToDensity: starting volume creation");
     const auto startTime = std::chrono::high_resolution_clock::now();
@@ -450,13 +450,13 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     }
 
     for (unsigned int i = 0; i < c2->GetParticleListCount(); ++i) {
-        megamol::core::moldyn::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
+        geocalls::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
         const float globRad = parts.GetGlobalRadius();
         const bool useGlobRad =
             (parts.GetVertexDataType() ==
-                megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) ||
-            (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ);
-        if (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+                geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) ||
+            (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ);
+        if (parts.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE) {
             continue;
         }
 
@@ -735,7 +735,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     return true;
 }
 
-void datatools::ParticlesToDensity::modifyBBox(megamol::core::moldyn::MultiParticleDataCall* c2) {
+void datatools::ParticlesToDensity::modifyBBox(geocalls::MultiParticleDataCall* c2) {
 
     auto sx = this->xResSlot.Param<core::param::IntParam>()->Value();
     auto sy = this->yResSlot.Param<core::param::IntParam>()->Value();

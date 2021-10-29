@@ -41,9 +41,8 @@ datatools::ParticleSortFixHack::~ParticleSortFixHack(void) {
  * datatools::ParticleSortFixHack::manipulateData
  */
 bool datatools::ParticleSortFixHack::manipulateData(
-        megamol::core::moldyn::MultiParticleDataCall& outData,
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
-    using megamol::core::moldyn::MultiParticleDataCall;
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    using geocalls::MultiParticleDataCall;
 
     // update id table if requried
     if ((inData.DataHash() == 0) || (inData.DataHash() != inDataHash)) {
@@ -107,7 +106,7 @@ namespace {
 
 }
 
-bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiParticleDataCall& inData) {
+bool datatools::ParticleSortFixHack::updateIDdata(geocalls::MultiParticleDataCall& inData) {
     outDataHash++;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Updating Particle Sorting ID Data...");
 
@@ -532,8 +531,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
     return true;
 }
 
-void datatools::ParticleSortFixHack::updateData(
-        megamol::core::moldyn::MultiParticleDataCall& inData) {
+void datatools::ParticleSortFixHack::updateData(geocalls::MultiParticleDataCall& inData) {
     data.resize(inData.GetParticleListCount());
 
     for (unsigned int i = 0; i < static_cast<unsigned int>(data.size()); i++) {
@@ -551,7 +549,7 @@ void datatools::ParticleSortFixHack::updateData(
     outDataTime = inData.FrameID();
 }
 
-void datatools::ParticleSortFixHack::copyData(particle_data& tar, core::moldyn::SimpleSphericalParticles& src) {
+void datatools::ParticleSortFixHack::copyData(particle_data& tar, geocalls::SimpleSphericalParticles& src) {
     tar.parts = src;
 
     const unsigned char* colPtr = static_cast<const unsigned char*>(src.GetColourData());
@@ -564,21 +562,21 @@ void datatools::ParticleSortFixHack::copyData(particle_data& tar, core::moldyn::
 
     // colour
     switch (src.GetColourDataType()) {
-    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE: break;
-    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: colSize = 3; break;
-    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: colSize = 4; break;
-    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: colSize = 12; break;
-    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: colSize = 16; break;
-    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: colSize = 4; break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: colSize = 3; break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: colSize = 4; break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: colSize = 12; break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: colSize = 16; break;
+    case geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: colSize = 4; break;
     default: break;
     }
     if (colStride < colSize) colStride = colSize;
 
     // radius and position
     switch (src.GetVertexDataType()) {
-    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE: break;
-    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vertSize = 12; break;
-    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vertSize = 16; break;
+    case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE: break;
+    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vertSize = 12; break;
+    case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vertSize = 16; break;
         // We do not support short-vertices ATM
     default: break;
     }

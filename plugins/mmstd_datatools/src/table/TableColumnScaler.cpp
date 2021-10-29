@@ -106,7 +106,7 @@ bool TableColumnScaler::processData(core::Call &c) {
 
             auto scalingFactor = this->scalingFactorSlot.Param<core::param::FloatParam>()->Value();
 
-            auto selectionString = this->columnSelectorSlot.Param<core::param::StringParam>()->Value();
+            auto selectionString = vislib::TString(this->columnSelectorSlot.Param<core::param::StringParam>()->Value().c_str());
             selectionString.Remove(vislib::TString(" "));
             auto st = vislib::StringTokeniserW(selectionString, vislib::TString(";"));
             auto selectors = st.Split(selectionString, vislib::TString(";"));

@@ -45,12 +45,10 @@ namespace datatools {
          * @return True on success
          */
         virtual bool manipulateData(
-            megamol::core::moldyn::MultiParticleDataCall& outData,
-            megamol::core::moldyn::MultiParticleDataCall& inData) override;
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
         virtual bool manipulateExtent(
-            core::moldyn::MultiParticleDataCall &outData,
-            core::moldyn::MultiParticleDataCall &inData) override;
+            geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
     private:
 

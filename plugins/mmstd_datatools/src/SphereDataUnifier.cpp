@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "SphereDataUnifier.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "vislib/RawStorage.h"
 
 using namespace megamol;
@@ -26,7 +26,7 @@ datatools::SphereDataUnifier::SphereDataUnifier(void) : Module(),
     this->putDataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &SphereDataUnifier::getExtentCallback);
     this->MakeSlotAvailable(&this->putDataSlot);
 
-    this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
 }
@@ -60,7 +60,7 @@ void datatools::SphereDataUnifier::release(void) {
  * datatools::SphereDataUnifier::getDataCallback
  */
 bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall*inCall = dynamic_cast<MultiParticleDataCall*>(&caller);
     if (inCall == NULL) return false;
 
@@ -293,7 +293,7 @@ bool datatools::SphereDataUnifier::getDataCallback(core::Call& caller) {
  * datatools::SphereDataUnifier::getExtentCallback
  */
 bool datatools::SphereDataUnifier::getExtentCallback(core::Call& caller) {
-    using core::moldyn::MultiParticleDataCall;
+    using geocalls::MultiParticleDataCall;
     MultiParticleDataCall *inCall = dynamic_cast<MultiParticleDataCall*>(&caller);
     if (inCall == NULL) return false;
 

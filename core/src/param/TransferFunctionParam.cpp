@@ -30,16 +30,14 @@ TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : A
 }
 
 
-void TransferFunctionParam::Definition(vislib::RawStorage& outDef) const {
-    outDef.AssertSize(6);
-    memcpy(outDef.AsAt<char>(0), "MMTFFC", 6);
+std::string TransferFunctionParam::Definition() const {
+    return "MMTFFC";
 }
 
 
-bool TransferFunctionParam::ParseValue(vislib::TString const& v) {
-
+bool TransferFunctionParam::ParseValue(std::string const& v) {
     try {
-        this->SetValue(std::string(v.PeekBuffer()));
+        this->SetValue(v);
         return true;
     } catch (...) {}
     return false;
@@ -59,9 +57,8 @@ void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
 }
 
 
-vislib::TString TransferFunctionParam::ValueString(void) const {
-
-    return vislib::TString(this->val.c_str());
+std::string TransferFunctionParam::ValueString(void) const {
+    return this->val;
 }
 
 
